@@ -12,14 +12,14 @@ All job-specific auxilary files need to be present in the working directory.
 All output will be generated in this directory as well.
 """
 import os, sys
-from retis.fileio import filereader
+from retis.fileio.filereader import readinputfile
 #########################################################################
 def getinput(workdir):
     """
     get input parameters
     """
     infile = os.path.join(workdir,'input.py')
-    filereader.readinputfile(infile)
+    readinputfile(infile)
 #########################################################################
 def main(workdir):
     """
