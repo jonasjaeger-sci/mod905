@@ -20,6 +20,7 @@ def getinput(workdir):
     """
     infile = os.path.join(workdir,'input.py')
     readinputfile(infile)
+    return True
 #########################################################################
 def main(workdir):
     """
@@ -33,18 +34,18 @@ def main(workdir):
     #execpar=exec_class(inputpar) 
     #del inputpar #clear memory
     #Now start our main loop
-    print( "Start main iteration loop ...")
+    print("Start main iteration loop ...")
     #while execpar.ITERATIONSTEP:
     #    execpar.ITERATE()
     #    execpar.OUTPUT()
     #execpar.FINALIZE()
 
 #Start the program by executing main()
-if __name__=="__main__": 
-    arguments = sys.argv  #check if user correctly typed 'python RETIS.py workdir'
-    if len(arguments)!= 2:
+if __name__ == "__main__": 
+    # check if user correctly typed 'python RETIS.py workdir'
+    if len(sys.argv)!= 2:
         print("please type 'python RETIS.py workdir'", file=sys.stderr)
         print("with 'workdir' your working-directory", file=sys.stderr)
         sys.exit()
-    workdir=arguments[1]
+    workdir = sys.argv[1]
     main(workdir)
