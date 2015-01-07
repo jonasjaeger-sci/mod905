@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-fileio.py: This file handles input/output
+filereader.py: This file handles input/output
 """
 import os
 def readinputfile(filename):
