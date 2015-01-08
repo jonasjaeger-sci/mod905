@@ -9,5 +9,5 @@ def readinputfile(filename):
     readinputfile: This function reads the input parameters
     """
     if not os.path.isfile(filename):
-        raise IOError('Could not locate file: {}'.format(filename))
+        raise IOError("Could not locate file: {}".format(filename))
 
