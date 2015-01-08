@@ -18,7 +18,7 @@ def getinput(workdir):
     """
     get input parameters
     """
-    infile = os.path.join(workdir,'input.py')
+    infile = os.path.join(workdir,"input.py")
     readinputfile(infile)
     return True
 #########################################################################
