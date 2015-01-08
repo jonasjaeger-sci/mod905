@@ -5,3 +5,8 @@
 .Python
 .DS_Store
 
+# vim swap files
+*.swp
+*.swo
+*~
+
