@@ -41,7 +41,7 @@ def accept_reject(system, r, rnd=rnd):
     if rnd.rand() < pacc:
         return r, v_trial, v_trial, True
     else:
-        return system.r, system.epot, v_trial, False
+        return system.r, system.v_pot, v_trial, False
 
 def max_displace_step(system, maxdx=0.1, rnd=rnd):
     """ Monte Carlo routine. 
