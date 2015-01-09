@@ -43,7 +43,7 @@ def accept_reject(system, r, rnd=rnd):
     else:
         return system.r, system.epot, v_trial, False
 
-def max_displace_step(system, maxdx=0.01, rnd=rnd):
+def max_displace_step(system, maxdx=0.1, rnd=rnd):
     """ Monte Carlo routine. 
     Select one particle randomly and displaces it's position randomly.
     Returns the new positions and their corresponding potential energy,
@@ -55,7 +55,7 @@ def max_displace_step(system, maxdx=0.01, rnd=rnd):
     system: the system to operate on
     
     Keyword arguments:
-    maxdx: the maximum displacement (default is 0.01)
+    maxdx: the maximum displacement (default is 0.1)
     rnd: the random number generator (default is the global one)
 
     Returns:
