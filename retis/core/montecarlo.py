@@ -18,12 +18,12 @@ def seed_random_generator(seed=1, rnd=rnd):
     """
     rnd.seed(seed)
 
-def accept_reject(system, trial, rnd=rnd):
+def accept_reject(system, r, rnd=rnd):
     """Routine for accepting or rejecting a MC move
 
     Arguments:
     system: the system we are investigating
-    trial: the trial positions
+    r: the trial positions
 
     Keyword arguments:
     rnd: the random number generator (default is the global one)
@@ -34,7 +34,7 @@ def accept_reject(system, trial, rnd=rnd):
     v_trial: potential energy of trial positions
     status: True if move is acceped, False otherwise
     """
-    v_trial = system.evaluate_potential(trial) 
+    v_trial = system.evaluate_potential(r) 
     dE = v_trial - system.epot
     pacc = np.exp(-system.beta * dE)
     status = False
