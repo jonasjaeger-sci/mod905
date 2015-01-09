@@ -34,6 +34,8 @@ class RectangularWell(PotentialFunction):
         super(RectangularWell, self).__init__(dim=1, desc=desc)
         self.largenumber = largenumber
         self.left, self.right = left, right
+    def update_left_right(self, left, right):
+        self.left, self.right = left, right
     def potential(self, r):
         if self.left<r<self.right:
             return 0.0
@@ -41,5 +43,4 @@ class RectangularWell(PotentialFunction):
             return self.largenumber
     def force(self, r):
         pass
-        
     
