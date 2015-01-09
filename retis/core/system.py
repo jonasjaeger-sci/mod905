@@ -46,9 +46,9 @@ class System(object):
         Note: May be beneficial to call forcefield(system) later
         """
         if r is None:
-            return self.forcefield.force(self.r)
+            return self.forcefield.evaluate_force(self.r)
         else:
-            return self.forcefield.force(r)
+            return self.forcefield.evaluate_force(r)
 
     def evaluate_potential(self, r=None):
         """
@@ -58,6 +58,6 @@ class System(object):
         for trial moves etc. in MC routines
         """   
         if r is None:
-            return self.forcefield.potential(self.r)
+            return self.forcefield.evaluate_potential(self.r)
         else:
-            return self.forcefield.potential(r)
+            return self.forcefield.evaluate_potential(r)
