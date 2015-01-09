@@ -26,7 +26,7 @@ class System(object):
         # rather than a list of particles to loop over
         self.periodic = periodic # use periodic boundaries?
         self.box = box # simulation box
-        self.epot = 0.0 # stores the potential energy of the system
+        self.v_pot = 0.0 # stores the potential energy of the system
         self.temperature = temperature
         self.beta = 1.0/(self.temperature*constants._kB[units])
 
@@ -34,7 +34,7 @@ class System(object):
         self.f = self.evaluate_force()
 
     def potential(self):
-        self.epot = self.evaluate_potential()
+        self.v_pot = self.evaluate_potential()
 
     def evaluate_force(self, r=None):
         """
