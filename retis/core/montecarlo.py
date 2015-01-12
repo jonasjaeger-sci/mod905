@@ -6,7 +6,9 @@ Module for Monte Carlo Algorithms
 
 import numpy as np
 from numpy.random import RandomState
+import warnings # for debugging: to catch overflow in numpy
 
+warnings.simplefilter("error", RuntimeWarning) # just to catch warnings
 rnd = RandomState() # this will be the random number generator
 
 def seed_random_generator(seed=1, rnd=rnd):
@@ -36,7 +38,13 @@ def accept_reject(system, r, rnd=rnd):
     """
     v_trial = system.evaluate_potential(r) 
     dE = v_trial - system.v_pot
-    pacc = np.exp(-system.beta * dE)
+    try:
+        pacc = np.exp(-system.beta * dE)
+    except RuntimeWarning, e:
+        if 'overflow encountered in exp' in e: 
+            pacc = 42.0 # works, rnd.rand() is < 1 anyway
+            # if the error is something else, we do not set pacc
+            # and make the program crash.
     if rnd.rand() < pacc:
         return r, v_trial, v_trial, True
     else:
