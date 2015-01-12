@@ -29,7 +29,7 @@ class DoubleWell(PotentialFunction):
 
 class RectangularWell(PotentialFunction):
     """One dimensional rectangular well"""
-    def __init__(self, left=0.0, right=1.0, largenumber=1e100,
+    def __init__(self, left=0.0, right=1.0, largenumber=1e10,
                  desc="1D Rectangular well potential"):
         super(RectangularWell, self).__init__(dim=1, desc=desc)
         self.largenumber = largenumber
