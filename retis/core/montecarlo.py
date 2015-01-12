@@ -37,7 +37,6 @@ def accept_reject(system, r, rnd=rnd):
     v_trial = system.evaluate_potential(r) 
     dE = v_trial - system.v_pot
     pacc = np.exp(-system.beta * dE)
-    status = False
     if rnd.rand() < pacc:
         return r, v_trial, v_trial, True
     else:
