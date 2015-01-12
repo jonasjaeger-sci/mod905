@@ -26,6 +26,9 @@ class Property(object):
         see: 
         http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         """
+        """ Consider if this should be moved/deleted
+        and just replaced with a function from the analysis methods.
+        """
         x = self.val[-1] # most recent value
         delta = x-self.mean
         self.mean += delta/float(self.n)
@@ -41,6 +44,9 @@ class Property(object):
     def histogram(self, bins=10, limits=(-1,1)):
         """Creates a histogram, using the data stored in 
         self.val
+        """
+        """ Consider if this should be moved/deleted
+        and just replaced with a function from the analysis methods.
         """
         hist, bins = np.histogram(self.val, bins=bins,
                                   range=limits, density=False)
