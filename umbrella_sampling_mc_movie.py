@@ -47,7 +47,8 @@ system.p = ['X']*system.n # named particle type
 # set up the simulation we will run on the system:
 simulation = Simulation() # create a new simulation
 # add properties relevant for the umbrella simulation:
-umbrellas = [[-0.5, -0.2], 
+umbrellas = [[-1.0, -0.4],
+             [-0.5, -0.2], 
              [-0.3, 0.0], 
              [-0.1, 0.2], 
              [0.1, 0.4], 
@@ -58,7 +59,7 @@ simulation.randseed = 1 # set seed for random number generator
 # initialize random 
 mc.seed_random_generator(simulation.randseed)
 
-simulation.maxcycles = 1000
+simulation.maxcycles = 10000
 system.forcefield = forcefield_bias
 trajectory = [] # to store trajectories
 
@@ -95,7 +96,7 @@ for i, umbrella in enumerate(umbrellas):
         #print(u_simulation.cycle)
         pass
     print(u_simulation.cycle)
-    traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
+    #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(traj)
     print("Done", system.r, umbrellas[i][0], simulation.cycle)
 
@@ -104,6 +105,7 @@ for i, umbrella in enumerate(umbrellas):
 # we need to get the histograms:
 from retis.analysis.histogram import histogram, match_histograms
 bins = 48
+#bins = 75
 limits = (-1.2, 1.2)
 histograms = [histogram(traj.val, bins=bins, 
                         limits=limits) for traj in trajectory]
@@ -117,12 +119,25 @@ for i in range(len(umbrellas)-1):
     histograms_s.append(matched)
     scale_factor.append(s)
 print(scale_factor)
-print(histograms_s[1])
+
+hist_avg = []
+for i,xi in enumerate(x):
+    h = 0.0
+    n = 0.0
+    for k,u in enumerate(umbrellas):
+        if u[0]<= xi <u[1]:
+            h += histograms_s[k][i]
+            n += 1.0
+    if n > 0.0:
+        h /= n
+    hist_avg.append(h)
 
 # let's also do some very simple plotting
 from matplotlib import pyplot as plt
 for h in histograms_s:
     plt.plot(x,h)
+plt.plot(x, hist_avg, lw=10, alpha=0.4)
+#plt.semilogy()
 #for h in histograms:
 #    plt.plot(x,h[0])
 plt.show()
