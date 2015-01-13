@@ -33,7 +33,7 @@ class System(object):
         self.temperature = temperature
         if not self.temperature:
             self.beta = None
-        else
+        else:
             self.beta = 1.0/(self.temperature*constants._kB[units])
 
     def add_particle(self, r=None, v=None, f=None, name=None):
