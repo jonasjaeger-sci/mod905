@@ -112,10 +112,9 @@ class RectangularWell(PotentialFunction):
         -------
         The potential energy
         """
-        if self.left<r<self.right:
-            return 0.0
-        else:
-            return self.largenumber
+        return np.where(np.logical_and(r > self.left, r < self.right), 
+                        0.0, self.largenumber)
+
     def force(self, r):
         """ 
         Evaluate the force. 
