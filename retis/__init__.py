@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-retis library
+This is the RETIS library
+=========================
 """
+import .core
+import .forcefield
+import .analysis
