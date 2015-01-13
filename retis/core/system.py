@@ -5,6 +5,7 @@
 system.py
 """
 import constants
+import numpy as np
 
 __all__ = ['System']
 
@@ -12,8 +13,8 @@ class System(object):
     """
     This class defines a system
     """
-    def __init__(self, N=None, dim=None, r=None, v=None, f=None, p=None,
-                 forcefield=None, periodic=False, box=None, temperature=None,
+    def __init__(self, N=0, dim=0, r=None, v=None, f=None, p=[],
+                 forcefield=[], periodic=False, box=[], temperature=None,
                  units=None):
         self.N = N # number of particles
         self.dim = dim # dimensionality
@@ -30,7 +31,26 @@ class System(object):
         self.box = box # simulation box
         self.v_pot = 0.0 # stores the potential energy of the system
         self.temperature = temperature
-        self.beta = 1.0/(self.temperature*constants._kB[units])
+        if not self.temperature:
+            self.beta = None
+        else
+            self.beta = 1.0/(self.temperature*constants._kB[units])
+
+    def add_particle(self, r=None, v=None, f=None, name=None):
+        if not r: r = np.zeros(self.dim)
+        if not v: v = np.zeros(self.dim)
+        if not f: f = np.zeros(self.dim)
+        if not name: name = '?'
+        self.p.append(name)
+        if len(self.p)==1:
+            self.r = r
+            self.v = v
+            self.f = f
+        else:
+            self.r = np.vstack([self.r, r])
+            self.v = np.vstack([self.v, v])
+            self.f = np.vstack([self.f, f])
+        self.N += 1
 
     def force(self):
         self.f = self.evaluate_force()
