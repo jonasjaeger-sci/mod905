@@ -6,6 +6,8 @@ simulation.py
 
 import numpy as np
 
+__all__ = ["Simulation", "UmbrellaSimulation"]
+
 class Simulation(object):
     """This class defines the simulation."""
     def __init__(self, cycle=0, maxcycle=0):

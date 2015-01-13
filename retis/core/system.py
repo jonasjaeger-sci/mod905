@@ -6,6 +6,8 @@ system.py
 """
 import constants
 
+__all__ = ['System']
+
 class System(object):
     """
     This class defines a system

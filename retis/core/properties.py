@@ -6,6 +6,8 @@ is obtained as a function of the system.
 """
 import numpy as np
 
+__all__ = ["Property"]
+
 class Property(object):
     """Generic property object"""
     def __init__(self, desc=""):
