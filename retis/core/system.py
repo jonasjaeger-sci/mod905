@@ -13,9 +13,8 @@ class System(object):
     """
     This class defines a generic system for simulation.
     """
-    def __init__(self, N=0, dim=0, r=None, v=None, f=None, p=[],
-                 forcefield=[], periodic=False, box=[], temperature=None,
-                 units=None):
+    def __init__(self, N=0, dim=0, r=None, v=None, f=None, p=None, units=None,
+                 forcefield=None, periodic=False, box=None, temperature=None):
         """ 
         Initialization of the system.
     
@@ -39,12 +38,15 @@ class System(object):
         N/A, but sets derived variables:
         self.beta : float, inverse of (kB*T).
         """
-        self.N = N # number of particles
-        self.dim = dim # dimensionality
-        self.r = r # positions of particles
-        self.v = v # velocities of particles
-        self.f = f # forces on particles
-        self.p = p # particle types/id's 
+        self.N = N 
+        self.dim = dim 
+        self.r = r 
+        self.v = v 
+        self.f = f 
+        if not p: 
+            self.p = []*N
+        else:
+            self.p = p
         self.forcefield = forcefield
         # Note for future: might consider making a
         # particle object, but its very convenient
@@ -57,9 +59,9 @@ class System(object):
         if not self.temperature:
             self.beta = None
         else:
-            self.beta = 1.0/(self.temperature*constants._kB[units])
+            self.beta = 1.0/(self.temperature*constants.kB[units])
 
-    def add_particle(self, r=None, v=None, f=None, name=None):
+    def add_particle(self, r=None, v=None, f=None, name='?'):
         """ 
         Adds a particle to the system.
     
@@ -81,10 +83,12 @@ class System(object):
         If no arguments are given a particle with id='?' will be
         created.
         """
-        if not r: r = np.zeros(self.dim)
-        if not v: v = np.zeros(self.dim)
-        if not f: f = np.zeros(self.dim)
-        if not name: name = '?'
+        if not r: 
+            r = np.zeros(self.dim)
+        if not v: 
+            v = np.zeros(self.dim)
+        if not f: 
+            f = np.zeros(self.dim)
         self.p.append(name)
         if len(self.p)==1:
             self.r = r
