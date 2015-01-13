@@ -99,7 +99,6 @@ class System(object):
             self.v = np.vstack([self.v, v])
             self.f = np.vstack([self.f, f])
         self.N += 1
-
     def evaluate_force(self, r=None):
         """ 
         Evaluate the forces

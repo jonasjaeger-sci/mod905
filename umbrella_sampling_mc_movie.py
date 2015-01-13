@@ -17,7 +17,7 @@ import numpy as np
 # We begin by defining the system we will simulation "on":
 system = System(dim=1, temperature=500, units='eV/K') 
 # Lets add a particle to this system
-system.add_particle(name='X', r=np.array([-0.7]))
+system.add_particle(name='X1', r=np.array([-0.7]))
 # We also need to set up the force field.
 # We do this by combining potential functions.
 # Here, we select two pre-defined potential functions,
@@ -45,8 +45,9 @@ maxcycles = 1e4
 # and we define these tasks here by defining two functions:
 def record(system, traj_prop, ener_prop): 
     """Function to store positions and energy"""
-    traj_prop.add(system.r)
-    ener_prop.add(system.v_pot)
+    for ri in system.r:
+        traj_prop.add(ri)
+        ener_prop.add(system.v_pot)
 
 randseed = 1 # set seed for random number generator
 mc.seed_random_generator(randseed)
@@ -87,11 +88,12 @@ for i, umbrella in enumerate(umbrellas):
     simulation.task = [task1, task2]
     while not simulation.simulation_finished(system):
         simulation.step()
+    traj.val = np.array(traj.val)
     traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(traj)
     energy.append(ener)
     print("Umbrella no: {}, cycles: {}".format(i+1, simulation.cycle), 
-          "Reached end point: {}".format(system.r[0]>over)) 
+          "Reached end point: {}".format(np.any(system.r > over))) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
@@ -107,7 +109,7 @@ from matplotlib import pyplot as plt
 x = histograms[0][2]
 xv = np.linspace(-2, 2, 1000)
 F = -np.log(hist_avg)/system.beta # free energy
-V = forcefield.evaluate_potential(xv) # unbiased potetnial
+V = np.array([forcefield.evaluate_potential(xi) for xi in xv]) # unbiased potetnial
 F += (V.min()-F.min())
 plt.plot(xv, V, 'b-', label='Unbiased potential')
 plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
