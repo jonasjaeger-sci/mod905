@@ -37,15 +37,16 @@ system.forcefield = forcefield_bias # attach force field to the system
 umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], 
              [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
 # and just define some parameters for the simulation:
-maxcycles = 100000
+maxcycles = 1e4
 # Next, we will define the logic for the umbrella 
 # simulation. A simulation object will have certain
 # tasks to do, which may be dynamically changed.
 # Here, all the umbrella simulations will do the same task,
 # and we define these tasks here by defining two functions:
-def record_positions(system, traj): 
-    """Function to store positions"""
+def record(system, traj, ener): 
+    """Function to store positions and energy"""
     traj.add(system.r)
+    ener.add(system.v_pot)
 randseed = 1 # set seed for random number generator
 mc.seed_random_generator(randseed)
 maxdx = 0.1 # maximum allowed displacement
@@ -59,8 +60,7 @@ def mc_task(system, maxdx):
         system.r = r
         system.v_pot = v_trial
 
-trajectory = [] # to store all the trajectories
-
+trajectory, energy = [], [] # to store all the trajectories and energies
 # we run all the umbrella simulations by looping over the different
 # umbrellas we defined:
 for i, umbrella in enumerate(umbrellas):
@@ -75,24 +75,26 @@ for i, umbrella in enumerate(umbrellas):
     # Now, we can define the actual simulation:
     simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
                                     maxcycle=maxcycles)
-    # we also create a new property, which we use to record the trajectory:
+    # Also create properties for storing data:
     traj = Property(desc='Position of the particle')
+    ener = Property(desc='Energy of the particle')
     # let us add the two task we defined previously:
     task1 = {'func':mc_task, 'args':[system],
                'kwargs':{'maxdx':maxdx}}
-    task2 = {'func':record_positions, 'args':[system, traj], 'kwargs':{}}
+    task2 = {'func':record, 'args':[system, traj, ener], 'kwargs':{}}
     simulation.task = [task1, task2]
-    while simulation.step(system):
-        pass
+    while not simulation.simulation_finished(system):
+        simulation.step()
     traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(traj)
+    energy.append(ener)
     print("Umbrella no: {}, cycles: {}".format(i+1, simulation.cycle), 
           "Reached end point: {}".format(system.r[0]>over)) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
 from retis.analysis.histogram import histogram, match_all_histograms
-bins = 101
+bins = 100
 limits = (-1.2, 1.2)
 histograms = [histogram(traj.val, bins=bins, 
                         limits=limits) for traj in trajectory]
@@ -100,18 +102,23 @@ histograms = [histogram(traj.val, bins=bins,
 histograms_s, scale_factor, hist_avg = match_all_histograms(histograms, umbrellas)
 # let's also do some very simple plotting
 from matplotlib import pyplot as plt
+# first, plot the unbiased potential,
+# and the obtained free energy:
 x = histograms[0][2]
+xv = np.linspace(-1,1,1000)
 F = -np.log(hist_avg)/system.beta
-r = np.linspace(-1,1,100)
-V = forcefield.evaluate_potential(r)
-shift = V.min()-F.min()
-F += shift
-# Plot unbiased potential and free energy::
-plt.plot(r,V,'b-', label='Unbiased potential')
+V = forcefield.evaluate_potential(xv)
+F += (V.min()-F.min())
+# Plot unbiased potential and free energy:
+plt.plot(xv,V,'b-', label='Unbiased potential')
 plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
 plt.legend()
 plt.show()
-
+# we can also animate the trajectories
+for traj, ener in zip(trajectory, energy):
+    r, e = traj.val, ener.val
+    plt.plot(r, e)
+plt.show()
 #for h in histograms_s:
 #    plt.plot(x,h)
 #plt.plot(x, hist_avg, lw=10, alpha=0.4)
