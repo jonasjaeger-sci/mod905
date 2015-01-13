@@ -8,26 +8,26 @@ from numpy.random import RandomState
 
 __all__ = ["seed_random_generator", "accept_reject", "max_displace_step"]
 
-rnd = RandomState() # this will be the random number generator
+random_generator = RandomState() # this will be the random number generator
 
 
-def seed_random_generator(seed=1, rnd=rnd):
+def seed_random_generator(seed=1, rgen=random_generator):
     """ 
     Helper function to seed the random number generator
 
     Parameters
     ----------
     seed : int, optional
-        seed for the random number generator rnd
-    rnd : random number generator
+        seed for the random number generator
+    rgen : random number generator
 
     Returns
     -------
-    None, however ``rnd`` is seeded with the given seed.
+    None, however ``rgen`` is seeded with the given seed.
     """
-    rnd.seed(seed)
+    rgen.seed(seed)
 
-def accept_reject(system, r, rnd=rnd):
+def accept_reject(system, r, rgen=random_generator):
     """
     Routine for accepting or rejecting a MC move
 
@@ -35,7 +35,7 @@ def accept_reject(system, r, rnd=rnd):
     ----------
     system : the system object we are investigating
     r : the trial positions, assumed to be a numpy array
-    rnd : random number generator, optional
+    rgen : random number generator, optional
         (default is the global one for this module)
 
     Returns
@@ -55,12 +55,12 @@ def accept_reject(system, r, rnd=rnd):
     v_trial = system.evaluate_potential(r) 
     dE = v_trial - system.v_pot
     pacc = np.exp(-system.beta * dE)
-    if rnd.rand() < pacc:
+    if rgen.rand() < pacc:
         return r, v_trial, v_trial, True
     else:
         return system.r, system.v_pot, v_trial, False
 
-def max_displace_step(system, maxdx=0.1, rnd=rnd):
+def max_displace_step(system, maxdx=0.1, rgen=random_generator):
     """ 
     Monte Carlo routine for diplacing particles.
 
@@ -74,14 +74,14 @@ def max_displace_step(system, maxdx=0.1, rnd=rnd):
     ----------
     system : the system object to operate on
     maxdx : the maximum displacement (default is 0.1)
-    rnd : the random number generator (default is the global one)
+    rgen : the random number generator (default is the global one)
 
     Returns
     -------
     This function just returns the outcome if applying the
     function accept_reject to the system and trial position.
     """
-    idx = rnd.random_integers(0,system.N-1) # select particle randomly
+    idx = rgen.random_integers(0, system.N-1) # select particle randomly
     trial = np.copy(system.r) # copy positions
-    trial[idx] += 2.0*maxdx*(rnd.rand(system.dim)-0.5) # displace selected
+    trial[idx] += 2.0 * maxdx * (rgen.rand(system.dim) - 0.5) # displace
     return accept_reject(system, trial)
