@@ -33,6 +33,7 @@ class RectangularWell(PotentialFunction):
                  desc="1D Rectangular well potential"):
         super(RectangularWell, self).__init__(dim=1, desc=desc)
         self.largenumber = largenumber
+        #self.largenumber = float('inf') # possible to use this, NOTE FOR LATER
         self.left, self.right = left, right
     def update_left_right(self, left, right):
         self.left, self.right = left, right
