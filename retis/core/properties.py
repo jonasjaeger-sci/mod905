@@ -43,19 +43,6 @@ class Property(object):
     def dump_to_file(self, filename):
         np.savetxt(filename, self.val)
 
-    def histogram(self, bins=10, limits=(-1,1)):
-        """Creates a histogram, using the data stored in 
-        self.val
-        """
-        """ Consider if this should be moved/deleted
-        and just replaced with a function from the analysis methods.
-        """
-        hist, bins = np.histogram(self.val, bins=bins,
-                                  range=limits, density=False)
-        self.hist = hist
-        self.bins = bins
-        self.bin_mid = 0.5*(bins[1:]+bins[:-1])
-
     def __str__(self):
         return self.desc
 
