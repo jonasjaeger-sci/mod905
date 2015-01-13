@@ -41,7 +41,8 @@ class DoubleWell(PotentialFunction):
         -------
         The potential energy
         """
-        return self.a*r**4-self.b*(r-self.c)**2
+        v_pot = self.a*r**4-self.b*(r-self.c)**2
+        return v_pot.sum()
 
     def force(self, r):
         """ 
