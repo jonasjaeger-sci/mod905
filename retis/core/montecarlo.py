@@ -5,11 +5,9 @@ Module for Monte Carlo Algorithms
 """
 import numpy as np
 from numpy.random import RandomState
-import warnings # for debugging: to catch overflow in numpy
 
 __all__ = ["seed_random_generator", "accept_reject", "max_displace_step"]
 
-warnings.simplefilter("error", RuntimeWarning) # just to catch warnings
 rnd = RandomState() # this will be the random number generator
 
 
@@ -52,18 +50,11 @@ def accept_reject(system, r, rnd=rnd):
     A overflow is possible when using numpy.exp() here. 
     This can for instance happen in a umbrella simulation
     where the bias potential is infinite or very large. 
-    The warnings module is here used to catch numpy warnings for
-    this and to deal with it.
+    Right now, this is just ignored.
     """
     v_trial = system.evaluate_potential(r) 
     dE = v_trial - system.v_pot
-    try:
-        pacc = np.exp(-system.beta * dE)
-    except RuntimeWarning, e:
-        if 'overflow encountered in exp' in e: 
-            pacc = 42.0 # works, rnd.rand() is < 1 anyway
-            # if the error is something else, we do not set pacc
-            # and make the program crash.
+    pacc = np.exp(-system.beta * dE)
     if rnd.rand() < pacc:
         return r, v_trial, v_trial, True
     else:
