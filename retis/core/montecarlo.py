@@ -90,7 +90,7 @@ def max_displace_step(system, maxdx=0.1, rnd=rnd):
     This function just returns the outcome if applying the
     function accept_reject to the system and trial position.
     """
-    idx = rnd.random_integers(0,system.n-1) # select particle randomly
+    idx = rnd.random_integers(0,system.N-1) # select particle randomly
     trial = np.copy(system.r) # copy positions
     trial[idx] += 2.0*maxdx*(rnd.rand(system.dim)-0.5) # displace selected
     return accept_reject(system, trial)
