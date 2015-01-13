@@ -43,13 +43,15 @@ maxcycles = 1e4
 # tasks to do, which may be dynamically changed.
 # Here, all the umbrella simulations will do the same task,
 # and we define these tasks here by defining two functions:
-def record(system, traj, ener): 
+def record(system, traj_prop, ener_prop): 
     """Function to store positions and energy"""
-    traj.add(system.r)
-    ener.add(system.v_pot)
+    traj_prop.add(system.r)
+    ener_prop.add(system.v_pot)
+
 randseed = 1 # set seed for random number generator
 mc.seed_random_generator(randseed)
 maxdx = 0.1 # maximum allowed displacement
+
 def mc_task(system, maxdx):
     """
     Function to perform monte carlo moves.
@@ -99,29 +101,75 @@ limits = (-1.2, 1.2)
 histograms = [histogram(traj.val, bins=bins, 
                         limits=limits) for traj in trajectory]
 # We are going to match these histograms:
-histograms_s, scale_factor, hist_avg = match_all_histograms(histograms, umbrellas)
+histograms_s, _, hist_avg = match_all_histograms(histograms, umbrellas)
 # let's also do some very simple plotting
 from matplotlib import pyplot as plt
-# first, plot the unbiased potential,
-# and the obtained free energy:
 x = histograms[0][2]
-xv = np.linspace(-1,1,1000)
-F = -np.log(hist_avg)/system.beta
-V = forcefield.evaluate_potential(xv)
+xv = np.linspace(-2, 2, 1000)
+F = -np.log(hist_avg)/system.beta # free energy
+V = forcefield.evaluate_potential(xv) # unbiased potetnial
 F += (V.min()-F.min())
-# Plot unbiased potential and free energy:
-plt.plot(xv,V,'b-', label='Unbiased potential')
+plt.plot(xv, V, 'b-', label='Unbiased potential')
 plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
 plt.legend()
+plt.xlim((-1, 1))
+plt.ylim((-0.3, 0.05))
 plt.show()
-# we can also animate the trajectories
-for traj, ener in zip(trajectory, energy):
-    r, e = traj.val, ener.val
-    plt.plot(r, e)
+
+# we can also create a animations:
+from matplotlib import animation
+fig = plt.figure()
+ax = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
+line, = ax.plot(xv, V, lw=2)
+linec = ax.axvline(x=None, lw=2, ls=':', color='black')
+axvl = ax.axvspan(xmin=None, xmax=None, color="0.7", alpha=0.4)
+axvr = ax.axvspan(xmin=None, xmax=None, color="0.7", alpha=0.4)
+scat = ax.scatter(None, None, s=100, c='green')#, alpha=0.8)
+
+umpos1 = umbrellas[0][0]
+umpos2 = umbrellas[0][1]
+
+traj_data = []
+ener_data = []
+umbr = [] # id of current umbrella
+crossing = [] # position that must be crossed
+for i, (traj, ener) in enumerate(zip(trajectory, energy)):
+    r, e = traj.val[::50], ener.val[::50]
+    traj_data.extend(r)
+    ener_data.extend(e)
+    umbr.extend([i]*len(r))
+    if (i+1) == len(umbrellas):
+        crossing.extend([1.5]*len(r))
+    else:
+        crossing.extend([umbrellas[i+1][0]]*len(r))
+
+def init():
+    # function to draw a clear frame
+    line.set_ydata(V)
+    return line, #, axv
+
+def update(i):
+    #global umpos1, umpos2
+    p = np.array([traj_data[i], ener_data[i]])
+    scat.set_offsets(p)
+    linec.set_xdata(crossing[i])
+    umpos1 = umbrellas[umbr[i]][0]
+    umpos2 = umbrellas[umbr[i]][1]
+    a = np.array([[-1.1, 0.0], [-1.1, 1.0],
+                 [umpos1, 1.0], [umpos1, 0.0],
+                 [-1.1, 0.0]])
+
+    b = np.array([[umpos2, 0.0], [umpos2, 1.0],
+                 [1.1, 1.0], [1.1, 0.0],
+                 [umpos2, 0.0]])
+    axvr.set_xy(b)
+    axvl.set_xy(a)
+    return scat, axvl, axvr, linec
+
+anim = animation.FuncAnimation(fig, update, np.arange(len(traj_data)), 
+        init_func=init,interval=25, blit=True)
+
 plt.show()
-#for h in histograms_s:
-#    plt.plot(x,h)
-#plt.plot(x, hist_avg, lw=10, alpha=0.4)
-#plt.show()
+
 
 
