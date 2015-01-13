@@ -7,6 +7,6 @@ Force fields
 
 from .forcefield import *
 from .potential import *
-from .onedimpot import *
+from .potentials import *
 
 
