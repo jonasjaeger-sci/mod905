@@ -94,6 +94,3 @@ def max_displace_step(system, maxdx=0.1, rnd=rnd):
     trial = np.copy(system.r) # copy positions
     trial[idx] += 2.0*maxdx*(rnd.rand(system.dim)-0.5) # displace selected
     return accept_reject(system, trial)
-    #r, v_pot, v_trial, status = accept_reject(system, trial)
-    #return r, v_pot, v_trial, status
-
