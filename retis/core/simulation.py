@@ -117,6 +117,6 @@ class UmbrellaSimulation(Simulation):
     
         """
         return (self.cycle>self.maxcycle and
-                np.any(system.particles['r']>self.overlap))
+                np.all(system.particles['r']>self.overlap))
         
 
