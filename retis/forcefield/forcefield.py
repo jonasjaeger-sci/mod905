@@ -34,11 +34,8 @@ class ForceField(object):
         Parameters
         ----------
         self : 
-        r : np.array, the position of the particles.
-        kwargs : dictionary of the variables that are needed to
-            actually calculate the potential. Typically this
-            includes variables such as the position of the particles 
-            and/or the id's of the particles.
+        kwargs : dictionary of variables needed to evaluate the forces.
+            Typically this is the positions and the particle names.
 
         Returns
         -------
