@@ -27,7 +27,7 @@ class ForceField(object):
         self.desc = desc
         self.potential = potential
 
-    def evaluate_force(self, r):
+    def evaluate_force(self, r, particles=None):
         """ 
         Evaluate the force on the particles.
     
@@ -35,20 +35,25 @@ class ForceField(object):
         ----------
         self : 
         r : np.array, the position of the particles.
+        particles : list, optional (default is none). Some potentials
+            require the particle id's to determine how the
+            potential is to be evaluated.
 
         Returns
         -------
-        f : np.array with the forces.
+        force : np.array with the forces.
         """
-        f = None
-        for ff in self.potential:
-            if f is None:
-                f = ff.force(r)
+        force = None
+        args = [r]
+        if particles: args.append(particles)
+        for potential in self.potential:
+            if force is None:
+                force = potential.force(*args)
             else:
-                f += ff.force(r)
-        return f
+                force += potential.force(*args)
+        return force
 
-    def evaluate_potential(self, r):
+    def evaluate_potential(self, r, particles=None):
         """ 
         Evaluate the potential energy.
     
@@ -56,18 +61,24 @@ class ForceField(object):
         ----------
         self : 
         r : np.array, the position of the particles.
+        particles : list, optional (default is none). Some potentials
+            require the particle id's to determine how the
+            potential is to be evaluated.
 
         Returns
         -------
-        pot : float equal to the potential energy.
+        v_pot : float equal to the potential energy.
         """
-        pot = None
-        for ff in self.potential:
-            if pot is None:
-                pot = ff.potential(r)
+        v_pot = None
+        args = [r]
+        if particles: 
+            args.append(particles)
+        for pot in self.potential:
+            if v_pot is None:
+                v_pot = pot.potential(*args)
             else:
-                pot += ff.potential(r)
-        return pot
+                v_pot += pot.potential(*args)
+        return v_pot
 
     def __str__(self):
         """ 
@@ -82,7 +93,8 @@ class ForceField(object):
         -------
         String with description of force field.
         """
-        s = '\n *'.join([ff.desc for ff in self.potential])
-        s = 'Force field: {}\nPotential functions: \n *{}'.format(self.desc, s)
-        return s
+        pots = "\n *".join([ff.desc for ff in self.potential])
+        force = "Force field: {}".format(self.desc)
+        desc = "{}\nPotential functions: \n *{}".format(force, pots)
+        return desc
 
