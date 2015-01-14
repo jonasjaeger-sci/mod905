@@ -26,7 +26,10 @@ class DoubleWell(PotentialFunction):
         N/A
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
-        self.a, self.b, self.c = a, b, c
+        self.set_parameters({'a': a, 'b': b, 'c': c})
+        self.a = a
+        self.b = b
+        self.c = c
 
     def potential(self, r):
         """ 
@@ -35,13 +38,13 @@ class DoubleWell(PotentialFunction):
         Parameters
         ---------- 
         self : 
-        r : the position.
+        r : numpy.array, the position.
         
         Returns
         -------
         The potential energy
         """
-        v_pot = self.a*r**4-self.b*(r-self.c)**2
+        v_pot = self.a*r**4 - self.b*(r - self.c)**2
         return v_pot.sum()
 
     def force(self, r):
@@ -81,9 +84,13 @@ class RectangularWell(PotentialFunction):
         N/A 
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
+        self.set_parameters({'left': left, 'right': right,
+                             'largenumber': largenumber})
         self.largenumber = largenumber
         #self.largenumber = float('inf') # possible to use this, NOTE FOR LATER
-        self.left, self.right = left, right
+        self.left = left
+        self.right = right
+
     def update_left_right(self, left, right):
         """ 
         Updates the boundaries.
@@ -116,18 +123,4 @@ class RectangularWell(PotentialFunction):
         v_pot = np.where(np.logical_and(r > self.left, r < self.right), 
                         0.0, self.largenumber)
         return v_pot.sum()
-    def force(self, r):
-        """ 
-        Evaluate the force. 
-        
-        Parameters
-        ---------- 
-        self : 
-        r : the position.
-        
-        Returns
-        -------
-        N/A 
-        """
-        pass
-    
+
