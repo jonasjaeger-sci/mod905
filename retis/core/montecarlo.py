@@ -27,20 +27,20 @@ def seed_random_generator(seed=1, rgen=random_generator):
     """
     rgen.seed(seed)
 
-def accept_reject(system, r, rgen=random_generator):
+def accept_reject(system, trial, rgen=random_generator):
     """
     Routine for accepting or rejecting a MC move
 
     Parameters
     ----------
     system : the system object we are investigating
-    r : the trial positions, assumed to be a numpy array
+    trial : the trial positions, assumed to be a numpy array
     rgen : random number generator, optional
         (default is the global one for this module)
 
     Returns
     -------
-    r : the accepted positions (can be equal to the previous positions).
+    the accepted positions (trial or the original system.particles['r']):
     v_pot : potential energy corresponding to positions r
     v_trial : potential energy of trial positions
     status : True if move is acceped, False otherwise
@@ -52,13 +52,13 @@ def accept_reject(system, r, rgen=random_generator):
     where the bias potential is infinite or very large. 
     Right now, this is just ignored.
     """
-    v_trial = system.evaluate_potential(r) 
+    v_trial = system.evaluate_potential(r=trial) 
     dE = v_trial - system.v_pot
     pacc = np.exp(-system.beta * dE)
     if rgen.rand() < pacc:
-        return r, v_trial, v_trial, True
+        return trial, v_trial, v_trial, True
     else:
-        return system.r, system.v_pot, v_trial, False
+        return system.particles['r'], system.v_pot, v_trial, False
 
 def max_displace_step(system, maxdx=0.1, rgen=random_generator):
     """ 
@@ -81,7 +81,7 @@ def max_displace_step(system, maxdx=0.1, rgen=random_generator):
     This function just returns the outcome if applying the
     function accept_reject to the system and trial position.
     """
-    idx = rgen.random_integers(0, system.N-1) # select particle randomly
-    trial = np.copy(system.r) # copy positions
+    idx = rgen.random_integers(0, system.npart-1) # select particle randomly
+    trial = np.copy(system.particles['r']) # copy positions
     trial[idx] += 2.0 * maxdx * (rgen.rand(system.dim) - 0.5) # displace
     return accept_reject(system, trial)

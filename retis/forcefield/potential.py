@@ -23,34 +23,50 @@ class PotentialFunction(object):
         """
         self.dim = dim # dimensionality
         self.desc = desc
-    def force(self, *args):
+        self.params = None # variable to hold parameters
+
+    def set_parameters(self, **params):
         """ 
-        Function to evaluate the force.
+        Sets the paramters of the potential, i.e. sets
+        self.params to the given parameters. 
     
         Parameters
         ----------
         self : 
-        *args : Not defined here, it's defined in the derived potentials.
+        **params : dict, optional. Parameters for
+            the potential
 
         Returns
         -------
-        N/A 
+        N/A, but updates self.params 
         """
-        pass
-    def potential(self, *args):
-        """ 
-        Function to evaluate the force.
-    
+        for par in params:
+            self.params[par] = params[par]
+ 
+    def params_to_attr(self):
+        """
+        Converts from the parameter dictionary to
+        attributes of the object.
+        
         Parameters
         ----------
         self : 
-        *args : Not defined here, it's defined in the derived potentials.
 
         Returns
         -------
-        N/A 
+        N/A, but updates self.params 
+
+        Note
+        ----
+        Consider removing this method - objects that want to
+        set attributes like this can do it them selves; here we
+        uncritically just adds all parameters as attributes.
+        Keeping it for now to make pylint shut up about the number
+        of methods.
         """
-        pass
+        for par in self.params:
+            setattr(self, par, self.params[par])
+
     def __str__(self):
         """
         Return the string description of the potential. 

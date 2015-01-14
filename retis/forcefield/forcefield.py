@@ -27,7 +27,7 @@ class ForceField(object):
         self.desc = desc
         self.potential = potential
 
-    def evaluate_force(self, r, particles=None):
+    def evaluate_force(self, **kwargs):
         """ 
         Evaluate the force on the particles.
     
@@ -35,45 +35,60 @@ class ForceField(object):
         ----------
         self : 
         r : np.array, the position of the particles.
-        particles : list, optional (default is none). Some potentials
-            require the particle id's to determine how the
-            potential is to be evaluated.
+        kwargs : dictionary of the variables that are needed to
+            actually calculate the potential. Typically this
+            includes variables such as the position of the particles 
+            and/or the id's of the particles.
 
         Returns
         -------
         force : np.array with the forces.
+        
+        Note
+        ----
+        See the note for evaluate_potential
         """
         force = None
-        args = [r]
-        if particles: args.append(particles)
-        for potential in self.potential:
+        for pot in self.potential:
+            nvar = pot.force.func_code.co_argcount 
+            var = pot.force.func_code.co_varnames[:nvar]
+            args = [kwargs[vari] for vari in var[1:]]
             if force is None:
-                force = potential.force(*args)
+                force = pot.force(*args)
             else:
-                force += potential.force(*args)
+                force += pot.force(*args)
         return force
 
-    def evaluate_potential(self, r, particles=None):
+    def evaluate_potential(self, **kwargs):
         """ 
         Evaluate the potential energy.
     
         Parameters
         ----------
-        self : 
-        r : np.array, the position of the particles.
-        particles : list, optional (default is none). Some potentials
-            require the particle id's to determine how the
-            potential is to be evaluated.
+        self :
+        kwargs : dictionary of variables needed to evaluate the potential.
+            Typically this is the positions and the particle names.
 
         Returns
         -------
         v_pot : float equal to the potential energy.
+
+        Note
+        ----
+        In this function each potential function picks out the
+        variable that it needs. This might be stupid,
+        as these variable names will have to match (names will have
+        to be know anyway if I use optional keywords.
+        One solution might be to just pass the system to the 
+        potential, with additional optional arguments on what to
+        override (override is here usefull when calculating the energies
+        in Monte Carlo moves - i.e. to use the trial positions).
         """
         v_pot = None
-        args = [r]
-        if particles: 
-            args.append(particles)
         for pot in self.potential:
+            nvar = pot.potential.func_code.co_argcount 
+            var = pot.potential.func_code.co_varnames[:nvar]
+            args = [kwargs[vari] for vari in var[1:]]
             if v_pot is None:
                 v_pot = pot.potential(*args)
             else:

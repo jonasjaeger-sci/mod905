@@ -13,22 +13,15 @@ class System(object):
     """
     This class defines a generic system for simulation.
     """
-    def __init__(self, N=0, dim=0, r=None, v=None, f=None, p=None, units=None,
-                 forcefield=None, periodic=False, box=None, temperature=None):
+    def __init__(self, dim=0, units=None, periodic=False, box=None, 
+                 temperature=None):
         """ 
         Initialization of the system.
     
         Parameters
         ----------
         self : 
-        N : int, optional. Number of particles.
         dim : int optional. The dimensionality.
-        r : numpy.array, optional. The positions of the particles.
-        v : numpy.array, optional. The velocities of the particles.
-        f : numpy.array, optional. The forces on the particles.
-        p : list, optional. The id of the particles in a list.
-        forcefield : list, optional. The potential functions that consitute the 
-            force field. 
         periodic : boolean, optional. True = the system has periodic boundaries. 
         box : list, optional. System boundaries in the self.dim dimensions.
         temperature : float, optional. The temperature of the system.
@@ -38,28 +31,24 @@ class System(object):
         N/A, but sets derived variables:
         self.beta : float, inverse of (kB*T).
         """
-        self.N = N 
         self.dim = dim 
-        self.r = r 
-        self.v = v 
-        self.f = f 
-        if not p: 
-            self.p = []*N
-        else:
-            self.p = p
-        self.forcefield = forcefield
-        # Note for future: might consider making a
-        # particle object, but its very convenient
-        # for numpy to have d*N arrays with r, v, f, ... 
-        # rather than a list of particles to loop over
         self.periodic = periodic # use periodic boundaries?
         self.box = box # simulation box
-        self.v_pot = 0.0 # stores the potential energy of the system
         self.temperature = temperature
         if not self.temperature:
             self.beta = None
         else:
             self.beta = 1.0/(self.temperature*constants.kB[units])
+        # intialize other variables:
+        self.v_pot = 0.0 # stores the potential energy of the system
+        self.npart = 0
+        self.particles = {'r': None, 'v': None, 'f':None,
+                          'name': []}
+        self.forcefield = None
+        # Note for future: might consider making a
+        # particle object, but its very convenient
+        # for numpy to have d*N arrays with r, v, f, ... 
+        # rather than a list of particles to loop over
 
     def add_particle(self, r=None, v=None, f=None, name='?'):
         """ 
@@ -71,16 +60,16 @@ class System(object):
         r : numpy.array, optional. The positions of the particle.
         v : numpy.array, optional. The velocities of the particle.
         f : numpy.array, optional. The forces on the particle.
-        name : string, optional. The id of the particle.
+        name : string, optional. The name of the particle.
 
         Returns
         -------
         N/A, but increments self.N and updates
-        self.r, self.v, self.f and self.p
+        self.particles
 
         Note
         ----
-        If no arguments are given a particle with id='?' will be
+        If no arguments are given a particle with name='?' will be
         created.
         """
         if not r: 
@@ -89,38 +78,32 @@ class System(object):
             v = np.zeros(self.dim)
         if not f: 
             f = np.zeros(self.dim)
-        self.p.append(name)
-        if len(self.p)==1:
-            self.r = r
-            self.v = v
-            self.f = f
+        if self.npart == 0:
+            self.particles = {'r': r, 'v': v, 'f': f, 'name': [name]}
         else:
-            self.r = np.vstack([self.r, r])
-            self.v = np.vstack([self.v, v])
-            self.f = np.vstack([self.f, f])
-        self.N += 1
-    def evaluate_force(self, r=None):
+            self.particles['name'].append(name)
+            self.particles['r'] =  np.vstack([self.particles['r'], r])
+            self.particles['v'] =  np.vstack([self.particles['v'], v])
+            self.particles['f'] =  np.vstack([self.particles['f'], f])
+        self.npart += 1
+
+    def evaluate_force(self, **kwargs):
         """ 
         Evaluate the forces
     
         Parameters
         ----------
         self : 
-        r : numpy.array, optional. The positions of the particle.
-            If r is not given, self.r will be used.
 
         Returns
         -------
         The forces as a numpy.array
         """
-        if r is None:
-            return self.forcefield.evaluate_force(self.r)
-        else:
-            return self.forcefield.evaluate_force(r)
+        return self.forcefield.evaluate_force(self.particles, **kwargs)
 
     def force(self):
         """ 
-        Updates self.f by calling self.evaluate_force()
+        Updates the forces by calling self.evaluate_force()
     
         Parameters
         ----------
@@ -128,28 +111,27 @@ class System(object):
         
         Returns
         -------
-        N/A, but updates self.f
+        N/A, but updates self.forces
         """
-        self.f = self.evaluate_force()
+        self.particles['f'] = self.evaluate_force()
 
-    def evaluate_potential(self, r=None):
+    def evaluate_potential(self, **kwargs):
         """
-        Evaluate the potential energy
+        Evaluate the potential energy. Here we pick out what variables
+        we are going to pass on to the forcefield object.
     
         Parameters
         ----------
         self : 
-        r : numpy.array, optional. The positions of the particle.
-            If r is not given, self.r will be used.
-        
+
         Returns
         -------
         The scalar potential energy correspoding to the given r.
-        """   
-        if r is None:
-            return self.forcefield.evaluate_potential(self.r)
-        else:
-            return self.forcefield.evaluate_potential(r)
+        """
+        args = {}
+        args['r'] = kwargs.get('r',self.particles['r'])
+        args['name'] = kwargs.get('name',self.particles['name'])
+        return self.forcefield.evaluate_potential(**args)
 
     def potential(self):
         """ 
@@ -161,6 +143,6 @@ class System(object):
         
         Returns
         -------
-        N/A, but updates self.f
+        N/A, but updates self.v_pot
         """
         self.v_pot = self.evaluate_potential()

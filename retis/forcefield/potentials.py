@@ -26,7 +26,7 @@ class DoubleWell(PotentialFunction):
         N/A
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
-        self.set_parameters({'a': a, 'b': b, 'c': c})
+        self.params = {'a': a, 'b': b, 'c': c}
         self.a = a
         self.b = b
         self.c = c
@@ -84,8 +84,8 @@ class RectangularWell(PotentialFunction):
         N/A 
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
-        self.set_parameters({'left': left, 'right': right,
-                             'largenumber': largenumber})
+        self.params = {'left': left, 'right': right,
+                       'largenumber': largenumber}
         self.largenumber = largenumber
         #self.largenumber = float('inf') # possible to use this, NOTE FOR LATER
         self.left = left
@@ -105,8 +105,10 @@ class RectangularWell(PotentialFunction):
         -------
         N/A 
         """
+        self.set_parameters(**{'left': left, 'right': right})
         self.left = left
         self.right = right
+
     def potential(self, r):
         """ 
         Evaluate the potential. 

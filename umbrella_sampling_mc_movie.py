@@ -45,7 +45,7 @@ maxcycles = 1e4
 # and we define these tasks here by defining two functions:
 def record(system, traj_prop, ener_prop): 
     """Function to store positions and energy"""
-    for ri in system.r:
+    for ri in system.particles['r']:
         traj_prop.add(ri)
         ener_prop.add(system.v_pot)
 
@@ -58,9 +58,9 @@ def mc_task(system, maxdx):
     Function to perform monte carlo moves.
     Will update positions and potential energy as needed.
     """
-    r, v_pot, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
+    accepted_r, v_pot, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
     if status:
-        system.r = r
+        system.particles['r'] = accepted_r
         system.v_pot = v_trial
 
 trajectory, energy = [], [] # to store all the trajectories and energies
@@ -93,7 +93,7 @@ for i, umbrella in enumerate(umbrellas):
     trajectory.append(traj)
     energy.append(ener)
     print("Umbrella no: {}, cycles: {}".format(i+1, simulation.cycle), 
-          "Reached end point: {}".format(np.any(system.r > over))) 
+          "Reached end point: {}".format(np.any(system.particles['r'] > over))) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
@@ -109,7 +109,7 @@ from matplotlib import pyplot as plt
 x = histograms[0][2]
 xv = np.linspace(-2, 2, 1000)
 F = -np.log(hist_avg)/system.beta # free energy
-V = np.array([forcefield.evaluate_potential(xi) for xi in xv]) # unbiased potetnial
+V = np.array([forcefield.evaluate_potential(r=xi) for xi in xv]) # unbiased potetnial
 F += (V.min()-F.min())
 plt.plot(xv, V, 'b-', label='Unbiased potential')
 plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
