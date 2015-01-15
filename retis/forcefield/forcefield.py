@@ -4,6 +4,8 @@
 This file contains a class for a generic force field
 """
 
+__all__ = ['ForceField']
+
 class ForceField(object):
     """Generic force field object"""
 

@@ -5,6 +5,8 @@ This file contains a class for a generic potential function
 This class is subclassed in all potential functions
 """
 
+__all__ = []
+
 class PotentialFunction(object):
     """Generic potential function"""
     def __init__(self, dim=1, desc=""):

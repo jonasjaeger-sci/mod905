@@ -7,6 +7,8 @@ This file contains one-dimensional potentials
 import numpy as np
 from potential import PotentialFunction
 
+__all__ = ['DoubleWell', 'RectangularWell']
+
 class DoubleWell(PotentialFunction):
     """One dimensional double well potential"""
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):

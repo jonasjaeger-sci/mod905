@@ -6,6 +6,8 @@ This file contains methods for data analysis
 
 import numpy as np
 
+__all__ = ['histogram', 'match_all_histograms']
+
 def histogram(data, bins=10, limits=(-1,1)):
     """ 
     Function to create a histogram of the data stored
