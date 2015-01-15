@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -129,8 +128,8 @@ class System(object):
         The scalar potential energy correspoding to the given r.
         """
         args = {}
-        args['r'] = kwargs.get('r',self.particles['r'])
-        args['name'] = kwargs.get('name',self.particles['name'])
+        args['r'] = kwargs.get('r', self.particles['r'])
+        args['name'] = kwargs.get('name', self.particles['name'])
         return self.forcefield.evaluate_potential(**args)
 
     def potential(self):
