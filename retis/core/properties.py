@@ -7,7 +7,35 @@ import numpy as np
 __all__ = ["Property"]
 
 class Property(object):
-    """Generic property object"""
+    """
+    Property(object)
+
+    A generic object to store values obtained during a simulation. 
+    It will maintain the mean and variance as values are added using
+    Property.add(val)
+
+    Attributes
+    ----------
+    desc : string, description of the property.
+    n : integer, number values stored.
+    mean : float, the current mean.
+    delta2 : float, a helper variable used for calculating the variance.
+    variance : float, the current variance
+    val : list, used to store all values.
+
+    Parameters
+    ----------
+    desc : string, optional. Used to set the attribute desc.
+
+    Examples
+    --------
+    >>> from retis.core.properties import Property
+    >>> ener = Property(desc='Energy of the particle(s)')
+    >>> ener.add(42.0)
+    >>> ener.add(12.220)
+    >>> ener.add(99.22)
+    >>> ener.mean
+    """
     def __init__(self, desc=""):
         """ 
         Initialize the property. 
@@ -24,11 +52,11 @@ class Property(object):
         self.desc = desc
         self.n = 0 # number of times it has been evaluated
         self.mean = 0.0 # to store average
-        self.M2 = 0.0 # helper for variance
+        self.delta2 = 0.0 # helper for variance
         self.variance = 0.0
         self.val = [] # list to store *all* values
 
-    def add(self, v):
+    def add(self, val):
         """ 
         Adds a element/value to the property
         and updated the mean and variance.
@@ -36,14 +64,14 @@ class Property(object):
         Parameters
         ----------
         self : 
-        v : the value to add
+        val : the value to add
         
         Returns
         -------
         None, but updated the mean and variance
         """
         self.n += 1
-        self.val.append(v)
+        self.val.append(val)
         self.update_mean_and_variance()
 
     def update_mean_and_variance(self):
@@ -65,14 +93,14 @@ class Property(object):
         Consider if this should be moved/deleted and just
         replaced with a function from the analysis method.
         """
-        x = self.val[-1] # most recent value
-        delta = x-self.mean
+        val = self.val[-1] # most recent value
+        delta = val - self.mean
         self.mean += delta/float(self.n)
-        self.M2 += delta*(x-self.mean)
-        if (self.n<2):
+        self.delta2 += delta * (val - self.mean)
+        if (self.n < 2):
             self.variance = float('inf')
         else:
-            self.variance = self.M2/float(self.n-1)
+            self.variance = self.delta2/float(self.n - 1)
 
     def dump_to_file(self, filename):
         """ 
