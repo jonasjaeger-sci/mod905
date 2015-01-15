@@ -49,7 +49,7 @@ class System(object):
         # for numpy to have d*N arrays with r, v, f, ... 
         # rather than a list of particles to loop over
 
-    def add_particle(self, r=None, v=None, f=None, m=0.0, name='?'):
+    def add_particle(self, r=None, v=None, f=None, m=1.0, name='?'):
         """ 
         Adds a particle to the system.
     
