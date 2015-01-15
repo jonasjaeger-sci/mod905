@@ -41,7 +41,7 @@ class System(object):
         # intialize other variables:
         self.v_pot = 0.0 # stores the potential energy of the system
         self.npart = 0
-        self.particles = {'r': None, 'v': None, 'f':None,
+        self.particles = {'r': None, 'v': None, 'f':None, 'm':None, 'minv':None,
                           'name': []}
         self.forcefield = None
         # Note for future: might consider making a
@@ -49,7 +49,7 @@ class System(object):
         # for numpy to have d*N arrays with r, v, f, ... 
         # rather than a list of particles to loop over
 
-    def add_particle(self, r=None, v=None, f=None, name='?'):
+    def add_particle(self, r=None, v=None, f=None, m=0.0, name='?'):
         """ 
         Adds a particle to the system.
     
@@ -59,6 +59,7 @@ class System(object):
         r : numpy.array, optional. The positions of the particle.
         v : numpy.array, optional. The velocities of the particle.
         f : numpy.array, optional. The forces on the particle.
+        m : float, optional. The mass of the particle
         name : string, optional. The name of the particle.
 
         Returns
@@ -78,12 +79,15 @@ class System(object):
         if not f: 
             f = np.zeros(self.dim)
         if self.npart == 0:
-            self.particles = {'r': r, 'v': v, 'f': f, 'name': [name]}
+            self.particles = {'r':r, 'v':v, 'f':f, 'm':np.array([m]),
+                              'minv':np.array([1.0/m]), 'name':[name]}
         else:
             self.particles['name'].append(name)
             self.particles['r'] =  np.vstack([self.particles['r'], r])
             self.particles['v'] =  np.vstack([self.particles['v'], v])
             self.particles['f'] =  np.vstack([self.particles['f'], f])
+            self.particles['m'] =  np.append(self.particles['m'], m)
+            self.particles['minv'] = np.append(self.particles['minv'], 1.0/m)
         self.npart += 1
 
     def evaluate_force(self, **kwargs):
