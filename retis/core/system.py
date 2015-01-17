@@ -34,7 +34,7 @@ class System(object):
         self.periodic = periodic # use periodic boundaries?
         self.box = box # simulation box
         self.temperature = temperature
-        if not self.temperature:
+        if self.temperature is None:
             self.beta = None
         else:
             self.beta = 1.0/(self.temperature*constants.kB[units])
@@ -72,11 +72,11 @@ class System(object):
         If no arguments are given a particle with name='?' will be
         created.
         """
-        if not r: 
+        if r is None: 
             r = np.zeros(self.dim)
-        if not v: 
+        if v is None: 
             v = np.zeros(self.dim)
-        if not f: 
+        if f is None: 
             f = np.zeros(self.dim)
         if self.npart == 0:
             self.particles = {'r':r, 'v':v, 'f':f, 'm':np.array([m]),
