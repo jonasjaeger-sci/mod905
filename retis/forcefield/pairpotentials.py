@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file contains different pair potentials potentials
+This file contains different pair potentials 
 """
 
 import numpy as np
