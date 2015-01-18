@@ -8,4 +8,5 @@ from .simulation import *
 from .system import *
 from .properties import *
 from .montecarlo import *
+from .box import *
 
