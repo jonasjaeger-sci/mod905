@@ -8,7 +8,15 @@ import numpy as np
 __all__ = ["Simulation", "UmbrellaSimulation"]
 
 class Simulation(object):
-    """This class defines the simulation."""
+    """
+    This class defines a generic simulation.
+    
+    Attributes
+    ----------
+    cycle : int, the current cycle number for the simulation.
+    maxcycle : int, maximum number of cycles to perform.
+    """
+
     def __init__(self, cycle=0, maxcycle=0):
         """ 
         Initialization of the system.
@@ -34,7 +42,6 @@ class Simulation(object):
         Parameters
         ----------
         self : 
-        system : the system object, optional.
 
         Returns
         -------
@@ -73,9 +80,20 @@ class Simulation(object):
 
 
 class UmbrellaSimulation(Simulation):
-    """This is a special case of the simulation class with settings
-    to help set up a umbrella simulation.
     """
+    This class defines a Umbrella simulation which is a special case of 
+    the simulation class with settings to simplify the 
+    execution of the umbrella simulation.
+
+    Attributes
+    ----------
+    umbrella : list = [float, float], umbrella window.
+    overlap : float, the positions that must be crossed before
+        the simulation is done.
+    cycle : int, the current simulation cycle.
+    maxcycle : int, the MINIMUM number of cycles to perform.
+    """
+
     def __init__(self, umbrella, overlap, cycle=0, maxcycle=0):
         """ 
         Initialization of a umbrella simulation.
@@ -101,6 +119,7 @@ class UmbrellaSimulation(Simulation):
                                                  maxcycle=maxcycle)
         self.umbrella = umbrella
         self.overlap = overlap
+
     def simulation_finished(self, system):
         """
         Check if simulation is done. 
@@ -113,9 +132,9 @@ class UmbrellaSimulation(Simulation):
         ----------
         self :
         system : the system object we are acting on.
-    
         """
+
         return (self.cycle>self.maxcycle and
-                np.all(system.particles['r']>self.overlap))
+                np.all(system.particles.pos > self.overlap))
         
 

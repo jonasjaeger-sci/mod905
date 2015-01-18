@@ -5,14 +5,36 @@ system.py
 """
 import constants
 import numpy as np
+from particlelist import Particles
+
 
 __all__ = ['System']
 
 class System(object):
     """
     This class defines a generic system for simulation.
+    
+    Attributes
+    ----------
+    dim : int, dimensionality
+    periodic : bool, should we use periodic boundaries or not?
+    box : list, defines the simulation box
+    temperature : float, defines the set temperature
+    beta : float, defines the boltzmann factor
+    v_pot : float,  the potential energy of the system
+    particles : obj from particleslist which represents the 
+        particles and the properties of the particles (positions, 
+        velocities, forces etc.)
+    forcefield : ForceField object which defines the force field to
+        use.
+    units : string, units to use in for the system
+
+    Note
+    ----
+    It might be more clean to lump the dim variable, the periodic variable
+    and the box variable into a box-object.
     """
-    def __init__(self, dim=0, units=None, periodic=False, box=None, 
+    def __init__(self, dim=0, units='eV/K', periodic=False, box=None, 
                  temperature=None):
         """ 
         Initialization of the system.
@@ -40,55 +62,41 @@ class System(object):
             self.beta = 1.0/(self.temperature*constants.kB[units])
         # intialize other variables:
         self.v_pot = 0.0 # stores the potential energy of the system
-        self.npart = 0
-        self.particles = {'r': None, 'v': None, 'f':None, 'm':None, 'minv':None,
-                          'name': []}
+        self.particles = Particles() # empty particle list
         self.forcefield = None
-        # Note for future: might consider making a
-        # particle object, but its very convenient
-        # for numpy to have d*N arrays with r, v, f, ... 
-        # rather than a list of particles to loop over
 
-    def add_particle(self, r=None, v=None, f=None, m=1.0, name='?'):
+    def add_particle(self, pos=None, vel=None, force=None, 
+                     mass=1.0, name='?', ptype='?'):
         """ 
         Adds a particle to the system.
     
         Parameters
         ----------
         self : 
-        r : numpy.array, optional. The positions of the particle.
-        v : numpy.array, optional. The velocities of the particle.
-        f : numpy.array, optional. The forces on the particle.
-        m : float, optional. The mass of the particle
-        name : string, optional. The name of the particle.
+        pos : numpy.array, optional. Positions of the particle.
+        vel : numpy.array, optional. Velocities of the particle.
+        force : numpy.array, optional. Forces on the particle.
+        mass : float, optional. Mass of the particle
+        name : string, optional. Name of the particle.
+        ptype : string, optional. Particle type.
 
         Returns
         -------
-        N/A, but increments self.N and updates
-        self.particles
+        N/A, updates self.particles
 
         Note
         ----
         If no arguments are given a particle with name='?' will be
         created.
         """
-        if r is None: 
-            r = np.zeros(self.dim)
-        if v is None: 
-            v = np.zeros(self.dim)
-        if f is None: 
-            f = np.zeros(self.dim)
-        if self.npart == 0:
-            self.particles = {'r':r, 'v':v, 'f':f, 'm':np.array([m]),
-                              'minv':np.array([1.0/m]), 'name':[name]}
-        else:
-            self.particles['name'].append(name)
-            self.particles['r'] =  np.vstack([self.particles['r'], r])
-            self.particles['v'] =  np.vstack([self.particles['v'], v])
-            self.particles['f'] =  np.vstack([self.particles['f'], f])
-            self.particles['m'] =  np.append(self.particles['m'], m)
-            self.particles['minv'] = np.append(self.particles['minv'], 1.0/m)
-        self.npart += 1
+        if pos is None: 
+            pos = np.zeros(self.dim)
+        if vel is None: 
+            vel = np.zeros(self.dim)
+        if force is None: 
+            force = np.zeros(self.dim)
+        self.particles.add_particle(pos, vel, force, mass=mass,
+                                    name=name, ptype=ptype)
 
     def evaluate_force(self, **kwargs):
         """ 
@@ -102,7 +110,11 @@ class System(object):
         -------
         The forces as a numpy.array
         """
-        return self.forcefield.evaluate_force(self.particles, **kwargs)
+        args = {}
+        args['pos'] = kwargs.get('pos', self.particles.pos)
+        args['name'] = kwargs.get('name', self.particles.name)
+        args['ptype'] = kwargs.get('ptype', self.particles.ptype)
+        return self.forcefield.evaluate_force(**args)
 
     def force(self):
         """ 
@@ -116,7 +128,7 @@ class System(object):
         -------
         N/A, but updates self.forces
         """
-        self.particles['f'] = self.evaluate_force()
+        self.particles.force = self.evaluate_force()
 
     def evaluate_potential(self, **kwargs):
         """
@@ -132,8 +144,9 @@ class System(object):
         The scalar potential energy correspoding to the given r.
         """
         args = {}
-        args['r'] = kwargs.get('r', self.particles['r'])
-        args['name'] = kwargs.get('name', self.particles['name'])
+        args['pos'] = kwargs.get('pos', self.particles.pos)
+        args['name'] = kwargs.get('name', self.particles.name)
+        args['ptype'] = kwargs.get('ptype', self.particles.ptype)
         return self.forcefield.evaluate_potential(**args)
 
     def potential(self):

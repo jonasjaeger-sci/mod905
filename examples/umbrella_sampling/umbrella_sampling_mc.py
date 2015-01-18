@@ -16,7 +16,7 @@ import numpy as np
 # We begin by defining the system we will simulate.
 system = System(dim=1, temperature=500, units='eV/K') 
 # Lets add a particle to this system
-system.add_particle(name='X1', r=np.array([-0.7]))
+system.add_particle(name='X1', pos=np.array([-0.7]))
 # We also need to set up the force field.
 # We do this by combining two potential functions:
 # 1) A double well potential
@@ -52,7 +52,7 @@ def mc_task(system, maxdx):
     """
     accepted_r, v_pot, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
     if status:
-        system.particles['r'] = accepted_r
+        system.particles.pos = accepted_r
         system.v_pot = v_trial
 
 # and we need to record the positions for later analysis:  
@@ -62,7 +62,7 @@ def record(system, traj_prop, ener_prop):
     Here, in case we use more than one particle, we will
     simply replicate the energy of the system correspondingly.
     """
-    for ri in system.particles['r']:
+    for ri in system.particles.pos:
         traj_prop.add(ri)
         ener_prop.add(system.v_pot)
 
@@ -94,7 +94,7 @@ for i, umbrella in enumerate(umbrellas):
     trajectory.append(traj)
     energy.append(ener)
     print("Done. Cycles: {}. Reached end point: {}".format(simulation.cycle,
-          np.all(system.particles['r'] > over))) 
+          np.all(system.particles.pos > over))) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
@@ -112,7 +112,7 @@ from matplotlib import pyplot as plt
 x = histograms[0][2]
 xv = np.linspace(-2, 2, 1000)
 F = -np.log(hist_avg)/system.beta # free energy
-V = np.array([forcefield.evaluate_potential(r=xi) for xi in xv]) # unbiased potetnial
+V = np.array([forcefield.evaluate_potential(pos=xi) for xi in xv]) # unbiased potetnial
 F += (V.min()-F.min())
 plt.plot(xv, V, 'b-', label='Unbiased potential')
 plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
