@@ -114,6 +114,36 @@ class Particles(object):
                     'name': self.name[i], 'type': self.ptype[i]}
             yield part
 
+    def kinetic_energy(self):
+        """
+        This method returns the kinetic energy of the particles.
+        
+        Parameters
+        ----------
+        self : 
+
+        Returns
+        -------
+        A float with the kinetic energy of the particles.
+        """
+        kinetic = 0.5*np.sum(self.vel*self.vel*self.mass)
+        return kinetic
+
+    def get_kinetic_temperature(self):
+        """
+        This method returns the kinetic temperature of the 
+        particles.
+
+        Parameters
+        ----------
+        self : 
+        
+        Returns
+        -------
+        A float with the current kinetic temperature.
+        """
+        return 2.0*self.kinetic_energy()/(3.0*self.npart)
+
     def pairs(self):
         """ 
         This is a function to iterate over all pairs of particles.
