@@ -72,10 +72,12 @@ trajectory, energy = [], [] # to store all  trajectories/energies
 # the different umbrellas we defined:
 for i, umbrella in enumerate(umbrellas):
     print("Running umbrealla no: {} ({})".format(i, umbrella))
-    potential_rw.update_left_right(*umbrella) # update bias location
+    # Update parameters for the rectangular potential:
+    params = {'left': umbrella[0], 'right': umbrella[1]}
+    system.forcefield.update_potential_parameters(potential_rw, **params)
     system.potential() # recalculate potential energy
     over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
-    # Initial the umbrella simulation:
+    # Initiate the umbrella simulation:
     simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
                                     maxcycle=maxcycles)
     # Also create properties for storing data:
