@@ -119,26 +119,19 @@ class RectangularWell(PotentialFunction):
                        'largenumber': {'value':self.largenumber, 
                               'desc': 'Potential value outside boundaries'}}
 
-    def update_left_right(self, left, right):
+    def check_parameters(self):
         """ 
-        Updates the boundaries.
-        
-        Parameters
-        ---------- 
-        left : float. The left boundary of the potential.
-        right : float. The right boundary of the potential.
+        Function to check the consistensy of the parameters.
         
         Returns
         -------
-        N/A 
+        N/A, but might raise a warning. 
         """
-        if left >= right:
+
+        if self.left >= self.right:
             msg = "Setting left >= right in RectangularWell potential!"
             warnings.warn(msg)
-        self.params['left']['value'] = left
-        self.params['right']['value'] = right
-        self.left = left
-        self.right = right
+        
 
     def potential(self, pos):
         """ 
