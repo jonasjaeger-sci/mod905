@@ -2,6 +2,7 @@
 """
 This file contains a class for a generic force field
 """
+import warnings
 
 __all__ = ['ForceField']
 
