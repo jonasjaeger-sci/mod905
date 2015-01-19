@@ -4,6 +4,9 @@ This file contains a class for a generic potential function
 This class is subclassed in all potential functions
 """
 
+import warnings
+
+
 __all__ = []
 
 class PotentialFunction(object):
@@ -37,6 +40,21 @@ class PotentialFunction(object):
         self.dim = dim # dimensionality
         self.desc = desc
         self.params = {}
+
+    def update_parameters(self, **params):
+        """
+        Updates the parameters for the potential
+    
+        Parameters
+        ----------
+        params : dictionary with the parameters to update
+        """
+        for param in params:
+            if hasattr(self, param):
+                setattr(self, param, params[param])
+            else:
+                msg = 'Ignoring unknown parameter {}'.format(param)
+                warnings.warn(msg)
 
     def get_parameters(self):
         """ 
