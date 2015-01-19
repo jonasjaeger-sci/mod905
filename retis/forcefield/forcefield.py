@@ -26,7 +26,10 @@ class ForceField(object):
         """
         self.dim = dim # dimensionality
         self.desc = desc
-        self.potential = potential
+        if type(potential)==type([]) or (potential is None):
+            self.potential = potential
+        else:
+            self.potential = [potential]
         
     def update_potential_parameters(self, potential, **params):
         """
