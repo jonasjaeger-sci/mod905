@@ -14,7 +14,6 @@ class ForceField(object):
     
         Parameters
         ----------
-        self : 
         dim : int, optional. Represents the dimensionality.
         desc : string, optional. Description of the force field.
         potential : list, optional. Potential functions that the force
@@ -34,7 +33,6 @@ class ForceField(object):
     
         Parameters
         ----------
-        self : 
         kwargs : dictionary of variables needed to evaluate the forces.
             Typically this is the positions and the particle names.
 
@@ -63,7 +61,6 @@ class ForceField(object):
     
         Parameters
         ----------
-        self :
         kwargs : dictionary of variables needed to evaluate the potential.
             Typically this is the positions and the particle names.
 
@@ -97,14 +94,11 @@ class ForceField(object):
         """ 
         A string representation of the force field. 
         It it returns the string descriptions of the potential functions.
-    
-        Parameters
-        ----------
-        self : 
 
         Returns
         -------
-        String with description of force field.
+        String with description of force field and the potential
+        functions included in the force field.
         """
         pots = "\n *".join([ff.desc for ff in self.potential])
         force = "Force field: {}".format(self.desc)

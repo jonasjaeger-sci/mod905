@@ -28,7 +28,6 @@ class DoubleWell(PotentialFunction):
         
         Parameters
         ---------- 
-        self : 
         a : float, optional. 
         b : float, optional. 
         c : float, optional. 
@@ -54,7 +53,6 @@ class DoubleWell(PotentialFunction):
         
         Parameters
         ---------- 
-        self : 
         pos : numpy.array, the position(s).
         
         Returns
@@ -70,7 +68,6 @@ class DoubleWell(PotentialFunction):
         
         Parameters
         ---------- 
-        self : 
         pos : the position.
         
         Returns
@@ -100,7 +97,6 @@ class RectangularWell(PotentialFunction):
     
         Parameters
         ----------
-        self : 
         left : float, optional. The left boundary of the potential.
         right : float, optional. The right boundary of the potential.
         largenumber : float, optional. The value of the potential outside 
@@ -129,7 +125,6 @@ class RectangularWell(PotentialFunction):
         
         Parameters
         ---------- 
-        self : 
         left : float. The left boundary of the potential.
         right : float. The right boundary of the potential.
         
@@ -151,7 +146,6 @@ class RectangularWell(PotentialFunction):
         
         Parameters
         ---------- 
-        self : 
         pos : the position.
         
         Returns

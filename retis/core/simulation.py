@@ -23,7 +23,6 @@ class Simulation(object):
     
         Parameters
         ----------
-        self : 
         cycle : int, optional. The current cycle
         maxcycle : int, optional. Maximum number of cycles to perform
 
@@ -39,10 +38,6 @@ class Simulation(object):
         """
         Function to determine if simulation is finished
 
-        Parameters
-        ----------
-        self : 
-
         Returns
         -------
         True if simulation is finished, false otherwise.
@@ -54,13 +49,9 @@ class Simulation(object):
         Run a simulation step. Here, the tasks in self.task
         will be executed.
     
-        Parameters
-        ----------
-        self : 
-
         Returns
         -------
-        N/A, but my modify the system and other external variabales.
+        N/A, but may modify the system and other external variabales.
 
         Note
         ----
@@ -100,7 +91,6 @@ class UmbrellaSimulation(Simulation):
     
         Parameters
         ----------
-        self : 
         umbrella : list = [float, float]. The umbrella window to consider.
         overlap : float, the position we have to cross before the simulation
             is done.
@@ -130,7 +120,6 @@ class UmbrellaSimulation(Simulation):
 
         Parameters
         ----------
-        self :
         system : the system object we are acting on.
         """
 

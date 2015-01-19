@@ -20,13 +20,13 @@ class PotentialFunction(object):
         for convenience in case other methods/classes wants to know all
         the parameters of the potential.
     """
+
     def __init__(self, dim=1, desc=""):
         """ 
         Initiates the potential
     
         Parameters
         ----------
-        self : 
         dim : int, optional. Represents the dimensionality.
         desc : string, optional. Description of the force field.
 
@@ -63,10 +63,6 @@ class PotentialFunction(object):
         """
         Return the string description of the potential. 
     
-        Parameters
-        ----------
-        self : 
-
         Returns
         -------
         self.desc

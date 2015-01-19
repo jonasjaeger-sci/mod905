@@ -35,15 +35,8 @@ class Particles(object):
     """
     def __init__(self):
         """ 
-        Initialize the Particle list
-
-        Parameters
-        ----------
-        self : 
-        
-        Returns
-        -------
-        N/A
+        Initialize the Particle list. Here we dictate the the particle list
+        is created with zero particles.
         """
         self.npart = 0
         self.pos = None
@@ -62,7 +55,6 @@ class Particles(object):
     
         Parameters
         ----------
-        self : 
         pos : numpy.array, positions of new particle
         vel :  numpy.array, velocities of new particle
         force : numpy.array, forces of new particle.
@@ -100,10 +92,6 @@ class Particles(object):
         This function will yield the properties of the different
         particles.
     
-        Parameters
-        ----------
-        self : 
-        
         Returns
         -------
         yields the information in self.pos, self.vel, ... etc.
@@ -116,12 +104,8 @@ class Particles(object):
 
     def kinetic_energy(self):
         """
-        This method returns the kinetic energy of the particles.
+        This method returns the kinetic energy of the particles in the list.
         
-        Parameters
-        ----------
-        self : 
-
         Returns
         -------
         A float with the kinetic energy of the particles.
@@ -132,12 +116,8 @@ class Particles(object):
     def get_kinetic_temperature(self):
         """
         This method returns the kinetic temperature of the 
-        particles.
+        particles in the list by making use of self.kinetic_energy()
 
-        Parameters
-        ----------
-        self : 
-        
         Returns
         -------
         A float with the current kinetic temperature.
@@ -151,9 +131,6 @@ class Particles(object):
         speed up can be harvested. The current list will iterate
         over all paris.
     
-        Parameters
-        ----------
-        self : 
         
         Returns
         -------

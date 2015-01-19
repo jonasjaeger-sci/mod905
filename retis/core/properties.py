@@ -42,7 +42,6 @@ class Property(object):
 
         Parameters
         ----------
-        self : 
         desc : optional text description of the object
         
         Returns
@@ -63,7 +62,6 @@ class Property(object):
 
         Parameters
         ----------
-        self : 
         val : the value to add
         
         Returns
@@ -79,10 +77,6 @@ class Property(object):
         Calculates the mean and variance on the fly.
         Source:
         http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-
-        Parameters
-        ----------
-        self : 
 
         Returns
         -------
@@ -108,7 +102,6 @@ class Property(object):
 
         Parameters
         ----------
-        self : 
         filename : name/path of file to write.
 
         Returns
@@ -124,5 +117,6 @@ class Property(object):
         np.savetxt(filename, self.val)
 
     def __str__(self):
+        """Simply return the string description of the property"""
         return self.desc
 

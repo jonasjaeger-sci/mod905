@@ -38,7 +38,6 @@ class System(object):
     
         Parameters
         ----------
-        self : 
         dim : number of dimensions to consider in this simulation
         box : list, optional. System boundaries in the self.dim dimensions.
         temperature : float, optional. The temperature of the system.
@@ -65,7 +64,6 @@ class System(object):
         
         Parameters
         ----------
-        self :
         temperature : float, optional, the temperature of the system.
         
         Returns
@@ -85,7 +83,6 @@ class System(object):
     
         Parameters
         ----------
-        self : 
         pos : numpy.array, optional. Positions of the particle.
         vel : numpy.array, optional. Velocities of the particle.
         force : numpy.array, optional. Forces on the particle.
@@ -117,7 +114,10 @@ class System(object):
     
         Parameters
         ----------
-        self : 
+        kwargs : dictionary with settings that can be used to override
+            the information in self.particles. This is useful if one
+            wants to evaluate the forces for a different configuration
+            of the particles.
 
         Returns
         -------
@@ -132,10 +132,6 @@ class System(object):
     def force(self):
         """ 
         Updates the forces by calling self.evaluate_force()
-    
-        Parameters
-        ----------
-        self : 
         
         Returns
         -------
@@ -150,7 +146,10 @@ class System(object):
     
         Parameters
         ----------
-        self : 
+        kwargs : dictionary with settings that can be used to override
+            the information in self.particles. This is useful if one
+            wants to evaluate the potential for a different configuration
+            of the particles.
 
         Returns
         -------
@@ -166,10 +165,6 @@ class System(object):
         """ 
         Updates self.v_pot by calling self.evaluate_potential()
     
-        Parameters
-        ----------
-        self : 
-        
         Returns
         -------
         N/A, but updates self.v_pot
