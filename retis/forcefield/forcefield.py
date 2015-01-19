@@ -26,6 +26,22 @@ class ForceField(object):
         self.dim = dim # dimensionality
         self.desc = desc
         self.potential = potential
+        
+    def update_potential_parameters(self, potential, **params):
+        """
+        This method will update the potential parameters of the
+        given potential function.
+
+        Returns
+        -------
+        N/A, but will update parameters of the selected potential!
+        """
+        if potential in self.potential:
+            potential.update_parameters(**params)
+        else:
+            warnings.warn('Unknow potential')
+            
+            
 
     def evaluate_force(self, **kwargs):
         """ 
