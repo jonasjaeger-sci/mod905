@@ -41,6 +41,14 @@ class PotentialFunction(object):
         self.desc = desc
         self.params = {}
 
+    def check_parameters(self):
+        """
+        This function is check on the consistency of
+        the parameters. This can be implemented for the
+        different potential functions.
+        """
+        pass
+
     def update_parameters(self, **params):
         """
         Updates the parameters for the potential
@@ -51,10 +59,13 @@ class PotentialFunction(object):
         """
         for param in params:
             if hasattr(self, param):
-                setattr(self, param, params[param])
+                value = params[param]
+                setattr(self, param, value)
+                self.params[param]['value'] = value
             else:
                 msg = 'Ignoring unknown parameter {}'.format(param)
                 warnings.warn(msg)
+        self.check_parameters()
 
     def get_parameters(self):
         """ 
