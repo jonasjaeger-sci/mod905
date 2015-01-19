@@ -146,6 +146,32 @@ class Box(object):
         return pbcpos
     
 
+    def pbc_dist(self, distance):
+        """
+        This method applies periodic boundaries to a distance
+        matrix/vector
+        
+        Parameters
+        ----------
+        distance : numpy.array, the distance vectors
+    
+        Returns
+        -------
+        The pbc-wrapped distances
+        """
+        pbcdist = np.zeros(distance.shape)
+        for i, periodic in enumerate(self.periodic):
+            if periodic:
+                dist = distance[:,i]
+                length = self.length[i]
+                bhi = 0.5*length
+                delta = np.where(np.abs(dist)>0.5*length, 
+                             dist-np.rint(dist/length)*length, dist)
+                pbcdist[:,i] = delta   
+            else:
+                pbcdist[:,i] = distance[:,i]
+        return pbcdist
+
     def __str__(self):
         """
         This method returns a string describing the box
