@@ -17,14 +17,16 @@ class Box(object):
         dimension i
     length : list, length[i] = length of box in dimension i, equals
         boundary[i][1] - boundary[i][0]
+    periodic : list, periodic[i] = True if periodic boundaries are to be
+        used in dimension i, False otherwise.
     """
+
     def __init__(self, size, periodic=None):
         """
         Initialize the box
         
         Parameters
         ----------
-        self : 
         size : list with the size of the box, can be given as 
             size[i] = length_i which defines the box-length in
             dimension i, the box will the be assumed to have 
@@ -32,7 +34,7 @@ class Box(object):
             can be defined explicitly: size[i] = [low, high]
         periodic : optional list, periodic[i] is True if periodic 
             boundaries will be applied in dimension i. Default
-            is true for each dimension in size
+            is True for each dimension in size.
         """
         self.length = []
         self.periodic = []
@@ -65,24 +67,61 @@ class Box(object):
         self.high = np.array(self.high)
 
 
+    def calculate_volume(self):
+        """
+        Calculates the volume of the box. 
+        
+        Returns
+        -------
+        The volume of the box.
+        """
+        volume = None
+        for length in self.length:
+            if volume is None:
+                volume = length
+            else:
+                volume *= length
+        return volume
+
+    def pbc_coordinate2(self, x, dim):
+        while x<self.low[dim]:
+            x = x + self.length[dim]
+        while x>self.high[dim]:
+            x = x - self.length[dim]
+        return x
+
+    def pbc_slow2(self, allpos):
+        dpos = np.zeros(allpos.shape)
+        for i, periodic in enumerate(self.periodic):
+            if periodic:
+                coord = [self.pbc_coordinate2(x, i) for x in allpos[:,i]]
+                dpos[:,i] = np.array(coord)
+            else:
+                dpos[:,i] = np.array([x for x in allpos[:,i]])
+        return dpos
+
+    def pbc_coordinate(self, x, low, high, length):
+        if x < low or x > high:
+            return x - np.floor(x/length)*length
+        else:
+            return x
+
     def pbc_slow(self, allpos):
-        dpos = []
-        for pos in allpos:
-            npos = []
-            for i, posi in enumerate(pos):
-                if self.periodic[i]:
-                    rpos = posi - self.low[i]
-                    if rpos < 0.0 or rpos > self.length[i]:
-                        rpos = rpos - np.floor(rpos / self.length[i]) * self.length[i]
-                    rpos += self.low[i]
-                    npos.append(rpos)
-                else:
-                    npos.append(posi)
-            dpos.append(npos)
-        return np.array(dpos)
+        dpos = np.zeros(allpos.shape)
+        for i, periodic in enumerate(self.periodic):
+            if periodic:
+                low = self.low[i]
+                high = self.high[i]
+                length = self.length[i]
+                pos = [self.pbc_coordinate(xi, low, high, length) for xi in allpos[:,i]]
+                dpos[:,i] = np.array(pos)
+            else:
+                dpos[:,i] = allpos[:,i]
+        return dpos
+
     def pbc_wrap(self, pos):
         """
-        This method applied periodic boundaries to the 
+        This method applies periodic boundaries to the 
         given position
 
         Paramters
@@ -95,17 +134,27 @@ class Box(object):
         """
         pbcpos = np.zeros(pos.shape)
         for i, periodic in enumerate(self.periodic):
-            if not periodic:
-                continue
-            low = self.low[i]
-            length = self.length[i]
-            relpos = pos[:,i] - low
-            delta = np.where(np.logical_or(relpos < 0.0, relpos>length), relpos-np.floor(relpos/length)*length, relpos)
-            pbcpos[:,i] = delta + low
+            if periodic:
+                low = self.low[i]
+                length = self.length[i]
+                relpos = pos[:,i] - low
+                delta = np.where(np.logical_or(relpos < 0.0, relpos>length), 
+                             relpos-np.floor(relpos/length)*length, relpos)
+                pbcpos[:,i] = delta + low
+            else:
+                pbcpos[:,i] = pos[:,i]
         return pbcpos
     
 
     def __str__(self):
+        """
+        This method returns a string describing the box
+        
+        Returns
+        -------
+        String with type of box, extent of the box and
+        information about the periodicity.
+        """
         boxstr = ["Simple rectangular cuboid box:"]
         for i, periodic in enumerate(self.periodic):
             low = self.low[i]
