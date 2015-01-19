@@ -14,45 +14,38 @@ from retis.forcefield.potentials import DoubleWell, RectangularWell
 import numpy as np 
 
 # Let's set up the simulation.
-# We begin by defining the system we will simulation "on":
+# We begin by defining the system we will simulate.
 system = System(dim=1, temperature=500, units='eV/K') 
 # Lets add a particle to this system
 system.add_particle(name='X1', r=np.array([-0.7]))
 # We also need to set up the force field.
-# We do this by combining potential functions.
-# Here, we select two pre-defined potential functions,
-# a duoble well potential and a rectangular well potential.
-# The rectangular well will be used as a bias potential.
+# We do this by combining two potential functions:
+# 1) A double well potential
 potential_dw = DoubleWell(a=1, b=1, c=0.02)
+# 2) A rectangular well
 potential_rw = RectangularWell()
 forcefield = ForceField(desc='Double well', potential=[potential_dw])
+
 forcefield_bias = ForceField(desc='Double well with rectangular bias',
                              potential=[potential_dw, potential_rw])
 
-system.forcefield = forcefield_bias # attach force field to the system
+system.forcefield = forcefield_bias # attach biased force field to the system
 
 # Now we need to define the simulation. Here we define several
 # small umbrella simulations, which we will link together with this script.
-# We select the placement of the umbrellas
+# We select the placement of the umbrellas:
 umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], 
              [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
-# and just define some parameters for the simulation:
+n_umb = len(umbrellas)
+# and just define some parameters for the simulation
 maxcycles = 1e4
-# Next, we will define the logic for the umbrella 
-# simulation. A simulation object will have certain
-# tasks to do, which may be dynamically changed.
-# Here, all the umbrella simulations will do the same task,
-# and we define these tasks here by defining two functions:
-def record(system, traj_prop, ener_prop): 
-    """Function to store positions and energy"""
-    for ri in system.particles['r']:
-        traj_prop.add(ri)
-        ener_prop.add(system.v_pot)
-
-randseed = 1 # set seed for random number generator
+randseed = 1 # seed for random number generator:
 mc.seed_random_generator(randseed)
 maxdx = 0.1 # maximum allowed displacement
 
+# Next, we will define some tasks we want
+# do to during the simulation. 
+# We need to perform the actual umbrella sampling
 def mc_task(system, maxdx):
     """
     Function to perform monte carlo moves.
@@ -63,37 +56,46 @@ def mc_task(system, maxdx):
         system.particles['r'] = accepted_r
         system.v_pot = v_trial
 
-trajectory, energy = [], [] # to store all the trajectories and energies
-# we run all the umbrella simulations by looping over the different
-# umbrellas we defined:
+# and we need to record the positions for later analysis:  
+def record(system, traj_prop, ener_prop): 
+    """
+    Function to store positions and energy
+    Here, in case we use more than one particle, we will
+    simply replicate the energy of the system correspondingly.
+    """
+    for ri in system.particles['r']:
+        traj_prop.add(ri)
+        ener_prop.add(system.v_pot)
+
+
+trajectory, energy = [], [] # to store all  trajectories/energies
+# we run all the umbrella simulations by looping over 
+# the different umbrellas we defined:
 for i, umbrella in enumerate(umbrellas):
-    # we need to update the position of the bias potential and recalculate:
-    potential_rw.update_left_right(*umbrella) 
-    system.potential()
-    # this defines the point we must cross in the simulation:
-    if (i+1)==len(umbrellas):
-        over = umbrellas[i][0]
-    else:
-        over = umbrellas[i+1][0]
-    # Now, we can define the actual simulation:
+    print("Running umbrealla no: {} ({})".format(i, umbrella))
+    potential_rw.update_left_right(*umbrella) # update bias location
+    system.potential() # recalculate potential energy
+    over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
+    # Initial the umbrella simulation:
     simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
                                     maxcycle=maxcycles)
     # Also create properties for storing data:
-    traj = Property(desc='Position of the particle')
-    ener = Property(desc='Energy of the particle')
+    traj = Property(desc='Position of the particle(s)')
+    ener = Property(desc='Energy of the particle(s)')
     # let us add the two task we defined previously:
     task1 = {'func':mc_task, 'args':[system],
                'kwargs':{'maxdx':maxdx}}
     task2 = {'func':record, 'args':[system, traj, ener], 'kwargs':{}}
     simulation.task = [task1, task2]
+
     while not simulation.simulation_finished(system):
         simulation.step()
     traj.val = np.array(traj.val)
-    traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
+    #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(traj)
     energy.append(ener)
-    print("Umbrella no: {}, cycles: {}".format(i+1, simulation.cycle), 
-          "Reached end point: {}".format(np.any(system.particles['r'] > over))) 
+    print("Done. Cycles: {}. Reached end point: {}".format(simulation.cycle,
+          np.all(system.particles['r'] > over))) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
@@ -104,7 +106,9 @@ histograms = [histogram(traj.val, bins=bins,
                         limits=limits) for traj in trajectory]
 # We are going to match these histograms:
 histograms_s, _, hist_avg = match_all_histograms(histograms, umbrellas)
-# let's also do some very simple plotting
+
+# let's also create a simple plot of the
+# potential and the free energy.
 from matplotlib import pyplot as plt
 x = histograms[0][2]
 xv = np.linspace(-2, 2, 1000)
