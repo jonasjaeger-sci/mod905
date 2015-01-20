@@ -110,6 +110,12 @@ class Particles(object):
         -------
         A numpy array with the same number of dimensions as self.vel.  
         It contains the kinetic energy of the particles.
+
+        Note
+        ----
+        Consider if this calculation should be moved elsewere.
+        It could for instance bee a property that's supposed to
+        be calculated. 
         """
         kinetic = 0.5*np.sum(self.vel*self.vel*self.mass, axis=0)
         return kinetic
@@ -124,26 +130,32 @@ class Particles(object):
         temperature : numpy.array with same size as the kinetic energy, it
             contains the temperature in each spatial dimension.
         average_temperature : the temperature averaged over all dimensions.
+        
+        Note
+        ----
+        Consider if this calculation should be moved elsewere.
+        It could for instance bee a property that's supposed to
+        be calculated. 
         """
         temperature = 2.0*self.kinetic_energy()/float(self.npart)
         average_temperature = np.average(temperature)
         return temperature, average_temperature
 
     def pairs(self):
-        """ 
+        """
         This is a function to iterate over all pairs of particles.
         For more sophisticated particle lists this is where the 
         speed up can be harvested. The current list will iterate
         over all paris.
-    
+     
         
         Returns
         -------
         yields the positions and types of the difference pairs.
         """
         for i, posi in enumerate(self.pos[:-1]):
-            for j, posj in enumerate(self.pos[i:]):
-                yield (i, j, self.ptype[i], self.ptype[j])
+            for j, posj in enumerate(self.pos[i+1:]):
+                yield (i, i+1+j, self.ptype[i], self.ptype[j])
 
 
 
