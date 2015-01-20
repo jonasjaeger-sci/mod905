@@ -108,9 +108,10 @@ class Particles(object):
         
         Returns
         -------
-        A float with the kinetic energy of the particles.
+        A numpy array with the same number of dimensions as self.vel.  
+        It contains the kinetic energy of the particles.
         """
-        kinetic = 0.5*np.sum(self.vel*self.vel*self.mass)
+        kinetic = 0.5*np.sum(self.vel*self.vel*self.mass, axis=0)
         return kinetic
 
     def get_kinetic_temperature(self):
@@ -120,9 +121,13 @@ class Particles(object):
 
         Returns
         -------
-        A float with the current kinetic temperature.
+        temperature : numpy.array with same size as the kinetic energy, it
+            contains the temperature in each spatial dimension.
+        average_temperature : the temperature averaged over all dimensions.
         """
-        return 2.0*self.kinetic_energy()/(3.0*self.npart)
+        temperature = 2.0*self.kinetic_energy()/float(self.npart)
+        average_temperature = np.average(T)
+        return temperature, average_temperature
 
     def pairs(self):
         """ 
