@@ -2,9 +2,49 @@
 """
 This file contains a class for a generic force field
 """
+import numpy as np
 import warnings
 
 __all__ = ['ForceField']
+
+def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j, 
+                      mixing='geometric'):
+    """
+    This function defines so-called mixing rules which may be usefull
+    for some force fields for generating parameters.
+    
+    Parameters
+    ----------
+    epsilon_i and epsilon_j : float, which, for a Lennard-Jones potential 
+        corresponds to the epsilon parameter
+    sigma_i and sigma_j : float, which, for a Lennard-Jones potential
+        corresponds to the sigma parameter
+    mixing :  string, represents what kind of mixing that should be done
+    
+    Returns
+    -------
+    epsilon_ij and sigma_ij : float, the mixed parameters according to the 
+        specified mixing rule.
+    """
+    if mixing == 'geometric':
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
+        sigma_ij = np.sqrt(sigma_i * sigma_j)
+    elif mixing == 'arithmetic':
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
+        sigma_ij = 0.5*(sigma_i + sigma_j)
+    elif mixing == 'sixthpower':
+        si3 = sigma_i**3
+        si6 = si3**2
+        sj3 = sigma_j**3
+        sj6 = sj3**2
+        avgs6 = (si6+sj6)*0.5
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
+        sigma_ij = (avgs6)**(1.0/6.0)
+    else:
+        warnings.warn('Unknown mixing rule requested!')
+        epsilon_ij = 1.0
+        sigma_ij = 1.0
+    return epsilon_ij, sigma_ij
 
 class ForceField(object):
     """Generic force field object"""
