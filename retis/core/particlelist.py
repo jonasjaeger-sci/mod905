@@ -126,7 +126,7 @@ class Particles(object):
         average_temperature : the temperature averaged over all dimensions.
         """
         temperature = 2.0*self.kinetic_energy()/float(self.npart)
-        average_temperature = np.average(T)
+        average_temperature = np.average(temperature)
         return temperature, average_temperature
 
     def pairs(self):
