@@ -146,7 +146,7 @@ class Box(object):
         return pbcpos
     
 
-    def pbc_dist(self, distance):
+    def pbc_dist_matrix(self, distance):
         """
         This method applies periodic boundaries to a distance
         matrix/vector
@@ -164,12 +164,20 @@ class Box(object):
             if periodic:
                 dist = distance[:,i]
                 length = self.length[i]
-                bhi = 0.5*length
                 delta = np.where(np.abs(dist)>0.5*length, 
                              dist-np.rint(dist/length)*length, dist)
                 pbcdist[:,i] = delta   
             else:
                 pbcdist[:,i] = distance[:,i]
+        return pbcdist
+
+    def pbc_dist_coordinate(self, distance):
+        pbcdist = np.zeros(distance.shape)
+        for i, (periodic, length) in enumerate(zip(self.periodic, self.length)):
+            if periodic and np.abs(distance[i])>0.5*length:
+                pbcdist[i] = distance[i]-np.rint(distance[i]/length)*length
+            else:
+                pbcdist[i] = distance[i]
         return pbcdist
 
     def __str__(self):
