@@ -65,7 +65,7 @@ class Box(object):
                     self.periodic.append(True)
         self.low = np.array(self.low)
         self.high = np.array(self.high)
-
+        self.length = np.array(self.length)
 
     def calculate_volume(self):
         """
@@ -159,16 +159,13 @@ class Box(object):
         -------
         The pbc-wrapped distances
         """
-        pbcdist = np.zeros(distance.shape)
-        for i, periodic in enumerate(self.periodic):
+        pbcdist = distance 
+        for i, (periodic, length) in enumerate(zip(self.periodic, self.length)):
             if periodic:
-                dist = distance[:,i]
-                length = self.length[i]
-                delta = np.where(np.abs(dist)>0.5*length, 
-                             dist-np.rint(dist/length)*length, dist)
-                pbcdist[:,i] = delta   
-            else:
-                pbcdist[:,i] = distance[:,i]
+                dist = pbcdist[:,i]
+                high = 0.5*length
+                k = np.where(np.abs(dist)>=high)[0]
+                dist[k] -= np.rint(dist[k]/length)*length
         return pbcdist
 
     def pbc_dist_coordinate(self, distance):
