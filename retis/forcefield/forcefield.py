@@ -57,11 +57,13 @@ class ForceField(object):
     Attributes
     ----------
     desc : string, description of the force field
-    potential : list, optional. Potential functions that the force
+    potential : list. Potential functions that the force
         field is built up from.
+    param : list, contains the parameters for the corresponding
+        potential
     """
 
-    def __init__(self, desc="", potential=None):
+    def __init__(self, desc="", potential=None, params=None):
         """ 
         Initiates the force field object.
     
@@ -70,17 +72,67 @@ class ForceField(object):
         desc : string, optional. Description of the force field.
         potential : list, optional. Potential functions that the force
             field is built up from.
+        params : parameters for the potential(s)
 
         Returns
         -------
         N/A 
         """
         self.desc = desc
-        if type(potential)==type([]) or (potential is None):
-            self.potential = potential
+        if potential is None:
+            self.potential = []
         else:
-            self.potential = [potential]
+            if type(potential)==type([]):
+                self.potential = potential
+            else:
+                self.potential = [potential]
+
+        if params is None: # try to get them from the potential
+            self.params = [pot.params for pot in self.potential]
+        else:
+            if type(params)==type([]):
+                self.params = params
+            else:
+                self.params = [params]
+
+    def add_potential(self, potential, parameters=None):
+        """
+        Adds a potential with parameters to the force field
         
+        Parameters
+        ----------
+        potential : object, potential function to add
+        parameters : dict, optional, parameters for the potential
+        
+        Returns
+        -------
+        N/A but it will upsate self.potential and self.params
+        """
+        self.potential.append(potential)
+        if parameters is None:
+            self.params.append(potential.params)
+        else:
+            self.params.append(parameters)
+
+    def remove_potential(self, potential):
+        """
+        Removes a selected potential from the force field
+        
+        Parameters
+        ----------
+        potential : the potential function to remove
+        
+        Returns
+        -------
+        N/A but it will upsate self.potential and self.params
+        """
+        if potential in self.potential:
+            idx = self.potential.index(potential)
+            potrm = self.potential.pop(idx)
+            paramrm = self.params.pop(idx)
+        else:
+            warnings.warn('Unknow potential --- will not remove')
+
     def update_potential_parameters(self, potential, **params):
         """
         This method will update the potential parameters of the
@@ -88,10 +140,12 @@ class ForceField(object):
 
         Returns
         -------
-        N/A, but will update parameters of the selected potential!
+        N/A, but will update parameters of the selected potential
+        and modified the corresponding self.params
         """
         if potential in self.potential:
             potential.update_parameters(**params)
+            self.params[self.potential.index(potential)] = potential.params
         else:
             warnings.warn('Unknow potential')
             
@@ -196,7 +250,6 @@ class ForceField(object):
                 v_pot += v_poti 
                 force += forcei
         return v_pot, force
-    
 
     def __str__(self):
         """ 

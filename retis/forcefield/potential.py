@@ -37,7 +37,7 @@ class PotentialFunction(object):
         -------
         N/A 
         """
-        self.dim = dim # dimensionality
+        self.dim = dim 
         self.desc = desc
         self.params = {}
 
@@ -46,16 +46,29 @@ class PotentialFunction(object):
         This function is check on the consistency of
         the parameters. This can be implemented for the
         different potential functions.
+        
+        Returns
+        -------
+        True if the check(s) pass
         """
-        pass
+        if len(self.params)==0:
+            warnings.warn('No parameters are set for the potential')
+            return False
+        return True
 
     def update_parameters(self, **params):
         """
-        Updates the parameters for the potential
+        Updates the parameters for the potential. In this generic function,
+        it will just try to set attributes for the object. 
     
         Parameters
         ----------
         params : dictionary with the parameters to update
+
+        Note
+        ----
+        A parameter in **params which is not a attribute of the object will be
+        ignored.
         """
         for param in params:
             if hasattr(self, param):
@@ -87,6 +100,17 @@ class PotentialFunction(object):
             desc = self.params[param]['desc']
             allinfo.append(strinfo.format(param, desc, value))
         return 'Parameters:\n'+'\n'.join(allinfo)
+
+    def parameters_to_dict(self):
+        """
+        This method is intended to generate a dictionary
+        containing the parameters for the potential
+        
+        Returns
+        -------
+        N/A, but is should modify self.params
+        """
+        self.params = {}
 
     def __str__(self):
         """
