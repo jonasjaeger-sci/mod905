@@ -5,214 +5,434 @@ This file contains different pair potentials
 
 import numpy as np
 from potential import PotentialFunction
+import forcefield
+import itertools
 import warnings
 
 __all__ = ['PairLennardJonesCut']
 
-
 class PairLennardJonesCut(PotentialFunction):
     """
-    A Lennard Jones 6-12 potential
+    A Lennard-Jones 6-12 potential with a simple cut-off.
+    
+    Attributes
+    ----------
+    The attributes are the Lennard Jones parameters for each
+    pair of particle types. The parameters are stored as
+    dictionaries with keys equal to the pairs, i.e. for the interaction
+    between particles of type Ar and particles of type Kr the keys will 
+    be ('Ar','Kr') and ('Kr','Ar').
+    The parameters are defined using the  epsilon and sigma values 
+    as follows:
+    lj1 : 48.0 * epsilon_ij * sigma_ij**12
+    lj2 : 24.0 * epsilon_ij * sigma_ij**6
+    lj3 : 4.0 * epsilon_ij * sigma_ij**12
+    lj4 : 4.0 * epsilon_ij * sigma_ij**6
+    rcut2 : is a dictionary for squared cut-off for each interaction.
+    params : dict, potential parameters, sigma's and epsilons and
+        factor - float for generating rcut_i = sigma_i * factor and
+        mixing - string, defining the mixing rule.
+    matrix_np : copies of the corresponding lj1, lj2, ... etc. 
+        Used as helper variables for numpy calculation of forces 
+        and potential.
     """
-    def __init__(self, interactions=None, dim=3, factor=2.5,
-                 mixing='geometric',
+    def __init__(self, dim=3, mixing='geometric', factor=2.5,
                  desc='Lennard Jones pair potential with simple cut-off'):
-        """
-        Initiates the Lennard-Jones potential
-        interactions = {'a': {'sigma': 0.1, 'epsilon': 1.0, 'rcut':5.6},
-                        'b': {'sigma': 0.2, 'epsilon': 2.0}}
-        """
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
-        if interactions is None:
-            interactions = {'?': {'sigma': 1.0, 'epsilon': 1.0,
-                                  'rcut': 2.5}}
-        self.factor = factor
-        self.mixing = mixing
-        self.epsilon_ij = {}
-        self.sigma_ij = {}
-        self.rcut_ij = {}
-        self.interactions = {}
-        self.all_interactions = {}
         self.lj1 = {}
         self.lj2 = {}
         self.lj3 = {}
         self.lj4 = {}
-        self.add_interactions(interactions)
+        self.rcut2 = {}
+        self.params = {'epsilon': {}, 'sigma': {}, 'rcut': {},
+                       'epsilon_ij': {}, 'sigma_ij': {}, 'rcut_ij': {},
+                       'mixing': mixing, 'factor': factor}
+        self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4':[],
+                          'rcut2': []}
 
-    def lj_force_and_potential(self, rsq, itype='?', jtype='?'):
-        r2inv = 1.0/rsq
-        r6inv = r2inv**3
-        forcelj = r6inv * (self.lj1[itype, jtype]*r6inv - 
-                  self.lj2[itype, jtype])
-        forcelj *= r2inv
-        energy = r6inv * (self.lj3[itype, jtype]*r6inv 
-                 - self.lj4[itype, jtype])
-        return forcelj, energy
-
-    def lj_scalar_potential(self, rsq, itype='?', jtype='?'):
-        r2inv = 1.0/rsq
-        r6inv = r2inv**3
-        energy = r6inv * (self.lj3[itype, jtype]*r6inv 
-                 - self.lj4[itype, jtype])
-        return energy
-    
-    def lj_scalar_force(self, rsq, itype='?', jtype='?'):
-        r2inv = 1.0/rsq
-        r6inv = r2inv**3
-        forcelj = r6inv * (self.lj1[itype, jtype]*r6inv - 
-                  self.lj2[itype, jtype])
-        forcelj *= r2inv
-        return forcelj
+    def add_parameters(self, parameters):
+        """
+        This method will add new potential parameters.
         
+        Parameters
+        ----------
+        parameters : the new parameters. They are assumed to be dictionaries
+            of type {'A': {'epsilon': 1.0, 'sigma': 1.2, 'rcut': 2.0}} 
+        """
+        add_eps_sig, add_cut = False, False
+        for i, params in parameters.items():
+            if 'epsilon' in params and 'sigma' in params:
+                self.params['epsilon'][i] = params['epsilon']
+                sigma = params['sigma']
+                self.params['sigma'][i] = sigma
+                self.params['rcut'][i] = params.get('rcut', 
+                                            self.params['factor']*sigma)
+                add_eps_sig = True
+            else:
+                if 'rcut' in params:
+                    self.params['rcut'][i] = params['rcut']
+                    j = tuple([k for k in reversed(i)])
+                    self.params['rcut'][j] = params['rcut']
+                    add_cut = True
+        if add_eps_sig:
+            self._update_mixing_parameters()
+            self._generate_lj_parameters()
+        if add_eps_sig or add_cut:
+            self._generate_rcut() 
 
-    def force_and_potential(self, particles):
-        forces = np.zeros(particles.force.shape)
-        v_pot = 0.0
-        for pairs in particles.pairs:
-            i, j, type_i, type_j = pairs
-            delta_r = particles.pos[i] - particles.pos[j]
-            rsq = np.dot(delta_r, delta_r)
-            if rsq < self.rcut_ij[type_i, type_j]:
-                force, energy = self.lj_force_and_potential(self, rsq, 
-                                           itype=type_i, jtype=type_j)
-                force *= delta_r
-                forces[i, j] += force
-                forces[j, i] -= force
-                v_pot += energy
-        return forces, v_pot
+    def remove_parameter(self, particle):
+        """
+        This method will remove parameters for the specified particle
+
+        Returns
+        -------
+        N/A, but modifies self.parameters, self.lj1, self.lj2, self.lj3,
+        self.lj4, self.rcut2
+        """
+        remove_eps_sig = False
+        try:
+            del self.params['epsilon'][particle]
+            del self.params['sigma'][particle]
+            remove_eps_sig = True
+        except KeyError:
+            remove_eps_sig = False
+
+        try:
+            del self.params['rcut'][particle]
+            remove_cut = True
+        except KeyError:
+            remove_cut = False
+
+        if remove_eps_sig:
+            self._update_mixing_parameters()
+            self._generate_lj_parameters()
+        if remove_eps_sig or remove_cut:
+            self._generate_rcut()
+    
+    def _generate_rcut(self):
+        """
+        This method will set rcut (and rcut2) for the different pair
+        interactions. Here, it's possible that the rcut value for a pair
+        is specified even though the sigma_ij and epsilon_ij are not. This
+        is typicaly done when sigma_ij and epsilon_ij are generated and
+        rcut_ij is explicitly set.
+
+        Returns
+        -------
+        N/A, but modifies self.rcut2
+        """
+        rcut_ij = {}
+        rcut2 = {}
+        for i in self.params['epsilon_ij']:
+            if i in self.params['rcut']:
+                rcut_ij[i] = self.params['rcut'][i]
+            elif i[0] == i[1]:
+                rcut_ij[i] = self.params['rcut'][i[0]]
+            else:
+                rcut_ij[i] = self.params['sigma_ij'][i]*self.params['factor']
+            rcut2[i] = rcut_ij[i]**2
+        self.params['rcut_ij'] = rcut_ij
+        self.rcut2 = rcut2
+
+    def _make_tables_for_numpy(self, particles):
+        """
+        This is a helper function for using numpy. 
+        It is, perhaps, not so elegant as is will just create some new
+        attributes to help with the calculation for forces and potential.
+        It will, for each particle i store the particle types of the 
+        i+1 other atoms it will interact with in the force/potential calculation.
+        This makes it possible to do slices of the parameters in the calculations.
+
+        Paramters
+        ---------
+        particles : object, the particle list
+        
+        Returns
+        -------
+        N/A, but sets self.matrix_np 
+        """
+        npart = particles.npart
+        update = False
+        try:
+            update = not (len(self.matrix_np['lj1'][0]) == npart - 1)
+        except IndexError:
+            update = True
+        if update:
+            for key in self.matrix_np:
+                self.matrix_np[key] = []
+            for i, itype in enumerate(particles.ptype):
+                rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
+                for j in xrange(i+1, npart):
+                    jtype = particles.ptype[j]
+                    rcut2.append(self.rcut2[itype, jtype])
+                    lj1.append(self.lj1[itype, jtype])
+                    lj2.append(self.lj2[itype, jtype])
+                    lj3.append(self.lj3[itype, jtype])
+                    lj4.append(self.lj4[itype, jtype])
+                self.matrix_np['rcut2'].append(np.array(rcut2))
+                self.matrix_np['lj1'].append(np.array(lj1))
+                self.matrix_np['lj2'].append(np.array(lj2))
+                self.matrix_np['lj3'].append(np.array(lj3))
+                self.matrix_np['lj4'].append(np.array(lj4))
 
     def force(self, particles, box):
-        forces = np.zeros(particles.force.shape)
-        for pairs in particles.pairs:
-            i, j, type_i, type_j = pairs
-            delta_r = particles.pos[i] - particles.pos[j]
-            rsq = np.dot(delta_r, delta_r)
-            if rsq < self.rcut_ij[type_i, type_j]:
-                force = delta_r * self.lj_scalar_force(rsq, 
-                                               itype=type_i, jtype=type_j)
-                forces[i, j] += force
-                forces[j, i] -= force
-        return forces
+        """
+        This method calculates the force for the Lennard Jones
+        interaction.
+        
+        Parameters
+        ----------
+        particles : object, particle list.
+        box : object, representing the box used in the simulation. 
+        
+        Returns
+        -------
+        The force as a numpy.array of the same shape as the positions
+        in particles.pos.
+        """
+        force = np.zeros(particles.pos.shape)
+        try:
+            raise AttributeError
+            #for pair in particles.pairs():
+            #    i, j, itype, jtype = pair
+            #    delta_pos = particles.pos[i]-particles.pos[j]
+            #    delta = box.pbc_dist_coordinate(delta_pos)
+            #    rsq = np.dot(delta, delta)
+            #    if rsq < self.rcut2[itype, jtype]:
+            #        r2inv = 1.0/rsq
+            #        r6inv = r2inv**3
+            #        forcelj = r2inv*r6inv * (self.lj1[itype, jtype]*r6inv -
+            #                                 self.lj2[itype, jtype])
+            #        forceij = forcelj*delta
+            #        force[i] += forceij
+            #        force[j] -= forceij
+        except AttributeError:
+            self._make_tables_for_numpy(particles)
+            for i, particle_i in enumerate(particles.pos[:-1]):
+                delta = box.pbc_dist_matrix(particle_i - particles.pos[i+1:])
+                rsq =  np.einsum('ij, ij->i', delta, delta)
+                k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
+                lj1 = self.matrix_np['lj1'][i][k]
+                lj2 = self.matrix_np['lj2'][i][k]
+                r2inv = 1.0/rsq[k]
+                r6inv = r2inv**3
+                forcelj = r2inv*r6inv * (lj1*r6inv - lj2)
+                forcelj = np.diag(forcelj)
+                forceij = np.dot(forcelj, delta[k])
+                force[i] += np.sum(forceij, axis=0)
+                force[k+i+1] -= forceij
+        return force
 
-    def potential(self, particles):
+    def potential(self, particles, box):
+        """
+        This method calculates the potential energy for the Lennard Jones
+        interaction.
+        
+        Parameters
+        ----------
+        particles : object, particle list.
+        box : object, representing the box used in the simulation. 
+        
+        Returns
+        -------
+        The potential energy as a float.
+        """
         v_pot = 0.0
-        for pairs in particles.pairs:
-            i, j, type_i, type_j = pairs
-            delta_r = particles.pos[i] - particles.pos[j]
-            rsq = np.dot(delta_r, delta_r)
-            if rsq < self.rcut_ij[type_i, type_j]:
-                v_pot += self.lj_scalar_potential(rsq, 
-                                                  itype=type_i, jtype=type_j)
+        try:
+            raise AttributeError
+            #for pair in particles.pairs():
+            #    i, j, itype, jtype = pair
+            #    delta_pos = particles.pos[i]-particles.pos[j]
+            #    delta = box.pbc_dist_coordinate(delta_pos)
+            #    rsq = np.dot(delta, delta)
+            #    if rsq < self.rcut2[itype, jtype]:
+            #        r2inv = 1.0/rsq
+            #        r6inv = r2inv**3
+            #        v_pot += r6inv * (self.lj3[itype, jtype]*r6inv - 
+            #                          self.lj4[itype, jtype])
+        except AttributeError:
+            self._make_tables_for_numpy(particles)
+            for i, particle_i in enumerate(particles.pos[:-1]):
+                delta = box.pbc_dist_matrix(particle_i - particles.pos[i+1:])
+                rsq =  np.einsum('ij, ij->i', delta, delta)
+                k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
+                lj3 = self.matrix_np['lj3'][i][k]
+                lj4 = self.matrix_np['lj4'][i][k]
+                r2inv = 1.0/rsq[k]
+                r6inv = r2inv**3
+                v_pot += np.sum(r6inv*(lj3*r6inv - lj4))
         return v_pot
 
-    def add_interactions(self, interactions):
-        for (i, inter_i) in interactions.items():
-            if not ('sigma' in inter_i and 'epsilon' in inter_i):
-                wsig = "Missing parameters in LJ interaction: {}".format(i)
-                warnings.warn(wsig)
-                continue
-            self.interactions[i] = inter_i
-        # update mixed values:
-        self.epsilon_ij = {}
-        self.sigma_ij = {}
-        self._update_mixing_parameters()
-        self._generate_rcut()
-        self._generate_table()
-        self._generate_lj_parameters()
-    
+
+    def potential_and_force(self, particles, box):
+        """
+        Method for calculating the potential and force for the
+        Lennard-Jones interaction.
+
+        Parameters
+        ----------
+        particles : object, particle list.
+        box : object, representing the box used in the simulation. 
+
+        Returns
+        -------
+        (v_pot, force) where v_pot is float equal to the potential
+        energy and force as a numpy.array of the same shape as the positions
+        in particles.pos.
+        """
+        v_pot = 0.0
+        force = np.zeros(particles.pos.shape)
+        try: 
+            raise AttributeError   
+            #for pair in particles.pairs():
+            #    i, j, itype, jtype = pair
+            #    delta_pos = particles.pos[i]-particles.pos[j]
+            #    delta = box.pbc_dist_coordinate(delta_pos)
+            #    rsq = np.dot(delta, delta)
+            #    if rsq < self.rcut2[itype, jtype]:
+            #        r2inv = 1.0/rsq
+            #        r6inv = r2inv**3
+            #        v_pot += r6inv * (self.lj3[itype, jtype]*r6inv 
+            #                           - self.lj4[itype, jtype])
+            #        forcelj = r2inv*r6inv * (self.lj1[itype, jtype]*r6inv -
+            #                                 self.lj2[itype, jtype])
+            #        forceij = forcelj*delta
+            #        force[i] += forceij
+            #        force[j] -= forceij
+        except AttributeError:
+            self._make_tables_for_numpy(particles)
+            for i, particle_i in enumerate(particles.pos[:-1]):
+                delta = particle_i - particles.pos[i+1:]
+                delta = box.pbc_dist_matrix(delta)
+                rsq =  np.einsum('ij, ij->i', delta, delta)
+                k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
+                lj1 = self.matrix_np['lj1'][i][k] 
+                lj2 = self.matrix_np['lj2'][i][k]
+                lj3 = self.matrix_np['lj3'][i][k] 
+                lj4 = self.matrix_np['lj4'][i][k]
+                r2inv = 1.0/rsq[k]
+                r6inv = r2inv**3
+                v_pot += np.sum(r6inv*(lj3*r6inv - lj4))
+                forcelj = r2inv*r6inv * (lj1*r6inv - lj2)
+                forcelj = np.diag(forcelj)
+                forceij = np.dot(forcelj, delta[k])
+                force[i] += np.sum(forceij, axis=0)
+                force[k+i+1] -= forceij
+        return v_pot, force
+
     def _generate_lj_parameters(self):
+        """
+        Method to calculate/generate all Lennard Jones parameters
+        self.lj1, self.lj2, self.lj3, self.lj4 from the values defined
+        in self.params.
+        
+        Parameters
+        ----------
+        N/A
+
+        Returns
+        -------
+        None, but modifies self.lj1, self.lj2, self.lj3, self.lj4
+
+        Note
+        ----
+        self.params is assumed to contain the parameters for all interactions,
+        that is we assume that they are defined for ALL paris we might encounter.
+        Typically, this requires that we have done some kind of mixing 
+        (by running self._) or that these are explicitly set.
+        """
         self.lj1 = {}
         self.lj2 = {}
         self.lj3 = {}
         self.lj4 = {}
-        for i in self.epsilon_ij:
-            if type(i) == type(()): 
-                epsilon_ij = self.epsilon_ij[i]
-                sigma_ij = self.sigma_ij[i]
+        for i in self.params['epsilon_ij']:
+            if type(i) == type(()):
+                epsilon_ij = self.params['epsilon_ij'][i]
+                sigma_ij = self.params['sigma_ij'][i]
                 self.lj1[i] = 48.0 * epsilon_ij * sigma_ij**12
                 self.lj2[i] = 24.0 * epsilon_ij * sigma_ij**6
                 self.lj3[i] = 4.0 * epsilon_ij * sigma_ij**12
                 self.lj4[i] = 4.0 * epsilon_ij * sigma_ij**6
 
-    def _generate_table(self):
-        self.all_interactions = {}
-        for i in self.epsilon_ij:
-            inter_i = {'sigma': self.sigma_ij[i], 
-                       'epsilon': self.epsilon_ij[i],
-                       'rcut': self.rcut_ij[i],
-                       'generated': i in self.interactions}
-            self.all_interactions[i] = inter_i
-
-    def _generate_rcut(self):
-        """
-        To generate missing rcut
-        """
-        for (i, inter) in self.interactions.items():
-            if not 'rcut' in inter:
-                inter['rcut'] = inter['sigma']*self.factor
-        
-        for (i, sigma_ij) in self.sigma_ij.items():
-            if i in self.interactions:
-                self.rcut_ij[i] = self.interactions[i]['rcut']
-            else:
-                self.rcut_ij[i] = self.factor*sigma_ij
-
     def _update_mixing_parameters(self):
-        for (i, inter_i) in self.interactions.items():
-            epsilon_i = inter_i['epsilon']
-            sigma_i = inter_i['sigma']
-            if type(i)==type(()): # i defines a cross interaction, just copy
-                self.epsilon_ij[i] = epsilon_i
-                self.sigma_ij[i] = sigma_i
-                continue
-            for (j, inter_j) in self.interactions.items():
-                epsilon_j = inter_j['epsilon']
-                sigma_j = inter_j['sigma']
-                if type(j)==type(()): # j defines a cross interaction, just copy
-                    self.epsilon_ij[j] = epsilon_j
-                    self.sigma_ij[j] = sigma_j
-                    continue
-                if self.mixing == 'geometric':
-                    epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-                    sigma_ij = np.sqrt(sigma_i * sigma_j)
-                elif self.mixing == 'arithmetic':
-                    epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-                    sigma_ij = 0.5*(sigma_i + sigma_j)
-                elif self.mixing == 'sixthpower':
-                    epsilon_ij = (2.0 * np.sqrt(epsilon_i * epsilon_j) *\
-                                 sigma_i**3 *  sigma_j**3) / \
-                                 (sigma_i**6 + sigma_j**6)
-                    sigma_ij = ((sigma_i**6 + sigma_j**6)*0.5)**(1./6.)
-                else:
-                    warnings.warn('Unknown mixing rule requested!')
-                    epsilon_ij = 1.0
-                    sigma_ij = 1.0
-                if not (i, j) in self.epsilon_ij:
-                    self.epsilon_ij[i, j] = epsilon_ij
-                if not (i, j) in self.sigma_ij:
-                    self.sigma_ij[i, j] = sigma_ij
-                if not (i==j):
-                    self.epsilon_ij[j, i] = epsilon_ij
-                    self.sigma_ij[j, i] = sigma_ij
-            
-#class PairWCA(PairLJ_cut):
-#    """ 
-#    The WCA pair potential.
-#    """
-#    def __init__(self, epsilon=None, sigma=None,
-#                 desc='WCA pair potential'):
-#        """ 
-#        Initiates the WCA potential.
-#        
-#        Parameters
-#        ---------- 
-#        self : 
-#        desc : string, optional. Description of the force field.
-#        
-#        Returns
-#        -------
-#        N/A
-#        """
-#        rcut = {ptype: (2.0**(1./6.))*sigi for (ptype, sigi) in sigma}
-#        super(PairWCA, self).__init__(dim=3, desc=desc)
+        """
+        This method will update/create parameters for pairs, based
+        on the parameters for atoms. 
 
+        Returns
+        -------
+        N/A, but will update self.params['epsilon_ij'] and self.params['sigma_ij']
+        """
+        epsilon_ij, sigma_ij = {}, {}
+        epsilon, sigma = self.params['epsilon'], self.params["sigma"]
+        for pair in itertools.product(epsilon.keys(), epsilon.keys()):
+            i = pair[0]
+            j = pair[1]
+            epsilon_i, epsilon_j = epsilon[i], epsilon[j]
+            sigma_i, sigma_j = sigma[i], sigma[j]
+            if type(i) == type(()): 
+                # pair interaction is specified, assume that this is
+                # intended:
+                epsilon_ij[i], sigma_ij[i] = epsilon_i, sigma_i
+                j = tuple([k for k in reversed(i)])
+                epsilon_ij[j], sigma_ij[j] = epsilon_i, sigma_i
+                continue
+            if type(j) == type(()):
+                epsilon_ij[j], sigma_ij[j] = epsilon_j, sigma_j
+                i = tuple([k for k in reversed(j)])
+                epsilon_ij[i], sigma_ij[i] = epsilon_j, sigma_j
+                continue
+            # generate:
+            eps, sig = forcefield.mixing_parameters(epsilon_i, sigma_i,
+                                          epsilon_j, sigma_j, 
+                                          mixing=self.params['mixing'])
+            if not (i, j) in epsilon_ij:
+                epsilon_ij[i, j] = eps
+                sigma_ij[i, j] = sig
+            if not (j, i) in epsilon_ij:
+                epsilon_ij[j, i] = epsilon_ij[i, j]
+                sigma_ij[j, i] = sigma_ij[i, j]
+        self.params['epsilon_ij'] = epsilon_ij
+        self.params['sigma_ij'] = sigma_ij
+
+    def str_parameters(self):
+        """
+        This method will just generate a string with the potential parameters and
+        the generated pair parameters.
+
+        Returns
+        -------
+        string, with parameters.
+        """
+        strparam = ["Potential parameters, Lennard-Jones:"]
+        strparam.extend(["Mixing: {}".format(self.params["mixing"])])
+        atmformat = "{0:12s} {1:>9s} {2:>9s} {3:>9s}"
+        atmformat2 = "{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}"
+        atmformat3 = "{0:12s} {1:>9s} {2:>9s} {3:>9.4f}"
+        strparam.append("Input parameters:")
+        strparam.append(atmformat.format("Atom/pair", "epsilon", "sigma", 
+                                         "cut-off"))
+        for i in self.params["epsilon"]:
+            epsilon = self.params["epsilon"][i]
+            sigma = self.params["sigma"][i]
+            rcut = self.params["rcut"][i]
+            strparam.append(atmformat2.format(i, epsilon, sigma, rcut))
+        for i in self.params["rcut"]:
+            if not i in self.params["epsilon"]:
+                rcut = self.params["rcut"][i]
+                if type(i) == type(()):
+                    stri = "{}-{}".format(*i)
+                else:
+                    stri = "{}".format(i)
+                strparam.append(atmformat3.format(stri, "", "", rcut))
+        strparam.append("Generated parameters:")
+        strparam.append(atmformat.format("Atom/pair", "epsilon", "sigma", 
+                                         "cut-off"))
+        for i in self.params["epsilon_ij"]:
+            epsilon = self.params["epsilon_ij"][i]
+            sigma = self.params["sigma_ij"][i]
+            rcut = self.params["rcut_ij"][i]
+            if type(i) == type(()):
+                stri = "{}-{}".format(*i)
+            strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
+        return "\n".join(strparam)
