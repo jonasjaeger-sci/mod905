@@ -17,21 +17,23 @@ class PairLennardJonesCut(PotentialFunction):
     
     Attributes
     ----------
-    The attributes are the Lennard Jones parameters for each
-    pair of particle types. The parameters are stored as
-    dictionaries with keys equal to the pairs, i.e. for the interaction
-    between particles of type Ar and particles of type Kr the keys will 
-    be ('Ar','Kr') and ('Kr','Ar').
-    The parameters are defined using the  epsilon and sigma values 
-    as follows:
-    lj1 : 48.0 * epsilon_ij * sigma_ij**12
-    lj2 : 24.0 * epsilon_ij * sigma_ij**6
-    lj3 : 4.0 * epsilon_ij * sigma_ij**12
-    lj4 : 4.0 * epsilon_ij * sigma_ij**6
-    rcut2 : is a dictionary for squared cut-off for each interaction.
-    params : dict, potential parameters, sigma's and epsilons and
-        factor - float for generating rcut_i = sigma_i * factor and
-        mixing - string, defining the mixing rule.
+    params : dict, with parameters for the potential. This
+        is assumed to be defined by the force field. Some of the
+        parameters are defined implicitly and are generated from the
+        other parameters. The parameters are 'epsilon', 'sigma' and
+        'rcut' which defines the potential parameters and 'factor'
+        and 'mixing' which are used when creating the derived parameters
+        'epsilon_ij', 'sigma_ij', 'rcut_ij'.
+    lj1 : dict, keys are the pairs (particle types) that may interact. 
+        Calculated as: 48.0 * epsilon_ij * sigma_ij**12
+    lj2 : dict, keys are the pairs (particle types) that may interact. 
+        Calculated as: 24.0 * epsilon_ij * sigma_ij**6
+    lj3 : dict, keys are the pairs (particle types) that may interact. 
+        Calculated as: 4.0 * epsilon_ij * sigma_ij**12
+    lj4 : dict, keys are the pairs (particle types) that may interact. 
+        Calculated as: 4.0 * epsilon_ij * sigma_ij**6
+    rcut2 : dict, keys are the paris (particle types) that may interact.
+        It defines the squared cut off for each interaction type.
     matrix_np : copies of the corresponding lj1, lj2, ... etc. 
         Used as helper variables for numpy calculation of forces 
         and potential.
@@ -49,6 +51,50 @@ class PairLennardJonesCut(PotentialFunction):
                        'mixing': mixing, 'factor': factor}
         self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4':[],
                           'rcut2': []}
+
+    def update_parameters(self, params):
+        """
+        Updates the parameters for the potential, that is the
+        values for 'epsilon', 'sigma' 'rcut', 'mixing', 'factor'.
+    
+        Parameters
+        ----------
+        params : dictionary with the parameters to update
+        """
+        special = ['mixing', 'factor']
+        for key in special:
+            self.params[key] = params.get(key, self.params[key]) 
+        
+        add_eps_sig, add_cut = False, False
+        for i, parameter in params.items():
+            if i in special:
+                continue
+            if all(key in parameter for key in ('epsilon', 'sigma')):
+                # set both epsilon and sigma at the same time:
+                self.params['epsilon'][i] = parameter['epsilon']
+                sigma = parameter['sigma']
+                self.params['sigma'][i] = sigma
+                # generate rcut if it's not there...
+                self.params['rcut'][i] = parameter.get('rcut', 
+                                         self.params['factor']*sigma)
+                add_eps_sig = True
+            else:
+                # not both epsilon and sigma were specified, this only
+                # makes sence if we just specify rcut for a pair-pair
+                # interaction
+                if 'rcut' in parameter and type(i) == type(()):
+                    self.params['rcut'][i] = parameter['rcut']
+                    j = tuple([k for k in reversed(i)])
+                    self.params['rcut'][j] = parameter['rcut']
+                    add_cut = True
+                else:
+                    msg = 'Did not understand parameter for: {}'.format(i)
+                    warnings.warn(msg)
+        if add_eps_sig:
+            self._update_mixing_parameters()
+            self._generate_lj_parameters()
+        if add_eps_sig or add_cut:
+            self._generate_rcut() 
 
     def add_parameters(self, parameters):
         """

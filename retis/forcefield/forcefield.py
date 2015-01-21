@@ -109,10 +109,9 @@ class ForceField(object):
         N/A but it will upsate self.potential and self.params
         """
         self.potential.append(potential)
-        if parameters is None:
-            self.params.append(potential.params)
-        else:
-            self.params.append(parameters)
+        if not parameters is None:
+            potential.update_parameters(parameters)
+        self.params.append(potential.params)
 
     def remove_potential(self, potential):
         """
