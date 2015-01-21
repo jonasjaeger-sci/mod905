@@ -141,6 +141,17 @@ class Particles(object):
         average_temperature = np.average(temperature)
         return temperature, average_temperature
 
+    def reset_momentum(self):
+        """
+        This method sets the linear momentum of the particles to zero
+
+        Returns
+        -------
+        N/A, but modifies self.vel
+        """
+        mom = np.sum(self.vel*self.mass, axis=0)
+        self.vel -= mom/self.mass.sum()
+
     def pairs(self):
         """
         This is a function to iterate over all pairs of particles.
