@@ -47,24 +47,34 @@ def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j,
     return epsilon_ij, sigma_ij
 
 class ForceField(object):
-    """Generic force field object"""
+    """
+    ForceField(object)
 
-    def __init__(self, dim=1, desc="", potential=None):
+    This class described a generic Force Field.
+    A force field is assumed to consist of a number of potential
+    functions with parameters.
+
+    Attributes
+    ----------
+    desc : string, description of the force field
+    potential : list, optional. Potential functions that the force
+        field is built up from.
+    """
+
+    def __init__(self, desc="", potential=None):
         """ 
         Initiates the force field object.
     
         Parameters
         ----------
-        dim : int, optional. Represents the dimensionality.
         desc : string, optional. Description of the force field.
         potential : list, optional. Potential functions that the force
-        filed is built up from.
+            field is built up from.
 
         Returns
         -------
         N/A 
         """
-        self.dim = dim # dimensionality
         self.desc = desc
         if type(potential)==type([]) or (potential is None):
             self.potential = potential
