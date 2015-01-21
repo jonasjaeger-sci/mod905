@@ -56,7 +56,7 @@ class PotentialFunction(object):
             return False
         return True
 
-    def update_parameters(self, **params):
+    def update_parameters(self, params):
         """
         Updates the parameters for the potential. In this generic function,
         it will just try to set attributes for the object. 
@@ -67,9 +67,13 @@ class PotentialFunction(object):
 
         Note
         ----
-        A parameter in **params which is not a attribute of the object will be
+        A parameter in params which is not a attribute of the object will be
         ignored.
         """
+        if type(params) != type({}):
+            msg = 'Did not understand the parameters...'
+            warnings.warn(msg)
+            return False
         for param in params:
             if hasattr(self, param):
                 value = params[param]
@@ -78,7 +82,7 @@ class PotentialFunction(object):
             else:
                 msg = 'Ignoring unknown parameter {}'.format(param)
                 warnings.warn(msg)
-        self.check_parameters()
+        return self.check_parameters()
 
     def get_parameters(self):
         """ 

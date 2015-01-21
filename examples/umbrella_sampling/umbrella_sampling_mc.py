@@ -74,7 +74,7 @@ for i, umbrella in enumerate(umbrellas):
     print("Running umbrealla no: {} ({})".format(i, umbrella))
     # Update parameters for the rectangular potential:
     params = {'left': umbrella[0], 'right': umbrella[1]}
-    system.forcefield.update_potential_parameters(potential_rw, **params)
+    system.forcefield.update_potential_parameters(potential_rw, params)
     system.potential() # recalculate potential energy
     over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
     # Initiate the umbrella simulation:

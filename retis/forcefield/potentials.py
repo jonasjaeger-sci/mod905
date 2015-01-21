@@ -20,6 +20,7 @@ class DoubleWell(PotentialFunction):
     a : float, parameter for the potential
     b : float, parameter for the potential
     c : float, parameter for the potential
+    params : dictionary, containing the parameters.
     """
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
@@ -41,12 +42,8 @@ class DoubleWell(PotentialFunction):
         self.a = a
         self.b = b
         self.c = c
-        self.params = {'a': {'value': self.a, 
-                             'desc': 'Parameter for double well'},
-                       'b': {'value': self.b, 
-                             'desc': 'Parameter for double well'},
-                       'c': {'value': self.c, 
-                             'desc': 'Parameter for double well'}}
+        self.parameters_to_dict()
+
     def potential(self, pos):
         """ 
         Evaluate the potential for the one-dimensional double well potential.
@@ -76,6 +73,21 @@ class DoubleWell(PotentialFunction):
         """
         return -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
 
+    def parameters_to_dict(self):
+        """
+        Generate a dictionary with the parameters of
+        the potential.
+        
+        Returns
+        -------
+        N/A but updates self.params
+        """
+        self.params = {'a': {'value': self.a, 
+                             'desc': 'Parameter for double well'},
+                       'b': {'value': self.b, 
+                             'desc': 'Parameter for double well'},
+                       'c': {'value': self.c, 
+                             'desc': 'Parameter for double well'}}
 
 class RectangularWell(PotentialFunction):
     """
@@ -102,7 +114,7 @@ class RectangularWell(PotentialFunction):
         largenumber : float, optional. The value of the potential outside 
             (left, right).
         desc : string, optional. Description of the force field.
-
+        params : dictionary containing the parameters
         Returns
         -------
         N/A 
@@ -112,12 +124,7 @@ class RectangularWell(PotentialFunction):
         self.largenumber = largenumber
         self.left = left
         self.right = right
-        self.params = {'left': {'value': self.left, 
-                                'desc': 'Left boundary'},
-                       'right': {'value': self.right, 
-                                 'desc': 'Right boundary'},
-                       'largenumber': {'value':self.largenumber, 
-                              'desc': 'Potential value outside boundaries'}}
+        self.parameters_to_dict()
 
     def check_parameters(self):
         """ 
@@ -148,3 +155,19 @@ class RectangularWell(PotentialFunction):
         v_pot = np.where(np.logical_and(pos > self.left, pos < self.right), 
                         0.0, self.largenumber)
         return v_pot.sum()
+    
+    def parameters_to_dict(self):
+        """
+        Generate a dictionary with the parameters of
+        the potential.
+        
+        Returns
+        -------
+        N/A but updates self.params
+        """
+        self.params = {'left': {'value': self.left, 
+                                'desc': 'Left boundary'},
+                       'right': {'value': self.right, 
+                                 'desc': 'Right boundary'},
+                       'largenumber': {'value':self.largenumber, 
+                              'desc': 'Potential value outside boundaries'}}

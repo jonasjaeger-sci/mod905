@@ -133,10 +133,17 @@ class ForceField(object):
         else:
             warnings.warn('Unknow potential --- will not remove')
 
-    def update_potential_parameters(self, potential, **params):
+    def update_potential_parameters(self, potential, params):
         """
         This method will update the potential parameters of the
         given potential function.
+
+        Parameters
+        ----------
+        potential : potential to update. Should be in the list
+            self.potential
+        params : the new parameters to set, should be a 
+            dictionary.
 
         Returns
         -------
@@ -144,7 +151,7 @@ class ForceField(object):
         and modified the corresponding self.params
         """
         if potential in self.potential:
-            potential.update_parameters(**params)
+            potential.update_parameters(params)
             self.params[self.potential.index(potential)] = potential.params
         else:
             warnings.warn('Unknow potential')
