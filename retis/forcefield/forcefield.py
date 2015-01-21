@@ -85,8 +85,6 @@ class ForceField(object):
         else:
             warnings.warn('Unknow potential')
             
-            
-
     def evaluate_force(self, **kwargs):
         """ 
         Evaluate the force on the particles.
@@ -149,6 +147,46 @@ class ForceField(object):
             else:
                 v_pot += pot.potential(*args)
         return v_pot
+
+    def evaluate_potential_and_force(self, **kwargs):
+        """ 
+        Evaluate the potential energy and the force.
+    
+        Parameters
+        ----------
+        kwargs : dictionary of variables needed to evaluate the potential.
+            Typically this is the positions and the particle names.
+
+        Returns
+        -------
+        v_pot : float equal to the potential energy.
+        force : numpy.array with the forces
+
+        Note
+        ----
+        In this function each potential function picks out the
+        variable that it needs. This might be stupid,
+        as these variable names will have to match (names will have
+        to be know anyway if I use optional keywords.
+        One solution might be to just pass the system to the 
+        potential, with additional optional arguments on what to
+        override (override is here usefull when calculating the energies
+        in Monte Carlo moves - i.e. to use the trial positions).
+        """
+        v_pot = None
+        force = None
+        for pot in self.potential:
+            nvar = pot.potential_and_force.func_code.co_argcount 
+            var = pot.potential_and_force.func_code.co_varnames[:nvar]
+            args = [kwargs[vari] for vari in var[1:]]
+            if v_pot is None or force is None:
+                v_pot, force = pot.potential_and_force(*args)
+            else:
+                v_poti, forcei = pot.potential_and_force(*args)
+                v_pot += v_poti 
+                force += forcei
+        return v_pot, force
+    
 
     def __str__(self):
         """ 
