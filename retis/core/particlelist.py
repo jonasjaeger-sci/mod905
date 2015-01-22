@@ -38,6 +38,13 @@ class Particles(object):
         Initialize the Particle list. Here we dictate the the particle list
         is created with zero particles.
         """
+        self.empty_list()
+
+    def empty_list(self):
+        """
+        This is a method to reset the particle list.
+        It will delete all particles in the list.
+        """
         self.npart = 0
         self.pos = None
         self.vel = None
@@ -46,7 +53,6 @@ class Particles(object):
         self.imass = None
         self.name = None
         self.ptype =  None
-        self.index = 0
 
     def add_particle(self, pos, vel, force, mass=1.0, 
                      name='?', ptype='?'):
@@ -85,6 +91,7 @@ class Particles(object):
             self.mass = np.vstack([self.mass, mass])
             self.imass = np.vstack([self.imass, 1.0/mass])
         self.npart += 1
+
 
     def __iter__(self):
         """ 
@@ -155,9 +162,8 @@ class Particles(object):
     def pairs(self):
         """
         This is a function to iterate over all pairs of particles.
-        For more sophisticated particle lists this is where the 
-        speed up can be harvested. The current list will iterate
-        over all paris.
+        For more sophisticated particle lists this can be
+        a implementation of a smart neighborlist.
      
         
         Returns
