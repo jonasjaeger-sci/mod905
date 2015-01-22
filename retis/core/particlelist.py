@@ -127,10 +127,15 @@ class Particles(object):
         kinetic = 0.5*np.sum(self.vel*self.vel*self.mass, axis=0)
         return kinetic
 
-    def get_kinetic_temperature(self):
+    def get_kinetic_temperature(self, dof=None):
         """
         This method returns the kinetic temperature of the 
         particles in the list by making use of self.kinetic_energy()
+
+        Parameters
+        ----------
+        dof : optional, numpy.array containing the degrees of freedom
+            to subtract in each dimension.
 
         Returns
         -------
@@ -144,7 +149,13 @@ class Particles(object):
         It could for instance bee a property that's supposed to
         be calculated. 
         """
-        temperature = 2.0*self.kinetic_energy()/float(self.npart)
+        if dof is None:
+            temperature = 2.0*self.kinetic_energy()/float(self.npart)
+        else:
+            temperature = []
+            for kinetic, dofi in zip(self.kinetic_energy(), dof):
+                temperature.append(2.0*kinetic/(float(self.npart)-dofi))
+            temperature = np.array(temperature)
         average_temperature = np.average(temperature)
         return temperature, average_temperature
 
