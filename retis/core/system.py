@@ -16,7 +16,7 @@ class System(object):
     
     Attributes
     ----------
-    box : list, defines the simulation box
+    box : object, defines the simulation box
     temperature : float, defines the set temperature
     beta : float, defines the boltzmann factor
     v_pot : float,  the potential energy of the system
@@ -50,15 +50,14 @@ class System(object):
         self.dim = dim
         self.box = box # simulation box
         self.units = units
-        self.beta = None
-        self.temperaure = None
-        self.set_temperature(temperature=temperature)
+        self.temperature = temperature
+        self.beta = self.calculate_beta()
         # intialize other variables:
         self.v_pot = 0.0 # stores the potential energy of the system
         self.particles = Particles() # empty particle list
         self.forcefield = None
 
-    def set_temperature(self, temperature=None):
+    def calculate_beta(self, temperature=None):
         """
         Updates the temperature and beta for the system
         
@@ -70,11 +69,12 @@ class System(object):
         -------
         N/A, but self.temperature and self.beta are updated
         """
-        self.temperature = temperature
-        if self.temperature is None:
-            self.beta = None
-        else:
-            self.beta = 1.0/(self.temperature*constants.kB[self.units])
+        if temperature is None:
+            if self.temperature is None:
+                return None
+            else:
+                temperature = self.temperature
+        return 1.0/(temperature*constants.kB[self.units])
 
     def add_particle(self, pos, vel=None, force=None, 
                      mass=1.0, name='?', ptype='?'):
@@ -108,6 +108,44 @@ class System(object):
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
 
+
+    def force(self):
+        """ 
+        Updates the forces by calling self._evaluate_potential_force()
+        
+        Returns
+        -------
+        The new forces as a numpy.array, it will also update self.particles.force
+        """
+        self.particles.force = self._evaluate_potential_force(what='force')
+        return self.particles.force
+
+    def potential(self):
+        """ 
+        Updates self.v_pot by calling self._evaluate_potential_force()
+    
+        Returns
+        -------
+        The potential as a float, it will also update self.v_pot
+        """
+        self.v_pot = self._evaluate_potential_force(what='potential')
+        return self.v_pot
+
+    def potential_and_force(self):
+        """
+        Updates the potential energy in self.v_pot and the forces in
+        self.particles.force by calling self._evaluate_potential_force()
+
+        Returns
+        -------
+        The potential as a float and the forces as a numpy.array. It will
+        also update self.v_pot and self.particles.force
+        """
+        v_pot, force = self._evaluate_potential_force(what='both')
+        self.v_pot = v_pot
+        self.particles.force = force
+        return v_pot, force
+
     def evaluate_force(self, **kwargs):
         """ 
         Evaluate the forces
@@ -123,26 +161,11 @@ class System(object):
         -------
         The forces as a numpy.array
         """
-        args = {}
-        args['pos'] = kwargs.get('pos', self.particles.pos)
-        args['name'] = kwargs.get('name', self.particles.name)
-        args['ptype'] = kwargs.get('ptype', self.particles.ptype)
-        return self.forcefield.evaluate_force(**args)
-
-    def force(self):
-        """ 
-        Updates the forces by calling self.evaluate_force()
-        
-        Returns
-        -------
-        N/A, but updates self.forces
-        """
-        self.particles.force = self.evaluate_force()
+        return self._evaluate_potential_force(what='force', **kwargs)
 
     def evaluate_potential(self, **kwargs):
         """
-        Evaluate the potential energy. Here we pick out what variables
-        we are going to pass on to the forcefield object.
+        Evaluate the potential energy. 
     
         Parameters
         ----------
@@ -155,18 +178,40 @@ class System(object):
         -------
         The scalar potential energy correspoding to the given r.
         """
+        return self._evaluate_potential_force(what='potential', **kwargs)
+    
+    def evaluate_potential_and_force(self, **kwargs):
+        """
+        Evaluate the potential and/or the force
+        Parameters
+        ----------
+        kwargs : dictionary with settings that can be used to override
+            the information in self.particles. This is useful if one
+            wants to evaluate the potential for a different configuration
+            of the particles.
+
+        Returns
+        -------
+        The scalar potential and the force
+        """
+        return self._evaluate_potential_force(what='both', **kwargs)
+        
+    def _evaluate_potential_force(self, what='both', **kwargs):
+        """
+        Helper function to evaluate the potential or force
+        or both.
+        """
         args = {}
         args['pos'] = kwargs.get('pos', self.particles.pos)
         args['name'] = kwargs.get('name', self.particles.name)
         args['ptype'] = kwargs.get('ptype', self.particles.ptype)
-        return self.forcefield.evaluate_potential(**args)
+        args['particles'] = kwargs.get('particles', self.particles)
+        args['box'] = kwargs.get('box', self.box)
+        if what == 'potential':
+            return self.forcefield.evaluate_potential(**args)
+        elif what == 'force':
+            return self.forcefield.evaluate_force(**args)
+        else:
+            return self.forcefield.evaluate_potential_and_force(**args)
 
-    def potential(self):
-        """ 
-        Updates self.v_pot by calling self.evaluate_potential()
-    
-        Returns
-        -------
-        N/A, but updates self.v_pot
-        """
-        self.v_pot = self.evaluate_potential()
+
