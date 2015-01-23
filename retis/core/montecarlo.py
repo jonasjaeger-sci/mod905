@@ -16,9 +16,8 @@ def seed_random_generator(seed=1, rgen=RANDOMGENERATOR):
 
     Parameters
     ----------
-    seed : int, optional
-        seed for the random number generator
-    rgen : random number generator
+    seed : int, optional the seed for the random number generator
+    rgen : optional, random number generator. Default is the global one.
 
     Returns
     -------
@@ -32,10 +31,10 @@ def accept_reject(system, trial, rgen=RANDOMGENERATOR):
 
     Parameters
     ----------
-    system : the system object we are investigating
-    trial : the trial positions, assumed to be a numpy array
-    rgen : random number generator, optional
-        (default is the global one for this module)
+    system : object, the system object we are investigating
+    trial : numpy.array with the the trial position(s)
+    rgen : optional, random number generator. Default is the
+        global one.
 
     Returns
     -------
@@ -59,7 +58,7 @@ def accept_reject(system, trial, rgen=RANDOMGENERATOR):
     else:
         return system.particles.pos, system.v_pot, v_trial, False
 
-def max_displace_step(system, maxdx=0.1, rgen=RANDOMGENERATOR):
+def max_displace_step(system, maxdx=0.1, idx=None, rgen=RANDOMGENERATOR):
     """ 
     Monte Carlo routine for diplacing particles.
 
@@ -71,17 +70,20 @@ def max_displace_step(system, maxdx=0.1, rgen=RANDOMGENERATOR):
 
     Parameters
     ----------
-    system : the system object to operate on
-    maxdx : the maximum displacement (default is 0.1)
-    rgen : the random number generator (default is the global one)
+    system : object, the system object to operate on
+    maxdx : float, optional, the maximum displacement. Default is 0.1.
+    rgen : optional, the random number generator. Default is the global one.
+    idx : int, optional, index of particle to displace. If idx is not
+        given, the particle is choosen at random.
 
     Returns
     -------
     This function just returns the outcome if applying the
     function accept_reject to the system and trial position.
     """
-    # select particle randomly and copy the positions:
-    idx = rgen.random_integers(0, system.particles.npart-1) 
+    if idx is None:
+        idx = rgen.random_integers(0, system.particles.npart-1) 
     trial = np.copy(system.particles.pos) 
     trial[idx] += 2.0 * maxdx * (rgen.rand(system.dim) - 0.5) # displace
     return accept_reject(system, trial)
+
