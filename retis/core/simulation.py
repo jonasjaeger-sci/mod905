@@ -63,11 +63,24 @@ class Simulation(object):
         is defined.
         """
         self.cycle += 1
+        results = []
         for task in self.task:
-            func, args, kwargs = task['func'], task['args'], task['kwargs']
+            args = task.get('args', None)
+            kwargs = task.get('kwargs', None)
+            func = task['func']
             if callable(func): 
-                func(*args, **kwargs)
-        return True
+                if args is None:
+                    if kwargs is None:
+                        result = func()
+                    else:
+                        result = func(**kwargs)
+                else:
+                    if kwargs is None:
+                        result = func(*args)
+                    else:
+                        result = func(*args, **kwargs)
+                results.append(result)
+        return results
 
 
 class UmbrellaSimulation(Simulation):
