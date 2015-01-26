@@ -42,8 +42,8 @@ def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j,
         sigma_ij = (avgs6)**(1.0/6.0)
     else:
         warnings.warn('Unknown mixing rule requested!')
-        epsilon_ij = 1.0
-        sigma_ij = 1.0
+        epsilon_ij = 0.5*(epsilon_i + epsilon_j)
+        sigma_ij = 0.5*(sigma_i + sigma_j)
     return epsilon_ij, sigma_ij
 
 class ForceField(object):
