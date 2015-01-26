@@ -66,6 +66,7 @@ class Box(object):
         self.low = np.array(self.low)
         self.high = np.array(self.high)
         self.length = np.array(self.length)
+        self.dim = len(self.length)
 
     def calculate_volume(self):
         """
@@ -73,7 +74,7 @@ class Box(object):
         
         Returns
         -------
-        The volume of the box.
+        float equal to the volume of the box.
         """
         volume = None
         for length in self.length:
