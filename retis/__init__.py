@@ -6,3 +6,4 @@ This is the RETIS library
 from . import core
 from . import forcefield
 from . import analysis
+from . import tools
