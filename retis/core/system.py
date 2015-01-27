@@ -3,8 +3,9 @@
 """
 system.py
 """
-import constants
 import numpy as np
+# from the retis package
+from units import CONSTANTS
 from particles import Particles
 
 
@@ -74,7 +75,7 @@ class System(object):
                 return None
             else:
                 temperature = self.temperature
-        return 1.0/(temperature*constants.kB[self.units])
+        return 1.0/(temperature*CONSTANTS['kB'][self.units])
 
     def add_particle(self, pos, vel=None, force=None, 
                      mass=1.0, name='?', ptype='?'):
