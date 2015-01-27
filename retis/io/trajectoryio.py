@@ -8,6 +8,7 @@ import warnings
 import os.path
 import itertools
 import numpy as np
+from retis.core.units import CONVERT
 
 __all__ = ['WriteXYZ', 'WriteGromacs']
 
@@ -46,9 +47,8 @@ class TrajectoryWriter(object):
         these are not specified when writing frames
     oldfile : string, defines how we handle existing files with the same
         name as given in filename.
-    units : string, specifies the system of units we use in the simulation
     """
-    def __init__(self, filename, filetype, oldfile, units, frame=0):
+    def __init__(self, filename, filetype, oldfile, frame=0):
         """
         Initiates the trajectory writer object.
 
@@ -59,13 +59,11 @@ class TrajectoryWriter(object):
         oldfile : string, behavior if the filename is an
              existing file
         frame : int, counts the number of frames written
-        units : string, specifies the system of units we use in the simulation
         """
         self.frame = frame
         self.filename = filename
         self.filetype = filetype
         self.atomnames = []
-        self.units = units
         try:
             if os.path.isfile(self.filename):
                 msg = 'File exist'
@@ -138,12 +136,14 @@ class WriteXYZ(TrajectoryWriter):
     
     Attributes
     ----------
-    Same as for TrajectoryWriter
+    Same as for TrajectoryWriter and in addition:
+    convert : defines the conversion of positions from internal units to Å.
     """
-    def __init__(self, filename, oldfile='backup', frame=0):
+    def __init__(self, filename, oldfile='backup', frame=0, units='lj'):
         filetype = 'xyz'
-        super(WriteXYZ, self).__init__(filename, filetype, 
-                                       oldfile, frame=frame)
+        self.convert = {'pos': CONVERT['length'][units, 'Å']}
+        super(WriteXYZ, self).__init__(filename, filetype, oldfile, 
+                                       frame=frame)
 
     def write_frame(self, pos, names=None, header=None):
         """
@@ -170,7 +170,8 @@ class WriteXYZ(TrajectoryWriter):
                 names = self.atomnames
             pos = _adjust_coordinate(pos)
             for namei, posi in zip(names, pos):
-                self.trajfile.write('\n{} {} {} {}'.format(namei, *posi))
+                posc = posi*self.convert['pos']
+                self.trajfile.write('\n{} {} {} {}'.format(namei, *posc))
             self.frame += 1
             status = True
         except IOError as error:
@@ -186,13 +187,6 @@ class WriteXYZ(TrajectoryWriter):
             raise
         return status
 
-    def _convert_positions(self):
-        """
-        This method convert positions from the internal units
-        to the relevant units for the current format, i.e. Å
-        """
-        convert_from_to[self.units, 'Å']
-
 class WriteGromacs(TrajectoryWriter):
     """
     WriteGromacs(TrajectoryWriter)
@@ -204,13 +198,16 @@ class WriteGromacs(TrajectoryWriter):
     box : object, representing the simulation box
     gro_fmt : string, gromacs file format
     gro_vmt_vel : string, gromacs file format that also accepts velocities
+    convert : defines the conversion of positions from internal units to nm
+        and nm/ps.
     """
-    def __init__(self, filename, box, oldfile='backup', frame=0):
+    def __init__(self, filename, box, oldfile='backup', frame=0, units='lj'):
         filetype = 'gromacs'
         self.box = box
-        super(WriteGromacs, self).__init__(filename, filetype, 
-                                           oldfile, frame=frame) 
-
+        self.convert = {'pos': CONVERT['length'][units, 'nm'],
+                        'vel': CONVERT['velocity'][units, 'nm/ps']}
+        super(WriteGromacs, self).__init__(filename, filetype, oldfile,
+                                           frame=frame)
         self.gro_fmt = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
         self.gro_fmt_vel = self.gro_fmt[:-1] + '{7:8.3f}{8:8.3f}{9:8.3f}\n'
 
@@ -246,23 +243,28 @@ class WriteGromacs(TrajectoryWriter):
                 residuename = atomname
             if header is None:
                 header = 'Output from retis, frame no. {}\n'.format(self.frame)
+
             self.trajfile.write(header)   
             self.trajfile.write('{0}\n'.format(npart))
-            pos = _adjust_coordinate(pos)
+
+            pos = _adjust_coordinate(pos) # in case pos is 1D or 2D
             if not (vel is None):
                 vel = _adjust_coordinate(vel)
+
             for i, posi in enumerate(pos):
+                posc = posi*self.convert['pos'] 
                 residuenr = i if residuenum is None else residuenum[i]
                 atomnr = i if atomnum is None else atomnum[i]
                 if vel is None:
                     newline = self.gro_fmt.format(residuenr, residuename[i], 
-                                                  atomname[i], atomnr, *posi)
+                                                  atomname[i], atomnr, *posc)
                 else:
+                    velc = vel[i]*self.convert['vel']
                     newline = self.gro_fmt_vel.format(residuenr, 
                                 residuename[i], atomname[i], atomnr, 
-                                *itertools.chain(posi, vel[i]))
+                                *itertools.chain(posc, velc))
                 self.trajfile.write(newline)
-            self.trajfile.write('{0} {1} {2}\n'.format(*self._get_box_lengths()))
+            self.trajfile.write('{0} {1} {2}\n'.format(*self._box_lengths()))
             status = True
             self.frame += 1
         except IOError as error:
@@ -278,7 +280,7 @@ class WriteGromacs(TrajectoryWriter):
             raise
         return status
 
-    def _get_box_lengths(self):
+    def _box_lengths(self):
         """
         This is a helper method to obtain the box lengths from the
         box object
