@@ -17,17 +17,24 @@ CONSTANTS = {'kB': {'eV/K':8.6173324e-05, 'J/K': 1.3806488e-23, 'lj': 1.0},
              'NA': {'1/mol': 6.02214129e23}}
 
 CONVERT = {'length': {}, 'mass': {}, 'time': {},
-           'energy': {}}
+           'energy': {}, 'velocity': {}}
 
 CONVERT['length']['nm', 'Å'] = 10.0
 CONVERT['length']['nm', 'm'] = 1.0e-9
 CONVERT['length']['lj', 'Å'] = 3.405
 CONVERT['length']['lj', 'nm'] = 0.3405
+CONVERT['length']['lj', 'm'] = 3.405e-10
 CONVERT['mass']['lj', 'kg'] = 6.690e-26
 CONVERT['mass']['lj', 'g/mol'] = 39.948
 CONVERT['energy']['lj', 'J'] = 119.8*CONSTANTS['kB']['J/K']
 CONVERT['energy']['kcal', 'J'] = 4184.
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
+CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] * \
+                             (CONVERT['mass']['lj', 'kg']/\
+                              CONVERT['energy']['lj', 'J'])**0.5
+CONVERT['time']['lj', 'ps'] = 1.0e12*CONVERT['time']['lj', 's']
+CONVERT['velocity']['lj', 'nm/ps'] = CONVERT['length']['lj', 'nm']/\
+                                     CONVERT['time']['lj', 'ps']
 
 def _generate_inverse(conversions):
     """
@@ -93,7 +100,11 @@ if __name__ == "__main__":
     # _generate_inverse and _convert_from_to to generate
     # conversion factors.
     for i in CONVERT:
+        print(i)
+        for j in CONVERT[i]:
+            print(j, CONVERT[i][j])
         _generate_inverse(CONVERT[i])
+        print('Generating inverse conversions\n')
     print(_convert_from_to(CONVERT['length'], 'm', 'Å'))
     print(_convert_from_to(CONVERT['energy'], 'lj', 'kcal/mol'))
     print(_convert_from_to(CONVERT['length'], 'lj', 'nm'))
