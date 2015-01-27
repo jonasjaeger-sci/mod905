@@ -80,8 +80,8 @@ class Particles(object):
             self.pos = pos
             self.vel = vel
             self.force = force
-            self.mass = np.array([mass])
-            self.imass = np.array([1.0/mass])
+            self.mass = np.array(mass)
+            self.imass = np.array(1.0/mass)
         else:
             self.name.append(name)
             self.ptype.append(ptype)
@@ -91,6 +91,41 @@ class Particles(object):
             self.mass = np.vstack([self.mass, mass])
             self.imass = np.vstack([self.imass, 1.0/mass])
         self.npart += 1
+
+    def get_selection(self, properties, selection=None):
+        """
+        This is a helper method to return properties
+        for a selection of particles.
+        
+        Parameters
+        ----------
+        properties : list with strings of properties to return
+        selection : optional, list with indices to return
+            if selection is not given, data for all particles
+            are returned.
+        
+        Returns
+        -------
+        A list with the properties in the order they were asked for
+        in the properties argument.
+        """
+        #if selection is None:
+        #    selection = range(self.npart)
+        sel_prop = []
+        for prop in properties:
+            if hasattr(self, prop):
+                var = getattr(self, prop)
+                if type(var) == type([]):
+                    if selection is None:
+                        sel_prop.append(var)
+                    else:
+                        sel_prop.append([var[i] for i in selection])
+                else:
+                    if selection is None:
+                        sel_prop.append(var)
+                    else:
+                        sel_prop.append(var[selection])
+        return sel_prop
 
 
     def __iter__(self):
@@ -109,66 +144,6 @@ class Particles(object):
                     'name': self.name[i], 'type': self.ptype[i]}
             yield part
 
-    def kinetic_energy(self):
-        """
-        This method returns the kinetic energy of the particles in the list.
-        
-        Returns
-        -------
-        A numpy array with the same number of dimensions as self.vel.  
-        It contains the kinetic energy of the particles.
-
-        Note
-        ----
-        Consider if this calculation should be moved elsewere.
-        It could for instance bee a property that's supposed to
-        be calculated. 
-        """
-        kinetic = 0.5*np.sum(self.vel*self.vel*self.mass, axis=0)
-        return kinetic
-
-    def get_kinetic_temperature(self, dof=None):
-        """
-        This method returns the kinetic temperature of the 
-        particles in the list by making use of self.kinetic_energy()
-
-        Parameters
-        ----------
-        dof : optional, numpy.array containing the degrees of freedom
-            to subtract in each dimension.
-
-        Returns
-        -------
-        temperature : numpy.array with same size as the kinetic energy, it
-            contains the temperature in each spatial dimension.
-        average_temperature : the temperature averaged over all dimensions.
-        
-        Note
-        ----
-        Consider if this calculation should be moved elsewere.
-        It could for instance bee a property that's supposed to
-        be calculated. 
-        """
-        if dof is None:
-            temperature = 2.0*self.kinetic_energy()/float(self.npart)
-        else:
-            temperature = []
-            for kinetic, dofi in zip(self.kinetic_energy(), dof):
-                temperature.append(2.0*kinetic/(float(self.npart)-dofi))
-            temperature = np.array(temperature)
-        average_temperature = np.average(temperature)
-        return temperature, average_temperature
-
-    def reset_momentum(self):
-        """
-        This method sets the linear momentum of the particles to zero
-
-        Returns
-        -------
-        N/A, but modifies self.vel
-        """
-        mom = np.sum(self.vel*self.mass, axis=0)
-        self.vel -= mom/self.mass.sum()
 
     def pairs(self):
         """
