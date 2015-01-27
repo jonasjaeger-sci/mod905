@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 """
 This module defines some natural CONSTANTS, in different units
 and unit conversions.
@@ -11,24 +10,24 @@ References
 [1] Rowley et al., Journal of Computational Physics, vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
 """
-
+from __future__ import print_function
 from collections import deque
 
 CONSTANTS = {'kB': {'eV/K':8.6173324e-05, 'J/K': 1.3806488e-23, 'lj': 1.0},
              'NA': {'1/mol': 6.02214129e23}}
 
-convert = {'length': {}, 'mass': {}, 'time': {},
+CONVERT = {'length': {}, 'mass': {}, 'time': {},
            'energy': {}}
 
-convert['length']['nm', 'Å'] = 10.0
-convert['length']['nm', 'm'] = 1.0e-9
-convert['length']['lj', 'Å'] = 3.405
-convert['length']['lj', 'nm'] = 0.3405
-convert['mass']['lj', 'kg'] = 6.690e-26
-convert['mass']['lj', 'g/mol'] = 39.948
-convert['energy']['lj', 'J'] = 119.8*CONSTANTS['kB']['J/K']
-convert['energy']['kcal', 'J'] = 4184.
-convert['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
+CONVERT['length']['nm', 'Å'] = 10.0
+CONVERT['length']['nm', 'm'] = 1.0e-9
+CONVERT['length']['lj', 'Å'] = 3.405
+CONVERT['length']['lj', 'nm'] = 0.3405
+CONVERT['mass']['lj', 'kg'] = 6.690e-26
+CONVERT['mass']['lj', 'g/mol'] = 39.948
+CONVERT['energy']['lj', 'J'] = 119.8*CONSTANTS['kB']['J/K']
+CONVERT['energy']['kcal', 'J'] = 4184.
+CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
 
 def _generate_inverse(conversions):
     """
@@ -93,8 +92,8 @@ if __name__ == "__main__":
     # This is intended as an example of how to use the
     # _generate_inverse and _convert_from_to to generate
     # conversion factors.
-    for i in convert:
-        _generate_inverse(convert[i])
-    print(_convert_from_to(convert['length'], 'm', 'Å'))
-    print(_convert_from_to(convert['energy'], 'lj', 'kcal/mol'))
-    print(_convert_from_to(convert['length'], 'lj', 'nm'))
+    for i in CONVERT:
+        _generate_inverse(CONVERT[i])
+    print(_convert_from_to(CONVERT['length'], 'm', 'Å'))
+    print(_convert_from_to(CONVERT['energy'], 'lj', 'kcal/mol'))
+    print(_convert_from_to(CONVERT['length'], 'lj', 'nm'))
