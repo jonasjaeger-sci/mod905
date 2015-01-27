@@ -5,7 +5,7 @@ system.py
 """
 import constants
 import numpy as np
-from particlelist import Particles
+from particles import Particles
 
 
 __all__ = ['System']
