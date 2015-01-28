@@ -50,7 +50,7 @@ def mc_task(system, maxdx):
     Function to perform monte carlo moves.
     Will update positions and potential energy as needed.
     """
-    accepted_r, v_pot, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
+    accepted_r, v_pot, r_trial, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
     if status:
         system.particles.pos = accepted_r
         system.v_pot = v_trial
@@ -70,8 +70,9 @@ def record(system, traj_prop, ener_prop):
 trajectory, energy = [], [] # to store all  trajectories/energies
 # we run all the umbrella simulations by looping over 
 # the different umbrellas we defined:
+print('Starting simulations:')
 for i, umbrella in enumerate(umbrellas):
-    print("Running umbrealla no: {} ({})".format(i, umbrella))
+    print("Running umbrealla no: {} of {}. Location: {}".format(i+1, n_umb, umbrella))
     # Update parameters for the rectangular potential:
     params = {'left': umbrella[0], 'right': umbrella[1]}
     system.forcefield.update_potential_parameters(potential_rw, params)
