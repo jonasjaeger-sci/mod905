@@ -34,7 +34,7 @@ class Simulation(object):
         self.maxcycle = maxcycle
         self.task = []
 
-    def simulation_finished(self):
+    def is_finished(self):
         """
         Function to determine if simulation is finished
 
@@ -123,7 +123,7 @@ class UmbrellaSimulation(Simulation):
         self.umbrella = umbrella
         self.overlap = overlap
 
-    def simulation_finished(self, system):
+    def is_finished(self, system):
         """
         Check if simulation is done. 
     
