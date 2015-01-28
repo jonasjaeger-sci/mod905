@@ -1,49 +1,52 @@
 # -*- coding: utf-8 -*-
 """
-Example of running a simulation
+This is a simple example of how pyretis can be used
+for running an umbrella simulation.
+
+In this simulation, we study a particle moving in a one-dimensional
+potential energy landscape and the goal is to determine this
+landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-# first we need to import the retis simulation library
-# here, we only import the functions we need
 from retis.core import UmbrellaSimulation, System
 from retis.core import montecarlo as mc
 from retis.forcefield import ForceField, DoubleWell, RectangularWell
-# we will also use the numpy library for positions, velocities etc...
 import numpy as np 
 
-# Let's set up the simulation.
-# We begin by defining the system we will simulate.
+# Define system with a temperature in K
 system = System(dim=1, temperature=500, units='eV/K') 
-# Lets add a particle to this system
-system.add_particle(name='X1', pos=np.array([-0.7]))
-# We also need to set up the force field.
-# We do this by combining two potential functions:
-# 1) A double well potential
+# We will only have one particle in the system:
+system.add_particle(name='X', pos=np.array([-0.7]))
+# In this particular example, we are going to use
+# a simple double well potential
 potential_dw = DoubleWell(a=1, b=1, c=0.02)
-# 2) A rectangular well
+# and a rectangular well potential
 potential_rw = RectangularWell()
+# do set up the unbiased force field
 forcefield = ForceField(desc='Double well', potential=[potential_dw])
-
+# and the biased
 forcefield_bias = ForceField(desc='Double well with rectangular bias',
                              potential=[potential_dw, potential_rw])
+system.forcefield = forcefield_bias 
 
-system.forcefield = forcefield_bias # attach biased force field to the system
-
-# Now we need to define the simulation. Here we define several
-# small umbrella simulations, which we will link together with this script.
-# We select the placement of the umbrellas:
-umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], 
-             [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
+# Next we create a list containing the location of the
+# different umbrellas:
+umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
+             [0.3, 0.6], [0.5, 1.0]]
 n_umb = len(umbrellas)
-# and just define some parameters for the simulation
-maxcycles = 1e4
+# and we initiate the random number generator we will use
 randseed = 1 # seed for random number generator:
 mc.seed_random_generator(randseed)
-maxdx = 0.1 # maximum allowed displacement
+# and define some common variables for the simulations
+maxcycles = 1e4
+maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 
-# Next, we will define some tasks we want
-# do to during the simulation. 
-# We need to perform the actual umbrella sampling
+# In pyretis, a simulation is defined by defining certain tasks
+# the simulation will perform. Here we need to create a task
+# to perform Monte Carlo moves to sample the potential energy.
+# Let's make use of the predefined method `max_displace_step`
+# defined in the `retis.core.montecarlo` module which we 
+# have imported as `mc`.
 def mc_task(system, maxdx):
     """
     Function to perform monte carlo moves.
@@ -54,7 +57,8 @@ def mc_task(system, maxdx):
         system.particles.pos = accepted_r
         system.v_pot = v_trial
 
-# and we need to record the positions for later analysis:  
+# For convenience, we also create a function to
+# store all accepted positions and energies
 def record(system, traj_prop, ener_prop): 
     """
     Function to store positions and energy
@@ -66,13 +70,13 @@ def record(system, traj_prop, ener_prop):
         ener_prop.append(system.v_pot)
 
 
-trajectory, energy = [], [] # to store all  trajectories/energies
+trajectory, energy = [], [] # to store all trajectories & energies
 # we run all the umbrella simulations by looping over 
 # the different umbrellas we defined:
 print('Starting simulations:')
 for i, umbrella in enumerate(umbrellas):
     print('Running umbrealla no: {} of {}. Location: {}'.format(i+1, n_umb, umbrella))
-    # Update parameters for the rectangular potential:
+    # Move rectangular potential to correct place:
     params = {'left': umbrella[0], 'right': umbrella[1]}
     system.forcefield.update_potential_parameters(potential_rw, params)
     system.potential() # recalculate potential energy
@@ -81,42 +85,60 @@ for i, umbrella in enumerate(umbrellas):
     simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
                                     maxcycle=maxcycles)
     # Also create empy list for storing some data:
-    traj = []
-    ener = []
+    traj, ener = [], []
     # let us add the two task we defined previously:
-    task1 = {'func':mc_task, 'args':[system],
-               'kwargs':{'maxdx':maxdx}}
-    task2 = {'func':record, 'args':[system, traj, ener], 'kwargs':{}}
-    simulation.task = [task1, task2]
+    task_monte_carlo = {'func':mc_task, 'args':[system],
+                        'kwargs':{'maxdx':maxdx}}
+    task_record = {'func':record, 'args':[system, traj, ener]}
+    simulation.task = [task_monte_carlo, task_record]
 
     while not simulation.is_finished(system):
         simulation.step()
-    #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(np.array(traj))
     energy.append(np.array(ener))
     print('Done. Cycles: {}'.format(simulation.cycle)) 
 
 # We can now post-process the simulation output.
-# Here, we make use of some of the analysis tools in retis:
 from retis.analysis.histogram import histogram, match_all_histograms
 bins = 100
-lim = (-1.2, 1.2)
+lim = (-1.1, 1.1)
 histograms = [histogram(traj, bins=bins, limits=lim) for traj in trajectory]
+# extract the bins (the midpoints) and the bin-width:
+bin_x = histograms[0][-1]
+dbin = bin_x[1]-bin_x[0]
 # We are going to match these histograms:
+print('Matching histograms...')
 histograms_s, _, hist_avg = match_all_histograms(histograms, umbrellas)
 
-# let's also create a simple plot of the
-# potential and the free energy.
+# let us create some simple plots using matplotlib:
 from matplotlib import pyplot as plt
-x = histograms[0][2]
+# first, let us plot the matched histograms on a log-scale:
+print('Plotting matched histograms')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_yscale('log')
+ax.set_xlabel('Position ($x$)', fontsize='large')
+ax.set_ylabel('Matched histograms', fontsize='large')
+colors = ['blue', 'green', 'darkviolet', 'brown', 'gray', 'crimson', 'cyan']
+for i, histo in enumerate(histograms_s):
+    ax.bar(bin_x-0.5*dbin, histo, dbin, color=colors[i], alpha=0.6, log=True)
+ax.plot(bin_x, hist_avg, lw=7, color='orangered', alpha=0.6, label='Average after matching')
+ax.legend()
+plt.xlim((-1.1, 1.1))
+
+print('Plotting the free energy')
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(111)
 xv = np.linspace(-2, 2, 1000)
 F = -np.log(hist_avg)/system.beta # free energy
 V = np.array([forcefield.evaluate_potential(pos=xi) for xi in xv]) # unbiased potetnial
 F += (V.min()-F.min())
-plt.plot(xv, V, 'b-', label='Unbiased potential')
-plt.plot(x, F, lw=10, alpha=0.4, color='green', label='Free energy')
-plt.legend()
-plt.xlim((-1, 1))
+ax2.plot(xv, V, 'blue', lw=3, label='Unbiased potential', alpha=0.5)
+ax2.plot(bin_x, F, lw=7, alpha=0.5, color='green', label='Free energy')
+ax2.set_xlabel('Position ($x$)', fontsize='large')
+ax2.set_ylabel('Potential energy ($V(x)$) / eV', fontsize='large')
+ax2.legend()
+plt.xlim((-1.1, 1.1))
 plt.ylim((-0.3, 0.05))
 plt.show()
 

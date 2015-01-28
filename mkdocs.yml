@@ -1,6 +1,6 @@
 site_name: pyretis
 pages:
 - [index.md, Home]
+- [examples.md, Examples]
 - [about.md, About]
 theme: readthedocs
-
