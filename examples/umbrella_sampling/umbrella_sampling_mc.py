@@ -90,7 +90,7 @@ for i, umbrella in enumerate(umbrellas):
     task2 = {'func':record, 'args':[system, traj, ener], 'kwargs':{}}
     simulation.task = [task1, task2]
 
-    while not simulation.simulation_finished(system):
+    while not simulation.is_finished(system):
         simulation.step()
     traj.val = np.array(traj.val)
     #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
