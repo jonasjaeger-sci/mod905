@@ -7,7 +7,7 @@ import numpy as np
 
 __all__ = ['histogram', 'match_all_histograms']
 
-def histogram(data, bins=10, limits=(-1,1), normed=False):
+def histogram(data, bins=10, limits=(-1,1), density=False):
     """ 
     Function to create a histogram of the data stored
     in data.
@@ -26,8 +26,7 @@ def histogram(data, bins=10, limits=(-1,1), normed=False):
     bin_mid : the midpoint of the bins
     """
     hist, bins = np.histogram(data, bins=bins,
-                              range=limits, density=False,
-                              normed=normed)
+                              range=limits, density=density)
     bin_mid = 0.5*(bins[1:]+bins[:-1])
     return hist, bins, bin_mid
 
