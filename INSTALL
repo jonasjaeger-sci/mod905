@@ -1,0 +1,9 @@
+
+Installing the retis libraty
+============================
+
+1. Place the retis library somewhere you can access it, to /some/dir/pytismol
+
+2. Export the python path:
+
+export PYTHONPATH=$PYTHONPATH:/some/dir/pytismol
