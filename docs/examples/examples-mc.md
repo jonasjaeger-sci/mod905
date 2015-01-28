@@ -1,4 +1,5 @@
-## Umbrella Sampling
+
+### Umbrella Sampling
 
 This example will simply calculate the free energy profile
 in a given, known, potential using umbrella sampling.

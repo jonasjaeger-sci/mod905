@@ -1,6 +1,6 @@
 # pyretis
 
-Rare event simulations with python
+*rare event simulations with python*
 
 ---
 

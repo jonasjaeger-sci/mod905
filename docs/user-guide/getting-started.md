@@ -15,4 +15,4 @@ A simple hello world example
 ## More examples
 
 These are included in the pyretis/examples directory.
-More information on the [example page(s)](examples/examples.md).
+More information on the [example page(s)](../examples/examples.md).
