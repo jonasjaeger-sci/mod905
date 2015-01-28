@@ -103,7 +103,7 @@ class RectangularWell(PotentialFunction):
     """
 
     def __init__(self, left=0.0, right=1.0, largenumber=1e10,
-                 desc="1D Rectangular well potential"):
+                 desc='1D Rectangular well potential'):
         """ 
         Initiates a one-dimensional rectangular well.
     
@@ -134,9 +134,8 @@ class RectangularWell(PotentialFunction):
         -------
         N/A, but might raise a warning. 
         """
-
         if self.left >= self.right:
-            msg = "Setting left >= right in RectangularWell potential!"
+            msg = 'Setting left >= right in RectangularWell potential!'
             warnings.warn(msg)
         
 

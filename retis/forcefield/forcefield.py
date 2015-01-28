@@ -63,7 +63,7 @@ class ForceField(object):
         potential
     """
 
-    def __init__(self, desc="", potential=None, params=None):
+    def __init__(self, desc='', potential=None, params=None):
         """ 
         Initiates the force field object.
     
@@ -270,8 +270,8 @@ class ForceField(object):
         String with description of force field and the potential
         functions included in the force field.
         """
-        pots = "\n *".join([ff.desc for ff in self.potential])
-        force = "Force field: {}".format(self.desc)
-        desc = "{}\nPotential functions: \n *{}".format(force, pots)
+        pots = '\n *'.join([ff.desc for ff in self.potential])
+        force = 'Force field: {}'.format(self.desc)
+        desc = '{}\nPotential functions: \n *{}'.format(force, pots)
         return desc
 

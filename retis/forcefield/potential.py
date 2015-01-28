@@ -24,7 +24,7 @@ class PotentialFunction(object):
         the parameters of the potential.
     """
 
-    def __init__(self, dim=1, desc=""):
+    def __init__(self, dim=1, desc=''):
         """ 
         Initiates the potential
     

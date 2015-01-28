@@ -410,7 +410,7 @@ class PairLennardJonesCut(PotentialFunction):
         N/A, but will update self.params['epsilon_ij'] and self.params['sigma_ij']
         """
         epsilon_ij, sigma_ij = {}, {}
-        epsilon, sigma = self.params['epsilon'], self.params["sigma"]
+        epsilon, sigma = self.params['epsilon'], self.params['sigma']
         for pair in itertools.product(epsilon.keys(), epsilon.keys()):
             i = pair[0]
             j = pair[1]
@@ -450,35 +450,35 @@ class PairLennardJonesCut(PotentialFunction):
         -------
         string, with parameters.
         """
-        strparam = ["Potential parameters, Lennard-Jones:"]
-        strparam.extend(["Mixing: {}".format(self.params["mixing"])])
-        atmformat = "{0:12s} {1:>9s} {2:>9s} {3:>9s}"
-        atmformat2 = "{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}"
-        atmformat3 = "{0:12s} {1:>9s} {2:>9s} {3:>9.4f}"
-        strparam.append("Input parameters:")
-        strparam.append(atmformat.format("Atom/pair", "epsilon", "sigma", 
-                                         "cut-off"))
-        for i in self.params["epsilon"]:
-            epsilon = self.params["epsilon"][i]
-            sigma = self.params["sigma"][i]
-            rcut = self.params["rcut"][i]
+        strparam = ['Potential parameters, Lennard-Jones:']
+        strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
+        atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
+        atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
+        atmformat3 = '{0:12s} {1:>9s} {2:>9s} {3:>9.4f}'
+        strparam.append('Input parameters:')
+        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma', 
+                                         'cut-off'))
+        for i in self.params['epsilon']:
+            epsilon = self.params['epsilon'][i]
+            sigma = self.params['sigma'][i]
+            rcut = self.params['rcut'][i]
             strparam.append(atmformat2.format(i, epsilon, sigma, rcut))
-        for i in self.params["rcut"]:
-            if not i in self.params["epsilon"]:
-                rcut = self.params["rcut"][i]
+        for i in self.params['rcut']:
+            if not i in self.params['epsilon']:
+                rcut = self.params['rcut'][i]
                 if type(i) == type(()):
-                    stri = "{}-{}".format(*i)
+                    stri = '{}-{}'.format(*i)
                 else:
-                    stri = "{}".format(i)
-                strparam.append(atmformat3.format(stri, "", "", rcut))
-        strparam.append("Generated parameters:")
-        strparam.append(atmformat.format("Atom/pair", "epsilon", "sigma", 
-                                         "cut-off"))
-        for i in self.params["epsilon_ij"]:
-            epsilon = self.params["epsilon_ij"][i]
-            sigma = self.params["sigma_ij"][i]
-            rcut = self.params["rcut_ij"][i]
+                    stri = '{}'.format(i)
+                strparam.append(atmformat3.format(stri, '', '', rcut))
+        strparam.append('Generated parameters:')
+        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma', 
+                                         'cut-off'))
+        for i in self.params['epsilon_ij']:
+            epsilon = self.params['epsilon_ij'][i]
+            sigma = self.params['sigma_ij'][i]
+            rcut = self.params['rcut_ij'][i]
             if type(i) == type(()):
-                stri = "{}-{}".format(*i)
+                stri = '{}-{}'.format(*i)
             strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
-        return "\n".join(strparam)
+        return '\n'.join(strparam)
