@@ -5,7 +5,7 @@ simulation.py
 
 import numpy as np
 
-__all__ = ["Simulation", "UmbrellaSimulation"]
+__all__ = ['Simulation', 'UmbrellaSimulation']
 
 class Simulation(object):
     """
@@ -128,7 +128,7 @@ class UmbrellaSimulation(Simulation):
         Check if simulation is done. 
     
         In the umbrella simulation, the simulation is finished when we
-        cycle is larger than maxcycle and at least one particle has
+        cycle is larger than maxcycle and all particles have
         crossed self.overlap.
 
         Parameters
