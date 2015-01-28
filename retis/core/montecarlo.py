@@ -5,7 +5,7 @@ Module for Monte Carlo Algorithms
 import numpy as np
 from numpy.random import RandomState
 
-__all__ = ["seed_random_generator", "accept_reject", "max_displace_step"]
+__all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step']
 
 RANDOMGENERATOR = RandomState() # this will be the random number generator
 

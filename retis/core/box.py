@@ -5,7 +5,7 @@ Class for a simulation box
 
 import numpy as np
 
-__all__ = ["Box"]
+__all__ = ['Box']
 
 class Box(object):
     """
@@ -49,11 +49,11 @@ class Box(object):
                 self.low.append(dim[0])
                 self.high.append(dim[1])
             else:
-                msg = "Did not understand dimension in box: {}".format(dim)
+                msg = 'Did not understand dimension in box: {}'.format(dim)
                 raise ValueError(msg)
             length = self.high[-1]-self.low[-1]
             if length <= 0:
-                msg = "Error for dim: {}, box length <= 0!".format(dim)
+                msg = 'Error for dim: {}, box length <= 0'.format(dim)
                 raise ValueError(msg)
             self.length.append(length)
             if periodic is None:
@@ -187,7 +187,7 @@ class Box(object):
         String with type of box, extent of the box and
         information about the periodicity.
         """
-        boxstr = ["Simple rectangular cuboid box:"]
+        boxstr = ['Simple rectangular cuboid box:']
         for i, periodic in enumerate(self.periodic):
             low = self.low[i]
             high = self.high[i]
