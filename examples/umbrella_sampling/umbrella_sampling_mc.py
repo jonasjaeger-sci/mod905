@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 """
 Example of running a simulation
 """
+from __future__ import print_function
 # first we need to import the retis simulation library
 # here, we only import the functions we need
-from retis.core import UmbrellaSimulation, System, Property
+from retis.core import UmbrellaSimulation, System
 from retis.core import montecarlo as mc
-from retis.forcefield import ForceField
-from retis.forcefield.potentials import DoubleWell, RectangularWell
+from retis.forcefield import ForceField, DoubleWell, RectangularWell
 # we will also use the numpy library for positions, velocities etc...
 import numpy as np 
 
@@ -63,8 +62,8 @@ def record(system, traj_prop, ener_prop):
     simply replicate the energy of the system correspondingly.
     """
     for ri in system.particles.pos:
-        traj_prop.add(ri)
-        ener_prop.add(system.v_pot)
+        traj_prop.append(ri)
+        ener_prop.append(system.v_pot)
 
 
 trajectory, energy = [], [] # to store all  trajectories/energies
@@ -81,9 +80,9 @@ for i, umbrella in enumerate(umbrellas):
     # Initiate the umbrella simulation:
     simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
                                     maxcycle=maxcycles)
-    # Also create properties for storing data:
-    traj = Property(desc='Position of the particle(s)')
-    ener = Property(desc='Energy of the particle(s)')
+    # Also create empy list for storing some data:
+    traj = []
+    ener = []
     # let us add the two task we defined previously:
     task1 = {'func':mc_task, 'args':[system],
                'kwargs':{'maxdx':maxdx}}
@@ -92,19 +91,17 @@ for i, umbrella in enumerate(umbrellas):
 
     while not simulation.is_finished(system):
         simulation.step()
-    traj.val = np.array(traj.val)
     #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
-    trajectory.append(traj)
-    energy.append(ener)
+    trajectory.append(np.array(traj))
+    energy.append(np.array(ener))
     print('Done. Cycles: {}'.format(simulation.cycle)) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
 from retis.analysis.histogram import histogram, match_all_histograms
 bins = 100
-limits = (-1.2, 1.2)
-histograms = [histogram(traj.val, bins=bins, 
-                        limits=limits) for traj in trajectory]
+lim = (-1.2, 1.2)
+histograms = [histogram(traj, bins=bins, limits=lim) for traj in trajectory]
 # We are going to match these histograms:
 histograms_s, _, hist_avg = match_all_histograms(histograms, umbrellas)
 

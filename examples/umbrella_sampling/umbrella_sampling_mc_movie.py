@@ -27,7 +27,7 @@ ener_data = []
 umbr = [] # id of current umbrella
 crossing = [] # position that must be crossed
 for i, (traj, ener) in enumerate(zip(trajectory, energy)):
-    r, e = traj.val[::50], ener.val[::50]
+    r, e = traj[::50], ener[::50]
     traj_data.extend(r)
     ener_data.extend(e)
     umbr.extend([i]*len(r))
