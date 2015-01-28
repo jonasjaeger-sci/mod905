@@ -1,6 +1,13 @@
 site_name: pyretis
 pages:
-- [index.md, Home]
-- [examples.md, Examples]
-- [about.md, About]
+# Introduction
+- ['index.md', 'Home']
+# User Guide
+- ['user-guide/getting-started.md', 'User Guide', 'Getting started']
+- ['user-guide/examples/examples.md', 'User Guide', 'Examples']
+- ['user-guide/examples/umbrella-sampling.md', 'User Guide', 'Examples']
+# About
+- ['about/license.md', 'About', 'License']
+- ['about/release-notes.md', 'About', 'Release Notes']
 theme: readthedocs
+use_directory_urls: false

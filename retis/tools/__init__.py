@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Core RETIS tools
+Some RETIS tools
 =========================
 """
 
