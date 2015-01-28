@@ -72,7 +72,7 @@ trajectory, energy = [], [] # to store all  trajectories/energies
 # the different umbrellas we defined:
 print('Starting simulations:')
 for i, umbrella in enumerate(umbrellas):
-    print("Running umbrealla no: {} of {}. Location: {}".format(i+1, n_umb, umbrella))
+    print('Running umbrealla no: {} of {}. Location: {}'.format(i+1, n_umb, umbrella))
     # Update parameters for the rectangular potential:
     params = {'left': umbrella[0], 'right': umbrella[1]}
     system.forcefield.update_potential_parameters(potential_rw, params)
@@ -96,8 +96,7 @@ for i, umbrella in enumerate(umbrellas):
     #traj.dump_to_file('pos-umbrella-{0:03d}.txt'.format(i))
     trajectory.append(traj)
     energy.append(ener)
-    print("Done. Cycles: {}. Reached end point: {}".format(simulation.cycle,
-          np.all(system.particles.pos > over))) 
+    print('Done. Cycles: {}'.format(simulation.cycle)) 
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
