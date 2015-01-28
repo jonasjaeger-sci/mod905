@@ -95,7 +95,7 @@ def _convert_from_to(conversions, unit_from, unit_to):
         factor *= conversions[unit]
     return (unit_from, unit_to), factor, path[::-1]
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # This is intended as an example of how to use the
     # _generate_inverse and _convert_from_to to generate
     # conversion factors.

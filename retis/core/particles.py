@@ -5,7 +5,7 @@ particles.
 """
 import numpy as np
 
-__all__ = ["Particles"]
+__all__ = ['Particles']
 
 class Particles(object):
     """

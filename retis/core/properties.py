@@ -4,7 +4,7 @@ This file contains a class for a generic property.
 """
 import numpy as np
 
-__all__ = ["Property"]
+__all__ = ['Property']
 
 class Property(object):
     """
@@ -36,7 +36,7 @@ class Property(object):
     >>> ener.add(99.22)
     >>> ener.mean
     """
-    def __init__(self, desc=""):
+    def __init__(self, desc=''):
         """ 
         Initialize the property. 
 
