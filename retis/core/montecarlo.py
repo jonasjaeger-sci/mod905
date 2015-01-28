@@ -38,8 +38,9 @@ def accept_reject(system, trial, rgen=RANDOMGENERATOR):
 
     Returns
     -------
-    the accepted positions (trial or the original system.particles['r']):
-    v_pot : potential energy corresponding to positions r
+    the accepted positions (trial or the original positions)
+    v_pot : energy corresponding to the accepted positions
+    trial : the trial positions
     v_trial : potential energy of trial positions
     status : True if move is acceped, False otherwise
 
@@ -54,9 +55,9 @@ def accept_reject(system, trial, rgen=RANDOMGENERATOR):
     deltae = v_trial - system.v_pot
     pacc = np.exp(-system.beta * deltae)
     if rgen.rand() < pacc:
-        return trial, v_trial, v_trial, True
+        return trial, v_trial, trial, v_trial, True
     else:
-        return system.particles.pos, system.v_pot, v_trial, False
+        return system.particles.pos, system.v_pot, trial, v_trial, False
 
 def max_displace_step(system, maxdx=0.1, idx=None, rgen=RANDOMGENERATOR):
     """ 
