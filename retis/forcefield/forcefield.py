@@ -170,21 +170,25 @@ class ForceField(object):
         Returns
         -------
         force : np.array with the forces.
-        
+        virial : float with the virial
+
         Note
         ----
         See the note for evaluate_potential
         """
         force = None
+        virial = None
         for pot in self.potential:
             nvar = pot.force.func_code.co_argcount 
             var = pot.force.func_code.co_varnames[:nvar]
             args = [kwargs[vari] for vari in var[1:]]
-            if force is None:
-                force = pot.force(*args)
+            if force is None or virial is None:
+                force, virial = pot.force(*args)
             else:
-                force += pot.force(*args)
-        return force
+                forcei, viriali = pot.force(*args)
+                force += forcei
+                virial += viriali
+        return force, virial
 
     def evaluate_potential(self, **kwargs):
         """ 
@@ -234,6 +238,7 @@ class ForceField(object):
         -------
         v_pot : float equal to the potential energy.
         force : numpy.array with the forces
+        virial : float with the virial
 
         Note
         ----
@@ -248,17 +253,19 @@ class ForceField(object):
         """
         v_pot = None
         force = None
+        virial = None
         for pot in self.potential:
             nvar = pot.potential_and_force.func_code.co_argcount 
             var = pot.potential_and_force.func_code.co_varnames[:nvar]
             args = [kwargs[vari] for vari in var[1:]]
-            if v_pot is None or force is None:
-                v_pot, force = pot.potential_and_force(*args)
+            if v_pot is None or force is None or virial is None:
+                v_pot, force, virial = pot.potential_and_force(*args)
             else:
-                v_poti, forcei = pot.potential_and_force(*args)
+                v_poti, forcei, viriali = pot.potential_and_force(*args)
                 v_pot += v_poti 
                 force += forcei
-        return v_pot, force
+                virial += viriali
+        return v_pot, force, virial
 
     def __str__(self):
         """ 

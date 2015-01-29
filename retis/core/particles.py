@@ -52,7 +52,8 @@ class Particles(object):
         self.mass = None
         self.imass = None
         self.name = None
-        self.ptype =  None
+        self.ptype = None
+        self.virial = None
 
     def add_particle(self, pos, vel, force, mass=1.0, 
                      name='?', ptype='?'):

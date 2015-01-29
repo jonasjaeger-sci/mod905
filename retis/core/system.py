@@ -58,6 +58,17 @@ class System(object):
         self.particles = Particles() # empty particle list
         self.forcefield = None
 
+    def get_kB(self):
+        """
+        This function returns the value of Boltzmanns constant
+        in the correct units for the system
+        
+        Returns
+        -------
+        Boltzmanns constant as a float
+        """
+        return CONSTANTS['kB'][self.units]
+
     def calculate_beta(self, temperature=None):
         """
         Updates the temperature and beta for the system
@@ -118,8 +129,10 @@ class System(object):
         -------
         The new forces as a numpy.array, it will also update self.particles.force
         """
-        self.particles.force = self._evaluate_potential_force(what='force')
-        return self.particles.force
+        force, virial = self._evaluate_potential_force(what='force')
+        self.partilces.force = force
+        self.particles.virial = virial
+        return self.particles.force, virial
 
     def potential(self):
         """ 
@@ -142,10 +155,11 @@ class System(object):
         The potential as a float and the forces as a numpy.array. It will
         also update self.v_pot and self.particles.force
         """
-        v_pot, force = self._evaluate_potential_force(what='both')
+        v_pot, force, virial = self._evaluate_potential_force(what='both')
         self.v_pot = v_pot
         self.particles.force = force
-        return v_pot, force
+        self.particles.virial = virial
+        return v_pot, force, virial
 
     def evaluate_force(self, **kwargs):
         """ 

@@ -3,6 +3,7 @@
 This file contains methods that act on a (selection) of particles.
 """
 import numpy as np
+import warnings
 
 __all__ = ['kinetic_energy', 'kinetic_temperature', 'reset_momentum']
 
@@ -109,3 +110,37 @@ def reset_momentum(particles, selection=None):
     mom = np.sum(vel*mass, axis=0)
     particles.vel[selection] -= mom/mass.sum()
 
+def evaluate_press(particles, system, temperature=None, 
+                dof=None):
+    """
+    This method evaluates pV
+    
+    Parameters
+    ----------
+    particles : object with the particles, this is used to obtain the virial.
+    system : object with the system, this is used to obtain kB and number
+        of dimensions
+    temperature : float, optional the current temperature of the system
+        if the temperature is not given, it will be calculated based on
+        the selection of particles
+
+    Raises
+    ------
+    Warning if both temperature and dof is None. This might be perfectly
+    fine, but typically, some info about the dof to subtract is needed
+    for the temperature calculation. This is perhaps a indication that
+    we should rething how to include dof's to subtract!
+    """
+    if temperature is None and dof is None:
+        warnings.warn('Both temperature and dof are not set')
+    if temperature is None:
+        _, temperature = kinetic_temperature(particles, dof=dof, 
+                                             kinetic=None)
+    if dof is None:
+        npart = particles.npart
+    else:
+        npart = (particles.npart*system.dim - np.sum(dof))/system.dim
+    pressvolume = npart*temperature*system.get_kB() +\
+                  particles.virial/system.dim
+    press = pressvolume/(system.box.calculate_volume())
+    return pressvolume, press

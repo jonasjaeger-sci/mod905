@@ -226,6 +226,9 @@ class PairLennardJonesCut(PotentialFunction):
         This method calculates the force for the Lennard Jones
         interaction.
         
+        We also calculate the virial here, since the force
+        is evaluated.
+        
         Parameters
         ----------
         particles : object, particle list.
@@ -237,6 +240,7 @@ class PairLennardJonesCut(PotentialFunction):
         in particles.pos.
         """
         force = np.zeros(particles.pos.shape)
+        virial = 0.0
         try:
             raise AttributeError
             #for pair in particles.pairs():
@@ -252,6 +256,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        forceij = forcelj*delta
             #        force[i] += forceij
             #        force[j] -= forceij
+            #        virial += np.dot(forceij, delta)
         except AttributeError:
             self._make_tables_for_numpy(particles)
             for i, particle_i in enumerate(particles.pos[:-1]):
@@ -267,7 +272,8 @@ class PairLennardJonesCut(PotentialFunction):
                 forceij = np.dot(forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
-        return force
+                virial += np.sum(forceij*delta[k])
+        return force, virial
 
     def potential(self, particles, box):
         """
@@ -327,6 +333,7 @@ class PairLennardJonesCut(PotentialFunction):
         in particles.pos.
         """
         v_pot = 0.0
+        virial = 0.0
         force = np.zeros(particles.pos.shape)
         try: 
             raise AttributeError   
@@ -345,6 +352,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        forceij = forcelj*delta
             #        force[i] += forceij
             #        force[j] -= forceij
+            #        virial += np.dot(forceij, delta)
         except AttributeError:
             self._make_tables_for_numpy(particles)
             for i, particle_i in enumerate(particles.pos[:-1]):
@@ -364,7 +372,8 @@ class PairLennardJonesCut(PotentialFunction):
                 forceij = np.dot(forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
-        return v_pot, force
+                virial += np.sum(forceij*delta[k])
+        return v_pot, force, virial
 
     def _generate_lj_parameters(self):
         """
