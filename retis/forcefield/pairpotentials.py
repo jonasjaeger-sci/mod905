@@ -205,11 +205,16 @@ class PairLennardJonesCut(PotentialFunction):
         except IndexError:
             update = True
         if update:
+            try: # "stupid" python2 <-3 hack
+                xrange
+            except NameError:
+                xrange = range
+            
             for key in self.matrix_np:
                 self.matrix_np[key] = []
             for i, itype in enumerate(particles.ptype):
                 rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
-                for j in xrange(i+1, npart):
+                for j in xrange(i+1, npart): # note xrange here -> hack above
                     jtype = particles.ptype[j]
                     rcut2.append(self.rcut2[itype, jtype])
                     lj1.append(self.lj1[itype, jtype])
