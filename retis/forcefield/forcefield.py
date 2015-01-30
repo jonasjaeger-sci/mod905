@@ -179,8 +179,8 @@ class ForceField(object):
         force = None
         virial = None
         for pot in self.potential:
-            nvar = pot.force.func_code.co_argcount 
-            var = pot.force.func_code.co_varnames[:nvar]
+            nvar = pot.force.__code__.co_argcount
+            var = pot.force.__code__.co_varnames[:nvar]
             args = [kwargs[vari] for vari in var[1:]]
             if force is None or virial is None:
                 force, virial = pot.force(*args)
@@ -216,8 +216,8 @@ class ForceField(object):
         """
         v_pot = None
         for pot in self.potential:
-            nvar = pot.potential.func_code.co_argcount 
-            var = pot.potential.func_code.co_varnames[:nvar]
+            nvar = pot.potential.__code__.co_argcount
+            var = pot.potential.__code__.co_varnames[:nvar]
             args = [kwargs[vari] for vari in var[1:]]
             if v_pot is None:
                 v_pot = pot.potential(*args)
@@ -255,8 +255,8 @@ class ForceField(object):
         force = None
         virial = None
         for pot in self.potential:
-            nvar = pot.potential_and_force.func_code.co_argcount 
-            var = pot.potential_and_force.func_code.co_varnames[:nvar]
+            nvar = pot.potential_and_force.__code__.co_argcount 
+            var = pot.potential_and_force.__code__.co_varnames[:nvar]
             args = [kwargs[vari] for vari in var[1:]]
             if v_pot is None or force is None or virial is None:
                 v_pot, force, virial = pot.potential_and_force(*args)
