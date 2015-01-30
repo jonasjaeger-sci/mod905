@@ -5,22 +5,22 @@ simulation.py
 
 import numpy as np
 
-__all__ = ['Simulation', 'UmbrellaSimulation']
+__all__ = ['Simulation', 'UmbrellaWindowSimulation']
+
 
 class Simulation(object):
     """
     This class defines a generic simulation.
-    
+
     Attributes
     ----------
     cycle : int, the current cycle number for the simulation.
     maxcycle : int, maximum number of cycles to perform.
     """
-
     def __init__(self, cycle=0, maxcycle=0):
-        """ 
+        """
         Initialization of the system.
-    
+
         Parameters
         ----------
         cycle : int, optional. The current cycle
@@ -45,10 +45,10 @@ class Simulation(object):
         return self.cycle > self.maxcycle
 
     def step(self):
-        """ 
+        """
         Run a simulation step. Here, the tasks in self.task
         will be executed.
-    
+
         Returns
         -------
         N/A, but may modify the system and other external variabales.
@@ -68,7 +68,7 @@ class Simulation(object):
             args = task.get('args', None)
             kwargs = task.get('kwargs', None)
             func = task['func']
-            if callable(func): 
+            if callable(func):
                 if args is None:
                     if kwargs is None:
                         result = func()
@@ -83,10 +83,10 @@ class Simulation(object):
         return results
 
 
-class UmbrellaSimulation(Simulation):
+class UmbrellaWindowSimulation(Simulation):
     """
-    This class defines a Umbrella simulation which is a special case of 
-    the simulation class with settings to simplify the 
+    This class defines a Umbrella simulation which is a special case of
+    the simulation class with settings to simplify the
     execution of the umbrella simulation.
 
     Attributes
@@ -97,11 +97,10 @@ class UmbrellaSimulation(Simulation):
     cycle : int, the current simulation cycle.
     maxcycle : int, the MINIMUM number of cycles to perform.
     """
-
     def __init__(self, umbrella, overlap, cycle=0, maxcycle=0):
-        """ 
+        """
         Initialization of a umbrella simulation.
-    
+
         Parameters
         ----------
         umbrella : list = [float, float]. The umbrella window to consider.
@@ -110,23 +109,22 @@ class UmbrellaSimulation(Simulation):
         cycle : int, optional. The current simulation cycle.
         maxcycle : int, optional. The ``minimum`` number of cycles to perform.
             Note that in the Simulation class this is the ``maximum`` number of
-            cycles to perform. The meaning is redefined by redefining 
+            cycles to perform. The meaning is redefined by redefining
             the ``simulation_finished`` method.
 
         Returns
         -------
         N/A
         """
-
-        super(UmbrellaSimulation, self).__init__(cycle=cycle, 
-                                                 maxcycle=maxcycle)
+        super(UmbrellaWindowSimulation, self).__init__(cycle=cycle,
+                                                       maxcycle=maxcycle)
         self.umbrella = umbrella
         self.overlap = overlap
 
     def is_finished(self, system):
         """
-        Check if simulation is done. 
-    
+        Check if simulation is done.
+
         In the umbrella simulation, the simulation is finished when we
         cycle is larger than maxcycle and all particles have
         crossed self.overlap.
@@ -135,8 +133,5 @@ class UmbrellaSimulation(Simulation):
         ----------
         system : the system object we are acting on.
         """
-
-        return (self.cycle>self.maxcycle and
+        return (self.cycle > self.maxcycle and
                 np.all(system.particles.pos > self.overlap))
-        
-

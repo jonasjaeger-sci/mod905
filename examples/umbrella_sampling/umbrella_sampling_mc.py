@@ -8,7 +8,7 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-from retis.core import UmbrellaSimulation, System
+from retis.core import UmbrellaWindowSimulation, System
 from retis.core import montecarlo as mc
 from retis.forcefield import ForceField, DoubleWell, RectangularWell
 import numpy as np 
@@ -82,8 +82,8 @@ for i, umbrella in enumerate(umbrellas):
     system.potential() # recalculate potential energy
     over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
     # Initiate the umbrella simulation:
-    simulation = UmbrellaSimulation(umbrella=umbrella, overlap=over, 
-                                    maxcycle=maxcycles)
+    simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over, 
+                                          maxcycle=maxcycles)
     # Also create empy list for storing some data:
     traj, ener = [], []
     # let us add the two task we defined previously:
