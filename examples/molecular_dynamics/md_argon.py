@@ -45,7 +45,7 @@ write_gro = WriteGromacs('test.gro', box, frame=0, units=ljsystem.units)
 
 # first set up a simulation where we equilibriate the system
 # and scale the temperature:
-simulation_eq = Simulation(maxcycle=1000)
+simulation_eq = Simulation(maxcycle=200)
 integrator = VelocityVerlet(0.0025)
 
 task_integrate = {'func': integrator.integration_step,
@@ -88,7 +88,7 @@ while not simulation_eq.is_finished():
     print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_eq.cycle, avgtemp, etot))
     write_gro.write_frame(ljsystem.particles.pos)
 
-simulation_nve = Simulation(maxcycle=1000)
+simulation_nve = Simulation(maxcycle=200)
 simulation_nve.task = [task_integrate, task_reset_momentum]
 
 while not simulation_nve.is_finished():
@@ -100,7 +100,7 @@ while not simulation_nve.is_finished():
     total_e.append(etot)
     pV, press = evaluate_press(ljsystem.particles, ljsystem, temperature=avgtemp)
     pressure.append(press)
-    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_eq.cycle, avgtemp, etot))
+    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_nve.cycle, avgtemp, etot))
     write_gro.write_frame(ljsystem.particles.pos)
 
 
