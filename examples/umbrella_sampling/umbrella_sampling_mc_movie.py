@@ -15,9 +15,9 @@ ax = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
 
 line, = ax.plot(xv, V, lw=3, color='blue') # the potential
 
-linec = ax.axvline(x=None, lw=2, ls=':', color='black') # crossing line
-axv = ax.axvspan(xmin=None, xmax=None, color="blue", alpha=0.1) # umbrella reg.
-scat = ax.scatter(None, None, s=150, c='green') # the particle
+linec = ax.axvline(x=-10, lw=2, ls=':', color='black') # crossing line
+axv = ax.axvspan(xmin=-10, xmax=-10, color="blue", alpha=0.1) # umbrella reg.
+scat = ax.scatter(-10, -10, s=150, c='green') # the particle
 
 umpos1 = umbrellas[0][0]
 umpos2 = umbrellas[0][1]
