@@ -3,10 +3,11 @@
 """
 system.py
 """
+from __future__ import absolute_import
 import numpy as np
 # from the retis package
-from units import CONSTANTS
-from particles import Particles
+from .units import CONSTANTS
+from .particles import Particles
 
 
 __all__ = ['System']

@@ -2,10 +2,10 @@
 """
 This file contains positions dependent potentials
 """
-
+from __future__ import absolute_import
 import numpy as np
-from potential import PotentialFunction
 import warnings
+from .potential import PotentialFunction
 
 __all__ = ['DoubleWell', 'RectangularWell']
 

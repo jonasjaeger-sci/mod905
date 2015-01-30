@@ -2,12 +2,13 @@
 """
 This file contains different pair potentials 
 """
-
+from __future__ import absolute_import
 import numpy as np
-from potential import PotentialFunction
-import forcefield
 import itertools
 import warnings
+
+from .potential import PotentialFunction
+from . import forcefield
 
 __all__ = ['PairLennardJonesCut']
 
