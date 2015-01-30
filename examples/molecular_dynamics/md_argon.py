@@ -22,7 +22,7 @@ target_density = 0.9
 lattice, size = latticefcc(density=target_density, nx=3, ny=3, nz=3)
 box = Box(size)
 
-ljsystem = System(temperature=target_temperature, units='lj', dim=3, box=box)
+ljsystem = System(temperature=target_temperature, units='lj', box=box)
 for pos in lattice:
     ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
 npart = ljsystem.particles.npart

@@ -9,7 +9,7 @@ from retis.forcefield import ForceField, DoubleWell, RectangularWell
 import numpy as np 
 
 # Let's set up the simulation.
-system = System(dim=1, temperature=500, units='eV/K') 
+system = System(temperature=500, units='eV/K') 
 system.add_particle(name='X1', pos=np.array([-0.7]))
 potential_dw = DoubleWell(a=1, b=1, c=0.02)
 potential_rw = RectangularWell()

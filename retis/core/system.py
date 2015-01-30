@@ -5,6 +5,7 @@ system.py
 """
 from __future__ import absolute_import
 import numpy as np
+import warnings
 # from the retis package
 from .units import CONSTANTS
 from .particles import Particles
@@ -28,28 +29,26 @@ class System(object):
     forcefield : ForceField object which defines the force field to
         use.
     units : string, units to use in for the system
-
-    Note
-    ----
-    It might be more clean to lump the dim variable, the periodic variable
-    and the box variable into a box-object.
     """
-    def __init__(self, dim=1, units='eV/K', box=None, temperature=None):
+    def __init__(self, units='eV/K', box=None, temperature=None):
         """ 
         Initialization of the system.
     
         Parameters
         ----------
-        dim : number of dimensions to consider in this simulation
-        box : list, optional. System boundaries in the self.dim dimensions.
-        temperature : float, optional. The temperature of the system.
+        box : object of type Box
+            This variable represents the simulation box. It is used to
+            determine the number of dimensions
+        temperature : float
+            The temperature of the system, if applicable.
+        units : string
+            The system of units to use in the simulation box.
 
         Returns
         -------
         N/A, but sets derived variables:
         self.beta : float, inverse of (kB*T).
         """
-        self.dim = dim
         self.box = box # simulation box
         self.units = units
         self.temperature = temperature
@@ -69,6 +68,23 @@ class System(object):
         Boltzmanns constant as a float
         """
         return CONSTANTS['kB'][self.units]
+
+    def get_dim(self):
+        """
+        This function returns the dimensionality of the system.
+        The value is obtained from the box. In other words,
+        it is the box object that defines the dimensionality of
+        the system.
+        
+        Returns
+        -------
+        integer, representing the number of dimensions
+        """
+        try:
+            return self.box.dim
+        except AttributeError:
+            warnings.warn('Box dimensions not set, defaulting to 1!')
+            return 1
 
     def calculate_beta(self, temperature=None):
         """
@@ -96,31 +112,30 @@ class System(object):
     
         Parameters
         ----------
-        pos : numpy.array, optional. Positions of the particle.
-        vel : numpy.array, optional. Velocities of the particle.
-        force : numpy.array, optional. Forces on the particle.
-        mass : float, optional. Mass of the particle
-        name : string, optional. Name of the particle.
+        pos : numpy.array,
+            Position of the particle.
+        vel : numpy.array, optional. 
+            Velocity of the particle. If not given np.zeros will be used.
+        force : numpy.array, optional. 
+            Force on the particle. If not given np.zeros will be used.
+        mass : float, optional. 
+            Mass of the particle, default is 1.0
+        name : string, optional. 
+            Name of the particle, default is '?'
         ptype : string, optional. Particle type.
+            Particle type, default is '?'
 
         Returns
         -------
         N/A, updates self.particles
-
-        Note
-        ----
-        If no arguments are given a particle with name='?' will be
-        created.
         """
-        if pos is None: 
-            pos = np.zeros(self.dim)
+        dim = self.get_dim()
         if vel is None: 
-            vel = np.zeros(self.dim)
+            vel = np.zeros(dim)
         if force is None: 
-            force = np.zeros(self.dim)
+            force = np.zeros(dim)
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
-
 
     def force(self):
         """ 
@@ -128,7 +143,11 @@ class System(object):
         
         Returns
         -------
-        The new forces as a numpy.array, it will also update self.particles.force
+        out[1] : numpy.array. 
+            Forces on the particles. Note that self.particles.force will
+            also be updated.
+        out[2] : float.
+            The virial. Note that self.particles.virial will also be updated.
         """
         force, virial = self._evaluate_potential_force(what='force')
         self.partilces.force = force
@@ -141,7 +160,8 @@ class System(object):
     
         Returns
         -------
-        The potential as a float, it will also update self.v_pot
+        out : float.
+            The potential energy, note self.v_pot is also updated.
         """
         self.v_pot = self._evaluate_potential_force(what='potential')
         return self.v_pot
@@ -153,8 +173,13 @@ class System(object):
 
         Returns
         -------
-        The potential as a float and the forces as a numpy.array. It will
-        also update self.v_pot and self.particles.force
+        out[1] : float
+            The potential energy, note self.v_pot is also updated.
+        out[2] : numpy.array. 
+            Forces on the particles. Note that self.particles.force will
+            also be updated.
+        out[3] : float.
+            The virial. Note that self.particles.virial will also be updated.
         """
         v_pot, force, virial = self._evaluate_potential_force(what='both')
         self.v_pot = v_pot
@@ -175,7 +200,10 @@ class System(object):
 
         Returns
         -------
-        The forces as a numpy.array
+        out[1] : numpy.array. 
+            Forces on the particles. 
+        out[2] : float.
+            The virial. 
         """
         return self._evaluate_potential_force(what='force', **kwargs)
 
@@ -192,7 +220,8 @@ class System(object):
 
         Returns
         -------
-        The scalar potential energy correspoding to the given r.
+        out : float
+            The potential energy.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
     
@@ -208,7 +237,12 @@ class System(object):
 
         Returns
         -------
-        The scalar potential and the force
+        out[1] : float
+            The potential energy.
+        out[2] : numpy.array. 
+            Forces on the particles. 
+        out[3] : float.
+            The virial. 
         """
         return self._evaluate_potential_force(what='both', **kwargs)
         

@@ -14,7 +14,7 @@ from retis.forcefield import ForceField, DoubleWell, RectangularWell
 import numpy as np 
 
 # Define system with a temperature in K
-system = System(dim=1, temperature=500, units='eV/K') 
+system = System(temperature=500, units='eV/K') 
 # We will only have one particle in the system:
 system.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use

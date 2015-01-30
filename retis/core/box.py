@@ -19,6 +19,7 @@ class Box(object):
         boundary[i][1] - boundary[i][0]
     periodic : list, periodic[i] = True if periodic boundaries are to be
         used in dimension i, False otherwise.
+    dim : int, the number of dimensions the box is made up of.
     """
 
     def __init__(self, size, periodic=None):
@@ -85,13 +86,23 @@ class Box(object):
         return volume
 
     def pbc_coordinate2(self, x, dim):
-        while x<self.low[dim]:
+        """
+        This implementation of applying the pbc coordinate 
+        are included here just for testing. It will probably be
+        removed in the future.
+        """
+        while x < self.low[dim]:
             x = x + self.length[dim]
-        while x>self.high[dim]:
+        while x > self.high[dim]:
             x = x - self.length[dim]
         return x
 
     def pbc_slow2(self, allpos):
+        """
+        This implementation of applying the pbc coordinate 
+        are included here just for testing. It will probably be
+        removed in the future.
+        """
         dpos = np.zeros(allpos.shape)
         for i, periodic in enumerate(self.periodic):
             if periodic:
@@ -102,12 +113,22 @@ class Box(object):
         return dpos
 
     def pbc_coordinate(self, x, low, high, length):
+        """
+        This implementation of applying the pbc coordinate 
+        are included here just for testing. It will probably be
+        removed or modified in the future.
+        """
         if x < low or x > high:
             return x - np.floor(x/length)*length
         else:
             return x
 
     def pbc_slow(self, allpos):
+        """
+        This implementation of applying the pbc coordinate 
+        are included here just for testing. It will probably be
+        removed or modified in the future.
+        """
         dpos = np.zeros(allpos.shape)
         for i, periodic in enumerate(self.periodic):
             if periodic:
@@ -170,6 +191,16 @@ class Box(object):
         return pbcdist
 
     def pbc_dist_coordinate(self, distance):
+        """
+        This function applies periodic boundaries to a distance.
+        The distance can be a vector, but not a matrix of several
+        distance vectors.
+
+        Parameters
+        ----------
+        distance : numpy.array of shape (self.dim,) representing a distance 
+            vector.
+        """
         pbcdist = np.zeros(distance.shape)
         for i, (periodic, length) in enumerate(zip(self.periodic, self.length)):
             if periodic and np.abs(distance[i])>0.5*length:

@@ -85,6 +85,6 @@ def max_displace_step(system, maxdx=0.1, idx=None, rgen=RANDOMGENERATOR):
     if idx is None:
         idx = rgen.random_integers(0, system.particles.npart-1) 
     trial = np.copy(system.particles.pos) 
-    trial[idx] += 2.0 * maxdx * (rgen.rand(system.dim) - 0.5) # displace
+    trial[idx] += 2.0 * maxdx * (rgen.rand(system.get_dim()) - 0.5) # displace
     return accept_reject(system, trial)
 

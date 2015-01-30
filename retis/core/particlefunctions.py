@@ -136,11 +136,12 @@ def evaluate_press(particles, system, temperature=None,
     if temperature is None:
         _, temperature = kinetic_temperature(particles, dof=dof, 
                                              kinetic=None)
+    dim = float(system.get_dim())
     if dof is None:
         npart = particles.npart
     else:
-        npart = (particles.npart*system.dim - np.sum(dof))/system.dim
+        npart = (particles.npart*dim - np.sum(dof))/dim
     pressvolume = npart*temperature*system.get_kB() +\
-                  particles.virial/system.dim
+                  particles.virial/dim
     press = pressvolume/(system.box.calculate_volume())
     return pressvolume, press
