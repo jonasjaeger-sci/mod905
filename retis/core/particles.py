@@ -7,6 +7,7 @@ import numpy as np
 
 __all__ = ['Particles']
 
+
 class Particles(object):
     """
     Particles(object)
@@ -18,27 +19,39 @@ class Particles(object):
 
     Attributes
     ----------
-    npart : integer, number of particles
-    pos : np.array, positions of the particles
-    vel : np.array, velocities of the particles
-    force : np.array, forces on the particles
-    mass : np.array, masses of the particles
-    imass : np.array, inverse masses
-    name : list of strings, a name for the particle. Name is intented as
-        a short text describing the particle.
-    ptype : list of strings, a type for the particle. Particles with identical
-        ptype are of the same kind. 
-
-    Parameters
-    ----------
-
+    npart : integer
+        Number of particles.
+    pos : numpy.array
+        Positions of the particles.
+    vel : numpy.array
+        Velocities of the particles.
+    force : numpy.array
+        Forces on the particles.
+    mass : numpy.array
+        Masses of the particles.
+    imass : np.array
+        Inverse masses, 1.0/self.mass.
+    name : list of strings
+        A name for the particle. This may be used as short text
+        describing the particle.
+    ptype : list of strings
+        A type for the particle. Particles with identical ptype are of the
+        same kind.
     """
     def __init__(self):
-        """ 
+        """
         Initialize the Particle list. Here we dictate the the particle list
         is created with zero particles.
         """
-        self.empty_list()
+        self.npart = 0
+        self.pos = None
+        self.vel = None
+        self.force = None
+        self.mass = None
+        self.imass = None
+        self.name = None
+        self.ptype = None
+        self.virial = None
 
     def empty_list(self):
         """
@@ -55,11 +68,11 @@ class Particles(object):
         self.ptype = None
         self.virial = None
 
-    def add_particle(self, pos, vel, force, mass=1.0, 
+    def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
-        """ 
+        """
         Adds a particle to the system.
-    
+
         Parameters
         ----------
         pos : numpy.array, positions of new particle
@@ -97,14 +110,14 @@ class Particles(object):
         """
         This is a helper method to return properties
         for a selection of particles.
-        
+
         Parameters
         ----------
         properties : list with strings of properties to return
         selection : optional, list with indices to return
             if selection is not given, data for all particles
             are returned.
-        
+
         Returns
         -------
         A list with the properties in the order they were asked for
@@ -116,7 +129,7 @@ class Particles(object):
         for prop in properties:
             if hasattr(self, prop):
                 var = getattr(self, prop)
-                if type(var) == type([]):
+                if isinstance(var, list):
                     if selection is None:
                         sel_prop.append(var)
                     else:
@@ -128,38 +141,32 @@ class Particles(object):
                         sel_prop.append(var[selection])
         return sel_prop
 
-
     def __iter__(self):
-        """ 
+        """
         This is to iterate over the particles.
         This function will yield the properties of the different
         particles.
-    
+
         Returns
         -------
         yields the information in self.pos, self.vel, ... etc.
         """
         for i, pos in enumerate(self.pos):
             part = {'pos': pos, 'vel': self.vel[i], 'force': self.force[i],
-                    'mass': self.mass[i], 'imass': self.imass[i], 
+                    'mass': self.mass[i], 'imass': self.imass[i],
                     'name': self.name[i], 'type': self.ptype[i]}
             yield part
-
 
     def pairs(self):
         """
         This is a function to iterate over all pairs of particles.
         For more sophisticated particle lists this can be
         a implementation of a smart neighborlist.
-     
-        
+
         Returns
         -------
         yields the positions and types of the difference pairs.
         """
         for i, posi in enumerate(self.pos[:-1]):
             for j, posj in enumerate(self.pos[i+1:]):
-                yield (i, i+1+j, self.ptype[i], self.ptype[j])
-
-
-
+                yield (i, posi, self.ptype[i], i+1+j, posj, self.ptype[j])

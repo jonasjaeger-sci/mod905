@@ -13,7 +13,7 @@ References
 from __future__ import print_function
 from collections import deque
 
-CONSTANTS = {'kB': {'eV/K':8.6173324e-05, 'J/K': 1.3806488e-23, 'lj': 1.0},
+CONSTANTS = {'kB': {'eV/K': 8.6173324e-05, 'J/K': 1.3806488e-23, 'lj': 1.0},
              'NA': {'1/mol': 6.02214129e23}}
 
 CONVERT = {'length': {}, 'mass': {}, 'time': {},
@@ -26,25 +26,26 @@ CONVERT['length']['lj', 'nm'] = 0.3405
 CONVERT['length']['lj', 'm'] = 3.405e-10
 CONVERT['mass']['lj', 'kg'] = 6.690e-26
 CONVERT['mass']['lj', 'g/mol'] = 39.948
-CONVERT['energy']['lj', 'J'] = 119.8*CONSTANTS['kB']['J/K']
+CONVERT['energy']['lj', 'J'] = 119.8 * CONSTANTS['kB']['J/K']
 CONVERT['energy']['kcal', 'J'] = 4184.
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
 CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] * \
-                             (CONVERT['mass']['lj', 'kg']/\
+                             (CONVERT['mass']['lj', 'kg'] /
                               CONVERT['energy']['lj', 'J'])**0.5
-CONVERT['time']['lj', 'ps'] = 1.0e12*CONVERT['time']['lj', 's']
-CONVERT['velocity']['lj', 'nm/ps'] = CONVERT['length']['lj', 'nm']/\
+CONVERT['time']['lj', 'ps'] = 1.0e12 * CONVERT['time']['lj', 's']
+CONVERT['velocity']['lj', 'nm/ps'] = CONVERT['length']['lj', 'nm'] /\
                                      CONVERT['time']['lj', 'ps']
+
 
 def _generate_inverse(conversions):
     """
     This helper method is intended to generate all inverse
     conversions for simple conversions.
-        
+
     Parameters
     ----------
-    conversions : dictionary with unit conversions, assumed to be of type
-        convert[quantity] 
+    conversions : dictionary
+        The with unit conversions, assumed to be of type convert[quantity].
     """
     newconvert = {}
     for unit in conversions:
@@ -55,20 +56,23 @@ def _generate_inverse(conversions):
     for newunit in newconvert:
         conversions[newunit] = newconvert[newunit]
 
+
 def _convert_from_to(conversions, unit_from, unit_to):
     """
     This method is intented to generate a unit conversion between
     the provided units, given that a "path" between these units exist.
     This path is obtained by a BFS.
-    
+
     Parameters
     ----------
-    conversions : dictionary with unit conversions, assumed to be of type
-        convert[quantity] 
-    unit_from : string, starting unit
-    unit_to : string, target unit
+    conversions : dictionary
+        The unit conversions, assumed to be of type convert[quantity].
+    unit_from : string
+        Starting unit.
+    unit_to : string
+        Target unit.
     """
-    que = deque([unit_from]) # just use a list, pop(0) is not so slow here
+    que = deque([unit_from])
     visited = [unit_from]
     parents = {unit_from: None}
     while que:
@@ -77,7 +81,7 @@ def _convert_from_to(conversions, unit_from, unit_to):
             break
         for unit in conversions:
             unit1, unit2 = unit
-            if not unit1 == node: 
+            if not unit1 == node:
                 continue
             if unit2 not in visited:
                 visited.append(unit2)

@@ -9,7 +9,6 @@ import numpy as np
 __all__ = ['latticefcc']
 
 
-
 def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
     """
     This method generates points on a simple
@@ -17,21 +16,26 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
 
     Parameters
     ----------
-    lcon : float, the lattice constant
-    density : optional, float equal to the desired density. If this
-        is given, lcon is calculated
-    nx : number of repetitions of the lattice in the x-direction
-    ny : number of repetitions of the lattice in the y-direction
-    nz : number of repetitions of the lattice in the z-direction
+    lcon : float
+        The lattice constant.
+    density : float, optional
+        A desired density. If this is given, lcon is calculated.
+    nx : int
+        Number of repetitions of the lattice in the x-direction.
+    ny : int
+        Number of repetitions of the lattice in the y-direction.
+    nz : int
+        Number of repetitions of the lattice in the z-direction.
 
     Returns
     -------
-    positions : numpy.array with the lattice positions
-    size : list with the corresponding size, can be used
-        to define a simulation box
+    positions : numpy.array
+        The lattice positions.
+    size : list of floats
+        The corresponding size(s), can be used to define a simulation box.
     """
-    unit_cell = np.array([[0.0,0.0,0.0], [0.5,0.5,0.0],
-                          [0.0,0.5,0.5], [0.5,0.0,0.5]])
+    unit_cell = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.0],
+                          [0.0, 0.5, 0.5], [0.5, 0.0, 0.5]])
     npart = 4.0
     if density is not None:
         lcon = (npart/density)**(1.0/3.0)
@@ -40,11 +44,10 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
     positions = np.zeros((4*nx*ny*nz, 3))
     j = 0
     for i in itertools.product(range(nx), range(ny), range(nz)):
-        positions[j:j+4,:] = lcon*(np.array(i) + unit_cell)
+        positions[j:j+4, :] = lcon * (np.array(i) + unit_cell)
         j = j + 4
     size = [[0.0, i*lcon] for i in (nx, ny, nz)]
     return positions, size
-    
 #system.particles.npart/system.box.calculate_volume()
     #size = [[0.0, n*lcon] for n in (nx, ny, nz)]
 
@@ -64,5 +67,3 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
 #    position = a*(np.array(n)+unit_cell)
 #    for pos in position:
 #        system.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
-
-

@@ -9,6 +9,7 @@ import warnings
 
 __all__ = []
 
+
 class PotentialFunction(object):
     """
     PotentialFunction(object)
@@ -17,27 +18,31 @@ class PotentialFunction(object):
 
     Attributes
     ----------
-    desc : string, short description of the potential.
-    dim : int, represents the spatial dimensionality of the potential
-    params : dict, contains the parameters. This is a variable included
+    desc : string
+        Short description of the potential.
+    dim : int
+        Represents the spatial dimensionality of the potential.
+    params : dict
+        Contains the parameters. This is a variable included
         for convenience in case other methods/classes wants to know all
         the parameters of the potential.
     """
-
     def __init__(self, dim=1, desc=''):
-        """ 
+        """
         Initiates the potential
-    
+
         Parameters
         ----------
-        dim : int, optional. Represents the dimensionality.
-        desc : string, optional. Description of the force field.
+        dim : int, optional.
+            Represents the dimensionality.
+        desc : string, optional.
+            Description of the force field.
 
         Returns
         -------
-        N/A 
+        N/A
         """
-        self.dim = dim 
+        self.dim = dim
         self.desc = desc
         self.params = {}
 
@@ -46,12 +51,13 @@ class PotentialFunction(object):
         This function is check on the consistency of
         the parameters. This can be implemented for the
         different potential functions.
-        
+
         Returns
         -------
-        True if the check(s) pass
+        out : boolean
+            True if the check(s) pass.
         """
-        if len(self.params)==0:
+        if len(self.params) == 0:
             warnings.warn('No parameters are set for the potential')
             return False
         return True
@@ -59,18 +65,25 @@ class PotentialFunction(object):
     def update_parameters(self, params):
         """
         Updates the parameters for the potential. In this generic function,
-        it will just try to set attributes for the object. 
-    
+        it will just try to set attributes for the object.
+
         Parameters
         ----------
-        params : dictionary with the parameters to update
+        params : dict
+            The parameters to update.
+
+        Returns
+        -------
+        out : boolean
+            False if parameters could not be set.
+            True if they could be set and if the pass the consistency test.
 
         Note
         ----
         A parameter in params which is not a attribute of the object will be
         ignored.
         """
-        if type(params) != type({}):
+        if not isinstance(params, dict):
             msg = 'Did not understand the parameters...'
             warnings.warn(msg)
             return False
@@ -85,17 +98,14 @@ class PotentialFunction(object):
         return self.check_parameters()
 
     def get_parameters(self):
-        """ 
-        Method that returns information about the parameters for 
+        """
+        Method that returns information about the parameters for
         the potential.
-        
-        Parameters
-        ----------
-        N/A
-        
+
         Returns
         -------
-        A string with information about the parameters
+        out : string
+            Information about the parameters.
         """
         allinfo = []
         strinfo = '{}: {}, Value: {}'
@@ -109,7 +119,7 @@ class PotentialFunction(object):
         """
         This method is intended to generate a dictionary
         containing the parameters for the potential
-        
+
         Returns
         -------
         N/A, but is should modify self.params
@@ -118,10 +128,11 @@ class PotentialFunction(object):
 
     def __str__(self):
         """
-        Return the string description of the potential. 
-    
+        Return the string description of the potential.
+
         Returns
         -------
-        self.desc
+        out : string
+            Just returns self.desc.
         """
         return self.desc

@@ -14,8 +14,10 @@ class Simulation(object):
 
     Attributes
     ----------
-    cycle : int, the current cycle number for the simulation.
-    maxcycle : int, maximum number of cycles to perform.
+    cycle : int
+        The current cycle number for the simulation.
+    maxcycle : int
+        Maximum number of cycles to perform.
     """
     def __init__(self, cycle=0, maxcycle=0):
         """
@@ -23,8 +25,10 @@ class Simulation(object):
 
         Parameters
         ----------
-        cycle : int, optional. The current cycle
-        maxcycle : int, optional. Maximum number of cycles to perform
+        cycle : int, optional.
+            The current cycle
+        maxcycle : int, optional.
+            Maximum number of cycles to perform
 
         Returns
         -------
@@ -40,18 +44,18 @@ class Simulation(object):
 
         Returns
         -------
-        True if simulation is finished, false otherwise.
+        out : True if simulation is finished, false otherwise.
         """
         return self.cycle > self.maxcycle
 
     def step(self):
         """
         Run a simulation step. Here, the tasks in self.task
-        will be executed.
+        will be executed sequentially.
 
         Returns
         -------
-        N/A, but may modify the system and other external variabales.
+        N/A, but may modify the system and other external variables.
 
         Note
         ----
@@ -91,11 +95,14 @@ class UmbrellaWindowSimulation(Simulation):
 
     Attributes
     ----------
-    umbrella : list = [float, float], umbrella window.
-    overlap : float, the positions that must be crossed before
-        the simulation is done.
-    cycle : int, the current simulation cycle.
-    maxcycle : int, the MINIMUM number of cycles to perform.
+    umbrella : list = [float, float]
+        The umbrella window.
+    overlap : float
+        The positions that must be crossed before the simulation is done.
+    cycle : int
+        The current simulation cycle.
+    maxcycle : int
+        The MINIMUM number of cycles to perform.
     """
     def __init__(self, umbrella, overlap, cycle=0, maxcycle=0):
         """
@@ -103,12 +110,15 @@ class UmbrellaWindowSimulation(Simulation):
 
         Parameters
         ----------
-        umbrella : list = [float, float]. The umbrella window to consider.
-        overlap : float, the position we have to cross before the simulation
-            is done.
-        cycle : int, optional. The current simulation cycle.
-        maxcycle : int, optional. The ``minimum`` number of cycles to perform.
-            Note that in the Simulation class this is the ``maximum`` number of
+        umbrella : list = [float, float]
+            The umbrella window to consider.
+        overlap : float
+            The position we have to cross before the simulation is done.
+        cycle : int, optional.
+            The current simulation cycle.
+        maxcycle : int, optional.
+            The MINIMUM number of cycles to perform. Note that in the
+            ``Simulation`` class this is the MAXIMUM number of
             cycles to perform. The meaning is redefined by redefining
             the ``simulation_finished`` method.
 
@@ -131,7 +141,12 @@ class UmbrellaWindowSimulation(Simulation):
 
         Parameters
         ----------
-        system : the system object we are acting on.
+        system : system object
+            Used to check if current position(s) satisfy the ending criterion.
+
+        Returns
+        -------
+        out : True if simulation is finished, false otherwise.
         """
         return (self.cycle > self.maxcycle and
                 np.all(system.particles.pos > self.overlap))
