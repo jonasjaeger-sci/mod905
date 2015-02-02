@@ -5,7 +5,7 @@ This file contains methods that act on a (selection) of particles.
 import numpy as np
 import warnings
 
-__all__ = ['kinetic_energy', 'kinetic_temperature', 
+__all__ = ['kinetic_energy', 'kinetic_temperature',
            'reset_momentum', 'kinetic_energy_tensor',
            'evaluate_pressure', 'evaluate_pressure_tensor']
 
@@ -63,6 +63,7 @@ def kinetic_energy_tensor(particles, selection=None):
     mom = vel*mass
     kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
     return kin
+
 
 def kinetic_energy(particles, selection=None):
     """
@@ -197,11 +198,25 @@ def evaluate_pressure(particles, system, temperature=None,
     press = pressvolume / system.box.calculate_volume()
     return pressvolume, press
 
+
 def evaluate_pressure_tensor(particles, system):
+    """
+    This method evaluates the pressure tensor.
+
+    Parameters
+    ----------
+    particles : object of type particlelist.
+        List of particles to operate on.
+    system : object of type system.
+        The system, used to obtain the volume.
+
+    Returns
+    -------
+    out : numpy.array
+        The symmetric pressure tensor, dimensions (dim, dim), where
+        dim = system.box.dim are the number of dimensions considere.
+    """
     kin_tensor = kinetic_energy_tensor(particles)
     virial = particles.virial
-    pressvolume = virial + kin_tensor*2.0
-    return pressvolume/system.box.calculate_volume()
-
-
-
+    pressure = (virial + kin_tensor*2.0)/system.box.calculate_volume()
+    return pressure
