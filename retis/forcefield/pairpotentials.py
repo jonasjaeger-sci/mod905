@@ -267,11 +267,12 @@ class PairLennardJonesCut(PotentialFunction):
         out[0] : numpy.array
             The force as a numpy.array of the same shape as the positions
             in particles.pos.
-        out[1] : float
-            The virial.
+        out[1] : numpy.array
+            The virial, as a symmetric matrix with dimensions (dim, dim) where
+            dim is given by the box.
         """
         force = np.zeros(particles.pos.shape)
-        virial = 0.0
+        virial = np.zeros((box.dim, box.dim))
         try:
             raise AttributeError
             #for pair in particles.pairs():
@@ -287,7 +288,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        forceij = forcelj*delta
             #        force[i] += forceij
             #        force[j] -= forceij
-            #        virial += np.dot(forceij, delta)
+            #        virial += np.outer(forceij, delta)
         except AttributeError:
             self._make_tables_for_numpy(particles)
             for i, particle_i in enumerate(particles.pos[:-1]):
@@ -303,7 +304,7 @@ class PairLennardJonesCut(PotentialFunction):
                 forceij = np.dot(forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
-                virial += np.sum(forceij * delta[k])
+                virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return force, virial
 
     def potential(self, particles, box):
@@ -368,12 +369,13 @@ class PairLennardJonesCut(PotentialFunction):
         out[1] : numpy.array
             The force as a numpy.array of the same shape as the positions
             in particles.pos.
-        out[2] : float
-            The virial.
+        out[2] : numpy.array
+            The virial, as a symmetric matrix with dimensions (dim, dim) where
+            dim is given by the box.
         """
         v_pot = 0.0
-        virial = 0.0
         force = np.zeros(particles.pos.shape)
+        virial = np.zeros((box.dim, box.dim))
         try:
             raise AttributeError
             #for pair in particles.pairs():
@@ -391,7 +393,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        forceij = forcelj*delta
             #        force[i] += forceij
             #        force[j] -= forceij
-            #        virial += np.dot(forceij, delta)
+            #        virial += np.outer(forceij, delta)
         except AttributeError:
             self._make_tables_for_numpy(particles)
             for i, particle_i in enumerate(particles.pos[:-1]):
@@ -411,7 +413,7 @@ class PairLennardJonesCut(PotentialFunction):
                 forceij = np.dot(forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
-                virial += np.sum(forceij * delta[k])
+                virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return v_pot, force, virial
 
     def _generate_lj_parameters(self):
