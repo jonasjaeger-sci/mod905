@@ -3,11 +3,11 @@
 This file contains methods that act on a (selection) of particles.
 """
 import numpy as np
-import warnings
+#import warnings
 
-__all__ = ['kinetic_energy', 'kinetic_temperature',
-           'reset_momentum', 'kinetic_energy_tensor',
-           'evaluate_pressure', 'evaluate_pressure_tensor']
+__all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
+           'reset_momentum', 'calculate_kinetic_energy_tensor',
+           'calculate_scalar_pressure', 'calculate_pressure_tensor']
 
 
 def calculate_linear_momentum(particles, selection=None):
@@ -34,7 +34,7 @@ def calculate_linear_momentum(particles, selection=None):
     return np.sum(vel*mass, axis=0)
 
 
-def kinetic_energy_tensor(particles, selection=None):
+def calculate_kinetic_energy_tensor(particles, selection=None):
     """
     This function returns the kinetic energy as a tensor
     for a selection of particles. The tensor is formed as the
@@ -65,7 +65,7 @@ def kinetic_energy_tensor(particles, selection=None):
     return kin
 
 
-def kinetic_energy(particles, selection=None):
+def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     """
     This function returns the kinetic energy of a collection of
     particles.
@@ -76,24 +76,25 @@ def kinetic_energy(particles, selection=None):
         List of particles to operate on.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
+    kin_tensor : numpy.array
+        If kinetic_tensor is not given, the kinetic energy tensor will be
+        calculated.
 
     Returns
     -------
-    out : numpy.array
-        A numpy array with the same number of dimensions as self.vel.
-        It contains the kinetic energy of the particles in the different
-        dimensions.
+    out[0] : float
+        The scalar kinetic energy.
+    out[1] : numpy.array
+        The kinetic energy tensor.
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    kinetic = 0.5 * np.sum(vel*vel*mass, axis=0)
-    return kinetic
+    if kin_tensor is None:
+        kin_tensor = calculate_kinetic_energy_tensor(particles,
+                                                     selection=selection)
+    return kin_tensor.trace(), kin_tensor
 
 
-def kinetic_temperature(particles, selection=None,
-                        dof=None, kinetic=None):
+def calculate_kinetic_temperature(particles, selection=None,
+                                  dof=None, kin_tensor=None):
     """
     This method returns the kinetic temperature of a
     collection of particles.
@@ -106,9 +107,9 @@ def kinetic_temperature(particles, selection=None,
         A list with indices of particles to use in calculation.
     dof : numpy.array, optional
         The degrees of freedom to subtract in each dimension.
-    kinetic : numpy.array optional
-        The kinetic energy. If the kinetic energy is not given, it
-        will be recalculated here.
+    kin_tensor : numpy.array optional
+        The kinetic energy tensor. If the kinetic energy tensor is not
+        given, it will be recalculated here.
 
     Returns
     -------
@@ -122,84 +123,101 @@ def kinetic_temperature(particles, selection=None,
         vel, mass = particles.vel, particles.mass
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
-    npart = len(mass)
-    if kinetic is None:
-        kinetic = 0.5 * np.sum(vel*vel*mass, axis=0)
-    if dof is None:
-        temperature = 2.0 * kinetic / float(npart)
-    else:
+
+    ndof = len(mass)*np.ones(vel[0].shape)
+
+    if kin_tensor is None:
+        kin_tensor = calculate_kinetic_energy_tensor(particles,
+                                                     selection=selection)
+    if not dof is None:
         if isinstance(dof, list):
             dof = np.array(dof)
-        temperature = 2.0 * kinetic/(float(npart)-dof)
-    average_temperature = np.average(temperature)
-    return temperature, average_temperature
+        ndof = ndof - dof
+    temperature = 2.0 * kin_tensor.diagonal() / ndof
+    return temperature, np.average(temperature), kin_tensor
 
 
-def reset_momentum(particles, selection=None):
+def reset_momentum(system, selection=None, dim=None):
     """
     This method sets the linear momentum of a selection
     of particles to zero
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
+    system : object of type system.
+        System is assumed to contain a object in system.particles of type
+        particlelist which defines the particles to operate on.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
-
+    dim : list
+        If dim is None, ``reset_momentum'' will be applied to
+        all dimensions. Otherwise it will only be applied to the
+        dimensions where dim is True.
     Returns
     -------
     N/A, but modifies the velocities of the selected particles
     """
+    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = np.sum(vel*mass, axis=0)
+    if not dim is None:
+        for i, reset in enumerate(dim):
+            if not reset:
+                mom[i] = 0
     particles.vel[selection] -= (mom/mass.sum())
 
 
-def evaluate_pressure(particles, system, temperature=None,
-                      dof=None):
+def calculate_pressure_from_temp(system, temperature, dof=None):
     """
-    This method evaluates pV
+    This method evaluates the scalar pressure using the temperature
+    and the degrees of freedom.
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
     system : object of type system.
         The system, used to obtain kB in correct units and
         number of dimensions.
-    temperature : float, optional
-        The current temperature of the system. If the temperature is
-        not given, it will be calculated here.
-
-    Raises
-    ------
-    Warning if both temperature and dof is None. This might be perfectly
-    fine, but typically, some info about the dof to subtract is needed
-    for the temperature calculation. This is perhaps a indication that
-    we should rethink how to include dof's to subtract! It could possibly
-    be moved to the system.
+    temperature : float
+        The current kinetic temperature of the system. This temperature
+        is calculated by ``calculate_kientic_temperature``
+    dof : list of float/int
+        The degrees of freedom to subtract in each dimension
     """
-    if temperature is None and dof is None:
-        warnings.warn('Both temperature and dof are not set')
-    if temperature is None:
-        _, temperature = kinetic_temperature(particles, dof=dof,
-                                             kinetic=None)
     dim = float(system.get_dim())
+    particles = system.particles
     if dof is None:
-        npart = particles.npart
+        ndof = particles.npart
     else:
-        npart = (particles.npart * dim - np.sum(dof))/dim
-    pressvolume = npart * temperature * system.get_kB() +\
+        ndof = (particles.npart * dim - np.sum(dof))/dim
+    pressvolume = ndof * temperature * system.get_kB() +\
                   (particles.virial.trace()/dim)
     press = pressvolume / system.box.calculate_volume()
     return pressvolume, press
 
+def calculate_scalar_pressure(system, press_tensor=None, kin_tensor=None):
+    """
+    This method evaluates the scalar pressure using the pressure tensor.
 
-def evaluate_pressure_tensor(particles, system):
+    Parameters
+    ----------
+    system : object of type system.
+        Contains the particle list to use for the computation.
+    press_tensor : numpy.array
+        If press_tensor is not given, the pressure tensor will be
+        calculated.
+    kin_tensor : numpy.array
+        If kinetic_tensor is not given, the kinetic energy tensor will be
+        calculated.
+    """
+    if press_tensor is None:
+        press_tensor = calculate_pressure_tensor(system.particles, system,
+                                                 kin_tensor=kin_tensor)
+    return press_tensor.trace()/float(system.box.dim)
+
+def calculate_pressure_tensor(particles, system, kin_tensor=None):
     """
     This method evaluates the pressure tensor.
 
@@ -209,6 +227,9 @@ def evaluate_pressure_tensor(particles, system):
         List of particles to operate on.
     system : object of type system.
         The system, used to obtain the volume.
+    kin_tensor : numpy.array
+        If kinetic_tensor is not given, the kinetic energy tensor will be
+        calculated.
 
     Returns
     -------
@@ -216,7 +237,8 @@ def evaluate_pressure_tensor(particles, system):
         The symmetric pressure tensor, dimensions (dim, dim), where
         dim = system.box.dim are the number of dimensions considere.
     """
-    kin_tensor = kinetic_energy_tensor(particles)
+    if kin_tensor is None:
+        kin_tensor = calculate_kinetic_energy_tensor(particles)
     virial = particles.virial
     pressure = (virial + kin_tensor*2.0)/system.box.calculate_volume()
     return pressure
