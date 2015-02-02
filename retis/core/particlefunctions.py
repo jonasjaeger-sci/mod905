@@ -7,7 +7,7 @@ import warnings
 
 __all__ = ['kinetic_energy', 'kinetic_temperature', 
            'reset_momentum', 'kinetic_energy_tensor',
-           'evaluate_pressure']
+           'evaluate_pressure', 'evaluate_pressure_tensor']
 
 
 def calculate_linear_momentum(particles, selection=None):
@@ -193,6 +193,15 @@ def evaluate_pressure(particles, system, temperature=None,
     else:
         npart = (particles.npart * dim - np.sum(dof))/dim
     pressvolume = npart * temperature * system.get_kB() +\
-                  (particles.virial/dim)
+                  (particles.virial.trace()/dim)
     press = pressvolume / system.box.calculate_volume()
     return pressvolume, press
+
+def evaluate_pressure_tensor(particles, system):
+    kin_tensor = kinetic_energy_tensor(particles)
+    virial = particles.virial
+    pressvolume = virial + kin_tensor*2.0
+    return pressvolume/system.box.calculate_volume()
+
+
+
