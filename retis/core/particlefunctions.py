@@ -5,7 +5,9 @@ This file contains methods that act on a (selection) of particles.
 import numpy as np
 import warnings
 
-__all__ = ['kinetic_energy', 'kinetic_temperature', 'reset_momentum']
+__all__ = ['kinetic_energy', 'kinetic_temperature', 
+           'reset_momentum', 'kinetic_energy_tensor',
+           'evaluate_pressure']
 
 
 def calculate_linear_momentum(particles, selection=None):
@@ -31,6 +33,36 @@ def calculate_linear_momentum(particles, selection=None):
         vel, mass = particles.vel[selection], particles.mass[selection]
     return np.sum(vel*mass, axis=0)
 
+
+def kinetic_energy_tensor(particles, selection=None):
+    """
+    This function returns the kinetic energy as a tensor
+    for a selection of particles. The tensor is formed as the
+    outer product of the velocities.
+
+    Parameters
+    ----------
+    particles : object of type particlelist.
+        List of particles to operate on.
+    selection : list of integers, optional
+        A list with indices of particles to use in calculation.
+
+    Returns
+    -------
+    out : numpy.array
+        A numpy array with dimesionality equal to (dim, dim) where dim
+        is the number of dimensions used in the velocities. This tensor
+        should be symmetric and it's trace should be identical to the
+        output from the ``dim`` times the averaged output of the
+        ``kinetic_energy`` method defined below
+    """
+    if selection is None:
+        vel, mass = particles.vel, particles.mass
+    else:
+        vel, mass = particles.vel[selection], particles.mass[selection]
+    mom = vel*mass
+    kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
+    return kin
 
 def kinetic_energy(particles, selection=None):
     """
@@ -126,8 +158,8 @@ def reset_momentum(particles, selection=None):
     particles.vel[selection] -= (mom/mass.sum())
 
 
-def evaluate_press(particles, system, temperature=None,
-                   dof=None):
+def evaluate_pressure(particles, system, temperature=None,
+                      dof=None):
     """
     This method evaluates pV
 
