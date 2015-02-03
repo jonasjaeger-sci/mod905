@@ -130,7 +130,7 @@ print('Plotting the free energy')
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(111)
 xv = np.linspace(-2, 2, 1000)
-F = -np.log(hist_avg)/system.beta # free energy
+F = -np.log(hist_avg)/system.temperature['beta'] # free energy
 V = np.array([forcefield.evaluate_potential(pos=xi) for xi in xv]) # unbiased potetnial
 F += (V.min()-F.min())
 ax2.plot(xv, V, 'blue', lw=3, label='Unbiased potential', alpha=0.5)

@@ -63,7 +63,7 @@ def accept_reject(system, trial, rgen=RANDOMGENERATOR):
     """
     v_trial = system.evaluate_potential(pos=trial)
     deltae = v_trial - system.v_pot
-    pacc = np.exp(-system.beta * deltae)
+    pacc = np.exp(-system.temperature['beta'] * deltae)
     if rgen.rand() < pacc:
         return trial, v_trial, trial, v_trial, True
     else:

@@ -226,7 +226,7 @@ for i, (histo, scale) in enumerate(zip(all_histograms, scale_factors)):
 figtext.set_text('Calculating free energy')
 ax_hist.plot(bin_mid, hist_avg, lw=6, color='orangered', alpha=0.65)
 ax_hist_log.plot(bin_mid, hist_avg, lw=6, color='orangered', alpha=0.65)
-F = -np.log(hist_avg)/system.beta # free energy
+F = -np.log(hist_avg)/system.temperature['beta'] # free energy
 F += (V.min()-F.min())
 ax_pot.plot(bin_mid, F, lw=6, color='orangered', alpha=0.65)
 fig.savefig('final.png')

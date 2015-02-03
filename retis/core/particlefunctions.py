@@ -8,7 +8,7 @@ import numpy as np
 __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',
            'calculate_scalar_pressure', 'calculate_pressure_tensor',
-           'calculate_linear_momentum']
+           'calculate_linear_momentum', 'atomic_kinetic_energy_tensor']
 
 
 def calculate_linear_momentum(system, selection=None):
@@ -70,6 +70,39 @@ def calculate_kinetic_energy_tensor(system, selection=None):
     return kin
 
 
+def atomic_kinetic_energy_tensor(system, selection=None):
+    """
+    This function returns the kinetic energy tensor for
+    each atom in a selection of particles.
+
+    Parameters
+    ----------
+    system : object of type System from retis.core.system
+        This object is assumed to contain the particle list to calculate
+        the linear momentum for.
+    selection : list of integers, optional
+        A list with indices of particles to use in calculation.
+
+    Returns
+    -------
+    out[] : numpy.array
+        A numpy array with dimesionality equal to (len(selection), dim, dim)
+        where dim is the number of dimensions used in the velocities.
+        out[i] contains the kinetic energy tensor formed by the outer product
+        of mol[selection][i] and vel[selection][i].
+        The sum of the tensor should equal the output from
+        ``calculate_kinetic_energy_tensor``
+    """
+    particles = system.particles
+    if selection is None:
+        vel, mass = particles.vel, particles.mass
+    else:
+        vel, mass = particles.vel[selection], particles.mass[selection]
+    mom = vel*mass
+    kin = 0.5*np.einsum('ij,ik->ijk', mom, vel)
+    return kin
+
+
 def calculate_kinetic_energy(system, selection=None, kin_tensor=None):
     """
     This function returns the kinetic energy of a collection of
@@ -100,7 +133,7 @@ def calculate_kinetic_energy(system, selection=None, kin_tensor=None):
 
 
 def calculate_kinetic_temperature(system, selection=None,
-                                  dof=None, kin_tensor=None):
+                                  kin_tensor=None):
     """
     This method returns the kinetic temperature of a
     collection of particles.
@@ -112,8 +145,6 @@ def calculate_kinetic_temperature(system, selection=None,
         the linear momentum for.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
-    dof : numpy.array, optional
-        The degrees of freedom to subtract in each dimension.
     kin_tensor : numpy.array optional
         The kinetic energy tensor. If the kinetic energy tensor is not
         given, it will be recalculated here.
@@ -137,9 +168,8 @@ def calculate_kinetic_temperature(system, selection=None,
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(system,
                                                      selection=selection)
+    dof = system.temperature['dof']
     if not dof is None:
-        if isinstance(dof, list):
-            dof = np.array(dof)
         ndof = ndof - dof
     temperature = 2.0 * kin_tensor.diagonal() / ndof
     return temperature, np.average(temperature), kin_tensor
@@ -178,7 +208,7 @@ def reset_momentum(system, selection=None, dim=None):
     particles.vel[selection] -= (mom/mass.sum())
 
 
-def calculate_pressure_from_temp(system, temperature, dof=None):
+def calculate_pressure_from_temp(system, temperature):
     """
     This method evaluates the scalar pressure using the temperature
     and the degrees of freedom.
@@ -191,16 +221,15 @@ def calculate_pressure_from_temp(system, temperature, dof=None):
     temperature : float
         The current kinetic temperature of the system. This temperature
         is calculated by ``calculate_kientic_temperature``
-    dof : list of float/int
-        The degrees of freedom to subtract in each dimension
     """
     dim = float(system.get_dim())
     particles = system.particles
+    dof = system.temperature['dof']
     if dof is None:
         ndof = particles.npart
     else:
         ndof = (particles.npart * dim - np.sum(dof))/dim
-    pressvolume = ndof * temperature * system.get_kB() +\
+    pressvolume = ndof * temperature * system.get_boltzmann() +\
                   (particles.virial.trace()/dim)
     press = pressvolume / system.box.calculate_volume()
     return pressvolume, press

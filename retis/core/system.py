@@ -18,16 +18,26 @@ class System(object):
 
     Attributes
     ----------
-    box : object, defines the simulation box
-    temperature : float, defines the set temperature
-    beta : float, defines the boltzmann factor
-    v_pot : float,  the potential energy of the system
-    particles : obj from particleslist which represents the
-        particles and the properties of the particles (positions,
-        velocities, forces etc.)
-    forcefield : ForceField object which defines the force field to
-        use.
-    units : string, units to use in for the system
+    box : object of Box type (defined in retis.core.box)
+        Defines the simulation box.
+    temperature : dict
+        the float temperature['set'] defines the set temperature of the
+        simulation (if applicable)  and the derived float 1.0/(kB*T)
+        which is stored in temperature['beta'].
+        temperature['dof'] contains information about the degrees of
+        freedom which is used when calculating the instantaneous temperature
+        of the system.
+    v_pot : float
+        the potential energy of the system
+    particles : obj from retis.core.particles
+        Defines the particleslist which represents the particles and the
+        properties of the particles (positions, velocities, forces etc.)
+    forcefield : ForceField object from retis.forcefield
+        Defines the force field to use and implements the actual force
+        and potential calculation.
+    units : string
+        Units to use for the system/simulation. Should match the defined units
+        in retis.core.units.
     """
     def __init__(self, units='eV/K', box=None, temperature=None):
         """
@@ -39,7 +49,7 @@ class System(object):
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float
-            The temperature of the system, if applicable.
+            The (desired) temperature of the system, if applicable.
         units : string
             The system of units to use in the simulation box.
 
@@ -47,17 +57,42 @@ class System(object):
         -------
         N/A, but sets derived variables:
         self.beta : float, inverse of (kB*T).
+
+        Note
+        ----
+        self.temperature is defined as a dictionary. This is just
+        because it's convenient to include information about the
+        degrees of freedom of the system here. In the future one could
+        possibly have a more general temperature object, but it's not
+        really needed right now.
         """
-        self.box = box 
+        self.box = box
         self.units = units
-        self.temperature = temperature
-        self.beta = self.calculate_beta()
+        self.temperature = {'set': temperature, 'dof':None}
+        self.temperature['beta'] = self.calculate_beta()
         # intialize other variables:
-        self.v_pot = 0.0 
+        self.v_pot = 0.0
         self.particles = Particles()  # empty particle list
         self.forcefield = None
 
-    def get_kB(self):
+    def adjust_dof(self, dof):
+        """
+        This method adjusts the degrees of freedom we are going to
+        neglect for the system.
+        
+        Parameters
+        ----------
+        dof : numpy.array
+            The degrees of freedom to add.
+        """
+        if isinstance(dof, list):
+            dof = np.array(dof)
+        if self.temperature['dof'] is None:
+            self.temperature['dof'] = dof
+        else:
+            self.temperature['dof'] += dof
+            
+    def get_boltzmann(self):
         """
         This function returns the value of Boltzmanns constant
         in the correct units for the system
@@ -91,17 +126,20 @@ class System(object):
 
         Parameters
         ----------
-        temperature : float, optional, the temperature of the system.
+        temperature : float, optional
+            The temperature of the syste. If the temperature
+            is not given, self.temperature will be used.
 
         Returns
         -------
-        N/A, but self.temperature and self.beta are updated
+        out : float
+            The calculated 1.0/(kB*T)
         """
         if temperature is None:
-            if self.temperature is None:
+            if self.temperature['set'] is None:
                 return None
             else:
-                temperature = self.temperature
+                temperature = self.temperature['set']
         return 1.0 / (temperature * CONSTANTS['kB'][self.units])
 
     def add_particle(self, pos, vel=None, force=None,
