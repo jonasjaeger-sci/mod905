@@ -300,8 +300,7 @@ class PairLennardJonesCut(PotentialFunction):
                 r2inv = 1.0/rsq[k]
                 r6inv = r2inv**3
                 forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-                forcelj = np.diag(forcelj)
-                forceij = np.dot(forcelj, delta[k])
+                forceij = np.einsum('i,ij->ij',forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
                 virial += np.einsum('ij,ik->jk', forceij, delta[k])
@@ -362,6 +361,15 @@ class PairLennardJonesCut(PotentialFunction):
         box : object as defined in retis.core.box
             Representation of the box used in the simulation.
 
+        Note
+        ----
+        Currently, the virial is only calculated for the particles as a whole.
+        It is not calculated as a virial per atom. The virial per atom might
+        be useful to obtain a local pressure or stress, however this needs
+        some consideration. Perhaps it's best to fully implement this as a
+        method of planes or something similar. Some commented lines below are
+        included to show how a per-atom virial can be obtained.
+
         Returns
         -------
         out[0] : float
@@ -376,6 +384,7 @@ class PairLennardJonesCut(PotentialFunction):
         v_pot = 0.0
         force = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
+        #virial2 = np.zeros((len(force),box.dim, box.dim))  # per atom virial
         try:
             raise AttributeError
             #for pair in particles.pairs():
@@ -409,11 +418,15 @@ class PairLennardJonesCut(PotentialFunction):
                 r6inv = r2inv**3
                 v_pot += np.sum(r6inv * (lj3 * r6inv - lj4))
                 forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-                forcelj = np.diag(forcelj)
-                forceij = np.dot(forcelj, delta[k])
+                forceij = np.einsum('i,ij->ij',forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
+                #virialij = np.einsum('ij,ik->ijk', forceij, delta[k])
+                #virialijs = np.sum(virialij, axis=0)
                 virial += np.einsum('ij,ik->jk', forceij, delta[k])
+                #virial += virialijs
+                #virial2[i] += 0.5*virialijs  # per atom virial
+                #virial2[k+i+1] += 0.5*virialij  # per atom virial
         return v_pot, force, virial
 
     def _generate_lj_parameters(self):
