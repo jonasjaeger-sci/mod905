@@ -7,18 +7,20 @@ import numpy as np
 
 __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',
-           'calculate_scalar_pressure', 'calculate_pressure_tensor']
+           'calculate_scalar_pressure', 'calculate_pressure_tensor',
+           'calculate_linear_momentum']
 
 
-def calculate_linear_momentum(particles, selection=None):
+def calculate_linear_momentum(system, selection=None):
     """
     This function calculate the linear momentum for a collection
     of particles
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
+    system : object of type System from retis.core.system
+        This object is assumed to contain the particle list to calculate
+        the linear momentum for.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
 
@@ -27,6 +29,7 @@ def calculate_linear_momentum(particles, selection=None):
     out : numpy.array
         The array contains the linear momentum for each dimension.
     """
+    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -34,7 +37,7 @@ def calculate_linear_momentum(particles, selection=None):
     return np.sum(vel*mass, axis=0)
 
 
-def calculate_kinetic_energy_tensor(particles, selection=None):
+def calculate_kinetic_energy_tensor(system, selection=None):
     """
     This function returns the kinetic energy as a tensor
     for a selection of particles. The tensor is formed as the
@@ -42,8 +45,9 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
+    system : object of type System from retis.core.system
+        This object is assumed to contain the particle list to calculate
+        the linear momentum for.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
 
@@ -56,6 +60,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
         output from the ``dim`` times the averaged output of the
         ``kinetic_energy`` method defined below
     """
+    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -65,15 +70,16 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
     return kin
 
 
-def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
+def calculate_kinetic_energy(system, selection=None, kin_tensor=None):
     """
     This function returns the kinetic energy of a collection of
     particles.
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
+    system : object of type System from retis.core.system
+        This object is assumed to contain the particle list to calculate
+        the linear momentum for.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     kin_tensor : numpy.array
@@ -88,12 +94,12 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
         The kinetic energy tensor.
     """
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(particles,
+        kin_tensor = calculate_kinetic_energy_tensor(system,
                                                      selection=selection)
     return kin_tensor.trace(), kin_tensor
 
 
-def calculate_kinetic_temperature(particles, selection=None,
+def calculate_kinetic_temperature(system, selection=None,
                                   dof=None, kin_tensor=None):
     """
     This method returns the kinetic temperature of a
@@ -101,8 +107,9 @@ def calculate_kinetic_temperature(particles, selection=None,
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
+    system : object of type System from retis.core.system
+        This object is assumed to contain the particle list to calculate
+        the linear momentum for.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     dof : numpy.array, optional
@@ -119,6 +126,7 @@ def calculate_kinetic_temperature(particles, selection=None,
     out[1] : float
         The temperature averaged over all dimensions.
     """
+    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -127,7 +135,7 @@ def calculate_kinetic_temperature(particles, selection=None,
     ndof = len(mass)*np.ones(vel[0].shape)
 
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(particles,
+        kin_tensor = calculate_kinetic_energy_tensor(system,
                                                      selection=selection)
     if not dof is None:
         if isinstance(dof, list):
@@ -197,6 +205,7 @@ def calculate_pressure_from_temp(system, temperature, dof=None):
     press = pressvolume / system.box.calculate_volume()
     return pressvolume, press
 
+
 def calculate_scalar_pressure(system, press_tensor=None, kin_tensor=None):
     """
     This method evaluates the scalar pressure using the pressure tensor.
@@ -213,20 +222,19 @@ def calculate_scalar_pressure(system, press_tensor=None, kin_tensor=None):
         calculated.
     """
     if press_tensor is None:
-        press_tensor = calculate_pressure_tensor(system.particles, system,
+        press_tensor = calculate_pressure_tensor(system,
                                                  kin_tensor=kin_tensor)
     return press_tensor.trace()/float(system.box.dim)
 
-def calculate_pressure_tensor(particles, system, kin_tensor=None):
+
+def calculate_pressure_tensor(system, kin_tensor=None):
     """
     This method evaluates the pressure tensor.
 
     Parameters
     ----------
-    particles : object of type particlelist.
-        List of particles to operate on.
     system : object of type system.
-        The system, used to obtain the volume.
+        The system, used to obtain the volume and the particle list.
     kin_tensor : numpy.array
         If kinetic_tensor is not given, the kinetic energy tensor will be
         calculated.
@@ -238,7 +246,7 @@ def calculate_pressure_tensor(particles, system, kin_tensor=None):
         dim = system.box.dim are the number of dimensions considere.
     """
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(particles)
-    virial = particles.virial
+        kin_tensor = calculate_kinetic_energy_tensor(system, selection=None)
+    virial = system.particles.virial
     pressure = (virial + kin_tensor*2.0)/system.box.calculate_volume()
     return pressure
