@@ -4,6 +4,7 @@ This file contains a class for a generic force field
 """
 import numpy as np
 import warnings
+import inspect
 
 __all__ = ['ForceField']
 
@@ -197,9 +198,9 @@ class ForceField(object):
         force = None
         virial = None
         for pot in self.potential:
-            nvar = pot.force.__code__.co_argcount
-            var = pot.force.__code__.co_varnames[:nvar]
-            args = [kwargs[vari] for vari in var[1:]]
+            arguments = inspect.getargspec(pot.force)
+            var = arguments[0]
+            args = [kwargs[vari] for vari in var if vari is not 'self']
             if force is None or virial is None:
                 force, virial = pot.force(*args)
             else:
@@ -236,9 +237,9 @@ class ForceField(object):
         """
         v_pot = None
         for pot in self.potential:
-            nvar = pot.potential.__code__.co_argcount
-            var = pot.potential.__code__.co_varnames[:nvar]
-            args = [kwargs[vari] for vari in var[1:]]
+            arguments = inspect.getargspec(pot.potential)
+            var = arguments[0]
+            args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None:
                 v_pot = pot.potential(*args)
             else:
@@ -279,9 +280,9 @@ class ForceField(object):
         force = None
         virial = None
         for pot in self.potential:
-            nvar = pot.potential_and_force.__code__.co_argcount
-            var = pot.potential_and_force.__code__.co_varnames[:nvar]
-            args = [kwargs[vari] for vari in var[1:]]
+            arguments = inspect.getargspec(pot.potential_and_force)
+            var = arguments[0]
+            args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None or force is None or virial is None:
                 v_pot, force, virial = pot.potential_and_force(*args)
             else:
