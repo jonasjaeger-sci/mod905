@@ -22,7 +22,7 @@ system.forcefield = forcefield_bias # attach biased force field to the system
 umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], 
              [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
 n_umb = len(umbrellas)
-maxcycles = 100
+mincycles = 100
 randseed = 1 # seed for random number generator:
 mc.seed_random_generator(randseed)
 maxdx = 0.1 # maximum allowed displacement
@@ -53,7 +53,7 @@ for i, umbrella in enumerate(umbrellas):
     over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
     # Initiate the umbrella simulation:
     simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over, 
-                                    maxcycle=maxcycles)
+                                    mincycle=mincycles)
     simulation.task = [monte_carlo_task]
 
     pos, trial, ener, ener_trial = [], [], [], []

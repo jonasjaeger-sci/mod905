@@ -14,39 +14,52 @@ class Simulation(object):
 
     Attributes
     ----------
-    cycle : int
-        The current cycle number for the simulation.
-    maxcycle : int
-        Maximum number of cycles to perform.
+    cycle : dict of ints
+        This dict stores information about the number of cycles.
+        The int in cycle['end'] represents the cycle number where the
+        simulation should end.
+        The int in cycle['step'] represents the current cycle number.
+        The int in cycle['start'] is the cycle number we started at.
+    task : list of dicts
+        Each dich contain the tasks to be done. This are represented as a
+        dict with the key-words 'func', 'args', 'kwargs'. Tasks are called as
+        task['func'](*args, **kwargs)
     """
-    def __init__(self, cycle=0, maxcycle=0):
+    def __init__(self, endcycle=0, startcycle=0):
         """
         Initialization of the system.
 
         Parameters
         ----------
-        cycle : int, optional.
-            The current cycle
-        maxcycle : int, optional.
-            Maximum number of cycles to perform
+        startcycle : int, optional.
+            The cycle we start the simulation on, can be usefull if
+            restarting.
+        endcycle : int, optional.
+            This number represents the cycle number where the simulation
+            should end. It some simulations (e.g. MD) this would be the number
+            of steps to perform, in other simulations this could be the
+            minimum or maximum number of cycles to perform
 
         Returns
         -------
         N/A, but initiates self.tasks.
         """
-        self.cycle = cycle
-        self.maxcycle = maxcycle
+        self.cycle = {'step': startcycle, 'end': endcycle,
+                      'start': startcycle}
         self.task = []
 
     def is_finished(self):
         """
-        Function to determine if simulation is finished
+        Function to determine if simulation is finished. In this
+        version, the simulation is done if the current step number
+        is larger than the end cycle. Note that the number of steps
+        performed is dependent of the value of self.cycle['start'].
 
         Returns
         -------
         out : True if simulation is finished, false otherwise.
         """
-        return self.cycle > self.maxcycle
+        return self.cycle['step'] >= self.cycle['end']
 
     def step(self):
         """
@@ -66,7 +79,7 @@ class Simulation(object):
         of self.task and its functions in the script where the simulation
         is defined.
         """
-        self.cycle += 1
+        self.cycle['step'] += 1
         results = []
         for task in self.task:
             args = task.get('args', None)
@@ -99,12 +112,12 @@ class UmbrellaWindowSimulation(Simulation):
         The umbrella window.
     overlap : float
         The positions that must be crossed before the simulation is done.
-    cycle : int
+    startcycle : int
         The current simulation cycle.
-    maxcycle : int
+    mincycle : int
         The MINIMUM number of cycles to perform.
     """
-    def __init__(self, umbrella, overlap, cycle=0, maxcycle=0):
+    def __init__(self, umbrella, overlap, mincycle=0, startcycle=0):
         """
         Initialization of a umbrella simulation.
 
@@ -126,8 +139,8 @@ class UmbrellaWindowSimulation(Simulation):
         -------
         N/A
         """
-        super(UmbrellaWindowSimulation, self).__init__(cycle=cycle,
-                                                       maxcycle=maxcycle)
+        super(UmbrellaWindowSimulation, self).__init__(endcycle=mincycle,
+                                                       startcycle=startcycle)
         self.umbrella = umbrella
         self.overlap = overlap
 
@@ -148,5 +161,5 @@ class UmbrellaWindowSimulation(Simulation):
         -------
         out : True if simulation is finished, false otherwise.
         """
-        return (self.cycle > self.maxcycle and
+        return (self.cycle['step'] > self.cycle['end'] and
                 np.all(system.particles.pos > self.overlap))

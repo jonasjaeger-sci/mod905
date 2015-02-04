@@ -39,28 +39,31 @@ temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
 print('Generated temperatures with average: {}'.format(avgtemp))
 ljsystem.forcefield = forcefield
 
-
-
-
-
 write_gro = WriteGromacs('test.gro', box, frame=0, units=ljsystem.units)
+# finished with initialization
+
 
 # first set up a simulation where we equilibriate the system
 # and scale the temperature:
-simulation_eq = Simulation(maxcycle=200)
+simulation_eq = Simulation(endcycle=200)
 integrator = VelocityVerlet(0.0025)
 
 task_integrate = {'func': integrator.integration_step,
                   'args': [ljsystem]}
 
 def rescale_velocity(system):
-    temp, avgtemp, _ = calculate_kinetic_temperature(system)
-    scale_factor =  np.sqrt(system.temperature['set']/avgtemp)
+    temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
+    scale_factor = np.sqrt(system.temperature['set']/avgtemp)
     system.particles.vel *= scale_factor
 
 task_rescale = {'func': rescale_velocity, 'args': [ljsystem]}
 
-task_reset_momentum = {'func': reset_momentum, 'args': [ljsystem]}
+def reset_momentum_task(system, simulation, every=10):
+    if simulation.cycle['step']%every==0:
+        print('Reset!')
+        reset_momentum(system)
+
+task_reset_momentum = {'func': reset_momentum_task, 'args': [ljsystem, simulation_eq]}
 
 simulation_eq.task = [task_integrate, task_rescale, task_reset_momentum]
 
@@ -78,22 +81,27 @@ total_e = []
 pressure = []
 while not simulation_eq.is_finished():
     simulation_eq.step()
-    # let us also calculate some things:
-    avgtemp, vpot, ekin, etot = compute_energies(ljsystem)
+    # let us also calculate some stuff:
+    kin_tens = calculate_kinetic_energy_tensor(ljsystem)
+    press_tens = calculate_pressure_tensor(ljsystem, 
+                                           kin_tensor=kin_tens)
+    temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem, 
+                                                     kin_tensor=kin_tens)
+    ekin = kin_tens.trace()
+    press =  calculate_scalar_pressure(ljsystem, press_tensor=press_tens, 
+                                       kin_tensor=kin_tens)
+    vpot = ljsystem.v_pot
+    etot = ekin+vpot
+
     temps.append(avgtemp)
     kinetic_e.append(ekin)
     potential_e.append(vpot)
     total_e.append(etot)
-    kin_tens = calculate_kinetic_energy_tensor(ljsystem)
-    print(ekin, kin_tens.trace())
-    press = calculate_scalar_pressure(ljsystem)
-    press2 = calculate_pressure_tensor(ljsystem)
-    print(press, press2.trace()/3.0)
-    pressure.append(press2.trace())
-    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_eq.cycle, avgtemp, etot))
+    pressure.append(press)
+    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_eq.cycle['step'], avgtemp, etot))
     write_gro.write_frame(ljsystem.particles.pos)
 
-simulation_nve = Simulation(maxcycle=200)
+simulation_nve = Simulation(endcycle=200)
 simulation_nve.task = [task_integrate, task_reset_momentum]
 
 while not simulation_nve.is_finished():
@@ -103,9 +111,7 @@ while not simulation_nve.is_finished():
     kinetic_e.append(ekin)
     potential_e.append(vpot)
     total_e.append(etot)
-    #pV, press = evaluate_pressure(ljsystem.particles, ljsystem, temperature=avgtemp)
-    #pressure.append(press)
-    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_nve.cycle, avgtemp, etot))
+    print('Step: {}, Temp: {}, E-tot:{}'.format(simulation_nve.cycle['step'], avgtemp, etot))
     write_gro.write_frame(ljsystem.particles.pos)
 
 
@@ -114,9 +120,9 @@ plt.figure()
 plt.plot(temps)
 plt.show()
 plt.figure()
-plt.plot(kinetic_e-kinetic_e[0])
-plt.plot(potential_e-potential_e[0])
-plt.plot(total_e-total_e[0])
+plt.plot(kinetic_e-kinetic_e[200])
+plt.plot(potential_e-potential_e[200])
+plt.plot(total_e-total_e[200])
 plt.figure()
 plt.plot(pressure)
 plt.show()

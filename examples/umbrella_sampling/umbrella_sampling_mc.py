@@ -38,7 +38,7 @@ n_umb = len(umbrellas)
 randseed = 1 # seed for random number generator:
 mc.seed_random_generator(randseed)
 # and define some common variables for the simulations
-maxcycles = 1e4
+mincycles = 1e4
 maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 
 # In pyretis, a simulation is defined by defining certain tasks
@@ -83,7 +83,7 @@ for i, umbrella in enumerate(umbrellas):
     over = umbrellas[min(i+1, n_umb-1)][0] # position we must cross
     # Initiate the umbrella simulation:
     simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over, 
-                                          maxcycle=maxcycles)
+                                          mincycle=mincycles)
     # Also create empy list for storing some data:
     traj, ener = [], []
     # let us add the two task we defined previously:
@@ -96,7 +96,7 @@ for i, umbrella in enumerate(umbrellas):
         simulation.step()
     trajectory.append(np.array(traj))
     energy.append(np.array(ener))
-    print('Done. Cycles: {}'.format(simulation.cycle)) 
+    print('Done. Cycles: {}'.format(simulation.cycle['step']-simulation.cycle['start'])) 
 
 # We can now post-process the simulation output.
 from retis.analysis.histogram import histogram, match_all_histograms
