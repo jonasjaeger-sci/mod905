@@ -4,8 +4,65 @@ simulation.py
 """
 
 import numpy as np
+import warnings
+
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation']
+
+
+def _do_task(task, stepnumber, currentstep):
+    """
+    This is a helper function for executing a task.
+    It is used by the simulation class when iterating over the different
+    tasks defined for the simulation.
+
+    Parameters
+    ----------
+    task : dict
+        This is a representation of the task to perform, it contains
+        the keyword 'func' and it may contain keyword 'args', 'kwargs' and
+        'extra'. task['func'] defines the function (i.e. it is assumed to be
+        callable) to execute while task['args'] and task['kwargs'] are the
+        optional arguments and keyword arguments to pass to the function
+        defined in task['func'].
+        task['extra'] can be used to execute a task at certain steps or at
+        certain intervals.
+    stepnumber : int
+        The number of steps the simulation has done since it started.
+    currentstep : int
+        The current stepnumber of the simulation.
+    """
+    func = task['func']
+    if not callable(func):
+        msg = 'Task is not callable! Will not do: {}'.format(task)
+        warnings.warn(msg)
+        return None
+    args = task.get('args', None)
+    kwargs = task.get('kwargs', None)
+    extra = task.get('extra', None)
+    execute_task = True
+    if extra:
+        if 'every' in extra:
+            execute_task = stepnumber % extra['every'] == 0
+        if 'at' in extra:
+            try:
+                execute_task = currentstep in extra['at']
+            except TypeError:
+                execute_task = currentstep == extra['at']
+    if execute_task:
+        if args is None:
+            if kwargs is None:
+                result = func()
+            else:
+                result = func(**kwargs)
+        else:
+            if kwargs is None:
+                result = func(*args)
+            else:
+                result = func(*args, **kwargs)
+        return result
+    else:
+        return None
 
 
 class Simulation(object):
@@ -23,7 +80,9 @@ class Simulation(object):
     task : list of dicts
         Each dich contain the tasks to be done. This are represented as a
         dict with the key-words 'func', 'args', 'kwargs'. Tasks are called as
-        task['func'](*args, **kwargs)
+        task['func'](*args, **kwargs). The keyword 'extra' can be used to tune
+        how the function is executed (for instance if its desirable to only
+        run it at certain steps).
     """
     def __init__(self, endcycle=0, startcycle=0):
         """
@@ -80,23 +139,11 @@ class Simulation(object):
         is defined.
         """
         self.cycle['step'] += 1
+        stepno = self.cycle['step'] - self.cycle['start']  # no. of steps done
         results = []
         for task in self.task:
-            args = task.get('args', None)
-            kwargs = task.get('kwargs', None)
-            func = task['func']
-            if callable(func):
-                if args is None:
-                    if kwargs is None:
-                        result = func()
-                    else:
-                        result = func(**kwargs)
-                else:
-                    if kwargs is None:
-                        result = func(*args)
-                    else:
-                        result = func(*args, **kwargs)
-                results.append(result)
+            resi = _do_task(task, stepno, self.cycle['step'])
+            results.append(resi)
         return results
 
 
