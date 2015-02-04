@@ -40,8 +40,7 @@ def mc_task(system, maxdx):
         system.v_pot = v_trial
     return status, accepted_r, trial
 # define function as simulation task
-monte_carlo_task = {'func':mc_task, 'args':[system],
-                    'kwargs':{'maxdx':maxdx}}
+monte_carlo_task = {'func':mc_task, 'args':[system, maxdx]}
 # run simulations:
 trajectory, energy = [], [] 
 print('Running simulations')
@@ -54,7 +53,7 @@ for i, umbrella in enumerate(umbrellas):
     # Initiate the umbrella simulation:
     simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over, 
                                     mincycle=mincycles)
-    simulation.task = [monte_carlo_task]
+    simulation.add_task(monte_carlo_task)
 
     pos, trial, ener, ener_trial = [], [], [], []
     success = []

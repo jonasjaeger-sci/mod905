@@ -87,10 +87,10 @@ for i, umbrella in enumerate(umbrellas):
     # Also create empy list for storing some data:
     traj, ener = [], []
     # let us add the two task we defined previously:
-    task_monte_carlo = {'func':mc_task, 'args':[system],
-                        'kwargs':{'maxdx':maxdx}}
+    task_monte_carlo = {'func':mc_task, 'args':[system, maxdx]}
     task_record = {'func':record, 'args':[system, traj, ener]}
-    simulation.task = [task_monte_carlo, task_record]
+    simulation.add_task(task_monte_carlo)
+    simulation.add_task(task_record)
 
     while not simulation.is_finished(system):
         simulation.step()
