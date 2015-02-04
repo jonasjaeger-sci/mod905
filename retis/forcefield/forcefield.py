@@ -145,8 +145,10 @@ class ForceField(object):
             idx = self.potential.index(potential)
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
+            return (potrm, paramrm)
         else:
             warnings.warn('Unknow potential --- will not remove')
+            return None
 
     def update_potential_parameters(self, potential, params):
         """
