@@ -199,7 +199,7 @@ class ForceField(object):
         virial = None
         for pot in self.potential:
             arguments = inspect.getargspec(pot.force)
-            var = arguments[0]
+            var = arguments.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if force is None or virial is None:
                 force, virial = pot.force(*args)
@@ -238,7 +238,7 @@ class ForceField(object):
         v_pot = None
         for pot in self.potential:
             arguments = inspect.getargspec(pot.potential)
-            var = arguments[0]
+            var = arguments.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None:
                 v_pot = pot.potential(*args)
@@ -281,7 +281,7 @@ class ForceField(object):
         virial = None
         for pot in self.potential:
             arguments = inspect.getargspec(pot.potential_and_force)
-            var = arguments[0]
+            var = arguments.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None or force is None or virial is None:
                 v_pot, force, virial = pot.potential_and_force(*args)
