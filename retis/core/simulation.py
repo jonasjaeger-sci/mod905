@@ -2,10 +2,11 @@
 """
 simulation.py
 """
-
 import numpy as np
+import collections
+import inspect
+import types
 import warnings
-
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation']
 
@@ -31,6 +32,15 @@ def _do_task(task, stepnumber, currentstep):
         The number of steps the simulation has done since it started.
     currentstep : int
         The current stepnumber of the simulation.
+
+    Raises
+    ------
+    None, but will issue a warning if task['func'] is not callable.
+
+    Returns
+    -------
+    out : The result, if any, of executing the task. The return value is
+        defined in the function defining the task.
     """
     func = task['func']
     if not callable(func):
@@ -145,6 +155,67 @@ class Simulation(object):
             resi = _do_task(task, stepno, self.cycle['step'])
             results.append(resi)
         return results
+
+    def add_task(self, task, position=None):
+        """
+        Method for adding a task. A task can still be added manually by
+        simply appending to self.task. This method will however do some
+        checks so that the task added can be executed.
+        
+        Parameters
+        ----------
+        task : dict
+            A dict defining the task. See also ``_do_taks`` for a more
+            eleborate description of what this dict contains.
+        position : int
+            Can be used to placed the task at a specific position.
+        """
+        if not callable(task['func']):
+            msg = 'Task {} cannot be executed. Not added!'.format(task['func'])
+            warnings.warn(msg)
+            return False
+        arguments = inspect.getargspec(task['func'])
+        if not arguments.defaults:
+            args = arguments.args
+            defaults = None
+        else:
+            args = arguments.args[:len(arguments.defaults)]
+            defaults = arguments.args[-len(arguments.defaults):]
+        task_args = task.get('args', None)
+        if not task_args:
+            ntask_args = 0
+        else:
+            # here we need to be carefull. The expected input is a list or
+            # a tuple (at least a sequence of some sort). However, it can be
+            # just a single variable. It this single variable happens to be 
+            # a string, len(task_args) will not be correct. Here we attempt
+            # to correct this, perhaps it can be done better elsewhere.
+            isstring = isinstance(task_args, types.StringTypes)
+            isiterab = isinstance(task_args, collections.Iterable)
+            if isstring or not isiterab:
+                msg = ['Argument is expected to be a list or tuple']
+                task['args'] = [task_args]
+                msg += ['Corrected {} to {}'.format(task_args, task['args'])]
+                msg += ['Please verify that this is correct!']
+                msg = '\n'.join(msg)
+                warnings.warn(msg)
+                task_args = task['args']
+            ntask_args = len(task_args)
+        args = [argsi for argsi in args if argsi is not 'self']
+        nargs = len(args)
+        if not nargs==ntask_args:
+            msg = ['Function expected {} positional arguments'.format(nargs)]
+            msg += ['Expected args: {}'.format(args)]
+            msg += ["Arguments found in task['args']: {}".format(task_args)]
+            msg += ['Task NOT added!']
+            msg = '\n'.join(msg)
+            warnings.warn(msg)
+            return False
+        if position is None:
+            self.task.append(task)
+        else:
+            self.task.insert(position, task)
+        return True
 
 
 class UmbrellaWindowSimulation(Simulation):
