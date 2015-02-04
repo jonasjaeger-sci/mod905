@@ -79,7 +79,7 @@ class System(object):
         """
         This method adjusts the degrees of freedom we are going to
         neglect for the system.
-        
+
         Parameters
         ----------
         dof : numpy.array
@@ -91,7 +91,7 @@ class System(object):
             self.temperature['dof'] = dof
         else:
             self.temperature['dof'] += dof
-            
+
     def get_boltzmann(self):
         """
         This function returns the value of Boltzmanns constant

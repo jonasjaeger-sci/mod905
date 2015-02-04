@@ -161,7 +161,7 @@ class Simulation(object):
         Method for adding a task. A task can still be added manually by
         simply appending to self.task. This method will however do some
         checks so that the task added can be executed.
-        
+
         Parameters
         ----------
         task : dict
@@ -169,6 +169,14 @@ class Simulation(object):
             eleborate description of what this dict contains.
         position : int
             Can be used to placed the task at a specific position.
+
+        Note
+        ----
+        Tasks that will fail are still added to the list of tasks. This is
+        done because the program will then fail while trying to execute tasks.
+        This is intended: if a task cannot be executed the program will fail,
+        and the task should be corrected. The only exception are tasks that
+        cannot be executed, these are not added.
         """
         if not callable(task['func']):
             msg = 'Task {} cannot be executed. Not added!'.format(task['func'])
@@ -181,13 +189,12 @@ class Simulation(object):
         else:
             args = arguments.args[:len(arguments.defaults)]
             defaults = arguments.args[-len(arguments.defaults):]
+        # first test the required arguments:
         task_args = task.get('args', None)
-        if not task_args:
-            ntask_args = 0
-        else:
+        if task_args:
             # here we need to be carefull. The expected input is a list or
             # a tuple (at least a sequence of some sort). However, it can be
-            # just a single variable. It this single variable happens to be 
+            # just a single variable. It this single variable happens to be
             # a string, len(task_args) will not be correct. Here we attempt
             # to correct this, perhaps it can be done better elsewhere.
             isstring = isinstance(task_args, types.StringTypes)
@@ -202,15 +209,28 @@ class Simulation(object):
                 task_args = task['args']
             ntask_args = len(task_args)
         args = [argsi for argsi in args if argsi is not 'self']
-        nargs = len(args)
-        if not nargs==ntask_args:
-            msg = ['Function expected {} positional arguments'.format(nargs)]
+        try:
+            ntask_args = len(task_args)
+        except TypeError:
+            ntask_args = 0
+        if not len(args) == ntask_args:
+            msg = ['Wrong number of arguments for task:']
             msg += ['Expected args: {}'.format(args)]
             msg += ["Arguments found in task['args']: {}".format(task_args)]
-            msg += ['Task NOT added!']
             msg = '\n'.join(msg)
             warnings.warn(msg)
-            return False
+        # also test keyword arguments if present.
+        # here we only see if we give some arguments that the
+        # function does not need.
+        if defaults:
+            kwargs = task.get('kwargs', None)
+            if kwargs:
+                extra = [key for key in kwargs if key not in defaults]
+                if extra:
+                    msg = ['Task Keyword arguments: {}'.format(defaults)]
+                    msg += ['Attempting to pass extra: {}'.format(extra)]
+                    msg = '\n'.join(msg)
+                    warnings.warn(msg)
         if position is None:
             self.task.append(task)
         else:
