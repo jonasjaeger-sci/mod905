@@ -156,6 +156,18 @@ class Simulation(object):
             results.append(resi)
         return results
 
+    def add_tasks(self, *tasks):
+        """
+        Method to add several task in sequential order.
+
+        Parameters
+        ----------
+        tasks : list of dicts
+            This list contain the tasks to add.
+        """
+        for task in tasks:
+            self.add_task(task)
+
     def add_task(self, task, position=None):
         """
         Method for adding a task. A task can still be added manually by
