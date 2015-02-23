@@ -77,7 +77,7 @@ while not simulation_lammps.is_finished():
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator 
 
-d = np.loadtxt('lammps-output.txt') 
+d = np.loadtxt('lammps-output.txt.gz') 
 # step, temperature, press, potential, ekin, etot, pxx, pyy, pzz, pxy, pxz, pyz
 n = min(len(v_pot), len(d[:,0]))
 
