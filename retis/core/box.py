@@ -170,7 +170,8 @@ class Box(object):
                 length = self.length[i]
                 relpos = pos[:, i] - low
                 delta = np.where(np.logical_or(relpos < 0.0, relpos >= length),
-                             relpos - np.floor(relpos/length) * length, relpos)
+                                 relpos - np.floor(relpos/length) * length,
+                                 relpos)
                 pbcpos[:, i] = delta + low
             else:
                 pbcpos[:, i] = pos[:, i]
