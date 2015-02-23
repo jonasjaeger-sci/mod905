@@ -338,9 +338,9 @@ class WriteGromacs(TrajectoryWriter):
         """
         missing = 3 - self.box.dim
         if missing > 0:
-            boxlength = np.zeros(3)
+            boxlength = np.ones(3)
             for i, length in enumerate(self.box.length):
-                boxlength[i] = length
+                boxlength[i] = length*self.convert['pos']
             return boxlength
         else:
-            return self.box.length
+            return self.box.length*self.convert['pos']
