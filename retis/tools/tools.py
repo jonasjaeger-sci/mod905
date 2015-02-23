@@ -6,13 +6,13 @@ This file contains some convenient methods
 import itertools
 import numpy as np
 
-__all__ = ['latticefcc']
+__all__ = ['latticefcc', 'lattice_simple_cubic']
 
 
 def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
     """
     This method generates points on a simple
-    fcc lattice
+    fcc lattice.
 
     Parameters
     ----------
@@ -33,6 +33,10 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
         The lattice positions.
     size : list of floats
         The corresponding size(s), can be used to define a simulation box.
+
+    Note
+    ----
+    Current implementation will only work for a 3D system.
     """
     unit_cell = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.0],
                           [0.0, 0.5, 0.5], [0.5, 0.0, 0.5]])
@@ -48,6 +52,33 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
         j = j + 4
     size = [[0.0, i*lcon] for i in (nx, ny, nz)]
     return positions, size
+
+def lattice_simple_cubic(box, spacing=1.0):
+    """
+    This method creates a simple cubic lattice with
+    the given spacing.
+
+    Parameters
+    ----------
+    box : list of lists/tuples
+        box[i] = [low, high] gives the box bounds in dimension i
+    spacing : float
+        the lattice spacing
+
+    Returns
+    -------
+    positions : numpy.array
+        The lattice positions.
+    """
+    npart = [int(np.floor((boxi[1] - boxi[0])/spacing)) for boxi in box]
+    ranges = [range(i) for i in npart]
+    origin = np.array([boxi[0] for boxi in box])
+    pos = [origin + spacing*np.array(i) for i in itertools.product(*ranges)]
+    positions = np.array(pos)
+    avgp = np.average(positions, axis=0)
+    newavg = np.array([boxi[0]+0.5*(boxi[1]-boxi[0]) for boxi in box])
+    return positions+(newavg-avgp)
+
 #system.particles.npart/system.box.calculate_volume()
     #size = [[0.0, n*lcon] for n in (nx, ny, nz)]
 
