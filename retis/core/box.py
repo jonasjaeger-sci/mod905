@@ -45,6 +45,7 @@ class Box(object):
         self.periodic = []
         self.low = []
         self.high = []
+        box.size = size
         for dim in size:
             ldim = len(dim)
             if ldim == 1:
