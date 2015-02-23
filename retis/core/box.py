@@ -14,11 +14,11 @@ class Box(object):
 
     Attributes
     ----------
-    boundary : list
-        boundary[i] = [low, high] are the box boundaries in dimension i
+    size : list
+        size[i] = [low, high] are the box boundaries in dimension i
     length : list
         length[i] = length of box in dimension i, equals
-        boundary[i][1] - boundary[i][0]
+        size[i][1] - size[i][0]
     periodic : list
         periodic[i] = True if periodic boundaries are to be used in
         dimension i, False otherwise.
@@ -35,7 +35,7 @@ class Box(object):
         size : list.
             The size of the box, can be given with size[i] = length_i
             which defines the box-length in dimension i. The box will then be
-            assumed to have boundary[i] = [0, length_i]. Alternatively the
+            assumed to have size[i] = [0, length_i]. Alternatively the
             boundaries can be defined explicitly: size[i] = [low, high].
         periodic : list, optional.
             periodic[i] is True if periodic boundaries will be applied in
@@ -45,7 +45,7 @@ class Box(object):
         self.periodic = []
         self.low = []
         self.high = []
-        box.size = size
+        self.size = size
         for dim in size:
             ldim = len(dim)
             if ldim == 1:
