@@ -136,7 +136,7 @@ class PairLennardJonesCut(PotentialFunction):
         Parameters
         ----------
         parameters : dict
-            Tthe new parameters. They are assumed to be dicts
+            The new parameters. They are assumed to be dicts
             of type {'A': {'epsilon': 1.0, 'sigma': 1.2, 'rcut': 2.0}}.
         """
         add_eps_sig, add_cut = False, False
@@ -594,3 +594,23 @@ class PairLennardJonesCut(PotentialFunction):
                 stri = '{}-{}'.format(*i)
             strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
         return '\n'.join(strparam)
+
+class WCADoubleWell(PotentialFunction):
+    """
+    A WCA double well potential
+
+    Attributes
+    ----------
+    params : dict
+        The parameters for the potential. This is assumed to be defined
+    """
+    def __init__(self, dim=3, 
+                 desc='WCA double well potential'):
+        """
+        Initialization of the force field
+
+        Parameters
+        ----------
+            default is true since this is consistent with the force
+        """
+        super(WCADoubleWell, self).__init__(dim=dim, desc=desc)

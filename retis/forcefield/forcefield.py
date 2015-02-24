@@ -107,7 +107,7 @@ class ForceField(object):
                 self.params = [params]
             # also assume that we indend to set the parameters:
             for pot, param in zip(self.potential, self.params):
-                pot.update_parameters(param)
+                pot.add_parameters(param)
 
     def add_potential(self, potential, parameters=None):
         """
@@ -126,7 +126,7 @@ class ForceField(object):
         """
         self.potential.append(potential)
         if not parameters is None:
-            potential.update_parameters(parameters)
+            potential.add_parameters(parameters)
         self.params.append(potential.params)
 
     def remove_potential(self, potential):
