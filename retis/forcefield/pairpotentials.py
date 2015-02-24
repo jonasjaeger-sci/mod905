@@ -51,7 +51,20 @@ class PairLennardJonesCut(PotentialFunction):
         and potential.
     """
     def __init__(self, dim=3, mixing='geometric', factor=2.5,
+                 shift=True,
                  desc='Lennard Jones pair potential with simple cut-off'):
+        """
+        Initialization of the force field
+
+        Parameters
+        ----------
+        factor : float
+            factor is used to calculate rcut if it's not explicitly given.
+            rcut will then be equal to factor*sigma.
+        shift : boolean
+            determines if the potential will be shifted at the cutoff
+            default is true since this is consistent with the force
+        """
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
         self.lj1 = {}
         self.lj2 = {}
@@ -60,9 +73,10 @@ class PairLennardJonesCut(PotentialFunction):
         self.rcut2 = {}
         self.params = {'epsilon': {}, 'sigma': {}, 'rcut': {},
                        'epsilon_ij': {}, 'sigma_ij': {}, 'rcut_ij': {},
-                       'mixing': mixing, 'factor': factor}
+                       'mixing': mixing, 'factor': factor,
+                       'shift-potential': shift}
         self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': []}
+                          'rcut2': [], 'offset':[]}
 
     def update_parameters(self, params):
         """
@@ -89,7 +103,8 @@ class PairLennardJonesCut(PotentialFunction):
                 self.params['sigma'][i] = sigma
                 # generate rcut if it's not there...
                 self.params['rcut'][i] = parameter.get('rcut',
-                                         self.params['factor']*sigma)
+                                                       self.params['factor'] *\
+                                                       sigma)
                 add_eps_sig = True
             else:
                 # not both epsilon and sigma were specified, this only
@@ -126,7 +141,8 @@ class PairLennardJonesCut(PotentialFunction):
                 sigma = params['sigma']
                 self.params['sigma'][i] = sigma
                 self.params['rcut'][i] = params.get('rcut',
-                                            self.params['factor']*sigma)
+                                                    self.params['factor'] *\
+                                                    sigma)
                 add_eps_sig = True
             else:
                 if 'rcut' in params:
@@ -234,6 +250,7 @@ class PairLennardJonesCut(PotentialFunction):
                 self.matrix_np[key] = []
             for i, itype in enumerate(particles.ptype):
                 rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
+                offset = []
                 for j in xrange(i+1, npart):  # note xrange here -> hack above
                     jtype = particles.ptype[j]
                     rcut2.append(self.rcut2[itype, jtype])
@@ -241,11 +258,19 @@ class PairLennardJonesCut(PotentialFunction):
                     lj2.append(self.lj2[itype, jtype])
                     lj3.append(self.lj3[itype, jtype])
                     lj4.append(self.lj4[itype, jtype])
+                    if self.params['shift-potential']:
+                        r2inv = 1.0/rcut2[-1]
+                        r6inv = r2inv**3
+                        vcut = r6inv * (lj3[-1] * r6inv - lj4[-1])
+                    else:
+                        vcut = 0.0
+                    offset.append(vcut)
                 self.matrix_np['rcut2'].append(np.array(rcut2))
                 self.matrix_np['lj1'].append(np.array(lj1))
                 self.matrix_np['lj2'].append(np.array(lj2))
                 self.matrix_np['lj3'].append(np.array(lj3))
                 self.matrix_np['lj4'].append(np.array(lj4))
+                self.matrix_np['offset'].append(np.array(offset))
 
     def force(self, particles, box):
         """
@@ -300,7 +325,7 @@ class PairLennardJonesCut(PotentialFunction):
                 r2inv = 1.0/rsq[k]
                 r6inv = r2inv**3
                 forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-                forceij = np.einsum('i,ij->ij',forcelj, delta[k])
+                forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
                 virial += np.einsum('ij,ik->jk', forceij, delta[k])
@@ -344,9 +369,10 @@ class PairLennardJonesCut(PotentialFunction):
                 k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
                 lj3 = self.matrix_np['lj3'][i][k]
                 lj4 = self.matrix_np['lj4'][i][k]
+                offset = self.matrix_np['offset'][i][k]
                 r2inv = 1.0/rsq[k]
                 r6inv = r2inv**3
-                v_pot += np.sum(r6inv * (lj3 * r6inv - lj4))
+                v_pot += np.sum((r6inv * (lj3 * r6inv - lj4)-offset))
         return v_pot
 
     def potential_and_force(self, particles, box):
@@ -414,11 +440,12 @@ class PairLennardJonesCut(PotentialFunction):
                 lj2 = self.matrix_np['lj2'][i][k]
                 lj3 = self.matrix_np['lj3'][i][k]
                 lj4 = self.matrix_np['lj4'][i][k]
+                offset = self.matrix_np['offset'][i][k]
                 r2inv = 1.0/rsq[k]
                 r6inv = r2inv**3
-                v_pot += np.sum(r6inv * (lj3 * r6inv - lj4))
+                v_pot += np.sum((r6inv * (lj3 * r6inv - lj4))-offset)
                 forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-                forceij = np.einsum('i,ij->ij',forcelj, delta[k])
+                forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 force[i] += np.sum(forceij, axis=0)
                 force[k+i+1] -= forceij
                 #virialij = np.einsum('ij,ik->ijk', forceij, delta[k])
@@ -495,7 +522,7 @@ class PairLennardJonesCut(PotentialFunction):
             # generate:
             eps, sig = forcefield.mixing_parameters(epsilon_i, sigma_i,
                                                     epsilon_j, sigma_j,
-                                          mixing=self.params['mixing'])
+                                                mixing=self.params['mixing'])
             if not (i, j) in epsilon_ij:
                 epsilon_ij[i, j] = eps
                 sigma_ij[i, j] = sig
