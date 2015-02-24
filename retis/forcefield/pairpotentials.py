@@ -42,6 +42,9 @@ class PairLennardJonesCut(PotentialFunction):
         Lennard Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: 4.0 * epsilon_ij * sigma_ij**6
+    offset : dict
+        Potential values for shifting the potential if requested.
+        This is the potential evaluated at the cutoff.
     rcut2 : dict
         Squared cut-off for each interaction type.
         Keys are the paris (particle types) that may interact.
@@ -71,6 +74,7 @@ class PairLennardJonesCut(PotentialFunction):
         self.lj3 = {}
         self.lj4 = {}
         self.rcut2 = {}
+        self.offset = {}
         self.params = {'epsilon': {}, 'sigma': {}, 'rcut': {},
                        'epsilon_ij': {}, 'sigma_ij': {}, 'rcut_ij': {},
                        'mixing': mixing, 'factor': factor,
@@ -123,6 +127,7 @@ class PairLennardJonesCut(PotentialFunction):
             self._generate_lj_parameters()
         if add_eps_sig or add_cut:
             self._generate_rcut()
+            self._generate_offsets()
 
     def add_parameters(self, parameters):
         """
@@ -155,6 +160,7 @@ class PairLennardJonesCut(PotentialFunction):
             self._generate_lj_parameters()
         if add_eps_sig or add_cut:
             self._generate_rcut()
+            self._generate_offsets()
 
     def remove_parameter(self, particle):
         """
@@ -189,6 +195,7 @@ class PairLennardJonesCut(PotentialFunction):
             self._generate_lj_parameters()
         if remove_eps_sig or remove_cut:
             self._generate_rcut()
+            self._generate_offsets()
 
     def _generate_rcut(self):
         """
@@ -214,6 +221,25 @@ class PairLennardJonesCut(PotentialFunction):
             rcut2[i] = rcut_ij[i]**2
         self.params['rcut_ij'] = rcut_ij
         self.rcut2 = rcut2
+
+    def _generate_offsets(self):
+        """
+        This function will generate offset if shifting of the potential
+        is requested.
+        """
+        self.offset = {}
+        for i in self.params['epsilon_ij']:
+            if isinstance(i, tuple):
+                lj3 = self.lj3[i]
+                lj4 = self.lj4[i]
+                rcut2 = self.rcut2[i]
+                if self.params['shift-potential']:
+                    r2inv = 1.0/rcut2
+                    r6inv = r2inv**3
+                    vcut = r6inv * (lj3 * r6inv - lj4)
+                else:
+                    vcut = 0.0
+                self.offset[i] = vcut
 
     def _make_tables_for_numpy(self, particles):
         """
@@ -258,13 +284,7 @@ class PairLennardJonesCut(PotentialFunction):
                     lj2.append(self.lj2[itype, jtype])
                     lj3.append(self.lj3[itype, jtype])
                     lj4.append(self.lj4[itype, jtype])
-                    if self.params['shift-potential']:
-                        r2inv = 1.0/rcut2[-1]
-                        r6inv = r2inv**3
-                        vcut = r6inv * (lj3[-1] * r6inv - lj4[-1])
-                    else:
-                        vcut = 0.0
-                    offset.append(vcut)
+                    offset.append(self.offset[itype, jtype])
                 self.matrix_np['rcut2'].append(np.array(rcut2))
                 self.matrix_np['lj1'].append(np.array(lj1))
                 self.matrix_np['lj2'].append(np.array(lj2))
@@ -360,7 +380,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        r2inv = 1.0/rsq
             #        r6inv = r2inv**3
             #        v_pot += r6inv * (self.lj3[itype, jtype]*r6inv -
-            #                          self.lj4[itype, jtype])
+            #                          self.lj4[itype, jtype]) - self.offset[itype, type]
         except AttributeError:
             self._make_tables_for_numpy(particles)
             for i, particle_i in enumerate(particles.pos[:-1]):
@@ -422,7 +442,7 @@ class PairLennardJonesCut(PotentialFunction):
             #        r2inv = 1.0/rsq
             #        r6inv = r2inv**3
             #        v_pot += r6inv * (self.lj3[itype, jtype]*r6inv
-            #                           - self.lj4[itype, jtype])
+            #                           - self.lj4[itype, jtype]) - offset[itype, jtype]
             #        forcelj = r2inv*r6inv * (self.lj1[itype, jtype]*r6inv -
             #                                 self.lj2[itype, jtype])
             #        forceij = forcelj*delta
