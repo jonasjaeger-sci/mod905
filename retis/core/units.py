@@ -29,10 +29,14 @@ CONVERT['mass']['lj', 'g/mol'] = 39.948
 CONVERT['energy']['lj', 'J'] = 119.8 * CONSTANTS['kB']['J/K']
 CONVERT['energy']['kcal', 'J'] = 4184.
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
+CONVERT['energy']['lj', 'kcal/mol'] = CONVERT['energy']['lj', 'J'] *\
+                                      (1.0/CONVERT['energy']['kcal', 'J']) * \
+                                      CONVERT['energy']['kcal', 'kcal/mol']
 CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] * \
                              (CONVERT['mass']['lj', 'kg'] /
                               CONVERT['energy']['lj', 'J'])**0.5
 CONVERT['time']['lj', 'ps'] = 1.0e12 * CONVERT['time']['lj', 's']
+CONVERT['time']['lj', 'fs'] = 1.0e15 * CONVERT['time']['lj', 's']
 CONVERT['velocity']['lj', 'nm/ps'] = CONVERT['length']['lj', 'nm'] /\
                                      CONVERT['time']['lj', 'ps']
 
