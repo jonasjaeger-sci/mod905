@@ -205,9 +205,8 @@ class PairLennardJonesCutnp(PotentialFunction):
             i, j = pair
             # generate:
             eps, sig, cut = forcefield.mixing_parameters(epsilon[i], sigma[i],
-                                                         rcut[i],
-                                                         epsilon[j], sigma[j],
-                                                         rcut[j], 
+                                                         rcut[i], epsilon[j],
+                                                         sigma[j], rcut[j],
                                                          mixing=mix)
             self.pairparams['pairs'].add(pair)
             self.pairparams['epsilon'][pair] = eps
