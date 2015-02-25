@@ -3,7 +3,6 @@
 This file contains a WCA pair potential
 """
 from __future__ import absolute_import
-import numpy as np
 from .pairlennardjones import PairLennardJonesCutnp
 
 __all__ = ['PairWCAnp']
@@ -18,5 +17,3 @@ class PairWCAnp(PairLennardJonesCutnp):
                  desc='WCA potential'):
         super(PairWCAnp, self).__init__(dim=dim, desc=desc, shift=True,
                                         factor=2.**(1./6.))
-    
-
