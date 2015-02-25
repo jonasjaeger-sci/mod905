@@ -7,7 +7,7 @@ pyretis.
 """
 from retis.core import Simulation, System, Box
 from retis.core.integrators import VelocityVerlet
-from retis.forcefield import ForceField, PairLennardJonesCut
+from retis.forcefield import ForceField, PairLennardJonesCutnp
 from retis.io import WriteGromacs
 from retis.core.particlefunctions import * 
 import numpy as np
@@ -16,7 +16,7 @@ import numpy as np
 size = [[0.0, 8.39798] for _ in range(3)] # hard coded box-size
 box = Box(size)
 
-lennard_jones = PairLennardJonesCut(shift=False)
+lennard_jones = PairLennardJonesCutnp(shift=False)
 lj_parameters = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
               'mixing': 'geometric'}
 forcefield = ForceField(potential=[lennard_jones], params=[lj_parameters])

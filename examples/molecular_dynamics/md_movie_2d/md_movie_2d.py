@@ -7,13 +7,13 @@ from retis.core import Simulation, System, Box
 from retis.core.particlefunctions import * 
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
-from retis.forcefield import ForceField, PairLennardJonesCut
+from retis.forcefield import ForceField, PairLennardJonesCutnp
 from retis.io import WriteGromacs
 from retis.tools import lattice_simple_cubic
 import numpy as np 
 
 # set up potential function(s) and force field:
-lennard_jones = PairLennardJonesCut(dim=2)
+lennard_jones = PairLennardJonesCutnp(dim=2)
 lj_parameters = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
               'mixing': 'geometric'}
 forcefield = ForceField(potential=[lennard_jones], params=[lj_parameters])
