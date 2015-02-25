@@ -68,9 +68,9 @@ class PairLennardJonesCutnp(PotentialFunction):
 
     def add_parameters(self, parameters, mix=True):
         """
-        This method will add new potential parameters for 
+        This method will add new potential parameters for
         atoms or pairs.
-        
+
         Parameters
         ----------
         parameters : dict
@@ -131,11 +131,12 @@ class PairLennardJonesCutnp(PotentialFunction):
                 update_lj = True
 
         if update_lj: # we have added new parameters
-            if mix: self._generate_mixing_parameters()
+            if mix:
+                self._generate_mixing_parameters()
             self._generate_lj_cut_offset()
             # reset matrix_np here, which means that it will be regenerated
             self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': [], 'offset':[]}
+                              'rcut2': [], 'offset':[]}
 
     def update_parameters(self, parameters, mix=False):
         """
@@ -154,7 +155,7 @@ class PairLennardJonesCutnp(PotentialFunction):
         update_lj = False
         for key, params in parameters.items():
             if key in self.params:
-                if key=='mixing' and params != self.params[key] and  not mix:
+                if key == 'mixing' and params != self.params[key] and  not mix:
                     msg = 'Mixing rule changed, but re-mixing not requested'
                     warnings.warn(msg)
                 self.params[key] = params
@@ -186,7 +187,7 @@ class PairLennardJonesCutnp(PotentialFunction):
             self._generate_lj_cut_offset()
             # reset matrix_np here, which means that it will be regenerated
             self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': [], 'offset':[]}
+                              'rcut2': [], 'offset':[]}
 
 
     def _generate_mixing_parameters(self):
@@ -195,25 +196,23 @@ class PairLennardJonesCutnp(PotentialFunction):
         on the parameters for atoms. In order to do so, it
         will make use of the defined mixing rule.
         """
-        epsilon =  self.typeparams['epsilon']
-        sigma =  self.typeparams['sigma']
+        epsilon = self.typeparams['epsilon']
+        sigma = self.typeparams['sigma']
         types = self.typeparams['types']
         rcut = self.typeparams['rcut']
         mix = self.params['mixing']
         for pair in itertools.product(types, types):
-            i,j = pair
-            epsilon_i, epsilon_j = epsilon[i], epsilon[j]
-            sigma_i, sigma_j = sigma[i], sigma[j]
+            i, j = pair
             # generate:
-            eps, sig = forcefield.mixing_parameters(epsilon_i, sigma_i,
-                                                    epsilon_j, sigma_j,
+            eps, sig = forcefield.mixing_parameters(epsilon[i], sigma[i],
+                                                    epsilon[j], sigma[j],
                                                     mixing=mix)
             self.pairparams['pairs'].add(pair)
             self.pairparams['epsilon'][pair] = eps
             self.pairparams['sigma'][pair] = sig
             # for rcut, we keep the old value if possible, this is
             # desirable for equal-type interactions (A-A, B-B, etc.).
-            if i==j:
+            if i == j:
                 rcutij = rcut[i]
             else:
                 rcutij = self.params['factor']*sig
@@ -260,7 +259,7 @@ class PairLennardJonesCutnp(PotentialFunction):
         Of course, this is not viable for a very large system, then one would
         do something else like C or Fortran or a more clever division of the
         work.
-        
+
         Paramters
         ---------
         particles : object
@@ -273,22 +272,16 @@ class PairLennardJonesCutnp(PotentialFunction):
         npart = particles.npart
         update = False
         try: # this will only check for correct size
-            update = not (len(self.matrix_np['lj1'][0]) == (npart - 1))
+            update = not len(self.matrix_np['lj1'][0]) == (npart - 1)
         except IndexError:
             update = True
         if update:
-            try:  # "stupid" python2 <-3 hack
-                xrange
-            except NameError:
-                xrange = range
-
             for key in self.matrix_np:
                 self.matrix_np[key] = []
             for i, itype in enumerate(particles.ptype):
                 rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
                 offset = []
-                for j in xrange(i+1, npart):  # note xrange here -> hack above
-                    jtype = particles.ptype[j]
+                for jtype in particles.ptype[i+1:]:
                     rcut2.append(self.rcut2[itype, jtype])
                     lj1.append(self.lj1[itype, jtype])
                     lj2.append(self.lj2[itype, jtype])
@@ -455,7 +448,6 @@ class PairLennardJonesCutnp(PotentialFunction):
         strparam.extend(['Shift potential: {}'.format(self.params['shift-potential'])])
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
         atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
-        atmformat3 = '{0:12s} {1:>9s} {2:>9s} {3:>9.4f}'
         strparam.append('Input parameters:')
         strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
                                          'cut-off'))
