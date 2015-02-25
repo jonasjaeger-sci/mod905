@@ -5,7 +5,6 @@ simulation.py
 import numpy as np
 import collections
 import inspect
-import types
 import warnings
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation']
@@ -209,7 +208,7 @@ class Simulation(object):
             # just a single variable. It this single variable happens to be
             # a string, len(task_args) will not be correct. Here we attempt
             # to correct this, perhaps it can be done better elsewhere.
-            isstring = isinstance(task_args, types.StringTypes)
+            isstring = isinstance(task_args, str)
             isiterab = isinstance(task_args, collections.Iterable)
             if isstring or not isiterab:
                 msg = ['Argument is expected to be a list or tuple']

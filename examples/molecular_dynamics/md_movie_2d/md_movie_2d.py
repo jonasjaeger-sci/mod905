@@ -135,11 +135,11 @@ def update(i):
     fmax = None
     for fi in force:
         fs = np.sqrt(np.dot(fi,fi))
-        if fs>fmax or fmax is None: fmax=fs
+        if fmax is None or fs>fmax: fmax=fs
     vmax = None
     for vi in vel:
         vs = np.sqrt(np.dot(vi,vi))
-        if vs>vmax or vmax is None: vmax = vs
+        if vmax is None or vs>vmax: vmax = vs
     XY, FU, FV, VU, VV = [], [], [], [], []
     for pi, fi, vi in zip(pos, force, vel):
         pj = pi*SIGMA
