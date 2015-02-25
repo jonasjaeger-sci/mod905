@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This file contains different pair potentials
+This file contains the Lennard-Jones pair potentials
+and variations.
 """
 from __future__ import absolute_import
 import numpy as np
@@ -51,7 +52,7 @@ class PairLennardJonesCutnp(PotentialFunction):
     """
     def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
                  desc='Lennard Jones pair potential with simple cut-off'):
-
+        super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc)
         self.typeparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
                            'types':set()}
         self.pairparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
