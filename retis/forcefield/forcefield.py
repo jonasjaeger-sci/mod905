@@ -9,7 +9,7 @@ import inspect
 __all__ = ['ForceField']
 
 
-def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j,
+def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
     """
     This function defines so-called mixing rules which may be usefull
@@ -36,9 +36,11 @@ def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j,
     if mixing == 'geometric':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
         sigma_ij = np.sqrt(sigma_i * sigma_j)
+        rcut_ij = np.sqrt(rcut_i * rcut_j)
     elif mixing == 'arithmetic':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
         sigma_ij = 0.5 * (sigma_i + sigma_j)
+        rcut_ij = 0.5 * (rcut_i + rcut_j)
     elif mixing == 'sixthpower':
         si3 = sigma_i**3
         si6 = si3**2
@@ -47,11 +49,13 @@ def mixing_parameters(epsilon_i, sigma_i, epsilon_j, sigma_j,
         avgs6 = 0.5 * (si6 + sj6)
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
         sigma_ij = avgs6**(1.0/6.0)
+        rcut_ij = (0.5*(rcut_i**6 + rcut_j**6))**(1.0/6.0)
     else:
         warnings.warn('Unknown mixing rule requested!')
         epsilon_ij = 0.5 * (epsilon_i + epsilon_j)
         sigma_ij = 0.5 * (sigma_i + sigma_j)
-    return epsilon_ij, sigma_ij
+        rcut_ij = 0.5 * (rcut_i + rcut_j)
+    return epsilon_ij, sigma_ij, rcut_ij
 
 
 class ForceField(object):
