@@ -204,19 +204,15 @@ class PairLennardJonesCutnp(PotentialFunction):
         for pair in itertools.product(types, types):
             i, j = pair
             # generate:
-            eps, sig = forcefield.mixing_parameters(epsilon[i], sigma[i],
-                                                    epsilon[j], sigma[j],
-                                                    mixing=mix)
+            eps, sig, cut = forcefield.mixing_parameters(epsilon[i], sigma[i],
+                                                         rcut[i],
+                                                         epsilon[j], sigma[j],
+                                                         rcut[j], 
+                                                         mixing=mix)
             self.pairparams['pairs'].add(pair)
             self.pairparams['epsilon'][pair] = eps
             self.pairparams['sigma'][pair] = sig
-            # for rcut, we keep the old value if possible, this is
-            # desirable for equal-type interactions (A-A, B-B, etc.).
-            if i == j:
-                rcutij = rcut[i]
-            else:
-                rcutij = self.params['factor']*sig
-            self.pairparams['rcut'][pair] = rcutij
+            self.pairparams['rcut'][pair] = cut
 
 
     def _generate_lj_cut_offset(self):
@@ -241,13 +237,14 @@ class PairLennardJonesCutnp(PotentialFunction):
             vcut = 0.0
             if self.params['shift-potential']:
                 try:
-                    r2inv = 1.0/self.rcut2[pair]
-                    r6inv = r2inv**3
-                    vcut = r6inv * (self.lj3[pair] * r6inv - self.lj4[pair])
+                    print sigma_ij, self.pairparams['rcut'][pair]
+                    ratio = sigma_ij/self.pairparams['rcut'][pair]
+                    vcut = 4.0 * epsilon_ij * (ratio**12 - ratio**6)
                 except ZeroDivisionError:
                     vcut = 0.0
             self.offset[pair] = vcut
-
+        for x in self.offset:
+            print x, self.offset[x]
     def _generate_tables_for_numpy(self, particles):
         """
         This is a helper function since we are using numpy here.
