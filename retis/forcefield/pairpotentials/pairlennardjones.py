@@ -237,14 +237,12 @@ class PairLennardJonesCutnp(PotentialFunction):
             vcut = 0.0
             if self.params['shift-potential']:
                 try:
-                    print sigma_ij, self.pairparams['rcut'][pair]
                     ratio = sigma_ij/self.pairparams['rcut'][pair]
                     vcut = 4.0 * epsilon_ij * (ratio**12 - ratio**6)
                 except ZeroDivisionError:
                     vcut = 0.0
             self.offset[pair] = vcut
-        for x in self.offset:
-            print x, self.offset[x]
+
     def _generate_tables_for_numpy(self, particles):
         """
         This is a helper function since we are using numpy here.
