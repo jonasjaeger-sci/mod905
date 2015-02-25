@@ -212,7 +212,7 @@ class PairLennardJonesCutnp(PotentialFunction):
             self.pairparams['epsilon'][pair] = eps
             self.pairparams['sigma'][pair] = sig
             # for rcut, we keep the old value if possible, this is
-            # desirable for equal type interactions.
+            # desirable for equal-type interactions (A-A, B-B, etc.).
             if i==j:
                 rcutij = rcut[i]
             else:
@@ -241,9 +241,12 @@ class PairLennardJonesCutnp(PotentialFunction):
             self.rcut2[pair] = self.pairparams['rcut'][pair]**2
             vcut = 0.0
             if self.params['shift-potential']:
-                r2inv = 1.0/self.rcut2[pair]
-                r6inv = r2inv**3
-                vcut = r6inv * (self.lj3[pair] * r6inv - self.lj4[pair])
+                try:
+                    r2inv = 1.0/self.rcut2[pair]
+                    r6inv = r2inv**3
+                    vcut = r6inv * (self.lj3[pair] * r6inv - self.lj4[pair])
+                except ZeroDivisionError:
+                    vcut = 0.0
             self.offset[pair] = vcut
 
     def _generate_tables_for_numpy(self, particles):
