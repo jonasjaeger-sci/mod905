@@ -167,6 +167,6 @@ class Particles(object):
         -------
         yields the positions and types of the difference pairs.
         """
-        for i, posi in enumerate(self.pos[:-1]):
-            for j, posj in enumerate(self.pos[i+1:]):
-                yield (i, posi, self.ptype[i], i+1+j, posj, self.ptype[j])
+        for i, itype in enumerate(self.ptype[:-1]):
+            for j, jtype in enumerate(self.ptype[i+1:]):
+                yield (i, i+1+j, itype, jtype)
