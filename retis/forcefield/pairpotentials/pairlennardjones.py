@@ -11,12 +11,13 @@ import warnings
 from ..potential import PotentialFunction
 from .. import forcefield
 
-__all__ = ['PairLennardJonesCutnp']
+__all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
-class PairLennardJonesCutnp(PotentialFunction):
+class PairLennardJonesCut(PotentialFunction):
     """
     A Lennard-Jones 6-12 potential with a simple cut-off.
     The potential can be shifted.
+    This implementa
 
     Attributes
     ----------
@@ -52,7 +53,7 @@ class PairLennardJonesCutnp(PotentialFunction):
     """
     def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
                  desc='Lennard Jones pair potential with simple cut-off'):
-        super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc)
+        super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
         self.typeparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
                            'types':set()}
         self.pairparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
@@ -63,8 +64,6 @@ class PairLennardJonesCutnp(PotentialFunction):
         self.lj3, self.lj4 = {}, {} # for energy calculation
         self.rcut2 = {}
         self.offset = {}
-        self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': [], 'offset':[]}
 
     def add_parameters(self, parameters, mix=True):
         """
@@ -104,7 +103,6 @@ class PairLennardJonesCutnp(PotentialFunction):
                                                                    factor,
                                                                    sigma)
                 warnings.warn(msg)
-
             if isinstance(key, tuple): # adding pair
                 key_r = (key[1], key[0])
                 for pair in [key, key_r]:
@@ -134,9 +132,7 @@ class PairLennardJonesCutnp(PotentialFunction):
             if mix:
                 self._generate_mixing_parameters()
             self._generate_lj_cut_offset()
-            # reset matrix_np here, which means that it will be regenerated
-            self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                              'rcut2': [], 'offset':[]}
+        return update_lj
 
     def update_parameters(self, parameters, mix=False):
         """
@@ -185,10 +181,7 @@ class PairLennardJonesCutnp(PotentialFunction):
             self._generate_mixing_parameters()
         if update_lj:
             self._generate_lj_cut_offset()
-            # reset matrix_np here, which means that it will be regenerated
-            self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                              'rcut2': [], 'offset':[]}
-
+        return update_lj
 
     def _generate_mixing_parameters(self):
         """
@@ -213,7 +206,6 @@ class PairLennardJonesCutnp(PotentialFunction):
             self.pairparams['sigma'][pair] = sig
             self.pairparams['rcut'][pair] = cut
 
-
     def _generate_lj_cut_offset(self):
         """
         This method generates the Lennard-Jones parameters
@@ -236,11 +228,193 @@ class PairLennardJonesCutnp(PotentialFunction):
             vcut = 0.0
             if self.params['shift-potential']:
                 try:
-                    ratio = sigma_ij/self.pairparams['rcut'][pair]
-                    vcut = 4.0 * epsilon_ij * (ratio**12 - ratio**6)
+                    rcut = sigma_ij/self.pairparams['rcut'][pair]
+                    vcut = 4.0 * epsilon_ij * (rcut**12 - rcut**6)
                 except ZeroDivisionError:
                     vcut = 0.0
             self.offset[pair] = vcut
+
+    def str_parameters(self):
+        """
+        This method will just generate a string with the potential
+        parameters and the generated pair parameters.
+
+        Returns
+        -------
+        out : string
+            Table with the parameters of all interactions.
+        """
+        strparam = ['Potential parameters, Lennard-Jones:']
+        strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
+        strparam.extend(['Shift potential: {}'.format(self.params['shift-potential'])])
+        atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
+        atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
+        strparam.append('Input parameters:')
+        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
+                                         'cut-off'))
+        for i in self.typeparams['types']:
+            epsilon = self.typeparams['epsilon'][i]
+            sigma = self.typeparams['sigma'][i]
+            rcut = self.typeparams['rcut'][i]
+            strparam.append(atmformat2.format(i, epsilon, sigma, rcut))
+        strparam.append('Pair parameters:')
+        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
+                                         'cut-off'))
+        for i in self.pairparams['pairs']:
+            epsilon = self.pairparams['epsilon'][i]
+            sigma = self.pairparams['sigma'][i]
+            rcut = self.pairparams['rcut'][i]
+            stri = '{}-{}'.format(*i)
+            strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
+        return '\n'.join(strparam)
+
+    def potential(self, particles, box):
+        """
+        This method calculates the potential energy for the Lennard Jones
+        interaction.
+
+        Parameters
+        ----------
+        particles : object, particle list.
+        box : object, representing the box used in the simulation.
+
+        Returns
+        -------
+        The potential energy as a float.
+        """
+        v_pot = 0.0
+        for pair in particles.pairs():
+            i, j, itype, jtype = pair
+            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            rsq = np.dot(delta, delta)
+            if rsq < self.rcut2[itype, jtype]:
+                r2inv = 1.0/rsq
+                r6inv = r2inv**3
+                v_pot += r6inv * (self.lj3[itype, jtype]*r6inv -
+                                  self.lj4[itype, jtype]) -\
+                         self.offset[itype, jtype]
+        return v_pot
+
+    def force(self, particles, box):
+        """
+        This method calculates the force for the Lennard Jones
+        interaction.
+
+        We also calculate the virial here, since the force
+        is evaluated.
+
+        Parameters
+        ----------
+        particles : object, particle list.
+        box : object, representing the box used in the simulation.
+
+        Returns
+        -------
+        The force as a numpy.array of the same shape as the positions
+        in particles.pos.
+        """
+        forces = np.zeros(particles.pos.shape)
+        virial = np.zeros((box.dim, box.dim))
+        for pair in particles.pairs():
+            i, j, itype, jtype = pair
+            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            rsq = np.dot(delta, delta)
+            if rsq < self.rcut2[itype, jtype]:
+                r2inv = 1.0/rsq
+                r6inv = r2inv**3
+                forcelj = r2inv*r6inv * (self.lj1[itype, jtype]*r6inv -
+                                         self.lj2[itype, jtype])
+                forceij = forcelj*delta
+                forces[i] += forceij
+                forces[j] -= forceij
+                virial += np.outer(forceij, delta)
+        return forces, virial
+
+    def potential_and_force(self, particles, box):
+        """
+        Method for calculating the potential and force for the
+        Lennard-Jones interaction.
+
+        Parameters
+        ----------
+        particles : object as defined in retis.core.particles
+            The particle list.
+        box : object as defined in retis.core.box
+            Representation of the box used in the simulation.
+
+        Note
+        ----
+        Currently, the virial is only calculated for the particles as a whole.
+        It is not calculated as a virial per atom. The virial per atom might
+        be useful to obtain a local pressure or stress, however this needs
+        some consideration. Perhaps it's best to fully implement this as a
+        method of planes or something similar. Some commented lines below are
+        included to show how a per-atom virial can be obtained.
+
+        Returns
+        -------
+        out[0] : float
+            The potential energy as a float.
+        out[1] : numpy.array
+            The force as a numpy.array of the same shape as the positions
+            in particles.pos.
+        out[2] : numpy.array
+            The virial, as a symmetric matrix with dimensions (dim, dim) where
+            dim is given by the box.
+        """
+        v_pot = 0.0
+        forces = np.zeros(particles.pos.shape)
+        virial = np.zeros((box.dim, box.dim))
+        for pair in particles.pairs():
+            i, j, itype, jtype = pair
+            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            rsq = np.dot(delta, delta)
+            if rsq < self.rcut2[itype, jtype]:
+                r2inv = 1.0/rsq
+                r6inv = r2inv**3
+                v_pot += r6inv * (self.lj3[itype, jtype]*r6inv -
+                                  self.lj4[itype, jtype]) -\
+                         self.offset[itype, jtype]
+                forcelj = r2inv * r6inv * (self.lj1[itype, jtype]*r6inv -
+                                           self.lj2[itype, jtype])
+                forceij = forcelj*delta
+                forces[i] += forceij
+                forces[j] -= forceij
+                virial += np.outer(forceij, delta)
+        return v_pot, forces, virial
+
+class PairLennardJonesCutnp(PairLennardJonesCut):
+    """
+    A Lennard-Jones 6-12 potential with a simple cut-off.
+    The potential can be shifted.
+    PairLennardJonesCutnp uses numpy for calculations, i.e. most
+    operations are recast as vector operations.
+
+    Attributes
+    ----------
+    matrix_np : dict
+        This dict contains numpy matrix versions of the Lennard-Jones
+        parameters.
+    """
+    def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
+                 desc='Lennard Jones pair potential with simple cut-off'):
+        super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
+                                                    shift=shift,
+                                                    factor=factor,
+                                                    mixing=mixing)
+        self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
+                          'rcut2': [], 'offset':[]}
+
+    def _reset_matrix_np(self):
+        """
+        This is just a helper function to reset self.matrix_np.
+
+        Returns
+        -------
+        N/A but alters self.matrix_np
+        """
+        for key in self.matrix_np:
+            self.matrix_np[key] = []
 
     def _generate_tables_for_numpy(self, particles):
         """
@@ -270,8 +444,7 @@ class PairLennardJonesCutnp(PotentialFunction):
         except IndexError:
             update = True
         if update:
-            for key in self.matrix_np:
-                self.matrix_np[key] = []
+            self._reset_matrix_np()
             for i, itype in enumerate(particles.ptype):
                 rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
                 offset = []
@@ -426,38 +599,24 @@ class PairLennardJonesCutnp(PotentialFunction):
             virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return pot, forces, virial
 
-
-    def str_parameters(self):
+    def add_parameters(self, parameters, mix=True):
         """
-        This method will just generate a string with the potential
-        parameters and the generated pair parameters.
-
-        Returns
-        -------
-        out : string
-            Table with the parameters of all interactions.
+        This function will just run the add_parameters of the
+        super class. This is done just in case the adding of
+        parameters should trigger an update of self.matrix_np
         """
-        strparam = ['Potential parameters, Lennard-Jones:']
-        strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
-        strparam.extend(['Shift potential: {}'.format(self.params['shift-potential'])])
-        atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
-        atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
-        strparam.append('Input parameters:')
-        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
-                                         'cut-off'))
-        for i in self.typeparams['types']:
-            epsilon = self.typeparams['epsilon'][i]
-            sigma = self.typeparams['sigma'][i]
-            rcut = self.typeparams['rcut'][i]
-            strparam.append(atmformat2.format(i, epsilon, sigma, rcut))
-        strparam.append('Pair parameters:')
-        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
-                                         'cut-off'))
-        for i in self.pairparams['pairs']:
-            epsilon = self.pairparams['epsilon'][i]
-            sigma = self.pairparams['sigma'][i]
-            rcut = self.pairparams['rcut'][i]
-            stri = '{}-{}'.format(*i)
-            strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
-        return '\n'.join(strparam)
+        res = super(PairLennardJonesCutnp, self).add_parameters(parameters,
+                                                                mix=mix)
+        if res:
+            self._reset_matrix_np()
 
+    def update_parameters(self, parameters, mix=False):
+        """
+        This function will just run the update_parameters of the
+        super class. This is done just in case the updating of
+        parameters should trigger an update of self.matrix_np
+        """
+        res = super(PairLennardJonesCutnp, self).update_parameters(parameters,
+                                                                   mix=mix)
+        if res:
+            self._reset_matrix_np()
