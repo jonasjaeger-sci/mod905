@@ -275,8 +275,10 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        particles : object, particle list.
-        box : object, representing the box used in the simulation.
+        particles : object as defined in retis.core.particles
+            The particle list.
+        box : object as defined in retis.core.box
+            Representation of the box used in the simulation.
 
         Returns
         -------
@@ -305,8 +307,10 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        particles : object, particle list.
-        box : object, representing the box used in the simulation.
+        particles : object as defined in retis.core.particles
+            The particle list.
+        box : object as defined in retis.core.box
+            Representation of the box used in the simulation.
 
         Returns
         -------
