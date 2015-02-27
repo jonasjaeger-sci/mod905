@@ -301,8 +301,8 @@ class WriteGromacs(TrajectoryWriter):
 
             for i, posi in enumerate(pos):
                 posc = posi * self.convert['pos']
-                residuenr = i if residuenum is None else residuenum[i]
-                atomnr = i if atomnum is None else atomnum[i]
+                residuenr = i+1 if residuenum is None else residuenum[i]
+                atomnr = i+1 if atomnum is None else atomnum[i]
                 if vel is None:
                     newline = self.gro_fmt.format(residuenr, residuename[i],
                                                   atomname[i], atomnr, *posc)
