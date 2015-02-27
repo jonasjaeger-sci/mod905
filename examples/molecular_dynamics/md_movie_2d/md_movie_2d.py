@@ -196,6 +196,13 @@ def update(frame, system):
     It is called one time per step, and we choose to update the simulation
     inside this function
 
+    Parameters
+    ----------
+    frame : int
+        The current frame number, supplied by animation.FuncAnimation
+    system : object
+        The system object we are simulating
+
     Returns
     -------
     out : list
