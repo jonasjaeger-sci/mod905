@@ -14,7 +14,7 @@ from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_kinetic_temperature,
                                           calculate_scalar_pressure)
 import numpy as np
-
+import os
 
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
@@ -28,8 +28,9 @@ forcefield = ForceField(potential=[ljpot],
 ljsystem.forcefield = forcefield
 
 # read initial position and velocity:
-pos = np.loadtxt('initial_pos.txt.gz')
-vel = np.loadtxt('initial_vel.txt.gz')
+dirname = 'input_data'
+pos = np.loadtxt(os.path.join(dirname, 'initial_pos.txt.gz'))
+vel = np.loadtxt(os.path.join(dirname, 'initial_vel.txt.gz'))
 for xyzi, veli in zip(pos, vel):
     ljsystem.add_particle(name='Ar', pos=xyzi, vel=veli, mass=1.0, ptype='Ar')
 npart = float(ljsystem.particles.npart)
