@@ -24,5 +24,6 @@ dump dumptraj2 all custom 1 lj-unwrap.lammpstrj.bin id xu yu zu vx vy vz fx fy f
 
 fix 1 all nve
 thermo 1
+thermo_style custom step temp press pe ke etotal pxx pyy pzz pxy pxz pyz
 run 5000
 
