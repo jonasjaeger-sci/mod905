@@ -68,7 +68,7 @@ class System(object):
         """
         self.box = box
         self.units = units
-        self.temperature = {'set': temperature, 'dof':None}
+        self.temperature = {'set': temperature, 'dof': None}
         self.temperature['beta'] = self.calculate_beta()
         # intialize other variables:
         self.v_pot = 0.0

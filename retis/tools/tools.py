@@ -53,6 +53,7 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
     size = [[0.0, i*lcon] for i in (nx, ny, nz)]
     return positions, size
 
+
 def lattice_simple_cubic(box, spacing=1.0):
     """
     This method creates a simple cubic lattice with
