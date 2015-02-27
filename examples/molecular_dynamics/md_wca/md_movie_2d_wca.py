@@ -198,6 +198,11 @@ def init():
         list of the patches to be drawn
     """
     patches = []
+    for ci in circles:
+        ci.set_visible(False)
+        patches.append(ci)
+    linebond.set_data(None, None)
+    patches.append(linebond)
     force_arrow.set_visible(False)
     patches.append(force_arrow)
     vel_arrow.set_visible(False)
