@@ -13,6 +13,7 @@ from .. import forcefield
 
 __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
+
 class PairLennardJonesCut(PotentialFunction):
     """
     A Lennard-Jones 6-12 potential with a simple cut-off.
@@ -55,13 +56,13 @@ class PairLennardJonesCut(PotentialFunction):
                  desc='Lennard Jones pair potential with simple cut-off'):
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
         self.typeparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
-                           'types':set()}
+                           'types': set()}
         self.pairparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
                            'pairs': set()}
         self.params = {'mixing': mixing, 'factor': factor,
                        'shift-potential': shift}
-        self.lj1, self.lj2 = {}, {} # for force calculation
-        self.lj3, self.lj4 = {}, {} # for energy calculation
+        self.lj1, self.lj2 = {}, {}
+        self.lj3, self.lj4 = {}, {}
         self.rcut2 = {}
         self.offset = {}
 
@@ -98,12 +99,12 @@ class PairLennardJonesCut(PotentialFunction):
                 continue
             if rcut is None:
                 factor = self.params['factor']
-                rcut = factor*sigma
+                rcut = factor * sigma
                 msg = 'rcut for {} not given. Set to {}*{}'.format(key,
                                                                    factor,
                                                                    sigma)
                 warnings.warn(msg)
-            if isinstance(key, tuple): # adding pair
+            if isinstance(key, tuple):  # adding pair
                 key_r = (key[1], key[0])
                 for pair in [key, key_r]:
                     if pair in self.pairparams['pairs']:
@@ -116,7 +117,7 @@ class PairLennardJonesCut(PotentialFunction):
                     self.pairparams['sigma'][pair] = sigma
                     self.pairparams['rcut'][pair] = rcut
                     update_lj = True
-            else: # adding atom
+            else:  # adding atom
                 if key in self.typeparams['types']:
                     msg = 'Atom {} already defined - ignored!'.format(key)
                     warnings.warn(msg)
@@ -128,7 +129,7 @@ class PairLennardJonesCut(PotentialFunction):
                 self.typeparams['rcut'][key] = rcut
                 update_lj = True
 
-        if update_lj: # we have added new parameters
+        if update_lj:  # we have added new parameters
             if mix:
                 self._generate_mixing_parameters()
             self._generate_lj_cut_offset()
@@ -151,12 +152,12 @@ class PairLennardJonesCut(PotentialFunction):
         update_lj = False
         for key, params in parameters.items():
             if key in self.params:
-                if key == 'mixing' and params != self.params[key] and  not mix:
+                if key == 'mixing' and params != self.params[key] and not mix:
                     msg = 'Mixing rule changed, but re-mixing not requested'
                     warnings.warn(msg)
                 self.params[key] = params
             else:
-                if isinstance(key, tuple): # updating pair parameter
+                if isinstance(key, tuple):  # updating pair parameter
                     key_r = (key[1], key[0])
                     present = []
                     for i in [key, key_r]:
@@ -177,7 +178,7 @@ class PairLennardJonesCut(PotentialFunction):
                     else:
                         msg = '{} not found, ignoring type'.format(key)
                         warnings.warn(msg)
-        if mix: # we might have to do re-mixing here, independent of update_lj
+        if mix:  # we might have to do re-mixing here independent of update_lj
             self._generate_mixing_parameters()
         if update_lj:
             self._generate_lj_cut_offset()
@@ -246,7 +247,8 @@ class PairLennardJonesCut(PotentialFunction):
         """
         strparam = ['Potential parameters, Lennard-Jones:']
         strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
-        strparam.extend(['Shift potential: {}'.format(self.params['shift-potential'])])
+        useshift = self.params['shift-potential'])]
+        strparam.extend(['Shift potential: {}'.format(useshift)
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
         atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
         strparam.append('Input parameters:')
@@ -387,6 +389,7 @@ class PairLennardJonesCut(PotentialFunction):
                 virial += np.outer(forceij, delta)
         return v_pot, forces, virial
 
+
 class PairLennardJonesCutnp(PairLennardJonesCut):
     """
     A Lennard-Jones 6-12 potential with a simple cut-off.
@@ -407,7 +410,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                                                     factor=factor,
                                                     mixing=mixing)
         self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': [], 'offset':[]}
+                          'rcut2': [], 'offset': []}
 
     def _reset_matrix_np(self):
         """
@@ -443,7 +446,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         """
         npart = particles.npart
         update = False
-        try: # this will only check for correct size
+        try:  # this will only check for correct size
             update = not len(self.matrix_np['lj1'][0]) == (npart - 1)
         except IndexError:
             update = True

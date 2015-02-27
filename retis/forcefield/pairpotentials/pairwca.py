@@ -143,7 +143,7 @@ class DoubleWellWCA(PotentialFunction):
             Maximum, located at: rzero+width
         """
         return self.rzero, self.rzero+2.0*self.width, self.rzero+self.width
-        
+
     def potential(self, particles, box):
         """
         This method calculates the potential energy for the DoubleWellWCA
