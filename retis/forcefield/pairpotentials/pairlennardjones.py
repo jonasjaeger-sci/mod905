@@ -247,8 +247,8 @@ class PairLennardJonesCut(PotentialFunction):
         """
         strparam = ['Potential parameters, Lennard-Jones:']
         strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
-        useshift = self.params['shift-potential'])]
-        strparam.extend(['Shift potential: {}'.format(useshift)
+        useshift = self.params['shift-potential']
+        strparam.extend(['Shift potential: {}'.format(useshift)])
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
         atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
         strparam.append('Input parameters:')
