@@ -10,4 +10,11 @@
 *.swo
 *~
 
+# gro and xyz files
+*.gro
+*.xyz
+
+# movie files
+*.mp4
+
 site/
