@@ -97,6 +97,8 @@ pos0 = box.pbc_wrap(ljsystem.particles.pos)
 circles = []
 for _ in range(int(npart)):
     circles.append(plt.Circle((0, 0), radius=SIGMA*0.5, alpha=0.5))
+    circles[-1].set_visible(False)
+    ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
 force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], zorder=4)
 vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], color='darkgreen', zorder=4)
@@ -260,16 +262,6 @@ def init():
         list of the patches to be drawn
     """
     patches = []
-    for ci in circles:
-        ci.set_visible(False)
-        ax.add_patch(ci)
-        patches.append(ci)
-    linepot.set_data(None, None)
-    patches.append(linepot)
-    linekin.set_data(None, None)
-    patches.append(linekin)
-    linetot.set_data(None, None)
-    patches.append(linetot)
     force_arrow.set_visible(False)
     patches.append(force_arrow)
     vel_arrow.set_visible(False)
@@ -278,11 +270,11 @@ def init():
     patches.append(time_text)
     return patches
 
+
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update, frames=numberofsteps,
-                               fargs=[ljsystem],
-                               repeat=False, interval=2, blit=True,
-                               init_func=init)
+                               fargs=[ljsystem], repeat=False, interval=2,
+                               blit=True, init_func=init)
 # for making a movie:
 #anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()
