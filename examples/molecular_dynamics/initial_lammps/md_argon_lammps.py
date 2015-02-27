@@ -71,6 +71,9 @@ temp = []
 pressure, pressure_tensor = [], []
 step = []
 outfmt = '{0:8d} {1:12.7f} {2:12.7f} {3:12.7f} {4:12.7f} {5:12.7f}'
+outfmt2 = '# {0:>6s} {1:>12s} {2:>12s} {3:>12s} {4:>12s} {5:>12s}'
+print(outfmt2.format('Step', 'Temp', 'Press', 'Pot', 'Kin', 'Total'))
+
 while not simulationLAMMPS.is_finished():
     vpot, ekin, etot, avgtemp, press, presstens = common_calculations(ljsystem)
     v_pot.append(vpot / npart)
