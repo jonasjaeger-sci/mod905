@@ -4,11 +4,8 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import (Simulation,
-                        System,
-                        Box,
-                        random_normal,
-                        seed_random_generator,
+from retis.core import (Simulation, System, Box,
+                        seed_random_generator, 
                         generate_maxwellian_velocities)
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
@@ -48,8 +45,8 @@ npart = ljsystem.particles.npart
 print('Added {} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
-seed_random_generator()
 ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
+seed_random_generator()
 generate_maxwellian_velocities(ljsystem)
 temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
 print('Generated temperatures with average: {}'.format(avgtemp))
