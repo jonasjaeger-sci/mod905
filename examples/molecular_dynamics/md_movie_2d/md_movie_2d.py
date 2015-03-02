@@ -5,7 +5,9 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Simulation, System, Box
+from retis.core import (Simulation, System, Box,
+                        seed_random_generator,
+                        generate_maxwellian_velocities)
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField, PairLennardJonesCutnp
@@ -35,10 +37,11 @@ npart = ljsystem.particles.npart
 print('Added {} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
-scalet = np.sqrt(ljsystem.temperature['set'])
-ljsystem.particles.vel = np.random.normal(loc=0.0, scale=scalet,
-                                          size=(npart, 2))
-reset_momentum(ljsystem)
+ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
+seed_random_generator()
+generate_maxwellian_velocities(ljsystem)
+temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
+print('Generated temperatures with average: {}'.format(avgtemp))
 ljsystem.forcefield = forcefield
 # also initiate forces:
 ljsystem.potential_and_force()
