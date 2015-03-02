@@ -39,6 +39,7 @@ ljsystem.particles.vel = np.random.normal(loc=0.0, scale=scalet,
 # we need to reset the momemtum now, since the initial velocities may have
 # a net drift
 reset_momentum(ljsystem)
+ljsystem.adjust_dof([1, 1, 1]) # adjust DOF since we are in "NVEMG"
 temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
 print('Generated temperatures with average: {}'.format(avgtemp))
 # Attach force field:
