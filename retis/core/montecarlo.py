@@ -3,10 +3,13 @@
 Module for Monte Carlo Algorithms and other 
 "random" functions.
 """
+from __future__ import absolute_import
+from .particlefunctions import calculate_kinetic_temperature, reset_momentum
 import numpy as np
 from numpy.random import RandomState
 
-__all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step', 'random_normal']
+__all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step', 
+           'random_normal', 'generate_maxwellian_velocities']
 
 RANDOMGENERATOR = RandomState()  # this will be the random number generator
 
@@ -113,7 +116,6 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
     might want to use the random number generator with a specified
     seed.
 
-
     Parameters
     ----------
     loc : float, optional
@@ -132,3 +134,54 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
         The random numbers drawn.
     """
     return rgen.normal(loc=loc, scale=scale, size=size)
+
+
+def generate_maxwellian_velocities(system, temperature=None, selection=None,
+                                   rgen=RANDOMGENERATOR):
+    """
+    Function to generate velocities from a Maxwell distribution for a
+    group of particles. We do this in three steps:
+    1) We generate velocities from a standard normal distribution
+    2) We scale the velocity of particle i with 1.0/sqrt(mass_i) and
+    reset the momentum
+    3) We scale the velocities to the set temperature
+
+    Parameters
+    ----------
+    system : object of type system
+        This object is assumed to have a particle list type.
+    temperature : float, optional
+        The desired temperature, if this is not set, the value in
+        system.temperature['set'] will be used.
+    selection : list of ints, optional
+        A list with indices of the particles to consider. 
+        Can be used to only apply it to a selection of particles
+    rgen : object, optional
+        The random number generator
+    Returns
+    -------
+    N/A, but modifies the velocities of the selected particles
+    """
+    particles = system.particles
+    if selection is None:
+        vel, imass = particles.vel, particles.imass
+    else:
+        vel, imass = particles.vel[selection], particles.imass[selection]
+
+    if temperature is None:
+        temperature = system.temperature['set']
+    vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0, size=vel.shape)
+
+    if selection is None:  # this if might be removed as x[None] is x
+        system.particles.vel = vel
+    else:
+        system.particles.vel[selection] = vel
+
+    reset_momentum(system, selection=selection)
+    _, avgtemp, _ = calculate_kinetic_temperature(system, selection=selection)
+    scale_factor = np.sqrt(temperature/avgtemp)
+
+    if selection is None:  # this if might be removed as x[None] is x
+        system.particles.vel *= scale_factor
+    else:
+        system.particles.vel[selection] *= scale_factor
