@@ -46,7 +46,7 @@ class Box(object):
         self.low = []
         self.high = []
         self.size = size
-        for dim in size:
+        for i, dim in enumerate(size):
             ldim = len(dim)
             if ldim == 1:
                 self.low.append(0.0)
@@ -66,7 +66,7 @@ class Box(object):
                 self.periodic.append(True)
             else:
                 try:
-                    self.periodic.append(periodic[dim])
+                    self.periodic.append(periodic[i])
                 except IndexError:
                     self.periodic.append(True)
         self.low = np.array(self.low)
