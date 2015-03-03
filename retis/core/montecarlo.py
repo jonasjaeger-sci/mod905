@@ -9,7 +9,8 @@ import numpy as np
 from numpy.random import RandomState
 
 __all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step', 
-           'random_normal', 'generate_maxwellian_velocities']
+           'random_normal', 'generate_maxwellian_velocities',
+           'multivariate_normal']
 
 RANDOMGENERATOR = RandomState()  # this will be the random number generator
 
@@ -132,8 +133,44 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
     -------
     out : float or numpy.array of floats
         The random numbers drawn.
+
+    See also
+    --------
+    numpy.random.normal
     """
     return rgen.normal(loc=loc, scale=scale, size=size)
+
+
+def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
+    """
+    Function to return numbers from a multivariat distribution.
+    This function will actually just call np.random.multivariate_normal
+    the reason for including it here as a function is that we might want
+    to use the random number generator with a specified seed.
+
+    Parameters
+    ----------
+    mean : numpy array (1D, N)
+        Mean of the N-dimensional array
+    cov : numpy array (2D, (N, N))
+        Covariance matrix of the distribution.
+    size : int or tuple of ints, optional
+        Output shape. Default is None, in which case a single value is
+        returned.
+    rgen : object, optional
+        The random number generator
+
+    Returns
+    -------
+    out : float or numpy.array of floats
+        The random numbers drawn.
+
+    See also
+    --------
+    numpy.random.random.multivariate_normal
+    """
+    return rgen.multivariate_normal(mean, cov, size=size)
+
 
 
 def generate_maxwellian_velocities(system, temperature=None, selection=None,
@@ -169,9 +206,7 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
         vel, imass = particles.vel, particles.imass
     else:
         vel, imass = particles.vel[selection], particles.imass[selection]
-
     vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0, size=vel.shape)
-
     if selection is None:  # this if might be removed as x[None] is x
         system.particles.vel = vel
     else:

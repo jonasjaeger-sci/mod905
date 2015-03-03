@@ -3,6 +3,9 @@
 """
 integrators.py
 """
+from __future__ import absolute_import
+from .montecarlo import random_normal, multivariate_normal
+import numpy as np
 
 __all__ = ['VelocityVerlet']
 
@@ -17,8 +20,10 @@ class Integrator(object):
 
     Attributes
     ----------
-    delta_t : float, time timesptep.
-    desc : string, description of the integrator.
+    delta_t : float
+        Time timesptep.
+    desc : string
+        Description of the integrator.
     """
 
     def __init__(self, delta_t, desc='Generic integrator'):
@@ -82,7 +87,7 @@ class Verlet(Integrator):
             Description of the integrator
         """
         super(Verlet, self).__init__(delta_t, desc=desc)
-        self.half_idt = 0.5/self.delta_t
+        self.half_idt = 0.5 / self.delta_t
         self.delta_t2 = self.delta_t**2
         self.previous_pos = None
 
@@ -95,7 +100,7 @@ class Verlet(Integrator):
         particles : object
             The initial configuration. Positions and velocities are required.
         """
-        self.previous_pos = particles.pos - particles.vel*self.delta_t
+        self.previous_pos = particles.pos - particles.vel * self.delta_t
 
     def integration_step(self, system):
         """
@@ -109,7 +114,7 @@ class Verlet(Integrator):
         """
         particles = system.particles
         acc = particles.force * particles.imass
-        pos = 2.0*particles.pos - self.previous_pos + acc*self.delta_t2
+        pos = 2.0 * particles.pos - self.previous_pos + acc * self.delta_t2
         particles.vel = (pos - self.previous_pos) * self.half_idt
         self.previous_pos, particles.pos = particles.pos, pos
         system.potential_and_force()
@@ -123,9 +128,12 @@ class VelocityVerlet(Integrator):
 
     Attributes
     ----------
-    delta_t : float, time timestep.
-    half_delta_t : float, half of timestep
-    desc : string, description of the integrator.
+    delta_t : float
+        Time timestep.
+    half_delta_t : float
+        Half of timestep
+    desc : string
+        Description of the integrator.
     """
     def __init__(self, delta_t, desc='The velocity verlet integrator'):
         """
@@ -134,7 +142,7 @@ class VelocityVerlet(Integrator):
         Parameters
         ----------
         delta_t : float
-            Tthe time step.
+            The time step.
         desc : string
             Description of the integrator.
         """
@@ -157,3 +165,193 @@ class VelocityVerlet(Integrator):
         particles.pos += self.delta_t * particles.vel
         system.potential_and_force()
         particles.vel += self.half_delta_t * particles.force * imass
+
+
+class Langevin(Integrator):
+    """
+    Langevin(Integrator)
+
+    This class defines a Langevin integrator.
+
+    Attributes
+    ----------
+    gamma : float
+        The friction parameter
+    high_friction : boolan
+        Determines if we are in the high_friction limit and should
+        do the overdamped version
+    init_params : boolean
+        If true, we will initiate parameters for the Langevin integrator when
+        integrate_step is invoked.
+    param_high : dict
+        This contains the parameters for the high friction limit. Here
+        we integrate the equations of motion according to:
+        r(t + dt) = r(t) + dt * f(t)/m*gamma + dr
+        param_high['sigma'] : float
+            standard deviation for the positions, used when drawing dr
+        param_high['bddt'] : numpy.array
+            Equal to dt*gamma/masses, since the masses is an numpy.array
+            this will have the same shape.
+    param_iner : dict
+        This dict contains the parameters for the non-high friction limit
+        We integrate the equations of motion according to:
+        r(t + dt) = r(t) + c1 * dt * v(t) + c2*dt*dt*a(t) + dr
+        v(r + dt) = c0 * v(t) + (c1-c2)*dt*a(t) + c2*dt*a(t+dt) + dv
+        param_iner['c0'] : float
+            Corresponds to c0 in the equation above.
+        param_iner['a1'] : float
+            Correcponds to c1*dt in the equation above.
+        param_iner['a2'] : numpy.array
+            Corresponds to c2*dt*dt/mass in the equation above.
+            Here we divide by the masses in order to use the forces rather
+            than the acceleration a. Since the masses might be different for
+            different particles, this will result in a numpy.array with shape
+            equal to the shape of the masses.
+        param_iner['b1'] : numpy.array
+            Corresponds to (c1-c2)*dt/mass in the equation above.
+            Here we also divide by the masses, resulting in a numpy.array
+        param_iner['b2'] : numpy.array
+            Corresponds to c2*dt/mass in the equation above.
+            Here we also divide by the masses, resulting in a numpy.array
+        param_iner['mean'] : numpy.array (2,)
+            The means for the bivariate gaussian distribution
+        param_iner['cov'] : numpy.array (2,2)
+            This array contains the covariance for the bivariate gaussian
+            distribution param_iner['mean'] and param_iner['cov'] are used
+            as parameters when drawing dr and dv from the bivariate
+            distribution.
+    """
+    def __init__(self, delta_t, gamma, high_friction=False,
+                 desc='Langevin integrator'):
+        """
+        Initiates the Langevin integrator. Actually, it is very convenient to
+        set some variables for the different particles. To have a
+        uniform init for the different integrators, we postpone this. This
+        initialization can be done later by calling explicitly the function
+        _init_parameters(self, system) or it will be called the first time
+        integration_step is invoked.
+
+        Parameters
+        ----------
+        delta_t : float
+            The time step.
+        desc : string
+            Description of the integrator.
+        param_high : dict
+            Parameters for the high friction limit.
+        param_iner : dict
+            Parameters for the non-high friction limit.
+        """
+        super(Langevin, self).__init__(delta_t, desc=desc)
+        self.gamma = gamma
+        self.high_friction = high_friction
+        self.param_high = {'sigma': None, 'bddt': None}
+        self.param_iner = {'c0': None, 'a1': None, 'a2': None,
+                           'b1': None, 'b2': None, 'mean': None, 'cov': None}
+        self.init_params = True
+
+    def _init_parameters(self, system):
+        """
+        Extra initialization of the Langevin integrator.
+
+        Parameters
+        ----------
+        system : object
+            The system to integrate/act on. Assumed to have a particle list
+            in system.particles.
+        """
+        beta = system.temperature['beta']
+        imasses = system.particles.imass
+        masses = system.particles.mass
+        if self.high_friction:
+            sigma = np.sqrt(2.0 * self.delta_t * imasses * beta * self.gamma)
+            bddt = self.delta_t * imasses * self.gamma
+            self.high_friction['sigma'] = sigma
+            self.high_friction['bddt'] = bddt
+        else:
+            gammadt = self.gamma * self.delta_t
+            exp_gdt = np.exp(-gammadt)
+            if self.gamma > 0.0:
+                c_0 = exp_gdt
+                c_1 = (1.0 - c_0) / gammadt
+                c_2 = (1.0 - c_1) / gammadt
+            else:
+                c_0, c_1, c_2 = 1.0, 1.0, 0.5
+
+            self.param_iner['c0'] = c_0
+            self.param_iner['a1'] = c_1 * self.delta_t
+            self.param_iner['a2'] = c_2 * self.delta_t**2 * imasses
+            self.param_iner['b1'] = (c_1 - c_2) * self.delta_t * imasses
+            self.param_iner['b2'] = c_2 * self.delta_t * imasses
+
+            sig_r = np.sqrt((self.delta_t / (beta * masses * self.gamma)) *
+                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
+            sig_v = np.sqrt((1.0 - exp_gdt**2)/(beta * masses))
+            cov_rv = (1.0/(beta * masses * self.gamma)) * (1.0 - exp_gdt)**2
+
+            self.param_iner['mean'] = np.zeros(2)
+            self.param_iner['cov'] = np.array([[sig_r**2, cov_rv],
+                                               [cov_rv, sig_v**2]])
+
+    def integration_step(self, system):
+        """
+        Langevin integration, one time step.
+
+        Parameters
+        ----------
+        system : object
+            The system to integrate/act on. Assumed to have a particle list
+            in system.particles.
+        """
+        if self.init_params:
+            self._init_parameters(system)
+            self.init_params = False
+        if self.high_friction:
+            self.integration_step_overdamped(system)
+        else:
+            self.integration_step_inertia(system)
+
+    def integration_step_overdamped(self, system):
+        """
+        Overdamped Langevin integration, one time step
+
+        Parameters
+        ----------
+        system : object
+            The system to integrate/act on. Assumed to have a particle list
+            in system.particles.
+        """
+        particles = system.particles
+        rands = random_normal(loc=0.0, scale=self.param_high['sigma'],
+                              size=particles.vel.shape)
+        particles.pos += self.param_high['bddt'] * particles.force + rands
+        particles.vel = rands
+
+    def integration_step_inertia(self, system):
+        """
+        Langevin integration, one time step
+
+        Parameters
+        ----------
+        system : object
+            The system to integrate/act on. Assumed to have a particle list
+            in system.particles.
+        """
+        particles = system.particles
+        if self.gamma > 0.0:
+            mean, cov = self.param_iner['mean'], self.param_iner['cov']
+            randxv = multivariate_normal(mean, cov, size=particles.pos.shape)
+            pos_rand = randxv[:, :, 0]
+            vel_rand = randxv[:, :, 1]
+        else:
+            pos_rand = np.zeros(particles.pos.shape)
+            vel_rand = np.zeros(particles.vel.shape)
+
+        c_0 = self.param_iner['c0']
+        a_1, a_2 = self.param_iner['a1'], self.param_iner['a2']
+        b_1, b_2 = self.param_iner['b1'], self.param_iner['b2']
+        particles.pos += a_1 * particles.vel + a_2 * particles.force +\
+                         pos_rand
+        vel2 = c_0 * particles.vel + b_1 * particles.force + vel_rand
+        system.potential_and_force()  # update forces
+        particles.vel = vel2 + b_2 * system.particles.force
