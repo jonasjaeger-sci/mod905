@@ -66,7 +66,10 @@ def calculate_kinetic_energy_tensor(system, selection=None):
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = vel*mass
-    kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
+    if len(mass) == 1:
+        kin = 0.5*np.outer(mom, vel)
+    else:
+        kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
     return kin
 
 
@@ -99,7 +102,10 @@ def atomic_kinetic_energy_tensor(system, selection=None):
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = vel*mass
-    kin = 0.5*np.einsum('ij,ik->ijk', mom, vel)
+    if len(mass) == 1:
+        kin = 0.5*np.outer(mom, vel)
+    else:
+        kin = 0.5*np.einsum('ij,ik->ijk', mom, vel)
     return kin
 
 
@@ -162,8 +168,12 @@ def calculate_kinetic_temperature(system, selection=None,
         vel, mass = particles.vel, particles.mass
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
-
-    ndof = len(mass)*np.ones(vel[0].shape)
+    
+    npart = len(mass)
+    if npart == 1:
+        ndof = npart * np.ones(vel.shape)
+    else:
+        ndof = npart * np.ones(vel[0].shape)
 
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(system,
