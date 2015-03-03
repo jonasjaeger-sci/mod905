@@ -137,7 +137,7 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
 
 
 def generate_maxwellian_velocities(system, temperature=None, selection=None,
-                                   rgen=RANDOMGENERATOR):
+                                   momentum=True, rgen=RANDOMGENERATOR):
     """
     Function to generate velocities from a Maxwell distribution for a
     group of particles. We do this in three steps:
@@ -156,6 +156,8 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
     selection : list of ints, optional
         A list with indices of the particles to consider. 
         Can be used to only apply it to a selection of particles
+    momentum : boolean
+        If true, we will reset the momentum.
     rgen : object, optional
         The random number generator
     Returns
@@ -168,8 +170,6 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
     else:
         vel, imass = particles.vel[selection], particles.imass[selection]
 
-    if temperature is None:
-        temperature = system.temperature['set']
     vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0, size=vel.shape)
 
     if selection is None:  # this if might be removed as x[None] is x
@@ -177,7 +177,11 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
     else:
         system.particles.vel[selection] = vel
 
-    reset_momentum(system, selection=selection)
+    if momentum:
+        reset_momentum(system, selection=selection)
+
+    if temperature is None:
+        temperature = system.temperature['set']
     _, avgtemp, _ = calculate_kinetic_temperature(system, selection=selection)
     scale_factor = np.sqrt(temperature/avgtemp)
 
