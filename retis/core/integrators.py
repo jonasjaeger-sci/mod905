@@ -290,8 +290,11 @@ class Langevin(Integrator):
             cov_rv = (1.0/(beta * masses * self.gamma)) * (1.0 - exp_gdt)**2
 
             self.param_iner['mean'] = np.zeros(2)
-            self.param_iner['cov'] = np.array([[sig_r**2, cov_rv],
-                                               [cov_rv, sig_v**2]])
+            self.param_iner['cov'] = np.zeros((2,2))
+            self.param_iner['cov'][0, 0] = sig_r**2
+            self.param_iner['cov'][1, 1] = sig_v**2
+            self.param_iner['cov'][0, 1] = cov_rv
+            self.param_iner['cov'][1, 0] = cov_rv
 
     def integration_step(self, system):
         """
@@ -341,8 +344,12 @@ class Langevin(Integrator):
         if self.gamma > 0.0:
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
             randxv = multivariate_normal(mean, cov, size=particles.pos.shape)
-            pos_rand = randxv[:, :, 0]
-            vel_rand = randxv[:, :, 1]
+            if particles.npart == 1:
+                pos_rand = randxv[:, 0]
+                vel_rand = randxv[:, 1]
+            else:
+                pos_rand = randxv[:, :, 0]
+                vel_rand = randxv[:, :, 1]
         else:
             pos_rand = np.zeros(particles.pos.shape)
             vel_rand = np.zeros(particles.vel.shape)
