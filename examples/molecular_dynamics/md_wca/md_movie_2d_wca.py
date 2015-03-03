@@ -279,7 +279,7 @@ def update(frame, system):
     """
     pos = box.pbc_wrap(system.particles.pos)
     patches = []
-    ptypes = ljsystem.particles.ptype
+    ptypes = system.particles.ptype
     for ci, pi, itype in zip(circles, pos, ptypes):
         ci.center = np.array([pi[0], pi[1]])*SIGMA
         ci.set_color(colors[itype])
@@ -299,10 +299,10 @@ def update(frame, system):
 
     if not simulationNVE.is_finished():
         # reaction coordinate:
-        delta = box.pbc_dist_coordinate(ljsystem.particles.pos[bidx[0]] -
-                                        ljsystem.particles.pos[bidx[1]])
+        delta = box.pbc_dist_coordinate(system.particles.pos[bidx[0]] -
+                                        system.particles.pos[bidx[1]])
         dr = np.sqrt(np.dot(delta, delta))
-        points = [dr, dwca.potential(ljsystem.particles, box)]
+        points = [dr, dwca.potential(system.particles, box)]
         orderscatter.set_offsets(points)
         patches.append(orderscatter)
         # draw the bond:
@@ -332,7 +332,7 @@ def update(frame, system):
         print(outfmt.format(step[-1], temperature[-1], v_pot[-1],
                             e_kin[-1], e_tot[-1]))
         # store the trajectory to a .gro file:
-        write_gro.write_frame(pos, atomname=ljsystem.particles.ptype)
+        write_gro.write_frame(pos, atomname=system.particles.ptype)
         # finally, do the simultion step:
         simulationNVE.step()
         return patches
