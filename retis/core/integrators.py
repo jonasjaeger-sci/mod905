@@ -264,10 +264,10 @@ class Langevin(Integrator):
         imasses = system.particles.imass
         masses = system.particles.mass
         if self.high_friction:
-            sigma = np.sqrt(2.0 * self.delta_t * imasses * beta * self.gamma)
-            bddt = self.delta_t * imasses * self.gamma
-            self.high_friction['sigma'] = sigma
-            self.high_friction['bddt'] = bddt
+            sigma = np.sqrt(2.0 * self.delta_t * imasses/(beta * self.gamma))
+            bddt = self.delta_t * imasses / self.gamma
+            self.param_high['sigma'] = sigma
+            self.param_high['bddt'] = bddt
         else:
             gammadt = self.gamma * self.delta_t
             exp_gdt = np.exp(-gammadt)
