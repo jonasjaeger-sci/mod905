@@ -116,16 +116,16 @@ class Particles(object):
             self.pos = pos
             self.vel = vel
             self.force = force
-            self.mass = np.array([mass])
-            self.imass = np.array([1.0/mass])
+            self.mass = np.array(mass)
+            self.imass = np.array(1.0/mass)
         else:
             self.name.append(name)
             self.ptype.append(ptype)
             self.pos = np.vstack([self.pos, pos])
             self.vel = np.vstack([self.vel, vel])
             self.force = np.vstack([self.force, force])
-            self.mass = np.vstack([self.mass, mass])
-            self.imass = np.vstack([self.imass, 1.0/mass])
+            self.mass = np.append(self.mass, mass)
+            self.imass = np.append(self.imass, 1.0/mass)
         self.npart += 1
 
     def get_selection(self, properties, selection=None):
