@@ -81,10 +81,39 @@ class DoubleWell(PotentialFunction):
 
         Returns
         -------
-        out : numpy.array
+        out[0] : numpy.array
             The calculated force.
+        out[1] : numpy.array
+            The virial, currently not implemented for this potential
         """
-        return -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
+        forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
+        virial = 0.0*np.outer(forces, pos)  # zeros, with correct shape
+        return forces, virial
+
+    def potential_and_force(self, pos):
+        """
+        Evaluate the potential and the force for the one-dimensional
+        double well potential.
+
+        Parameters
+        ----------
+        pos : numpy.array
+            The position to use for the evaluation of the force.
+
+        Returns
+        -------
+        out[0] : float
+            The potential energy as a float.
+        out[1] : numpy.array
+            The force as a numpy.array of the same shape as the positions
+            in particles.pos.
+        out[2] : numpy.array
+            The virial, currently not implemented for this potential
+        """
+        v_pot = self.a*pos**4 - self.b*(pos - self.c)**2
+        forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
+        virial = 0.0*np.outer(forces, pos)  # zeros, with correct shape
+        return v_pot.sum(), forces, virial
 
     def parameters_to_dict(self):
         """
