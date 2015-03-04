@@ -4,6 +4,7 @@ This file contain a class to represent a collection of
 particles.
 """
 import numpy as np
+import warnings
 
 __all__ = ['Particles']
 
@@ -67,6 +68,27 @@ class Particles(object):
         self.name = None
         self.ptype = None
         self.virial = None
+
+    def get_dim(self):
+        """
+        Function to get the dimensionality, based on self.pos, self.vel
+        and self.force
+
+        Returns
+        -------
+        out : int
+            The dimensionality
+        """
+        if self.npart == 0:
+            dims = [0]
+        elif self.npart == 1:
+            dims = [len(i) for i in (self.pos, self.vel, self.force)]
+        else:
+            dims = [len(i) for i in (self.pos[0], self.vel[0], self.force[0])]
+        if len(set(dims)) != 1:
+            msg = 'Inconsistent dimensions in position, velocity and force!'
+            warnings.warn(msg)
+        return dims[0]
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
