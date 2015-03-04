@@ -288,13 +288,21 @@ class Langevin(Integrator):
                             (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
             sig_v = np.sqrt((1.0 - exp_gdt**2)/(beta * masses))
             cov_rv = (1.0/(beta * masses * self.gamma)) * (1.0 - exp_gdt)**2
-
-            self.param_iner['mean'] = np.zeros(2)
-            self.param_iner['cov'] = np.zeros((2,2))
-            self.param_iner['cov'][0, 0] = sig_r**2
-            self.param_iner['cov'][1, 1] = sig_v**2
-            self.param_iner['cov'][0, 1] = cov_rv
-            self.param_iner['cov'][1, 0] = cov_rv
+            # masses & imasses are column matrices, this complicates
+            # things somewhat, so we use ravel:
+            sig_r = np.ravel(sig_r)
+            sig_v = np.ravel(sig_v)
+            cov_rv = np.ravel(cov_rv)
+            self.param_iner['mean'] = []
+            self.param_iner['cov'] = []
+            for sig_ri, sig_vi, cov_rvi in zip(sig_r, sig_v, cov_rv):
+                self.param_iner['mean'].append(np.zeros(2))
+                cov_matrix = np.zeros((2, 2))
+                cov_matrix[0, 0] = sig_ri**2
+                cov_matrix[1, 1] = sig_vi**2
+                cov_matrix[0, 1] = cov_rvi
+                cov_matrix[1, 0] = cov_rvi
+                self.param_iner['cov'].append(cov_matrix)
 
     def integration_step(self, system):
         """
@@ -341,15 +349,19 @@ class Langevin(Integrator):
             in system.particles.
         """
         particles = system.particles
+        ndim = system.particles.get_dim()
         if self.gamma > 0.0:
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
-            randxv = multivariate_normal(mean, cov, size=particles.pos.shape)
-            if particles.npart == 1:
-                pos_rand = randxv[:, 0]
-                vel_rand = randxv[:, 1]
-            else:
-                pos_rand = randxv[:, :, 0]
-                vel_rand = randxv[:, :, 1]
+            pos_rand = None
+            vel_rand = None
+            for meani, covi in zip(mean, cov):
+                randxv = multivariate_normal(meani, covi, size=ndim)
+                if pos_rand is None or vel_rand is None:
+                    pos_rand = randxv[:, 0]
+                    vel_rand = randxv[:, 1]
+                else:
+                    pos_rand = np.vstack([pos_rand, randxv[:, 0]])
+                    vel_rand = np.vstack([vel_rand, randxv[:, 1]])
         else:
             pos_rand = np.zeros(particles.pos.shape)
             vel_rand = np.zeros(particles.vel.shape)
@@ -360,5 +372,5 @@ class Langevin(Integrator):
         particles.pos += a_1 * particles.vel + a_2 * particles.force +\
                          pos_rand
         vel2 = c_0 * particles.vel + b_1 * particles.force + vel_rand
-        system.potential_and_force()  # update forces
+        system.force()  # update forces
         particles.vel = vel2 + b_2 * system.particles.force
