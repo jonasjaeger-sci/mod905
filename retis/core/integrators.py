@@ -366,11 +366,12 @@ class Langevin(Integrator):
             pos_rand = np.zeros(particles.pos.shape)
             vel_rand = np.zeros(particles.vel.shape)
 
-        c_0 = self.param_iner['c0']
-        a_1, a_2 = self.param_iner['a1'], self.param_iner['a2']
-        b_1, b_2 = self.param_iner['b1'], self.param_iner['b2']
-        particles.pos += a_1 * particles.vel + a_2 * particles.force +\
-                         pos_rand
-        vel2 = c_0 * particles.vel + b_1 * particles.force + vel_rand
-        system.force()  # update forces
-        particles.vel = vel2 + b_2 * system.particles.force
+        particles.pos += self.param_iner['a1'] * particles.vel +\
+                         self.param_iner['a2'] * particles.force + pos_rand
+
+        vel2 = self.param_iner['c0'] * particles.vel +\
+               self.param_iner['b1'] * particles.force + vel_rand
+
+        system.force()  # update forces 
+
+        particles.vel = vel2 + self.param_iner['b2'] * system.particles.force
