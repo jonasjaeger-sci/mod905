@@ -8,6 +8,12 @@ import inspect
 
 __all__ = ['ForceField']
 
+# NOTE: It might be good to update the calling of forces, potential 
+# so that we don't use the inspect every time we are calling the functions
+# we can use inspect to check how the functions should be called, than
+# store this and call the functions accordingly. We only need to rerun
+# inspect if potentials are added during the simulations
+
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
