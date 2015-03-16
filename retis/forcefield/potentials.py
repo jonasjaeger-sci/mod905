@@ -87,7 +87,7 @@ class DoubleWell(PotentialFunction):
             The virial, currently not implemented for this potential
         """
         forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
-        virial = 0.0*np.outer(forces, pos)  # zeros, with correct shape
+        virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
     def potential_and_force(self, pos):
@@ -112,7 +112,7 @@ class DoubleWell(PotentialFunction):
         """
         v_pot = self.a*pos**4 - self.b*(pos - self.c)**2
         forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
-        virial = 0.0*np.outer(forces, pos)  # zeros, with correct shape
+        virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return v_pot.sum(), forces, virial
 
     def parameters_to_dict(self):
