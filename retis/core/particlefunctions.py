@@ -168,8 +168,8 @@ def calculate_kinetic_temperature(system, selection=None,
         vel, mass = particles.vel, particles.mass
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
-    
-    npart = len(mass)
+
+    npart = len(mass) # using mass, since selection may be != particles.npart
     if npart == 1:
         ndof = npart * np.ones(vel.shape)
     else:

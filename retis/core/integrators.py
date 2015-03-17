@@ -264,10 +264,9 @@ class Langevin(Integrator):
         imasses = system.particles.imass
         masses = system.particles.mass
         if self.high_friction:
-            sigma = np.sqrt(2.0 * self.delta_t * imasses/(beta * self.gamma))
-            bddt = self.delta_t * imasses / self.gamma
-            self.param_high['sigma'] = sigma
-            self.param_high['bddt'] = bddt
+            self.param_high['sigma'] = np.sqrt(2.0 * self.delta_t *
+                                               imasses/(beta * self.gamma))
+            self.param_high['bddt'] = self.delta_t * imasses / self.gamma
         else:
             gammadt = self.gamma * self.delta_t
             exp_gdt = np.exp(-gammadt)
@@ -289,20 +288,21 @@ class Langevin(Integrator):
             sig_v = np.sqrt((1.0 - exp_gdt**2)/(beta * masses))
             cov_rv = (1.0/(beta * masses * self.gamma)) * (1.0 - exp_gdt)**2
             # masses & imasses are column matrices, this complicates
-            # things somewhat, so we use ravel:
+            # things somewhat, so we will ravel them:
             sig_r = np.ravel(sig_r)
             sig_v = np.ravel(sig_v)
             cov_rv = np.ravel(cov_rv)
             self.param_iner['mean'] = []
             self.param_iner['cov'] = []
             for sig_ri, sig_vi, cov_rvi in zip(sig_r, sig_v, cov_rv):
-                self.param_iner['mean'].append(np.zeros(2))
                 cov_matrix = np.zeros((2, 2))
                 cov_matrix[0, 0] = sig_ri**2
                 cov_matrix[1, 1] = sig_vi**2
                 cov_matrix[0, 1] = cov_rvi
                 cov_matrix[1, 0] = cov_rvi
                 self.param_iner['cov'].append(cov_matrix)
+                self.param_iner['mean'].append(np.zeros(2))
+                # NOTE: Can be simplified - mean is always just zero...
 
     def integration_step(self, system):
         """
@@ -369,6 +369,6 @@ class Langevin(Integrator):
         vel2 = self.param_iner['c0'] * particles.vel +\
                self.param_iner['b1'] * particles.force + vel_rand
 
-        system.force()  # update forces 
+        system.force()  # update forces
 
         particles.vel = vel2 + self.param_iner['b2'] * system.particles.force
