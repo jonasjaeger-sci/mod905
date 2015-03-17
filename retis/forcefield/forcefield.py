@@ -8,12 +8,6 @@ import inspect
 
 __all__ = ['ForceField']
 
-# NOTE: It might be good to update the calling of forces, potential 
-# so that we don't use the inspect every time we are calling the functions
-# we can use inspect to check how the functions should be called, than
-# store this and call the functions accordingly. We only need to rerun
-# inspect if potentials are added during the simulations
-
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
@@ -80,6 +74,11 @@ class ForceField(object):
         The potential functions that the force field is built up from.
     param : list
         The parameters for the corresponding potential functions.
+    arguments : dict
+        Contains information on how to call the different functions.
+        arguments['force'] = list with information on how to call the
+        corresponding potential function, i.e. it is equal to 
+        inspect.getargspec(potential.force)
     """
 
     def __init__(self, desc='', potential=None, params=None):
@@ -100,25 +99,15 @@ class ForceField(object):
         N/A
         """
         self.desc = desc
-        if potential is None:
-            self.potential = []
+        self.potential = []
+        self.params = []
+        self.arguments = {'force': [], 'potential': [], 'pot-and-force': []}
+        if params is None:
+            for pot in potential:
+                self.add_potential(pot)
         else:
-            if isinstance(potential, list):
-                self.potential = potential
-            else:
-                self.potential = [potential]
-
-        if params is None:  # try to get them from the potential
-            self.params = [pot.params for pot in self.potential]
-        else:
-            if isinstance(params, list):
-                self.params = params
-            else:
-                self.params = [params]
-            # also assume that we indend to set the parameters:
-            for pot, param in zip(self.potential, self.params):
-                pot.add_parameters(param)
-
+            for pot, param in zip(potential, params):
+                self.add_potential(pot, parameters=param)
     def add_potential(self, potential, parameters=None):
         """
         Adds a potential with parameters to the force field
@@ -132,8 +121,23 @@ class ForceField(object):
 
         Returns
         -------
-        N/A but it will upsate self.potential and self.params
+        N/A but it will update self.potential and self.params
         """
+        try:
+            arg_force = inspect.getargspec(potential.force)
+        except AttributeError:
+            arg_force = None
+        try:
+            arg_pot = inspect.getargspec(potential.potential)
+        except AttributeError:
+            arg_pot = None
+        try:
+            arg_pot_force = inspect.getargspec(potential.potential_and_force)
+        except AttributeError:
+            arg_pot_force = None
+        self.arguments['force'].append(arg_force)
+        self.arguments['potential'].append(arg_pot)
+        self.arguments['pot-and-force'].append(arg_pot_force)
         self.potential.append(potential)
         if not parameters is None:
             potential.add_parameters(parameters)
@@ -156,6 +160,9 @@ class ForceField(object):
             idx = self.potential.index(potential)
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
+            arg_force = self.arguments['force'].pop(idx)
+            arg_pot = self.arguments['pot'].pop(idx)
+            arg_pot_and_force = self.arguments['pot-and-force'].pop(idx)
             return (potrm, paramrm)
         else:
             warnings.warn('Unknow potential --- will not remove')
@@ -207,9 +214,8 @@ class ForceField(object):
         """
         force = None
         virial = None
-        for pot in self.potential:
-            arguments = inspect.getargspec(pot.force)
-            var = arguments.args
+        for pot, argu in zip(self.potential, self.arguments['force']):
+            var = argu.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if force is None or virial is None:
                 force, virial = pot.force(*args)
@@ -246,9 +252,9 @@ class ForceField(object):
         in Monte Carlo moves - i.e. to use the trial positions).
         """
         v_pot = None
-        for pot in self.potential:
-            arguments = inspect.getargspec(pot.potential)
-            var = arguments.args
+        for pot, argu in zip(self.potential, self.arguments['potential']):
+            #arguments = inspect.getargspec(pot.potential)
+            var = argu.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None:
                 v_pot = pot.potential(*args)
@@ -289,9 +295,8 @@ class ForceField(object):
         v_pot = None
         force = None
         virial = None
-        for pot in self.potential:
-            arguments = inspect.getargspec(pot.potential_and_force)
-            var = arguments.args
+        for pot, argu in zip(self.potential, self.arguments['pot-and-force']):
+            var = argu.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None or force is None or virial is None:
                 v_pot, force, virial = pot.potential_and_force(*args)
