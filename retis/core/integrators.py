@@ -350,22 +350,19 @@ class Langevin(Integrator):
         """
         particles = system.particles
         ndim = system.particles.get_dim()
+        npart = system.particles.npart
+        pos_rand = np.zeros(particles.pos.shape)
+        vel_rand = np.zeros(particles.vel.shape)
         if self.gamma > 0.0:
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
-            pos_rand = None
-            vel_rand = None
-            for meani, covi in zip(mean, cov):
+            for i, (meani, covi) in enumerate(zip(mean, cov)):
                 randxv = multivariate_normal(meani, covi, size=ndim)
-                if pos_rand is None or vel_rand is None:
+                if npart == 1: # special case for just one particle
                     pos_rand = randxv[:, 0]
                     vel_rand = randxv[:, 1]
                 else:
-                    pos_rand = np.vstack([pos_rand, randxv[:, 0]])
-                    vel_rand = np.vstack([vel_rand, randxv[:, 1]])
-        else:
-            pos_rand = np.zeros(particles.pos.shape)
-            vel_rand = np.zeros(particles.vel.shape)
-
+                    pos_rand[i] = randxv[:, 0]
+                    vel_rand[i] = randxv[:, 1]
         particles.pos += self.param_iner['a1'] * particles.vel +\
                          self.param_iner['a2'] * particles.force + pos_rand
 
