@@ -220,6 +220,11 @@ class Langevin(Integrator):
             distribution param_iner['mean'] and param_iner['cov'] are used
             as parameters when drawing dr and dv from the bivariate
             distribution.
+
+    Note
+    ----
+    Currently, we are using a multinormal distribution from numpy.
+    Consider replacing this one as it seems somewhat slow.
     """
     def __init__(self, delta_t, gamma, high_friction=False,
                  desc='Langevin integrator'):
