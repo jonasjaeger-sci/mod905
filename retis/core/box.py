@@ -10,7 +10,13 @@ __all__ = ['Box']
 
 class Box(object):
     """
-    Box(object) defines a simple simulation box.
+    Box(object) defines a simple simulation box. The box will handle
+    periodic boundaries if needed.
+    A non-periodic dummy-box can be created using Box(periodic=[False, ...])
+    which may be usefull for setting the dimensionality.
+    Otherwise, a box will typically be created with a size, Box(size=[...]).
+    Periodocity can be explicity set (default is assumed periodic in all
+    dimensions).
 
     Attributes
     ----------
@@ -26,7 +32,7 @@ class Box(object):
         the number of dimensions the box is made up of.
     """
 
-    def __init__(self, size, periodic=None):
+    def __init__(self, size=None, periodic=None):
         """
         Initialize the box
 
@@ -45,6 +51,12 @@ class Box(object):
         self.periodic = []
         self.low = []
         self.high = []
+        if size is None:
+            if periodic is None:  # Assume 1D non-periodic box
+                size = [[-float('inf'), float('inf')]]
+                periodic = [False]
+            else:
+                size = [[-float('inf'), float('inf')] for i in periodic]
         self.size = size
         for i, dim in enumerate(size):
             ldim = len(dim)
