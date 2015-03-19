@@ -208,9 +208,7 @@ def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
         cho = np.linalg.cholesky(cov)
     norm = random_normal(loc=0.0, scale=1.0, size=2*size, rgen=rgen)
     norm = norm.reshape(size, 2)
-    meanm = np.ones((size, 2))
-    meanm[:, 0] *= mean[0]
-    meanm[:, 1] *= mean[1]
+    meanm = np.array([mean, ] * size)
     return meanm + np.dot(norm, cho.T)
 
 
