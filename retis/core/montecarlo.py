@@ -10,7 +10,7 @@ from numpy.random import RandomState
 
 __all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step', 
            'random_normal', 'generate_maxwellian_velocities',
-           'multivariate_normal']
+           'multivariate_normal', 'multivariate_normal_n']
 
 RANDOMGENERATOR = RandomState()  # this will be the random number generator
 
@@ -95,7 +95,7 @@ def max_displace_step(system, maxdx=0.1, idx=None, rgen=RANDOMGENERATOR):
         The random number generator. Default is the global one in this module.
     idx : int, optional.
         Index of particle to displace. If idx is not given, the particle
-        is choosen randomly.
+        is chosen randomly.
 
     Returns
     -------
@@ -143,7 +143,7 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
 
 def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
     """
-    Function to return numbers from a multivariat distribution.
+    Function to return numbers from a multivariate distribution.
     This function will actually just call np.random.multivariate_normal
     the reason for including it here as a function is that we might want
     to use the random number generator with a specified seed.
@@ -171,6 +171,44 @@ def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
     """
     return rgen.multivariate_normal(mean, cov, size=size)
 
+def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
+    """
+    Function to return numbers from a multivariate distribution.
+    This is an attempt on speeding up the call of 
+    numpy.random.multivariate_normal if we need to call it over and
+    over again. Such repeated calling will do a svd repeatedly, which
+    is waste full.
+    In this function, such a transform can be supplied, it is only
+    estimated if it's not given.
+
+    Parameters
+    ----------
+    mean : numpy array (1D, 2)
+        Mean of the N-dimensional array
+    cov : numpy array (2D, (2, 2))
+        Covariance matrix of the distribution.
+    cho : numpy.array (2D, (2, 2)), optional
+        Cholesky factorization of cov. If not given,
+        it will be calculated here.
+    size : int, optional.
+        Number of samples to do.
+    rgen : object, optional
+        The random number generator
+
+    Returns
+    -------
+    out : float or numpy.array of floats
+        The random numbers drawn.
+
+    See also
+    --------
+    self.multivariate_normal
+    """
+    if cho is None:
+        cho = np.linalg.cholesky(cov)
+    norm = random_normal(loc=0.0, scale=1.0, size=2*size, rgen=rgen)
+    norm = norm.reshape(2, size)
+    return np.dot(cho, norm)
 
 
 def generate_maxwellian_velocities(system, temperature=None, selection=None,
@@ -206,7 +244,8 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
         vel, imass = particles.vel, particles.imass
     else:
         vel, imass = particles.vel[selection], particles.imass[selection]
-    vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0, size=vel.shape)
+    vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0,
+                                         size=vel.shape, rgen=rgen)
     if selection is None:  # this if might be removed as x[None] is x
         system.particles.vel = vel
     else:

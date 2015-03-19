@@ -4,7 +4,7 @@
 integrators.py
 """
 from __future__ import absolute_import
-from .montecarlo import random_normal, multivariate_normal
+from .montecarlo import random_normal, multivariate_normal, multivariate_normal_n
 import numpy as np
 
 __all__ = ['VelocityVerlet']
@@ -299,6 +299,7 @@ class Langevin(Integrator):
             cov_rv = np.ravel(cov_rv)
             self.param_iner['mean'] = []
             self.param_iner['cov'] = []
+            self.param_iner['cho'] = []
             for sig_ri, sig_vi, cov_rvi in zip(sig_r, sig_v, cov_rv):
                 cov_matrix = np.zeros((2, 2))
                 cov_matrix[0, 0] = sig_ri**2
@@ -306,6 +307,7 @@ class Langevin(Integrator):
                 cov_matrix[0, 1] = cov_rvi
                 cov_matrix[1, 0] = cov_rvi
                 self.param_iner['cov'].append(cov_matrix)
+                self.param_iner['cho'].append(np.linalg.cholesky(cov_matrix))
                 self.param_iner['mean'].append(np.zeros(2))
                 # NOTE: Can be simplified - mean is always just zero...
 
@@ -360,14 +362,17 @@ class Langevin(Integrator):
         vel_rand = np.zeros(particles.vel.shape)
         if self.gamma > 0.0:
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
-            for i, (meani, covi) in enumerate(zip(mean, cov)):
-                randxv = multivariate_normal(meani, covi, size=ndim)
+            cho = self.param_iner['cho']
+            for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
+                #randxv = multivariate_normal(meani, covi, size=ndim)
+                randxv = multivariate_normal_n(meani, covi, cho=choi, size=ndim)
                 if npart == 1: # special case for just one particle
-                    pos_rand = randxv[:, 0]
-                    vel_rand = randxv[:, 1]
+                    pos_rand = randxv[0, :]
+                    vel_rand = randxv[1, :]
                 else:
-                    pos_rand[i] = randxv[:, 0]
-                    vel_rand[i] = randxv[:, 1]
+                    pos_rand[i] = randxv[0, :]
+                    vel_rand[i] = randxv[1, :]
+                #print randxv[:,0]
         particles.pos += self.param_iner['a1'] * particles.vel +\
                          self.param_iner['a2'] * particles.force + pos_rand
 
