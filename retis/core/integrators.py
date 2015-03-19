@@ -4,7 +4,7 @@
 integrators.py
 """
 from __future__ import absolute_import
-from .montecarlo import random_normal, multivariate_normal, multivariate_normal_n
+from .montecarlo import random_normal, multivariate_normal_n
 import numpy as np
 
 __all__ = ['VelocityVerlet']
@@ -255,6 +255,7 @@ class Langevin(Integrator):
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
         self.init_params = True
 
+
     def _init_parameters(self, system):
         """
         Extra initialization of the Langevin integrator.
@@ -267,7 +268,6 @@ class Langevin(Integrator):
         """
         beta = system.temperature['beta']
         imasses = system.particles.imass
-        masses = system.particles.mass
         if self.high_friction:
             self.param_high['sigma'] = np.sqrt(2.0 * self.delta_t *
                                                imasses/(beta * self.gamma))
@@ -288,19 +288,16 @@ class Langevin(Integrator):
             self.param_iner['b1'] = (c_1 - c_2) * self.delta_t * imasses
             self.param_iner['b2'] = c_2 * self.delta_t * imasses
 
-            sig_r = np.sqrt((self.delta_t / (beta * masses * self.gamma)) *
-                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
-            sig_v = np.sqrt((1.0 - exp_gdt**2)/(beta * masses))
-            cov_rv = (1.0/(beta * masses * self.gamma)) * (1.0 - exp_gdt)**2
-            # masses & imasses are column matrices, this complicates
-            # things somewhat, so we will ravel them:
-            sig_r = np.ravel(sig_r)
-            sig_v = np.ravel(sig_v)
-            cov_rv = np.ravel(cov_rv)
             self.param_iner['mean'] = []
             self.param_iner['cov'] = []
             self.param_iner['cho'] = []
-            for sig_ri, sig_vi, cov_rvi in zip(sig_r, sig_v, cov_rv):
+
+            for imass in imasses:
+                sig_ri = (self.delta_t * imass / (beta * self.gamma)) \
+                         * (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt)
+                sig_ri = np.sqrt(sig_ri)
+                sig_vi = np.sqrt((1.0 - exp_gdt**2) * imasses / beta)
+                cov_rvi = (imasses/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.zeros((2, 2))
                 cov_matrix[0, 0] = sig_ri**2
                 cov_matrix[1, 1] = sig_vi**2
@@ -357,7 +354,6 @@ class Langevin(Integrator):
         """
         particles = system.particles
         ndim = system.particles.get_dim()
-        npart = system.particles.npart
         pos_rand = np.zeros(particles.pos.shape)
         vel_rand = np.zeros(particles.vel.shape)
         if self.gamma > 0.0:
@@ -366,13 +362,13 @@ class Langevin(Integrator):
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
                 #randxv = multivariate_normal(meani, covi, size=ndim)
                 randxv = multivariate_normal_n(meani, covi, cho=choi, size=ndim)
-                if npart == 1: # special case for just one particle
-                    pos_rand = randxv[0, :]
-                    vel_rand = randxv[1, :]
+                if system.particles.npart == 1: # special case for just one particle
+                    pos_rand = randxv[:, 0]
+                    vel_rand = randxv[:, 1]
                 else:
-                    pos_rand[i] = randxv[0, :]
-                    vel_rand[i] = randxv[1, :]
-                #print randxv[:,0]
+                    pos_rand[i] = randxv[:, 0]
+                    vel_rand[i] = randxv[:, 1]
+
         particles.pos += self.param_iner['a1'] * particles.vel +\
                          self.param_iner['a2'] * particles.force + pos_rand
 
