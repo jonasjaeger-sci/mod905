@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module for Monte Carlo Algorithms and other 
+Module for Monte Carlo Algorithms and other
 "random" functions.
 """
 from __future__ import absolute_import
@@ -8,7 +8,7 @@ from .particlefunctions import calculate_kinetic_temperature, reset_momentum
 import numpy as np
 from numpy.random import RandomState
 
-__all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step', 
+__all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step',
            'random_normal', 'generate_maxwellian_velocities',
            'multivariate_normal', 'multivariate_normal_n']
 
@@ -174,7 +174,7 @@ def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
 def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
     """
     Function to return numbers from a multivariate distribution.
-    This is an attempt on speeding up the call of 
+    This is an attempt on speeding up the call of
     numpy.random.multivariate_normal if we need to call it over and
     over again. Such repeated calling will do a svd repeatedly, which
     is waste full.
@@ -197,7 +197,7 @@ def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
 
     Returns
     -------
-    out : float or numpy.array of floats
+    out : float or numpy.array of floats size
         The random numbers drawn.
 
     See also
@@ -207,8 +207,11 @@ def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
     if cho is None:
         cho = np.linalg.cholesky(cov)
     norm = random_normal(loc=0.0, scale=1.0, size=2*size, rgen=rgen)
-    norm = norm.reshape(2, size)
-    return np.dot(cho, norm)
+    norm = norm.reshape(size, 2)
+    meanm = np.ones((size, 2))
+    meanm[:, 0] *= mean[0]
+    meanm[:, 1] *= mean[1]
+    return meanm + np.dot(norm, cho.T)
 
 
 def generate_maxwellian_velocities(system, temperature=None, selection=None,
@@ -229,7 +232,7 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
         The desired temperature, if this is not set, the value in
         system.temperature['set'] will be used.
     selection : list of ints, optional
-        A list with indices of the particles to consider. 
+        A list with indices of the particles to consider.
         Can be used to only apply it to a selection of particles
     momentum : boolean
         If true, we will reset the momentum.
