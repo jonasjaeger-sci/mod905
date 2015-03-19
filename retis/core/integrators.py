@@ -296,8 +296,8 @@ class Langevin(Integrator):
                 sig_ri = (self.delta_t * imass / (beta * self.gamma)) \
                          * (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt)
                 sig_ri = np.sqrt(sig_ri)
-                sig_vi = np.sqrt((1.0 - exp_gdt**2) * imasses / beta)
-                cov_rvi = (imasses/(beta * self.gamma)) * (1.0 - exp_gdt)**2
+                sig_vi = np.sqrt((1.0 - exp_gdt**2) * imass / beta)
+                cov_rvi = (imass/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.zeros((2, 2))
                 cov_matrix[0, 0] = sig_ri**2
                 cov_matrix[1, 1] = sig_vi**2
