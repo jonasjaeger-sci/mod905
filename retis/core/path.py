@@ -5,8 +5,59 @@ This file contain a class to represent paths.
 import numpy as np
 import warnings
 import copy
+import itertools
 
-__all__ = ['Path']
+__all__ = ['Path', 'paste_paths']
+
+
+def paste_paths(path1, path2, overlap=True):
+    """
+    Helper function to merge a backward and forward trajectory so that
+    the paths will be stacked on top of each-other. The ordering is
+    important here, paste_paths(path1, path2) != paste_paths(path2, path1).
+    The code is very similar to Path.__add__ but we have to take care:
+    - path1 must be iterated in reverse
+    - we may have to remove one point in path2 (if the paths overlap)
+
+    Parameters
+    ----------
+    path1 : object of type Path
+        This is the backward trajectory
+    path2 : object of type Path
+        This is the forward trajectory
+    overlap : boolean, default is True
+        If true, path1 and path2 have a common starting-point, that is,
+        the first point in path2 is identical to the first point in path1
+        In time-space this means that the first point in path2 is equal to
+        the last point in path1 (the backward and forward path started
+        at the same location in space)
+    """
+    if path1.maxlen == path2.maxlen:
+        # everything is ok, they have the same length
+        maxlen = path1.maxlen
+    else:
+        # they are unequal and both is not none, just pick the largest
+        maxlen = max(path1.maxlen, path2.maxlen)
+        msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
+        warnings.warn(msg)
+
+    new_path = Path(maxlen=maxlen)  # this is the merged path
+    iter_path1 = reversed(path1.path)
+    if overlap:
+        iter_path2 = path2.path[1:]
+    else:
+        iter_path2 = path2.path
+
+    for phasepoint in itertools.chain(iter_path1, iter_path2):
+        if maxlen is None or len(new_path.path) < new_path.maxlen:
+            new_path._append_phase_point(np.copy(phasepoint[0]),
+                                         np.copy(phasepoint[1]),
+                                         copy.copy(phasepoint[2]))
+        else:
+            msg = 'Truncated path at: {}'.format(len(new_path.path))
+            warnings.warn(msg)
+            return new_path
+    return new_path
 
 class Path(object):
     """
@@ -72,15 +123,35 @@ class Path(object):
             This variable is the order parameter for the given point.
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
-            pos = np.copy(particles.pos)
-            vel = np.copy(particles.vel)
             # copy.copy(orderp) might be taken out here, since we assume that
             # orderp is really a float
-            self.path.append([pos, vel, copy.copy(orderp)])
-            self._update_orderp(orderp, len(self.path)-1)
+            self._append_phase_point(np.copy(particles.pos),
+                                     np.copy(particles.vel),
+                                     copy.copy(orderp))
         else:
             msg = 'Could not add time slice to path!'
             warnings.warn(msg)
+
+    def _append_phase_point(self, pos, vel, orderp):
+        """
+        Method to append a phase point to the path
+
+        Parameters
+        ----------
+        pos : numpy.array
+            The positions of the particles
+        vel: numpy.array
+            The velocities of the particles
+        orderp : float
+            This variable is the order parameter for the given point.
+
+        Returns
+        -------
+        None, but will update self.path and possible self.ordermax and/or
+        self.ordermin
+        """
+        self.path.append([pos, vel, orderp])
+        self._update_orderp(orderp, len(self.path)-1)
 
     def _update_orderp(self, orderp, idx):
         """
@@ -126,3 +197,60 @@ class Path(object):
         self.ordermin = ordermin
         self.ordermax = ordermax
         return ordermin, ordermax
+
+    def __add__(self, other):
+        """
+        This functions defines how we add two paths,
+        i.e. new_path = self + other
+
+        Parameters
+        ----------
+        self, other : objects of type Path
+
+        Returns
+        -------
+        out : object of type Path
+        """
+        if self.maxlen == other.maxlen:
+            # everything is ok, they have the same length
+            maxlen = self.maxlen
+        else:
+            # they are unequal and both is not none, just pick the largest
+            maxlen = max(self.maxlen, other.maxlen)
+            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
+            warnings.warn(msg)
+
+        new_path = Path(maxlen=maxlen)  # this is the new path
+
+        for phasepoint in itertools.chain(self.path, other.path):
+            if maxlen is None or len(new_path.path) < new_path.maxlen:
+                new_path._append_phase_point(np.copy(phasepoint[0]),
+                                             np.copy(phasepoint[1]),
+                                             copy.copy(phasepoint[2]))
+            else:
+                msg = 'Truncated path at: {}'.format(len(new_path.path))
+                warnings.warn(msg)
+                return new_path
+        return new_path
+
+    def __iadd__(self, other):
+        for phasepoint in other.path:
+            if self.maxlen is None or len(self.path) < self.maxlen:
+                self._append_phase_point(np.copy(phasepoint[0]),
+                                         np.copy(phasepoint[1]),
+                                         copy.copy(phasepoint[2]))
+            else:
+                msg = 'Truncated path at: {}'.format(len(self.path))
+                warnings.warn(msg)
+                break
+        return self
+
+    def __str__(self):
+        """
+        Return a simple string representation of the Path.
+        """
+        msg = ['Path with length {} (max: {})'.format(len(self.path),
+                                                      self.maxlen)]
+        msg += ['Order parameter max: {}'.format(self.ordermax)]
+        msg += ['Order parameter min: {}'.format(self.ordermin)]
+        return '\n'.join(msg)
