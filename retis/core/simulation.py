@@ -110,11 +110,27 @@ class Simulation(object):
 
         Returns
         -------
-        N/A, but initiates self.tasks.
+        N/A, but initiates self.tasks and set self.cycle.
         """
         self.cycle = {'step': startcycle, 'end': endcycle,
                       'start': startcycle}
         self.task = []
+
+    def extend_cycles(self, steps):
+        """
+        To extend a simulation with the given number of steps.
+
+        Parameters
+        ----------
+        steps :  int
+            The number of steps to extend the simulation with.
+
+        Returns
+        -------
+        N/A, modifies self.cycle
+        """
+        self.cycle['start'] = self.cycle['end']
+        self.cycle['end'] += steps
 
     def is_finished(self):
         """
@@ -148,7 +164,8 @@ class Simulation(object):
         is defined.
         """
         self.cycle['step'] += 1
-        stepno = self.cycle['step'] - self.cycle['start']  # no. of steps done
+        # no. of steps done since start
+        stepno = self.cycle['step'] - self.cycle['start']
         results = []
         for task in self.task:
             resi = _do_task(task, stepno, self.cycle['step'])
