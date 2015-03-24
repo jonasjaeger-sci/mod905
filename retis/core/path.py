@@ -74,6 +74,8 @@ class Path(object):
         if self.maxlen is None or len(self.path) < self.maxlen:
             pos = np.copy(particles.pos)
             vel = np.copy(particles.vel)
+            # copy.copy(orderp) might be taken out here, since we assume that
+            # orderp is really a float
             self.path.append([pos, vel, copy.copy(orderp)])
             self._update_orderp(orderp, len(self.path)-1)
         else:
