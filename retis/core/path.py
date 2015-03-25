@@ -42,18 +42,17 @@ def paste_paths(path1, path2, overlap=True):
         warnings.warn(msg)
 
     new_path = Path(maxlen=maxlen)  # this is the merged path
-    iter_path1 = reversed(path1.path)
-    if overlap:
+    iter_path1 = reversed(path1.path)  # we iterate in correct time direction
+    if overlap:  # do not include the overlapping point:
         iter_path2 = path2.path[1:]
     else:
         iter_path2 = path2.path
 
     for phasepoint in itertools.chain(iter_path1, iter_path2):
-        if maxlen is None or len(new_path.path) < new_path.maxlen:
-            new_path._append_phase_point(np.copy(phasepoint[0]),
-                                         np.copy(phasepoint[1]),
-                                         copy.copy(phasepoint[2]))
-        else:
+        app = new_path.append(np.copy(phasepoint[0]),
+                              np.copy(phasepoint[1]),
+                              copy.copy(phasepoint[2]))
+        if not app:
             msg = 'Truncated path at: {}'.format(len(new_path.path))
             warnings.warn(msg)
             return new_path
@@ -109,32 +108,13 @@ class Path(object):
         for phasepoint in self.path:
             yield phasepoint
 
-    def append(self, particles, orderp):
-        """
-        Method to append a new time-splice to the path
 
-        Parameters
-        ----------
-        particles : object of particlelist type
-            This object represents the snapshot which will be stored.
-            Note that we here copies the positions and velocities and
-            store these.
-        orderp : float
-            This variable is the order parameter for the given point.
+    def append(self, pos, vel, orderp):
         """
-        if self.maxlen is None or len(self.path) < self.maxlen:
-            # copy.copy(orderp) might be taken out here, since we assume that
-            # orderp is really a float
-            self._append_phase_point(np.copy(particles.pos),
-                                     np.copy(particles.vel),
-                                     copy.copy(orderp))
-        else:
-            msg = 'Could not add time slice to path!'
-            warnings.warn(msg)
+        Method to append a new phase point to the path. The phasepoint is
+        assumed to be given by positions and velocities with
+        a corresponding scalar order parameter.
 
-    def _append_phase_point(self, pos, vel, orderp):
-        """
-        Method to append a phase point to the path
 
         Parameters
         ----------
@@ -144,14 +124,15 @@ class Path(object):
             The velocities of the particles
         orderp : float
             This variable is the order parameter for the given point.
-
-        Returns
-        -------
-        None, but will update self.path and possible self.ordermax and/or
-        self.ordermin
         """
-        self.path.append([pos, vel, orderp])
-        self._update_orderp(orderp, len(self.path)-1)
+        if self.maxlen is None or len(self.path) < self.maxlen:
+            self.path.append([np.copy(pos), np.copy(vel), copy.copy(orderp)])
+            self._update_orderp(orderp, len(self.path)-1)
+            return True
+        else:
+            msg = 'Path length exceeded! Could not append to path!'
+            warnings.warn(msg)
+            return False
 
     def _update_orderp(self, orderp, idx):
         """
@@ -169,6 +150,7 @@ class Path(object):
             self.ordermax = [orderp, idx]
         if self.ordermin is None or orderp < self.ordermin[0]:
             self.ordermin = [orderp, idx]
+
 
     def get_min_max_orderp(self):
         """
@@ -198,6 +180,7 @@ class Path(object):
         self.ordermax = ordermax
         return ordermin, ordermax
 
+
     def __add__(self, other):
         """
         This functions defines how we add two paths,
@@ -223,27 +206,27 @@ class Path(object):
         new_path = Path(maxlen=maxlen)  # this is the new path
 
         for phasepoint in itertools.chain(self.path, other.path):
-            if maxlen is None or len(new_path.path) < new_path.maxlen:
-                new_path._append_phase_point(np.copy(phasepoint[0]),
-                                             np.copy(phasepoint[1]),
-                                             copy.copy(phasepoint[2]))
-            else:
+            app = new_path.append(np.copy(phasepoint[0]),
+                                  np.copy(phasepoint[1]),
+                                  copy.copy(phasepoint[2]))
+            if not app:
                 msg = 'Truncated path at: {}'.format(len(new_path.path))
                 warnings.warn(msg)
                 return new_path
         return new_path
 
+
     def __iadd__(self, other):
         for phasepoint in other.path:
-            if self.maxlen is None or len(self.path) < self.maxlen:
-                self._append_phase_point(np.copy(phasepoint[0]),
-                                         np.copy(phasepoint[1]),
-                                         copy.copy(phasepoint[2]))
-            else:
+            app = self.append(np.copy(phasepoint[0]),
+                              np.copy(phasepoint[1]),
+                              copy.copy(phasepoint[2]))
+            if not app:
                 msg = 'Truncated path at: {}'.format(len(self.path))
                 warnings.warn(msg)
-                break
+                return self
         return self
+
 
     def __str__(self):
         """
