@@ -5,14 +5,13 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import (Simulation, System, Box, 
+from retis.core import (Simulation, System, Box,
                         seed_random_generator,
                         generate_maxwellian_velocities)
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_kinetic_temperature,
                                           calculate_scalar_pressure,
-                                          calculate_linear_momentum,
-                                          reset_momentum)
+                                          calculate_linear_momentum)
 from retis.core.integrators import VelocityVerlet
 from retis.forcefield import ForceField, PairLennardJonesCutnp
 from retis.io import WriteGromacs
@@ -25,7 +24,7 @@ forcefield = ForceField(potential=[potential],
                         params=[{'Ar': {'sigma': 1.0,
                                         'epsilon': 1.0,
                                         'rcut': 2.5}}])
-lattice, size = latticefcc(density=0.9, nx=3, ny=3, nz=3)
+lattice, size = latticefcc(density=0.9, nrx=3, nry=3, nrz=3)
 box = Box(size)
 
 ljsystem = System(temperature=2.0, units='lj', box=box)
@@ -34,7 +33,7 @@ for pos in lattice:
 npart = ljsystem.particles.npart
 print('Created fcc grid with {} atoms.'.format(npart))
 
-ljsystem.adjust_dof([1, 1, 1]) # adjust DOF since we are in "NVEMG"
+ljsystem.adjust_dof([1, 1, 1])  # adjust DOF since we are in "NVEMG"
 # generate velocities:
 seed_random_generator()
 generate_maxwellian_velocities(ljsystem)

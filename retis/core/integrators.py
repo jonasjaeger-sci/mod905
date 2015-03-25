@@ -255,7 +255,6 @@ class Langevin(Integrator):
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
         self.init_params = True
 
-
     def _init_parameters(self, system):
         """
         Extra initialization of the Langevin integrator.
@@ -360,9 +359,10 @@ class Langevin(Integrator):
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
             cho = self.param_iner['cho']
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
-                #randxv = multivariate_normal(meani, covi, size=ndim)
-                randxv = multivariate_normal_n(meani, covi, cho=choi, size=ndim)
-                if system.particles.npart == 1: # special case for just one particle
+                randxv = multivariate_normal_n(meani, covi, cho=choi,
+                                               size=ndim)
+                # special case for just a single particle:
+                if system.particles.npart == 1:
                     pos_rand = randxv[:, 0]
                     vel_rand = randxv[:, 1]
                 else:

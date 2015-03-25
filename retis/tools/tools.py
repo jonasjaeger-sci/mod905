@@ -9,7 +9,7 @@ import numpy as np
 __all__ = ['latticefcc', 'lattice_simple_cubic']
 
 
-def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
+def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
     """
     This method generates points on a simple
     fcc lattice.
@@ -20,11 +20,11 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
         The lattice constant.
     density : float, optional
         A desired density. If this is given, lcon is calculated.
-    nx : int
+    nrx : int
         Number of repetitions of the lattice in the x-direction.
-    ny : int
+    nry : int
         Number of repetitions of the lattice in the y-direction.
-    nz : int
+    nrz : int
         Number of repetitions of the lattice in the z-direction.
 
     Returns
@@ -45,12 +45,12 @@ def latticefcc(lcon=None, density=None, nx=1, ny=1, nz=1):
         lcon = (npart/density)**(1.0/3.0)
     if lcon is None:
         raise ValueError
-    positions = np.zeros((4*nx*ny*nz, 3))
+    positions = np.zeros((4 * nrx * nry * nrz, 3))
     j = 0
-    for i in itertools.product(range(nx), range(ny), range(nz)):
+    for i in itertools.product(range(nrx), range(nry), range(nrz)):
         positions[j:j+4, :] = lcon * (np.array(i) + unit_cell)
         j = j + 4
-    size = [[0.0, i*lcon] for i in (nx, ny, nz)]
+    size = [[0.0, i * lcon] for i in (nrx, nry, nrz)]
     return positions, size
 
 
@@ -71,14 +71,14 @@ def lattice_simple_cubic(box, spacing=1.0):
     positions : numpy.array
         The lattice positions.
     """
-    npart = [int(np.floor((boxi[1] - boxi[0])/spacing)) for boxi in box]
+    npart = [int(np.floor((boxi[1] - boxi[0]) / spacing)) for boxi in box]
     ranges = [range(i) for i in npart]
     origin = np.array([boxi[0] for boxi in box])
-    pos = [origin + spacing*np.array(i) for i in itertools.product(*ranges)]
+    pos = [origin + spacing * np.array(i) for i in itertools.product(*ranges)]
     positions = np.array(pos)
     avgp = np.average(positions, axis=0)
-    newavg = np.array([boxi[0]+0.5*(boxi[1]-boxi[0]) for boxi in box])
-    return positions+(newavg-avgp)
+    newavg = np.array([boxi[0] + 0.5*(boxi[1] - boxi[0]) for boxi in box])
+    return positions + (newavg - avgp)
 
 #system.particles.npart/system.box.calculate_volume()
     #size = [[0.0, n*lcon] for n in (nx, ny, nz)]

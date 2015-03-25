@@ -58,6 +58,7 @@ def paste_paths(path1, path2, overlap=True):
             return new_path
     return new_path
 
+
 class Path(object):
     """
     Path(object)
@@ -108,7 +109,6 @@ class Path(object):
         for phasepoint in self.path:
             yield phasepoint
 
-
     def append(self, pos, vel, orderp):
         """
         Method to append a new phase point to the path. The phasepoint is
@@ -127,7 +127,7 @@ class Path(object):
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             self.path.append([np.copy(pos), np.copy(vel), copy.copy(orderp)])
-            self._update_orderp(orderp, len(self.path)-1)
+            self._update_orderp(orderp, len(self.path) - 1)
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
@@ -150,7 +150,6 @@ class Path(object):
             self.ordermax = [orderp, idx]
         if self.ordermin is None or orderp < self.ordermin[0]:
             self.ordermin = [orderp, idx]
-
 
     def get_min_max_orderp(self):
         """
@@ -179,7 +178,6 @@ class Path(object):
         self.ordermin = ordermin
         self.ordermax = ordermax
         return ordermin, ordermax
-
 
     def __add__(self, other):
         """
@@ -215,7 +213,6 @@ class Path(object):
                 return new_path
         return new_path
 
-
     def __iadd__(self, other):
         for phasepoint in other.path:
             app = self.append(np.copy(phasepoint[0]),
@@ -226,7 +223,6 @@ class Path(object):
                 warnings.warn(msg)
                 return self
         return self
-
 
     def __str__(self):
         """
