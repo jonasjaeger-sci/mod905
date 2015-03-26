@@ -56,7 +56,6 @@ class System(object):
         Returns
         -------
         N/A, but sets derived variables:
-        self.beta : float, inverse of (kB*T).
 
         Note
         ----
