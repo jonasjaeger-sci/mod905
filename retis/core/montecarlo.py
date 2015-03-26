@@ -10,6 +10,7 @@ from numpy.random import RandomState
 
 __all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step',
            'random_normal', 'generate_maxwellian_velocities',
+           'draw_maxwellian_velocities',
            'multivariate_normal']
 
 RANDOMGENERATOR = RandomState()  # this will be the random number generator
@@ -264,3 +265,25 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
         system.particles.vel *= scale_factor
     else:
         system.particles.vel[selection] *= scale_factor
+
+def draw_maxwellian_velocities(system, sigma_v=None, rgen=RANDOMGENERATOR):
+    """
+    Simple function to draw numbers from a gaussian distribution.
+
+    Parameters
+    ----------
+    system : object of type system
+        This is used to determine the temperature parameter(s) and
+        the shape (number of particles and dimensionality)
+    sigma_v : numpy.array, optional
+        Standard deviation in velocity, one for each particle.
+        If it's not given it will be estimated.
+    rgen : object, optional
+        The random number generator
+    """
+    if not sigma_v:
+        kbt = (1.0/system.temperature['beta'])
+        sigma_v = np.sqrt(kbt*system.particles.imass)
+    vel = random_normal(loc=0.0, scale=sigma_v,
+                        size=system.particles.vel.shape, rgen=rgen)
+    return vel
