@@ -10,7 +10,7 @@ from numpy.random import RandomState
 
 __all__ = ['seed_random_generator', 'accept_reject', 'max_displace_step',
            'random_normal', 'generate_maxwellian_velocities',
-           'multivariate_normal', 'multivariate_normal_n']
+           'multivariate_normal']
 
 RANDOMGENERATOR = RandomState()  # this will be the random number generator
 
@@ -141,37 +141,37 @@ def random_normal(loc=0.0, scale=1.0, size=None, rgen=RANDOMGENERATOR):
     return rgen.normal(loc=loc, scale=scale, size=size)
 
 
-def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
-    """
-    Function to return numbers from a multivariate distribution.
-    This function will actually just call np.random.multivariate_normal
-    the reason for including it here as a function is that we might want
-    to use the random number generator with a specified seed.
+#def multivariate_normal(mean, cov, size=None, rgen=RANDOMGENERATOR):
+#    """
+#    Function to return numbers from a multivariate distribution.
+#    This function will actually just call np.random.multivariate_normal
+#    the reason for including it here as a function is that we might want
+#    to use the random number generator with a specified seed.
+#
+#    Parameters
+#    ----------
+#    mean : numpy array (1D, N)
+#        Mean of the N-dimensional array
+#    cov : numpy array (2D, (N, N))
+#        Covariance matrix of the distribution.
+#    size : int or tuple of ints, optional
+#        Output shape. Default is None, in which case a single value is
+#        returned.
+#    rgen : object, optional
+#        The random number generator
+#
+#    Returns
+#    -------
+#    out : float or numpy.array of floats
+#        The random numbers drawn.
+#
+#    See also
+#    --------
+#    numpy.random.random.multivariate_normal
+#    """
+#    return rgen.multivariate_normal(mean, cov, size=size)
 
-    Parameters
-    ----------
-    mean : numpy array (1D, N)
-        Mean of the N-dimensional array
-    cov : numpy array (2D, (N, N))
-        Covariance matrix of the distribution.
-    size : int or tuple of ints, optional
-        Output shape. Default is None, in which case a single value is
-        returned.
-    rgen : object, optional
-        The random number generator
-
-    Returns
-    -------
-    out : float or numpy.array of floats
-        The random numbers drawn.
-
-    See also
-    --------
-    numpy.random.random.multivariate_normal
-    """
-    return rgen.multivariate_normal(mean, cov, size=size)
-
-def multivariate_normal_n(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
+def multivariate_normal(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
     """
     Function to return numbers from a multivariate distribution.
     This is an attempt on speeding up the call of
