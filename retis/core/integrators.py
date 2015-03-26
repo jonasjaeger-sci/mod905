@@ -4,7 +4,7 @@
 integrators.py
 """
 from __future__ import absolute_import
-from .montecarlo import random_normal, multivariate_normal_n
+from .montecarlo import random_normal, multivariate_normal
 import numpy as np
 
 __all__ = ['VelocityVerlet']
@@ -359,8 +359,8 @@ class Langevin(Integrator):
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
             cho = self.param_iner['cho']
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
-                randxv = multivariate_normal_n(meani, covi, cho=choi,
-                                               size=ndim)
+                randxv = multivariate_normal(meani, covi, cho=choi,
+                                             size=ndim)
                 # special case for just a single particle:
                 if system.particles.npart == 1:
                     pos_rand = randxv[:, 0]
