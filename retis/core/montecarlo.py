@@ -213,8 +213,9 @@ def multivariate_normal(mean, cov, cho=None, size=1, rgen=RANDOMGENERATOR):
     return meanm + np.dot(norm, cho.T)
 
 
-def generate_maxwellian_velocities(system, temperature=None, selection=None,
-                                   momentum=True, rgen=RANDOMGENERATOR):
+def generate_maxwellian_velocities(particles, temperature, dof,
+                                   selection=None, momentum=True,
+                                   rgen=RANDOMGENERATOR):
     """
     Function to generate velocities from a Maxwell distribution for a
     group of particles. We do this in three steps:
@@ -227,9 +228,12 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
     ----------
     system : object of type system
         This object is assumed to have a particle list type.
-    temperature : float, optional
-        The desired temperature, if this is not set, the value in
-        system.temperature['set'] will be used.
+    temperature : float
+        The desired temperature. Typically, system.temperature['set']
+        will be used here.
+    dof : list of floats, optional
+        dof is the degrees of freedom to subtract. It's shape should
+        be equal to the number of dimensions.
     selection : list of ints, optional
         A list with indices of the particles to consider.
         Can be used to only apply it to a selection of particles
@@ -237,34 +241,28 @@ def generate_maxwellian_velocities(system, temperature=None, selection=None,
         If true, we will reset the momentum.
     rgen : object, optional
         The random number generator
+
     Returns
     -------
     N/A, but modifies the velocities of the selected particles
     """
-    particles = system.particles
     if selection is None:
         vel, imass = particles.vel, particles.imass
     else:
         vel, imass = particles.vel[selection], particles.imass[selection]
     vel = np.sqrt(imass) * random_normal(loc=0.0, scale=1.0,
                                          size=vel.shape, rgen=rgen)
-    if selection is None:  # this if might be removed as x[None] is x
-        system.particles.vel = vel
-    else:
-        system.particles.vel[selection] = vel
+    # NOTE: x[None] = x for a numpy.array
+    # But this is not valid for a list!
+    particles.vel[selection] = vel
 
     if momentum:
-        reset_momentum(system, selection=selection)
+        reset_momentum(particles, selection=selection)
 
-    if temperature is None:
-        temperature = system.temperature['set']
-    _, avgtemp, _ = calculate_kinetic_temperature(system, selection=selection)
+    _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
+                                                  selection=selection)
     scale_factor = np.sqrt(temperature/avgtemp)
-
-    if selection is None:  # this if might be removed as x[None] is x
-        system.particles.vel *= scale_factor
-    else:
-        system.particles.vel[selection] *= scale_factor
+    particles.vel[selection] *= scale_factor
 
 def draw_maxwellian_velocities(system, sigma_v=None, rgen=RANDOMGENERATOR):
     """
@@ -286,4 +284,4 @@ def draw_maxwellian_velocities(system, sigma_v=None, rgen=RANDOMGENERATOR):
         sigma_v = np.sqrt(kbt*system.particles.imass)
     vel = random_normal(loc=0.0, scale=sigma_v,
                         size=system.particles.vel.shape, rgen=rgen)
-    return vel
+    return vel, sigma_v

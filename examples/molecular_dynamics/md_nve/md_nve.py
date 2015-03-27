@@ -34,10 +34,12 @@ npart = ljsystem.particles.npart
 print('Created fcc grid with {} atoms.'.format(npart))
 
 ljsystem.adjust_dof([1, 1, 1])  # adjust DOF since we are in "NVEMG"
+DOF = ljsystem.temperature['dof']
 # generate velocities:
 seed_random_generator()
-generate_maxwellian_velocities(ljsystem)
-temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
+generate_maxwellian_velocities(ljsystem.particles,
+                               ljsystem.temperature['set'], dof=DOF)
+temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
 print('Generated temperatures with average: {}'.format(avgtemp))
 # Attach force field:
 ljsystem.forcefield = forcefield
@@ -62,14 +64,19 @@ def common_calculations(system):
     It used functions from the particle functions module to obtain
     energies, pressure, etc.
     """
-    kin_tens = calculate_kinetic_energy_tensor(system)
-    _, tempi, _ = calculate_kinetic_temperature(system,
+    particles = system.particles
+    dof = system.temperature['dof']
+    dim = system.get_dim()
+    volume = system.box.calculate_volume()
+    kin_tens = calculate_kinetic_energy_tensor(particles)
+    _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
                                                 kin_tensor=kin_tens)
     ekini = kin_tens.trace()
-    pressi = calculate_scalar_pressure(system, kin_tensor=kin_tens)
+    pressi = calculate_scalar_pressure(particles, volume, dim,
+                                       kin_tensor=kin_tens)
     vpoti = system.v_pot
     etoti = ekini + vpoti
-    momi = calculate_linear_momentum(system)
+    momi = calculate_linear_momentum(particles)
     return vpoti, ekini, etoti, tempi, pressi, momi
 
 temps = []

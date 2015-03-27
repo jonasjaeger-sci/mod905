@@ -11,16 +11,15 @@ __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'calculate_linear_momentum', 'atomic_kinetic_energy_tensor']
 
 
-def calculate_linear_momentum(system, selection=None):
+def calculate_linear_momentum(particles, selection=None):
     """
     This function calculate the linear momentum for a collection
     of particles
 
     Parameters
     ----------
-    system : object of type System from retis.core.system
-        This object is assumed to contain the particle list to calculate
-        the linear momentum for.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
 
@@ -29,7 +28,6 @@ def calculate_linear_momentum(system, selection=None):
     out : numpy.array
         The array contains the linear momentum for each dimension.
     """
-    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -37,7 +35,7 @@ def calculate_linear_momentum(system, selection=None):
     return np.sum(vel*mass, axis=0)
 
 
-def calculate_kinetic_energy_tensor(system, selection=None):
+def calculate_kinetic_energy_tensor(particles, selection=None):
     """
     This function returns the kinetic energy as a tensor
     for a selection of particles. The tensor is formed as the
@@ -45,9 +43,8 @@ def calculate_kinetic_energy_tensor(system, selection=None):
 
     Parameters
     ----------
-    system : object of type System from retis.core.system
-        This object is assumed to contain the particle list to calculate
-        the linear momentum for.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
 
@@ -60,7 +57,6 @@ def calculate_kinetic_energy_tensor(system, selection=None):
         output from the ``dim`` times the averaged output of the
         ``kinetic_energy`` method defined below
     """
-    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -73,16 +69,15 @@ def calculate_kinetic_energy_tensor(system, selection=None):
     return kin
 
 
-def atomic_kinetic_energy_tensor(system, selection=None):
+def atomic_kinetic_energy_tensor(particles, selection=None):
     """
     This function returns the kinetic energy tensor for
     each atom in a selection of particles.
 
     Parameters
     ----------
-    system : object of type System from retis.core.system
-        This object is assumed to contain the particle list to calculate
-        the linear momentum for.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
 
@@ -96,7 +91,6 @@ def atomic_kinetic_energy_tensor(system, selection=None):
         The sum of the tensor should equal the output from
         ``calculate_kinetic_energy_tensor``
     """
-    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -109,16 +103,15 @@ def atomic_kinetic_energy_tensor(system, selection=None):
     return kin
 
 
-def calculate_kinetic_energy(system, selection=None, kin_tensor=None):
+def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     """
     This function returns the kinetic energy of a collection of
     particles.
 
     Parameters
     ----------
-    system : object of type System from retis.core.system
-        This object is assumed to contain the particle list to calculate
-        the linear momentum for.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     kin_tensor : numpy.array
@@ -133,12 +126,12 @@ def calculate_kinetic_energy(system, selection=None, kin_tensor=None):
         The kinetic energy tensor.
     """
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(system,
+        kin_tensor = calculate_kinetic_energy_tensor(particles,
                                                      selection=selection)
     return kin_tensor.trace(), kin_tensor
 
 
-def calculate_kinetic_temperature(system, selection=None,
+def calculate_kinetic_temperature(particles, dof=None, selection=None,
                                   kin_tensor=None):
     """
     This method returns the kinetic temperature of a
@@ -146,9 +139,11 @@ def calculate_kinetic_temperature(system, selection=None,
 
     Parameters
     ----------
-    system : object of type System from retis.core.system
-        This object is assumed to contain the particle list to calculate
-        the linear momentum for.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
+    dof : list of floats, optional
+        dof is the degrees of freedom to subtract. It's shape should
+        be equal to the number of dimensions.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     kin_tensor : numpy.array optional
@@ -163,7 +158,6 @@ def calculate_kinetic_temperature(system, selection=None,
     out[1] : float
         The temperature averaged over all dimensions.
     """
-    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -176,25 +170,24 @@ def calculate_kinetic_temperature(system, selection=None,
         ndof = npart * np.ones(vel[0].shape)
 
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(system,
+        kin_tensor = calculate_kinetic_energy_tensor(particles,
                                                      selection=selection)
-    dof = system.temperature['dof']
+    #dof = system.temperature['dof']
     if not dof is None:
         ndof = ndof - dof
     temperature = 2.0 * kin_tensor.diagonal() / ndof
     return temperature, np.average(temperature), kin_tensor
 
 
-def reset_momentum(system, selection=None, dim=None):
+def reset_momentum(particles, selection=None, dim=None):
     """
     This method sets the linear momentum of a selection
     of particles to zero
 
     Parameters
     ----------
-    system : object of type system.
-        System is assumed to contain a object in system.particles of type
-        particlelist which defines the particles to operate on.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     dim : list
@@ -205,7 +198,6 @@ def reset_momentum(system, selection=None, dim=None):
     -------
     N/A, but modifies the velocities of the selected particles
     """
-    particles = system.particles
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
@@ -218,41 +210,60 @@ def reset_momentum(system, selection=None, dim=None):
     particles.vel[selection] -= (mom/mass.sum())
 
 
-def calculate_pressure_from_temp(system, temperature):
+def calculate_pressure_from_temp(particles, dim, boltzmann, volume, 
+                                 temperature, dof=None):
     """
     This method evaluates the scalar pressure using the temperature
     and the degrees of freedom.
 
     Parameters
     ----------
-    system : object of type system.
-        The system, used to obtain kB in correct units and
-        number of dimensions.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
+    dim : int
+        This is the dimensionality of the system. 
+        Typically provided by system.get_dim()
+    boltzmann : float
+        This is the boltzmann factor in correct units.
+        Typically it can be supplied by system.get_boltzmann()
     temperature : float
         The current kinetic temperature of the system. This temperature
         is calculated by ``calculate_kientic_temperature``
+    volume : float
+        This is the volume ``occupied`` by the particles. It can typically
+        be obtained by a box.calculate_volume()
+    dof : list of floats, optional
+        dof is the degrees of freedom to subtract. It's shape should
+        be equal to the number of dimensions.
     """
-    dim = float(system.get_dim())
-    particles = system.particles
-    dof = system.temperature['dof']
+    #dim = float(system.get_dim())
+    #particles = system.particles
+    #dof = system.temperature['dof']
     if dof is None:
         ndof = particles.npart
     else:
-        ndof = (particles.npart * dim - np.sum(dof))/dim
-    pressvolume = ndof * temperature * system.get_boltzmann() +\
-                  (particles.virial.trace()/dim)
-    press = pressvolume / system.box.calculate_volume()
+        ndof = (particles.npart * dim - np.sum(dof)) / float(dim)
+    pressvolume = ndof * temperature * boltzmann
+    pressvolume += particles.virial.trace() / float(dim)
+    press = pressvolume / volume
     return pressvolume, press
 
 
-def calculate_scalar_pressure(system, press_tensor=None, kin_tensor=None):
+def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
+                              kin_tensor=None):
     """
     This method evaluates the scalar pressure using the pressure tensor.
 
     Parameters
     ----------
-    system : object of type system.
-        Contains the particle list to use for the computation.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
+    volume : float
+        This is the volume ``occupied`` by the particles. It can typically
+        be obtained by a box.calculate_volume()
+    dim : int
+        This is the dimensionality of the system. 
+        Typically provided by system.get_dim()
     press_tensor : numpy.array
         If press_tensor is not given, the pressure tensor will be
         calculated.
@@ -261,19 +272,22 @@ def calculate_scalar_pressure(system, press_tensor=None, kin_tensor=None):
         calculated.
     """
     if press_tensor is None:
-        press_tensor = calculate_pressure_tensor(system,
+        press_tensor = calculate_pressure_tensor(particles, volume,
                                                  kin_tensor=kin_tensor)
-    return press_tensor.trace()/float(system.box.dim)
+    return press_tensor.trace() / float(dim)
 
 
-def calculate_pressure_tensor(system, kin_tensor=None):
+def calculate_pressure_tensor(particles, volume, kin_tensor=None):
     """
     This method evaluates the pressure tensor.
 
     Parameters
     ----------
-    system : object of type system.
-        The system, used to obtain the volume and the particle list.
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
+    volume : float
+        This is the volume ``occupied`` by the particles. It can typically
+        be obtained by a box.calculate_volume()
     kin_tensor : numpy.array
         If kinetic_tensor is not given, the kinetic energy tensor will be
         calculated.
@@ -282,10 +296,9 @@ def calculate_pressure_tensor(system, kin_tensor=None):
     -------
     out : numpy.array
         The symmetric pressure tensor, dimensions (dim, dim), where
-        dim = system.box.dim are the number of dimensions considere.
+        dim = the number of dimensions considered in the simulation.
     """
     if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(system, selection=None)
-    virial = system.particles.virial
-    pressure = (virial + kin_tensor*2.0)/system.box.calculate_volume()
+        kin_tensor = calculate_kinetic_energy_tensor(particles, selection=None)
+    pressure = (particles.virial + 2. * kin_tensor) / volume
     return pressure

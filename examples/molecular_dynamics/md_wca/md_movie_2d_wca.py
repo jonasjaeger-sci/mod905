@@ -46,9 +46,11 @@ print('Added {} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
 ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
+DOF = ljsystem.temperature['dof']
 seed_random_generator()
-generate_maxwellian_velocities(ljsystem)
-temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem)
+generate_maxwellian_velocities(ljsystem.particles,
+                               ljsystem.temperature['set'], dof=DOF)
+temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
 print('Generated temperatures with average: {}'.format(avgtemp))
 ljsystem.forcefield = forcefield
 # also initiate forces:
@@ -184,8 +186,10 @@ def energy_calculation(system):
         The system object, with a particle list, which we can use to compute
         the energies.
     """
-    kin_tens = calculate_kinetic_energy_tensor(system)
-    _, avgtemp, _ = calculate_kinetic_temperature(system,
+    particles = system.particles
+    dof = system.temperature['dof']
+    kin_tens = calculate_kinetic_energy_tensor(particles)
+    _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
                                                   kin_tensor=kin_tens)
     kini = kin_tens.trace()
     return avgtemp, system.v_pot, kini

@@ -68,13 +68,19 @@ def common_calculations(system):
     typically want to do. Here we obtain temperature, pressure,
     kinetic, potential and total energy
     """
-    kin_tensi = calculate_kinetic_energy_tensor(system)
-    press_tensi = calculate_pressure_tensor(system,
+    particles = system.particles
+    dof = system.temperature['dof']
+    volume = system.box.calculate_volume()
+    dim = system.get_dim()
+    kin_tensi = calculate_kinetic_energy_tensor(particles)
+    
+    press_tensi = calculate_pressure_tensor(particles, volume,
                                             kin_tensor=kin_tensi)
-    _, tempi, _ = calculate_kinetic_temperature(system,
+    _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
                                                 kin_tensor=kin_tensi)
     ekini = kin_tensi.trace()
-    pressi = calculate_scalar_pressure(system, press_tensor=press_tensi,
+    pressi = calculate_scalar_pressure(particles, volume, dim,
+                                       press_tensor=press_tensi,
                                        kin_tensor=kin_tensi)
     vpoti = system.v_pot
     etoti = ekini + vpoti
