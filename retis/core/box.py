@@ -95,13 +95,7 @@ class Box(object):
         out : float
             The volume of the box.
         """
-        volume = None
-        for length in self.length:
-            if volume is None:
-                volume = length
-            else:
-                volume *= length
-        return volume
+        return np.product(self.length)
 
     #def pbc_coordinate2(self, x, dim):
     #    """
