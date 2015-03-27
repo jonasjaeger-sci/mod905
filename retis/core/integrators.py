@@ -53,6 +53,21 @@ class Integrator(object):
         """
         pass
 
+    def __call__(self, system):
+        """
+        This is just to allow calling Integrator(system).
+        Here, we are just calling integration_step(system)
+
+        Parameters
+        ----------
+        system : object of type system.
+
+        Returns
+        -------
+        N/A, but will update the particles.
+        """
+        self.integration_step(system)
+
     def __str__(self):
         """
         This method just returns the string description of the
@@ -377,4 +392,4 @@ class Langevin(Integrator):
 
         system.force()  # update forces
 
-        particles.vel = vel2 + self.param_iner['b2'] * system.particles.force
+        particles.vel = vel2 + self.param_iner['b2'] * particles.force
