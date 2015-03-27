@@ -34,12 +34,10 @@ npart = ljsystem.particles.npart
 print('Created fcc grid with {} atoms.'.format(npart))
 
 ljsystem.adjust_dof([1, 1, 1])  # adjust DOF since we are in "NVEMG"
-DOF = ljsystem.temperature['dof']
 # generate velocities:
 seed_random_generator()
-generate_maxwellian_velocities(ljsystem.particles,
-                               ljsystem.temperature['set'], dof=DOF)
-temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
+ljsystem.generate_velocities(momentum=True)
+avgtemp = ljsystem.calculate_temperature()
 print('Generated temperatures with average: {}'.format(avgtemp))
 # Attach force field:
 ljsystem.forcefield = forcefield
