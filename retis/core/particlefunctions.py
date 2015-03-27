@@ -210,8 +210,8 @@ def reset_momentum(particles, selection=None, dim=None):
     particles.vel[selection] -= (mom/mass.sum())
 
 
-def calculate_pressure_from_temp(particles, dim, boltzmann, volume, 
-                                 temperature, dof=None):
+def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
+                                 dof=None):
     """
     This method evaluates the scalar pressure using the temperature
     and the degrees of freedom.
@@ -221,14 +221,11 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
     particles : object of type Particles from retis.core.particles
         This object represent the particles.
     dim : int
-        This is the dimensionality of the system. 
+        This is the dimensionality of the system.
         Typically provided by system.get_dim()
     boltzmann : float
         This is the boltzmann factor in correct units.
         Typically it can be supplied by system.get_boltzmann()
-    temperature : float
-        The current kinetic temperature of the system. This temperature
-        is calculated by ``calculate_kientic_temperature``
     volume : float
         This is the volume ``occupied`` by the particles. It can typically
         be obtained by a box.calculate_volume()
@@ -236,13 +233,11 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
         dof is the degrees of freedom to subtract. It's shape should
         be equal to the number of dimensions.
     """
-    #dim = float(system.get_dim())
-    #particles = system.particles
-    #dof = system.temperature['dof']
     if dof is None:
         ndof = particles.npart
     else:
         ndof = (particles.npart * dim - np.sum(dof)) / float(dim)
+    _, temperature, _ = calculate_kinetic_temperature(particles, dof=dof)
     pressvolume = ndof * temperature * boltzmann
     pressvolume += particles.virial.trace() / float(dim)
     press = pressvolume / volume
@@ -262,7 +257,7 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
         This is the volume ``occupied`` by the particles. It can typically
         be obtained by a box.calculate_volume()
     dim : int
-        This is the dimensionality of the system. 
+        This is the dimensionality of the system.
         Typically provided by system.get_dim()
     press_tensor : numpy.array
         If press_tensor is not given, the pressure tensor will be
