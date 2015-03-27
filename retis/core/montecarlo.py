@@ -226,8 +226,8 @@ def generate_maxwellian_velocities(particles, temperature, dof,
 
     Parameters
     ----------
-    system : object of type system
-        This object is assumed to have a particle list type.
+    particles : object of type particlelist
+        These are the particles to set the velocity of.
     temperature : float
         The desired temperature. Typically, system.temperature['set']
         will be used here.
