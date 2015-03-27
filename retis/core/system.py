@@ -8,6 +8,8 @@ import warnings
 # from the retis package
 from .units import CONSTANTS
 from .particles import Particles
+from .particlefunctions import calculate_kinetic_temperature
+from .montecarlo import generate_maxwellian_velocities
 
 __all__ = ['System']
 
@@ -300,3 +302,48 @@ class System(object):
             return self.forcefield.evaluate_force(**args)
         else:
             return self.forcefield.evaluate_potential_and_force(**args)
+
+    def generate_velocities(self, momentum=True, temperature=None,
+                            distribution='maxwell'):
+        """
+        This method will set the velocities of the particles
+        according to the desired temperature. The temperature can
+        be specified, or it can be taken from self.temperature['set'].
+
+        Parameters
+        ----------
+        momentum : boolean, optional
+            Determines if the momentum should be reset.
+        temperature : float, optional
+            The desired temperature to set.
+        distribution : str
+            Selects a distribution for generating the velocities.
+
+        Returns
+        -------
+        N/A but updates system.particles.vel
+        """
+        if temperature is None:
+            temperature = self.temperature['set']
+        dof = self.temperature['dof']
+        if distribution == 'maxwell':
+            generate_maxwellian_velocities(self.particles, temperature, dof,
+                                           momentum=momentum)
+        else:
+            msg = 'Distribution "{}" not defined!'.format(distribution)
+            warnings.warn(msg)
+
+    def calculate_temperature(self):
+        """
+        Function to calculate the temperature of the current configuration
+        of the system. It is included here for convenience since the dof's
+        are easily accessible here.
+
+        Returns
+        -------
+        out : float
+            The temperature of the system
+        """
+        dof = self.temperature['dof']
+        _, temp, _ = calculate_kinetic_temperature(self.particles, dof=dof)
+        return temp
