@@ -36,7 +36,8 @@ def paste_paths(path1, path2, overlap=True):
         # everything is ok, they have the same length
         maxlen = path1.maxlen
     else:
-        # they are unequal and both is not none, just pick the largest
+        # They are unequal and both is not None, just pick the largest.
+        # In case one is None, the other will be picked.
         maxlen = max(path1.maxlen, path2.maxlen)
         msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
         warnings.warn(msg)
@@ -179,6 +180,52 @@ class Path(object):
         self.ordermax = ordermax
         return ordermin, ordermax
 
+    def status(self, interfaces):
+        """
+        Method to get the current status of the path. This is indended to
+        determine if we have crossed certain interfaces or not.
+
+        Parameters
+        ----------
+        interfaces : list of floats
+            This list is assumed to contain the three interface values
+            left, middle and right
+        
+        Returns
+        -------
+        out[0] : str, 'L' or 'R'
+            Start condition: did the trajectory start at the left ('L') or
+            right (R) interface.
+        out[1] : str, 'L' or 'R' or None
+            Ending condition: did the trajectory end at the left ('L') or
+            righ ('R') interface or None of them.
+        out[1] : strm 'M' or None
+            Did we cross the middle interface ('M') or not (None)
+        """
+        start = None
+        end = None
+        cross = [False]*len(interfaces)
+        if len(self.path) < 1:  # The path is empty, just return
+            return start, end, cross
+        ordermax, ordermin = self.ordermax[0], self.ordermin[0]
+        for i, interface in enumerate(interfaces):
+            if ordermin < interface <= ordermax:  # have crossed it
+                cross[i] = True
+        left, _, right = interfaces
+        # check end point:
+        if self.path[-1][-1] < left:
+            end = 'L'
+        elif self.path[-1][-1] > right:
+            end = 'R'
+        # check starting point
+        if self.path[0][-1] <= left:
+            start = 'L'
+        elif self.path[0][-1] >= right:
+            start = 'R'
+        else:
+            warnings.warn('Undefined starting point')
+        return start, end, cross
+
     def __add__(self, other):
         """
         This functions defines how we add two paths,
@@ -230,6 +277,9 @@ class Path(object):
         """
         msg = ['Path with length {} (max: {})'.format(len(self.path),
                                                       self.maxlen)]
-        msg += ['Order parameter max: {}'.format(self.ordermax)]
-        msg += ['Order parameter min: {}'.format(self.ordermin)]
+        msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
+        msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
+        if len(self.path)>0:
+            msg += ['\tStart {}'.format(self.path[0][-1])]
+            msg += ['\tEnd {}'.format(self.path[-1][-1])]
         return '\n'.join(msg)

@@ -337,7 +337,8 @@ class System(object):
         """
         Function to calculate the temperature of the current configuration
         of the system. It is included here for convenience since the dof's
-        are easily accessible here.
+        are easily accessible and it's a very common calculation to perform,
+        even though it might be cleaner to include it as a particlefunction.
 
         Returns
         -------
