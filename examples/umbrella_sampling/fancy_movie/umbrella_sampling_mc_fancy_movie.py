@@ -3,18 +3,23 @@
 Example of running a simulation
 """
 from __future__ import print_function
-from retis.core import UmbrellaWindowSimulation, System
-from retis.core import montecarlo as mc
+from retis.core import UmbrellaWindowSimulation, System, RandomGenerator
+from retis.core.montecarlo import max_displace_step
 from retis.forcefield import ForceField, DoubleWell, RectangularWell
 import numpy as np 
 
-# Let's set up the simulation.
-system = System(temperature=500, units='eV/K') 
-system.add_particle(name='X1', pos=np.array([-0.7]))
+# Define system with a temperature in K
+system = System(temperature=500, units='eV/K')
+# We will only have one particle in the system:
+system.add_particle(name='X', pos=np.array([-0.7]))
+# In this particular example, we are going to use
+# a simple double well potential
 potential_dw = DoubleWell(a=1, b=1, c=0.02)
+# and a rectangular well potential
 potential_rw = RectangularWell()
-
+# do set up the unbiased force field
 forcefield = ForceField(desc='Double well', potential=[potential_dw])
+# and the biased
 forcefield_bias = ForceField(desc='Double well with rectangular bias',
                              potential=[potential_dw, potential_rw])
 
@@ -22,30 +27,39 @@ system.forcefield = forcefield_bias # attach biased force field to the system
 umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], 
              [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
 n_umb = len(umbrellas)
-mincycles = 100
+# and we initiate the random number generator we will use
 randseed = 1 # seed for random number generator:
-mc.seed_random_generator(randseed)
-maxdx = 0.1 # maximum allowed displacement
+rgen = RandomGenerator(seed=randseed)
+# and define some common variables for the simulations
+mincycles = 1e4
+maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 
-# Next, define tasks we want 
-# to do during the simulation:
-def mc_task(system, maxdx):
+# In pyretis, a simulation is defined by defining certain tasks
+# the simulation will perform. Here we need to create a task
+# to perform Monte Carlo moves to sample the potential energy.
+# Let's make use of the predefined method `max_displace_step`
+# defined in the `retis.core.montecarlo` module which we 
+# have imported from `mc`.
+def mc_task(rgen, system, maxdx):
     """
     Function to perform monte carlo moves.
     Will update positions and potential energy as needed.
     """
-    accepted_r, v_pot, trial, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
+    accepted_r, v_pot, trial, v_trial, status = max_displace_step(rgen, system,
+                                                                  maxdx=maxdx)
     if status:
         system.particles.pos = accepted_r
         system.v_pot = v_trial
     return status, accepted_r, trial
+
 # define function as simulation task
-monte_carlo_task = {'func':mc_task, 'args':[system, maxdx]}
-# run simulations:
-trajectory, energy = [], [] 
-print('Running simulations')
+monte_carlo_task = {'func':mc_task, 'args':[rgen, system, maxdx]}
+trajectory, energy = [], [] # to store all trajectories & energies
+# we run all the umbrella simulations by looping over 
+# the different umbrellas we defined:
+print('Starting simulations:')
 for i, umbrella in enumerate(umbrellas):
-    print("Running umbrealla no: {} of {}. Location: {}".format(i+1, n_umb, umbrella))
+    print('Running umbrealla no: {} of {}. Location: {}'.format(i+1, n_umb, umbrella))
     params = {'left': umbrella[0], 'right': umbrella[1]}
     system.forcefield.update_potential_parameters(potential_rw, params)
     system.potential() # recalculate potential energy
@@ -66,8 +80,7 @@ for i, umbrella in enumerate(umbrellas):
     trajectory.append([np.array(pos), np.array(trial), success])
     energy.append(np.array(ener))
 
-    print("Done. Cycles: {}. Reached end point: {}".format(simulation.cycle,
-          np.all(system.particles.pos > over))) 
+    print('Done. Cycles: {}'.format(simulation.cycle['step']-simulation.cycle['start']))
 
 
 

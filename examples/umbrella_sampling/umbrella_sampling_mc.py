@@ -8,8 +8,8 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-from retis.core import UmbrellaWindowSimulation, System
-from retis.core import montecarlo as mc
+from retis.core import UmbrellaWindowSimulation, System, RandomGenerator
+from retis.core.montecarlo import max_displace_step
 from retis.forcefield import ForceField, DoubleWell, RectangularWell
 import numpy as np 
 
@@ -36,7 +36,7 @@ umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 randseed = 1 # seed for random number generator:
-mc.seed_random_generator(randseed)
+rgen = RandomGenerator(seed=randseed)
 # and define some common variables for the simulations
 mincycles = 1e4
 maxdx = 0.1 # maximum allowed displacement in the MC step(s).
@@ -46,13 +46,14 @@ maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 # to perform Monte Carlo moves to sample the potential energy.
 # Let's make use of the predefined method `max_displace_step`
 # defined in the `retis.core.montecarlo` module which we 
-# have imported as `mc`.
-def mc_task(system, maxdx):
+# have imported from `mc`.
+def mc_task(rgen, system, maxdx):
     """
     Function to perform monte carlo moves.
     Will update positions and potential energy as needed.
     """
-    accepted_r, v_pot, r_trial, v_trial, status = mc.max_displace_step(system, maxdx=maxdx)
+    accepted_r, v_pot, r_trial, v_trial, status = max_displace_step(rgen, system, 
+                                                                    maxdx=maxdx)
     if status:
         system.particles.pos = accepted_r
         system.v_pot = v_trial
@@ -87,7 +88,7 @@ for i, umbrella in enumerate(umbrellas):
     # Also create empy list for storing some data:
     traj, ener = [], []
     # let us add the two task we defined previously:
-    task_monte_carlo = {'func':mc_task, 'args':[system, maxdx]}
+    task_monte_carlo = {'func':mc_task, 'args':[rgen, system, maxdx]}
     task_record = {'func':record, 'args':[system, traj, ener]}
     simulation.add_task(task_monte_carlo)
     simulation.add_task(task_record)
