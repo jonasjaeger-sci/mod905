@@ -9,7 +9,6 @@ import warnings
 from .units import CONSTANTS
 from .particles import Particles
 from .particlefunctions import calculate_kinetic_temperature
-from .montecarlo import generate_maxwellian_velocities
 
 __all__ = ['System']
 
@@ -303,7 +302,7 @@ class System(object):
         else:
             return self.forcefield.evaluate_potential_and_force(**args)
 
-    def generate_velocities(self, momentum=True, temperature=None,
+    def generate_velocities(self, rgen, momentum=True, temperature=None,
                             distribution='maxwell'):
         """
         This method will set the velocities of the particles
@@ -312,6 +311,9 @@ class System(object):
 
         Parameters
         ----------
+        rgen : object of type RandomGenerator
+            This is the random generator which handles the drawing of
+            velocities
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
@@ -327,8 +329,8 @@ class System(object):
             temperature = self.temperature['set']
         dof = self.temperature['dof']
         if distribution == 'maxwell':
-            generate_maxwellian_velocities(self.particles, temperature, dof,
-                                           momentum=momentum)
+            rgen.generate_maxwellian_velocities(self.particles, temperature,
+                                                dof, momentum=momentum)
         else:
             msg = 'Distribution "{}" not defined!'.format(distribution)
             warnings.warn(msg)
