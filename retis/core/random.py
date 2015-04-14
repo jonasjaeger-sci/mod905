@@ -11,6 +11,7 @@ from numpy.random import RandomState
 
 __all__ = ['RandomGenerator']
 
+
 class RandomGenerator(RandomState):
     """
     RandomGenerator(RandomState)
@@ -137,5 +138,3 @@ class RandomGenerator(RandomState):
         vel = self.normal(loc=0.0, scale=sigma_v,
                           size=system.particles.vel.shape)
         return vel, sigma_v
-
-

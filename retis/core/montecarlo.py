@@ -83,4 +83,3 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
     trial = np.copy(system.particles.pos)
     trial[idx] += 2.0 * maxdx * (rgen.rand(system.get_dim()) - 0.5)
     return accept_reject(rgen, system, trial)
-

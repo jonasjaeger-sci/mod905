@@ -163,7 +163,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
 
-    npart = len(mass) # using mass, since selection may be != particles.npart
+    npart = len(mass)  # using mass, since selection may be != particles.npart
     if npart == 1:
         ndof = npart * np.ones(vel.shape)
     else:
@@ -232,7 +232,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
     dof : list of floats, optional
         dof is the degrees of freedom to subtract. It's shape should
         be equal to the number of dimensions.
-    
+
     Note
     ----
     This function may possibly be removed - it does not appear to be
