@@ -11,3 +11,4 @@ from .montecarlo import *
 from .box import *
 from .particles import *
 from .path import *
+from .random import *
