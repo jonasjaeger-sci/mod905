@@ -5,17 +5,14 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import (Simulation, System, Box,
-                        seed_random_generator,
-                        generate_maxwellian_velocities)
+from retis.core import Simulation, System, Box, RandomGenerator
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField, PairLennardJonesCutnp
 from retis.io import WriteGromacs
 from retis.tools import lattice_simple_cubic
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
-                                          calculate_kinetic_temperature,
-                                          reset_momentum)
+                                          calculate_kinetic_temperature)
 import numpy as np
 
 # set up potential function(s) and force field:
@@ -39,9 +36,8 @@ npart = float(npart)
 # generate velocities:
 ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
 DOF = ljsystem.temperature['dof']
-seed_random_generator()
-generate_maxwellian_velocities(ljsystem.particles,
-                               ljsystem.temperature['set'], dof=DOF)
+rgen = RandomGenerator(seed=0)
+ljsystem.generate_velocities(rgen, momentum=False)
 temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
 print('Generated temperatures with average: {}'.format(avgtemp))
 
@@ -150,7 +146,7 @@ def energy_calculation(system):
     kin_tens = calculate_kinetic_energy_tensor(particles)
     _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
                                                   kin_tensor=kin_tens)
-    kini = kin_tens.trace()     
+    kini = kin_tens.trace()
     return avgtemp, system.v_pot, kini
 
 

@@ -5,9 +5,7 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import (Simulation, System, Box,
-                        seed_random_generator,
-                        generate_maxwellian_velocities)
+from retis.core import Simulation, System, Box, RandomGenerator
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_kinetic_temperature,
                                           calculate_scalar_pressure,
@@ -35,8 +33,8 @@ print('Created fcc grid with {} atoms.'.format(npart))
 
 ljsystem.adjust_dof([1, 1, 1])  # adjust DOF since we are in "NVEMG"
 # generate velocities:
-seed_random_generator()
-ljsystem.generate_velocities(momentum=True)
+rgen = RandomGenerator(seed=0)
+ljsystem.generate_velocities(rgen, momentum=True)
 avgtemp = ljsystem.calculate_temperature()
 print('Generated temperatures with average: {}'.format(avgtemp))
 # Attach force field:
