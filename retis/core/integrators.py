@@ -4,7 +4,6 @@
 integrators.py
 """
 from __future__ import absolute_import
-from .montecarlo import random_normal, multivariate_normal
 import numpy as np
 
 __all__ = ['VelocityVerlet', 'Langevin']
@@ -52,6 +51,19 @@ class Integrator(object):
         N/A, but will update the particles
         """
         pass
+
+    def invert_dt(self):
+        """
+        This method is just intended to invert the time step for the
+        integration
+
+        Returns
+        -------
+        out : boolean
+            True if time step is positive, False otherwise
+        """
+        self.delta_t *= -1.0
+        return self.delta_t > 0.0
 
     def __call__(self, system):
         """
@@ -190,6 +202,8 @@ class Langevin(Integrator):
 
     Attributes
     ----------
+    rgen : object of type RandomGenerator
+        This is the class that handles generation of random numbers
     gamma : float
         The friction parameter
     high_friction : boolan
@@ -241,7 +255,7 @@ class Langevin(Integrator):
     Currently, we are using a multinormal distribution from numpy.
     Consider replacing this one as it seems somewhat slow.
     """
-    def __init__(self, delta_t, gamma, high_friction=False,
+    def __init__(self, delta_t, gamma, rgen, high_friction=False,
                  desc='Langevin integrator'):
         """
         Initiates the Langevin integrator. Actually, it is very convenient to
@@ -255,6 +269,11 @@ class Langevin(Integrator):
         ----------
         delta_t : float
             The time step.
+        gamma : float
+            The gamma parameter for the Langevin integrator
+        rgen : object of type RandomGenerator
+            This is the class that will handle random number generation
+            for us.
         desc : string
             Description of the integrator.
         param_high : dict
@@ -265,6 +284,7 @@ class Langevin(Integrator):
         super(Langevin, self).__init__(delta_t, desc=desc)
         self.gamma = gamma
         self.high_friction = high_friction
+        self.rgen = rgen
         self.param_high = {'sigma': None, 'bddt': None}
         self.param_iner = {'c0': None, 'a1': None, 'a2': None,
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
@@ -351,8 +371,8 @@ class Langevin(Integrator):
             in system.particles.
         """
         particles = system.particles
-        rands = random_normal(loc=0.0, scale=self.param_high['sigma'],
-                              size=particles.vel.shape)
+        rands = self.rgen.normal(loc=0.0, scale=self.param_high['sigma'],
+                                 size=particles.vel.shape)
         particles.pos += self.param_high['bddt'] * particles.force + rands
         particles.vel = rands
 
@@ -374,8 +394,8 @@ class Langevin(Integrator):
             mean, cov = self.param_iner['mean'], self.param_iner['cov']
             cho = self.param_iner['cho']
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
-                randxv = multivariate_normal(meani, covi, cho=choi,
-                                             size=ndim)
+                randxv = self.rgen.multivariate_normal(meani, covi, cho=choi,
+                                                       size=ndim)
                 # special case for just a single particle:
                 if system.particles.npart == 1:
                     pos_rand = randxv[:, 0]
