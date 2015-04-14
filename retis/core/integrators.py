@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from .montecarlo import random_normal, multivariate_normal
 import numpy as np
 
-__all__ = ['VelocityVerlet']
+__all__ = ['VelocityVerlet', 'Langevin']
 
 
 class Integrator(object):
