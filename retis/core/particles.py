@@ -90,6 +90,16 @@ class Particles(object):
             warnings.warn(msg)
         return dims[0]
 
+    def get_phase_point(self):
+        """
+        This function returns a copy of the corrent phase point, that is
+        self.pos and self.vel. In addition in returns the accompanying forces.
+        """
+        retval = {'pos': np.copy(self.pos),
+                  'vel': np.copy(self.vel),
+                  'force': np.copy(self.force)}
+        return retval
+
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
         """
