@@ -6,10 +6,10 @@ Module for Monte Carlo Algorithms and other
 from __future__ import absolute_import
 import numpy as np
 
-__all__ = ['accept_reject', 'max_displace_step']
+__all__ = ['metropolis_accept_reject', 'max_displace_step']
 
 
-def accept_reject(rgen, system, trial):
+def accept_reject_displace(rgen, system, trial):
     """
     Routine for accepting or rejecting a MC move
 
@@ -44,11 +44,54 @@ def accept_reject(rgen, system, trial):
     """
     v_trial = system.evaluate_potential(pos=trial)
     deltae = v_trial - system.v_pot
-    pacc = np.exp(-system.temperature['beta'] * deltae)
-    if rgen.rand() < pacc:
+    if metropolis_accept_reject(rgen, system, deltae):
         return trial, v_trial, trial, v_trial, True
     else:
         return system.particles.pos, system.v_pot, trial, v_trial, False
+
+
+def accept_reject_momenta(rgen, system, dke, aimless=True):
+    """
+    This will accept/reject a change in momenta given
+    the corresponding change in kinetic energy
+    
+    Parameters
+    ----------
+    rgen : object of type RandomGenerator
+        The random number generator.
+    system : object of type System
+        The system object we are investigating. This is used
+        to access the beta factor.
+    dke : float
+        The change in kinetic energy
+    """
+    if aimless:  # for the aimless shooting we accept
+        return True
+    else:
+        return metropolis_accept_reject(rgen, system, dke)
+
+
+def metropolis_accept_reject(rgen, system, deltae):
+    """
+    This will accept/reject a change of energy according
+    to the metropolis rule.
+    FIXME: Check if metropolis really is a good name here.
+
+    Parameters
+    ----------
+    rgen : object of type RandomGenerator
+        The random number generator.
+    system : object of type System
+        The system object we are investigating. This is used
+        to access the beta factor.
+    deltae : float
+        The change in energy
+    """
+    if deltae < 0.0:  # short-cut to avoid calculating np.exp()
+        return True
+    else:
+        pacc = np.exp(-system.temperature['beta'] * deltae)
+        return rgen.rand() < pacc
 
 
 def max_displace_step(rgen, system, maxdx=0.1, idx=None):
@@ -63,7 +106,7 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
 
     Parameters
     ----------
-    rgen : object.
+    rgen : object of type RandomGenerator
         The random number generator.
     system : object
         The system object to operate on
@@ -82,4 +125,4 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
         idx = rgen.random_integers(0, system.particles.npart - 1)
     trial = np.copy(system.particles.pos)
     trial[idx] += 2.0 * maxdx * (rgen.rand(system.get_dim()) - 0.5)
-    return accept_reject(rgen, system, trial)
+    return accept_reject_displace(rgen, system, trial)
