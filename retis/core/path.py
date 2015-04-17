@@ -7,7 +7,7 @@ import warnings
 import copy
 import itertools
 
-__all__ = ['Path', 'paste_paths']
+__all__ = ['Path', 'paste_paths', 'reverse_path']
 
 
 def paste_paths(path1, path2, overlap=True):
@@ -50,13 +50,40 @@ def paste_paths(path1, path2, overlap=True):
         iter_path2 = path2.path
 
     for phasepoint in itertools.chain(iter_path1, iter_path2):
-        app = new_path.append(np.copy(phasepoint[0]),
-                              np.copy(phasepoint[1]),
-                              copy.copy(phasepoint[2]))
+        app = new_path.append(phasepoint[0],
+                              phasepoint[1],
+                              phasepoint[2])
         if not app:
             msg = 'Truncated path at: {}'.format(len(new_path.path))
             warnings.warn(msg)
             return new_path
+    return new_path
+
+
+def reverse_path(path, order_func=None):
+    """
+    This method will reverse a path and return the reverse path as
+    a new Path object.
+
+    Parameters
+    ----------
+    path : object of type Path
+        This is the path we wish to reverse
+    order_func : function, optional
+        In case the order parameter should be re-calculated for the reverse
+        path, the function order_func can be specified to do this.
+    """
+    new_path = Path(maxlen=path.maxlen)
+    for phasepoint in reversed(path.path):
+        pos, vel = phasepoint[0], -1.0*phasepoint[1]
+        if order_func:
+            orderp = order_func(pos, vel)
+        else:
+            orderp = phasepoint[2]
+        app = new_path.append(pos, vel, orderp)
+        if not app:
+            msg = 'Could not reverse path'
+            warnings.warn(msg)
     return new_path
 
 
@@ -190,7 +217,7 @@ class Path(object):
         interfaces : list of floats
             This list is assumed to contain the three interface values
             left, middle and right
-        
+
         Returns
         -------
         out[0] : str, 'L' or 'R'
@@ -279,7 +306,7 @@ class Path(object):
                                                       self.maxlen)]
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
         msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
-        if len(self.path)>0:
+        if len(self.path) > 0:
             msg += ['\tStart {}'.format(self.path[0][-1])]
             msg += ['\tEnd {}'.format(self.path[-1][-1])]
         return '\n'.join(msg)
