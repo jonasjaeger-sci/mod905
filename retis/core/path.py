@@ -41,8 +41,8 @@ def paste_paths(path1, path2, overlap=True):
         maxlen = max(path1.maxlen, path2.maxlen)
         msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
         warnings.warn(msg)
-
-    new_path = Path(maxlen=maxlen)  # this is the merged path
+    time_origin = path1.time_origin - len(path1.path) + 1
+    new_path = Path(maxlen=maxlen, time_origin=time_origin)
     iter_path1 = reversed(path1.path)  # we iterate in correct time direction
     if overlap:  # do not include the overlapping point:
         iter_path2 = path2.path[1:]
@@ -111,7 +111,7 @@ class Path(object):
         This is the (current) maximum order parameter for the path.
         ordermax[0] is the value, ordermax[1] is the index in self.path.
     """
-    def __init__(self, maxlen=None):
+    def __init__(self, maxlen=None, time_origin=0):
         """
         Initialize the Path object.
 
@@ -120,11 +120,16 @@ class Path(object):
         maxlen : int, optional
             This is the max-length of the path. The default value,
             None, is just a path of arbitrary length.
+        time_origin : int, optional
+            This can be used to store the shooting point of a parent
+            trajectory.
         """
         self.maxlen = maxlen
         self.path = []
         self.ordermin = None
         self.ordermax = None
+        self.time_origin = time_origin
+        self.accepted = False
 
     def __iter__(self):
         """
@@ -175,9 +180,9 @@ class Path(object):
             This is the index of the new order parameter in self.path
         """
         if self.ordermax is None or orderp > self.ordermax[0]:
-            self.ordermax = [orderp, idx]
+            self.ordermax = (orderp, idx)
         if self.ordermin is None or orderp < self.ordermin[0]:
-            self.ordermin = [orderp, idx]
+            self.ordermin = (orderp, idx)
 
     def get_min_max_orderp(self):
         """
@@ -187,27 +192,27 @@ class Path(object):
         Returns
         -------
         out[0] : list
-            This is the minimum order parameter, tuple with [value, index]
+            This is the minimum order parameter, tuple with (value, index)
         out[1] : list
-            This is the maximum order parameter, tuple with [value, index]
+            This is the maximum order parameter, tuple with (value, index)
         """
         ordermin = None
         ordermax = None
         for i, phasepoint in enumerate(self.path):
             orderp = phasepoint[-1]
             if ordermin is None or ordermax is None:
-                ordermin = [orderp, i]
-                ordermax = [orderp, i]
+                ordermin = (orderp, i)
+                ordermax = (orderp, i)
             else:
                 if orderp > ordermax[0]:
-                    ordermax = [orderp, i]
+                    ordermax = (orderp, i)
                 if orderp < ordermin[0]:
-                    ordermin = [orderp, i]
+                    ordermin = (orderp, i)
         self.ordermin = ordermin
         self.ordermax = ordermax
         return ordermin, ordermax
 
-    def status(self, interfaces):
+    def get_status(self, interfaces):
         """
         Method to get the current status of the path. This is indended to
         determine if we have crossed certain interfaces or not.
@@ -275,7 +280,7 @@ class Path(object):
             msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
             warnings.warn(msg)
 
-        new_path = Path(maxlen=maxlen)  # this is the new path
+        new_path = Path(maxlen=maxlen)
 
         for phasepoint in itertools.chain(self.path, other.path):
             app = new_path.append(np.copy(phasepoint[0]),
