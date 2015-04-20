@@ -94,6 +94,11 @@ class Particles(object):
         """
         This function returns a copy of the corrent phase point, that is
         self.pos and self.vel. In addition in returns the accompanying forces.
+
+        Returns
+        -------
+        out : dict
+            Dictionary with the positions, velocity and forces.
         """
         retval = {'pos': np.copy(self.pos),
                   'vel': np.copy(self.vel),
