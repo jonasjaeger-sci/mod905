@@ -212,10 +212,11 @@ class Path(object):
         self.ordermax = ordermax
         return ordermin, ordermax
 
-    def get_status(self, interfaces):
+    def check_interfaces(self, interfaces):
         """
-        Method to get the current status of the path. This is indended to
-        determine if we have crossed certain interfaces or not.
+        Method to get the current status of the path with respect
+        to the given interfaces. This is indended to determine if we
+        have crossed certain interfaces or not.
 
         Parameters
         ----------
@@ -225,31 +226,28 @@ class Path(object):
 
         Returns
         -------
-        out[0] : str, 'L' or 'R'
+        out[0] : str, 'L' or 'R' or None
             Start condition: did the trajectory start at the left ('L') or
             right (R) interface.
         out[1] : str, 'L' or 'R' or None
             Ending condition: did the trajectory end at the left ('L') or
             righ ('R') interface or None of them.
-        out[1] : strm 'M' or None
-            Did we cross the middle interface ('M') or not (None)
+        out[2] : list of boolean
+            out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
-        start = None
-        end = None
-        cross = [False]*len(interfaces)
-        if len(self.path) < 1:  # The path is empty, just return
+        start, end, cross = None, None, None
+        if len(self.path) < 1:
+            warnings.warn('Path is empty!')
             return start, end, cross
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
-        for i, interface in enumerate(interfaces):
-            if ordermin < interface <= ordermax:  # have crossed it
-                cross[i] = True
-        left, _, right = interfaces
-        # check end point:
+        cross = [ordermin < interface <= ordermax for interface in interfaces]
+        left, right = min(interfaces), max(interfaces)
+        # check end:
         if self.path[-1][-1] < left:
             end = 'L'
         elif self.path[-1][-1] > right:
             end = 'R'
-        # check starting point
+        # and check start:
         if self.path[0][-1] <= left:
             start = 'L'
         elif self.path[0][-1] >= right:
