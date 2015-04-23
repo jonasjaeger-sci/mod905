@@ -41,7 +41,7 @@ class Particles(object):
     """
     def __init__(self):
         """
-        Initialize the Particle list. Here we dictate the the particle list
+        Initialize the Particle list. Here we dictate that the particle list
         is created with zero particles.
         """
         self.npart = 0
@@ -58,6 +58,7 @@ class Particles(object):
         """
         This is a method to reset the particle list.
         It will delete all particles in the list.
+        Note, this is __init__ repeated.
         """
         self.npart = 0
         self.pos = None
@@ -92,7 +93,7 @@ class Particles(object):
 
     def get_phase_point(self):
         """
-        This function returns a copy of the corrent phase point, that is
+        This function returns a copy of the current phase point, that is
         self.pos and self.vel. In addition in returns the accompanying forces.
 
         Returns
@@ -104,6 +105,24 @@ class Particles(object):
                   'vel': np.copy(self.vel),
                   'force': np.copy(self.force)}
         return retval
+
+    def set_phase_point(self, phasepoint):
+        """
+        This function sets the position, velocities (and forces) and
+        included here for convenience - it can be used together with
+        ``get_phase_point()`` for easy change of the particle state.
+
+        Returns
+        -------
+        N/A but updates self.pos, self.vel and self.force
+        """
+        self.pos = np.copy(phasepoint['pos'])
+        self.vel = np.copy(phasepoint['vel'])
+        try:
+            self.force = np.copy(phasepoint['force'])
+        except KeyError:
+            msg = 'Setting particle pos & vel without setting forces'
+            warnings.warn(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
@@ -198,7 +217,7 @@ class Particles(object):
         """
         This is a function to iterate over all pairs of particles.
         For more sophisticated particle lists this can be
-        a implementation of a smart neighborlist.
+        a implementation of a smart neighbor list.
 
         Returns
         -------
