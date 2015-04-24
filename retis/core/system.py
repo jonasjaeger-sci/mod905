@@ -63,15 +63,14 @@ class System(object):
         self.temperature is defined as a dictionary. This is just
         because it's convenient to include information about the
         degrees of freedom of the system here. In the future one could
-        possibly have a more general temperature object, but it's not
-        really needed right now.
+        possibly have a more general temperature object.
         """
         self.box = box
         self.units = units
         self.temperature = {'set': temperature, 'dof': None}
         self.temperature['beta'] = self.calculate_beta()
         # intialize other variables:
-        self.v_pot = 0.0
+        self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
 
