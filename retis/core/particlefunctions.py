@@ -62,7 +62,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = vel*mass
-    if len(mass) == 1:
+    if len(mass) == 1:  # in general: selection != particles.npart
         kin = 0.5*np.outer(mom, vel)
     else:
         kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
@@ -96,7 +96,7 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = vel*mass
-    if len(mass) == 1:
+    if len(mass) == 1:  # in general: selection != particles.npart
         kin = 0.5*np.outer(mom, vel)
     else:
         kin = 0.5*np.einsum('ij,ik->ijk', mom, vel)
