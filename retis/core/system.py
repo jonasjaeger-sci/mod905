@@ -72,7 +72,7 @@ class System(object):
         self.temperature['beta'] = self.calculate_beta()
         # intialize other variables:
         self.v_pot = 0.0
-        self.particles = Particles()  # empty particle list
+        self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
 
     def adjust_dof(self, dof):
