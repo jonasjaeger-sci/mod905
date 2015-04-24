@@ -12,3 +12,4 @@ from .box import *
 from .particles import *
 from .path import *
 from .random import *
+from .orderparameter import *
