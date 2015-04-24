@@ -9,6 +9,12 @@ import itertools
 
 __all__ = ['Path', 'paste_paths', 'reverse_path']
 
+# the following defines a human-readable form of the possible path status:
+_STATUS = {'ACC': 'The path has been accepted',
+           'MCR': 'Momenta change rejection',
+           'BWI': 'Backward trajectory end at wrong interface',
+           'BTL': 'Backward trajectory too long',
+           'KOB': 'Kicked outside of boundaries'}
 
 def paste_paths(path1, path2, overlap=True):
     """
@@ -104,12 +110,23 @@ class Path(object):
     path : list
         This is the trajectory/series of snapshots, stored as a list of tuples.
         Each tuple stores the position, velocities, order parameter.
-    ordermin : list
+    ordermin : tuple
         This is the (current) minimum order parameter for the path.
         ordermin[0] is the value, ordermin[1] is the index in self.path.
-    ordermax : list
+    ordermax : tuple
         This is the (current) maximum order parameter for the path.
         ordermax[0] is the value, ordermax[1] is the index in self.path.
+    time_origin : int
+        This is the location of the phasepoint path[0] relative to it's
+        parent. This might be usefull for plotting.
+    status : str or None
+        The status of the path. The possibilities are:
+        None - Not set yet
+        ACC - The path has been accepted
+        MCR - Momenta change rejection
+        BWI - Backward trajectory end at wrong interface
+        BTL - Backward trajectory too long
+        KOB - Kicked outside of boundaries
     """
     def __init__(self, maxlen=None, time_origin=0):
         """
@@ -129,7 +146,7 @@ class Path(object):
         self.ordermin = None
         self.ordermax = None
         self.time_origin = time_origin
-        self.accepted = False
+        self.status = None
 
     def __iter__(self):
         """
@@ -240,7 +257,7 @@ class Path(object):
             warnings.warn('Path is empty!')
             return start, end, cross
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
-        cross = [ordermin < interface <= ordermax for interface in interfaces]
+        cross = [ordermin < interpos <= ordermax for interpos in interfaces]
         left, right = min(interfaces), max(interfaces)
         # check end:
         if self.path[-1][-1] < left:
@@ -312,4 +329,6 @@ class Path(object):
         if len(self.path) > 0:
             msg += ['\tStart {}'.format(self.path[0][-1])]
             msg += ['\tEnd {}'.format(self.path[-1][-1])]
+        if self.status:
+            msg += ['\tStatus: {}'.format(_STATUS[self.status])]
         return '\n'.join(msg)
