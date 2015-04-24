@@ -2,8 +2,13 @@
 """
 This file contain a class to represent an order parameter
 """
-#import numpy as np
+from __future__ import division  # for StringFunctionParser
+import numpy as np
 import warnings
+# imports for StringFunctionParser:
+from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
+                       Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
+import operator
 
 __all__ = ['OrderParameter', 'OrderParameterPosition']
 
@@ -196,3 +201,254 @@ class OrderParameterPosition(OrderParameter):
             return vel
         else:
             return vel[self.dim]
+
+
+class StringFunctionParser(object):
+    """
+    This class defines a simple parser for user-defined order parameters.
+    It is based on fourFn.py, see
+    http://pyparsing.wikispaces.com/file/view/fourFn.py
+
+    Attributes
+    ----------
+    pars :
+        This is responsible for the actual parsing
+    operators : dict
+        This dict defines the different operators that can be used.
+    functs : dict
+        This dict defines the different scalar functions that can be used.
+    system_functs : set
+        This set defines the different functions that will make use of
+        the system object
+    system : object of type retis.core.system
+        This object is used to access system properties, e.g. partilces
+        and the box.
+    string_function : string
+        String representation of the function that we wish to evaluate.
+    """
+    def __init__(self, string_function=None):
+        """
+        Initialte the function
+
+        Parameters
+        ----------
+        string_function : string, optional
+            This is the string that defines the function we wish to use.
+        """
+        self.pars = self._initiate_parser()
+
+        self.operators = {'+': operator.add,
+                          '-': operator.sub,
+                          '*': operator.mul,
+                          '/': operator.truediv,
+                          '^': operator.pow,
+                          ',': lambda x, y: (x, y)}
+
+        self.functs = {'sin': np.sin,
+                       'cos': np.cos,
+                       'tan': np.tan,
+                       'abs': np.abs,
+                       'sign': np.sign,
+                       'sqrt': np.sqrt}
+
+        self.system_functs = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'distance']
+
+        self.system = None
+
+        if string_function is not None:
+            self.parse_function(string_function)
+        else:
+            self.string_function = None
+
+    def system_function(self, function, args):
+        """
+        This handles the calls that need to envoke system functions.
+
+        Parameters
+        ----------
+        function : string
+            This is the function that should be called. I will need
+            to be one of the strings defined in self.system_functs
+        args : string
+            These are the arguments that should be passed to function.
+        """
+        pass
+        #self.system
+        #xyz = {'x': 0, 'y': 1, 'z': 2}
+        ##particles = self.system.particles
+        #if function == 'distance':
+        #    i, j = int(args[0]), int(args[1])
+        #    #print('Calculate dist between particles {} and {}'.format(i, j))
+        #    # pass
+        #else:
+        #    idx = int(args)
+        #    if function[0] == 'v':
+        #        dim = xyz[function[1]]
+        #        #print('Lockup velocity, particle {}, dim: {}'.format(idx, dim))
+        #    else:
+        #        dim = xyz[function[0]]
+        #        #print('Lockup pos, particle {}, dim: {}'.format(idx, dim))
+        #return 0.0
+
+    def push_first(self, toks):
+        """
+        This will append parsed string elements
+        to the stack.
+
+        Parameters
+        ----------
+        toks: list of strings
+            Tokens, toks[0] is to be added
+
+        Returns
+        -------
+        N/A but updates self.exprstack
+
+        Note
+        ----
+        The function can also be defined as push_first(self, strg, loc, toks)
+        where strg is the original string being parsed and loc is the location
+        of the matching substring.
+        """
+        self.exprstack.append(toks[0])
+
+    def push_uminus(self, toks):
+        """
+        This will push to the expression stack,
+        similar to ``push_first``, however this function is needed for
+        handling expressions like ``-x''
+
+        Parameters
+        ----------
+        toks: list of strings
+            Tokens, toks[0] is to be added
+
+        Returns
+        -------
+        N/A but updates self.exprstack
+
+        Note
+        ----
+        The function can also be defined as push_first(self, strg, loc, toks)
+        where strg is the original string being parsed and loc is the location
+        of the matching substring.
+        """
+        if toks and toks[0] == '-':
+            self.exprstack.append('unary -')
+
+    def evaluate_stack(self, stack):
+        """
+        The method evaluates the stack recursively.
+        Here, we also might pass the system in case we need to
+        use it for accessing positions, velocities etc.
+
+        Parameters
+        ----------
+        stack : list
+            This is the list of operations/expressions to execute
+        system : object of type retis.core.system
+            The system object is used to access particles and
+            also the box.
+        """
+        oper = stack.pop()
+        result = 0
+        if oper == 'unary -':
+            result = -self.evaluate_stack(stack)
+        else:
+            if oper in "+-*/^,":
+                op2 = self.evaluate_stack(stack)
+                op1 = self.evaluate_stack(stack)
+                result = self.operators[oper](op1, op2)
+            elif oper == "PI":
+                result = np.pi  # 3.1415926535
+            elif oper == "E":
+                result = np.e  # 2.718281828
+            elif oper in self.functs:
+                result = self.functs[oper](self.evaluate_stack(stack))
+            elif oper in self.system_functs:
+                result = self.system_function(oper, self.evaluate_stack(stack))
+            elif oper[0].isalpha():
+                result = 0
+            else:
+                result = float(oper)
+        return result
+
+    def parse_function(self, string_function):
+        """
+        This method will parse the string and set up
+        self.exprstack.
+        """
+        self.exprstack = []
+        self.pars.parseString(string_function, True)
+        self.string_function = string_function
+
+    def evaluate(self, system=None):
+        """
+        Evaluate the expression, assuming that is has been parsed.
+
+        Parameters
+        ----------
+        system : object of type retis.core.system
+            The system object is used to access particles and
+            also the box. Here we set self.system to point to this
+            object as it is a convenient way of accessing the required
+            paramters.
+        """
+        if self.string_function is None or len(self.exprstack) < 1:
+            return None
+        else:
+            self.system = system
+            return self.evaluate_stack(self.exprstack[:])
+
+    def _initiate_parser(self):
+        """
+        Helper function to initiate the parser.
+        """
+        point = Literal('.')
+        exp = CaselessLiteral('E')
+        fnumber = Combine(Word('+-' + nums, nums) +
+                          Optional(point + Optional(Word(nums))) +
+                          Optional(exp + Word('+-' + nums, nums)))
+        ident = Word(alphas, alphas + nums + "_$")
+        plus = Literal('+')
+        minus = Literal('-')
+        mult = Literal('*')
+        div = Literal('/')
+        comma = Literal(',')
+        lpar = Literal('(').suppress()
+        rpar = Literal(')').suppress()
+        lbra = Literal('[').suppress()
+        rbra = Literal(']').suppress()
+        addop = plus | minus | comma
+        multop = mult | div
+        expop = Literal('^')
+        # pylint: disable=C0103
+        pi = CaselessLiteral('PI')
+        # pylint: enable=C0103
+        expr = Forward()
+        atom = ((Optional(oneOf('- +')) +
+                 (pi | exp | fnumber | ident +
+                  ((lpar + expr + rpar) |
+                   (lbra + expr + rbra))).setParseAction(self.push_first))
+                | Optional(oneOf('- +')) +
+                Group(lpar + expr + rpar)).setParseAction(self.push_uminus)
+
+        factor = Forward()
+        # Forward implements __lshift__ so that x << y will update x
+        # therefore we here disable pylint warnings:
+        # pylint: disable=W0106
+        factor << atom + ZeroOrMore((expop +
+                                     factor).setParseAction(self.push_first))
+        term = factor + ZeroOrMore((multop +
+                                    factor).setParseAction(self.push_first))
+        expr << term + ZeroOrMore((addop +
+                                   term).setParseAction(self.push_first))
+        # pylint: enable=W0106
+        return expr
+
+    def __str__(self):
+        msg = ['{}:'.format(self.__class__.__name__)]
+        msg += ['Function: {}'.format(self.string_function)]
+        msg += ['Expression stack:']
+        msg += ['{}'.format(self.exprstack)]
+        return '\n'.join(msg)
