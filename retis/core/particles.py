@@ -38,8 +38,13 @@ class Particles(object):
     ptype : list of strings
         A type for the particle. Particles with identical ptype are of the
         same kind.
+    dim : int
+        This variable is the dimensionality of the particle list. This
+        should be derived from the box. For some functions it is convenient
+        to be able to access the dimensionality directly from the particle
+        list. It is therefore set as an attribute here.
     """
-    def __init__(self):
+    def __init__(self, dim=1):
         """
         Initialize the Particle list. Here we dictate that the particle list
         is created with zero particles.
@@ -53,12 +58,15 @@ class Particles(object):
         self.name = None
         self.ptype = None
         self.virial = None
+        self.dim = dim
 
     def empty_list(self):
         """
         This is a method to reset the particle list.
         It will delete all particles in the list.
-        Note, this is __init__ repeated.
+        Note, this is almost __init__ repeated. The reason for __init__ to be
+        repeated is simply that we want to define all attributes in __init__
+        and not get any surprise attributes elsewhere.
         """
         self.npart = 0
         self.pos = None
@@ -72,24 +80,34 @@ class Particles(object):
 
     def get_dim(self):
         """
-        Function to get the dimensionality, based on self.pos, self.vel
-        and self.force
+        Function to get the dimensionality, it simply returns self.dim
 
         Returns
         -------
         out : int
             The dimensionality
         """
-        if self.npart == 0:
-            dims = [0]
-        elif self.npart == 1:
-            dims = [len(i) for i in (self.pos, self.vel, self.force)]
-        else:
-            dims = [len(i) for i in (self.pos[0], self.vel[0], self.force[0])]
-        if len(set(dims)) != 1:
-            msg = 'Inconsistent dimensions in position, velocity and force!'
-            warnings.warn(msg)
-        return dims[0]
+        return self.dim
+#    def get_dim(self):
+#        """
+#        Function to get the dimensionality, based on self.pos, self.vel
+#        and self.force
+#
+#        Returns
+#        -------
+#        out : int
+#            The dimensionality
+#        """
+#        if self.npart == 0:
+#            dims = [0]
+#        elif self.npart == 1:
+#            dims = [len(i) for i in (self.pos, self.vel, self.force)]
+#        else:
+#            dims = [len(i) for i in (self.pos[0], self.vel[0], self.force[0])]
+#        if len(set(dims)) != 1:
+#            msg = 'Inconsistent dimensions in position, velocity and force!'
+#            warnings.warn(msg)
+#        return dims[0]
 
     def get_phase_point(self):
         """
