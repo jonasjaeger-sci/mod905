@@ -387,7 +387,7 @@ class Langevin(Integrator):
             in system.particles.
         """
         particles = system.particles
-        ndim = system.particles.get_dim()
+        ndim = system.get_dim()
         pos_rand = np.zeros(particles.pos.shape)
         vel_rand = np.zeros(particles.vel.shape)
         if self.gamma > 0.0:
