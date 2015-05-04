@@ -2,12 +2,18 @@
 """
 simulation.py
 """
+from __future__ import absolute_import
 import numpy as np
 import collections
 import inspect
 import warnings
+from .particlefunctions import (calculate_kinetic_energy_tensor,
+                                calculate_kinetic_temperature,
+                                calculate_scalar_pressure,
+                                calculate_linear_momentum)
 
-__all__ = ['Simulation', 'UmbrellaWindowSimulation']
+
+__all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE']
 
 
 def _do_task(task, stepnumber, currentstep):
@@ -95,7 +101,7 @@ class Simulation(object):
     """
     def __init__(self, endcycle=0, startcycle=0):
         """
-        Initialization of the system.
+        Initialization of the simulation.
 
         Parameters
         ----------
@@ -329,3 +335,82 @@ class UmbrellaWindowSimulation(Simulation):
         """
         return (self.cycle['step'] > self.cycle['end'] and
                 np.all(system.particles.pos > self.overlap))
+
+
+class SimulationNVE(Simulation):
+    """
+    This class is used to define a NVE simulation with some additional
+    additional tasks/calculations.
+    """
+    def __init__(self, system, integrator, endcycle=0, startcycle=0):
+        """
+        Initialization of a NVE simulation.
+
+        Parameters
+        ----------
+        system : object of type System
+            This is the system we are investigating
+        integrator : object of type Integrator
+            This is the integrator that is used to propagate the system
+            in time.
+        startcycle : int, optional.
+            The cycle we start the simulation on, can be usefull if
+            restarting.
+        endcycle : int, optional.
+            This number represents the cycle number where the simulation
+            should end.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        N/A
+        """
+        super(SimulationNVE, self).__init__(endcycle=endcycle,
+                                            startcycle=startcycle)
+        self.system = system
+        self.integrator = integrator
+        if not self.integrator.dynamics == 'NVE':
+            msg = 'Using integrator {} for NVE dynamics!'
+            warnings.warn(msg.format(integrator.desc))
+
+        task_integrate = {'func': self.integrator.integration_step,
+                          'args': [self.system]}
+
+        task_calculate = {'func': self.common_calculations,
+                          'args': []}
+        # order is here important
+        # first calculate for current state:
+        self.add_task(task_calculate)
+        # then propagate
+        self.add_task(task_integrate)
+
+    def common_calculations(self):
+        """
+        This function will do some calculations that are common
+        for NVE simulations. We will calculate energies, pressure etc.
+
+        Parameters
+        ----------
+        system : object of type System
+            This is the system we are investigating
+
+        Returns:
+        """
+        system = self.system
+        particles = system.particles
+        dof = system.temperature['dof']
+        dim = system.get_dim()
+        volume = system.box.calculate_volume()
+        kin_tens = calculate_kinetic_energy_tensor(particles)
+        _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
+                                                    kin_tensor=kin_tens)
+        ekini = kin_tens.trace()
+        pressi = calculate_scalar_pressure(particles, volume, dim,
+                                           kin_tensor=kin_tens)
+        vpoti = system.v_pot
+        etoti = ekini + vpoti
+        momi = calculate_linear_momentum(particles)
+        return vpoti, ekini, etoti, tempi, pressi, momi
+
