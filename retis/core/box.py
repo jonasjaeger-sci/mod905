@@ -97,17 +97,33 @@ class Box(object):
         """
         return np.product(self.length)
 
-    #def pbc_coordinate2(self, x, dim):
-    #    """
-    #    This implementation of applying the pbc coordinate
-    #    are included here just for testing. It will probably be
-    #    removed in the future.
-    #    """
-    #    while x < self.low[dim]:
-    #        x = x + self.length[dim]
-    #    while x > self.high[dim]:
-    #        x = x - self.length[dim]
-    #    return x
+    def pbc_coordinate_dim(self, pos, dim):
+        """
+        This function applies the periodic boundaries to the selected
+        dimension only. This can be usefull for instance in connection
+        with order parameters.
+
+        Parameters
+        ----------
+        pos : float
+            Coordinate to wrap around
+        dim : int
+            This selects the dimension to consider
+        """
+        if self.periodic[dim]:
+            low, length = self.low[dim], self.length[dim]
+            relpos = pos - low
+            delta = relpos
+            if relpos < 0.0 or relpos >= length:
+                delta = relpos - np.floor(relpos/length) * length
+            return delta + low
+        else:
+            return pos
+        #while x < self.low[dim]:
+        #    x = x + self.length[dim]
+        #while x > self.high[dim]:
+        #    x = x - self.length[dim]
+        #return x
 
     #def pbc_slow2(self, allpos):
     #    """
