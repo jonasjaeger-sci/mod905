@@ -23,9 +23,12 @@ class Integrator(object):
         Time timesptep.
     desc : string
         Description of the integrator.
+    dynamics : str
+        A short string to represent the type of dynamics produced
+        by the integrator (NVE, NVT, stochastic, ...).
     """
 
-    def __init__(self, delta_t, desc='Generic integrator'):
+    def __init__(self, delta_t, desc='Generic integrator', dynamics=''):
         """
         Initialization of the integrator
 
@@ -36,6 +39,7 @@ class Integrator(object):
         """
         self.delta_t = delta_t
         self.desc = desc
+        self.dynamics = dynamics
 
     def integration_step(self, system):
         """
@@ -102,7 +106,7 @@ class Verlet(Integrator):
     delta_t2 : float
         Squared timestep: `delta_t*delta_t`
     """
-    def __init__(self, delta_t, desc='The velocity verlet integrator'):
+    def __init__(self, delta_t, desc='The verlet integrator'):
         """
         Initiates the Velocity Verlet integrator
 
@@ -113,7 +117,7 @@ class Verlet(Integrator):
         desc : string
             Description of the integrator
         """
-        super(Verlet, self).__init__(delta_t, desc=desc)
+        super(Verlet, self).__init__(delta_t, desc=desc, dynamics='NVE')
         self.half_idt = 0.5 / self.delta_t
         self.delta_t2 = self.delta_t**2
         self.previous_pos = None
@@ -173,7 +177,7 @@ class VelocityVerlet(Integrator):
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerlet, self).__init__(delta_t, desc=desc)
+        super(VelocityVerlet, self).__init__(delta_t, desc=desc, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
@@ -281,7 +285,7 @@ class Langevin(Integrator):
         param_iner : dict
             Parameters for the non-high friction limit.
         """
-        super(Langevin, self).__init__(delta_t, desc=desc)
+        super(Langevin, self).__init__(delta_t, desc=desc, dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
         self.rgen = rgen
