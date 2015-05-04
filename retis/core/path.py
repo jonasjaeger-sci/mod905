@@ -13,8 +13,12 @@ __all__ = ['Path', 'paste_paths', 'reverse_path']
 _STATUS = {'ACC': 'The path has been accepted',
            'MCR': 'Momenta change rejection',
            'BWI': 'Backward trajectory end at wrong interface',
-           'BTL': 'Backward trajectory too long',
-           'KOB': 'Kicked outside of boundaries'}
+           'BTL': 'Backward trajectory too long (detailed balance condition)',
+           'BTX': 'Backward trajectory too long (max-path exceeded)',
+           'KOB': 'Kicked outside of boundaries',
+           'FTL': 'Forward trajectory too long (detailed balance condition)',
+           'FTX': 'Forward trajectory too long (max-path exceeded)',
+           'NCR': 'No crossing with middle interface'}
 
 def paste_paths(path1, path2, overlap=True):
     """
@@ -120,13 +124,8 @@ class Path(object):
         This is the location of the phasepoint path[0] relative to it's
         parent. This might be usefull for plotting.
     status : str or None
-        The status of the path. The possibilities are:
-        None - Not set yet
-        ACC - The path has been accepted
-        MCR - Momenta change rejection
-        BWI - Backward trajectory end at wrong interface
-        BTL - Backward trajectory too long
-        KOB - Kicked outside of boundaries
+        The status of the path. The possibilities are defined
+        in the variable _STATUS
     """
     def __init__(self, maxlen=None, time_origin=0):
         """
