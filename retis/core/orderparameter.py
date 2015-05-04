@@ -10,7 +10,8 @@ from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
                        Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
 import operator
 
-__all__ = ['OrderParameter', 'OrderParameterPosition']
+__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
+
 
 class OrderParameter(object):
     """
@@ -79,19 +80,6 @@ class OrderParameter(object):
         """
         pass
 
-    def parse_function(self, function):
-        """
-        This function is intended to parse an order parameter given as
-        a string and return a function that can be used to evaluate
-        the order parameter.
-
-        Parameters
-        ----------
-        function : string
-            A representation of the function
-        """
-        pass
-
     def __call__(self, system):
         """
         Method to conveniently call calculate and calculate_velocity.
@@ -128,7 +116,7 @@ class OrderParameterPosition(OrderParameter):
     """
     def __init__(self, name, index, dim='x', periodic=False):
         """
-        Initialize the OrderParameter object
+        Initialize the OrderParameterPosition object
 
         Parameters
         ----------
@@ -203,6 +191,69 @@ class OrderParameterPosition(OrderParameter):
             return vel[self.dim]
 
 
+class OrderParameterParse(OrderParameter):
+    """
+    This class defines a simple order parameter that is
+    parsed from a text string given by the user. The reason
+    for putting this into a object rather than as a functionality
+    to the OrderParameter function is just to limit the possibility
+    of parsing to one object only.
+    """
+    def __init__(self, name, orderstr, ordervelstr):
+        """
+        Initialize the OrderParameterParse object
+
+        Parameters
+        ----------
+        name : string
+            The name for the order parameter
+        orderstr : string
+            This is the string representing the order parameter
+        ordervelstr : string
+            This is the string representing the velocity of the order
+            parameter
+        """
+        description = 'Parsed order parameter'
+        super(OrderParameterParse, self).__init__(name, desc=description)
+        self.orderparser = StringFunctionParser(string_function=orderstr)
+        self.ordervelparser = StringFunctionParser(string_function=ordervelstr)
+
+    def calculate(self, system):
+        """
+        This function calculates the order parameter
+
+        Parameters
+        ----------
+        system : object of type retis.core.system
+            This object is used for the actual calculation, typically only
+            system.particles.pos and/or system.particles.vel will be used.
+            In some cases system.forcefield can also be used to include
+            specific energies for the order parameter
+
+        Returns
+        -------
+        out : float
+            The order parameter
+        """
+        return self.orderparser.evaluate(system=system)
+
+    def calculate_velocity(self, system):
+        """
+        This function calculates the time derivative of the order parameter.
+
+        Parameters
+        ----------
+        system : object of type retis.core.system
+            This object is used for the actual calculation.
+
+        Returns
+        -------
+        out : float
+            The velocity of the order parameter
+        """
+        return self.ordervelparser.evaluate(system=system)
+
+
 class StringFunctionParser(object):
     """
     This class defines a simple parser for user-defined order parameters.
@@ -251,7 +302,8 @@ class StringFunctionParser(object):
                        'sign': np.sign,
                        'sqrt': np.sqrt}
 
-        self.system_functs = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'distance']
+        self.system_functs = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'distance',
+                              'distance_pbc', 'pbc_x', 'pbc_y', 'pbc_z']
 
         self.system = None
 
@@ -272,23 +324,35 @@ class StringFunctionParser(object):
         args : string
             These are the arguments that should be passed to function.
         """
-        pass
-        #self.system
-        #xyz = {'x': 0, 'y': 1, 'z': 2}
-        ##particles = self.system.particles
-        #if function == 'distance':
-        #    i, j = int(args[0]), int(args[1])
-        #    #print('Calculate dist between particles {} and {}'.format(i, j))
-        #    # pass
-        #else:
-        #    idx = int(args)
-        #    if function[0] == 'v':
-        #        dim = xyz[function[1]]
-        #        #print('Lockup velocity, particle {}, dim: {}'.format(idx, dim))
-        #    else:
-        #        dim = xyz[function[0]]
-        #        #print('Lockup pos, particle {}, dim: {}'.format(idx, dim))
-        #return 0.0
+        #print('Calling with:',function, args)
+        xyz = {'x': 0, 'y': 1, 'z': 2}
+        particles = self.system.particles
+        retval = None
+        if function[:8] == 'distance':
+            #print('Calculate dist between particles {} and {}'.format(i, j))
+            i, j = int(args[0]), int(args[1])
+            dist = particles.pos[i] - particles.pos[j]
+            if function[-4:] == '_pbc':
+                dist = self.system.box.pbc_dist_coordinate(dist)
+            retval = dist
+        elif function[:3] == 'pbc':
+            #print('Apply pbc {} to: {}'.format(function,args))
+            dim = xyz[function[-1]]
+            retval = self.system.box.pbc_coordinate_dim(args, dim)
+        else:
+            # simple look-up of velocity or position
+            idx = int(args) - 1  # NOTE: NUMBERING STARTS AT 0 in PYTHON
+            if function[0] == 'v':
+                dim = xyz[function[1]]
+                coord = particles.vel[idx]
+            else:
+                dim = xyz[function[0]]
+                coord = particles.pos[idx]
+            if self.system.get_dim() == 1:
+                retval = coord
+            else:
+                retval = coord[dim]
+        return retval
 
     def push_first(self, toks):
         """
