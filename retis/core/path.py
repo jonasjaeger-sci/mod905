@@ -7,7 +7,7 @@ import warnings
 import copy
 import itertools
 
-__all__ = ['Path', 'paste_paths', 'reverse_path']
+__all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path']
 
 # the following defines a human-readable form of the possible path status:
 _STATUS = {'ACC': 'The path has been accepted',
@@ -383,8 +383,12 @@ class PathEnsemble(object):
             if it crossed the middle interface.
         cycle :  list of ints
             This is the cycle number where the path was generated.
+    npath : int
+        The number of paths stored.
+    maxpath : int
+        The maximum number of paths to store.
     """
-    def __init__(self, ensemble, interfaces):
+    def __init__(self, ensemble, interfaces, maxpath=100000):
         """
         Initialize the Path object.
 
@@ -397,15 +401,16 @@ class PathEnsemble(object):
             for the order parameters: [left, middle, right]
         """
         self.ensemble = ensemble
-        self.interfaces = interfaces
-        self.path_data = {'status': [],  # current status of path
-                          'length': [],  # length of the path
-                          'ordermin': [],  # minimum order parameter
-                          'ordermax': [],  # maximum order parameter
-                          'generated': [],  # how the path was generated
+        self.interfaces = tuple(interfaces)  # Should not change interfaces
+        self.path_data = {'status': [],
+                          'length': [],
+                          'ordermin': [],
+                          'ordermax': [],
+                          'generated': [],
                           'interface': [],
-                          'cycle': []}  # info on start, middle and end
-
+                          'cycle': []}
+        self.npath = 0
+        self.maxpath = maxpath
     def reset_data(self):
         """
         This method will just erase the stored data in path_data.
@@ -415,6 +420,7 @@ class PathEnsemble(object):
         """
         for key in self.path_data:
             self.path_data[key] = []
+        self.npath = 0
 
     def append(self, path, cycle=0):
         """
@@ -428,6 +434,8 @@ class PathEnsemble(object):
         cycle : int, optional
             The current cycle number
         """
+        if self.npath >= self.maxpath:
+            pass
         self.path_data['generated'].append(path.generated)
         self.path_data['status'].append(path.status)
         self.path_data['length'].append(len(path.path))
@@ -440,4 +448,13 @@ class PathEnsemble(object):
             middle = '*'
         self.path_data['interface'].append((left, middle, right))
         self.path_data['cycle'].append(cycle)
+        self.npath += 1
+
+    def __str__(self):
+        """
+        Return a string with some info about this object
+        """
+        msg = ['Path ensemble: {}'.format(self.ensemble)]
+        msg += ['\tNumber of paths stored: {}'.format(self.npath)]
+        return '\n'.join(msg)
 
