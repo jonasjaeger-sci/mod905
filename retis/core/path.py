@@ -20,46 +20,55 @@ _STATUS = {'ACC': 'The path has been accepted',
            'FTX': 'Forward trajectory too long (max-path exceeded)',
            'NCR': 'No crossing with middle interface'}
 
-def paste_paths(path1, path2, overlap=True):
+_GENERATED = {'sh': 'Path was generated with a shooting move',
+              'tr': 'Path was generated with a time-reversal move',
+              's+': 'Swapping move +',
+              's-': 'Swapping move -'}
+
+def paste_paths(path_back, path_forw, overlap=True):
     """
-    Helper function to merge a backward and forward trajectory so that
-    the paths will be stacked on top of each-other. The ordering is
-    important here, paste_paths(path1, path2) != paste_paths(path2, path1).
+    This function will merge two paths - one is in the backward time
+    direction and the other is in the forward direction. The resulting
+    path is equal to the two paths stacked on top of each-other in correct
+    time. Note that the ordering is important here:
+    paste_paths(path1, path2) != paste_paths(path2, path1).
+
     The code is very similar to Path.__add__ but we have to take care:
-    - path1 must be iterated in reverse
+    - path_back must be iterated in reverse (it is assumed to be a
+      backward trajectory)
     - we may have to remove one point in path2 (if the paths overlap)
 
     Parameters
     ----------
-    path1 : object of type Path
+    path_back : object of type Path
         This is the backward trajectory
-    path2 : object of type Path
+    path_forw : object of type Path
         This is the forward trajectory
     overlap : boolean, default is True
-        If true, path1 and path2 have a common starting-point, that is,
-        the first point in path2 is identical to the first point in path1
-        In time-space this means that the first point in path2 is equal to
-        the last point in path1 (the backward and forward path started
-        at the same location in space)
+        If true, path_back and path_forw have a common starting-point,
+        that is, the first point in path_forw is identical to the first point
+        in path_back. In time-space this means that the first point in
+        path_forw is identical to the last point in path_back (the backward
+        and forward path started at the same location in space).
     """
-    if path1.maxlen == path2.maxlen:
-        # everything is ok, they have the same length
-        maxlen = path1.maxlen
+    if path_back.maxlen == path_forw.maxlen:
+        # everything is ok, they have the same maximum length
+        maxlen = path_back.maxlen
     else:
         # They are unequal and both is not None, just pick the largest.
         # In case one is None, the other will be picked.
-        maxlen = max(path1.maxlen, path2.maxlen)
+        maxlen = max(path_back.maxlen, path_forw.maxlen)
         msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
         warnings.warn(msg)
-    time_origin = path1.time_origin - len(path1.path) + 1
+    time_origin = path_back.time_origin - len(path_back.path) + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
-    iter_path1 = reversed(path1.path)  # we iterate in correct time direction
+    iter_path_back = reversed(path_back.path)  # we iterate in correct time direction
     if overlap:  # do not include the overlapping point:
-        iter_path2 = path2.path[1:]
+        iter_path_forw = path_forw.path[1:]
     else:
-        iter_path2 = path2.path
+        iter_path_forw = path_forw.path
 
-    for phasepoint in itertools.chain(iter_path1, iter_path2):
+    for phasepoint in itertools.chain(iter_path_back, iter_path_forw):
         app = new_path.append(phasepoint[0],
                               phasepoint[1],
                               phasepoint[2])
@@ -113,7 +122,7 @@ class Path(object):
         None.
     path : list
         This is the trajectory/series of snapshots, stored as a list of tuples.
-        Each tuple stores the position, velocities, order parameter.
+        Each tuple stores (positions, velocities, order parameter).
     ordermin : tuple
         This is the (current) minimum order parameter for the path.
         ordermin[0] is the value, ordermin[1] is the index in self.path.
@@ -146,6 +155,7 @@ class Path(object):
         self.ordermax = None
         self.time_origin = time_origin
         self.status = None
+        self.generated = None
 
     def __iter__(self):
         """
@@ -163,7 +173,6 @@ class Path(object):
         Method to append a new phase point to the path. The phasepoint is
         assumed to be given by positions and velocities with
         a corresponding scalar order parameter.
-
 
         Parameters
         ----------
@@ -231,7 +240,7 @@ class Path(object):
     def check_interfaces(self, interfaces):
         """
         Method to get the current status of the path with respect
-        to the given interfaces. This is indended to determine if we
+        to the given interfaces. This is intended to determine if we
         have crossed certain interfaces or not.
 
         Parameters
@@ -330,4 +339,105 @@ class Path(object):
             msg += ['\tEnd {}'.format(self.path[-1][-1])]
         if self.status:
             msg += ['\tStatus: {}'.format(_STATUS[self.status])]
+        if self.generated:
+            msg += ['\tGenerated: {}'.format(_GENERATED[self.generated])]
         return '\n'.join(msg)
+
+
+class PathEnsemble(object):
+    """
+    PathEnsemble(object)
+
+    This class represents a collection of Paths or a Path ensemble.
+    The Path ensemble will not save the phase-space points of the paths
+    but it will store other information about the paths.
+    The PathEnsemble implements a dict ``path_data`` which contains important
+    data for the paths.
+
+    Attributes
+    ----------
+    ensemble : str
+        This is a string representation of the path ensemble. Typically
+        something like '0-', '0+', '1', '2', ...
+    interfaces : list of ints
+        These are the interfaces specified with the values
+        for the order parameters: [left, middle, right]
+    path_data : dict
+        This dict contains information about the paths. The possible keys are:
+        status : list of strings
+            This is the status of the path. The possibilities are defined in
+            the variable _STATUS.
+        length : list of ints
+            This is the path lengths.
+        ordermin : list of tuples. ordermin[i][0] = minimum order parameter of
+            the path, ordermin[i][1] = index in the path where this occurs.
+        ordermax : list of tuples. ordermax[i][0] = maximum order parameter of
+            the path, ordermax[i][1] = index in the path where this occurs.
+        generated :  list of strings
+            The strings indicate how the paths were generated. The
+            possibilities are defined in _GENERATED
+        interface : list of typles
+            interface[i] = (start, middle, end) for path i. start/end can
+            be 'L'/'R'/'*' and middle can be 'M' or '*'. This is a string
+            representation on where the path started, where it ended and
+            if it crossed the middle interface.
+        cycle :  list of ints
+            This is the cycle number where the path was generated.
+    """
+    def __init__(self, ensemble, interfaces):
+        """
+        Initialize the Path object.
+
+        Parameters
+        ----------
+        ensemble : string
+            The string representation of the path ensemble.
+        interfaces : list of ints
+            These are the interfaces specified with the values
+            for the order parameters: [left, middle, right]
+        """
+        self.ensemble = ensemble
+        self.interfaces = interfaces
+        self.path_data = {'status': [],  # current status of path
+                          'length': [],  # length of the path
+                          'ordermin': [],  # minimum order parameter
+                          'ordermax': [],  # maximum order parameter
+                          'generated': [],  # how the path was generated
+                          'interface': [],
+                          'cycle': []}  # info on start, middle and end
+
+    def reset_data(self):
+        """
+        This method will just erase the stored data in path_data.
+        It can be used in combination with flushing the data to a
+        file in order to periodically write and empty the amount of data
+        stored in memory.
+        """
+        for key in self.path_data:
+            self.path_data[key] = []
+
+    def append(self, path, cycle=0):
+        """
+        This will append the data from the given path object to
+        self.path_data
+
+        Parameters
+        ----------
+        path : object of type Path
+            This is the path to store data from.
+        cycle : int, optional
+            The current cycle number
+        """
+        self.path_data['generated'].append(path.generated)
+        self.path_data['status'].append(path.status)
+        self.path_data['length'].append(len(path.path))
+        self.path_data['ordermax'].append(tuple(path.ordermax))
+        self.path_data['ordermin'].append(tuple(path.ordermin))
+        left, right, cross = path.check_interfaces(self.interfaces)
+        if cross[1]:
+            middle = 'M'
+        else:
+            middle = '*'
+        self.path_data['interface'].append((left, middle, right))
+        self.path_data['cycle'].append(cycle)
+
