@@ -25,6 +25,7 @@ _GENERATED = {'sh': 'Path was generated with a shooting move',
               's+': 'Swapping move +',
               's-': 'Swapping move -'}
 
+
 def paste_paths(path_back, path_forw, overlap=True):
     """
     This function will merge two paths - one is in the backward time
@@ -62,7 +63,7 @@ def paste_paths(path_back, path_forw, overlap=True):
         warnings.warn(msg)
     time_origin = path_back.time_origin - len(path_back.path) + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
-    iter_path_back = reversed(path_back.path)  # we iterate in correct time direction
+    iter_path_back = reversed(path_back.path)  # iterate in correct time dir
     if overlap:  # do not include the overlapping point:
         iter_path_forw = path_forw.path[1:]
     else:
@@ -267,19 +268,63 @@ class Path(object):
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
         left, right = min(interfaces), max(interfaces)
-        # check end:
+        # check end & start:
+        end = self.get_end_point(left, right)
+        start = self.get_start_point(left, right)
+        return start, end, cross
+
+    def get_end_point(self, left, right):
+        """
+        This function just returns the end point of the path as
+        a string.
+
+        Parameters
+        ----------
+        left : float
+            The left interface
+        right : float
+            The right interface
+
+        Returns
+        -------
+        out : string
+            String representing where the end point is ('L' - left,
+            'R' - right or None).
+        """
         if self.path[-1][-1] < left:
             end = 'L'
         elif self.path[-1][-1] > right:
             end = 'R'
-        # and check start:
+        else:
+            end = None
+        return end
+
+    def get_start_point(self, left, right):
+        """
+        This function just returns the start point of the path as
+        a string.
+
+        Parameters
+        ----------
+        left : float
+            The left interface
+        right : float
+            The right interface
+
+        Returns
+        -------
+        out : string
+            String representing where the start point is ('L' - left,
+            'R' - right or None).
+        """
         if self.path[0][-1] <= left:
             start = 'L'
         elif self.path[0][-1] >= right:
             start = 'R'
         else:
+            start = None
             warnings.warn('Undefined starting point')
-        return start, end, cross
+        return start
 
     def __add__(self, other):
         """
@@ -387,6 +432,9 @@ class PathEnsemble(object):
         The number of paths stored.
     maxpath : int
         The maximum number of paths to store.
+    stats : dict
+        This dict just contain some numbers which can be used
+        for statistics during the simulation.
     """
     def __init__(self, ensemble, interfaces, maxpath=100000):
         """
@@ -411,6 +459,11 @@ class PathEnsemble(object):
                           'cycle': []}
         self.npath = 0
         self.maxpath = maxpath
+        self.stats = {}
+        for key in _STATUS:
+            self.stats[key] = 0
+        self.stats['RX'] = 0
+
     def reset_data(self):
         """
         This method will just erase the stored data in path_data.
@@ -420,6 +473,8 @@ class PathEnsemble(object):
         """
         for key in self.path_data:
             self.path_data[key] = []
+        for key in self.stats:
+            self.stats[key] = 0
         self.npath = 0
 
     def append(self, path, cycle=0):
@@ -449,6 +504,9 @@ class PathEnsemble(object):
         self.path_data['interface'].append((left, middle, right))
         self.path_data['cycle'].append(cycle)
         self.npath += 1
+        self.stats[path.status] += 1
+        if left == 'L' and right == 'R' and cross[1]:
+            self.stats['RX'] += 1
 
     def __str__(self):
         """
@@ -456,5 +514,6 @@ class PathEnsemble(object):
         """
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tNumber of paths stored: {}'.format(self.npath)]
+        msg += ['\tNumber of paths accepted: {}'.format(self.stats['ACC'])]
+        msg += ['\tNumber of reactive paths: {}'.format(self.stats['RX'])]
         return '\n'.join(msg)
-
