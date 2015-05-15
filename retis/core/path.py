@@ -483,36 +483,45 @@ class PathEnsemble(object):
             self.stats[key] = 0
         self.npath = 0
 
-    def append(self, path, cycle=0):
+    def add_path_data(self, path, status, cycle=0):
         """
-        This will append the data from the given path object to
-        self.path_data
+        This will append data from the given path to self.path_data
 
         Parameters
         ----------
         path : object of type Path
-            This is the path to store data from.
+            This is the object to store data from.
+        status : string
+            This is the status of the Path.
         cycle : int, optional
             The current cycle number
         """
         if self.npath >= self.maxpath:
             pass
-        self.path_data['generated'].append(path.generated)
-        self.path_data['status'].append(path.status)
-        self.path_data['length'].append(len(path.path))
-        self.path_data['ordermax'].append(tuple(path.ordermax))
-        self.path_data['ordermin'].append(tuple(path.ordermin))
-        left, right, cross = path.check_interfaces(self.interfaces)
-        if cross[1]:
-            middle = 'M'
+        if path:
+            self.path_data['generated'].append(path.generated)
+            self.path_data['status'].append(status)
+            self.path_data['length'].append(len(path.path))
+            self.path_data['ordermax'].append(tuple(path.ordermax))
+            self.path_data['ordermin'].append(tuple(path.ordermin))
+            left, right, cross = path.check_interfaces(self.interfaces)
+            if cross[1]:
+                middle = 'M'
+            else:
+                middle = '*'
+            self.path_data['interface'].append((left, middle, right))
+            if left == 'L' and right == 'R' and cross[1]:
+                self.stats['RX'] += 1
         else:
-            middle = '*'
-        self.path_data['interface'].append((left, middle, right))
+            self.path_data['generated'].append('')
+            self.path_data['status'].append(status)
+            self.path_data['length'].append(0)
+            self.path_data['ordermax'].append((None, None))
+            self.path_data['ordermin'].append((None, None))
+            self.path_data['interface'].append((False, False, False))
         self.path_data['cycle'].append(cycle)
         self.npath += 1
-        self.stats[path.status] += 1
-        if left == 'L' and right == 'R' and cross[1]:
-            self.stats['RX'] += 1
+        self.stats[status] += 1
 
     def __str__(self):
         """
