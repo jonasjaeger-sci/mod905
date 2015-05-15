@@ -101,7 +101,7 @@ def reverse_path(path, order_func=None):
     """
     new_path = Path(maxlen=path.maxlen)
     for phasepoint in reversed(path.path):
-        pos, vel = phasepoint[0], -1.0*phasepoint[1]
+        pos, vel = phasepoint[0], -1.0 * phasepoint[1]
         if order_func:
             orderp = order_func(pos, vel)
         else:
