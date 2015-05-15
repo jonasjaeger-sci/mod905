@@ -26,7 +26,7 @@ _GENERATED = {'sh': 'Path was generated with a shooting move',
               's-': 'Swapping move -'}
 
 
-def paste_paths(path_back, path_forw, overlap=True):
+def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     """
     This function will merge two paths - one is in the backward time
     direction and the other is in the forward direction. The resulting
@@ -51,16 +51,22 @@ def paste_paths(path_back, path_forw, overlap=True):
         in path_back. In time-space this means that the first point in
         path_forw is identical to the last point in path_back (the backward
         and forward path started at the same location in space).
+    maxlen : float, optional
+        This is the maximum length for the new path. If it's not given, it will
+        just be set to the largest of the maxlen of the two given paths.
     """
-    if path_back.maxlen == path_forw.maxlen:
-        # everything is ok, they have the same maximum length
-        maxlen = path_back.maxlen
-    else:
-        # They are unequal and both is not None, just pick the largest.
-        # In case one is None, the other will be picked.
-        maxlen = max(path_back.maxlen, path_forw.maxlen)
-        msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
-        warnings.warn(msg)
+    if maxlen is None:
+        if path_back.maxlen == path_forw.maxlen:
+            # everything is ok, they have the same maximum length
+            maxlen = path_back.maxlen
+        else:
+            # They are unequal and both is not None, just pick the largest.
+            # In case one is None, the other will be picked.
+            # Note that now there is a chance of truncating the path while
+            # pasting!
+            maxlen = max(path_back.maxlen, path_forw.maxlen)
+            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
+            warnings.warn(msg)
     time_origin = path_back.time_origin - len(path_back.path) + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
     iter_path_back = reversed(path_back.path)  # iterate in correct time dir
