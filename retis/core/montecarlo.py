@@ -54,7 +54,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
     """
     This will accept/reject a change in momenta given
     the corresponding change in kinetic energy
-    
+
     Parameters
     ----------
     rgen : object of type RandomGenerator

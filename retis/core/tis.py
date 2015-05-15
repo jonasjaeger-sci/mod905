@@ -61,18 +61,18 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
 
     else:
         #print('Shooting')
-        accept, new_path, status = shoot(rgen, system, path, order_function,
-                                         interfaces, integrator, aimless,
-                                         allowmaxlength=allowmaxlength,
-                                         start_cond=start_cond)
+        accept, new_path, status = _shoot(rgen, system, path, order_function,
+                                          interfaces, integrator, aimless,
+                                          allowmaxlength=allowmaxlength,
+                                          start_cond=start_cond)
         if new_path:  # store some additional data for the shooting move
             #new_path.parent = path
             new_path.generated = 'sh'
     return accept, new_path, status
 
 
-def shoot(rgen, system, path, order_function, interfaces, integrator,
-          aimless, allowmaxlength=False, start_cond='L'):
+def _shoot(rgen, system, path, order_function, interfaces, integrator,
+           aimless, allowmaxlength=False, start_cond='L'):
     """
     Method to perform a shooting-move.
 
@@ -142,11 +142,11 @@ def shoot(rgen, system, path, order_function, interfaces, integrator,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back, success_back, _ = propagate(system, integrator,
-                                           order_function,
-                                           interfaces,
-                                           maxlen=maxlenb,
-                                           reverse=True)
+    path_back, success_back, _ = _propagate(system, integrator,
+                                            order_function,
+                                            interfaces,
+                                            maxlen=maxlenb,
+                                            reverse=True)
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
     if not success_back:
@@ -165,12 +165,12 @@ def shoot(rgen, system, path, order_function, interfaces, integrator,
         return accept, trial_path, status
     # everything seems fine, propagate forward
     maxlenf = maxlen - len(path_back.path) + 1
-    path_forw, success_forw, _ = propagate(system,
-                                           integrator,
-                                           order_function,
-                                           interfaces,
-                                           maxlen=maxlenf,
-                                           reverse=False)
+    path_forw, success_forw, _ = _propagate(system,
+                                            integrator,
+                                            order_function,
+                                            interfaces,
+                                            maxlen=maxlenf,
+                                            reverse=False)
     path_forw.time_origin = time_shoot
     # now, the forward could have failed by exceeding maxlenf
     # however, it could also fail when we paste together so that
@@ -235,17 +235,17 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     # Loop is done, we have two points (previous and the
     # current system.particles)
     # we can propagate current phase point forward:
-    path_forw, success, msg = propagate(system, integrator, order_function,
-                                        interfaces, maxlen=MAXLEN)
+    path_forw, success, msg = _propagate(system, integrator, order_function,
+                                         interfaces, maxlen=MAXLEN)
     if not success:
         raise ValueError('Forward path not successfull.', msg)
     # and previous pase point backward.
     # First we set system to be at this point:
     system.particles.set_phase_point(previous)
     # then propagate :-)
-    path_back, success, msg = propagate(system, integrator, order_function,
-                                        interfaces, maxlen=MAXLEN,
-                                        reverse=True)
+    path_back, success, msg = _propagate(system, integrator, order_function,
+                                         interfaces, maxlen=MAXLEN,
+                                         reverse=True)
     if not success:
         raise ValueError('Backward path not successfull.', msg)
     # Merge backward and forward, here we do not set maxlen since
@@ -274,9 +274,9 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     elif end == start:  # case 2
         #print('Initial path start & end at wrong interface')
         #print('Running TIS to fix initial path:')
-        initial_path = fix_path_by_tis(system, interfaces, integrator,
-                                       rgen, order_function,
-                                       initial_path, start_cond)
+        initial_path = _fix_path_by_tis(system, interfaces, integrator,
+                                        rgen, order_function,
+                                        initial_path, start_cond)
     else:
         raise ValueError('Could not generate initial path')
     return initial_path
@@ -385,8 +385,8 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
     return dek
 
 
-def propagate(system, integrator, order_function, interfaces,
-              maxlen=None, reverse=False):
+def _propagate(system, integrator, order_function, interfaces,
+               maxlen=None, reverse=False):
     """
     This function will propagate a system in time. During the propagation,
     the system will be modified. However, at the end, the positions, velocities
@@ -458,8 +458,8 @@ def propagate(system, integrator, order_function, interfaces,
     return new_path, success, status
 
 
-def fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
-                    initial_path, start_cond):
+def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
+                     initial_path, start_cond):
     """
     This method fix a path that starts and ends at the wrong interfaces.
     This is used in connection with the initialization.

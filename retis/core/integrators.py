@@ -177,7 +177,8 @@ class VelocityVerlet(Integrator):
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerlet, self).__init__(delta_t, desc=desc, dynamics='NVE')
+        super(VelocityVerlet, self).__init__(delta_t, desc=desc,
+                                             dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
@@ -285,7 +286,8 @@ class Langevin(Integrator):
         param_iner : dict
             Parameters for the non-high friction limit.
         """
-        super(Langevin, self).__init__(delta_t, desc=desc, dynamics='stochastic')
+        super(Langevin, self).__init__(delta_t, desc=desc,
+                                       dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
         self.rgen = rgen

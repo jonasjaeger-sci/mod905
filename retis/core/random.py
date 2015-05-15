@@ -12,17 +12,22 @@ from numpy.random import RandomState
 __all__ = ['RandomGenerator']
 
 
-class RandomGenerator(RandomState):
+class RandomGenerator(object):
     """
-    RandomGenerator(RandomState)
+    RandomGenerator(object)
 
     This class that defines a random number generator.
-    It inherits from the numpy.random.RandomState class, see the docstring
-    for this class for extensive documentation.
+    It will use numpy.random.RandomState for the actual generation, see the
+    docstring for this class for extensive documentation.
+    Here we could inherit from RandomState but here we do not wish (?) to
+    inherit from an old-style class. This then results in some unfortunate(?)
+    small functions here that will actually just call RandomState.
 
     Attributes
     ----------
-
+    rgen : object of type RandomState
+        This is a container for the Mersenne Twiser pseudo-random number
+        generator as implemented in numpy.
     """
     def __init__(self, seed=None):
         """
@@ -34,7 +39,65 @@ class RandomGenerator(RandomState):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        super(RandomGenerator, self).__init__(seed=seed)
+        self.rgen = RandomState(seed=seed)
+
+    def rand(self, shape=1):
+        """
+        This will just call self.rgen.rand(), see the description of this
+        class.
+
+        Parameters
+        ----------
+        shape : int
+            Number of numbers to draw
+
+        Returns
+        -------
+        out : float
+            Pseudorandom number in [0, 1)
+        """
+        return self.rgen.rand(shape)
+
+    def random_integers(self, low, high):
+        """
+        This will just call self.rgen.random_integers(low, high), see the
+        description of this class.
+
+        Parameters
+        ----------
+        low : int
+            This is the lower limit
+        high : int
+            This is the upper limit
+
+        Returns
+        -------
+        out : int
+            This is a psudorandom integer in [low, high]
+        """
+        return self.rgen.random_integers(low, high)
+
+    def normal(self, loc=0.0, scale=1.0, size=None):
+        """
+        This function just runs self.rgen.normal and returns
+        values from a normal distribution.
+
+        Parameters
+        ----------
+        loc : float, optional
+            The mean of the distribution
+        scale : float, optional
+            The standard deviation of the distribution
+        size : int, tuple of ints, optional
+            Output shape, i.e. how many values to generate. Default is None
+            which is just a single value.
+
+        Returns
+        -------
+        out : float, numpy.array of floats
+            The random numbers generated
+        """
+        return self.rgen.normal(loc=loc, scale=scale, size=size)
 
     def multivariate_normal(self, mean, cov, cho=None, size=1):
         """
@@ -108,7 +171,8 @@ class RandomGenerator(RandomState):
             vel, imass = particles.vel, particles.imass
         else:
             vel, imass = particles.vel[selection], particles.imass[selection]
-        vel = np.sqrt(imass) * self.normal(loc=0.0, scale=1.0, size=vel.shape)
+        vel = np.sqrt(imass) * self.normal(loc=0.0, scale=1.0,
+                                           size=vel.shape)
         # NOTE: x[None] = x for a numpy.array - this is not valid for a list.
         particles.vel[selection] = vel
         if momentum:
