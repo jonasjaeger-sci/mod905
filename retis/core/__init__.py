@@ -13,3 +13,4 @@ from .particles import *
 from .path import *
 from .random import *
 from .orderparameter import *
+from .tis import *
