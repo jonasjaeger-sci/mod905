@@ -11,11 +11,8 @@ from .particlefunctions import calculate_kinetic_energy
 __all__ = ['make_tis_step', 'generate_initial_path']
 
 
-MAXLEN = 10000
-
-
 def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
-                  aimless=True, freq=0.5, allowmaxlength=True, start_cond='L'):
+                  tis_settings):
     """
     This method will perform a TIS step and generate a new trajectory
     from an existing one, either by performing a time-reversal move or
@@ -24,8 +21,6 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
-        This is the random generator that will be used.
     system : object of type System
         System is used here since we need access to the temperature
         and to the particle list.
@@ -37,6 +32,10 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
         which is equal to the order parameter.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
+    rgen : object of type RandomGenerator
+        This is the random generator that will be used.
+    tis_settings : dict
+        This dictionary contain the tis-settings
     aimless : boolean, optional
         Is the shooting aimless or not
     freq : float, in range [0, 1)
@@ -46,12 +45,12 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
         max-length as the trial path. Typically this is the overall
         max-length set in tis.
     """
-    if rgen.rand() < freq:
+    if rgen.rand() < tis_settings['freq']:
         #print('Reversing path')
         new_path = reverse_path(path)
         start, _, _ = new_path.check_interfaces(interfaces)
         new_path.generated = 'tr'
-        if start == start_cond:
+        if start == tis_settings['start_cond']:
             accept = True
             status = 'ACC'
         else:
@@ -62,9 +61,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     else:
         #print('Shooting')
         accept, new_path, status = _shoot(rgen, system, path, order_function,
-                                          interfaces, integrator, aimless,
-                                          allowmaxlength=allowmaxlength,
-                                          start_cond=start_cond)
+                                          interfaces, integrator, tis_settings)
         if new_path:  # store some additional data for the shooting move
             #new_path.parent = path
             new_path.generated = 'sh'
@@ -72,7 +69,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
 
 
 def _shoot(rgen, system, path, order_function, interfaces, integrator,
-           aimless, allowmaxlength=False, start_cond='L'):
+           tis_settings):
     """
     Method to perform a shooting-move.
 
@@ -90,8 +87,12 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         which is equal to the order parameter.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
-    aimless : boolean
-        Is the shooting aimless or not
+    tis_settings : dict
+        This contains the settings for TIS. Used here are:
+            aimless : boolean, is the shooting aimless or not?
+            allowmaxlength : boolean, should paths be allowed to reach
+                maximum length?
+            start_cond : string, starting condition, 'L'eft or 'R'ight
 
     Returns
     -------
@@ -112,7 +113,8 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     system.particles.pos = np.copy(pos)
     system.force()  # update forces
     # kick the timeslice:
-    dke = _kick_timeslice(rgen, system, aimless=aimless, momentum=False)
+    dke = _kick_timeslice(rgen, system, aimless=tis_settings['aimless'],
+                          momentum=False)
     # update the order paramater since it could depend on velocity
     orderp, _ = order_function(system)
     # We now check if the kick was ok or not:
@@ -123,7 +125,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         # Note trial_path is here just None
         return accept, trial_path, status
     # 2) If the kick is not aimless, we much check if we reject it or not:
-    if not aimless:
+    if not tis_settings['aimless']:
         accept_kick = metropolis_accept_reject(rgen, system, dke)
         # here call bias if needed
         # ... Insert call to bias ...
@@ -134,11 +136,11 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # ok: kick was either aimless or it was accepted by Metropolis
     # we should now generate trajectories, but first check how long
     # it should be:
-    if allowmaxlength:
-        maxlen = MAXLEN
+    if tis_settings['allowmaxlength']:
+        maxlen = tis_settings['maxlength']
     else:
         maxlen = int((len(path.path) - 2) / rgen.rand()) + 2
-        maxlen = min(maxlen, MAXLEN)
+        maxlen = min(maxlen, tis_settings['maxlength'])
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
@@ -153,12 +155,12 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         # something went wrong, most probably the path length was exceeded
         accept = False
         status = 'BTL'  # backward trajectory too long (maxlenb "too small")
-        if len(path_back.path) == MAXLEN - 1:  # exceeds maximum memory length
-            status = 'BTX'
+        if len(path_back.path) == tis_settings['maxlength'] - 1:
+            status = 'BTX'  # exceeds maximum memory length
         # Note trial_path is here just None
         return accept, trial_path, status
     # backward seems ok so far, check if the ending point is correct:
-    if path_back.get_end_point(left, right) != start_cond:
+    if path_back.get_end_point(left, right) != tis_settings['start_cond']:
         # backward trajectory end at wrong interface
         accept, status = False, 'BWI'
         # Note trial_path is here just None
@@ -176,12 +178,13 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # however, it could also fail when we paste together so that
     # the length is larger than the allowed maximum, we paste first
     # and ask later:
-    trial_path = paste_paths(path_back, path_forw, overlap=True, maxlen=MAXLEN)
+    trial_path = paste_paths(path_back, path_forw, overlap=True,
+                             maxlen=tis_settings['maxlength'])
     if not success_forw:
         accept = False
         status = 'FTL'
-        if len(trial_path.path) == MAXLEN:  # exceeds "memory"
-            status = 'FTX'
+        if len(trial_path.path) == tis_settings['maxlength']:
+            status = 'FTX'  # exceeds "memory"
         # trial_path is now different from None, set status:
         trial_path.status = status
         return accept, trial_path, status
@@ -197,7 +200,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
 
 
 def generate_initial_path(system, interfaces, integrator, rgen,
-                          order_function, start_cond='L'):
+                          order_function, tis_settings):
     """
     Simple method to generate an initial path
     This method will generate an initial path by repeatedly
@@ -219,24 +222,25 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     order_function : function
         This is a function that calculates the order parameter for a
         system.
-    start_cond : string, optional
-        This gives the start condition. This will typically
-        be interface[0]
+    tis_settings : dict
+        This dictionary contains settings for TIS. Used here are start_cond
+        which gives the start condition and maxlength which gives the maximum
+        allowed path length.
 
     Returns
     -------
     out : object of type Path
         This is the generated initial path
     """
-    _, middle, _ = interfaces
     previous, _ = _kick_across_middle(system, integrator,
-                                      rgen, order_function, middle)
+                                      rgen, order_function, interfaces[1])
     # note: current point is stored in system
     # Loop is done, we have two points (previous and the
     # current system.particles)
     # we can propagate current phase point forward:
     path_forw, success, msg = _propagate(system, integrator, order_function,
-                                         interfaces, maxlen=MAXLEN)
+                                         interfaces,
+                                         maxlen=tis_settings['maxlength'])
     if not success:
         raise ValueError('Forward path not successfull.', msg)
     # and previous pase point backward.
@@ -244,14 +248,15 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     system.particles.set_phase_point(previous)
     # then propagate :-)
     path_back, success, msg = _propagate(system, integrator, order_function,
-                                         interfaces, maxlen=MAXLEN,
+                                         interfaces,
+                                         maxlen=tis_settings['maxlength'],
                                          reverse=True)
     if not success:
         raise ValueError('Backward path not successfull.', msg)
     # Merge backward and forward, here we do not set maxlen since
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
-    if len(initial_path.path) == MAXLEN:
+    if len(initial_path.path) == tis_settings['maxlength']:
         raise ValueError('Initial path too long len(path) >= NX')
     start, end, _ = initial_path.check_interfaces(interfaces)
     # ok, now its time to check the path:
@@ -263,11 +268,11 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     # end at the same (wrong) interface - we now need to do some shooting moves
     # 3) We can start at wrong interface and end and the starting condition
     # we just have to reverse the path then.
-    if start == start_cond:  # case 0 and 1
+    if start == tis_settings['start_cond']:  # case 0 and 1
         initial_path.status = 'ACC'
         return initial_path
     # Now we do the other cases:
-    if end == start_cond:  # case 3 (and start != start_cond)
+    if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
         #print('Initial path is in the wrong direction: Reversing it!')
         initial_path = reverse_path(initial_path)
         initial_path.status = 'ACC'
@@ -276,7 +281,7 @@ def generate_initial_path(system, interfaces, integrator, rgen,
         #print('Running TIS to fix initial path:')
         initial_path = _fix_path_by_tis(system, interfaces, integrator,
                                         rgen, order_function,
-                                        initial_path, start_cond)
+                                        initial_path, tis_settings)
     else:
         raise ValueError('Could not generate initial path')
     return initial_path
@@ -459,7 +464,7 @@ def _propagate(system, integrator, order_function, interfaces,
 
 
 def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
-                     initial_path, start_cond):
+                     initial_path, tis_settings):
     """
     This method fix a path that starts and ends at the wrong interfaces.
     This is used in connection with the initialization.
@@ -477,6 +482,8 @@ def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
     order_function : function
         This is a function that calculates the order parameter for a
         system.
+    tis_settings : dict
+        Settings for TIS
     initial_path : object of type path
         This is the initial path to fix. It starts & ends at the
         wrong interface.
@@ -488,26 +495,29 @@ def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
     """
     left, middle, right = interfaces
     path_ok = False
+    local_tis_settings = {'allowmaxlength': True,
+                          'aimless': True,
+                          'freq': 0.5,
+                          'start_cond': tis_settings['start_cond'],
+                          'maxlength': tis_settings['maxlength']}
     while not path_ok:
         accept, trial, _ = make_tis_step(rgen, system,
                                          initial_path,
                                          order_function,
                                          interfaces,
                                          integrator,
-                                         allowmaxlength=True,
-                                         aimless=True, freq=0.5,
-                                         start_cond=start_cond)
+                                         local_tis_settings)
         if accept:
-            if start_cond == 'R':  # if new path is better, use it:
-                better = trial.ordermax[0] > initial_path.ordermax[0]
-                better = better and trial.ordermin[0] < middle
-                if better:
+            if tis_settings['start_cond'] == 'R':
+                # if new path is better, use it:
+                if (trial.ordermax[0] > initial_path.ordermax[0] and
+                        trial.ordermin[0] < middle):
                     initial_path = trial
                 path_ok = initial_path.ordermax[0] > right
-            elif start_cond == 'L':  # if new path is better, use it:
-                better = trial.ordermin[0] < initial_path.ordermin[0]
-                better = better and trial.ordermax[0] > middle
-                if better:
+            elif tis_settings['start_cond'] == 'L':
+                # if new path is better, use it:
+                if (trial.ordermin[0] < initial_path.ordermin[0] and
+                        trial.ordermax[0] > middle):
                     initial_path = trial
                 path_ok = initial_path.ordermin[0] < left
             else:
