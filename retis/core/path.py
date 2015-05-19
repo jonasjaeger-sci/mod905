@@ -282,6 +282,29 @@ class Path(object):
         middle = 'M' if cross[1] else '*'
         return start, end, middle, cross
 
+    def is_reactive(self, interfaces):
+        """
+        This is a simple function to determine if a path is reactive
+        or not. It will also return some other info that is usefull for
+        classification of the path.
+
+        Parameters
+        ----------
+        interfaces : list of floats
+            This list is assumed to contain the three interface values
+            left, middle and right
+
+        Returns
+        -------
+        out[0] : str, 'L' or 'R' or None
+            Start condition: did the trajectory start at the left ('L') or
+            right (R) interface.
+        """
+        start, end, middle, cross = self.check_interfaces(interfaces)
+        reactive = ((start == 'L' and end == 'R' and cross[1]) or
+                    (start == 'R' and end == 'L' and cross[1]))
+        return start, end, middle, reactive
+
     def get_end_point(self, left, right):
         """
         This function just returns the end point of the path as
@@ -511,7 +534,7 @@ class PathEnsemble(object):
             self.accepted.append([self.npath, 1])
         else:
             last = self.accepted.pop()
-            self.accepted.append([last[0], last[1]+1])
+            self.accepted.append([last[0], last[1] + 1])
         if path is None:
             self.path_data['generated'].append('')
             self.path_data['status'].append(status)
@@ -526,9 +549,9 @@ class PathEnsemble(object):
             self.path_data['length'].append(len(path.path))
             self.path_data['ordermax'].append(tuple(path.ordermax))
             self.path_data['ordermin'].append(tuple(path.ordermin))
-            left, right, middle, cross = path.check_interfaces(self.interfaces)
-            self.path_data['interface'].append((left, middle, right))
-            if left == 'L' and right == 'R' and cross[1]:
+            start, end, middle, reactive = path.is_reactive(self.interfaces)
+            self.path_data['interface'].append((start, middle, end))
+            if reactive:
                 self.path_data['success'].append(True)
                 self.stats['RX'] += 1
             else:
