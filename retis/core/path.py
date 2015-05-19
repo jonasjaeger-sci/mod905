@@ -498,7 +498,14 @@ class PathEnsemble(object):
         """
         if self.npath >= self.maxpath:
             pass
-        if path:
+        if path is None:
+            self.path_data['generated'].append('')
+            self.path_data['status'].append(status)
+            self.path_data['length'].append(0)
+            self.path_data['ordermax'].append((None, None))
+            self.path_data['ordermin'].append((None, None))
+            self.path_data['interface'].append((False, False, False))
+        else:
             self.path_data['generated'].append(path.generated)
             self.path_data['status'].append(status)
             self.path_data['length'].append(len(path.path))
@@ -512,13 +519,6 @@ class PathEnsemble(object):
             self.path_data['interface'].append((left, middle, right))
             if left == 'L' and right == 'R' and cross[1]:
                 self.stats['RX'] += 1
-        else:
-            self.path_data['generated'].append('')
-            self.path_data['status'].append(status)
-            self.path_data['length'].append(0)
-            self.path_data['ordermax'].append((None, None))
-            self.path_data['ordermin'].append((None, None))
-            self.path_data['interface'].append((False, False, False))
         self.path_data['cycle'].append(cycle)
         self.npath += 1
         self.stats[status] += 1
