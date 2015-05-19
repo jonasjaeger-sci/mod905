@@ -264,20 +264,23 @@ class Path(object):
         out[1] : str, 'L' or 'R' or None
             Ending condition: did the trajectory end at the left ('L') or
             righ ('R') interface or None of them.
-        out[2] : list of boolean
+        out[2] str, 'M' or '*'
+            'M' if middle interface is crossed, '*' otherwise.
+        out[3] : list of boolean
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
-        start, end, cross = None, None, None
+        start, end, middle, cross = None, None, None, None
         if len(self.path) < 1:
             warnings.warn('Path is empty!')
-            return start, end, cross
+            return start, end, middle, cross
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
         left, right = min(interfaces), max(interfaces)
         # check end & start:
         end = self.get_end_point(left, right)
         start = self.get_start_point(left, right)
-        return start, end, cross
+        middle = 'M' if cross[1] else '*'
+        return start, end, middle, cross
 
     def get_end_point(self, left, right):
         """
@@ -401,9 +404,9 @@ class PathEnsemble(object):
 
     This class represents a collection of Paths or a Path ensemble.
     The Path ensemble will not save the phase-space points of the paths
-    but it will store other information about the paths.
-    The PathEnsemble implements a dict ``path_data`` which contains important
-    data for the paths.
+    but it will store other information about the paths which can be used
+    in the analysis. The PathEnsemble implements a dict ``path_data`` which
+    contains important data for the paths.
 
     Attributes
     ----------
@@ -462,13 +465,15 @@ class PathEnsemble(object):
                           'ordermax': [],
                           'generated': [],
                           'interface': [],
-                          'cycle': []}
+                          'cycle': [],
+                          'success': []}
         self.npath = 0
         self.maxpath = maxpath
         self.stats = {}
         for key in _STATUS:
             self.stats[key] = 0
         self.stats['RX'] = 0
+        self.accepted = []
 
     def reset_data(self):
         """
@@ -482,10 +487,14 @@ class PathEnsemble(object):
         for key in self.stats:
             self.stats[key] = 0
         self.npath = 0
+        self.accepted = []
 
     def add_path_data(self, path, status, cycle=0):
         """
         This will append data from the given path to self.path_data
+        As self.path_data may contain rejected paths, we also need to keep
+        track of how many times we should re-count the accepted paths.
+        This is done with the variable self.accepted.
 
         Parameters
         ----------
@@ -498,9 +507,15 @@ class PathEnsemble(object):
         """
         if self.npath >= self.maxpath:
             pass
+        if status == 'ACC':
+            self.accepted.append([self.npath, 1])
+        else:
+            last = self.accepted.pop()
+            self.accepted.append([last[0], last[1]+1])
         if path is None:
             self.path_data['generated'].append('')
             self.path_data['status'].append(status)
+            self.path_data['success'].append(False)
             self.path_data['length'].append(0)
             self.path_data['ordermax'].append((None, None))
             self.path_data['ordermin'].append((None, None))
@@ -511,14 +526,14 @@ class PathEnsemble(object):
             self.path_data['length'].append(len(path.path))
             self.path_data['ordermax'].append(tuple(path.ordermax))
             self.path_data['ordermin'].append(tuple(path.ordermin))
-            left, right, cross = path.check_interfaces(self.interfaces)
-            if cross[1]:
-                middle = 'M'
-            else:
-                middle = '*'
+            left, right, middle, cross = path.check_interfaces(self.interfaces)
             self.path_data['interface'].append((left, middle, right))
             if left == 'L' and right == 'R' and cross[1]:
+                self.path_data['success'].append(True)
                 self.stats['RX'] += 1
+            else:
+                self.path_data['success'].append(False)
+
         self.path_data['cycle'].append(cycle)
         self.npath += 1
         self.stats[status] += 1

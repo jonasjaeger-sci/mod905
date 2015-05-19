@@ -48,7 +48,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     if rgen.rand() < tis_settings['freq']:
         #print('Reversing path')
         new_path = reverse_path(path)
-        start, _, _ = new_path.check_interfaces(interfaces)
+        start, _, _, _ = new_path.check_interfaces(interfaces)
         new_path.generated = 'tr'
         if start == tis_settings['start_cond']:
             accept = True
@@ -190,7 +190,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         return accept, trial_path, status
     # we have made it so far, check if we cross middle interface
     # finally, check if middle interface was crossed:
-    _, _, cross = trial_path.check_interfaces(interfaces)
+    _, _, _, cross = trial_path.check_interfaces(interfaces)
     if not cross[1]:  # not crossed middle
         accept, status = False, 'NCR'
     else:
@@ -258,7 +258,7 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     initial_path = paste_paths(path_back, path_forw, overlap=False)
     if len(initial_path.path) == tis_settings['maxlength']:
         raise ValueError('Initial path too long len(path) >= NX')
-    start, end, _ = initial_path.check_interfaces(interfaces)
+    start, end, _, _ = initial_path.check_interfaces(interfaces)
     # ok, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
     # and continue all the way to the end - perfect!
