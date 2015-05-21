@@ -39,7 +39,7 @@ def histogram(data, bins=10, limits=(-1, 1), density=False):
     return hist, bins, bin_mid
 
 
-def _match_histograms(histo1, histo2, x, overlap):
+def _match_histograms(histo1, histo2, bin_x, overlap):
     """
     Function to mach two histograms. The matching is done
     so that the integral of the overlapping regions of
@@ -51,7 +51,7 @@ def _match_histograms(histo1, histo2, x, overlap):
         The first histogram.
     histo2 : numpy.arraym
         The second histogram, this is the histogram that will be scaled.
-    x : numpy.array
+    bin_x : numpy.array
         This is the bin mid-points of the histograms. Note that we
         assume here that histo1 and histo2 are obtained using the same
         number of bins and limits.
@@ -66,10 +66,10 @@ def _match_histograms(histo1, histo2, x, overlap):
         The calculated scale factor.
     """
     int1, int2 = 0.0, 0.0
-    for hi, hj, xi in zip(histo1, histo2, x):
-        if overlap[0] <= xi < overlap[1]:
-            int1 += hi
-            int2 += hj
+    for histi, histj, bin_xi in zip(histo1, histo2, bin_x):
+        if overlap[0] <= bin_xi < overlap[1]:
+            int1 += histi
+            int2 += histj
     if int2 == 0.0:
         scale_factor = 1.0
     else:
@@ -99,23 +99,23 @@ def match_all_histograms(histograms, umbrellas):
         Count for overall matched histogram - a "averaged" histogram.
     """
     histograms_s, scale_factor = [histograms[0][0]], [1.0]
-    x = histograms[0][2]
+    bin_x = histograms[0][2]
     for i in range(len(umbrellas) - 1):
         limits = (umbrellas[i+1][0], umbrellas[i][1])
-        matched, s = _match_histograms(histograms_s[-1],
-                                       histograms[i+1][0], x, limits)
+        matched, scale = _match_histograms(histograms_s[-1],
+                                           histograms[i+1][0], bin_x, limits)
         histograms_s.append(matched)
-        scale_factor.append(s)
+        scale_factor.append(scale)
     # merge histograms:
     matched_count = []
-    for i, xi in enumerate(x):
-        h = 0.0
-        n = 0.0
-        for k, u in enumerate(umbrellas):
-            if u[0] <= xi < u[1]:
-                h += histograms_s[k][i]
-                n += 1.0
-        if n > 0.0:
-            h /= n
-        matched_count.append(h)
+    for i, bin_xi in enumerate(bin_x):
+        hist = 0.0  # histogram value at bin_xi
+        norm = 0.0
+        for k, umb in enumerate(umbrellas):
+            if umb[0] <= bin_xi < umb[1]:
+                hist += histograms_s[k][i]
+                norm += 1.0
+        if norm > 0.0:
+            hist /= norm
+        matched_count.append(hist)
     return histograms_s, scale_factor, np.array(matched_count)
