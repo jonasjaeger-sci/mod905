@@ -100,7 +100,7 @@ for i, umbrella in enumerate(umbrellas):
     print('Done. Cycles: {}'.format(simulation.cycle['step']-simulation.cycle['start'])) 
 
 # We can now post-process the simulation output.
-from retis.analysis.histogram import histogram, match_all_histograms
+from retis.analysis import histogram, match_all_histograms
 bins = 100
 lim = (-1.1, 1.1)
 histograms = [histogram(traj, bins=bins, limits=lim) for traj in trajectory]
