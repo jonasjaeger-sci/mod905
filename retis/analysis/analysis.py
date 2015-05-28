@@ -25,3 +25,17 @@ def running_average(data):
     """
     one = np.ones(np.shape(data))
     return data.cumsum(axis=0) / one.cumsum(axis=0)
+
+def _chunks(itera, size):
+    """
+    Yield successive size-sized chunks from itera.
+
+    Parameters
+    ----------
+    itera : iterabel
+        This is the iterabel we will return chunks of
+    size : int
+        The size of the chunks
+    """
+    for i in xrange(0, len(itera), size):
+        yield itera[i:i+size]
