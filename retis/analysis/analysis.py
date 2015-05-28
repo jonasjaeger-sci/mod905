@@ -36,6 +36,14 @@ def _chunks(itera, size):
         This is the iterabel we will return chunks of
     size : int
         The size of the chunks
+
+    Returns
+    -------
+    This is an iterator and will yield the chunks
+
+    Notes
+    -----
+    Source: http://stackoverflow.com/a/312464
     """
     for i in xrange(0, len(itera), size):
         yield itera[i:i+size]
