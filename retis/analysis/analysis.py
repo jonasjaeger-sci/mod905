@@ -73,56 +73,49 @@ def block_error(data, maxblock=None, blockskip=1):
 
     Returns
     -------
-    blockid : numpy.array
-        These contains the block lengths consideres
+    blocklen : numpy.array
+        These contains the block lengths considered
     block_avg : numpy.array
         The averages as function of block length
-    block_std : numpy.array
-        The standard deviation as function of block length
-    block_std_avg : float
-        The average standard deviation for block with length
-        > maxblock//2
+    block_err : numpy.array
+        Estimate of errors as function of block length
+    block_err_avg : float
+        Average of the error estimate for blocks with length > maxblock//2
     """
     if maxblock is None:
         maxblock = len(data) // 2
     else:
         maxblock = min(maxblock, len(data) // 2)
     # define helper variables:
-    blockid = np.arange(0, maxblock, blockskip, dtype=np.int_) + 1
-    # blockid contains in reality the lengths of the blocks one should
-    # consider
-    block = np.zeros(len(blockid))  # to accumulate values for a block
-    nblock = np.zeros(len(blockid))  # to count number of whole blocks
-    block_avg = np.zeros(len(blockid))  # to store averages in block
-    block_var = np.zeros(len(blockid))  # to store variance in block
-    block_std = np.zeros(len(blockid))  # to store standard deviation
+    blocklen = np.arange(0, maxblock, blockskip, dtype=np.int_)
+    # blocklen contains the lengths of the blocks
+    blocklen += 1
+    # +1 to make blocklen[i] = length of block no i where numbering
+    # starts at 0 -> blocklen[0] = 1 and so on. Note that arange does
+    # create [0, ..., maxblock).
+    block = np.zeros(len(blocklen))  # to accumulate values for a block
+    nblock = np.zeros(block.shape)  # to count number of whole blocks
+    block_avg = np.zeros(block.shape)  # to store averages in block
+    block_var = np.zeros(block.shape)  # estimator of variance
+
     for i, datai in enumerate(data):
         block += datai  # accumulate the value to all blocks
-        # next pick out blocks which are full:
-        k = np.where((i + 1) % blockid == 0)[0]
-        block_avg[k] = block_avg[k] + block[k]
-        block_var[k] = block_var[k] + block[k]**2
-        block[k] = 0.0
+        # next pick out blocks which are "full":
+        k = np.where((i + 1) % blocklen == 0)[0]
+        # update estimate of average and variance
+        block[k] = block[k] / blocklen[k]
         nblock[k] += 1
-        #if i%1000==0: print i
-    # remaining of blocks is thrown away
-    # Next, calculate average and variance.
-    # here we also accumulate values for block where the length
-    # is larger then half the maxblock length in order to calculate
-    # an average relative error and average correlation length
-    block_std_avg = []
-    for i, j in enumerate(blockid):
-        block_avg[i] /= float(j + 1) * nblock[i]
-        block_var[i] /= float(j + 1)**2 * nblock[i]
-        denom = nblock[i] - 1.0
-        if denom > 0:
-            block_var[i] = (block_var[i] - block_avg[i]**2) / denom
-        else:
-            block_var[i] = 0.0
-        block_std[i] = np.sqrt(block_var[i])
-        if j > (maxblock // 2):
-            block_std_avg.append(block_std[i])
-    block_std_avg = np.average(block_std_avg)
+        deltas = block[k] - block_avg[k]
+        block_avg[k] = block_avg[k] + deltas/nblock[k]
+        block_var[k] = block_var[k] + deltas*(block[k] - block_avg[k])
+        # reset these blocks
+        block[k] = 0.0
+        if i % 1000 == 0:
+            print i
+    block_var = block_var / (nblock - 1)
+    block_err = np.sqrt(block_var/nblock)  # estimate of error
+    k = np.where(blocklen > maxblock // 2)[0]
+    block_err_avg = np.average(block_err[k])
     # calculate relative errors
     #try:
     #    rel_err = block_std / abs(block_avg[0])
@@ -137,4 +130,4 @@ def block_error(data, maxblock=None, blockskip=1):
     #except ZeroDivisionError:
     #    ncor = float('inf') * block_std
     #    avg_ncor = float('inf')
-    return blockid, block_avg, block_std, block_std_avg
+    return blocklen, block_avg, block_err, block_err_avg
