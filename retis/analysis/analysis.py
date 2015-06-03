@@ -108,8 +108,8 @@ def block_error(data, maxblock=None, blockskip=1):
         block[k] = block[k] / blocklen[k]
         nblock[k] += 1
         deltas = block[k] - block_avg[k]
-        block_avg[k] = block_avg[k] + deltas/nblock[k]
-        block_var[k] = block_var[k] + deltas*(block[k] - block_avg[k])
+        block_avg[k] = block_avg[k] + deltas / nblock[k]
+        block_var[k] = block_var[k] + deltas * (block[k] - block_avg[k])
         # reset these blocks
         block[k] = 0.0
         if i % 1000 == 0:
@@ -119,6 +119,7 @@ def block_error(data, maxblock=None, blockskip=1):
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
     return blocklen, block_avg, block_err, block_err_avg
+
 
 def _block_error_relative(block_avg, block_err, block_err_avg):
     """
