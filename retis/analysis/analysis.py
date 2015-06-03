@@ -5,7 +5,7 @@ This file contains some simple methods for numerical analysis.
 
 import numpy as np
 
-__all__ = ['running_average', 'block_error', 'block_error_relative']
+__all__ = ['running_average', 'block_error']
 
 
 def running_average(data):
@@ -117,49 +117,3 @@ def block_error(data, maxblock=None, blockskip=1):
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
     return blocklen, block_avg, block_err, block_err_avg
-
-
-def block_error_relative(block_avg, block_err, block_err_avg):
-    """
-    This is a helper function to estimate the correlation length
-    and relative errors from a block analysis.
-
-    Parameters
-    ----------
-    block_avg : numpy.array
-        These are the block averages, as obtained from the
-        block_error function.
-    block_err : numpy.array
-        These are the error estimates, as obtained from the
-        block_error function.
-    block_err_avg : float
-        The average block error, as obtained from the block_error function.
-
-    Returns
-    -------
-    rel_err : numpy.array
-        Relative errors (wrt. the overall average) as function of block size.
-    avg_rel_err : float
-        Average relative errors (wrt. the overall average) as function of
-        block-size. Note that block_err_avg are calculated from block_err in
-        the block_error function by considering a subset of the blocks.
-    ncor : numpy.array
-        Estimated correlation length as function of block size.
-    avg_ncor : float
-        Average correlation length based on block_err_avg
-    """
-    # calculate relative errors
-    try:
-        rel_err = block_err / abs(block_avg[0])
-        avg_rel_err = block_err_avg / abs(block_avg[0])
-    except ZeroDivisionError:
-        rel_err = float('inf')
-        avg_rel_err = float('inf')
-    # and correlation
-    try:
-        ncor = (block_err / block_err[0])**2
-        avg_ncor = (block_err_avg / block_err[0])**2
-    except ZeroDivisionError:
-        ncor = float('inf')
-        avg_ncor = float('inf')
-    return rel_err, avg_rel_err, ncor, avg_ncor
