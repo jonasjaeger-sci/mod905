@@ -112,8 +112,6 @@ def block_error(data, maxblock=None, blockskip=1):
         block_var[k] = block_var[k] + deltas * (block[k] - block_avg[k])
         # reset these blocks
         block[k] = 0.0
-        if i % 1000 == 0:
-            print i
     block_var = block_var / (nblock - 1)
     block_err = np.sqrt(block_var/nblock)  # estimate of error
     k = np.where(blocklen > maxblock // 2)[0]
