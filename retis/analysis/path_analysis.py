@@ -102,10 +102,42 @@ def pcross_lambda(pathensemble, ngrid=1000):
     # next create the ``cumulative histogram'':
     ordermax = min(ordermax, max(pathensemble.interfaces))
     ordermin = pathensemble.interfaces[1]
+    pcross, lamb = _pcross_lambda_cumulative(orderparam, ordermin, ordermax,
+                                             ngrid, weights=weights)
+    return pcross, lamb
+
+
+def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
+                              weights=None):
+    """
+    This is a helper function for pcross_lambda, it will do the actual
+    calculation of the crossing probability as a function of order parameter.
+
+    It is split of from pcross_lambda in case the same analysis is to
+    be done for something different from a path ensemble, for instance
+    the results from the old tismol program.
+
+    Parameters
+    ----------
+    orderparam : numpy.array
+        Array with the order parameters
+    ordermin : float
+        Minimum allowed order parameter
+    ordermax : float
+        Maximum allowed order parameter
+    ngrid : int
+        This is the number of grid points
+    weights : numpy.array, optional
+        The weight of each order parameter. This is used in order to
+        count a specific order parameter more than once.
+        If it's not given, then all order parameters will be weights equally.
+    """
     lamb = np.linspace(ordermin, ordermax, ngrid)
     pcross = np.zeros(ngrid)
     delta_l = lamb[1] - lamb[0]
     sumw = 0.0
+    if weights is None:
+        weights = np.ones(orderparam.shape)
     for orderp, weight in zip(orderparam, weights):
         idx = int((orderp - ordermin) / delta_l)
         if idx >= ngrid:
