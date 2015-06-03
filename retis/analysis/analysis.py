@@ -118,7 +118,6 @@ def block_error(data, maxblock=None, blockskip=1):
     block_err = np.sqrt(block_var/nblock)  # estimate of error
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
-    print _block_error_relative(block_avg, block_err, block_err_avg)
     return blocklen, block_avg, block_err, block_err_avg
 
 def _block_error_relative(block_avg, block_err, block_err_avg):
