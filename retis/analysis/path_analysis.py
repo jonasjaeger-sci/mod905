@@ -5,10 +5,11 @@ in the object PathEnsemble in retis.core.path
 """
 from __future__ import absolute_import
 import numpy as np
-from .analysis import running_average
+from .analysis import running_average, block_error
 
 
-__all__ = ['running_pcross', 'pcross_lambda']
+__all__ = ['running_pcross', 'pcross_lambda', 'pcross_error',
+           'get_path_distribution']
 
 
 def _get_successfull(pathensemble):
@@ -149,3 +150,68 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
             pcross[:idx+1] += weight
     pcross /= sumw  # normalization
     return pcross, lamb
+
+
+def pcross_error(pathensemble, maxblock=5000, blockskip=1, data=None):
+    """
+    This function will run the block error analysis for the
+    path ensemble.
+
+    Parameters
+    ----------
+    pathensemble : object of type retis.core.path.PathEnsemble
+        This is the PathEnsemble we will analyse
+    maxblock : int
+        The maximum block length to consider
+    blockskip = int
+        Intervall between blocks. Blocks are created as 1, 1+blockskip, ...
+        up to maxblock.
+    data : numpy.array
+        This is the data created by _get_successfull(pathensemble)
+        If this function has been executed, the result can be re-used here
+        by specifying data. If not, it will be generated
+    """
+    if data is None:
+        data = _get_successfull(pathensemble)
+
+    blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
+                                             blockskip=blockskip)
+    # also calculate some relative errors:
+    try:
+        rel_err = berr / abs(bavg[0])
+        avg_rel_err = berr_avg / abs(bavg[0])
+    except ZeroDivisionError:
+        rel_err = float('inf')
+        avg_rel_err = float('inf')
+    # and correlation estimate:
+    try:
+        ncor = (berr / berr[0])**2
+        avg_ncor = (berr_avg / berr[0])**2
+    except ZeroDivisionError:
+        ncor = float('inf')
+        avg_ncor = float('inf')
+    return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
+
+
+def get_path_distribution(pathensemble):
+    """
+    This function will get the distribution of path-lengths for the
+    successful paths
+    """
+    # first get lengths of successfull:
+    lengths = []
+    for (pathid, reps) in pathensemble.accepted:
+        length = pathensemble.path_data['length'][pathid]
+        lengths.extend([length]*reps)
+
+    lengths2 = []
+    for mc_move, length in zip(pathensemble.path_data['generated'],
+                               pathensemble.path_data['length']):
+        if mc_move == 'tr':
+            lengths2.append(0)
+        elif mc_move == 'sh':
+            lengths2.append(length-1)
+        else:
+            raise ValueError('Unknown mc move')
+    print len(lengths), len(lengths2)
+    return np.array(lengths), np.array(lengths2)
