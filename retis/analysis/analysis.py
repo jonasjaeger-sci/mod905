@@ -5,7 +5,7 @@ This file contains some simple methods for numerical analysis.
 
 import numpy as np
 
-__all__ = ['running_average', 'block_error']
+__all__ = ['running_average', 'block_error', 'block_error_relative']
 
 
 def running_average(data):
@@ -119,7 +119,7 @@ def block_error(data, maxblock=None, blockskip=1):
     return blocklen, block_avg, block_err, block_err_avg
 
 
-def _block_error_relative(block_avg, block_err, block_err_avg):
+def block_error_relative(block_avg, block_err, block_err_avg):
     """
     This is a helper function to estimate the correlation length
     and relative errors from a block analysis.
