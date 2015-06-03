@@ -55,7 +55,9 @@ def block_error(data, maxblock=None, blockskip=1):
     This method will estimate the standard deviation in the input
     data by performing a block analysis. The number of blocks
     to consider can be specified or it will be taken as the
-    half of the length of the input data.
+    half of the length of the input data. Averages and variance is calculated
+    using the on-the-fly algorithm presented here:
+    http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
 
     Parameters
     ----------
@@ -116,18 +118,50 @@ def block_error(data, maxblock=None, blockskip=1):
     block_err = np.sqrt(block_var/nblock)  # estimate of error
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
-    # calculate relative errors
-    #try:
-    #    rel_err = block_std / abs(block_avg[0])
-    #    avg_rel_err = avg_abs_err / abs(block_avg[0])
-    #except ZeroDivisionError:
-    #    rel_err = float('inf') * block_std
-    #    avg_rel_err = float('inf')
-    # and correlation
-    #try:
-    #    ncor = (block_std / block_std[0])**2
-    #    avg_ncor = (avg_abs_err / block_std[0])**2
-    #except ZeroDivisionError:
-    #    ncor = float('inf') * block_std
-    #    avg_ncor = float('inf')
+    print _block_error_relative(block_avg, block_err, block_err_avg)
     return blocklen, block_avg, block_err, block_err_avg
+
+def _block_error_relative(block_avg, block_err, block_err_avg):
+    """
+    This is a helper function to estimate the correlation length
+    and relative errors from a block analysis.
+
+    Parameters
+    ----------
+    block_avg : numpy.array
+        These are the block averages, as obtained from the
+        block_error function.
+    block_err : numpy.array
+        These are the error estimates, as obtained from the
+        block_error function.
+    block_err_avg : float
+        The average block error, as obtained from the block_error function.
+
+    Returns
+    -------
+    rel_err : numpy.array
+        Relative errors (wrt. the overall average) as function of block size.
+    avg_rel_err : float
+        Average relative errors (wrt. the overall average) as function of
+        block-size. Note that block_err_avg are calculated from block_err in
+        the block_error function by considering a subset of the blocks.
+    ncor : numpy.array
+        Estimated correlation length as function of block size.
+    avg_ncor : float
+        Average correlation length based on block_err_avg
+    """
+    # calculate relative errors
+    try:
+        rel_err = block_err / abs(block_avg[0])
+        avg_rel_err = block_err_avg / abs(block_avg[0])
+    except ZeroDivisionError:
+        rel_err = float('inf')
+        avg_rel_err = float('inf')
+    # and correlation
+    try:
+        ncor = (block_err / block_err[0])**2
+        avg_ncor = (block_err_avg / block_err[0])**2
+    except ZeroDivisionError:
+        ncor = float('inf')
+        avg_ncor = float('inf')
+    return rel_err, avg_rel_err, ncor, avg_ncor
