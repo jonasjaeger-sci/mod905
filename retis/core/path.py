@@ -54,6 +54,13 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     maxlen : float, optional
         This is the maximum length for the new path. If it's not given, it will
         just be set to the largest of the maxlen of the two given paths.
+
+    Note
+    ----
+    Some information about the path will not be set here. This must be set
+    elsewhere. This includes:
+        path.generated
+        path.status
     """
     if maxlen is None:
         if path_back.maxlen == path_forw.maxlen:
@@ -142,6 +149,13 @@ class Path(object):
     status : str or None
         The status of the path. The possibilities are defined
         in the variable _STATUS
+    generated : tuple
+        This contains information on how the path was generated.
+        generated[0] : string, one of _GENERATED
+        generated[1:] : additional information:
+        For generated[0] == 'sh' the additional information is the index
+        of the shooting point on the old path, the new path and the
+        corresponding order parameter.
     """
     def __init__(self, maxlen=None, time_origin=0):
         """
@@ -443,7 +457,7 @@ class Path(object):
         if self.status:
             msg += ['\tStatus: {}'.format(_STATUS[self.status])]
         if self.generated:
-            msg += ['\tGenerated: {}'.format(_GENERATED[self.generated])]
+            msg += ['\tGenerated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
 
 

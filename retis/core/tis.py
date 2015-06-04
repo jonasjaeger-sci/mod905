@@ -47,26 +47,50 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     """
     if rgen.rand() < tis_settings['freq']:
         #print('Reversing path')
-        new_path = reverse_path(path)
-        start, _, _, _ = new_path.check_interfaces(interfaces)
-        new_path.generated = 'tr'
-        if start == tis_settings['start_cond']:
-            accept = True
-            status = 'ACC'
-        else:
-            accept = False
-            status = 'BWI'  # backward trajectory end at wrong interface
-        new_path.status = status
-
+        accept, new_path, status = _time_reversal(path, interfaces,
+                                                  tis_settings)
     else:
         #print('Shooting')
         accept, new_path, status = _shoot(rgen, system, path, order_function,
                                           interfaces, integrator, tis_settings)
-        if new_path:  # store some additional data for the shooting move
-            #new_path.parent = path
-            new_path.generated = 'sh'
     return accept, new_path, status
 
+
+def _time_reversal(path, interfaces, tis_settings):
+    """
+    Method to perform a time-reversal move.
+
+    Parameters
+    ----------
+    path : object of type Path
+        This is the input path wich will be used for generating a new path.
+    interfaces : list/tuple of floats
+        These are the interface positions on form [left, middle, right]
+    tis_settings : dict
+        This contains the settings for TIS. Used here are:
+            start_cond : string, starting condition, 'L'eft or 'R'ight
+
+    Returns
+    -------
+    out[0] : boolean
+        True if the path can be accepted
+    out[1] : object of type Path or None
+        Returns the generated Path if something was generated
+    out[2] : string
+        Status of the path, this is one of the strings defined in
+        retis.core.path._STATUS
+    """
+    new_path = reverse_path(path)
+    start, _, _, _ = new_path.check_interfaces(interfaces)
+    new_path.generated = ('tr')  # explicitly set how this was generated
+    if start == tis_settings['start_cond']:
+        accept = True
+        status = 'ACC'
+    else:
+        accept = False
+        status = 'BWI'  # backward trajectory end at wrong interface
+    new_path.status = status
+    return accept, new_path, status
 
 def _shoot(rgen, system, path, order_function, interfaces, integrator,
            tis_settings):
@@ -180,6 +204,8 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # and ask later:
     trial_path = paste_paths(path_back, path_forw, overlap=True,
                              maxlen=tis_settings['maxlength'])
+    # here we should also store information about the shooting point:
+    trial_path.generated = ('sh', idx, len(path_back.path)-1, orderp)
     if not success_forw:
         accept = False
         status = 'FTL'
