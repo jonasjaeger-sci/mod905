@@ -9,7 +9,7 @@ from .analysis import running_average, block_error
 
 
 __all__ = ['running_pcross', 'pcross_lambda', 'pcross_error',
-           'get_path_distribution']
+           'get_path_distribution', 'shoot_analysis']
 
 
 def _get_successfull(pathensemble):
@@ -226,3 +226,37 @@ def get_path_distribution(pathensemble):
             raise ValueError('Unknown mc move: {}'.format(move))
     length_all = np.array(length_all)
     return length_acc, length_all
+
+
+def shoot_analysis(pathensemble):
+    """
+    This method will do a shoot analysis of the pathensemble.
+
+    Parameters
+    ----------
+    pathensemble : object of type retis.core.path.PathEnsemble
+        This is the PathEnsemble we will analyse
+
+    Returns
+    -------
+    out : dict
+        For each possible status ('ACC, 'BWI', etc) this dict will contain
+        a numpy.array of the order parameter in the shooting point.
+        It will also contain a 'REJ' key which is the concatenation of all
+        rejected and a 'ALL' key which is simply all the values.
+    """
+    shoot_stats = {'REJ':[], 'ALL':[]}
+    for path in pathensemble.paths:
+        move = path['generated'][0]
+        if move == 'sh':
+            orderp = path['generated'][1]
+            status = path['status']
+            if not status in shoot_stats:
+                shoot_stats[status] = []
+            shoot_stats[status].append(orderp)
+            if status != 'ACC':
+                shoot_stats['REJ'].append(orderp)
+            shoot_stats['ALL'].append(orderp)
+    for key in shoot_stats:
+        shoot_stats[key] = np.array(shoot_stats[key])
+    return shoot_stats
