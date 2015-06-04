@@ -358,6 +358,32 @@ class Path(object):
             warnings.warn('Undefined starting point')
         return start
 
+    def get_path_data(self, status, interfaces):
+        """
+        This function will return the information about the path which
+        will be stored in the path ensemble.
+
+        Parameters
+        ----------
+        status : string
+            This represents the current status of the path.
+        interfaces : list
+            These are just the interfaces we are currently considering.
+        """
+        path_info = {}
+        path_info['generated'] = self.generated
+        path_info['status'] = status
+        path_info['length'] = len(self.path)
+        path_info['ordermax'] = tuple(self.ordermax)
+        path_info['ordermin'] = tuple(self.ordermin)
+        start, end, middle, reactive = self.is_reactive(interfaces)
+        path_info['interface'] = (start, middle, end)
+        if reactive:
+            path_info['success'] = True
+        else:
+            path_info['success'] = False
+        return path_info
+
     def __add__(self, other):
         """
         This functions defines how we add two paths,
@@ -439,27 +465,10 @@ class PathEnsemble(object):
     interfaces : list of ints
         These are the interfaces specified with the values
         for the order parameters: [left, middle, right]
-    path_data : dict
-        This dict contains information about the paths. The possible keys are:
-        status : list of strings
-            This is the status of the path. The possibilities are defined in
-            the variable _STATUS.
-        length : list of ints
-            This is the path lengths.
-        ordermin : list of tuples. ordermin[i][0] = minimum order parameter of
-            the path, ordermin[i][1] = index in the path where this occurs.
-        ordermax : list of tuples. ordermax[i][0] = maximum order parameter of
-            the path, ordermax[i][1] = index in the path where this occurs.
-        generated :  list of strings
-            The strings indicate how the paths were generated. The
-            possibilities are defined in _GENERATED
-        interface : list of typles
-            interface[i] = (start, middle, end) for path i. start/end can
-            be 'L'/'R'/'*' and middle can be 'M' or '*'. This is a string
-            representation on where the path started, where it ended and
-            if it crossed the middle interface.
-        cycle :  list of ints
-            This is the cycle number where the path was generated.
+    paths : list
+        This list contains the stored information for the paths.
+        The information that is stored is obtained through the
+        ``get_path_data''function of the Path object.
     npath : int
         The number of paths stored.
     maxpath : int
@@ -482,15 +491,8 @@ class PathEnsemble(object):
         """
         self.ensemble = ensemble
         self.interfaces = tuple(interfaces)  # Should not change interfaces
-        self.path_data = {'status': [],
-                          'length': [],
-                          'ordermin': [],
-                          'ordermax': [],
-                          'generated': [],
-                          'interface': [],
-                          'cycle': [],
-                          'success': []}
         self.npath = 0
+        self.paths = []
         self.maxpath = maxpath
         self.stats = {}
         for key in _STATUS:
@@ -505,8 +507,7 @@ class PathEnsemble(object):
         file in order to periodically write and empty the amount of data
         stored in memory.
         """
-        for key in self.path_data:
-            self.path_data[key] = []
+        self.paths = []
         for key in self.stats:
             self.stats[key] = 0
         self.npath = 0
@@ -535,29 +536,16 @@ class PathEnsemble(object):
         else:
             last = self.accepted.pop()
             self.accepted.append([last[0], last[1] + 1])
-        if path is None:
-            self.path_data['generated'].append('')
-            self.path_data['status'].append(status)
-            self.path_data['success'].append(False)
-            self.path_data['length'].append(0)
-            self.path_data['ordermax'].append((None, None))
-            self.path_data['ordermin'].append((None, None))
-            self.path_data['interface'].append((False, False, False))
-        else:
-            self.path_data['generated'].append(path.generated)
-            self.path_data['status'].append(status)
-            self.path_data['length'].append(len(path.path))
-            self.path_data['ordermax'].append(tuple(path.ordermax))
-            self.path_data['ordermin'].append(tuple(path.ordermin))
-            start, end, middle, reactive = path.is_reactive(self.interfaces)
-            self.path_data['interface'].append((start, middle, end))
-            if reactive:
-                self.path_data['success'].append(True)
-                self.stats['RX'] += 1
-            else:
-                self.path_data['success'].append(False)
 
-        self.path_data['cycle'].append(cycle)
+        if path is None:
+            # just store minimal info
+            self.paths.append({'status': status})
+        else:
+            path_data = path.get_path_data(status, self.interfaces)
+            self.paths.append(path_data)  # store the new data
+            if path_data['success']:
+                self.stats['RX'] += 1
+        self.paths[-1]['cycle'] = cycle  # also just store the cycle number
         self.npath += 1
         self.stats[status] += 1
 

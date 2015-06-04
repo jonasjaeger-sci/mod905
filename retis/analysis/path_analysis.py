@@ -33,7 +33,7 @@ def _get_successfull(pathensemble):
     """
     data = []
     for (pathid, reps) in pathensemble.accepted:
-        value = 1 if pathensemble.path_data['success'][pathid] else 0
+        value = 1 if pathensemble.paths[pathid]['success'] else 0
         data += reps * [value]
     return np.array(data)
 
@@ -95,7 +95,7 @@ def pcross_lambda(pathensemble, ngrid=1000):
     weights = []
     ordermax = None
     for (pathid, reps) in pathensemble.accepted:
-        orderp = pathensemble.path_data['ordermax'][pathid][0]
+        orderp = pathensemble.paths[pathid]['ordermax'][0]
         if ordermax is None or orderp > ordermax:
             ordermax = orderp
         orderparam.append(orderp)
@@ -201,16 +201,15 @@ def get_path_distribution(pathensemble):
     # first get lengths of successfull:
     lengths = []
     for (pathid, reps) in pathensemble.accepted:
-        length = pathensemble.path_data['length'][pathid]
+        length = pathensemble.paths[pathid]['length']
         lengths.extend([length]*reps)
 
     lengths2 = []
-    for mc_move, length in zip(pathensemble.path_data['generated'],
-                               pathensemble.path_data['length']):
-        if mc_move == 'tr':
+    for path in pathensemble.paths:
+        if path['generated'] == 'tr':
             lengths2.append(0)
-        elif mc_move == 'sh':
-            lengths2.append(length-1)
+        elif path['generated'] == 'sh':
+            lengths2.append(path['length']-1)
         else:
             raise ValueError('Unknown mc move')
     print len(lengths), len(lengths2)
