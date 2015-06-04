@@ -195,22 +195,33 @@ def pcross_error(pathensemble, maxblock=5000, blockskip=1, data=None):
 
 def get_path_distribution(pathensemble):
     """
-    This function will get the distribution of path-lengths for the
-    successful paths
+    This function will get the distribution of path-lengths.
+
+    Parameters
+    ----------
+    pathensemble : object of type retis.core.path.PathEnsemble
+        This is the PathEnsemble we will analyse
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The length of the accepted paths
+    out[1] : numpy.array
+        The length of all paths
     """
-    # first get lengths of successfull:
-    lengths = []
+    # first get lengths of accepted paths:
+    length_acc = []
     for (pathid, reps) in pathensemble.accepted:
         length = pathensemble.paths[pathid]['length']
-        lengths.extend([length]*reps)
-
-    lengths2 = []
+        length_acc.extend([length]*reps)
+    length_acc = np.array(length_acc)
+    length_all = []
     for path in pathensemble.paths:
         if path['generated'] == 'tr':
-            lengths2.append(0)
+            length_all.append(0)
         elif path['generated'] == 'sh':
-            lengths2.append(path['length']-1)
+            length_all.append(path['length']-1)
         else:
             raise ValueError('Unknown mc move')
-    print len(lengths), len(lengths2)
-    return np.array(lengths), np.array(lengths2)
+    length_all = np.array(length_all)
+    return length_acc, length_all
