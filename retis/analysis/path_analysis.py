@@ -217,11 +217,12 @@ def get_path_distribution(pathensemble):
     length_acc = np.array(length_acc)
     length_all = []
     for path in pathensemble.paths:
-        if path['generated'] == 'tr':
+        move = path['generated'][0]
+        if move == 'tr':
             length_all.append(0)
-        elif path['generated'] == 'sh':
+        elif move == 'sh':
             length_all.append(path['length']-1)
         else:
-            raise ValueError('Unknown mc move')
+            raise ValueError('Unknown mc move: {}'.format(move))
     length_all = np.array(length_all)
     return length_acc, length_all
