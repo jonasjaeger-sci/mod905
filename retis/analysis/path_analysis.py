@@ -57,12 +57,14 @@ def running_pcross(pathensemble, data=None):
 
     Returns
     -------
-    out : numpy.array
+    out[0] : numpy.array
         The running average of the crossing probability
+    out[1] : numpy.array
+        The original data, can be used further.
     """
     if data is None:
         data = _get_successfull(pathensemble)
-    return running_average(data)
+    return running_average(data), data
 
 
 def pcross_lambda(pathensemble, ngrid=1000):
