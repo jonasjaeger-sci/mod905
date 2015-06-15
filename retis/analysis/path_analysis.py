@@ -12,7 +12,7 @@ __all__ = ['running_pcross', 'pcross_lambda', 'pcross_error',
            'get_path_distribution', 'shoot_analysis']
 
 
-def _get_successfull(pathensemble):
+def _get_successfull(pathensemble, idetect):
     """
     This is a helper function to build the data of accepted paths.
     In the PathEmsemble object, accepted paths are store as a list of
@@ -25,6 +25,9 @@ def _get_successfull(pathensemble):
     ----------
     pathensemble : object of type retis.core.path.PathEnsemble
         This is the PathEnsemble we will analyse
+    idetect : float
+        This is the interface used for detecting if a path is usccessfull
+        or not.
 
     Returns
     -------
@@ -33,12 +36,12 @@ def _get_successfull(pathensemble):
     """
     data = []
     for (pathid, reps) in pathensemble.accepted:
-        value = 1 if pathensemble.paths[pathid]['success'] else 0
+        value = 1 if pathensemble.paths[pathid]['ordermax'][0] > idetect else 0
         data += reps * [value]
     return np.array(data)
 
 
-def running_pcross(pathensemble, data=None):
+def running_pcross(pathensemble, idetect, data=None):
     """
     Function to create a running average of the crossing probability
     as function of the cycle number. Note that the accepted paths are used
@@ -54,6 +57,9 @@ def running_pcross(pathensemble, data=None):
         This is the data created by _get_successfull(pathensemble)
         If this function has been executed, the result can be re-used here
         by specifying data. If not, it will be generated
+    idetect : float
+        This is the interface used for detecting if a path is usccessfull
+        or not. I
 
     Returns
     -------
@@ -63,7 +69,7 @@ def running_pcross(pathensemble, data=None):
         The original data, can be used further.
     """
     if data is None:
-        data = _get_successfull(pathensemble)
+        data = _get_successfull(pathensemble, idetect)
     return running_average(data), data
 
 
@@ -154,7 +160,8 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     return pcross, lamb
 
 
-def pcross_error(pathensemble, maxblock=5000, blockskip=1, data=None):
+def pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
+                 data=None):
     """
     This function will run the block error analysis for the
     path ensemble.
@@ -172,9 +179,12 @@ def pcross_error(pathensemble, maxblock=5000, blockskip=1, data=None):
         This is the data created by _get_successfull(pathensemble)
         If this function has been executed, the result can be re-used here
         by specifying data. If not, it will be generated
+    idetect : float
+        This is the interface used for detecting if a path is usccessfull
+        or not.
     """
     if data is None:
-        data = _get_successfull(pathensemble)
+        data = _get_successfull(pathensemble, idetect)
 
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)

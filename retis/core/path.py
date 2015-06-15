@@ -296,29 +296,6 @@ class Path(object):
         middle = 'M' if cross[1] else '*'
         return start, end, middle, cross
 
-    def is_reactive(self, interfaces):
-        """
-        This is a simple function to determine if a path is reactive
-        or not. It will also return some other info that is usefull for
-        classification of the path.
-
-        Parameters
-        ----------
-        interfaces : list of floats
-            This list is assumed to contain the three interface values
-            left, middle and right
-
-        Returns
-        -------
-        out[0] : str, 'L' or 'R' or None
-            Start condition: did the trajectory start at the left ('L') or
-            right (R) interface.
-        """
-        start, end, middle, cross = self.check_interfaces(interfaces)
-        reactive = ((start == 'L' and end == 'R' and cross[1]) or
-                    (start == 'R' and end == 'L' and cross[1]))
-        return start, end, middle, reactive
-
     def get_end_point(self, left, right):
         """
         This function just returns the end point of the path as
@@ -390,12 +367,8 @@ class Path(object):
         path_info['length'] = len(self.path)
         path_info['ordermax'] = tuple(self.ordermax)
         path_info['ordermin'] = tuple(self.ordermin)
-        start, end, middle, reactive = self.is_reactive(interfaces)
+        start, end, middle, _ = self.check_interfaces(interfaces)
         path_info['interface'] = (start, middle, end)
-        if reactive:
-            path_info['success'] = True
-        else:
-            path_info['success'] = False
         return path_info
 
     def __add__(self, other):
@@ -511,7 +484,6 @@ class PathEnsemble(object):
         self.stats = {}
         for key in _STATUS:
             self.stats[key] = 0
-        self.stats['RX'] = 0
         self.accepted = []
 
     def reset_data(self):
@@ -557,8 +529,6 @@ class PathEnsemble(object):
         else:
             path_data = path.get_path_data(status, self.interfaces)
             self.paths.append(path_data)  # store the new data
-            if path_data['success']:
-                self.stats['RX'] += 1
         self.paths[-1]['cycle'] = cycle  # also just store the cycle number
         self.npath += 1
         self.stats[status] += 1
@@ -570,5 +540,4 @@ class PathEnsemble(object):
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tNumber of paths stored: {}'.format(self.npath)]
         msg += ['\tNumber of paths accepted: {}'.format(self.stats['ACC'])]
-        msg += ['\tNumber of reactive paths: {}'.format(self.stats['RX'])]
         return '\n'.join(msg)
