@@ -460,9 +460,6 @@ class PathEnsemble(object):
         The number of paths stored.
     maxpath : int
         The maximum number of paths to store.
-    stats : dict
-        This dict just contain some numbers which can be used
-        for statistics during the simulation.
     """
     def __init__(self, ensemble, interfaces, maxpath=100000):
         """
@@ -481,10 +478,6 @@ class PathEnsemble(object):
         self.npath = 0
         self.paths = []
         self.maxpath = maxpath
-        self.stats = {}
-        for key in _STATUS:
-            self.stats[key] = 0
-        self.accepted = []
 
     def reset_data(self):
         """
@@ -494,17 +487,11 @@ class PathEnsemble(object):
         stored in memory.
         """
         self.paths = []
-        for key in self.stats:
-            self.stats[key] = 0
         self.npath = 0
-        self.accepted = []
 
     def add_path_data(self, path, status, cycle=0):
         """
         This will append data from the given path to self.path_data
-        As self.path_data may contain rejected paths, we also need to keep
-        track of how many times we should re-count the accepted paths.
-        This is done with the variable self.accepted.
 
         Parameters
         ----------
@@ -517,12 +504,6 @@ class PathEnsemble(object):
         """
         if self.npath >= self.maxpath:
             pass
-        if status == 'ACC':
-            self.accepted.append([self.npath, 1])
-        else:
-            last = self.accepted.pop()
-            self.accepted.append([last[0], last[1] + 1])
-
         if path is None:
             # just store minimal info
             path_data = {'status': status}
@@ -531,7 +512,19 @@ class PathEnsemble(object):
         path_data['cycle'] = cycle  # also store cycle number
         self.paths.append(path_data)  # store the new data
         self.npath += 1
-        self.stats[status] += 1
+
+    def get_accepted(self):
+        """
+        This method will give an iterator usefull for iterating over
+        accepted paths only. In the PathEnsemble we store both accepted
+        and rejected paths. This method will loop over all paths stored
+        and yield the accepted paths the correct number of times.
+        """
+        last_path = None
+        for path in self.paths:
+            if path['status'] == 'ACC':
+                last_path = path
+            yield last_path
 
     def __str__(self):
         """
@@ -539,5 +532,4 @@ class PathEnsemble(object):
         """
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tNumber of paths stored: {}'.format(self.npath)]
-        msg += ['\tNumber of paths accepted: {}'.format(self.stats['ACC'])]
         return '\n'.join(msg)

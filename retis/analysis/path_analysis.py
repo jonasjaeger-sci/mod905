@@ -35,9 +35,9 @@ def _get_successfull(pathensemble, idetect):
         These are the values giving if paths are successfull or not.
     """
     data = []
-    for (pathid, reps) in pathensemble.accepted:
-        value = 1 if pathensemble.paths[pathid]['ordermax'][0] > idetect else 0
-        data += reps * [value]
+    for path in pathensemble.get_accepted():
+        value = 1 if path['ordermax'][0] > idetect else 0
+        data.append(value)
     return np.array(data)
 
 
@@ -100,19 +100,18 @@ def pcross_lambda(pathensemble, ngrid=1000):
     # first, get the boundaries and order parameters of the
     # accepted paths
     orderparam = []
-    weights = []
     ordermax = None
-    for (pathid, reps) in pathensemble.accepted:
-        orderp = pathensemble.paths[pathid]['ordermax'][0]
+    for path in pathensemble.get_accepted():
+        orderp = path['ordermax'][0]
         if ordermax is None or orderp > ordermax:
             ordermax = orderp
         orderparam.append(orderp)
-        weights.append(reps)
+    orderparam = np.array(orderparam)
     # next create the ``cumulative histogram'':
     ordermax = min(ordermax, max(pathensemble.interfaces))
     ordermin = pathensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(orderparam, ordermin, ordermax,
-                                             ngrid, weights=weights)
+                                             ngrid)
     return pcross, lamb
 
 
@@ -222,10 +221,7 @@ def get_path_distribution(pathensemble):
         The length of all paths
     """
     # first get lengths of accepted paths:
-    length_acc = []
-    for (pathid, reps) in pathensemble.accepted:
-        length = pathensemble.paths[pathid]['length']
-        length_acc.extend([length]*reps)
+    length_acc = [path['length'] for path in pathensemble.get_accepted()]
     length_acc = np.array(length_acc)
     length_all = []
     for path in pathensemble.paths:
