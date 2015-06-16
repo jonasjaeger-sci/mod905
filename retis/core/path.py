@@ -525,11 +525,11 @@ class PathEnsemble(object):
 
         if path is None:
             # just store minimal info
-            self.paths.append({'status': status})
+            path_data = {'status': status}
         else:
             path_data = path.get_path_data(status, self.interfaces)
-            self.paths.append(path_data)  # store the new data
-        self.paths[-1]['cycle'] = cycle  # also just store the cycle number
+        path_data['cycle'] = cycle  # also store cycle number
+        self.paths.append(path_data)  # store the new data
         self.npath += 1
         self.stats[status] += 1
 
