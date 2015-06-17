@@ -146,17 +146,23 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     pcross = np.zeros(ngrid)
     delta_l = lamb[1] - lamb[0]
     sumw = 0.0
-    if weights is None:
-        weights = np.ones(orderparam.shape)
-    for orderp, weight in zip(orderparam, weights):
-        idx = int((orderp - ordermin) / delta_l)
-        if idx >= ngrid:
-            idx = ngrid
+    for i, orderp in enumerate(orderparam):
+        idx = np.floor((orderp - ordermin) / delta_l)
+        idx = int(idx) + 1
+        # +1: idx is here defined so that lamb[idx-1] <= orderp < lamb[idx]
+        # further this lambda will contribute up to and including lamb[idx]
+        # this is accomplished by the idx+1 when summing weights below
+        if weights is None:
+            weight = 1
+        else:
+            weight = weights[i]
         sumw += weight
         if idx >= ngrid:
-            idx = ngrid - 1
-        if 0 <= idx < ngrid:
-            pcross[:idx+1] += weight
+            pcross += weight
+        elif idx < 0:
+            pass
+        else:
+            pcross[:idx+1] += weight  # +1 to include up to idx
     pcross /= sumw  # normalization
     return pcross, lamb
 
