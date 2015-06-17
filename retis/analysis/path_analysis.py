@@ -251,7 +251,9 @@ def get_path_distribution(pathensemble, bins=1000):
     hist2, _, bin_mid2 = histogram(length_all, bins=bins,
                                    limits=(length_all.min(), length_all.max()),
                                    density=True)
-    return [hist1, bin_mid1], [hist2, bin_mid2]
+    hist1 = [hist1, bin_mid1, (np.average(length_acc), np.std(length_acc))]
+    hist2 = [hist2, bin_mid2, (np.average(length_all), np.std(length_all))]
+    return hist1, hist2
 
 
 def shoot_analysis(pathensemble, bins=1000):
