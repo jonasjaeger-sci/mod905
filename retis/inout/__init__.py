@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Core RETIS tools
-=========================
+This library handles the input and output to pyretis.
+=====================================================
 """
 
 from .trajectoryio import *
+from .inout import *

@@ -3,12 +3,13 @@
 This file contains methods/classes for io operations
 on trajectories.
 """
-
-import warnings
-import os.path
-import itertools
-import numpy as np
+from __future__ import absolute_import
 from retis.core.units import CONVERT
+from .inout import create_backup
+import numpy as np
+import itertools
+import os
+import warnings
 
 __all__ = ['WriteXYZ', 'WriteGromacs']
 
@@ -94,9 +95,7 @@ class TrajectoryWriter(object):
                     msg += '\nWill append to file!'
                     self.trajfile = open(self.filename, 'a')
                 else:
-                    backupname = self._bakcup_file(self.filename)
-                    msg += '\nBackup existing file to: {}'.format(backupname)
-                    os.rename(self.filename, backupname)
+                    msg += create_backup(self.filename)
                     self.trajfile = open(self.filename, 'w')
                 warnings.warn(msg)
             else:
@@ -123,28 +122,6 @@ class TrajectoryWriter(object):
         """
         if len(self.atomnames) != npart:
             self.atomnames = [name] * npart
-
-    def _bakcup_file(self, filename):
-        """
-        This is a function to generate a new filename in case
-        a file with name self.filename exist and we want to
-        backup that file
-
-        Parameters
-        ----------
-        filename : string
-            The filename we want to change.
-
-        Returns
-        -------
-        out : string
-            Modified and hopefully unique filename.
-        """
-        fileid = 0
-        while os.path.isfile(filename) or os.path.isdir(filename):
-            filename = '{}_{}'.format(self.filename, fileid)
-            fileid += 1
-        return filename
 
     def close(self):
         """
