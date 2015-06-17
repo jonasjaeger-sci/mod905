@@ -9,7 +9,7 @@ from retis.core import Simulation, System, Box, RandomGenerator
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField, PairLennardJonesCutnp
-from retis.io import WriteGromacs
+from retis.inout import WriteGromacs
 from retis.tools import lattice_simple_cubic
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_kinetic_temperature)
