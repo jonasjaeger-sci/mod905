@@ -39,7 +39,8 @@ def _get_successfull(pathensemble, idetect):
     for path in pathensemble.get_accepted():
         value = 1 if path['ordermax'][0] > idetect else 0
         data.append(value)
-    return np.array(data)
+    data = np.array(data)
+    return data
 
 
 def running_pcross(pathensemble, idetect, data=None):
@@ -294,8 +295,7 @@ def shoot_analysis(pathensemble, bins=1000):
                       float(len(shoot_stats['ALL'])))
     return histograms, scale
 
-def analyse_path_ensemble(path_ensemble, analysis_settings, output=None,
-                          idetect=None):
+def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     """
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
@@ -307,32 +307,38 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, output=None,
         The Path ensemble to analyse
     analysis_settings : dict
         This contains settings for the analysis
-    output : object, optional
-        This object handles the output, if not given this method
-        will just return the analysis results.
     idetect : float, optional
         This is the interface used for detecting if a path is usccessfull
         or not. If no value is given, path_ensemble.interfaces[-1] will be
         use
+
+    Returns
+    -------
+    out : dict
+        This dictionary contains the main results for the analysis which
+        can be used for plotting or other kinds of output.
     """
+    result = {}
     if idetect is None:
         idetect = path_ensemble[-1]
     # first analysis is pcross as a function of lambda:
     pcross, lamb = pcross_lambda(path_ensemble,
                                  ngrid=analysis_settings['ngrid'])
+    result['pcross'] = [lamb, pcross]
     # next get the running average of the crossing probability
     prun, pdata = running_pcross(path_ensemble, idetect)
+    result['prun'] = prun
     # next, the error analysis:
     error = pcross_error(path_ensemble, idetect, data=pdata,
                          maxblock=analysis_settings['maxblock'],
                          blockskip=analysis_settings['blockskip'])
+    result['blockerror'] = error
     # next length-analysis:
     hist1, hist2 = get_path_distribution(path_ensemble,
                                          bins=analysis_settings['bins'])
+    result['pathlength'] = [hist1, hist2]
     # next, shoots:
     # move so that the analysis returns histograms and scale...
     hist3, scale = shoot_analysis(path_ensemble, bins=analysis_settings['bins'])
-    if output is not None:
-        # create the output - this is handled by the object
-        output.output_pcross_lambda(lamb, pcross)
-    return pcross, lamb, prun, pdata, error, hist1, hist2, hist3, scale
+    result['shoots'] = [hist3, scale]
+    return result
