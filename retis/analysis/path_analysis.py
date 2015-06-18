@@ -8,9 +8,7 @@ import numpy as np
 from .analysis import running_average, block_error
 from .histogram import histogram
 
-__all__ = ['running_pcross', 'pcross_lambda', 'pcross_error',
-           'get_path_distribution', 'shoot_analysis',
-           'analyse_path_ensemble', 'match_probabilities']
+__all__ = ['analyse_path_ensemble', 'match_probabilities']
 
 
 def _get_successfull(pathensemble, idetect):
@@ -43,7 +41,7 @@ def _get_successfull(pathensemble, idetect):
     return data
 
 
-def running_pcross(pathensemble, idetect, data=None):
+def _running_pcross(pathensemble, idetect, data=None):
     """
     Function to create a running average of the crossing probability
     as function of the cycle number. Note that the accepted paths are used
@@ -75,7 +73,7 @@ def running_pcross(pathensemble, idetect, data=None):
     return running_average(data), data
 
 
-def pcross_lambda(pathensemble, ngrid=1000):
+def _pcross_lambda(pathensemble, ngrid=1000):
     """
     This function will calculate the crossing probability for an ensemble as
     a function of the value of the order parameter.
@@ -167,8 +165,8 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     return pcross, lamb
 
 
-def pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
-                 data=None):
+def _pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
+                  data=None):
     """
     This function will run the block error analysis for the
     path ensemble.
@@ -212,7 +210,7 @@ def pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
 
 
-def get_path_distribution(pathensemble, bins=1000):
+def _get_path_distribution(pathensemble, bins=1000):
     """
     This function will get the distribution of path-lengths.
 
@@ -256,7 +254,7 @@ def get_path_distribution(pathensemble, bins=1000):
     return hist1, hist2
 
 
-def shoot_analysis(pathensemble, bins=1000):
+def _shoot_analysis(pathensemble, bins=1000):
     """
     This method will do a shoot analysis of the pathensemble.
 
@@ -331,25 +329,25 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     if idetect is None:
         idetect = path_ensemble[-1]
     # first analysis is pcross as a function of lambda:
-    pcross, lamb = pcross_lambda(path_ensemble,
-                                 ngrid=analysis_settings['ngrid'])
+    pcross, lamb = _pcross_lambda(path_ensemble,
+                                  ngrid=analysis_settings['ngrid'])
     result['pcross'] = [lamb, pcross]
     # next get the running average of the crossing probability
-    prun, pdata = running_pcross(path_ensemble, idetect)
+    prun, pdata = _running_pcross(path_ensemble, idetect)
     result['prun'] = prun
     # next, the error analysis:
-    error = pcross_error(path_ensemble, idetect, data=pdata,
-                         maxblock=analysis_settings['maxblock'],
-                         blockskip=analysis_settings['blockskip'])
+    error = _pcross_error(path_ensemble, idetect, data=pdata,
+                          maxblock=analysis_settings['maxblock'],
+                          blockskip=analysis_settings['blockskip'])
     result['blockerror'] = error
     # next length-analysis:
-    hist1, hist2 = get_path_distribution(path_ensemble,
-                                         bins=analysis_settings['bins'])
+    hist1, hist2 = _get_path_distribution(path_ensemble,
+                                          bins=analysis_settings['bins'])
     result['pathlength'] = [hist1, hist2]
     # next, shoots:
     # move so that the analysis returns histograms and scale...
-    hist3, scale = shoot_analysis(path_ensemble,
-                                  bins=analysis_settings['bins'])
+    hist3, scale = _shoot_analysis(path_ensemble,
+                                   bins=analysis_settings['bins'])
     result['shoots'] = [hist3, scale]
     return result
 
