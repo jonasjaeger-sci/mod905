@@ -10,6 +10,18 @@ import warnings
 import numpy as np
 
 
+__all__ = ['mpl_output_analysis', 'txt_output_analysis']
+
+
+# hard-coded patters for output files:
+_OUTFILES = {'pcross': '{}_pcross.{}',
+             'prun': '{}_prun.{}',
+             'blockerror': '{}_perror.{}',
+             'pathlength': '{}_lpath.{}',
+             'shoots': '{}_shoots.{}',
+             'shoots-scaled': '{}_shoots_scale.{}'}
+
+
 def _mpl_savefig(fig, outputfile):
     """
     This is just a helper function to save matplotlib figures.
@@ -184,6 +196,37 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     _mpl_savefig(fig_scale, outputfile_scale)
 
 
+def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
+    """
+    This method will output all the figures from the results obtained
+    by the path analysis.
+
+    Parameters
+    ----------
+    path_ensemble : object
+        This is the path ensemble we have analysed.
+    results : dict
+        This dict contains the result from the analysis.
+    idetect : float
+        This is the interface used for the detection in the analysis.
+    mpl_format : string, optional
+        This is the desired format to use for the graphs. Supported are
+        png, pdf, svg, etc. (see the matplotlib documentation).
+    """
+    ens = path_ensemble.ensemble  # identify the ensemble
+    outfiles = {}
+    for key in _OUTFILES:
+        outfiles[key] = _OUTFILES[key].format(ens, mpl_format)
+    _mpl_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
+                       ens, outfiles['pcross'])
+    _mpl_p_running_average(results['prun'], ens, outfiles['prun'])
+    _mpl_p_block_error(results['blockerror'], ens, outfiles['blockerror'])
+    _mpl_length_histogram(results['pathlength'][0], results['pathlength'][1],
+                          ens, outfiles['pathlength'])
+    _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
+                          outfiles['shoots'], outfiles['shoots-scaled'])
+
+
 def _txt_save_columns(outputfile, header, *variables):
     """
     This will save the different variables to a text file using
@@ -326,3 +369,34 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
             continue
     header = ''.join(header)
     _txt_save_columns(outputfile, header, *data)
+
+
+def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
+    """
+    This method will output all the figures from the results obtained
+    by the path analysis.
+
+    Parameters
+    ----------
+    path_ensemble : object
+        This is the path ensemble we have analysed.
+    results : dict
+        This dict contains the result from the analysis.
+    idetect : float
+        This is the interface used for the detection in the analysis.
+    txt_format : string, optional
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
+    """
+    ens = path_ensemble.ensemble  # identify the ensemble
+    outfiles = {}
+    for key in _OUTFILES:
+        outfiles[key] = _OUTFILES[key].format(ens, txt_format)
+    _txt_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
+                       ens, outfiles['pcross'])
+    _txt_p_running_average(results['prun'], ens, outfiles['prun'])
+    _txt_p_block_error(results['blockerror'], ens, outfiles['blockerror'])
+    _txt_length_histogram(results['pathlength'][0], results['pathlength'][1],
+                          ens, outfiles['pathlength'])
+    _txt_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
+                          outfiles['shoots'])
