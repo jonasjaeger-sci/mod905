@@ -241,7 +241,7 @@ def get_path_distribution(pathensemble, bins=1000):
         if move == 'tr':
             length_all.append(0)
         elif move == 'sh':
-            length_all.append(path['length']-1)
+            length_all.append(path['length'] - 1)
         else:
             raise ValueError('Unknown mc move: {}'.format(move))
     length_all = np.array(length_all)
@@ -279,7 +279,7 @@ def shoot_analysis(pathensemble, bins=1000):
         the scale factors for the histograms. The scale factors are obtained
         by dividing with the 'ALL' value.
     """
-    shoot_stats = {'REJ':[], 'ALL':[]}
+    shoot_stats = {'REJ': [], 'ALL': []}
     for path in pathensemble.paths:
         move = path['generated'][0]
         if move == 'sh':
@@ -302,6 +302,7 @@ def shoot_analysis(pathensemble, bins=1000):
         scale[key] = (float(len(shoot_stats[key])) /
                       float(len(shoot_stats['ALL'])))
     return histograms, scale
+
 
 def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     """
@@ -347,6 +348,7 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     result['pathlength'] = [hist1, hist2]
     # next, shoots:
     # move so that the analysis returns histograms and scale...
-    hist3, scale = shoot_analysis(path_ensemble, bins=analysis_settings['bins'])
+    hist3, scale = shoot_analysis(path_ensemble,
+                                  bins=analysis_settings['bins'])
     result['shoots'] = [hist3, scale]
     return result
