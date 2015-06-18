@@ -10,7 +10,8 @@ import warnings
 import numpy as np
 
 
-__all__ = ['mpl_output_analysis', 'txt_output_analysis']
+__all__ = ['mpl_output_analysis', 'mpl_total_probability',
+           'txt_output_analysis', 'txt_total_probability']
 
 
 # hard-coded patters for output files:
@@ -203,7 +204,7 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
 
     Parameters
     ----------
-    path_ensemble : object
+    path_ensemble : object of type PathEnsemble
         This is the path ensemble we have analysed.
     results : dict
         This dict contains the result from the analysis.
@@ -225,6 +226,40 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
                           ens, outfiles['pathlength'])
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'], outfiles['shoots-scaled'])
+
+
+def mpl_total_probability(path_ensembles, detect, results, matched,
+                          outputfile):
+    """
+    This method will plot the overall matched probabilities.
+
+    Parameters
+    ----------
+    path_ensembles : list of PathEnsemble objects
+        This is the path ensembles we have analysed.
+    results : list of dicts
+        This dict contains the results from the analysis.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+    matched : list of numpy.arrays
+        These are the matched/scaled probabilities
+    outputfile : string
+        This is the name of the output file to create. This will be
+        the unscaled plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    for idetect in detect:
+        axs.axvline(x=idetect, ls='--', alpha=0.8)
+    for result, prob, path_e in zip(results, matched, path_ensembles):
+        axs.plot(result['pcross'][0], prob, lw=3, label=path_e.ensemble)
+    axs.set_yscale('log')
+    axs.legend(prop={'size': 'small'})
+    axs.set_xlabel(r'Order parameter ($\lambda$)')
+    axs.set_ylabel('Probability')
+    titl = 'Matched probabilities'
+    axs.set_title(titl, fontsize='x-small', loc='left')
+    _mpl_savefig(fig, outputfile)
 
 
 def _txt_save_columns(outputfile, header, *variables):
@@ -400,3 +435,35 @@ def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
                           ens, outfiles['pathlength'])
     _txt_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'])
+
+
+def txt_total_probability(path_ensembles, detect, results, matched,
+                          outputfile):
+    """
+    This method will plot the overall matched probabilities.
+
+    Parameters
+    ----------
+    path_ensembles : list of PathEnsemble objects
+        This is the path ensembles we have analysed.
+    results : list of dicts
+        This dict contains the results from the analysis.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+    matched : list of numpy.arrays
+        These are the matched/scaled probabilities
+    outputfile : string
+        This is the name of the output file to create. This will be
+        the unscaled plot.
+    """
+    msg = create_backup(outputfile)
+    if msg:
+        warnings.warn(msg)
+    with open(outputfile, 'w') as fhandle:
+        for i, path_e in enumerate(path_ensembles):
+            header = 'Ensemble: {}, idetect: {}'.format(path_e.ensemble,
+                                                        detect[i])
+            mat = np.zeros((len(matched[i]), 2))
+            mat[:, 0] = results[i]['pcross'][0]
+            mat[:, 1] = matched[i]
+            np.savetxt(fhandle, mat, header=header)

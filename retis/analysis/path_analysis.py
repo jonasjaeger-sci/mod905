@@ -10,7 +10,7 @@ from .histogram import histogram
 
 __all__ = ['running_pcross', 'pcross_lambda', 'pcross_error',
            'get_path_distribution', 'shoot_analysis',
-           'analyse_path_ensemble']
+           'analyse_path_ensemble', 'match_probabilities']
 
 
 def _get_successfull(pathensemble, idetect):
@@ -162,7 +162,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         elif idx < 0:
             pass
         else:
-            pcross[:idx+1] += weight  # +1 to include up to idx
+            pcross[:idx + 1] += weight  # +1 to include up to idx
     pcross /= sumw  # normalization
     return pcross, lamb
 
@@ -352,3 +352,26 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
                                   bins=analysis_settings['bins'])
     result['shoots'] = [hist3, scale]
     return result
+
+
+def match_probabilities(results):
+    """
+    This method will match probabilities from several path ensembles.
+
+    Parameters
+    ----------
+    results : list
+        These are the results from the path analysis. results[i] is the
+        output from ``analyse_path_ensemble`` when applied to ensemble i.
+
+    Returns
+    -------
+    out : list of numpy.arrays
+        out[i] is the matched probability for ensemble i
+    """
+    accprob = 1.0
+    all_prob = []
+    for result in results:
+        all_prob.append(result['pcross'][1] * accprob)
+        accprob *= result['prun'][-1]
+    return all_prob
