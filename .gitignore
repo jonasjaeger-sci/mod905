@@ -18,3 +18,8 @@
 *.mp4
 
 site/
+
+# for readthedocs:
+_build
+_static
+_templates
