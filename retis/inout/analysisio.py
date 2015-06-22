@@ -8,7 +8,7 @@ from .inout import create_backup
 from matplotlib import pyplot as plt
 import warnings
 import numpy as np
-
+import os
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
            'txt_output_analysis', 'txt_total_probability']
@@ -23,7 +23,7 @@ _OUTFILES = {'pcross': '{}_pcross.{}',
              'shoots-scaled': '{}_shoots_scale.{}'}
 
 
-def _mpl_savefig(fig, outputfile):
+def _mpl_savefig(fig, outputfile, overwrite=False):
     """
     This is just a helper function to save matplotlib figures.
     It will save figures so that old ones are not overwritten.
@@ -35,11 +35,21 @@ def _mpl_savefig(fig, outputfile):
         We simply use fig.savefig here.
     outputfile : string
         This is the name of the output file to create.
+    overwrite : boolean, optional
+        If overwrite is True, old files will be overwritten.
+        If overwrite if False, old files will be moved/backed up.
     """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
+    if not overwrite:
+        msg = create_backup(outputfile)
+        if msg:
+            warnings.warn(msg)
+    else:
+        # just output a warning in case we overwrite something:
+        if os.path.isfile(outputfile):
+            msg = 'Will overwrite file {}!'.format(outputfile)
+            warnings.warn(msg)
     fig.savefig(outputfile)
+    plt.close(fig)  # free up memory
 
 
 def _mpl_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
