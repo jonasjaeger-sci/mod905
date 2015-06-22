@@ -524,6 +524,24 @@ class PathEnsemble(object):
                 last_path = path
             yield last_path
 
+    def get_acceptance_rate(self):
+        """
+        This method will simply return the fraction of accepted paths to
+        total number of paths in the path ensemble
+
+        Returns
+        -------
+        out : float
+            The acceptance rate.
+        """
+        acc = 0
+        npath = 0
+        for path in self.paths:
+            if path['status'] == 'ACC':
+                acc += 1
+            npath += 1
+        return float(acc)/float(npath)
+
     def __str__(self):
         """
         Return a string with some info about this object
