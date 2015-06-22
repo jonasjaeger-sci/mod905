@@ -1,13 +1,13 @@
-.. _pyretis-license:
+.. _pytismol-license:
 
 #######
 License
 #######
 
-pyretis License (MIT)
+pytismol License (MIT)
 =====================
 
-Copyright (c) 2015 The pyretis team
+Copyright (c) 2015 The pytismol team
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the

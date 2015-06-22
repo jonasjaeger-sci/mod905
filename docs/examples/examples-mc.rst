@@ -18,7 +18,7 @@ density.
    :alt: Result from the umbrella sampling
    :align: center
 
-We begin by importing the pyretis library:
+We begin by importing the pytismol library:
 
 .. code-block:: python
 

@@ -4,23 +4,23 @@
 Release Notes
 #############
 
-This is version |version| of pyretis.
+This is version |version| of pytismol.
 
 
 Upgrading
 =========
 
-To upgrade pyretis to the latest version, use ``pip``:
+To upgrade pytismol to the latest version, use ``pip``:
 
 ::
 
-    pip install -U pyretis
+    pip install -U pytismol
 
 You can determine your currently installed version using ``pip freeze``:
 
 ::
 
-    pip freeze | grep pyretis
+    pip freeze | grep pytismol
 
 Version history
 ===============

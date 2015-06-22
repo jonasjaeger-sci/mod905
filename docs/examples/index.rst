@@ -4,8 +4,8 @@
 Examples
 ########
 
-We have prepared several examples to show the use of pyretis. All
-examples are included in the pyretis/examples folder. Some example
+We have prepared several examples to show the use of pytismol. All
+examples are included in the pytismol/examples folder. Some example
 simualtions include:
 
 -  :ref:`Umbrella sampling <examples-mc-umbrella-sampling>` in a one dimensional potential

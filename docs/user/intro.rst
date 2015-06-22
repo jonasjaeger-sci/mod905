@@ -3,7 +3,7 @@
 Introduction to rare event methods
 ==================================
 
-pyretis is a computational library for performing
+pytismol is a computational library for performing
 transition interface sampling [TIS]_  and replica exchange transition interface
 sampling [RETIS]_.
 
