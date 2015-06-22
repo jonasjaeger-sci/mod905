@@ -214,6 +214,12 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
     mpl_format : string, optional
         This is the desired format to use for the graphs. Supported are
         png, pdf, svg, etc. (see the matplotlib documentation).
+
+    Returns
+    -------
+    out : dict
+        This dictionary contains the filenames of the figures that
+        we wrote.
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     outfiles = {}
@@ -227,7 +233,7 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
                           ens, outfiles['pathlength'])
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'], outfiles['shoots-scaled'])
-
+    return outfiles
 
 def mpl_total_probability(path_ensembles, detect, results, matched,
                           outputfile):
