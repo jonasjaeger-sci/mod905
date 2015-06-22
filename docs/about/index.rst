@@ -14,3 +14,4 @@ About pyretis
 
     license.rst
     release-notes.rst
+    todo.rst
