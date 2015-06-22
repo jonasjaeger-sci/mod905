@@ -34,7 +34,7 @@ rgen = RandomGenerator(seed=randseed)
 mincycles = 1e4
 maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 
-# In pyretis, a simulation is defined by defining certain tasks
+# In pytismol, a simulation is defined by defining certain tasks
 # the simulation will perform. Here we need to create a task
 # to perform Monte Carlo moves to sample the potential energy.
 # Let's make use of the predefined method `max_displace_step`

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This is a simple example of how pyretis can be used
+This is a simple example of how pytismol can be used
 for running an umbrella simulation.
 
 In this simulation, we study a particle moving in a one-dimensional
@@ -41,7 +41,7 @@ rgen = RandomGenerator(seed=randseed)
 mincycles = 1e4
 maxdx = 0.1 # maximum allowed displacement in the MC step(s).
 
-# In pyretis, a simulation is defined by defining certain tasks
+# In pytismol, a simulation is defined by defining certain tasks
 # the simulation will perform. Here we need to create a task
 # to perform Monte Carlo moves to sample the potential energy.
 # Let's make use of the predefined method `max_displace_step`

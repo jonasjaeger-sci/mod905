@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-#######
-pyretis
-#######
+########
+pytismol
+########
 
-This is pyretus - a library/simulation package for performing rare event
+This is pytismol - a library/simulation package for performing rare event
 simulations with python.
 
-pyretis Structure
+pytismol Structure
 =================
 
 Modules:
 
-- __init__.py: This is the main pyretis module. It will import usefull
+- __init__.py: This is the main pytismol module. It will import usefull
   subpackages and define the version number.
 
 Subpackages:
@@ -26,7 +26,7 @@ Subpackages:
 - tools: This package defines some methods which can be usefull for
   setting up simple systems, for example methods for generating lattices.
 
-- inout: This package defines the io for the pyretis program. This includes
+- inout: This package defines the io for the pytismol program. This includes
   generating output from the analysis and reading input-files etc.
 
 - analysis: This package defines the analysis tools for calculating 

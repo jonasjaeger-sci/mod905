@@ -127,7 +127,7 @@ ax1.set_title('Energies per particle')
 ax1.plot(d[:n, 0], d[:n, 3], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax1.plot(step[:n], v_pot[:n], lw=4, ls='--',
-         color='k', alpha=0.5, label='pyretis')
+         color='k', alpha=0.5, label='pytismol')
 ax1.legend(loc='lower right')
 
 ax2 = fig.add_subplot(312)
@@ -135,14 +135,14 @@ ax2.set_ylabel('Kinetic')
 ax2.plot(d[:n, 0], d[:n, 4], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax2.plot(step[:n], e_kin[:n], lw=4, ls='--',
-         color='k', alpha=0.5, label='pyretis')
+         color='k', alpha=0.5, label='pytismol')
 
 ax3 = fig.add_subplot(313)
 ax3.set_ylabel('Total')
 ax3.plot(d[:n, 0], d[:n, 5], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax3.plot(step[:n], e_tot[:n], lw=4, ls='--',
-         color='k', alpha=0.5, label='pyretis')
+         color='k', alpha=0.5, label='pytismol')
 
 ax1.set_xticklabels(())
 ax2.set_xticklabels(())
@@ -161,7 +161,7 @@ ax1.set_ylabel('Temperature')
 ax1.plot(d[:n, 0], d[:n, 1], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax1.plot(step[:n], temp[:n], lw=4, ls='--',
-         color='k', alpha=0.5, label='pyretis')
+         color='k', alpha=0.5, label='pytismol')
 ax1.legend(loc='upper right')
 ax1.set_xticklabels(())
 
@@ -170,7 +170,7 @@ ax2.set_ylabel('Pressure')
 ax2.plot(d[:n, 0], d[:n, 2], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax2.plot(step[:n], pressure[:n], lw=4, ls='--',
-         color='k', alpha=0.5, label='pyretis')
+         color='k', alpha=0.5, label='pytismol')
 plt.subplots_adjust(hspace=0.0)
 ax2.set_xlabel('step no.')
 
@@ -190,7 +190,7 @@ for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
     ax.plot(d[:n, 0], d[:n, i + 6], lw=4, ls='-',
             color='b', alpha=0.5, label='lammps')
     ax.plot(step[:n], pressure_tensor[:n, idx[0], idx[1]], lw=4, ls='--',
-            color='k', alpha=0.5, label='pyretis')
+            color='k', alpha=0.5, label='pytismol')
     if i == 0:
         ax.legend(loc='lower right')
         ax.yaxis.set_major_locator(MaxNLocator(nbins=len(ax.get_yticklabels()),
