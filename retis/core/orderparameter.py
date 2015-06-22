@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contain a class to represent an order parameter
-"""
+"""This file contains classes to represent order parameters"""
 from __future__ import division  # for StringFunctionParser
 import numpy as np
 import warnings
@@ -9,6 +7,7 @@ import warnings
 from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
                        Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
 import operator
+
 
 __all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
 

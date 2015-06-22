@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods used in the TIS method
-"""
+"""This file contains methods used in the TIS method."""
 from __future__ import absolute_import
 import numpy as np
 from .path import Path, paste_paths, reverse_path

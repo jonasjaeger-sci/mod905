@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-simulation.py
-"""
+"""Definitions of simulation objects."""
 from __future__ import absolute_import
 import numpy as np
 import collections

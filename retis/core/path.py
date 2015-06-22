@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contain a class to represent paths.
-"""
+"""This file contains classes/methods for paths and path ensembles."""
 import numpy as np
 import warnings
 import copy

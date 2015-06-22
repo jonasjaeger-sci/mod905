@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-This module defines some natural CONSTANTS, in different units
+This module defines some natural constants, in different units
 and unit conversions.
 For the Lennard-Jones potential, the conversions are currently
-hardcoded to the parameters given by Rowley et al.[1].
+hardcoded to the parameters given by Rowley et al. [ROWLEY]_.
 
 References
-----------
-[1] Rowley et al., Journal of Computational Physics, vol. 17, pp. 401-414, 1975
+~~~~~~~~~~
+.. [ROWLEY] Rowley et al., Journal of Computational Physics, vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
 """
 from __future__ import print_function

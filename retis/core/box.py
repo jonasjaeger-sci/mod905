@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Class for a simulation box
-"""
+"""Definition of a class for a simulation box"""
 
 import numpy as np
 

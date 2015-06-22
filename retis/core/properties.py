@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains a class for a generic property.
-"""
+"""This file contains a class for a generic property."""
 import numpy as np
 
 __all__ = ['Property']

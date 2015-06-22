@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-This file contain a class to represent a collection of
-particles.
-"""
+"""This file contain a class to represent a collection of particles."""
 import numpy as np
 import warnings
+
 
 __all__ = ['Particles']
 
@@ -149,18 +147,22 @@ class Particles(object):
 
         Parameters
         ----------
-        pos : numpy.array, positions of new particle
-        vel :  numpy.array, velocities of new particle
-        force : numpy.array, forces of new particle.
-        mass : float, optional. The mass of the particle
-        name : string, optional. The name of the particle.
-        ptype : string, optional. The particle type.
+        pos : numpy.array
+            Positions of new particle.
+        vel :  numpy.array
+            Velocities of new particle.
+        force : numpy.array
+            Forces on the new particle.
+        mass : float, optional.
+            The mass of the particle.
+        name : string, optional.
+            The name of the particle.
+        ptype : string, optional.
+            The particle type.
 
         Returns
         -------
-        N/A, but increments self.N and updates
-        self.particles
-
+        N/A, but increments self.N and updates self.particles.
         """
         if self.npart == 0:
             self.name = [name]
@@ -187,9 +189,10 @@ class Particles(object):
 
         Parameters
         ----------
-        properties : list with strings of properties to return
+        properties : list of strings
+            The strings represent the properties to return.
         selection : optional, list with indices to return
-            if selection is not given, data for all particles
+            If selection is not given, data for all particles
             are returned.
 
         Returns

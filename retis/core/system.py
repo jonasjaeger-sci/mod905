@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-system.py
-"""
+"""Definition of the system object."""
 from __future__ import absolute_import
 import numpy as np
 import warnings

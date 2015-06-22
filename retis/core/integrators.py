@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-
-"""
-integrators.py
-"""
+"""Definition of numerical integrators"""
 from __future__ import absolute_import
 import numpy as np
+
 
 __all__ = ['VelocityVerlet', 'Langevin']
 

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods that act on a (selection) of particles.
-"""
+"""This file contains methods that act on (a selection of) particles."""
 import numpy as np
-#import warnings
+
 
 __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',

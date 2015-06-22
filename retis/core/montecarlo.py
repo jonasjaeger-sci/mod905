@@ -6,6 +6,7 @@ Module for Monte Carlo Algorithms and other
 from __future__ import absolute_import
 import numpy as np
 
+
 __all__ = ['metropolis_accept_reject', 'max_displace_step']
 
 
