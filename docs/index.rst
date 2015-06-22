@@ -7,7 +7,7 @@
 Welcome to pytismol!
 ####################
 
-**pytismol - rare event simulations with python**
+*pytismol - rare event simulations with python*
 
 Overview
 ========
