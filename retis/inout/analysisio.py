@@ -8,19 +8,19 @@ from .inout import create_backup
 from matplotlib import pyplot as plt
 import warnings
 import numpy as np
-
+import os
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
            'txt_output_analysis', 'txt_total_probability']
 
 
 # hard-coded patters for output files:
-_OUTFILES = {'pcross': '{}_pcross.{}',
-             'prun': '{}_prun.{}',
-             'blockerror': '{}_perror.{}',
-             'pathlength': '{}_lpath.{}',
-             'shoots': '{}_shoots.{}',
-             'shoots-scaled': '{}_shoots_scale.{}'}
+_OUTFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
+             'prun': os.extsep.join(['{}_prun', '{}']),
+             'blockerror': os.extsep.join(['{}_perror', '{}']),
+             'pathlength': os.extsep.join(['{}_lpath', '{}']),
+             'shoots': os.extsep.join(['{}_shoots', '{}']),
+             'shoots-scaled': os.extsep.join(['{}_shoots_scale', '{}'])}
 
 
 def _mpl_savefig(fig, outputfile):
