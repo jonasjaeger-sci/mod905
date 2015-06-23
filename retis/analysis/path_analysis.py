@@ -349,12 +349,18 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     hist3, scale = _shoot_analysis(path_ensemble,
                                    bins=analysis_settings['bins'])
     result['shoots'] = [hist3, scale]
+    # finally add some simple efficiency metrics:
+    result['efficiency'] = [path_ensemble.get_acceptance_rate(),
+                            path_ensemble.npath * hist2[2][0]]
+    result['efficiency'].append(result['efficiency'][1] * error[4]**2)
+    # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
 
 def match_probabilities(results):
     """
     This method will match probabilities from several path ensembles.
+    It will also calculate efficiencies and error for the matched probability.
 
     Parameters
     ----------
@@ -364,12 +370,31 @@ def match_probabilities(results):
 
     Returns
     -------
-    out : list of numpy.arrays
+    out[0] : list of numpy.arrays
         out[i] is the matched probability for ensemble i
+    out[1] : dict
+        These are results for the over-all probability and error
+        and also some over-all TIS efficiencies.
     """
     accprob = 1.0
+    accprob_err = 0.0
+    prob_simtime = 0.0
+    prob_opt_eff = 0.0
     all_prob = []
     for result in results:
         all_prob.append(result['pcross'][1] * accprob)
         accprob *= result['prun'][-1]
-    return all_prob
+        accprob_err += result['blockerror'][4]**2
+        prob_simtime += result['efficiency'][1]
+        prob_opt_eff += np.sqrt(result['efficiency'][2])
+    prob_eff = accprob_err * prob_simtime
+    accprob_err = np.sqrt(accprob_err)
+    prob_opt_eff *= prob_opt_eff
+    # gather the other results into one dict
+    other = {'prob': accprob,  # over-all probability
+             'relerror': accprob_err,  # error in probability
+             'simtime': prob_simtime,  # simulation time: cycles * path-lenght
+             'opteff': prob_opt_eff,  # optimized TIS efficiency
+             'eff': prob_eff  # over-all TIS efficiency
+            }
+    return all_prob, other
