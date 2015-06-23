@@ -5,6 +5,7 @@ the results from the pytismol program.
 """
 from __future__ import absolute_import
 from retis import __version__ as VERSION
+from retis.analysis.path_analysis import match_probabilities
 
 
 __all__ = ['rst_generate_report']
@@ -66,6 +67,31 @@ def _rst_figures(figure_files, total_figure):
     return image_prob, image_shoots, image_total
 
 
+def _rst_combined_results(matched):
+    """
+    This will generate the section with the combined and over-all
+    results.
+
+    Parameters
+    ----------
+    matched : dict
+        This dict is assumed to contain the output from calling
+        ``match_probabilities`` in ``retis.analysis.path_analysis``.
+    """
+    str_comb = ['.. _combined-results:', '', 'Combined results', 16 * ('='),
+                '']
+    pcr = r'| Pcross = {0:16.9e} :math:`\pm` {1:16.9e} %'
+    pcr = pcr.format(matched['prob'], matched['relerror']*100)
+    str_comb.append(pcr)
+    pcr = '| Pcross: sim.time, teff {0:16.9e} {1:16.9e}'
+    pcr = pcr.format(matched['simtime'], matched['eff'])
+    str_comb.append(pcr)
+    pcr = '| Optimize pcross teff: {0:16.9e}'
+    pcr = pcr.format(matched['opteff'])
+    str_comb.append(pcr)
+    return '\n'.join(str_comb)
+
+
 def rst_generate_report(path_ensembles, results, figure_files, total_figure,
                         detect):
     """
@@ -93,27 +119,10 @@ def rst_generate_report(path_ensembles, results, figure_files, total_figure,
     images_prob, images_shoot, image_total = _rst_figures(figure_files,
                                                           total_figure)
     # generate tables:
-    tables = _rst_table_template(path_ensembles, results, detect)
-    table_int = _generate_rst_table(tables['interface'], 'Interfaces',
-                                    ['Ensemble', 'Left', 'Middle', 'Right',
-                                     'Detect'])
-    table_int = '\n'.join(table_int)
-    table_pro = _generate_rst_table(tables['prob'], 'Probabilities',
-                                    ['Ensemble', 'Pcross', 'Error',
-                                     'Rel. error (%)'])
-    table_pro = '\n'.join(table_pro)
-    table_len = _generate_rst_table(tables['path'], 'Path lengths',
-                                    ['Ensemble', 'Accepted', 'All',
-                                     'All/Accepted'])
-    table_len = '\n'.join(table_len)
-    table_eff = _generate_rst_table(tables['efficiency'], 'Efficiency',
-                                    ['Ensemble', 'TIS cycles', 'Tot sim.',
-                                     'Acceptance ratio', 'Correlation',
-                                     'Efficiency'])
-    table_eff = '\n'.join(table_eff)
-    tables = ['.. _tis-results:', '', 'Numerical TIS results', 21 * ('='), '',
-              table_int, '', table_pro, '', table_len, '', table_eff]
-    tables = '\n'.join(tables)
+    tables = _rst_generate_tables(path_ensembles, results, detect)
+    # generate overall stuff:
+    _, matched = match_probabilities(results)
+    combined = _rst_combined_results(matched)
     # generate output list:
     report = []
     report.append(19 * ('#'))
@@ -137,6 +146,8 @@ def rst_generate_report(path_ensembles, results, figure_files, total_figure,
     report.append(image_total)
     report.append('')
     report.append(tables)
+    report.append('')
+    report.append(combined)
     return report
 
 
@@ -168,13 +179,10 @@ def _apply_format(value, fmt):
         return str_fmt
 
 
-def _rst_table_template(path_ensembles, results, detect):
-    """"
-    This method will generate text/variables for tables in the report.
-    For the tables it will attempt to keep the fixed with. Note that this
-    may be fragile in case the headers for the tables change.
-    The with specified here is assumed to be the total header-width - 2. The
-    number 2 here will just be two spaces around the table entry.
+def _rst_generate_tables(path_ensembles, results, detect):
+    """
+    This will just generate a string with all the tables for
+    the report.
 
     Parameters
     ----------
@@ -187,32 +195,107 @@ def _rst_table_template(path_ensembles, results, detect):
 
     Returns
     -------
-    out : dict
-        This dict contains the tables (one table per entry in the dict).
-        The tables are made up of lists where list[i] corresponds to row
-        i in the table. Further list[i][j] is the string to place in
-        column j of row i of the table.
+    out : string
+        The string with all the table data
+    """
+    _, table_int = _rst_table_interface(path_ensembles, detect)
+    _, table_pro = _rst_table_probability(path_ensembles, results)
+    _, table_len = _rst_table_path(path_ensembles, results)
+    _, table_eff = _rst_table_efficiencies(path_ensembles, results)
+    tables = ['.. _tis-results:', '', 'Numerical TIS results', 21 * ('='), '',
+              table_int, '\n', table_pro, '\n', table_len, '\n', table_eff]
+    return '\n'.join(tables)
+
+
+def _rst_table_interface(path_ensembles, detect):
+    """
+    This will generate the table for the interfaces.
+
+    Parameters
+    ----------
+    path_ensembles : list of objects of type PathEnsemble
+        These are the path ensembles we have analysed.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in reStrucutredText format which represents
+        the table.
     """
     # table for interfaces:
-    tables = {}
-    tables['interface'] = []
+    table = []
     for path_e, idet in zip(path_ensembles, detect):
         row = ['{:^8s}'.format(path_e.ensemble)]
         row.append(_apply_format(path_e.interfaces[0], '{:^8.4f}'))
         row.append(_apply_format(path_e.interfaces[1], '{:^8.4f}'))
         row.append(_apply_format(path_e.interfaces[2], '{:^8.4f}'))
         row.append(_apply_format(idet, '{:^8.4f}'))
-        tables['interface'].append(row)
+        table.append(row)
+    table_str = _generate_rst_table(table, 'Interfaces',
+                                    ['Ensemble', 'Left', 'Middle', 'Right',
+                                     'Detect'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
+
+
+def _rst_table_probability(path_ensembles, results):
+    """
+    This will generate the table for the probabilities.
+
+    Parameters
+    ----------
+    path_ensembles : list of objects of type PathEnsemble
+        These are the path ensembles we have analysed.
+    results : list of dicts
+        The dictionaries are the results obtained from the analysis.
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in reStrucutredText format which represents
+        the table.
+    """
     # table for probabilities:
-    tables['prob'] = []
+    table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
         row.append(_apply_format(result['prun'][-1], '{:^10.6f}'))
         row.append(_apply_format(result['blockerror'][2], '{:^10.6f}'))
         row.append(_apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
-        tables['prob'].append(row)
-    # table for path lengths:
-    tables['path'] = []
+        table.append(row)
+    table_str = _generate_rst_table(table, 'Probabilities',
+                                    ['Ensemble', 'Pcross', 'Error',
+                                     'Rel. error (%)'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
+
+
+def _rst_table_path(path_ensembles, results):
+    """
+    This will generate the table for the probabilities.
+
+    Parameters
+    ----------
+    path_ensembles : list of objects of type PathEnsemble
+        These are the path ensembles we have analysed.
+    results : list of dicts
+        The dictionaries are the results obtained from the analysis.
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in reStrucutredText format which represents
+        the table.
+    """
+    table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
         hist1 = result['pathlength'][0]
@@ -220,9 +303,34 @@ def _rst_table_template(path_ensembles, results, detect):
         row.append(_apply_format(hist1[2][0], '{:^10.6f}'))
         row.append(_apply_format(hist2[2][0], '{:^10.6f}'))
         row.append(_apply_format(hist2[2][0] / hist1[2][0], '{:^10.6f}'))
-        tables['path'].append(row)
+        table.append(row)
+    table_str = _generate_rst_table(table, 'Path lengths',
+                                    ['Ensemble', 'Accepted', 'All',
+                                     'All/Accepted'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
+
+def _rst_table_efficiencies(path_ensembles, results):
+    """
+    This will generate the table for the probabilities.
+
+    Parameters
+    ----------
+    path_ensembles : list of objects of type PathEnsemble
+        These are the path ensembles we have analysed.
+    results : list of dicts
+        The dictionaries are the results obtained from the analysis.
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in reStrucutredText format which represents
+        the table.
+    """
     # table for efficiency:
-    tables['efficiency'] = []
+    table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
         row.append(_apply_format(path_e.npath, '{:^10.0f}'))
@@ -230,9 +338,13 @@ def _rst_table_template(path_ensembles, results, detect):
         row.append(_apply_format(result['efficiency'][0], '{:^10.6f}'))
         row.append(_apply_format(result['blockerror'][6], '{:^10.6f}'))
         row.append(_apply_format(result['efficiency'][2], '{:^10.6f}'))
-        tables['efficiency'].append(row)
-    return tables
-
+        table.append(row)
+    table_str = _generate_rst_table(table, 'Efficiency',
+                                    ['Ensemble', 'TIS cycles', 'Tot sim.',
+                                     'Acceptance ratio', 'Correlation',
+                                     'Efficiency'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
 
 def _generate_rst_table(table, title, headings):
     """
