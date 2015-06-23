@@ -10,117 +10,6 @@ from retis import __version__ as VERSION
 __all__ = ['rst_generate_report']
 
 
-def _rst_table_interface(path_ensembles, detect):
-    """
-    This will generate an table in reStrcuturedText which displays the
-    different interfaces and their location. Used by the report generation.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects of type PathEnsemble
-        These are the path ensembles we have analysed.
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
-
-    Returns
-    -------
-    out : string
-        The table as a string in reStructuredText format.
-    """
-    hline = ['+----------+----------+----------+----------+----------+']
-    header = ['+------------------------------------------------------+',
-              '|Interfaces                                            |',
-              '+----------+----------+----------+----------+----------+',
-              '| Ensemble |   Left   |  Middle  |  Right   |  Detect  |']
-    rows = []
-    fmt = '| {0:^8s} | {1:^8.4f} | {2:^8.4f} | {3:^8.4f} | {4:^8.4f} |'
-    for path_e, idet in zip(path_ensembles, detect):
-        rows.append(fmt.format(path_e.ensemble,
-                               path_e.interfaces[0],
-                               path_e.interfaces[1],
-                               path_e.interfaces[2],
-                               idet))
-        rows.extend(hline)
-    table = header + hline + rows
-    table = '\n'.join(table)
-    return table
-
-
-def _rst_table_probabilities(path_ensembles, results):
-    """
-    This will generate an table in reStrcuturedText which displays the
-    obtained probabilities for the different path ensembles. This is used by
-    the report generation.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects of type PathEnsemble
-        These are the path ensembles we have analysed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-
-    Returns
-    -------
-    out : string
-        The table as a string in reStructuredText format.
-    """
-    hline = ['+----------+------------+------------+----------------+']
-    header = ['+-----------------------------------------------------+',
-              '|Probabilities                                        |',
-              '+----------+------------+------------+----------------+',
-              '| Ensemble |   Pcross   |   Error    | Rel. error (%) |']
-    rows = []
-    fmt = '| {0:^8s} | {1:^10.6f} | {2:^10.6f} |   {3:^10.6f}   |'
-    for path_e, result in zip(path_ensembles, results):
-        rows.append(fmt.format(path_e.ensemble,
-                               result['prun'][-1],
-                               result['blockerror'][2],
-                               result['blockerror'][4]*100.))
-        rows.extend(hline)
-    table = header + hline + rows
-    table = '\n'.join(table)
-    return table
-
-
-def _rst_table_path_lengths(path_ensembles, results):
-    """
-    This will generate an table in reStrcuturedText which displays the
-    obtained path-lengths for the different path ensembles. This is used by
-    the report generation.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects of type PathEnsemble
-        These are the path ensembles we have analysed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-
-    Returns
-    -------
-    out : string
-        The table as a string in reStructuredText format.
-    """
-    hline = ['+----------+------------+------------+----------------+']
-    header = ['+-----------------------------------------------------+',
-              '|Path lengths                                         |',
-              '+----------+------------+------------+----------------+',
-              '| Ensemble |  Accepted  |    All     |  All/Accepted  |']
-    rows = []
-    fmt = '| {0:^8s} | {1:^10.5f} | {2:^10.5f} |   {3:^10.5f}   |'
-
-    for path_e, result in zip(path_ensembles, results):
-        hist1 = result['pathlength'][0]
-        hist2 = result['pathlength'][1]
-        rows.append(fmt.format(path_e.ensemble,
-                               hist1[2][0],
-                               hist2[2][0],
-                               hist2[2][0]/hist1[2][0]))
-        rows.extend(hline)
-    table = header + hline + rows
-    table = '\n'.join(table)
-    return table
-
-
 def _rst_figure_3_row(figure_files, selection):
     """
     This is a rather specific method which will place three figures in a row.
@@ -158,19 +47,19 @@ def _rst_figures(figure_files, total_figure):
         This is the figure with the total probability plot.
     """
     image_text = ['.. _prob-figures-output:\n',
-                  'Probability figures', 19*('-'), '']
+                  'Probability figures', 19 * ('-'), '']
     sel = ['pcross', 'prun', 'blockerror']
     image_text.append(_rst_figure_3_row(figure_files, sel))
     image_prob = '\n'.join(image_text)
 
     image_text = ['.. _len-shoot-figures-output:\n',
-                  'Length and shoots figures', 25*('-'), '']
+                  'Length and shoots figures', 25 * ('-'), '']
     sel = ['pathlength', 'shoots', 'shoots-scaled']
     image_text.append(_rst_figure_3_row(figure_files, sel))
     image_shoots = '\n'.join(image_text)
 
     image_total = ['.. _total-probability-figure:',
-                   '', 'Total probability', 17*('-'), '',
+                   '', 'Total probability', 17 * ('-'), '',
                    '.. image:: {}'.format(total_figure),
                    '   :width: 50%', '   :align: center']
     image_total = '\n'.join(image_total)
@@ -204,17 +93,32 @@ def rst_generate_report(path_ensembles, results, figure_files, total_figure,
     images_prob, images_shoot, image_total = _rst_figures(figure_files,
                                                           total_figure)
     # generate tables:
-    table_int = _rst_table_interface(path_ensembles, detect)
-    table_pro = _rst_table_probabilities(path_ensembles, results)
-    table_len = _rst_table_path_lengths(path_ensembles, results)
-    tables = ['.. _tis-results:', '', 'Numerical TIS results', 21*('='), '',
-              table_int, '', table_pro, '', table_len]
+    tables = _rst_table_template(path_ensembles, results, detect)
+    table_int = _generate_rst_table(tables['interface'], 'Interfaces',
+                                    ['Ensemble', 'Left', 'Middle', 'Right',
+                                     'Detect'])
+    table_int = '\n'.join(table_int)
+    table_pro = _generate_rst_table(tables['prob'], 'Probabilities',
+                                    ['Ensemble', 'Pcross', 'Error',
+                                     'Rel. error (%)'])
+    table_pro = '\n'.join(table_pro)
+    table_len = _generate_rst_table(tables['path'], 'Path lengths',
+                                    ['Ensemble', 'Accepted', 'All',
+                                     'All/Accepted'])
+    table_len = '\n'.join(table_len)
+    table_eff = _generate_rst_table(tables['efficiency'], 'Efficiency',
+                                    ['Ensemble', 'TIS cycles', 'Tot sim.',
+                                     'Acceptance ratio', 'Correlation',
+                                     'Efficiency'])
+    table_eff = '\n'.join(table_eff)
+    tables = ['.. _tis-results:', '', 'Numerical TIS results', 21 * ('='), '',
+              table_int, '', table_pro, '', table_len, '', table_eff]
     tables = '\n'.join(tables)
     # generate output list:
     report = []
-    report.append(19*('#'))
+    report.append(19 * ('#'))
     report.append('pytismol - analysis')
-    report.append(19*('#'))
+    report.append(19 * ('#'))
     report.append('')
     report.append('Report generated by pytismol version {}'.format(VERSION))
     report.append('')
@@ -234,3 +138,143 @@ def rst_generate_report(path_ensembles, results, figure_files, total_figure,
     report.append('')
     report.append(tables)
     return report
+
+
+def _apply_format(value, fmt):
+    """
+    This method is to check the formatting of a float. Here we are
+    going to force a maximum length on the resulting string.
+    This is to avoid problems like: '{:7.2f}'.format(12345.7) which
+    returns '12345.70' with a length 8 > 7. Here it is done by simply
+    switching to an exponential notation, but not however that this
+    will have implications for how many decimal places we can show.
+    """
+    maxlen = fmt.split(':')[1].split('.')[0]
+    align = ''
+    if not maxlen[0].isalnum():
+        align = maxlen[0]
+        maxlen = maxlen[1:]
+    maxlen = int(maxlen)
+    str_fmt = fmt.format(value)
+    if len(str_fmt) > maxlen:  # switch to exponential:
+        #deci = int(fmt.split(':')[1].split('.')[1].split('f')[0])
+        if value < 0:
+            deci = maxlen - 7
+        else:
+            deci = maxlen - 6
+        new_fmt = '{{:{0}{1}.{2}e}}'.format(align, maxlen, deci)
+        return new_fmt.format(value)
+    else:
+        return str_fmt
+
+
+def _rst_table_template(path_ensembles, results, detect):
+    """"
+    This method will generate text/variables for tables in the report.
+    For the tables it will attempt to keep the fixed with. Note that this
+    may be fragile in case the headers for the tables change.
+    The with specified here is assumed to be the total header-width - 2. The
+    number 2 here will just be two spaces around the table entry.
+
+    Parameters
+    ----------
+    path_ensembles : list of objects of type PathEnsemble
+        These are the path ensembles we have analysed.
+    results : list of dicts
+        The dictionaries are the results obtained from the analysis.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+
+    Returns
+    -------
+    out : dict
+        This dict contains the tables (one table per entry in the dict).
+        The tables are made up of lists where list[i] corresponds to row
+        i in the table. Further list[i][j] is the string to place in
+        column j of row i of the table.
+    """
+    # table for interfaces:
+    tables = {}
+    tables['interface'] = []
+    for path_e, idet in zip(path_ensembles, detect):
+        row = ['{:^8s}'.format(path_e.ensemble)]
+        row.append(_apply_format(path_e.interfaces[0], '{:^8.4f}'))
+        row.append(_apply_format(path_e.interfaces[1], '{:^8.4f}'))
+        row.append(_apply_format(path_e.interfaces[2], '{:^8.4f}'))
+        row.append(_apply_format(idet, '{:^8.4f}'))
+        tables['interface'].append(row)
+    # table for probabilities:
+    tables['prob'] = []
+    for path_e, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(path_e.ensemble)]
+        row.append(_apply_format(result['prun'][-1], '{:^10.6f}'))
+        row.append(_apply_format(result['blockerror'][2], '{:^10.6f}'))
+        row.append(_apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
+        tables['prob'].append(row)
+    # table for path lengths:
+    tables['path'] = []
+    for path_e, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(path_e.ensemble)]
+        hist1 = result['pathlength'][0]
+        hist2 = result['pathlength'][1]
+        row.append(_apply_format(hist1[2][0], '{:^10.6f}'))
+        row.append(_apply_format(hist2[2][0], '{:^10.6f}'))
+        row.append(_apply_format(hist2[2][0] / hist1[2][0], '{:^10.6f}'))
+        tables['path'].append(row)
+    # table for efficiency:
+    tables['efficiency'] = []
+    for path_e, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(path_e.ensemble)]
+        row.append(_apply_format(path_e.npath, '{:^10.0f}'))
+        row.append(_apply_format(result['efficiency'][1], '{:^10.6f}'))
+        row.append(_apply_format(result['efficiency'][0], '{:^10.6f}'))
+        row.append(_apply_format(result['blockerror'][6], '{:^10.6f}'))
+        row.append(_apply_format(result['efficiency'][2], '{:^10.6f}'))
+        tables['efficiency'].append(row)
+    return tables
+
+
+def _generate_rst_table(table, title, headings):
+    """
+    This method will generate the reStructuredText for a table.
+
+    Parameters
+    ----------
+    table : list of lists
+        table[i][j] is the string contents of column j of table i of the table.
+    title : string
+        The header/title for the table
+    headings : list of strings
+        These are the headings for each table column.
+    """
+    # for each column, we need to figure out how wide it should be
+    # 1) Check headings
+    col_len = [len(col) + 2 for col in headings]
+    # 2) Check if some of the columns are wider
+    for row in table:
+        for i, col in enumerate(row):
+            if len(col) >= col_len[i] - 2:
+                col_len[i] = len(col) + 2  # add some extra space
+
+    width = len(col_len) + sum(col_len) - 1
+    topline = '+' + width * ('-') + '+'
+    # create the header
+    str_header = '|{{0:<{0}s}}|'.format(width)
+    str_header = str_header.format(title)
+    # make format for header:
+    head_fmt = ['{{0:^{0}s}}'.format(col) for col in col_len]
+    # create first row, which is the header on columns:
+    row_line = [fmt.format(col) for fmt, col in zip(head_fmt, headings)]
+    row_line = [''] + row_line + ['']
+    row_line = '|'.join(row_line)
+    # also set-up the horizontal line:
+    hline = [''] + [col * ('-') for col in col_len] + ['']
+    hline = '+'.join(hline)
+    # generate table
+    str_table = [topline, str_header, hline, row_line, hline]
+    for row in table:
+        row_line = [fmt.format(col) for fmt, col in zip(head_fmt, row)]
+        row_line = [''] + row_line + ['']
+        row_line = '|'.join(row_line)
+        str_table.extend([row_line, hline])
+    return str_table
