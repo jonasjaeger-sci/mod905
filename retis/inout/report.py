@@ -111,34 +111,37 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
     report = {'version': VERSION, 'figures': analysis['tis-fig'],
               'totalfig': analysis['matched-fig'], 'table_int': None, 'table_prob': None,
               'table_path': None, 'table_eff': None, 'pcross': None,
-              'pcross_e': None, 'pcross_simt': None, 'pcross_teff': None,
+              'perr': None, 'pcross_simt': None, 'pcross_teff': None,
               'pcross_opteff':None}
     # get the efficiency results:
     report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
-    report['pcross_e'] = '{0:16.9e}'.format(analysis['matched']['relerror'] *
+
+    if analysis['matched']['relerror'] > 0.01:
+        report['perr'] = '{0:16.9f}'.format(analysis['matched']['relerror'] *
+                                            100)
+    else:
+        report['perr'] = '{0:16.9e}'.format(analysis['matched']['relerror'] *
                                             100)
     report['pcross_simt'] = '{0:16.9e}'.format(analysis['matched']['simtime'])
     report['pcross_teff'] = '{0:16.9e}'.format(analysis['matched']['eff'])
     report['pcross_opteff'] = '{0:16.9e}'.format(analysis['matched']['opteff'])
 
-    if output in ['html', 'rst']:
-        # first generate rst, then convert if html is wanted
-        # build output variables:
-        # for the tables we build them explicitly to control the width:
-        _, report['table_int'] = _rst_table_interface(path_ensembles,
-                                                      analysis['detect'])
-        _, report['table_prob'] = _rst_table_probability(path_ensembles,
-                                                         analysis['tis'])
-        _, report['table_path'] = _rst_table_path(path_ensembles,
-                                                  analysis['tis'])
-        _, report['table_eff'] = _rst_table_efficiencies(path_ensembles,
-                                                         analysis['tis'])
-    elif output in ['latex', 'tex']:
+    _, report['table_int'] = _table_interface(path_ensembles,
+                                              analysis['detect'], fmt=output)
+    _, report['table_prob'] = _table_probability(path_ensembles,
+                                                 analysis['tis'], fmt=output)
+    _, report['table_path'] = _table_path(path_ensembles,
+                                          analysis['tis'], fmt=output)
+    _, report['table_eff'] = _table_efficiencies(path_ensembles,
+                                                 analysis['tis'], fmt=output)
+    if output in ['latex', 'tex']:
         report['totalfig'] = _remove_extension(report['totalfig'])
         # remove extensions of figures:
         report['figures'] = []
         for fig in analysis['tis-fig']:
             report['figures'].append({key: _remove_extension(fig[key]) for key in fig})
+        report['pcross'] = _latexify_number(report['pcross'])
+        report['perr'] = _latexify_number(report['perr'])
     #pylint: disable=maybe-no-member
     render = env.get_template(template).render(report)
     #pylint: enable=maybe-no-member
@@ -154,8 +157,15 @@ def _apply_format(value, fmt):
     going to force a maximum length on the resulting string.
     This is to avoid problems like: '{:7.2f}'.format(12345.7) which
     returns '12345.70' with a length 8 > 7. Here it is done by simply
-    switching to an exponential notation, but not however that this
+    switching to an exponential notation, but note however that this
     will have implications for how many decimal places we can show.
+
+    Parameters
+    ----------
+    value : float
+        The float to format
+    fmt : string
+        The format to use.
     """
     maxlen = fmt.split(':')[1].split('.')[0]
     align = ''
@@ -165,7 +175,6 @@ def _apply_format(value, fmt):
     maxlen = int(maxlen)
     str_fmt = fmt.format(value)
     if len(str_fmt) > maxlen:  # switch to exponential:
-        #deci = int(fmt.split(':')[1].split('.')[1].split('f')[0])
         if value < 0:
             deci = maxlen - 7
         else:
@@ -176,7 +185,7 @@ def _apply_format(value, fmt):
         return str_fmt
 
 
-def _rst_table_interface(path_ensembles, detect):
+def _table_interface(path_ensembles, detect, fmt='rst'):
     """
     This will generate the table for the interfaces.
 
@@ -186,13 +195,15 @@ def _rst_table_interface(path_ensembles, detect):
         These are the path ensembles we have analysed.
     detect : list of floats
         These are the detect interfaces used in the analysis.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
 
     Returns
     -------
     out[0] : list of strings
         These are the rows of the table
     out[1] : string
-        This is a string in reStrucutredText format which represents
+        This is a string in the desired format which represents
         the table.
     """
     # table for interfaces:
@@ -204,14 +215,20 @@ def _rst_table_interface(path_ensembles, detect):
         row.append(_apply_format(path_e.interfaces[2], '{:^8.4f}'))
         row.append(_apply_format(idet, '{:^8.4f}'))
         table.append(row)
-    table_str = _generate_rst_table(table, 'Interfaces',
-                                    ['Ensemble', 'Left', 'Middle', 'Right',
-                                     'Detect'])
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Interfaces',
+                                          ['Ensemble', 'Left', 'Middle',
+                                           'Right', 'Detect'],
+                                          fixnum=set([1, 2, 3, 4]))
+    else:
+        table_str = _generate_rst_table(table, 'Interfaces',
+                                        ['Ensemble', 'Left', 'Middle',
+                                         'Right', 'Detect'])
     table_str = '\n'.join(table_str)
     return table, table_str
 
 
-def _rst_table_probability(path_ensembles, results):
+def _table_probability(path_ensembles, results, fmt='rst'):
     """
     This will generate the table for the probabilities.
 
@@ -221,6 +238,8 @@ def _rst_table_probability(path_ensembles, results):
         These are the path ensembles we have analysed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
 
     Returns
     -------
@@ -238,14 +257,20 @@ def _rst_table_probability(path_ensembles, results):
         row.append(_apply_format(result['blockerror'][2], '{:^10.6f}'))
         row.append(_apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
         table.append(row)
-    table_str = _generate_rst_table(table, 'Probabilities',
-                                    ['Ensemble', 'Pcross', 'Error',
-                                     'Rel. error (%)'])
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, r'Probabilities',
+                                          [r'Ensemble', r'$P_\text{cross}$',
+                                           r'Error', r'Rel. error (\%)'],
+                                          fixnum=set([1, 2, 3]))
+    else:
+        table_str = _generate_rst_table(table, r'Probabilities',
+                                        [r'Ensemble', r'Pcross', r'Error',
+                                         r'Rel. error (%)'])
     table_str = '\n'.join(table_str)
     return table, table_str
 
 
-def _rst_table_path(path_ensembles, results):
+def _table_path(path_ensembles, results, fmt='rst'):
     """
     This will generate the table for the probabilities.
 
@@ -255,6 +280,8 @@ def _rst_table_path(path_ensembles, results):
         These are the path ensembles we have analysed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
 
     Returns
     -------
@@ -273,13 +300,19 @@ def _rst_table_path(path_ensembles, results):
         row.append(_apply_format(hist2[2][0], '{:^10.6f}'))
         row.append(_apply_format(hist2[2][0] / hist1[2][0], '{:^10.6f}'))
         table.append(row)
-    table_str = _generate_rst_table(table, 'Path lengths',
-                                    ['Ensemble', 'Accepted', 'All',
-                                     'All/Accepted'])
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Path lengths',
+                                          ['Ensemble', 'Accepted', 'All',
+                                           'All/Accepted'],
+                                          fixnum=set([1, 2, 3]))
+    else:
+        table_str = _generate_rst_table(table, 'Path lengths',
+                                        ['Ensemble', 'Accepted', 'All',
+                                         'All/Accepted'])
     table_str = '\n'.join(table_str)
     return table, table_str
 
-def _rst_table_efficiencies(path_ensembles, results):
+def _table_efficiencies(path_ensembles, results, fmt='rst'):
     """
     This will generate the table for the probabilities.
 
@@ -289,6 +322,8 @@ def _rst_table_efficiencies(path_ensembles, results):
         These are the path ensembles we have analysed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
 
     Returns
     -------
@@ -308,10 +343,17 @@ def _rst_table_efficiencies(path_ensembles, results):
         row.append(_apply_format(result['blockerror'][6], '{:^10.6f}'))
         row.append(_apply_format(result['efficiency'][2], '{:^10.6f}'))
         table.append(row)
-    table_str = _generate_rst_table(table, 'Efficiency',
-                                    ['Ensemble', 'TIS cycles', 'Tot sim.',
-                                     'Acceptance ratio', 'Correlation',
-                                     'Efficiency'])
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Efficiency',
+                                          ['Ensemble', 'TIS cycles',
+                                           'Tot sim.', 'Acceptance ratio',
+                                           'Correlation', 'Efficiency'],
+                                          fixnum=set([1, 2, 3, 4, 5]))
+    else:
+        table_str = _generate_rst_table(table, 'Efficiency',
+                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
+                                         'Acceptance ratio', 'Correlation',
+                                         'Efficiency'])
     table_str = '\n'.join(table_str)
     return table, table_str
 
@@ -359,3 +401,55 @@ def _generate_rst_table(table, title, headings):
         row_line = '|'.join(row_line)
         str_table.extend([row_line, hline])
     return str_table
+
+def _generate_latex_table(table, title, headings, fixnum=None):
+    """
+    This method will generate the latex code for a table.
+
+    Parameters
+    ----------
+    table : list of lists
+        table[i][j] is the string contents of column j of table i of the table.
+    title : string
+        The header/title for the table
+    headings : list of strings
+        These are the headings for each table column.
+    fixnum : list/set of integers
+        These integers identifies the columns where ``_latexify_number`` is
+        to be applied.
+    """
+    #for col in headings
+    str_table = [r'\renewcommand{\arraystretch}{1.25}',
+                 r'\noindent', r'\begin{minipage}{\textwidth}', r'\centering',
+                 r'\textbf{' + title + r'} \\', r'\medskip'
+                 r'\begin{tabular}{' + len(headings)*('| c ')  + '|}']
+    str_table.append(r'\hline')
+    str_table.append(' & '.join(headings) + r'\\ \hline')
+    for row in table:
+        if fixnum:
+            rowl = [_latexify_number(col) if i in fixnum else col for i, col in enumerate(row)]
+            str_table.append(' & '.join(rowl) + r'\\')
+        else:
+            str_table.append(' & '.join(row) + r'\\')
+    str_table.append(r'\hline')
+    str_table.append(r'\end{tabular}')
+    str_table.append(r'\bigskip')
+    str_table.append(r'\end{minipage}')
+    return str_table
+
+def _latexify_number(str_float):
+    r"""
+    This will change exponential notation, e.g 1.2e-03, into
+    1.2 \times 10^{-3} for latex output.
+
+    Parameters
+    ----------
+    str_float : string
+        This is the string representation of a float
+
+    """
+    if 'e' in str_float:
+        base, exp = str_float.split('e')
+        return r'${0} \times 10^{{{1}}}$'.format(base, int(exp))
+    else:
+        return r'${}$'.format(str_float)
