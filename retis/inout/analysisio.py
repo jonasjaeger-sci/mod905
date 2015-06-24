@@ -11,7 +11,9 @@ import numpy as np
 import os
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
-           'txt_output_analysis', 'txt_total_probability']
+           'mpl_total_matched_probability',
+           'txt_output_analysis', 'txt_total_probability',
+           'txt_total_matched_probability']
 
 
 # hard-coded patters for output files:
@@ -238,7 +240,8 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
 def mpl_total_probability(path_ensembles, detect, results, matched,
                           outputfile):
     """
-    This method will plot the overall matched probabilities.
+    This method will plot the overall matched probabilities for the
+    different ensembles.
 
     Parameters
     ----------
@@ -251,8 +254,7 @@ def mpl_total_probability(path_ensembles, detect, results, matched,
     matched : list of numpy.arrays
         These are the matched/scaled probabilities
     outputfile : string
-        This is the name of the output file to create. This will be
-        the unscaled plot.
+        This is the name of the output file to create.
     """
     fig = plt.figure()
     axs = fig.add_subplot(111)
@@ -265,6 +267,32 @@ def mpl_total_probability(path_ensembles, detect, results, matched,
     axs.set_xlabel(r'Order parameter ($\lambda$)')
     axs.set_ylabel('Probability')
     titl = 'Matched probabilities'
+    axs.set_title(titl, fontsize='x-small', loc='left')
+    _mpl_savefig(fig, outputfile)
+
+
+def mpl_total_matched_probability(detect, matched, outputfile):
+    """
+    This method will plot the overall matched probability.
+
+    Parameters
+    ----------
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+    matched : numpy.array
+        The matched probability.
+    outputfile : string
+        This is the name of the output file to create.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    for idetect in detect:
+        axs.axvline(x=idetect, ls='--', alpha=0.8)
+    axs.plot(matched[:, 0], matched[:, 1], lw=3)
+    axs.set_yscale('log')
+    axs.set_xlabel(r'Order parameter ($\lambda$)')
+    axs.set_ylabel('Probability')
+    titl = 'Matched probability'
     axs.set_title(titl, fontsize='x-small', loc='left')
     _mpl_savefig(fig, outputfile)
 
@@ -447,7 +475,7 @@ def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
 def txt_total_probability(path_ensembles, detect, results, matched,
                           outputfile):
     """
-    This method will plot the overall matched probabilities.
+    This method will output the overall matched probabilities.
 
     Parameters
     ----------
@@ -460,8 +488,7 @@ def txt_total_probability(path_ensembles, detect, results, matched,
     matched : list of numpy.arrays
         These are the matched/scaled probabilities
     outputfile : string
-        This is the name of the output file to create. This will be
-        the unscaled plot.
+        This is the name of the output file to create.
     """
     msg = create_backup(outputfile)
     if msg:
@@ -474,3 +501,22 @@ def txt_total_probability(path_ensembles, detect, results, matched,
             mat[:, 0] = results[i]['pcross'][0]
             mat[:, 1] = matched[i]
             np.savetxt(fhandle, mat, header=header)
+
+
+def txt_total_matched_probability(detect, matched, outputfile):
+    """
+    This method will output the overall matched probability.
+
+    Parameters
+    ----------
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+    matched : numpy.array
+        The matched probability.
+    outputfile : string
+        This is the name of the output file to create.
+    """
+    header = 'Total matched probability. Interfaces: {}'
+    interf = ' , '.join([str(idet) for idet in detect])
+    header = header.format(interf)
+    _txt_save_columns(outputfile, header, matched[:, 0], matched[:, 1])

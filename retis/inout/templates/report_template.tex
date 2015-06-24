@@ -43,9 +43,9 @@ analysis program:
 \clearpage
 
 \subsection{Total probability}
-\begin{center}
-\includegraphics[width=0.5\linewidth]{@{{ totalfig }}@}
-\end{center}
+@{% for figure in totalfig %}@
+\includegraphics[width=0.45\linewidth]{@{{ figure }}@} @{% endfor %}@
+
 \section{Numerical TIS results}
 
 @{{ table_int }}@

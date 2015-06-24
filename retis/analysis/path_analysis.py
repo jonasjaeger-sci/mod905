@@ -396,7 +396,7 @@ def match_probabilities(results, detect):
         accprob_err += result['blockerror'][4]**2
         prob_simtime += result['efficiency'][1]
         prob_opt_eff += np.sqrt(result['efficiency'][2])
-    matched_prob = np.array(matched_prob)
+    matched_prob = np.transpose(np.array(matched_prob))
     prob_eff = accprob_err * prob_simtime
     accprob_err = np.sqrt(accprob_err)
     prob_opt_eff *= prob_opt_eff

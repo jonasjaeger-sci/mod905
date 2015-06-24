@@ -135,11 +135,11 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
     _, report['table_eff'] = _table_efficiencies(path_ensembles,
                                                  analysis['tis'], fmt=output)
     if output in ['latex', 'tex']:
-        report['totalfig'] = _remove_extension(report['totalfig'])
         # remove extensions of figures:
         report['figures'] = []
         for fig in analysis['tis-fig']:
             report['figures'].append({key: _remove_extension(fig[key]) for key in fig})
+        report['totalfig'] = [_remove_extension(fig) for fig in report['totalfig']]
         report['pcross'] = _latexify_number(report['pcross'])
         report['perr'] = _latexify_number(report['perr'])
     #pylint: disable=maybe-no-member
