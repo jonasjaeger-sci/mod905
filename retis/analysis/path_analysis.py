@@ -357,7 +357,7 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     return result
 
 
-def match_probabilities(results):
+def match_probabilities(results, detect):
     """
     This method will match probabilities from several path ensembles.
     It will also calculate efficiencies and error for the matched probability.
@@ -367,12 +367,17 @@ def match_probabilities(results):
     results : list
         These are the results from the path analysis. results[i] is the
         output from ``analyse_path_ensemble`` when applied to ensemble i.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
 
     Returns
     -------
     out[0] : list of numpy.arrays
-        out[i] is the matched probability for ensemble i
-    out[1] : dict
+        out[0][i] is the matched probability for ensemble i
+    out[1] : numpy.array
+        This is the matched probability. out[1][:,0] is the order parameter
+        out[1][:,1] is the probability.
+    out[2] : dict
         These are results for the over-all probability and error
         and also some over-all TIS efficiencies.
     """
@@ -381,12 +386,17 @@ def match_probabilities(results):
     prob_simtime = 0.0
     prob_opt_eff = 0.0
     all_prob = []
-    for result in results:
+    matched_prob = [[], []]
+    for idet, result in zip(detect, results):
+        idx = np.where(result['pcross'][0] <= idet)[0]
+        matched_prob[0].extend(result['pcross'][0][idx])
+        matched_prob[1].extend(result['pcross'][1][idx] * accprob)
         all_prob.append(result['pcross'][1] * accprob)
         accprob *= result['prun'][-1]
         accprob_err += result['blockerror'][4]**2
         prob_simtime += result['efficiency'][1]
         prob_opt_eff += np.sqrt(result['efficiency'][2])
+    matched_prob = np.array(matched_prob)
     prob_eff = accprob_err * prob_simtime
     accprob_err = np.sqrt(accprob_err)
     prob_opt_eff *= prob_opt_eff
@@ -397,4 +407,4 @@ def match_probabilities(results):
              'opteff': prob_opt_eff,  # optimized TIS efficiency
              'eff': prob_eff  # over-all TIS efficiency
             }
-    return all_prob, other
+    return all_prob, matched_prob, other
