@@ -5,150 +5,147 @@ the results from the pytismol program.
 """
 from __future__ import absolute_import
 from retis import __version__ as VERSION
-from retis.analysis.path_analysis import match_probabilities
+import warnings
+# for converting rst to html and/or latex:
+import docutils.core
+from docutils.writers.html4css1 import Writer as HTMLWriter
+from docutils.writers.html4css1 import HTMLTranslator
+import os
+# for using templates
+#from jinja2 import Environment, FileSystemLoader
+import jinja2
+
+__all__ = ['generate_report']
+
+# the types the program know how to generate:
+_TEMPLATES = {'rst': 'report_template.rst',
+              'html': 'report_template.rst',  # html is done via rst,
+              'latex': 'report_template.tex',
+              'tex': 'report_template.tex'}
 
 
-__all__ = ['rst_generate_report']
-
-
-def _rst_figure_3_row(figure_files, selection):
+def _rst_to_html(rst):
     """
-    This is a rather specific method which will place three figures in a row.
-    This is done by setting the width equal to 30%. This method is used
-    by ``_rst_figures``.
+    This will convert a reStrcuturedText string to simple html.
 
     Parameters
     ----------
-    figure_files : list of dicts.
-        These are the figures we will use.
-    selection : list of strings
-        This will select which images to use, for instance
-        selection = ['pcross', 'prun', 'blockerror']
-    """
-    image_fmt = '.. image:: {0}\n   :width: 30%'
-    image_text = []
-    for fig in figure_files:
-        for sel in selection:
-            image_text.append(image_fmt.format(fig[sel]))
-        image_text.append('')
-    image_text.pop()  # just remove last one for aesthetics...
-    return '\n'.join(image_text)
-
-
-def _rst_figures(figure_files, total_figure):
-    """
-    This method will generate the image-rows with the results.
-    It will simply put 3 images in each row with a width equal to 30%.
-
-    Parameters
-    ----------
-    figure_files : list of dicts.
-        These are the figures we will use.
-    total_figure : string
-        This is the figure with the total probability plot.
-    """
-    image_text = ['.. _prob-figures-output:\n',
-                  'Probability figures', 19 * ('-'), '']
-    sel = ['pcross', 'prun', 'blockerror']
-    image_text.append(_rst_figure_3_row(figure_files, sel))
-    image_prob = '\n'.join(image_text)
-
-    image_text = ['.. _len-shoot-figures-output:\n',
-                  'Length and shoots figures', 25 * ('-'), '']
-    sel = ['pathlength', 'shoots', 'shoots-scaled']
-    image_text.append(_rst_figure_3_row(figure_files, sel))
-    image_shoots = '\n'.join(image_text)
-
-    image_total = ['.. _total-probability-figure:',
-                   '', 'Total probability', 17 * ('-'), '',
-                   '.. image:: {}'.format(total_figure),
-                   '   :width: 50%', '   :align: center']
-    image_total = '\n'.join(image_total)
-    return image_prob, image_shoots, image_total
-
-
-def _rst_combined_results(matched):
-    """
-    This will generate the section with the combined and over-all
-    results.
-
-    Parameters
-    ----------
-    matched : dict
-        This dict is assumed to contain the output from calling
-        ``match_probabilities`` in ``retis.analysis.path_analysis``.
-    """
-    str_comb = ['.. _combined-results:', '', 'Combined results', 16 * ('='),
-                '']
-    pcr = r'| Pcross = {0:16.9e} :math:`\pm` {1:16.9e} %'
-    pcr = pcr.format(matched['prob'], matched['relerror']*100)
-    str_comb.append(pcr)
-    pcr = '| Pcross: sim.time, teff {0:16.9e} {1:16.9e}'
-    pcr = pcr.format(matched['simtime'], matched['eff'])
-    str_comb.append(pcr)
-    pcr = '| Optimize pcross teff: {0:16.9e}'
-    pcr = pcr.format(matched['opteff'])
-    str_comb.append(pcr)
-    return '\n'.join(str_comb)
-
-
-def rst_generate_report(path_ensembles, results, figure_files, total_figure,
-                        detect):
-    """
-    This method will generate the report in reStructuredText format.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects of type PathEnsemble
-        These are the path ensembles we have analysed.
-    figure_files : list of strings.
-        These are the figures we will use.
-    total_figure : string
-        This is the figure with the total probability plot.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
+    rst : string
+        The string to convert.
 
     Returns
     -------
-    out : list
-        This list are the text lines of the report.
+    out : string
+        A html document corresponding to the input reStructuredText.
     """
-    # generate image code:
-    images_prob, images_shoot, image_total = _rst_figures(figure_files,
-                                                          total_figure)
-    # generate tables:
-    tables = _rst_generate_tables(path_ensembles, results, detect)
-    # generate overall stuff:
-    _, matched = match_probabilities(results)
-    combined = _rst_combined_results(matched)
-    # generate output list:
-    report = []
-    report.append(19 * ('#'))
-    report.append('pytismol - analysis')
-    report.append(19 * ('#'))
-    report.append('')
-    report.append('Report generated by pytismol version {}'.format(VERSION))
-    report.append('')
-    report.append('.. _figure-results:')
-    report.append('')
-    report.append('Result figures')
-    report.append('==============')
-    report.append('')
-    report.append('The following figures were generated by the')
-    report.append('analysis program:')
-    report.append('')
-    report.append(images_prob)
-    report.append('')
-    report.append(images_shoot)
-    report.append('')
-    report.append(image_total)
-    report.append('')
-    report.append(tables)
-    report.append('')
-    report.append(combined)
-    return report
+    htmlwriter = HTMLWriter()
+    htmlwriter.translator_class = HTMLTranslator
+    html = docutils.core.publish_string(rst, writer=htmlwriter)
+    return html
+
+
+def _remove_extension(filename):
+    """
+    This method will remove the extension of a given filename
+
+    Parameters
+    ----------
+    filename : string
+        The filename to check
+
+    Returns
+    -------
+    out : string
+        The filename with the extension removed
+    """
+    try:
+        return os.path.splitext(filename)[0]
+    except IndexError:
+        return filename
+
+
+def generate_report(path_ensembles, analysis, output='rst', template=None):
+    """
+    This will generate the report for the results.
+
+    Parameters
+    ----------
+    analysis : dict
+        This is the output (and some input) for the analysis. The keys are:
+        'tis' : dict with the results from analysing path ensembles
+        'tis-fig' : list of correponding figures (to 'tis')
+        'matched' : results from the matchin of probability
+        'matched-fig' : the figure corresponding to 'matched'
+        'detect' : locations of the interfaces used for detection
+    output : string, optional
+        This is the desired output format. It must match one of the
+        formats defined in _TEMPLATES. Default is reStructuredText.
+    template : string, optional
+        This is the template file to use. The default is given
+        by _TEMPLATES[output].
+
+    Returns
+    -------
+    out : string
+        The generated report in the desired format.
+    """
+    if not output in _TEMPLATES:
+        warnings.warn('Unknown output {} will use rst'.format(output))
+        output = 'rst'
+    if template is None or not os.path.isfile(template):
+        # Use default template, this is located in the templates dir:
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(path, 'templates')
+        template = _TEMPLATES[output]
+    else:
+        # user specified full path to template:
+        path = os.path.dirname(template)
+        template = os.path.basename(template)
+
+    env = jinja2.Environment(block_start_string='@{%',
+                             block_end_string='%}@',
+                             variable_start_string='@{{',
+                             variable_end_string='}}@',
+                             loader=jinja2.FileSystemLoader(path))
+
+    report = {'version': VERSION, 'figures': analysis['tis-fig'],
+              'totalfig': analysis['matched-fig'], 'table_int': None, 'table_prob': None,
+              'table_path': None, 'table_eff': None, 'pcross': None,
+              'pcross_e': None, 'pcross_simt': None, 'pcross_teff': None,
+              'pcross_opteff':None}
+    # get the efficiency results:
+    report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
+    report['pcross_e'] = '{0:16.9e}'.format(analysis['matched']['relerror'] *
+                                            100)
+    report['pcross_simt'] = '{0:16.9e}'.format(analysis['matched']['simtime'])
+    report['pcross_teff'] = '{0:16.9e}'.format(analysis['matched']['eff'])
+    report['pcross_opteff'] = '{0:16.9e}'.format(analysis['matched']['opteff'])
+
+    if output in ['html', 'rst']:
+        # first generate rst, then convert if html is wanted
+        # build output variables:
+        # for the tables we build them explicitly to control the width:
+        _, report['table_int'] = _rst_table_interface(path_ensembles,
+                                                      analysis['detect'])
+        _, report['table_prob'] = _rst_table_probability(path_ensembles,
+                                                         analysis['tis'])
+        _, report['table_path'] = _rst_table_path(path_ensembles,
+                                                  analysis['tis'])
+        _, report['table_eff'] = _rst_table_efficiencies(path_ensembles,
+                                                         analysis['tis'])
+    elif output in ['latex', 'tex']:
+        report['totalfig'] = _remove_extension(report['totalfig'])
+        # remove extensions of figures:
+        report['figures'] = []
+        for fig in analysis['tis-fig']:
+            report['figures'].append({key: _remove_extension(fig[key]) for key in fig})
+    #pylint: disable=maybe-no-member
+    render = env.get_template(template).render(report)
+    #pylint: enable=maybe-no-member
+    if output == 'html':
+        return _rst_to_html(render)
+    else:
+        return render
 
 
 def _apply_format(value, fmt):
@@ -177,34 +174,6 @@ def _apply_format(value, fmt):
         return new_fmt.format(value)
     else:
         return str_fmt
-
-
-def _rst_generate_tables(path_ensembles, results, detect):
-    """
-    This will just generate a string with all the tables for
-    the report.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects of type PathEnsemble
-        These are the path ensembles we have analysed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
-
-    Returns
-    -------
-    out : string
-        The string with all the table data
-    """
-    _, table_int = _rst_table_interface(path_ensembles, detect)
-    _, table_pro = _rst_table_probability(path_ensembles, results)
-    _, table_len = _rst_table_path(path_ensembles, results)
-    _, table_eff = _rst_table_efficiencies(path_ensembles, results)
-    tables = ['.. _tis-results:', '', 'Numerical TIS results', 21 * ('='), '',
-              table_int, '\n', table_pro, '\n', table_len, '\n', table_eff]
-    return '\n'.join(tables)
 
 
 def _rst_table_interface(path_ensembles, detect):
