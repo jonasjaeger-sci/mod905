@@ -237,6 +237,7 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
                           outfiles['shoots'], outfiles['shoots-scaled'])
     return outfiles
 
+
 def mpl_total_probability(path_ensembles, detect, results, matched,
                           outputfile):
     """
@@ -434,11 +435,13 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
             data.append(mid)
             data.append(hist)
             data.append(hist_scale)
-            header.append(', {}'.format(key))
+            header.append('{}-mid-hist-hist-scale'.format(key))
         except KeyError:
             continue
-    header = ''.join(header)
+    header = ', '.join(header)
     _txt_save_columns(outputfile, header, *data)
+    # *data is used here since empty histograms will not be
+    # written to the output file.
 
 
 def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
