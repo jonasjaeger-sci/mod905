@@ -5,7 +5,7 @@ License
 #######
 
 pytismol License (MIT)
-=====================
+======================
 
 Copyright (c) 2015 The pytismol team
 
