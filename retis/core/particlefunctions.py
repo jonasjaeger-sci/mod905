@@ -6,7 +6,8 @@ import numpy as np
 __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',
            'calculate_scalar_pressure', 'calculate_pressure_tensor',
-           'calculate_linear_momentum', 'atomic_kinetic_energy_tensor']
+           'calculate_linear_momentum', 'atomic_kinetic_energy_tensor',
+           'calculate_thermo']
 
 
 def calculate_linear_momentum(particles, selection=None):
@@ -300,3 +301,40 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
         kin_tensor = calculate_kinetic_energy_tensor(particles, selection=None)
     pressure = (particles.virial + 2. * kin_tensor) / volume
     return pressure
+
+
+def calculate_thermo(particles, dof, dim, volume, vpot):
+    """
+    This method will calculate and return several thermodynamic properties.
+
+    Parameters
+    ----------
+    particles : object of type Particles from retis.core.particles
+        This object represent the particles.
+    dof : list of floats
+        dof is the degrees of freedom, typically provided with
+        a system.box.calculate_volume().
+    dim : float
+        The dimensionality of, typically provieded with a system.get_dim().
+    volume : float
+        This is the volume ``occupied`` by the particles. It can typically
+        be obtained by a box.calculate_volume().
+    vpot : float
+        The potential energy of the particles. It can typically be obtained
+        by a system.v_pot.
+
+    Returns
+    -------
+    out : dict
+        This dict contains the float that is calculated in this routine.
+    """
+    kin_tens = calculate_kinetic_energy_tensor(particles)
+    _, temp, _ = calculate_kinetic_temperature(particles, dof=dof,
+                                               kin_tensor=kin_tens)
+    ekin = kin_tens.trace()
+    press = calculate_scalar_pressure(particles, volume, dim,
+                                      kin_tensor=kin_tens)
+    mom = calculate_linear_momentum(particles)
+    result = {'potential': vpot, 'ekin': ekin, 'etot': ekin + vpot,
+              'temp': temp, 'press': press, 'mom': mom}
+    return result
