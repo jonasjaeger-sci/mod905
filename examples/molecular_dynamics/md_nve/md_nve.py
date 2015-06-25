@@ -11,7 +11,8 @@ from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_scalar_pressure,
                                           calculate_linear_momentum)
 from retis.core.integrators import VelocityVerlet
-from retis.forcefield import ForceField, PairLennardJonesCutnp
+from retis.forcefield import ForceField
+from retis.forcefield.pairpotentials import PairLennardJonesCutnp
 from retis.inout import WriteGromacs
 from retis.tools import latticefcc
 import numpy as np

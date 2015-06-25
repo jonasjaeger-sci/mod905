@@ -229,7 +229,7 @@ class PairLennardJonesCut(PotentialFunction):
             vcut = 0.0
             if self.params['shift-potential']:
                 try:
-                    rcut = sigma_ij/self.pairparams['rcut'][pair]
+                    rcut = sigma_ij / self.pairparams['rcut'][pair]
                     vcut = 4.0 * epsilon_ij * (rcut**12 - rcut**6)
                 except ZeroDivisionError:
                     vcut = 0.0
@@ -289,12 +289,13 @@ class PairLennardJonesCut(PotentialFunction):
         v_pot = 0.0
         for pair in particles.pairs():
             i, j, itype, jtype = pair
-            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            delta = box.pbc_dist_coordinate(particles.pos[i] -
+                                            particles.pos[j])
             rsq = np.dot(delta, delta)
             if rsq < self.rcut2[itype, jtype]:
                 r2inv = 1.0/rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * (self.lj3[itype, jtype]*r6inv -
+                v_pot += r6inv * (self.lj3[itype, jtype] * r6inv -
                                   self.lj4[itype, jtype]) -\
                          self.offset[itype, jtype]
         return v_pot
@@ -323,14 +324,15 @@ class PairLennardJonesCut(PotentialFunction):
         virial = np.zeros((box.dim, box.dim))
         for pair in particles.pairs():
             i, j, itype, jtype = pair
-            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            delta = box.pbc_dist_coordinate(particles.pos[i] -
+                                            particles.pos[j])
             rsq = np.dot(delta, delta)
             if rsq < self.rcut2[itype, jtype]:
-                r2inv = 1.0/rsq
+                r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                forcelj = r2inv*r6inv * (self.lj1[itype, jtype]*r6inv -
-                                         self.lj2[itype, jtype])
-                forceij = forcelj*delta
+                forcelj = r2inv * r6inv * (self.lj1[itype, jtype] * r6inv -
+                                           self.lj2[itype, jtype])
+                forceij = forcelj * delta
                 forces[i] += forceij
                 forces[j] -= forceij
                 virial += np.outer(forceij, delta)
@@ -373,17 +375,18 @@ class PairLennardJonesCut(PotentialFunction):
         virial = np.zeros((box.dim, box.dim))
         for pair in particles.pairs():
             i, j, itype, jtype = pair
-            delta = box.pbc_dist_coordinate(particles.pos[i]-particles.pos[j])
+            delta = box.pbc_dist_coordinate(particles.pos[i] -
+                                            particles.pos[j])
             rsq = np.dot(delta, delta)
             if rsq < self.rcut2[itype, jtype]:
-                r2inv = 1.0/rsq
+                r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * (self.lj3[itype, jtype]*r6inv -
+                v_pot += r6inv * (self.lj3[itype, jtype] * r6inv -
                                   self.lj4[itype, jtype]) -\
                          self.offset[itype, jtype]
-                forcelj = r2inv * r6inv * (self.lj1[itype, jtype]*r6inv -
+                forcelj = r2inv * r6inv * (self.lj1[itype, jtype] * r6inv -
                                            self.lj2[itype, jtype])
-                forceij = forcelj*delta
+                forceij = forcelj * delta
                 forces[i] += forceij
                 forces[j] -= forceij
                 virial += np.outer(forceij, delta)
@@ -498,9 +501,9 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             lj3 = self.matrix_np['lj3'][i][k]
             lj4 = self.matrix_np['lj4'][i][k]
             offset = self.matrix_np['offset'][i][k]
-            r2inv = 1.0/rsq[k]
+            r2inv = 1.0 / rsq[k]
             r6inv = r2inv**3
-            pot += np.sum((r6inv * (lj3 * r6inv - lj4)-offset))
+            pot += np.sum((r6inv * (lj3 * r6inv - lj4) - offset))
         return pot
 
     def force(self, particles, box):
@@ -541,7 +544,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
             lj1 = self.matrix_np['lj1'][i][k]
             lj2 = self.matrix_np['lj2'][i][k]
-            r2inv = 1.0/rsq[k]
+            r2inv = 1.0 / rsq[k]
             r6inv = r2inv**3
             forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
             forceij = np.einsum('i,ij->ij', forcelj, delta[k])
@@ -596,9 +599,9 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             lj3 = self.matrix_np['lj3'][i][k]
             lj4 = self.matrix_np['lj4'][i][k]
             offset = self.matrix_np['offset'][i][k]
-            r2inv = 1.0/rsq[k]
+            r2inv = 1.0 / rsq[k]
             r6inv = r2inv**3
-            pot += np.sum((r6inv * (lj3 * r6inv - lj4))-offset)
+            pot += np.sum((r6inv * (lj3 * r6inv - lj4)) - offset)
             forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
             forceij = np.einsum('i,ij->ij', forcelj, delta[k])
             forces[i] += np.sum(forceij, axis=0)

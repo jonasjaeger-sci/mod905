@@ -7,7 +7,8 @@ from __future__ import print_function
 from retis.core import Simulation, System, Box, RandomGenerator
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
-from retis.forcefield import ForceField, PairWCAnp, DoubleWellWCA
+from retis.forcefield import ForceField
+from retis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
 from retis.inout import WriteGromacs
 from retis.tools import lattice_simple_cubic
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
@@ -20,7 +21,7 @@ wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0},
                   'B': {'sigma': 1.0, 'epsilon': 1.0}}
 
 dwca = DoubleWellWCA(dim=2)
-dwca_parameters = {'types': [('B', 'B')], 'rzero': 1.0*(2.0**(1.0/6.0)),
+dwca_parameters = {'types': [('B', 'B')], 'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 6.0, 'width': 0.25}
 
 forcefield = ForceField(potential=[wca, dwca], params=[wca_parameters,
@@ -42,12 +43,12 @@ npart = ljsystem.particles.npart
 print('Added {} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
-ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
+ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
 DOF = ljsystem.temperature['dof']
 rgen = RandomGenerator(seed=0)
 ljsystem.generate_velocities(rgen, momentum=True)
-temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
-print('Generated temperatures with average: {}'.format(avgtemp))
+_, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
+print('Generated temperatures with average: {}'.format(gentemp))
 ljsystem.forcefield = forcefield
 # also initiate forces:
 ljsystem.potential_and_force()
@@ -84,9 +85,9 @@ gs = gridspec.GridSpec(2, 2)
 # This will just set up some dimensions etc. for the plotting:
 dx = size[0][1] - size[0][0]
 f = 0.12
-dx = np.array([-dx*f, dx*f])
+dx = dx * f * np.array([-1.0, 1.0])
 dy = size[1][1] - size[1][0]
-dy = np.array([-dy*f * 0.1, dy*f*0.1])
+dy = dy * f * 0.1 * np.array([-1.0, 1.0])
 SIGMA = CONVERT['length']['lj', 'Å']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
@@ -107,7 +108,7 @@ pos0 = box.pbc_wrap(ljsystem.particles.pos)
 # set up circles to represent the particles:
 circles = []
 for _ in range(int(npart)):
-    circles.append(plt.Circle((0, 0), radius=SIGMA*0.5, alpha=0.5))
+    circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5))
     circles[-1].set_visible(False)
     ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
@@ -121,10 +122,10 @@ plt.quiverkey(vel_arrow, 4, -3.5, 6, 'Velocities', coordinates='data',
 # also add a line representing the bond
 linebond, = ax.plot(None, None, lw=2, ls='-', color='magenta', alpha=0.7)
 # this will draw the lines representing the box boundaries:
-ax.axhline(y=size[1][0]*SIGMA, lw=2, ls=':', color='k')
-ax.axhline(y=size[1][1]*SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][0]*SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][1]*SIGMA, lw=2, ls=':', color='k')
+ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color='k')
+ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color='k')
+ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color='k')
+ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color='k')
 
 ax2 = fig.add_subplot(gs[0, 1])
 ax2.set_xlim(0, timeendfs)
@@ -281,7 +282,7 @@ def update(frame, system):
     patches = []
     ptypes = system.particles.ptype
     for ci, pi, itype in zip(circles, pos, ptypes):
-        ci.center = np.array([pi[0], pi[1]])*SIGMA
+        ci.center = np.array([pi[0], pi[1]]) * SIGMA
         ci.set_color(colors[itype])
         ci.set_visible(True)
         patches.append(ci)
@@ -326,7 +327,8 @@ def update(frame, system):
         linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
         patches.append(linetot)
         # also display current simulation time;
-        time_text.set_text('Time: {0:6.2f} fs'.format(time[-1]))
+        time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
+                                                                   frame))
         patches.append(time_text)
         # output energies to the screen:
         print(outfmt.format(step[-1], temperature[-1], v_pot[-1],

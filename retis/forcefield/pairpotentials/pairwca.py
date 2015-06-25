@@ -85,7 +85,6 @@ class DoubleWellWCA(PotentialFunction):
             type {'types': set(('A','A')), 'rzero': 1.0, 'width': 0.25,
                   'height': 6.0}
         """
-
         for key in parameters:
             if key in self.params:
                 self.params[key] = parameters[key]

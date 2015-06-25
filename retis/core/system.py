@@ -223,7 +223,7 @@ class System(object):
 
     def evaluate_force(self, **kwargs):
         """
-        Evaluate the forces
+        Evaluate the forces on the particles.
 
         Parameters
         ----------
@@ -238,6 +238,11 @@ class System(object):
             Forces on the particles.
         out[2] : float
             The virial.
+
+        Note
+        ----
+        This method will not update the forces, just calculate them.
+        The method `self.force` can be used to update the forces.
         """
         return self._evaluate_potential_force(what='force', **kwargs)
 
@@ -256,12 +261,18 @@ class System(object):
         -------
         out : float
             The potential energy.
+
+        Note
+        ----
+        This method will not update self.v_pot but it will just return it's
+        value for the (possibly given) configuration.
+        The method `self.potential` can be used to update self.v_pot.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
 
     def evaluate_potential_and_force(self, **kwargs):
         """
-        Evaluate the potential and/or the force
+        Evaluate the potential and/or the force.
 
         Parameters
         ----------
@@ -278,6 +289,11 @@ class System(object):
             Forces on the particles.
         out[3] : float
             The virial.
+
+        Note
+        ----
+        This function will not update the forces on the particles nor
+        self.v_pot. To update these, call `self.potential_and_force`.
         """
         return self._evaluate_potential_force(what='both', **kwargs)
 
@@ -285,6 +301,17 @@ class System(object):
         """
         Helper function to evaluate the potential or force
         or both.
+
+        Parameters
+        ----------
+        what : string
+            This selects what we are to evaluate. 'potential' selects
+            the potential energy only, 'force' selects the force only and
+            antyhing else will give both.
+        kwargs : dict
+            This dictionary can be used to override position, name, types,
+            particles and/or box. Default values are taken from selv.box or
+            self.particles.
         """
         args = {}
         args['pos'] = kwargs.get('pos', self.particles.pos)
@@ -292,6 +319,9 @@ class System(object):
         args['ptype'] = kwargs.get('ptype', self.particles.ptype)
         args['particles'] = kwargs.get('particles', self.particles)
         args['box'] = kwargs.get('box', self.box)
+        # Here we allow for **args when calling the force field. This is
+        # simply because we do not know beforhand what parameters we should
+        # pass into the force field.
         if what == 'potential':
             return self.forcefield.evaluate_potential(**args)
         elif what == 'force':

@@ -80,8 +80,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
 
 def match_all_histograms(histograms, umbrellas):
     """
-    Function to mach several histograms from a umbrella
-    sampling.
+    Function to mach several histograms from an umbrella sampling.
 
     Parameters
     ----------

@@ -8,7 +8,8 @@ from __future__ import print_function
 from retis.core import Simulation, System, Box, RandomGenerator
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
-from retis.forcefield import ForceField, PairLennardJonesCutnp
+from retis.forcefield import ForceField
+from retis.forcefield.pairpotentials import PairLennardJonesCutnp
 from retis.inout import WriteGromacs
 from retis.tools import lattice_simple_cubic
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
@@ -21,7 +22,7 @@ ljparams = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
             'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[ljparams])
 
-size = np.array([[0.0, 12.0/3.405], [0.0, 12.0/3.405]])
+size = np.array([[0.0, 12.0 / 3.405], [0.0, 12.0 / 3.405]])
 box = Box(size)
 ljsystem = System(temperature=1.0, units='lj', box=box)
 # generate some lattice points, this will give approx 9 points
@@ -34,12 +35,12 @@ npart = ljsystem.particles.npart
 print('Added {} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
-ljsystem.adjust_dof([1, 1]) # adjust DOF since we are in "NVEMG"
+ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
 DOF = ljsystem.temperature['dof']
 rgen = RandomGenerator(seed=0)
 ljsystem.generate_velocities(rgen, momentum=False)
-temp, avgtemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
-print('Generated temperatures with average: {}'.format(avgtemp))
+_, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
+print('Generated temperatures with average: {}'.format(gentemp))
 
 ljsystem.forcefield = forcefield
 # also initiate forces:
@@ -75,9 +76,9 @@ fig = plt.figure(figsize=(12, 6))
 # This will just set up some dimensions etc. for the plotting:
 dx = size[0][1] - size[0][0]
 f = 0.12
-dx = np.array([-dx*f, dx*f])
+dx = dx * f * np.array([-1.0, 1.0])
 dy = size[1][1] - size[1][0]
-dy = np.array([-dy*f * 0.1, dy*f*0.1])
+dy = dy * f * 0.1 * np.array([-1.0, 1.0])
 SIGMA = CONVERT['length']['lj', 'Å']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
@@ -98,7 +99,7 @@ pos0 = box.pbc_wrap(ljsystem.particles.pos)
 # set up circles to represent the particles:
 circles = []
 for _ in range(int(npart)):
-    circles.append(plt.Circle((0, 0), radius=SIGMA*0.5, alpha=0.5))
+    circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5))
     circles[-1].set_visible(False)
     ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
@@ -110,10 +111,10 @@ plt.quiverkey(force_arrow, 1, -4, 6, 'Forces', coordinates='data',
 plt.quiverkey(vel_arrow, 4, -4, 6, 'Velocities', coordinates='data',
               color='darkgreen')
 # this will draw the lines representing the box boundaries:
-ax.axhline(y=size[1][0]*SIGMA, lw=2, ls=':', color='k')
-ax.axhline(y=size[1][1]*SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][0]*SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][1]*SIGMA, lw=2, ls=':', color='k')
+ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color='k')
+ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color='k')
+ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color='k')
+ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color='k')
 
 ax2 = fig.add_subplot(122)
 ax2.set_xlim(0, timeendfs)
@@ -248,7 +249,8 @@ def update(frame, system):
         linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
         patches.append(linetot)
         # also display current simulation time;
-        time_text.set_text('Time: {0:6.2f} fs'.format(time[-1]))
+        time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
+                                                                   frame))
         patches.append(time_text)
         # output energies to the screen:
         print(outfmt.format(step[-1], temperature[-1], v_pot[-1],

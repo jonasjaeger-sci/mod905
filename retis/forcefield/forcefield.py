@@ -77,7 +77,7 @@ class ForceField(object):
     arguments : dict
         Contains information on how to call the different functions.
         arguments['force'] = list with information on how to call the
-        corresponding potential function, i.e. it is equal to 
+        corresponding potential function, i.e. it is equal to
         inspect.getargspec(potential.force)
     """
 
@@ -108,6 +108,7 @@ class ForceField(object):
         else:
             for pot, param in zip(potential, params):
                 self.add_potential(pot, parameters=param)
+
     def add_potential(self, potential, parameters=None):
         """
         Adds a potential with parameters to the force field
@@ -160,12 +161,12 @@ class ForceField(object):
             idx = self.potential.index(potential)
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
-            arg_force = self.arguments['force'].pop(idx)
-            arg_pot = self.arguments['pot'].pop(idx)
-            arg_pot_and_force = self.arguments['pot-and-force'].pop(idx)
+            self.arguments['force'].pop(idx)
+            self.arguments['pot'].pop(idx)
+            self.arguments['pot-and-force'].pop(idx)
             return (potrm, paramrm)
         else:
-            warnings.warn('Unknow potential --- will not remove')
+            warnings.warn('Potential not found in the force field functions')
             return None
 
     def update_potential_parameters(self, potential, params):
@@ -210,7 +211,7 @@ class ForceField(object):
 
         Note
         ----
-        See the note for evaluate_potential
+        See note in :py:func:`retis.forcefield.evaluate_potential_and_force`
         """
         force = None
         virial = None
@@ -242,14 +243,7 @@ class ForceField(object):
 
         Note
         ----
-        In this function each potential function picks out the
-        variable that it needs. This might be stupid,
-        as these variable names will have to match (names will have
-        to be know anyway if I use optional keywords.
-        One solution might be to just pass the system to the
-        potential, with additional optional arguments on what to
-        override (override is here usefull when calculating the energies
-        in Monte Carlo moves - i.e. to use the trial positions).
+        See note in :py:func:`retis.forcefield.evaluate_potential_and_force`
         """
         v_pot = None
         for pot, argu in zip(self.potential, self.arguments['potential']):
@@ -283,11 +277,9 @@ class ForceField(object):
 
         Note
         ----
-        In this function each potential function picks out the
-        variable that it needs. This might be stupid,
-        as these variable names will have to match (names will have
-        to be know anyway if I use optional keywords.
-        One solution might be to just pass the system to the
+        In this function each potential function picks out the variable that
+        it needs. This means that this function will be passed too many
+        parameters. One solution might be to just pass the system to the
         potential, with additional optional arguments on what to
         override (override is here usefull when calculating the energies
         in Monte Carlo moves - i.e. to use the trial positions).

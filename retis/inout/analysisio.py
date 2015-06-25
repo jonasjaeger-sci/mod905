@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods that will output
-the results from the path analysis.
+This file contains methods that will output results from the path analysis.
+It will also output matched results.
 """
 from __future__ import absolute_import
 from .inout import create_backup

@@ -8,7 +8,8 @@ a mixture of 3 Lennard-Jones particles.
 from __future__ import print_function
 from retis.core import Simulation, System, Box
 from retis.core.integrators import VelocityVerlet
-from retis.forcefield import ForceField, PairLennardJonesCutnp
+from retis.forcefield import ForceField
+from retis.forcefield.pairpotentials import PairLennardJonesCutnp
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_pressure_tensor,
                                           calculate_kinetic_temperature,
@@ -73,7 +74,7 @@ def common_calculations(system):
     volume = system.box.calculate_volume()
     dim = system.get_dim()
     kin_tensi = calculate_kinetic_energy_tensor(particles)
-    
+
     press_tensi = calculate_pressure_tensor(particles, volume,
                                             kin_tensor=kin_tensi)
     _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
