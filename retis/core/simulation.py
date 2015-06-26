@@ -5,13 +5,77 @@ import numpy as np
 import collections
 import inspect
 import warnings
-from .particlefunctions import (calculate_kinetic_energy_tensor,
-                                calculate_kinetic_temperature,
-                                calculate_scalar_pressure,
-                                calculate_linear_momentum)
+from .particlefunctions import calculate_thermo
+from .integrators import create_integrator
 
 
-__all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE']
+__all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE',
+           'create_simulation']
+
+
+def _check_settings(settings, required):
+    """
+    Helper function to check if required settings actually are set
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains the given settings
+    required : list of strings
+        This list contains the settings that are required and which
+        we will check the presence of.
+
+    Returns
+    -------
+    out : boolean
+        True if all required settings are persent, False otherwise.
+    """
+    result = True
+    for setting in required:
+        if not setting in settings:
+            warnings.warn('Setting `{}` not found!'.format(setting))
+            result = False
+    return result
+
+
+def create_simulation(settings, simulation_type='nve'):
+    """
+    This method will set up some common simulation types.
+    It is meant as a helper function to automate some very common set-up
+    tasks
+
+    Parameter
+    ---------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    simulation_type : string
+        This selects what kind of simulation we shall be doing
+
+    Returns
+    -------
+    out : object that represents the simulation.
+        This object will correspond to the selected simulation type.
+    """
+    simulation_type = simulation_type.lower()
+    sim = None
+    if simulation_type == 'nve':
+        # this will set up a MD NVE simulation.
+        required = ['system', 'endcycle']
+        if not _check_settings(settings, required):
+            return sim
+        intg = create_integrator(settings.get('integrator', None),
+                                 simulation_type)
+        sim = SimulationNVE(settings['system'], intg,
+                            endcycle=settings['endcycle'],
+                            startcycle=settings.get('startcycle', 0))
+    elif simulation_type == 'tis':
+        # this will set up a TIS simulation
+        warnings.warn('Simulation TIS not yet implemented')
+    elif simulation_type == 'retis':
+        warnings.warn('Simulation reTIS not yet implemented')
+    else:
+        warnings.warn('Unknown simulation {}'.format(simulation_type))
+    return sim
 
 
 def _do_task(task, stepnumber, currentstep):
@@ -90,6 +154,9 @@ class Simulation(object):
         simulation should end.
         The int in cycle['step'] represents the current cycle number.
         The int in cycle['start'] is the cycle number we started at.
+        The int in cycle['stepno'] is the number of cycles we have perfomred
+        to arrive at cycle['step']. This might be different from cycle['step']
+        since cycle['start'] might be different from 0.
     task : list of dicts
         Each dich contain the tasks to be done. This are represented as a
         dict with the key-words 'func', 'args', 'kwargs'. Tasks are called as
@@ -117,7 +184,7 @@ class Simulation(object):
         N/A, but initiates self.tasks and set self.cycle.
         """
         self.cycle = {'step': startcycle, 'end': endcycle,
-                      'start': startcycle}
+                      'start': startcycle, 'stepno': 0}
         self.task = []
 
     def extend_cycles(self, steps):
@@ -156,7 +223,8 @@ class Simulation(object):
 
         Returns
         -------
-        N/A, but may modify the system and other external variables.
+        out : list
+            This list contains the results of the defined tasks.
 
         Note
         ----
@@ -168,12 +236,13 @@ class Simulation(object):
         is defined.
         """
         self.cycle['step'] += 1
-        # no. of steps done since start
-        stepno = self.cycle['step'] - self.cycle['start']
-        results = []
+        self.cycle['stepno'] += 1
+        results = {}
         for task in self.task:
-            resi = _do_task(task, stepno, self.cycle['step'])
-            results.append(resi)
+            resi = _do_task(task, self.cycle['stepno'], self.cycle['step'])
+            label = task.get('result', None)
+            if label:
+                results[label] = resi
         return results
 
     def add_tasks(self, *tasks):
@@ -268,6 +337,31 @@ class Simulation(object):
         else:
             self.task.insert(position, task)
         return True
+
+    def run(self):
+        """
+        This method can be used to run a simulation.
+        The intented usage is for simulations where all tasks have been
+        defined in the system object. This means that all input/output are
+        also assumed to be defined as tasks.
+
+        Note
+        ----
+        This method will simply run the tasks. In general this is probably
+        too generic for the simulation you want. It is perhaps best to
+        modify the `run` method of your simulation object.
+
+        Yields
+        ------
+        out : dict
+            This dict contains the results from the simulation
+        """
+        while not self.is_finished():
+            results = self.step()
+            if results is None:
+                results = {}
+            results['cycle'] = (self.cycle['stepno'], self.cycle['step'])
+            yield results
 
 
 class UmbrellaWindowSimulation(Simulation):
@@ -370,45 +464,52 @@ class SimulationNVE(Simulation):
         self.system = system
         self.integrator = integrator
         if not self.integrator.dynamics == 'NVE':
-            msg = 'Using integrator {} for NVE dynamics!'
+            msg = 'Inconsistent integrator {} for NVE dynamics!'
             warnings.warn(msg.format(integrator.desc))
 
         task_integrate = {'func': self.integrator.integration_step,
                           'args': [self.system]}
-
-        task_calculate = {'func': self.common_calculations,
-                          'args': []}
-        # order is here important
-        # first calculate for current state:
-        self.add_task(task_calculate)
-        # then propagate
+        task_thermo = {'func': calculate_thermo,
+                       'args': [system,
+                                system.temperature['dof'],
+                                system.get_dim(),
+                                system.box.calculate_volume()],
+                       'first': True,
+                       'result': 'thermo'}
+        # task thermo is set up to execute at all steps
+        # add propagation task:
         self.add_task(task_integrate)
+        # add calculation task:
+        self.add_task(task_thermo)
 
-    def common_calculations(self):
+    def run(self):
         """
-        This function will do some calculations that are common
-        for NVE simulations. We will calculate energies, pressure etc.
+        This will run the simulation. It will also take care of the
+        initial output/calculation by going through all the tasks
+        and running those that are marked with 'first'. In this object,
+        the first task(s) is (are) assumed to be the propagation (and
+        possibly other system modifying) operations. In order to output
+        the initial state, we execute the tasks labeled with 'first' first.
 
-        Parameters
-        ----------
-        system : object of type System
-            This is the system we are investigating
-
-        Returns:
+        Yields
+        ------
+        out[0] : dict
+            The current cycle
+        out[1] : list
+            The results from the different tasks.
         """
-        system = self.system
-        particles = system.particles
-        dof = system.temperature['dof']
-        dim = system.get_dim()
-        volume = system.box.calculate_volume()
-        kin_tens = calculate_kinetic_energy_tensor(particles)
-        _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
-                                                    kin_tensor=kin_tens)
-        ekini = kin_tens.trace()
-        pressi = calculate_scalar_pressure(particles, volume, dim,
-                                           kin_tensor=kin_tens)
-        vpoti = system.v_pot
-        etoti = ekini + vpoti
-        momi = calculate_linear_momentum(particles)
-        return vpoti, ekini, etoti, tempi, pressi, momi
-
+        results = {'cycle': (self.cycle['stepno'], self.cycle['step'])}
+        for task in self.task:
+            if task.get('first', False):
+                resi = _do_task(task, self.cycle['stepno'],
+                                self.cycle['step'])
+                label = task.get('result', None)
+                if label:
+                    results[label] = resi
+        yield results
+        # now, run the simulation :-)
+        while not self.is_finished():
+            results = self.step()
+            if results is None:
+                results['cycle'] = (self.cycle['stepno'], self.cycle['step'])
+            yield results
