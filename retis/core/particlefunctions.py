@@ -303,7 +303,7 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
     return pressure
 
 
-def calculate_thermo(particles, dof, dim, volume, vpot):
+def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     """
     This method will calculate and return several thermodynamic properties.
 
@@ -313,7 +313,7 @@ def calculate_thermo(particles, dof, dim, volume, vpot):
         This object represent the particles.
     dof : list of floats
         dof is the degrees of freedom, typically provided with
-        a system.box.calculate_volume().
+        a system.temperature['dof'].
     dim : float
         The dimensionality of, typically provieded with a system.get_dim().
     volume : float
@@ -328,13 +328,21 @@ def calculate_thermo(particles, dof, dim, volume, vpot):
     out : dict
         This dict contains the float that is calculated in this routine.
     """
-    kin_tens = calculate_kinetic_energy_tensor(particles)
-    _, temp, _ = calculate_kinetic_temperature(particles, dof=dof,
+    if volume is None:
+        volume = system.box.calculate_volume()
+    if vpot is None:
+        vpot = system.v_pot
+    if dim is None:
+        dim = system.get_dim()
+    if dof is None:
+        dof = system.temperature['dof']
+    kin_tens = calculate_kinetic_energy_tensor(system.particles)
+    _, temp, _ = calculate_kinetic_temperature(system.particles, dof=dof,
                                                kin_tensor=kin_tens)
     ekin = kin_tens.trace()
-    press = calculate_scalar_pressure(particles, volume, dim,
+    press = calculate_scalar_pressure(system.particles, volume, dim,
                                       kin_tensor=kin_tens)
-    mom = calculate_linear_momentum(particles)
-    result = {'potential': vpot, 'ekin': ekin, 'etot': ekin + vpot,
+    mom = calculate_linear_momentum(system.particles)
+    result = {'vpot': vpot, 'ekin': ekin, 'etot': ekin + vpot,
               'temp': temp, 'press': press, 'mom': mom}
     return result
