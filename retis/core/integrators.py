@@ -2,9 +2,57 @@
 """Definition of numerical integrators"""
 from __future__ import absolute_import
 import numpy as np
+import warnings
 
 
-__all__ = ['VelocityVerlet', 'Langevin']
+__all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']
+
+
+def create_integrator(settings, simulation_type):
+    """
+    This will create the integrator according to the integrator settings.
+    This function is included as a convenient way of setting up and selecting
+    a integrator. It will return the selected integrator.
+
+    Parameters
+    ----------
+    settings : dict
+        This defines how we set up and select the integrator.
+    simulation_type : string
+        This string is used in case we need to select a default
+        integrator.
+
+    Returns
+    -------
+    out[0] : object
+        This object represents the integrator and will be one of the classes
+        defined in retis.core.integrators
+    """
+    if not settings:
+        # select a default, this is probably not what the user really
+        # wants.
+        if simulation_type == 'nve':
+            return VelocityVerlet(0.002)
+        else:
+            msg = 'No default integrator for {}'.format(simulation_type)
+            warnings.warn(msg)
+            return None
+    else:
+        name = settings['type'].lower()
+        # Avoiding getatttr on purpose:
+        if name == 'velocityverlet':
+            return VelocityVerlet(settings['timestep'])
+        elif name == 'verlet':
+            return Verlet(settings['timestep'])
+        elif name == 'langevin':
+            return Langevin(settings['timestep'],
+                            settings['gamma'],
+                            settings['rgen'],
+                            high_friction=settings['high-friction'])
+        else:
+            msg = 'Unknown integrator {}'.format(settings['type'])
+            warnings.warn(msg)
+            return None
 
 
 class Integrator(object):
@@ -52,7 +100,7 @@ class Integrator(object):
         -------
         N/A, but will update the particles
         """
-        pass
+        return None
 
     def invert_dt(self):
         """
@@ -80,7 +128,7 @@ class Integrator(object):
         -------
         N/A, but will update the particles.
         """
-        self.integration_step(system)
+        return self.integration_step(system)
 
     def __str__(self):
         """
@@ -147,6 +195,7 @@ class Verlet(Integrator):
         particles.vel = (pos - self.previous_pos) * self.half_idt
         self.previous_pos, particles.pos = particles.pos, pos
         system.potential_and_force()
+        return None
 
 
 class VelocityVerlet(Integrator):
@@ -195,6 +244,7 @@ class VelocityVerlet(Integrator):
         particles.pos += self.delta_t * particles.vel
         system.potential_and_force()
         particles.vel += self.half_delta_t * particles.force * imass
+        return None
 
 
 class Langevin(Integrator):
@@ -360,9 +410,9 @@ class Langevin(Integrator):
             self._init_parameters(system)
             self.init_params = False
         if self.high_friction:
-            self.integration_step_overdamped(system)
+            return self.integration_step_overdamped(system)
         else:
-            self.integration_step_inertia(system)
+            return self.integration_step_inertia(system)
 
     def integration_step_overdamped(self, system):
         """
@@ -379,6 +429,7 @@ class Langevin(Integrator):
                                  size=particles.vel.shape)
         particles.pos += self.param_high['bddt'] * particles.force + rands
         particles.vel = rands
+        return None
 
     def integration_step_inertia(self, system):
         """
@@ -417,3 +468,4 @@ class Langevin(Integrator):
         system.force()  # update forces
 
         particles.vel = vel2 + self.param_iner['b2'] * particles.force
+        return None
