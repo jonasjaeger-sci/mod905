@@ -177,7 +177,7 @@ class WriteXYZ(TrajectoryWriter):
             npart = len(pos)
             self.trajfile.write('{0}\n'.format(npart))
             if header is None:
-                header = 'Output from retis, frame no. {}'.format(self.frame)
+                header = 'Output from retis, frame no. {}\n'.format(self.frame)
             self.trajfile.write(header)
             if names is None:
                 self._generate_atom_names(npart)
@@ -185,7 +185,7 @@ class WriteXYZ(TrajectoryWriter):
             pos = _adjust_coordinate(pos)
             for namei, posi in zip(names, pos):
                 posc = posi * self.convert['pos']
-                self.trajfile.write('\n{} {} {} {}'.format(namei, *posc))
+                self.trajfile.write('{} {} {} {}\n'.format(namei, *posc))
             self.frame += 1
             status = True
         except IOError as error:
