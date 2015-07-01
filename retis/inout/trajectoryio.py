@@ -201,6 +201,22 @@ class WriteXYZ(TrajectoryWriter):
             raise
         return status
 
+    def write_system(self, system, header=None):
+        """
+        This is a method for writing a configuration in
+        xyz-format. It is similar to `write_frame` and it's
+        meant for convenience: atoms names will not have to be specified.
+
+        Parameters
+        ----------
+        system : object of type retis.core.System
+            The system object with the positions to write
+        header : string, optional
+            Header to use for writing the xyz-frame.
+        """
+        return self.write_frame(system.particles.pos,
+                                names=system.particles.name, header=header)
+
 
 class WriteGromacs(TrajectoryWriter):
     """
@@ -278,8 +294,8 @@ class WriteGromacs(TrajectoryWriter):
 
             for i, posi in enumerate(pos):
                 posc = posi * self.convert['pos']
-                residuenr = i+1 if residuenum is None else residuenum[i]
-                atomnr = i+1 if atomnum is None else atomnum[i]
+                residuenr = i + 1 if residuenum is None else residuenum[i]
+                atomnr = i + 1 if atomnum is None else atomnum[i]
                 if vel is None:
                     newline = self.gro_fmt.format(residuenr, residuename[i],
                                                   atomname[i], atomnr, *posc)
@@ -308,6 +324,31 @@ class WriteGromacs(TrajectoryWriter):
             raise
         return status
 
+    def write_system(self, system, header=None, write_vel=False):
+        """
+        This is a method for writing a configuration in
+        gro-format. It is similar to `write_frame` and it's
+        meant for convenience: atoms names will not have to be specified.
+
+        Parameters
+        ----------
+        system : object of type retis.core.System
+            The system object with the positions to write
+        header : string, optional
+            Header to use for writing the xyz-frame.
+        write_vel : boolean, optional
+            If true, velocities will be written
+        """
+        if not write_vel:
+            return self.write_frame(system.particles.pos,
+                                    atomname=system.particles.name,
+                                    header=header)
+        else:
+            return self.write_frame(system.particles.pos,
+                                    vel=system.particles.vel,
+                                    atomname=system.particles.name,
+                                    header=header)
+
     def _box_lengths(self):
         """
         This is a helper method to obtain the box lengths from the
@@ -317,7 +358,7 @@ class WriteGromacs(TrajectoryWriter):
         if missing > 0:
             boxlength = np.ones(3)
             for i, length in enumerate(self.box.length):
-                boxlength[i] = length*self.convert['pos']
+                boxlength[i] = length * self.convert['pos']
             return boxlength
         else:
-            return self.box.length*self.convert['pos']
+            return self.box.length * self.convert['pos']
