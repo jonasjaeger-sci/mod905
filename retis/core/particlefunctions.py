@@ -343,6 +343,8 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     press = calculate_scalar_pressure(system.particles, volume, dim,
                                       kin_tensor=kin_tens)
     mom = calculate_linear_momentum(system.particles)
-    result = {'vpot': vpot, 'ekin': ekin, 'etot': ekin + vpot,
+    npart = float(system.particles.npart)
+    result = {'vpot': vpot / npart, 'ekin': ekin / npart,
+              'etot': (ekin + vpot) / npart,
               'temp': temp, 'press': press, 'mom': mom}
     return result
