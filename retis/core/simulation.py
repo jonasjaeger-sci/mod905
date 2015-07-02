@@ -462,6 +462,7 @@ class SimulationNVE(Simulation):
         super(SimulationNVE, self).__init__(endcycle=endcycle,
                                             startcycle=startcycle)
         self.system = system
+        self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
         if not self.integrator.dynamics == 'NVE':
             msg = 'Inconsistent integrator {} for NVE dynamics!'
@@ -498,6 +499,8 @@ class SimulationNVE(Simulation):
         out[1] : list
             The results from the different tasks.
         """
+        # do a initial yield, this is just to output the initial state
+        # before integration is done.
         results = {'cycle': (self.cycle['stepno'], self.cycle['step'])}
         for task in self.task:
             if task.get('first', False):
@@ -511,5 +514,6 @@ class SimulationNVE(Simulation):
         while not self.is_finished():
             results = self.step()
             if results is None:
-                results['cycle'] = (self.cycle['stepno'], self.cycle['step'])
+                results = {}
+            results['cycle'] = (self.cycle['stepno'], self.cycle['step'])
             yield results
