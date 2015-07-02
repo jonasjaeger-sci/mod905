@@ -360,8 +360,7 @@ class Simulation(object):
             results = self.step()
             if results is None:
                 results = {}
-            results['cycle'] = {'stepno': self.cycle['stepno'],
-                                'step': self.cycle['step']}
+            results['cycle'] = self.cycle
             yield results
 
 
@@ -502,9 +501,7 @@ class SimulationNVE(Simulation):
         """
         # do a initial yield, this is just to output the initial state
         # before integration is done.
-        results = {}
-        results['cycle'] = {'stepno': self.cycle['stepno'],
-                            'step': self.cycle['step']}
+        results = {'cycle': self.cycle}
         for task in self.task:
             if task.get('first', False):
                 resi = _do_task(task, self.cycle['stepno'],
@@ -518,6 +515,5 @@ class SimulationNVE(Simulation):
             results = self.step()
             if results is None:
                 results = {}
-            results['cycle'] = {'stepno': self.cycle['stepno'],
-                                'step': self.cycle['step']}
+            results['cycle'] = self.cycle
             yield results
