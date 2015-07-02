@@ -11,8 +11,9 @@ export PYTHONPATH=$PYTHONPATH:/some/dir/pytismol
 Building the documentation
 ==========================
 
-The documentation can be created using mkdocs:
+The documentation can be created by running `make html` in the
+`docs` directory.
 
-mkdocs build
+
 
 
