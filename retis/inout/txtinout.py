@@ -2,12 +2,15 @@
 """This file contains methods that handle output/input of text"""
 import itertools
 
+
 _DEFINED_TABLES = {'energies': {'title': 'Energy output',
                                 'var': ['stepno', 'temp', 'vpot',
                                         'ekin', 'etot', 'press'],
                                 'headers': ['Step', 'Temp', 'Pot',
                                             'Kin', 'Tot', 'Press'],
                                 'width': (10, 12), 'spacing': 2}}
+
+
 def get_predefined_table(table):
     """
     This method will just set up and return some predefined tables which
@@ -48,8 +51,8 @@ def _create_and_format_row(row, width, header=False, spacing=1):
         iterable it will be applied to headers untill it's exhausted. In that
         case the last entry will be repeated.
     header : boolean, optional
-        To tell if we are formatting for a header or not. The header will include
-        a # to indicate that it's a header.
+        To tell if we are formatting for a header or not.
+        The header will include a '#' to indicate that it's a header.
     spacing : int, optional
         This is the white space for separating columns.
 
