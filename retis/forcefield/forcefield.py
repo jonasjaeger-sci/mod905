@@ -102,12 +102,13 @@ class ForceField(object):
         self.potential = []
         self.params = []
         self.arguments = {'force': [], 'potential': [], 'pot-and-force': []}
-        if params is None:
-            for pot in potential:
-                self.add_potential(pot)
-        else:
-            for pot, param in zip(potential, params):
-                self.add_potential(pot, parameters=param)
+        if not potential is None:
+            if params is None:
+                for pot in potential:
+                    self.add_potential(pot)
+            else:
+                for pot, param in zip(potential, params):
+                    self.add_potential(pot, parameters=param)
 
     def add_potential(self, potential, parameters=None):
         """
