@@ -12,6 +12,47 @@ import numpy as np
 __all__ = ['WriteXYZ', 'WriteGromacs']
 
 
+# define some formats:
+#_GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
+#_GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.3f}{8:8.3f}{9:8.3f}\n'
+#_GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
+#_XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
+_GRO_FMT = [('{:5d}', 5), ('{:5s}', 5), ('{:5s}', 5), ('{:5d}', 5),
+            ('{:8.3f}', 8), ('{:8.3f}', 8), ('{:8.3f}', 8)]
+_GRO_VEL_FMT = _GRO_FMT + [('{:8.3f}', 8), ('{:8.3f}', 8), ('{:8.3f}', 8)]
+_GRO_BOX_FMT = [('{:12.6f}', 12), ('{:12.6f}', 12), ('{:12.6f}', 12)]
+_XYZ_FMT = [('{:5s}', 5), ('{:8.3f}', 8), ('{:8.3f}', 8), ('{:8.3f}', 8)]
+
+
+def _format(fmt, *values):
+    """
+    This method will apply the given formats to the values.
+    If will make sure that the length of each formatted string
+    is not longer than the specified field width. It does this by
+    truncation of the values.
+
+    Parameters
+    ----------
+    fmt : list of tuples
+        These are the strings describing the format. There should be
+        one format for each item in values. fmt[i][0] is the format
+        string and fmt[i][1] is the max-length.
+    values : list
+        These are the values to format.
+
+    Returns
+    -------
+    out : list
+        List of formatted strings.
+    """
+    str_out = []
+    for fmti, vali in zip(fmt, values):
+        new = fmti[0].format(vali)
+        if len(new) > fmti[1]:
+            new = new[:fmti[1]]
+        str_out.append(new)
+    return str_out
+
 def _adjust_coordinate(coord):
     """
     Method to adjust the dimensionality. A lot of the different
@@ -87,11 +128,15 @@ class WriteXYZ(FileWriter):
             names = self.atomnames
         pos = _adjust_coordinate(pos)
         for namei, posi in zip(names, pos):
-            out = '{} {} {} {}\n'.format(namei,
-                                         posi[0]*self.convert['pos'],
-                                         posi[1]*self.convert['pos'],
-                                         posi[2]*self.convert['pos'])
-            status = self.write_string(out)
+            #out = _XYZ_FMT.format(namei,
+            #                      posi[0]*self.convert['pos'],
+            #                      posi[1]*self.convert['pos'],
+            #                      posi[2]*self.convert['pos'])
+            out = _format(_XYZ_FMT, namei, posi[0]*self.convert['pos'],
+                          posi[1]*self.convert['pos'],
+                          posi[2]*self.convert['pos'])
+            out.append('\n')
+            status = self.write_string('  '.join(out))
             if not status:
                 return status
         self.frame += 1
@@ -139,10 +184,6 @@ class WriteGromacs(FileWriter):
     Same as for TrajectoryWriter and in addition the following:
     box : object of type box as defined in box.py
         The simulation box, used for box-lengths.
-    gro_fmt : string
-        The gromacs file format.
-    gro_vmt_vel : string
-        gromacs file format that also accepts velocities.
     convert : dict of floats
         Defines the conversion of positions from internal units to nm
         and nm/ps.
@@ -155,8 +196,6 @@ class WriteGromacs(FileWriter):
         self.convert = {'pos': CONVERT['length'][units, 'nm'],
                         'vel': CONVERT['velocity'][units, 'nm/ps']}
         super(WriteGromacs, self).__init__(filename, filetype, oldfile)
-        self.gro_fmt = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
-        self.gro_fmt_vel = self.gro_fmt[:-1] + '{7:8.3f}{8:8.3f}{9:8.3f}\n'
 
     def write_frame(self, pos, vel=None, residuenum=None, residuename=None,
                     atomname=None, atomnum=None, header=None):
@@ -207,26 +246,44 @@ class WriteGromacs(FileWriter):
             residuenr = i + 1 if residuenum is None else residuenum[i]
             atomnr = i + 1 if atomnum is None else atomnum[i]
             if vel is None:
-                out = self.gro_fmt.format(residuenr, residuename[i],
-                                          atomname[i], atomnr,
-                                          posi[0] * self.convert['pos'],
-                                          posi[1] * self.convert['pos'],
-                                          posi[2] * self.convert['pos'])
+                #out = _GRO_FMT.format(residuenr, residuename[i],
+                #                      atomname[i], atomnr,
+                #                      posi[0] * self.convert['pos'],
+                #                      posi[1] * self.convert['pos'],
+                #                      posi[2] * self.convert['pos'])
+                out = _format(_GRO_FMT, residuenr, residuename[i],
+                              atomname[i], atomnr,
+                              posi[0] * self.convert['pos'],
+                              posi[1] * self.convert['pos'],
+                              posi[2] * self.convert['pos'])
             else:
-                out = self.gro_fmt_vel.format(residuenr, residuename[i],
-                                              atomname[i], atomnr,
-                                              posi[0] * self.convert['pos'],
-                                              posi[1] * self.convert['pos'],
-                                              posi[2] * self.convert['pos'],
-                                              vel[i][0] * self.convert['vel'],
-                                              vel[i][1] * self.convert['vel'],
-                                              vel[i][2] * self.convert['vel'])
-            status = self.write_string(out)
+                #out = _GRO_VEL_FMT.format(residuenr, residuename[i],
+                #                          atomname[i], atomnr,
+                #                          posi[0] * self.convert['pos'],
+                #                          posi[1] * self.convert['pos'],
+                #                          posi[2] * self.convert['pos'],
+                #                          vel[i][0] * self.convert['vel'],
+                #                          vel[i][1] * self.convert['vel'],
+                #                          vel[i][2] * self.convert['vel'])
+                out = _format(_GRO_VEL_FMT, residuenr, residuename[i],
+                              atomname[i], atomnr,
+                              posi[0] * self.convert['pos'],
+                              posi[1] * self.convert['pos'],
+                              posi[2] * self.convert['pos'],
+                              vel[i][0] * self.convert['vel'],
+                              vel[i][1] * self.convert['vel'],
+                              vel[i][2] * self.convert['vel'])
+            #status = self.write_string(out)
+            out.append('\n')
+            status = self.write_string(''.join(out))
             if not status:
                 return status
         # Write box, note that we update the box-lengths here since
         # it may change during the simulation.
-        self.write_string('{0} {1} {2}\n'.format(*self._box_lengths()))
+        out = _format(_GRO_BOX_FMT, *self._box_lengths())
+        out.append('\n')
+        status = self.write_string(' '.join(out))
+        #self.write_string(_GRO_BOX_FMT.format(*self._box_lengths()))
         self.frame += 1
         return status
 
