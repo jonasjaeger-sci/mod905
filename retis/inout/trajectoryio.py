@@ -5,11 +5,9 @@ on trajectories.
 """
 from __future__ import absolute_import
 from retis.core.units import CONVERT
-from .inout import create_backup
+from .inout import FileWriter
 import numpy as np
-import itertools
-import os
-import warnings
+#import warnings
 
 __all__ = ['WriteXYZ', 'WriteGromacs']
 
@@ -43,119 +41,25 @@ def _adjust_coordinate(coord):
         return adjusted
 
 
-class TrajectoryWriter(object):
-    """
-    TrajectoryWriter(object)
-
-    This class defines a simple object to output a trajectory.
-    The actual writing of the trajectory should be specified in the
-    appropriate class for the format.
-
-    Attributes
-    ----------
-    filename : string
-        Name of file to write.
-    filetype : string
-        Identifies the filetype to write - the "format".
-    frame : int
-        Counter for the number of frames written.
-    atomnames : list of strings
-        Variables that stores atomnames in case
-        these are not specified when writing frames.
-    oldfile : string
-        Defines how we handle existing files with the same
-        name as given in filename.
-    """
-    def __init__(self, filename, filetype, oldfile, frame=0):
-        """
-        Initiates the trajectory writer object.
-
-        Paramters
-        ---------
-        filename : string
-            Name of the file to write.
-        filetype : string
-            Identifies the filetype to write (i.e. the format).
-        oldfile : string
-            Behavior if the filename is an existing file.
-        frame : int
-            Counts the number of frames written
-        """
-        self.frame = frame
-        self.filename = filename
-        self.filetype = filetype
-        self.atomnames = []
-        try:
-            if os.path.isfile(self.filename):
-                msg = 'File exist'
-                if oldfile == 'overwrite':
-                    msg += '\nWill overwrite!'
-                    self.trajfile = open(self.filename, 'w')
-                elif oldfile == 'append':
-                    msg += '\nWill append to file!'
-                    self.trajfile = open(self.filename, 'a')
-                else:
-                    msg += create_backup(self.filename)
-                    self.trajfile = open(self.filename, 'w')
-                warnings.warn(msg)
-            else:
-                self.trajfile = open(self.filename, 'w')
-        except IOError as error:
-            msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-            warnings.warn(msg)
-        except Exception as error:
-            msg = 'Error: {}'.format(error)
-            warnings.warn(msg)
-            raise
-
-    def _generate_atom_names(self, npart, name='X'):
-        """
-        This method will generate atom names is case they
-        are not given
-
-        Parameters
-        ----------
-        npart : int
-            Number of particles currently present
-        name : string
-            Atom name to use, default is X.
-        """
-        if len(self.atomnames) != npart:
-            self.atomnames = [name] * npart
-
-    def close(self):
-        """
-        Method to close the file, in case that is explicitly needed.
-        """
-        if not self.trajfile.closed:
-            self.trajfile.close()
-
-    def __del__(self):
-        """
-        This method in just to close the file in case the program
-        crashes. It is used here as it's not so nice to add as
-        with statement to the main script running the simulation.
-        """
-        if not self.trajfile.closed:
-            self.trajfile.close()
-
-
-class WriteXYZ(TrajectoryWriter):
+class WriteXYZ(FileWriter):
     """
     WriteXYZ(TrajectoryWriter)
     This class handles writing of a system to a file in a simple xyz format.
 
     Attributes
     ----------
-    Same as for TrajectoryWriter and in addition:
+    Same as for FileWriter and in addition:
     convert : dict of floats
         Defines the conversion of positions from internal units to Å.
+    atomnames : list
+        These are the atomnames used for the output.
     """
-    def __init__(self, filename, oldfile='backup', frame=0, units='lj'):
+    def __init__(self, filename, oldfile='backup', units='lj'):
         filetype = 'xyz'
         self.convert = {'pos': CONVERT['length'][units, 'Å']}
-        super(WriteXYZ, self).__init__(filename, filetype, oldfile,
-                                       frame=frame)
+        self.atomnames = []
+        self.frame = 0  # number of frames written
+        super(WriteXYZ, self).__init__(filename, filetype, oldfile)
 
     def write_frame(self, pos, names=None, header=None):
         """
@@ -172,33 +76,25 @@ class WriteXYZ(TrajectoryWriter):
         header : string, optional
             Header to use for writing the xyz-frame.
         """
-        status = False
-        try:
-            npart = len(pos)
-            self.trajfile.write('{0}\n'.format(npart))
-            if header is None:
-                header = 'Output from retis, frame no. {}\n'.format(self.frame)
-            self.trajfile.write(header)
-            if names is None:
-                self._generate_atom_names(npart)
-                names = self.atomnames
-            pos = _adjust_coordinate(pos)
-            for namei, posi in zip(names, pos):
-                posc = posi * self.convert['pos']
-                self.trajfile.write('{} {} {} {}\n'.format(namei, *posc))
-            self.frame += 1
-            status = True
-        except IOError as error:
-            msg = 'XYZ write I/O error ({}): {}'.format(error.errno,
-                                                        error.strerror)
-            warnings.warn(msg)
-        except ValueError as error:
-            msg = 'XYZ write value error: {}'.format(error)
-            warnings.warn(msg)
-        except Exception as error:
-            msg = 'XYZ write error: {}'.format(error)
-            warnings.warn(msg)
-            raise
+        npart = len(pos)
+        self.write_string('{0}\n'.format(npart))
+        if header is None:
+            header = 'pytismol ouput. Frame: {}\n'.format(self.frame)
+        self.write_string(header)
+        if names is None:
+            if len(self.atomnames) != npart:
+                self.atomnames = ['X'] * npart
+            names = self.atomnames
+        pos = _adjust_coordinate(pos)
+        for namei, posi in zip(names, pos):
+            out = '{} {} {} {}\n'.format(namei,
+                                         posi[0]*self.convert['pos'],
+                                         posi[1]*self.convert['pos'],
+                                         posi[2]*self.convert['pos'])
+            status = self.write_string(out)
+            if not status:
+                return status
+        self.frame += 1
         return status
 
     def write_system(self, system, header=None):
@@ -217,8 +113,23 @@ class WriteXYZ(TrajectoryWriter):
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
 
+    def __call__(self, system, header=None):
+        """
+        This is a method for writing a configuration in
+        xyz-format. This method will just call write_system and is
+        included here for convenience.
 
-class WriteGromacs(TrajectoryWriter):
+        Parameters
+        ----------
+        system : object of type retis.core.System
+            The system object with the positions to write
+        header : string, optional
+            Header to use for writing the xyz-frame.
+        """
+        return self.write_system(system, header=header)
+
+
+class WriteGromacs(FileWriter):
     """
     WriteGromacs(TrajectoryWriter)
     This class handles writing of a system to a file in a simple xyz format.
@@ -236,13 +147,14 @@ class WriteGromacs(TrajectoryWriter):
         Defines the conversion of positions from internal units to nm
         and nm/ps.
     """
-    def __init__(self, filename, box, oldfile='backup', frame=0, units='lj'):
+    def __init__(self, filename, box, oldfile='backup', units='lj'):
         filetype = 'gromacs'
+        self.atomnames = []
         self.box = box
+        self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'nm'],
                         'vel': CONVERT['velocity'][units, 'nm/ps']}
-        super(WriteGromacs, self).__init__(filename, filetype, oldfile,
-                                           frame=frame)
+        super(WriteGromacs, self).__init__(filename, filetype, oldfile)
         self.gro_fmt = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
         self.gro_fmt_vel = self.gro_fmt[:-1] + '{7:8.3f}{8:8.3f}{9:8.3f}\n'
 
@@ -274,54 +186,48 @@ class WriteGromacs(TrajectoryWriter):
         In short, the format is:
         residuenum, residuename, atomname, atomnum, x, y, z, vx, vy, vz
         """
-        status = False
-        try:
-            npart = len(pos)
-            if atomname is None:
-                self._generate_atom_names(npart)
-                atomname = self.atomnames
-            if residuename is None:  # just reuse atomnames
-                residuename = atomname
-            if header is None:
-                header = 'Output from retis, frame no. {}\n'.format(self.frame)
+        npart = len(pos)
+        if atomname is None:
+            if len(self.atomnames) != npart:
+                self.atomnames = ['X'] * npart
+            atomname = self.atomnames
+        if residuename is None:  # just reuse atomnames
+            residuename = atomname
+        if header is None:
+            header = 'pytismol ouput. Frame: {}\n'.format(self.frame)
 
-            self.trajfile.write(header)
-            self.trajfile.write('{0}\n'.format(npart))
+        self.write_string(header)
+        self.write_string('{0}\n'.format(npart))
 
-            pos = _adjust_coordinate(pos)  # in case pos is 1D or 2D
-            if not vel is None:
-                vel = _adjust_coordinate(vel)
+        pos = _adjust_coordinate(pos)  # in case pos is 1D or 2D
+        if not vel is None:
+            vel = _adjust_coordinate(vel)  # in case vel is 1D or 2D
 
-            for i, posi in enumerate(pos):
-                posc = posi * self.convert['pos']
-                residuenr = i + 1 if residuenum is None else residuenum[i]
-                atomnr = i + 1 if atomnum is None else atomnum[i]
-                if vel is None:
-                    newline = self.gro_fmt.format(residuenr, residuename[i],
-                                                  atomname[i], atomnr, *posc)
-                else:
-                    velc = vel[i] * self.convert['vel']
-                    newline = self.gro_fmt_vel.format(residuenr,
-                                                      residuename[i],
-                                                      atomname[i],
-                                                      atomnr,
-                                                      *itertools.chain(posc,
-                                                                       velc))
-                self.trajfile.write(newline)
-            self.trajfile.write('{0} {1} {2}\n'.format(*self._box_lengths()))
-            status = True
-            self.frame += 1
-        except IOError as error:
-            msg = 'Gro write I/O error ({}): {}'.format(error.errno,
-                                                        error.strerror)
-            warnings.warn(msg)
-        except ValueError as error:
-            msg = 'Gro write value error: {}'.format(error)
-            warnings.warn(msg)
-        except Exception as error:
-            msg = 'Gro write error: {}'.format(error)
-            warnings.warn(msg)
-            raise
+        for i, posi in enumerate(pos):
+            residuenr = i + 1 if residuenum is None else residuenum[i]
+            atomnr = i + 1 if atomnum is None else atomnum[i]
+            if vel is None:
+                out = self.gro_fmt.format(residuenr, residuename[i],
+                                          atomname[i], atomnr,
+                                          posi[0] * self.convert['pos'],
+                                          posi[1] * self.convert['pos'],
+                                          posi[2] * self.convert['pos'])
+            else:
+                out = self.gro_fmt_vel.format(residuenr, residuename[i],
+                                              atomname[i], atomnr,
+                                              posi[0] * self.convert['pos'],
+                                              posi[1] * self.convert['pos'],
+                                              posi[2] * self.convert['pos'],
+                                              vel[i][0] * self.convert['vel'],
+                                              vel[i][1] * self.convert['vel'],
+                                              vel[i][2] * self.convert['vel'])
+            status = self.write_string(out)
+            if not status:
+                return status
+        # Write box, note that we update the box-lengths here since
+        # it may change during the simulation.
+        self.write_string('{0} {1} {2}\n'.format(*self._box_lengths()))
+        self.frame += 1
         return status
 
     def write_system(self, system, header=None, write_vel=False):
@@ -348,6 +254,23 @@ class WriteGromacs(TrajectoryWriter):
                                     vel=system.particles.vel,
                                     atomname=system.particles.name,
                                     header=header)
+
+    def __call__(self, system, header=None, write_vel=False):
+        """
+        This is a method for writing a configuration in gro-format.
+        This method will just call write_system and is
+        included here for convenience.
+
+        Parameters
+        ----------
+        system : object of type retis.core.System
+            The system object with the positions to write
+        header : string, optional
+            Header to use for writing the xyz-frame.
+        write_vel : boolean, optional
+            If true, velocities will be written
+        """
+        return self.write_system(system, header=header, write_vel=write_vel)
 
     def _box_lengths(self):
         """
