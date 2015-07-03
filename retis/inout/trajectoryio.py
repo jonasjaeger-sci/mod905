@@ -47,11 +47,12 @@ def _format(fmt, *values):
     """
     str_out = []
     for fmti, vali in zip(fmt, values):
-        new = fmti[0].format(vali)#[:fmti[1]]
-        #if len(new) > fmti[1]:
-        #    new = new[:fmti[1]]
+        new = fmti[0].format(vali)
+        if len(new) > fmti[1]:
+            new = new[:fmti[1]]
         str_out.append(new)
     return str_out
+
 
 def _adjust_coordinate(coord):
     """
@@ -129,9 +130,9 @@ class WriteXYZ(FileWriter):
         pos = _adjust_coordinate(pos)
         for namei, posi in zip(names, pos):
             out = _XYZ_FMT.format(namei,
-                                  posi[0]*self.convert['pos'],
-                                  posi[1]*self.convert['pos'],
-                                  posi[2]*self.convert['pos'])
+                                  posi[0] * self.convert['pos'],
+                                  posi[1] * self.convert['pos'],
+                                  posi[2] * self.convert['pos'])
             #out = _format(_XYZ_FMT, namei, posi[0]*self.convert['pos'],
             #              posi[1]*self.convert['pos'],
             #              posi[2]*self.convert['pos'])
