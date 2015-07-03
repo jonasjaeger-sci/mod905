@@ -46,7 +46,7 @@ ljsystem.forcefield = forcefield
 # also initiate forces:
 ljsystem.potential_and_force()
 
-write_gro = WriteGromacs('test.gro', box, frame=0, units=ljsystem.units)
+write_gro = WriteGromacs('test.gro', box, units=ljsystem.units)
 
 numberofsteps = 950
 simulationNVE = Simulation(endcycle=numberofsteps)

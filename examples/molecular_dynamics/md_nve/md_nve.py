@@ -42,7 +42,7 @@ print('Generated temperatures with average: {}'.format(avgtemp))
 ljsystem.forcefield = forcefield
 ljsystem.potential_and_force()
 # initial trajectory writer
-write_gro = WriteGromacs('test.gro', box, frame=0, units=ljsystem.units)
+write_gro = WriteGromacs('test.gro', box, units=ljsystem.units)
 
 # set up a simple NVE simulation
 numberofsteps = 2000
