@@ -29,14 +29,16 @@ Subpackages:
 - inout: This package defines the io for the pytismol program. This includes
   generating output from the analysis and reading input-files etc.
 
-- analysis: This package defines the analysis tools for calculating 
+- analysis: This package defines the analysis tools for calculating
   crossing probabilities, rates etc.
 """
 from __future__ import absolute_import
+
+__version__ = '0.0.1'
+__version_details__ = 'pre-release and pre-alpha'
+
+# imports:
 from . import core
 from . import forcefield
 from . import analysis
 from . import tools
-
-__version__ = '0.0.1'
-__version_details__ = 'pre-release and pre-alpha'
