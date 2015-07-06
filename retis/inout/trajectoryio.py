@@ -9,7 +9,7 @@ from .inout import FileWriter
 import numpy as np
 #import warnings
 
-__all__ = ['WriteXYZ', 'WriteGromacs']
+__all__ = ['WriteXYZ', 'WriteGromacs', 'create_traj_writer']
 
 
 # define some formats:
@@ -22,6 +22,32 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 #_GRO_VEL_FMT = _GRO_FMT + [('{:8.3f}', 8), ('{:8.3f}', 8), ('{:8.3f}', 8)]
 #_GRO_BOX_FMT = [('{:12.6f}', 12), ('{:12.6f}', 12), ('{:12.6f}', 12)]
 #_XYZ_FMT = [('{:5s}', 5), ('{:8.3f}', 8), ('{:8.3f}', 8), ('{:8.3f}', 8)]
+
+
+def create_traj_writer(settings, system):
+    """
+    This is a method which will set up a trajectory writer object from
+    the settings in a given dictionary.
+
+    Parameters
+    ----------
+    settings : dict
+        These are the settings (filename etc) to use for creating the
+        trajectory writer
+    system : object of type system
+        This object is included since information about the units (and
+        possibly the box) is needed.
+    """
+    if settings['type'] == 'xyz':
+        trajwriter = WriteXYZ(settings['file'],
+                              units=system.units)
+    elif settings['type'] == 'gro':
+        trajwriter = WriteGromacs(settings['file'],
+                                  system.box,
+                                  system.units)
+    else:
+        trajwriter = None
+    return trajwriter
 
 
 def _format(fmt, *values):
@@ -121,8 +147,8 @@ class WriteXYZ(FileWriter):
         npart = len(pos)
         self.write_string('{0}\n'.format(npart))
         if header is None:
-            header = 'pytismol ouput. Frame: {}\n'.format(self.frame)
-        self.write_string(header)
+            header = 'pytismol ouput. Frame: {}'.format(self.frame)
+        self.write_string('{}\n'.format(header))
         if names is None:
             if len(self.atomnames) != npart:
                 self.atomnames = ['X'] * npart
@@ -178,12 +204,12 @@ class WriteXYZ(FileWriter):
 
 class WriteGromacs(FileWriter):
     """
-    WriteGromacs(TrajectoryWriter)
+    WriteGromacs(FileWriter)
     This class handles writing of a system to a file in a simple xyz format.
 
     Attributes
     ----------
-    Same as for TrajectoryWriter and in addition the following:
+    Same as for FileWriter and in addition the following:
     box : object of type box as defined in box.py
         The simulation box, used for box-lengths.
     convert : dict of floats
@@ -235,10 +261,10 @@ class WriteGromacs(FileWriter):
         if residuename is None:  # just reuse atomnames
             residuename = atomname
         if header is None:
-            header = 'pytismol ouput. Frame: {}\n'.format(self.frame)
+            header = 'pytismol ouput. Frame: {}'.format(self.frame)
 
-        self.write_string(header)
-        self.write_string('{0}\n'.format(npart))
+        self.write_string('{}\n'.format(header))
+        self.write_string('{}\n'.format(npart))
 
         pos = _adjust_coordinate(pos)  # in case pos is 1D or 2D
         if not vel is None:
