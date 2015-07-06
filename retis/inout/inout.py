@@ -150,6 +150,18 @@ class FileWriter(object):
         else:
             return False
 
+    def write_line(self, towrite):
+        """
+        This method is similar to write_string, however, it write a new
+        line after the given `towrite`.
+        
+        Parameters
+        ----------
+        towrite : string
+            This is the string to output to the file
+        """
+        return self.write_string('{}\n'.format(towrite))
+
     def __del__(self):
         """
         This method in just to close the file in case the program
