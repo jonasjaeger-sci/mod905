@@ -36,7 +36,7 @@ def get_predefined_table(table):
         return tab
 
 
-def _create_and_format_row(row, width, header=False, spacing=1):
+def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
     This will create the header format given the width.
     The specified width can either be a fixed number which will be
@@ -55,11 +55,12 @@ def _create_and_format_row(row, width, header=False, spacing=1):
         The header will include a '#' to indicate that it's a header.
     spacing : int, optional
         This is the white space for separating columns.
-
+    fmt_str : string, optional
+        This is the format to apply, if it's not given, it will be created.
     Returns
     -------
-    out[0] : list of strings
-        out[0][i] is the format string for column i.
+    out[0] : strings
+        The format string for the row
     out[1] : string
         This is the formatted row
 
@@ -67,7 +68,6 @@ def _create_and_format_row(row, width, header=False, spacing=1):
     ----
     If the field-width is too large, the value will be truncated here!
     """
-    fmt = None
     row_str = []
     # first check if width is iterable:
     try:
@@ -75,21 +75,32 @@ def _create_and_format_row(row, width, header=False, spacing=1):
             break
     except TypeError:
         width = [width]
-    for (col, wid) in itertools.izip_longest(row, width,
-                                             fillvalue=width[-1]):
-        if fmt is None:
+    if fmt_str is None:
+        fmt = None
+        for (col, wid) in itertools.izip_longest(row, width,
+                                                 fillvalue=width[-1]):
             if header:
-                fmt = ['# {{:>{}}}'.format(wid - 2)]
+                # if this is the header, just assume that all will be strings:
+                if fmt is None:
+                    fmt = ['# {{:>{}s}}'.format(wid - 2)]
+                else:
+                    fmt.append('{{:>{}s}}'.format(wid))
             else:
-                fmt = ['{{:>{}}}'.format(wid)]
-        else:
-            fmt.append('{{:>{}}}'.format(wid))
-        rowi = fmt[-1].format(col)
-        if len(rowi) > wid:
-            rowi = rowi[:wid]
-        row_str.append(rowi)
-    str_white = (' ') * spacing
-    return fmt, str_white.join(row_str)
+                # this is not the header, use 'g'
+                if fmt is None:
+                    fmt = []
+                fmt.append('{{:> {}.{}g}}'.format(wid, wid - 6))
+                try:
+                    fmt[-1].format(col)
+                except ValueError:
+                    fmt[-1] = '{{:> {}}}'.format(wid)
+            rowi = fmt[-1].format(col)
+            row_str.append(rowi)
+        str_white = (' ') * spacing
+        return str_white.join(fmt), str_white.join(row_str)
+    else:
+        row_str = fmt_str.format(*row)
+        return fmt_str, row_str
 
 
 class TxtTable(object):
@@ -113,8 +124,11 @@ class TxtTable(object):
     spacing : int
         This defines the white space between columns.
         A spacing less than 0 will be interpreted as a 0.
+    row_fmt : string
+        This is a format string which can be used to format the rows of the
+        table.
     """
-    def __init__(self, variables, width=12, headers=None, spacing=2):
+    def __init__(self, variables, width=12, headers=None, spacing=1):
         """
         Initialize the table. Here we can specify default formats for
         floats and for integers.
@@ -133,6 +147,7 @@ class TxtTable(object):
         self.variables = variables
         self.spacing = spacing  # zeros are correctly handled by get_header
         self.headers, self.header = self.make_header(headers=headers)
+        self.row_fmt = None
 
     def make_header(self, headers=None):
         """
@@ -178,10 +193,13 @@ class TxtTable(object):
             If this is true, we are creating the header.
         """
         row = [row_dict.get(var, None) for var in self.variables]
-        _, str_row = _create_and_format_row(row,
-                                            width=self.width,
-                                            header=header,
-                                            spacing=self.spacing)
+        row_fmt, str_row = _create_and_format_row(row,
+                                                  width=self.width,
+                                                  header=header,
+                                                  spacing=self.spacing,
+                                                  fmt_str=self.row_fmt)
+        if self.row_fmt is None:  # store the row format for re-usage
+            self.row_fmt = row_fmt
         return str_row
 
     def __call__(self, row, header=False):
