@@ -66,7 +66,7 @@ class FileWriter(object):
     fileh : file
         This is the file handle which can be used for writing etc.
     """
-    def __init__(self, filename, filetype, oldfile, count=0):
+    def __init__(self, filename, filetype, oldfile='backup', count=0):
         """
         Initiates the file writer object.
 
@@ -154,7 +154,7 @@ class FileWriter(object):
         """
         This method is similar to write_string, however, it write a new
         line after the given `towrite`.
-        
+
         Parameters
         ----------
         towrite : string
