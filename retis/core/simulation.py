@@ -5,9 +5,8 @@ import numpy as np
 import collections
 import inspect
 import warnings
-from .particlefunctions import calculate_thermo
-from .integrators import create_integrator
-
+from retis.core.particlefunctions import calculate_thermo
+from retis.core.integrators import create_integrator
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE',
            'create_simulation']
@@ -356,6 +355,19 @@ class Simulation(object):
         out : dict
             This dict contains the results from the simulation
         """
+        # do a initial yeld, this is just to output the initial
+        # state before we do any steps:
+        results = {'cycle': self.cycle}
+        for task in self.task:
+            # check we we should do any initial calculations:
+            if task.get('first', False):
+                resi = _do_task(task, self.cycle['stepno'],
+                                self.cycle['step'])
+                label = task.get('result', None)
+                if label:
+                    results[label] = resi
+        yield results
+        # now, run the simulation :-)
         while not self.is_finished():
             results = self.step()
             if results is None:
@@ -483,37 +495,22 @@ class SimulationNVE(Simulation):
         # add calculation task:
         self.add_task(task_thermo)
 
-    def run(self):
+    def run_simulation(self):
         """
-        This will run the simulation. It will also take care of the
-        initial output/calculation by going through all the tasks
-        and running those that are marked with 'first'. In this object,
-        the first task(s) is (are) assumed to be the propagation (and
-        possibly other system modifying) operations. In order to output
-        the initial state, we execute the tasks labeled with 'first' first.
+        This will run the simulation. It will basically loop over
+        self.run() and do some additional output relevant for NVE
+        simulations.
 
         Yields
         ------
-        out[0] : dict
-            The current cycle
-        out[1] : list
-            The results from the different tasks.
+        out : dict
+            The result from each step as given by self.run()
         """
-        # do a initial yield, this is just to output the initial state
-        # before integration is done.
-        results = {'cycle': self.cycle}
-        for task in self.task:
-            if task.get('first', False):
-                resi = _do_task(task, self.cycle['stepno'],
-                                self.cycle['step'])
-                label = task.get('result', None)
-                if label:
-                    results[label] = resi
-        yield results
-        # now, run the simulation :-)
-        while not self.is_finished():
-            results = self.step()
-            if results is None:
-                results = {}
-            results['cycle'] = self.cycle
-            yield results
+        for result in self.run():
+            if 'thermo' in result:
+                thermo = result['thermo'].copy()
+                thermo.update(result['cycle'])
+                yield thermo
+            else:
+                yield result['cycle']
+
