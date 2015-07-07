@@ -5,6 +5,9 @@ This file contains methods for creating plots.
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
+
+
+__all__ = ['set_plotting_style']
 # These are color definitions that we will use
 _COLORS = {'almost_black': '#262626'}
 # next follows some hard-coded color-schemes. The default will be deep.
@@ -36,7 +39,7 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
 _STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'pytismol.mplstyle'])
 
 
-def set_up_plotting(style='pytismol'):
+def set_plotting_style(style='pytismol'):
     """
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',

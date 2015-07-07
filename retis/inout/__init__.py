@@ -35,7 +35,7 @@ Modules:
 """
 from .analysisio import (mpl_output_analysis, mpl_total_probability,
                          txt_output_analysis, txt_total_probability)
-from .plotting import set_up_plotting
+from .plotting import set_plotting_style
 from .report import generate_report
 from .txtinout import WriteXYZ, WriteGromacs, FileWriter, TxtTable
 
