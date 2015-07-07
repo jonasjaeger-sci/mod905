@@ -4,7 +4,7 @@ This file contains methods that will output results from the path analysis.
 It will also output matched results.
 """
 from __future__ import absolute_import
-from .inout import create_backup
+from .common import create_backup
 from matplotlib import pyplot as plt
 import warnings
 import numpy as np
