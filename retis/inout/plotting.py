@@ -36,7 +36,8 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                              '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
-_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'pytismol.mplstyle'])
+_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
+                           'pytismol.mplstyle'])
 
 
 def set_plotting_style(style='pytismol'):

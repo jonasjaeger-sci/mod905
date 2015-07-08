@@ -109,10 +109,11 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
                              loader=jinja2.FileSystemLoader(path))
 
     report = {'version': VERSION, 'figures': analysis['tis-fig'],
-              'totalfig': analysis['matched-fig'], 'table_int': None, 'table_prob': None,
-              'table_path': None, 'table_eff': None, 'pcross': None,
-              'perr': None, 'pcross_simt': None, 'pcross_teff': None,
-              'pcross_opteff':None}
+              'totalfig': analysis['matched-fig'],
+              'table_int': None, 'table_prob': None,
+              'table_path': None, 'table_eff': None,
+              'pcross': None, 'perr': None, 'pcross_simt': None,
+              'pcross_teff': None, 'pcross_opteff': None}
     # get the efficiency results:
     report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
 
@@ -312,6 +313,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
     table_str = '\n'.join(table_str)
     return table, table_str
 
+
 def _table_efficiencies(path_ensembles, results, fmt='rst'):
     """
     This will generate the table for the probabilities.
@@ -356,6 +358,7 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
                                          'Efficiency'])
     table_str = '\n'.join(table_str)
     return table, table_str
+
 
 def _generate_rst_table(table, title, headings):
     """
@@ -402,6 +405,7 @@ def _generate_rst_table(table, title, headings):
         str_table.extend([row_line, hline])
     return str_table
 
+
 def _generate_latex_table(table, title, headings, fixnum=None):
     """
     This method will generate the latex code for a table.
@@ -422,7 +426,7 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     str_table = [r'\renewcommand{\arraystretch}{1.25}',
                  r'\noindent', r'\begin{minipage}{\textwidth}', r'\centering',
                  r'\textbf{' + title + r'} \\', r'\medskip'
-                 r'\begin{tabular}{' + len(headings)*('| c ')  + '|}']
+                 r'\begin{tabular}{' + len(headings) * ('| c ') + '|}']
     str_table.append(r'\hline')
     str_table.append(' & '.join(headings) + r'\\ \hline')
     for row in table:
@@ -436,6 +440,7 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     str_table.append(r'\bigskip')
     str_table.append(r'\end{minipage}')
     return str_table
+
 
 def _latexify_number(str_float):
     r"""
