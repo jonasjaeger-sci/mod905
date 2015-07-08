@@ -469,6 +469,8 @@ class PathEnsemble(object):
         ``get_path_data''function of the Path object.
     npath : int
         The number of paths stored.
+    nacc : int
+        The number of accepted paths stored.
     maxpath : int
         The maximum number of paths to store.
     """
@@ -487,6 +489,7 @@ class PathEnsemble(object):
         self.ensemble = ensemble
         self.interfaces = tuple(interfaces)  # Should not change interfaces
         self.npath = 0
+        self.nacc = 0
         self.paths = []
         self.maxpath = maxpath
 
@@ -499,6 +502,7 @@ class PathEnsemble(object):
         """
         self.paths = []
         self.npath = 0
+        self.nacc = 0
 
     def add_path_data(self, path, status, cycle=0):
         """
@@ -520,6 +524,8 @@ class PathEnsemble(object):
             path_data = {'status': status}
         else:
             path_data = path.get_path_data(status, self.interfaces)
+            if path_data['status'] == 'ACC':
+                self.nacc += 1
         path_data['cycle'] = cycle  # also store cycle number
         self.paths.append(path_data)  # store the new data
         self.npath += 1
@@ -540,7 +546,7 @@ class PathEnsemble(object):
     def get_acceptance_rate(self):
         """
         This method will simply return the fraction of accepted paths to
-        total number of paths in the path ensemble
+        total number of paths in the path ensemble.
 
         Returns
         -------
@@ -561,4 +567,7 @@ class PathEnsemble(object):
         """
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tNumber of paths stored: {}'.format(self.npath)]
+        msg += ['\tNumber of accepted paths: {}'.format(self.nacc)]
+        msg += ['\tRatio accepted/total paths: {}'.format(float(self.nacc) /
+                                                          float(self.npath))]
         return '\n'.join(msg)
