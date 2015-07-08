@@ -9,6 +9,15 @@ from matplotlib import pyplot as plt
 import warnings
 import numpy as np
 import os
+# If desirable pyplot/plt can be exchanged for FigureCanvans, i.e.:
+# from matplotlib.figure import Figure
+# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+# And in _mpl_savefig(canvas, outputfile) use
+# canvas.print_figure(outputfile)
+# In the _mpl_xxx plotting routines take out fig = plt.figure() and use
+# fig = Figure()
+# canvas = FigureCanvas(fig)
+
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
            'mpl_total_matched_probability',
