@@ -369,6 +369,19 @@ class Path(object):
         path_info['interface'] = (start, middle, end)
         return path_info
 
+    def success(self, idetect):
+        """
+        This function will check if the path is successfull, as given
+        by the maximum order parameter and the value of idetect. It is
+        successfor if the maximum order parameter > idetect.
+
+        Parameters
+        ----------
+        idetect : float
+            The value for which the path is successfull
+        """
+        return self.ordermax[0] > idetect
+
     def __add__(self, other):
         """
         This functions defines how we add two paths,
@@ -437,7 +450,7 @@ class PathEnsemble(object):
     PathEnsemble(object)
 
     This class represents a collection of Paths or a Path ensemble.
-    The Path ensemble will not save the phase-space points of the paths
+    The Path ensemble will not save the phase-space points of the paths,
     but it will store other information about the paths which can be used
     in the analysis. The PathEnsemble implements a dict ``path_data`` which
     contains important data for the paths.
