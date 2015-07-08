@@ -14,11 +14,12 @@ __all__ = ['analyse_path_ensemble', 'match_probabilities']
 def _get_successfull(pathensemble, idetect):
     """
     This is a helper function to build the data of accepted paths.
-    In the PathEmsemble object, accepted paths are store as a list of
-    lists: [[path_id, accepted_number_of_times], ...] which just stores
-    the id of the path and how many times it was accepted. This function
-    will create a flattened version with 1 if the path is successfull and
-    0 if it's not. This is then repeated accepted_number_of_times.
+    In the PathEmsemble object all paths are stored, both accepted
+    and rejected and the PathEnsemble.get_accepted() is used here to
+    iterate over accepted paths. Successfull paths are defined as paths
+    which are able to reach the interface specified with idetect. For
+    each accepted path, this function will give a value of 1 if the path
+    was successfull and 0 otherwise.
 
     Parameters
     ----------
@@ -56,7 +57,7 @@ def _running_pcross(pathensemble, idetect, data=None):
     data : numpy.array
         This is the data created by _get_successfull(pathensemble)
         If this function has been executed, the result can be re-used here
-        by specifying data. If not, it will be generated
+        by specifying data. If not, it will be generated.
     idetect : float
         This is the interface used for detecting if a path is usccessfull
         or not. I
