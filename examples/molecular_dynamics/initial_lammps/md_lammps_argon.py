@@ -98,12 +98,16 @@ while not simulationLAMMPS.is_finished():
 # with output from LAMMPS:
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from matplotlib import gridspec as gridspec
+from retis.inout import set_plotting_style
+set_plotting_style()  # load pytismol style
 
 dirname = 'output_data'
 d = np.loadtxt(os.path.join(dirname, 'lammps-output.txt.gz'))
 # step, temperature, press, potential, ekin, etot, pxx, pyy, pzz, pxy, pxz, pyz
 n = min(len(v_pot), len(d[:, 0]))
 
+print('Plotting energies')
 # make figure of energies: potential, kinetic and total:
 fig = plt.figure()
 ax1 = fig.add_subplot(311)
@@ -113,7 +117,6 @@ ax1.plot(d[:n, 0], d[:n, 3], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax1.plot(step[:n], v_pot[:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pytismol')
-ax1.legend(loc='lower right')
 
 ax2 = fig.add_subplot(312)
 ax2.set_ylabel('Kinetic')
@@ -132,13 +135,16 @@ ax3.plot(step[:n], e_tot[:n], lw=4, ls='--',
 ax1.set_xticklabels(())
 ax2.set_xticklabels(())
 ax3.set_xlabel('step no.')
-ax1.yaxis.set_major_locator(MaxNLocator(nbins=len(ax1.get_yticklabels()),
+ax1.yaxis.set_major_locator(MaxNLocator(nbins=3 + 1,  # + 1 due to prune lower
                                         prune='lower'))
-ax2.yaxis.set_major_locator(MaxNLocator(nbins=len(ax2.get_yticklabels()),
+ax2.yaxis.set_major_locator(MaxNLocator(nbins=3 + 2,  # + 2 due to prune both
                                         prune='both'))
+ax3.yaxis.set_major_locator(MaxNLocator(nbins=4))
+ax1.legend(loc='lower right', fontsize='small')
 fig.tight_layout()
 plt.subplots_adjust(hspace=0.0)
 
+print('Plotting pressure and temperature')
 # make figure of pressure and temperature:
 fig2 = plt.figure()
 ax1 = fig2.add_subplot(211)
@@ -147,7 +153,7 @@ ax1.plot(d[:n, 0], d[:n, 1], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax1.plot(step[:n], temp[:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pytismol')
-ax1.legend(loc='upper right')
+ax1.legend(loc='upper right', fontsize='small')
 ax1.set_xticklabels(())
 
 ax2 = fig2.add_subplot(212)
@@ -164,26 +170,30 @@ ax1.yaxis.set_major_locator(MaxNLocator(nbins=len(ax1.get_yticklabels()),
 ax2.yaxis.set_major_locator(MaxNLocator(nbins=len(ax2.get_yticklabels()),
                                         prune='upper'))
 
+print('Plotting pressure tensor')
 # make detailed plot of pressure tensor:
 pressure_tensor = np.array(pressure_tensor)
 fig3 = plt.figure()
+grid = gridspec.GridSpec(3, 2)
 presslab = ['pxx', 'pyy', 'pzz', 'pxy', 'pxz', 'pyz']
 pressindex = [(0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2)]
 for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
-    ax = fig3.add_subplot(int('61{}'.format(i + 1)))
+    ax = fig3.add_subplot(grid[i % 3, i / 3])
     ax.set_ylabel(pi)
     ax.plot(d[:n, 0], d[:n, i + 6], lw=4, ls='-',
             color='b', alpha=0.5, label='lammps')
     ax.plot(step[:n], pressure_tensor[:n, idx[0], idx[1]], lw=4, ls='--',
             color='k', alpha=0.5, label='pytismol')
     if i == 0:
-        ax.legend(loc='lower right')
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=len(ax.get_yticklabels()),
+        ax.legend(loc='upper left', fontsize='small')
+    if i == 2 or i == 5:
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=3 + 1,
                                                prune='lower'))
-    if i < 5:
+        ax.set_xlabel('step no.')
+    else:
         ax.set_xticklabels(())
-    if i > 0:
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=len(ax.get_yticklabels()),
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=3 + 2,
                                                prune='both'))
+fig3.tight_layout()
 plt.subplots_adjust(hspace=0.0)
 plt.show()
