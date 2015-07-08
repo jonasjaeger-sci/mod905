@@ -32,6 +32,12 @@ Modules:
   Futher it defines the more general FileWriter
   object and the trajectory-writers for storing trajectories in
   a 'standard' format, e.g. .xyz or .gro.
+
+Folders:
+
+- styles: This folder contains style files for matplotlib.
+
+- templates: This folder contains templates for the report.
 """
 from .analysisio import (mpl_output_analysis, mpl_total_probability,
                          txt_output_analysis, txt_total_probability)
