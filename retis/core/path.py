@@ -521,7 +521,7 @@ class PathEnsemble(object):
             pass
         if path is None:
             # just store minimal info
-            path_data = {'status': status}
+            path_data = {'status': status, 'generated': (None, 0, 0)}
         else:
             path_data = path.get_path_data(status, self.interfaces)
             if path_data['status'] == 'ACC':
