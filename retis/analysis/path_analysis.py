@@ -7,6 +7,8 @@ from __future__ import absolute_import
 import numpy as np
 from .analysis import running_average, block_error
 from .histogram import histogram
+import warnings
+
 
 __all__ = ['analyse_path_ensemble', 'match_probabilities']
 
@@ -242,7 +244,8 @@ def _get_path_distribution(pathensemble, bins=1000):
         elif move == 'sh':
             length_all.append(path['length'] - 1)
         else:
-            raise ValueError('Unknown mc move: {}'.format(move))
+            msg = 'Ignored unknown mc move: {}'.format(move)
+            warnings.warn(msg)
     length_all = np.array(length_all)
     hist1, _, bin_mid1 = histogram(length_acc, bins=bins,
                                    limits=(length_acc.min(), length_acc.max()),
