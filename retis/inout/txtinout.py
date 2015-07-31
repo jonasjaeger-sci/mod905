@@ -4,6 +4,7 @@ import itertools
 import os
 import warnings
 from retis.core.units import CONVERT  # unit conversion in trajectory
+from retis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 import numpy as np
 from .common import create_backup
 
@@ -210,15 +211,21 @@ class FileWriter(object):
         Name of file to write.
     filetype : string
         Identifies the filetype to write - the "format".
+    mode : string
+        Mode can be used to select if we should write to the file
+        (if mode is equal to 'w') or read from the file (mode equal to 'r').
+        The default is mode equal to 'w'.
     oldfile : string
         Defines how we handle existing files with the same
-        name as given in filename.
+        name as given in filename. Note that this is only usefull when the
+        mode is set to 'w'.
     count : int
         This is just a counter of how many times write has been called.
     fileh : file
         This is the file handle which can be used for writing etc.
     """
-    def __init__(self, filename, filetype, oldfile='backup', count=0):
+    def __init__(self, filename, filetype, mode='w', oldfile='backup',
+                 count=0):
         """
         Initiates the file writer object.
 
@@ -236,29 +243,41 @@ class FileWriter(object):
         self.count = count
         self.filename = filename
         self.filetype = filetype
+        self.mode = mode.lower()
         self.fileh = None
-        try:
-            if os.path.isfile(self.filename):
-                msg = 'File exist'
-                if oldfile == 'overwrite':
-                    msg += '\nWill overwrite!'
-                    self.fileh = open(self.filename, 'w')
-                elif oldfile == 'append':
-                    msg += '\nWill append to file!'
-                    self.fileh = open(self.filename, 'a')
-                else:
-                    msg += create_backup(self.filename)
-                    self.fileh = open(self.filename, 'w')
+        if self.mode == 'r':  # Read data
+            try:
+                self.fileh = open(self.filename, 'r')
+            except IOError as error:
+                msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
                 warnings.warn(msg)
-            else:
-                self.fileh = open(self.filename, 'w')
-        except IOError as error:
-            msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
+        elif self.mode == 'w':  # Write data to file + handle backup:
+            try:
+                if os.path.isfile(self.filename):
+                    msg = 'File exist'
+                    if oldfile == 'overwrite':
+                        msg += '\nWill overwrite!'
+                        self.fileh = open(self.filename, 'w')
+                    elif oldfile == 'append':
+                        msg += '\nWill append to file!'
+                        self.fileh = open(self.filename, 'a')
+                    else:
+                        msg += create_backup(self.filename)
+                        self.fileh = open(self.filename, 'w')
+                    warnings.warn(msg)
+                else:
+                    self.fileh = open(self.filename, 'w')
+            except IOError as error:
+                msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
+                warnings.warn(msg)
+            except Exception as error:
+                msg = 'Error: {}'.format(error)
+                warnings.warn(msg)
+                raise
+        else:
+            msg = 'Unknown file mode "{}"'.format(self.mode)
             warnings.warn(msg)
-        except Exception as error:
-            msg = 'Error: {}'.format(error)
-            warnings.warn(msg)
-            raise
+
         if self.fileh is None:
             msg = 'Could not open file!'
             warnings.warn(msg)
@@ -367,11 +386,11 @@ class WriteXYZ(FileWriter):
         These are the atomnames used for the output.
     """
     def __init__(self, filename, oldfile='backup', units='lj'):
-        filetype = 'xyz'
         self.convert = {'pos': CONVERT['length'][units, 'Å']}
         self.atomnames = []
         self.frame = 0  # number of frames written
-        super(WriteXYZ, self).__init__(filename, filetype, oldfile)
+        super(WriteXYZ, self).__init__(filename, 'xyz', mode='w',
+                                       oldfile=oldfile)
 
     def write_frame(self, pos, names=None, header=None):
         """
@@ -461,13 +480,13 @@ class WriteGromacs(FileWriter):
         and nm/ps.
     """
     def __init__(self, filename, box, oldfile='backup', units='lj'):
-        filetype = 'gromacs'
         self.atomnames = []
         self.box = box
         self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'nm'],
                         'vel': CONVERT['velocity'][units, 'nm/ps']}
-        super(WriteGromacs, self).__init__(filename, filetype, oldfile)
+        super(WriteGromacs, self).__init__(filename, 'gromacs', mode='w',
+                                           oldfile=oldfile)
 
     def write_frame(self, pos, vel=None, residuenum=None, residuename=None,
                     atomname=None, atomnum=None, header=None):
@@ -614,3 +633,117 @@ class WriteGromacs(FileWriter):
             return boxlength
         else:
             return self.box.length * self.convert['pos']
+
+
+def _line_to_path(line):
+    """
+    This is a helper function to convert a text line to a Path object.
+
+    Parameters
+    ----------
+    line : string
+        The line of text to convert
+
+    Returns
+    -------
+    out : object of type Path
+    """
+    path = Path()
+    data = line.split()
+    path.ordermin = (float(data[9]), 0)
+    path.ordermax = (float(data[10]), -1)
+    path.path = [None] * int(data[6])
+    path.path[0] = [None, path.ordermin[0]]
+    path.path[-1] = [None, path.ordermax[0]]
+    path.status = str(data[7])
+    path.generated = [str(data[8]), float(data[13]),
+                      int(data[14]), int(data[15])]
+    return path
+
+
+def _line_to_path_data(line):
+    """
+    This is a helper function to convert a text line to simplified
+    representation of a path.
+
+    Parameters
+    ----------
+    line : string
+        The line of text to convert
+
+    Returns
+    -------
+    out : dict
+        This dict contains the path information
+    """
+    data = [col.strip() for col in line.split()]
+    path_info = {}
+    path_info['generated'] = [str(data[8]), float(data[13]),
+                              int(data[14]), int(data[15])]
+    path_info['status'] = str(data[7])
+    path_info['length'] = int(data[6])
+    path_info['ordermax'] = (float(data[10]), int(data[12]))
+    path_info['ordermin'] = (float(data[9]), int(data[11]))
+    start = str(data[3])
+    middle = str(data[4])
+    end = str(data[5])
+    path_info['interface'] = (start, middle, end)
+    return path_info
+
+class PathEnsembleFile(FileWriter):
+    """
+    PathEnsembleFile(FileWriter)
+    This class handles writing/reading of path ensemble data to a file.
+    It also supports some attributes and functions found in the
+    PathEnsemble object. This makes it possible to run the analysis using
+    the PathEnsembleFile object.
+
+    Attributes
+    ----------
+    Same as for the FileWriter object, in addition:
+    """
+    def __init__(self, filename, ensemble, interfaces, mode='w',
+                 oldfile='backup'):
+        super(PathEnsembleFile, self).__init__(filename, 'pathensemble',
+                                               mode=mode,
+                                               oldfile=oldfile)
+        self.ensemble = ensemble
+        self.interfaces = interfaces
+
+    def to_path_ensemble(self):
+        """
+        This will read an entire file and return a path ensemble object.
+        Note that this might not be the fastes way of using the path ensemble
+        file and that this can require a lot of memory. For analysis
+        purposes, this object also supports a on-line analysis
+
+        Returns
+        -------
+        out : object of type PathEnsemble
+            The path ensemble read from the file.
+        """
+        path_ensemble = PathEnsemble(self.ensemble, self.interfaces)
+        for path in self.paths():
+            path_ensemble.add_path_data(path, path.status)
+        return path_ensemble
+
+    def paths(self):
+        """
+        This will yield the different paths stored in the file.
+
+        Yields
+        ------
+        out : object of type Path, the current path in the file
+        """
+        try:
+            self.fileh.seek(0)  # just to make sure we rewind
+            for lines in self.fileh:
+                new_path = _line_to_path_data(lines)
+                yield new_path
+        except IOError as error:
+            msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
+            warnings.warn(msg)
+        except Exception as error:
+            msg = 'Error: {}'.format(error)
+            warnings.warn(msg)
+            raise

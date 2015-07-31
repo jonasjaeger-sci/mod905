@@ -226,35 +226,85 @@ def _get_path_distribution(pathensemble, bins=1000):
 
     Returns
     -------
-    out[0] : list, [numpy.array, numpy.array]
+    out[0] : list, [numpy.array, numpy.array, tuple]
         Result for accepted paths (distribution). out[0][0] is the histogram
-        and out[0][1] are the mid points for bins.
-    out[1] : list, [numpy.array, numpy.array]
+        and out[0][1] are the mid points for bins. out[0][2] is a tuple with
+        the average and standard deviation for the length.
+    out[1] : list, [numpy.array, numpy.array, tuple]
         Result for all paths (distribution). out[1][0] is the histogram and
-        out[1][1] are the mid points for bins.
+        out[1][1] are the mid points for bins. out[1][2] is a tuple with the
+        average and standard deviation for the length.
     """
     # first get lengths of accepted paths:
     length_acc = [path['length'] for path in pathensemble.get_accepted()]
     length_acc = np.array(length_acc)
     length_all = []
     for path in pathensemble.paths:
-        move = path['generated'][0]
-        if move == 'tr':
-            length_all.append(0)
-        elif move == 'sh':
-            length_all.append(path['length'] - 1)
-        else:
-            msg = 'Ignored unknown mc move: {}'.format(move)
-            warnings.warn(msg)
+        length = _get_path_length(path)
+        if length is not None:
+            length_all.append(length)
     length_all = np.array(length_all)
+    hist1, hist2 = _create_length_histograms(length_acc, length_all, bins)
+    return hist1, hist2
+
+
+def _get_path_length(path):
+    """
+    This is a helper function to return the path length, for different
+    moves
+
+    Parameters
+    ----------
+    path : dict
+        This is the dict containing the path information
+
+    Returns
+    -------
+    out : int
+        The path length
+    """
+    move = path['generated'][0]
+    if move == 'tr':
+        return 0
+    elif move == 'sh':
+        return path['length'] - 1
+    else:
+        msg = 'Ignored unknown mc move: {}'.format(move)
+        warnings.warn(msg)
+        return None
+
+
+def _create_length_histograms(length_acc, length_all, bins):
+    """
+    This method will create the histograms which are the results
+    from the length analysis.
+
+    Parameters
+    ----------
+    length_acc : 1D numpy.array
+         These are the lengths of the accepted paths
+    length_all : 1D numpy.array
+        These are the lengths of all paths
+
+    Returns
+    -------
+    out[0] : list, [numpy.array, numpy.array, tuple]
+        Result for accepted paths (distribution). out[0][0] is the histogram
+        and out[0][1] are the mid points for bins. out[0][2] is a tuple with
+        the average and standard deviation for the length.
+    out[1] : list, [numpy.array, numpy.array, tuple]
+        Result for all paths (distribution). out[1][0] is the histogram and
+        out[1][1] are the mid points for bins. out[1][2] is a tuple with the
+        average and standard deviation for the length.
+    """
     hist1, _, bin_mid1 = histogram(length_acc, bins=bins,
                                    limits=(length_acc.min(), length_acc.max()),
                                    density=True)
     hist2, _, bin_mid2 = histogram(length_all, bins=bins,
                                    limits=(length_all.min(), length_all.max()),
                                    density=True)
-    hist1 = [hist1, bin_mid1, (np.average(length_acc), np.std(length_acc))]
-    hist2 = [hist2, bin_mid2, (np.average(length_all), np.std(length_all))]
+    hist1 = [hist1, bin_mid1, (length_acc.mean(), length_acc.std())]
+    hist2 = [hist2, bin_mid2, (length_all.mean(), length_all.std())]
     return hist1, hist2
 
 
@@ -283,16 +333,68 @@ def _shoot_analysis(pathensemble, bins=1000):
     """
     shoot_stats = {'REJ': [], 'ALL': []}
     for path in pathensemble.paths:
-        move = path['generated'][0]
-        if move == 'sh':
-            orderp = path['generated'][1]
-            status = path['status']
-            if not status in shoot_stats:
-                shoot_stats[status] = []
-            shoot_stats[status].append(orderp)
-            if status != 'ACC':
-                shoot_stats['REJ'].append(orderp)
-            shoot_stats['ALL'].append(orderp)
+        _update_shoot_stats(shoot_stats, path)
+    histograms, scale = _create_shoot_histograms(shoot_stats, bins)
+    return histograms, scale
+
+
+def _update_shoot_stats(shoot_stats, path):
+    """
+    This method will update the shoot_stats with the status of the
+    new path.
+
+    Parameters
+    ----------
+    shoot_stats : dict
+        This dict contains the results from the shoot analysis, e.g.
+        shoot_stats[key] contain the order parameters for the status
+        key which can be the different statuses defined in
+        retis.core.path._STATUS or 'REJ' (for rejected).
+    path : dict
+        This is the path information, represented as a dictionary.
+
+    Returns
+    -------
+    N/A but it will update shoot_stats for shooting moves.
+    """
+    move = path['generated'][0]
+    if move == 'sh':
+        orderp = path['generated'][1]
+        status = path['status']
+        if not status in shoot_stats:
+            shoot_stats[status] = []
+        shoot_stats[status].append(orderp)
+        if status != 'ACC':
+            shoot_stats['REJ'].append(orderp)
+        shoot_stats['ALL'].append(orderp)
+
+
+def _create_shoot_histograms(shoot_stats, bins):
+    """
+    To create histograms and scale for the shoot analysis.
+
+    Parameters
+    ----------
+    shoot_stats : dict
+        This dict contains the results from the shoot analysis, e.g.
+        shoot_stats[key] contain the order parameters for the status
+        key which can be the different statuses defined in
+        retis.core.path._STATUS or 'REJ' (for rejected).
+    bins : int
+        The number of bins to use for the histograms
+
+    Returns
+    -------
+    out[0] : dict
+        For each possible status ('ACC, 'BWI', etc) this dict will contain
+        a histogram as returned by the histogram function.
+        It will also contain a 'REJ' key which is the concatenation of all
+        rejected and a 'ALL' key which is simply all the values.
+    out[1] : dict
+        For each possible status ('ACC, 'BWI', etc) this dict will contain
+        the scale factors for the histograms. The scale factors are obtained
+        by dividing with the 'ALL' value.
+    """
     histograms = {}
     scale = {}
     for key in shoot_stats:
@@ -331,7 +433,7 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     """
     result = {}
     if idetect is None:
-        idetect = path_ensemble[-1]
+        idetect = path_ensemble.interfaces[-1]
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,
                                   ngrid=analysis_settings['ngrid'])
@@ -357,6 +459,101 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
                             path_ensemble.npath * hist2[2][0]]
     result['efficiency'].append(result['efficiency'][1] * error[4]**2)
+    # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
+    return result
+
+
+def analyse_path_ensemble_f(path_ensemble, analysis_settings,
+                            idetect=None):
+    """
+    This method will make use of the different analysis functions and analyse
+    a path ensemble. It will also output the results using the specified
+    output object.
+
+    Parameters
+    ----------
+    path_ensemble : object of type PathEnsemble
+        The Path ensemble to analyse
+    analysis_settings : dict
+        This contains settings for the analysis
+    idetect : float, optional
+        This is the interface used for detecting if a path is usccessfull
+        or not. If no value is given, path_ensemble.interfaces[-1] will be
+        use
+
+    Returns
+    -------
+    out : dict
+        This dictionary contains the main results for the analysis which
+        can be used for plotting or other kinds of output.
+    """
+    result = {'prun': []}
+    if idetect is None:
+        idetect = path_ensemble.interfaces[-1]
+    orderparam = []  # list of all accepted order parameters
+    weights = []
+    success = 0  # determines if the current path is successfull or not
+    pdata = []
+    length_acc = []
+    length_all = []
+    shoot_stats = {'REJ': [], 'ALL': []}
+    nacc = 0
+    npath = 0
+    for path in path_ensemble.paths():  # loop over all paths
+        npath += 1
+        if path['status'] == 'ACC':
+            nacc += 1
+            weights.append(1)
+            orderparam.append(path['ordermax'][0])
+            length_acc.append(path['length'])
+            success = 1 if path['ordermax'][0] > idetect else 0
+            pdata.append(success)  # Store data for block analysis
+        else:  # just increase the weigths
+            weights[-1] += 1
+        # we also update the running average of the probability here:
+        if len(result['prun']) == 0:
+            result['prun'] = [success]
+        else:  # update average
+            result['prun'].append((success + result['prun'][-1] * (npath - 1))
+                                  / float(npath))
+        # get the length - note that this length depends on the type of move
+        # see the _get_path_length function.
+        length = _get_path_length(path)
+        if length is not None:
+            length_all.append(length)
+        # update the shoot stats, this will only be done for shooting moves
+        _update_shoot_stats(shoot_stats, path)
+    # Perform the different analysis tasks:
+    # 1) result['prun'] is already calculated.
+    # 2) lambda pcross:
+    orderparam = np.array(orderparam)
+    pcross, lamb = _pcross_lambda_cumulative(orderparam,
+                                             path_ensemble.interfaces[1],
+                                             min(orderparam.max(),
+                                                 max(path_ensemble.interfaces)),
+                                             analysis_settings['ngrid'],
+                                             weights=weights)
+
+    result['pcross'] = [lamb, pcross]
+    # 3) block error analysis:
+    result['blockerror'] = _pcross_error(path_ensemble, idetect,
+                                         data=np.repeat(pdata, weights),
+                                         maxblock=analysis_settings['maxblock'],
+                                         blockskip=analysis_settings['blockskip'])
+    # 4) length analysis:
+    hist1, hist2 = _create_length_histograms(np.repeat(length_acc, weights),
+                                             np.array(length_all),
+                                             analysis_settings['bins'])
+    result['pathlength'] = [hist1, hist2]
+    # 5) shoots analysis:
+    hist3, scale = _create_shoot_histograms(shoot_stats,
+                                            analysis_settings['bins'])
+    result['shoots'] = [hist3, scale]
+    # 6) Add some simple efficiency metrics:
+    result['efficiency'] = [float(nacc) / float(npath),
+                            float(npath) * hist2[2][0]]
+    result['efficiency'].append(result['efficiency'][1] *
+                                result['blockerror'][4]**2)
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
