@@ -499,7 +499,7 @@ def analyse_path_ensemble_f(path_ensemble, analysis_settings,
     shoot_stats = {'REJ': [], 'ALL': []}
     nacc = 0
     npath = 0
-    for path in path_ensemble.paths():  # loop over all paths
+    for path in path_ensemble.get_paths():  # loop over all paths
         npath += 1
         if path['status'] == 'ACC':
             nacc += 1
@@ -527,10 +527,10 @@ def analyse_path_ensemble_f(path_ensemble, analysis_settings,
     # 1) result['prun'] is already calculated.
     # 2) lambda pcross:
     orderparam = np.array(orderparam)
+    ordermax = min(orderparam.max(), max(path_ensemble.interfaces))
     pcross, lamb = _pcross_lambda_cumulative(orderparam,
                                              path_ensemble.interfaces[1],
-                                             min(orderparam.max(),
-                                                 max(path_ensemble.interfaces)),
+                                             ordermax,
                                              analysis_settings['ngrid'],
                                              weights=weights)
 

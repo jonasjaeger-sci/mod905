@@ -690,6 +690,7 @@ def _line_to_path_data(line):
     path_info['interface'] = (start, middle, end)
     return path_info
 
+
 class PathEnsembleFile(FileWriter):
     """
     PathEnsembleFile(FileWriter)
@@ -723,13 +724,14 @@ class PathEnsembleFile(FileWriter):
             The path ensemble read from the file.
         """
         path_ensemble = PathEnsemble(self.ensemble, self.interfaces)
-        for path in self.paths():
+        for path in self.get_paths():
             path_ensemble.add_path_data(path, path.status)
         return path_ensemble
 
-    def paths(self):
+    def get_paths(self):
         """
-        This will yield the different paths stored in the file.
+        This will yield the different paths stored in the file. The lines
+        are read on-the-fly, converted and yielded one-by-one.
 
         Yields
         ------
@@ -747,3 +749,13 @@ class PathEnsembleFile(FileWriter):
             msg = 'Error: {}'.format(error)
             warnings.warn(msg)
             raise
+
+    def __str__(self):
+        """
+        Return a string with some info about this object
+        """
+        msg = ['Path (file) ensemble : {}'.format(self.ensemble)]
+        msg += ['\tFile name: {}'.format(self.filename)]
+        msg += ['\tFile mode: {}'.format(self.mode)]
+        return '\n'.join(msg)
+
