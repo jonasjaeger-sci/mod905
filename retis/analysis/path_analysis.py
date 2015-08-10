@@ -408,7 +408,7 @@ def _create_shoot_histograms(shoot_stats, bins):
     return histograms, scale
 
 
-def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
+def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     """
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
@@ -418,7 +418,7 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     ----------
     path_ensemble : object of type PathEnsemble
         The Path ensemble to analyse
-    analysis_settings : dict
+    settings : dict
         This contains settings for the analysis
     idetect : float, optional
         This is the interface used for detecting if a path is usccessfull
@@ -436,24 +436,24 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
         idetect = path_ensemble.interfaces[-1]
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,
-                                  ngrid=analysis_settings['ngrid'])
+                                  ngrid=settings['ngrid'])
     result['pcross'] = [lamb, pcross]
     # next get the running average of the crossing probability
     prun, pdata = _running_pcross(path_ensemble, idetect)
     result['prun'] = prun
     # next, the error analysis:
     error = _pcross_error(path_ensemble, idetect, data=pdata,
-                          maxblock=analysis_settings['maxblock'],
-                          blockskip=analysis_settings['blockskip'])
+                          maxblock=settings['maxblock'],
+                          blockskip=settings['blockskip'])
     result['blockerror'] = error
     # next length-analysis:
     hist1, hist2 = _get_path_distribution(path_ensemble,
-                                          bins=analysis_settings['bins'])
+                                          bins=settings['bins'])
     result['pathlength'] = [hist1, hist2]
     # next, shoots:
     # move so that the analysis returns histograms and scale...
     hist3, scale = _shoot_analysis(path_ensemble,
-                                   bins=analysis_settings['bins'])
+                                   bins=settings['bins'])
     result['shoots'] = [hist3, scale]
     # finally add some simple efficiency metrics:
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
@@ -463,7 +463,7 @@ def analyse_path_ensemble(path_ensemble, analysis_settings, idetect=None):
     return result
 
 
-def analyse_path_ensemble_f(path_ensemble, analysis_settings,
+def analyse_path_ensemble_f(path_ensemble, settings,
                             idetect=None):
     """
     This method will make use of the different analysis functions and analyse
@@ -474,7 +474,7 @@ def analyse_path_ensemble_f(path_ensemble, analysis_settings,
     ----------
     path_ensemble : object of type PathEnsemble
         The Path ensemble to analyse
-    analysis_settings : dict
+    settings : dict
         This contains settings for the analysis
     idetect : float, optional
         This is the interface used for detecting if a path is usccessfull
@@ -531,23 +531,23 @@ def analyse_path_ensemble_f(path_ensemble, analysis_settings,
     pcross, lamb = _pcross_lambda_cumulative(orderparam,
                                              path_ensemble.interfaces[1],
                                              ordermax,
-                                             analysis_settings['ngrid'],
+                                             settings['ngrid'],
                                              weights=weights)
 
     result['pcross'] = [lamb, pcross]
     # 3) block error analysis:
     result['blockerror'] = _pcross_error(path_ensemble, idetect,
                                          data=np.repeat(pdata, weights),
-                                         maxblock=analysis_settings['maxblock'],
-                                         blockskip=analysis_settings['blockskip'])
+                                         maxblock=settings['maxblock'],
+                                         blockskip=settings['blockskip'])
     # 4) length analysis:
     hist1, hist2 = _create_length_histograms(np.repeat(length_acc, weights),
                                              np.array(length_all),
-                                             analysis_settings['bins'])
+                                             settings['bins'])
     result['pathlength'] = [hist1, hist2]
     # 5) shoots analysis:
     hist3, scale = _create_shoot_histograms(shoot_stats,
-                                            analysis_settings['bins'])
+                                            settings['bins'])
     result['shoots'] = [hist3, scale]
     # 6) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
