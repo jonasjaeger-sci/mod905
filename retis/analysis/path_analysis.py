@@ -13,7 +13,7 @@ import warnings
 __all__ = ['analyse_path_ensemble', 'match_probabilities']
 
 
-def _get_successfull(pathensemble, idetect):
+def _get_successfull(path_ensemble, idetect):
     """
     This is a helper function to build the data of accepted paths.
     In the PathEmsemble object all paths are stored, both accepted
@@ -25,7 +25,7 @@ def _get_successfull(pathensemble, idetect):
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
+    path_ensemble : object of type `retis.core.path.PathEnsemble`.
         This is the PathEnsemble we will analyse
     idetect : float
         This is the interface used for detecting if a path is usccessfull
@@ -34,17 +34,17 @@ def _get_successfull(pathensemble, idetect):
     Returns
     -------
     out : numpy.array
-        These are the values giving if paths are successfull or not.
+        out[i] = 1 if path no. i is successfull 0 otherwise.
     """
     data = []
-    for path in pathensemble.get_accepted():
+    for path in path_ensemble.get_accepted():
         value = 1 if path['ordermax'][0] > idetect else 0
         data.append(value)
     data = np.array(data)
     return data
 
 
-def _running_pcross(pathensemble, idetect, data=None):
+def _running_pcross(path_ensemble, idetect, data=None):
     """
     Function to create a running average of the crossing probability
     as function of the cycle number. Note that the accepted paths are used
@@ -54,36 +54,40 @@ def _running_pcross(pathensemble, idetect, data=None):
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
+    path_ensemble : object of type retis.core.path.PathEnsemble
         This is the PathEnsemble we will analyse
-    data : numpy.array
-        This is the data created by _get_successfull(pathensemble)
-        If this function has been executed, the result can be re-used here
-        by specifying data. If not, it will be generated.
     idetect : float
         This is the interface used for detecting if a path is usccessfull
         or not. I
+    data : numpy.array
+        This is the data created by _get_successfull(path_ensemble)
+        If this function has been executed, the result can be re-used here
+        by specifying data. If not, it will be generated.
 
     Returns
     -------
     out[0] : numpy.array
         The running average of the crossing probability
     out[1] : numpy.array
-        The original data, can be used further.
+        The original data, can be used further in other analysis methods.
+
+    See Also
+    --------
+    _get_successfull
     """
     if data is None:
-        data = _get_successfull(pathensemble, idetect)
+        data = _get_successfull(path_ensemble, idetect)
     return running_average(data), data
 
 
-def _pcross_lambda(pathensemble, ngrid=1000):
+def _pcross_lambda(path_ensemble, ngrid=1000):
     """
     This function will calculate the crossing probability for an ensemble as
     a function of the value of the order parameter.
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
+    path_ensemble : object of type retis.core.path.PathEnsemble
         This is the PathEnsemble we will analyse
     ngrid : int
         This is the number of grid points
@@ -95,8 +99,12 @@ def _pcross_lambda(pathensemble, ngrid=1000):
     out[1] : numpy.array
         The order parameters
 
-    Note
-    ----
+    See Also
+    --------
+    _pcross_lambda_cumulative
+
+    Notes
+    -----
     This routine could perhaps be made shorter by making use of
     numpy.digitize etc.
     """
@@ -104,15 +112,15 @@ def _pcross_lambda(pathensemble, ngrid=1000):
     # accepted paths
     orderparam = []
     ordermax = None
-    for path in pathensemble.get_accepted():
+    for path in path_ensemble.get_accepted():
         orderp = path['ordermax'][0]
         if ordermax is None or orderp > ordermax:
             ordermax = orderp
         orderparam.append(orderp)
     orderparam = np.array(orderparam)
     # next create the ``cumulative histogram'':
-    ordermax = min(ordermax, max(pathensemble.interfaces))
-    ordermin = pathensemble.interfaces[1]
+    ordermax = min(ordermax, max(path_ensemble.interfaces))
+    ordermin = path_ensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(orderparam, ordermin, ordermax,
                                              ngrid)
     return pcross, lamb
@@ -121,17 +129,18 @@ def _pcross_lambda(pathensemble, ngrid=1000):
 def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
                               weights=None):
     """
-    This is a helper function for pcross_lambda, it will do the actual
-    calculation of the crossing probability as a function of order parameter.
+    This is a helper function for obtaining the crossing probability
+    as a function of the order parameter. It will do the actual calculation
+    of the crossing probability as a function of order parameter.
 
-    It is split of from pcross_lambda in case the same analysis is to
-    be done for something different from a path ensemble, for instance
-    the results from the old tismol program.
+    It is split off from ``pcross_lambda`` since the analysis is intented
+    to be backwards compatible with the output/results from the old
+    tismol FORTRAN program.
 
     Parameters
     ----------
     orderparam : numpy.array
-        Array with the order parameters
+        Array containing the order parameters
     ordermin : float
         Minimum allowed order parameter
     ordermax : float
@@ -140,8 +149,8 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         This is the number of grid points
     weights : numpy.array, optional
         The weight of each order parameter. This is used in order to
-        count a specific order parameter more than once.
-        If it's not given, then all order parameters will be weights equally.
+        count a specific order parameter more than once. If not given, the
+        values in `orderparam` will be weighted equally.
     """
     lamb = np.linspace(ordermin, ordermax, ngrid)
     pcross = np.zeros(ngrid)
@@ -168,7 +177,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     return pcross, lamb
 
 
-def _pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
+def _pcross_error(path_ensemble, idetect, maxblock=5000, blockskip=1,
                   data=None):
     """
     This function will run the block error analysis for the
@@ -176,23 +185,27 @@ def _pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
-        This is the PathEnsemble we will analyse
+    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
+        This is the path ensemble we will analyse
     maxblock : int
         The maximum block length to consider
     blockskip = int
         Intervall between blocks. Blocks are created as 1, 1+blockskip, ...
         up to maxblock.
     data : numpy.array
-        This is the data created by _get_successfull(pathensemble)
+        This is the data created by ``_get_successfull``.
         If this function has been executed, the result can be re-used here
-        by specifying data. If not, it will be generated
+        by specifying data. If not, it will be generated.
     idetect : float
         This is the interface used for detecting if a path is usccessfull
         or not.
+
+    See Also
+    --------
+    _get_successfull
     """
     if data is None:
-        data = _get_successfull(pathensemble, idetect)
+        data = _get_successfull(path_ensemble, idetect)
 
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)
@@ -213,14 +226,14 @@ def _pcross_error(pathensemble, idetect, maxblock=5000, blockskip=1,
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
 
 
-def _get_path_distribution(pathensemble, bins=1000):
+def _get_path_distribution(path_ensemble, bins=1000):
     """
-    This function will get the distribution of path-lengths.
+    This function will get the distribution of path lengths.
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
-        This is the PathEnsemble we will analyse
+    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
+        This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -234,12 +247,16 @@ def _get_path_distribution(pathensemble, bins=1000):
         Result for all paths (distribution). out[1][0] is the histogram and
         out[1][1] are the mid points for bins. out[1][2] is a tuple with the
         average and standard deviation for the length.
+
+    See Also
+    --------
+    _create_length_histograms
     """
     # first get lengths of accepted paths:
-    length_acc = [path['length'] for path in pathensemble.get_accepted()]
+    length_acc = [path['length'] for path in path_ensemble.get_accepted()]
     length_acc = np.array(length_acc)
     length_all = []
-    for path in pathensemble.paths:
+    for path in path_ensemble.paths:
         length = _get_path_length(path)
         if length is not None:
             length_all.append(length)
@@ -250,13 +267,14 @@ def _get_path_distribution(pathensemble, bins=1000):
 
 def _get_path_length(path):
     """
-    This is a helper function to return the path length, for different
-    moves
+    This is a helper function to return the path length for different
+    moves.
 
     Parameters
     ----------
     path : dict
-        This is the dict containing the path information
+        This is the dict containing the information about the path, typically
+        obtained by a ``for path in path_ensemble.get_paths():``.
 
     Returns
     -------
@@ -285,6 +303,8 @@ def _create_length_histograms(length_acc, length_all, bins):
          These are the lengths of the accepted paths
     length_all : 1D numpy.array
         These are the lengths of all paths
+    bins : int
+        The number of bins to use for the histograms.
 
     Returns
     -------
@@ -296,6 +316,10 @@ def _create_length_histograms(length_acc, length_all, bins):
         Result for all paths (distribution). out[1][0] is the histogram and
         out[1][1] are the mid points for bins. out[1][2] is a tuple with the
         average and standard deviation for the length.
+
+    See Also
+    --------
+    histogram in .histogram
     """
     hist1, _, bin_mid1 = histogram(length_acc, bins=bins,
                                    limits=(length_acc.min(), length_acc.max()),
@@ -308,14 +332,14 @@ def _create_length_histograms(length_acc, length_all, bins):
     return hist1, hist2
 
 
-def _shoot_analysis(pathensemble, bins=1000):
+def _shoot_analysis(path_ensemble, bins=1000):
     """
-    This method will do a shoot analysis of the pathensemble.
+    This method will do a shoot analysis of the path ensemble.
 
     Parameters
     ----------
-    pathensemble : object of type retis.core.path.PathEnsemble
-        This is the PathEnsemble we will analyse.
+    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
+        This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -330,9 +354,13 @@ def _shoot_analysis(pathensemble, bins=1000):
         For each possible status ('ACC, 'BWI', etc) this dict will contain
         the scale factors for the histograms. The scale factors are obtained
         by dividing with the 'ALL' value.
+
+    See Also
+    --------
+    _create_shoot_histograms
     """
     shoot_stats = {'REJ': [], 'ALL': []}
-    for path in pathensemble.paths:
+    for path in path_ensemble.paths:
         _update_shoot_stats(shoot_stats, path)
     histograms, scale = _create_shoot_histograms(shoot_stats, bins)
     return histograms, scale
@@ -341,15 +369,15 @@ def _shoot_analysis(pathensemble, bins=1000):
 def _update_shoot_stats(shoot_stats, path):
     """
     This method will update the shoot_stats with the status of the
-    new path.
+    given path.
 
     Parameters
     ----------
     shoot_stats : dict
         This dict contains the results from the shoot analysis, e.g.
-        shoot_stats[key] contain the order parameters for the status
-        key which can be the different statuses defined in
-        retis.core.path._STATUS or 'REJ' (for rejected).
+        `shoot_stats[key]` contain the order parameters for the status
+        `key` which can be the different statuses defined in
+        ``retis.core.path._STATUS`` or 'REJ' (for rejected).
     path : dict
         This is the path information, represented as a dictionary.
 
@@ -377,9 +405,9 @@ def _create_shoot_histograms(shoot_stats, bins):
     ----------
     shoot_stats : dict
         This dict contains the results from the shoot analysis, e.g.
-        shoot_stats[key] contain the order parameters for the status
-        key which can be the different statuses defined in
-        retis.core.path._STATUS or 'REJ' (for rejected).
+        `shoot_stats[key]` contain the order parameters for the status
+        `key` which can be the different statuses defined in
+        ``retis.core.path._STATUS`` or 'REJ' (for rejected).
     bins : int
         The number of bins to use for the histograms
 
@@ -394,6 +422,10 @@ def _create_shoot_histograms(shoot_stats, bins):
         For each possible status ('ACC, 'BWI', etc) this dict will contain
         the scale factors for the histograms. The scale factors are obtained
         by dividing with the 'ALL' value.
+
+    See Also
+    --------
+    histogram in ``retis.analysis.histogram``.
     """
     histograms = {}
     scale = {}
@@ -412,24 +444,33 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     """
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
-    output object.
+    output object. This analysis function assumes that the given path ensemble
+    is an object of type ``retis.core.path.PathEnsemble``.
 
     Parameters
     ----------
-    path_ensemble : object of type PathEnsemble
-        The Path ensemble to analyse
+    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
+        The path ensemble to analyse.
     settings : dict
-        This contains settings for the analysis
+        This dictionary contains settings for the analysis.
     idetect : float, optional
         This is the interface used for detecting if a path is usccessfull
-        or not. If no value is given, path_ensemble.interfaces[-1] will be
-        use
+        or not. If no value is given, `path_ensemble.interfaces[-1]` will be
+        assumed.
 
     Returns
     -------
     out : dict
         This dictionary contains the main results for the analysis which
         can be used for plotting or other kinds of output.
+
+    See Also
+    --------
+    _pcross_lambda
+    _running_pcross
+    _pcross_error
+    _get_path_distribution
+    _shoot_analysis
     """
     result = {}
     if idetect is None:
@@ -472,13 +513,14 @@ def analyse_path_ensemble_f(path_ensemble, settings,
 
     Parameters
     ----------
-    path_ensemble : object of type PathEnsemble
-        The Path ensemble to analyse
+    path_ensemble : object of type ``retis.core.path.PathEnsemble`` or
+        ``retis.inout.txtinout.PathEnsembleFile``. This is the path ensemble
+        to analyse.
     settings : dict
-        This contains settings for the analysis
+        This dictionary contains settings for the analysis.
     idetect : float, optional
         This is the interface used for detecting if a path is usccessfull
-        or not. If no value is given, path_ensemble.interfaces[-1] will be
+        or not. If no value is given, `path_ensemble.interfaces[-1]` will be
         use
 
     Returns
@@ -486,6 +528,19 @@ def analyse_path_ensemble_f(path_ensemble, settings,
     out : dict
         This dictionary contains the main results for the analysis which
         can be used for plotting or other kinds of output.
+
+    See Also
+    --------
+    _update_shoot_stats
+    _pcross_lambda_cumulative
+    _pcross_error
+    _create_length_histograms
+    _create_shoot_histograms
+
+    References
+    ----------
+    .. [1] Wikipedia, "Moving Average",
+           http://en.wikipedia.org/wiki/Moving_average
     """
     result = {'prun': []}
     if idetect is None:
@@ -566,7 +621,7 @@ def match_probabilities(results, detect):
     Parameters
     ----------
     results : list
-        These are the results from the path analysis. results[i] is the
+        These are the results from the path analysis. `results[i]` is the
         output from ``analyse_path_ensemble`` when applied to ensemble i.
     detect : list of floats
         These are the detect interfaces used in the analysis.
@@ -576,7 +631,7 @@ def match_probabilities(results, detect):
     out[0] : list of numpy.arrays
         out[0][i] is the matched probability for ensemble i
     out[1] : numpy.array
-        This is the matched probability. out[1][:,0] is the order parameter
+        Collected results, out[1][:,0] is the order parameter and
         out[1][:,1] is the probability.
     out[2] : dict
         These are results for the over-all probability and error
