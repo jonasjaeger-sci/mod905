@@ -561,6 +561,20 @@ class PathEnsemble(object):
             npath += 1
         return float(acc)/float(npath)
 
+    def get_paths(self):
+        """
+        This will yield the different paths stored in the path ensemble.
+        It is included here in order to have a simple compatibility between
+        the PathEnsemble object and the PathEnsembleFile object defined in
+        retis.core.txtinout.
+
+        Yields
+        ------
+        out : object of type Path
+        """
+        for path in self.paths:
+            yield path
+
     def __str__(self):
         """
         Return a string with some info about this object
