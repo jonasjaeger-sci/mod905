@@ -36,6 +36,7 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
         This is the white space for separating columns.
     fmt_str : string, optional
         This is the format to apply, if it's not given, it will be created.
+
     Returns
     -------
     out[0] : strings
@@ -217,7 +218,7 @@ class FileWriter(object):
         The default is mode equal to 'w'.
     oldfile : string
         Defines how we handle existing files with the same
-        name as given in filename. Note that this is only usefull when the
+        name as given in `filename`. Note that this is only usefull when the
         mode is set to 'w'.
     count : int
         This is just a counter of how many times write has been called.
@@ -236,7 +237,7 @@ class FileWriter(object):
         filetype : string
             Identifies the filetype to write (i.e. the format).
         oldfile : string
-            Behavior if the filename is an existing file.
+            Behavior if the `filename` is an existing file.
         frame : int
             Counts the number of frames written
         """
@@ -352,7 +353,7 @@ def _adjust_coordinate(coord):
     Parameters
     ----------
     coord : numpy.array
-        The real coordinates
+        The real coordinates.
 
     Returns
     -------
@@ -664,17 +665,17 @@ def _line_to_path(line):
 def _line_to_path_data(line):
     """
     This is a helper function to convert a text line to simplified
-    representation of a path.
+    representation of a path. This can be used to parse a file with path data.
 
     Parameters
     ----------
     line : string
-        The line of text to convert
+        The line of text to convert.
 
     Returns
     -------
     out : dict
-        This dict contains the path information
+        This dict contains the path information.
     """
     data = [col.strip() for col in line.split()]
     path_info = {}
@@ -694,17 +695,49 @@ def _line_to_path_data(line):
 class PathEnsembleFile(FileWriter):
     """
     PathEnsembleFile(FileWriter)
+
     This class handles writing/reading of path ensemble data to a file.
     It also supports some attributes and functions found in the
-    PathEnsemble object. This makes it possible to run the analysis using
-    the PathEnsembleFile object.
+    ``retis.core.path.PathEnsemble`` object. This makes it possible to run
+    the analysis tool directly using the PathEnsembleFile object rather than
+    first converting to a ``retis.core.path.PathEnsemble`` and then running
+    the analysis. The common methods are ``get_paths`` and ``__str__``.
+    The common properties are `ensemble` and `interfaces`
 
     Attributes
     ----------
     Same as for the FileWriter object, in addition:
+    ensemble : str
+        This is a string representation of the path ensemble. Typically
+        something like '0-', '0+', '1', '2', ..., '001' and so on.
+    interfaces : list of ints
+        These are the interfaces specified with the values
+        for the order parameters: [left, middle, right]
     """
     def __init__(self, filename, ensemble, interfaces, mode='w',
                  oldfile='backup'):
+        """
+        Initialize the PathEnsembleFile object
+
+        Parameters
+        ----------
+        filename : string
+            Name of file to write.
+        ensemble : str
+            This is a string representation of the path ensemble. Typically
+            something like '0-', '0+', '1', '2', ..., '001' and so on.
+        interfaces : list of ints
+            These are the interfaces specified with the values
+            for the order parameters: [left, middle, right]
+        mode : string
+            Mode can be used to select if we should write to the file
+            (if mode is equal to 'w') or read from the file (mode equal
+            to 'r'). The default is mode equal to 'w'.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only usefull when the mode is
+            set to 'w'.
+        """
         super(PathEnsembleFile, self).__init__(filename, 'pathensemble',
                                                mode=mode,
                                                oldfile=oldfile)
@@ -758,4 +791,3 @@ class PathEnsembleFile(FileWriter):
         msg += ['\tFile name: {}'.format(self.filename)]
         msg += ['\tFile mode: {}'.format(self.mode)]
         return '\n'.join(msg)
-
