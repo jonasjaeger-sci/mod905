@@ -476,7 +476,7 @@ class PathEnsemble(object):
     """
     def __init__(self, ensemble, interfaces, maxpath=100000):
         """
-        Initialize the Path object.
+        Initialize the PathEnsemble object.
 
         Parameters
         ----------
@@ -559,18 +559,19 @@ class PathEnsemble(object):
             if path['status'] == 'ACC':
                 acc += 1
             npath += 1
-        return float(acc)/float(npath)
+        return float(acc) / float(npath)
 
     def get_paths(self):
         """
         This will yield the different paths stored in the path ensemble.
         It is included here in order to have a simple compatibility between
-        the PathEnsemble object and the PathEnsembleFile object defined in
-        retis.core.txtinout.
+        the `PathEnsemble` object and the `PathEnsembleFile` object defined in
+        ``retis.core.txtinout``. This is useful for the analysis.
 
         Yields
         ------
-        out : object of type Path
+        out : dict
+            This is the dictionary representing the path data.
         """
         for path in self.paths:
             yield path
