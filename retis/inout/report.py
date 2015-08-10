@@ -339,7 +339,7 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
     table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
-        row.append(_apply_format(path_e.npath, '{:^10.0f}'))
+        row.append(_apply_format(result['tis-cycles'], '{:^10.0f}'))
         row.append(_apply_format(result['efficiency'][1], '{:^10.6f}'))
         row.append(_apply_format(result['efficiency'][0], '{:^10.6f}'))
         row.append(_apply_format(result['blockerror'][6], '{:^10.6f}'))

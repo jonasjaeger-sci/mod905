@@ -500,6 +500,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
                             path_ensemble.npath * hist2[2][0]]
     result['efficiency'].append(result['efficiency'][1] * error[4]**2)
+    result['tis-cycles'] = path_ensemble.npath
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
@@ -609,6 +610,7 @@ def analyse_path_ensemble_f(path_ensemble, settings,
                             float(npath) * hist2[2][0]]
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
+    result['tis-cycles'] = npath
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
