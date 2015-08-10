@@ -141,8 +141,10 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
         for fig in analysis['tis-fig']:
             report['figures'].append({key: _remove_extension(fig[key]) for key in fig})
         report['totalfig'] = [_remove_extension(fig) for fig in report['totalfig']]
-        report['pcross'] = _latexify_number(report['pcross'])
-        report['perr'] = _latexify_number(report['perr'])
+        for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff', 'pcross_opteff']:
+            #report['pcross'] = _latexify_number(report['pcross'])
+            #report['perr'] = _latexify_number(report['perr'])
+            report[key] = _latexify_number(report[key])
     #pylint: disable=maybe-no-member
     render = env.get_template(template).render(report)
     #pylint: enable=maybe-no-member

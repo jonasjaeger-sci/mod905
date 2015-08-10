@@ -70,7 +70,7 @@ Combined results
 
 :math:`P_{\text{cross}}` = @{{ pcross }}@  :math:`\pm`  @{{ perr }}@ %
 
-Pcross: sim.time, teff  @{{ pcross_simt }}@  @{{ pcross_teff}}@ 
+:math:`P_{\text{cross}}`: sim.time = @{{ pcross_simt }}@ :math:`\tau_{\text{eff}}` = @{{ pcross_teff}}@ 
 
-Optimize pcross teff: @{{ pcross_opteff }}@
+Optimized :math:`P_{\text{cross}}` :math:`\tau_{\text{eff}}`: @{{ pcross_opteff }}@
 
