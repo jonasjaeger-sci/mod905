@@ -108,17 +108,19 @@ def _mpl_p_running_average(prun, ensemble, outputfile):
     _mpl_savefig(fig, outputfile)
 
 
-def _mpl_p_block_error(error, ensemble, outputfile):
+def _mpl_block_error(error, title, outputfile):
     """
-    This will plot the output from the error analysis, that is
-    error as a function of the block length.
+    This will plot the output from a error analysis; the error
+    as a function of the block length.
 
     Parameters
     ----------
     error : list
-        This is the result from the error analysis
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
+        This list contains the result from the error analysis.
+    title : string
+        String to add to the title to the plot. In addition,
+        the relative error and the correlation length will be written
+        in the title.
     outputfile : string
         This is the name of the output file to create.
     """
@@ -128,8 +130,8 @@ def _mpl_p_block_error(error, ensemble, outputfile):
     axs.plot(error[0], error[3])
     axs.set_xlabel('Block length')
     axs.set_ylabel('Estimated error')
-    titl = 'Ensemble: {0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
-    titl = titl.format(ensemble, error[4], error[6])
+    titl = '{0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
+    titl = titl.format(title, error[4], error[6])
     axs.set_title(titl, fontsize='x-small', loc='left')
     _mpl_savefig(fig, outputfile)
 
@@ -239,7 +241,8 @@ def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
     _mpl_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
                        ens, outfiles['pcross'])
     _mpl_p_running_average(results['prun'], ens, outfiles['prun'])
-    _mpl_p_block_error(results['blockerror'], ens, outfiles['blockerror'])
+    _mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
+                     outfiles['blockerror'])
     _mpl_length_histogram(results['pathlength'][0], results['pathlength'][1],
                           ens, outfiles['pathlength'])
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
