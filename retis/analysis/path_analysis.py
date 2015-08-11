@@ -234,14 +234,14 @@ def _pcross_error(path_ensemble, idetect, maxblock=5000, blockskip=1,
         rel_err = berr / abs(bavg[0])
         avg_rel_err = berr_avg / abs(bavg[0])
     except ZeroDivisionError:
-        rel_err = float('inf')
+        rel_err = float('inf') * np.ones(berr.shape)
         avg_rel_err = float('inf')
     # and correlation estimate:
     try:
         ncor = (berr / berr[0])**2
         avg_ncor = (berr_avg / berr[0])**2
     except ZeroDivisionError:
-        ncor = float('inf')
+        ncor = float('inf') * np.ones(berr.shape)
         avg_ncor = float('inf')
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
 
