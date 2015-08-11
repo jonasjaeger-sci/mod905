@@ -211,6 +211,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     _mpl_savefig(fig, outputfile)
     _mpl_savefig(fig_scale, outputfile_scale)
 
+
 def mpl_simple_time_series(series, outputfile,
                            xlabel='Time', ylabel='', title=None):
     """

@@ -513,4 +513,3 @@ class SimulationNVE(Simulation):
                 yield thermo
             else:
                 yield result['cycle']
-

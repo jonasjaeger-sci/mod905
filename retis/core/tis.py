@@ -91,6 +91,7 @@ def _time_reversal(path, interfaces, tis_settings):
     new_path.status = status
     return accept, new_path, status
 
+
 def _shoot(rgen, system, path, order_function, interfaces, integrator,
            tis_settings):
     """
@@ -204,7 +205,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     trial_path = paste_paths(path_back, path_forw, overlap=True,
                              maxlen=tis_settings['maxlength'])
     # here we should also store information about the shooting point:
-    trial_path.generated = ('sh', idx, len(path_back.path)-1, orderp)
+    trial_path.generated = ('sh', idx, len(path_back.path) - 1, orderp)
     if not success_forw:
         accept = False
         status = 'FTL'

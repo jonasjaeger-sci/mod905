@@ -178,4 +178,3 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
         ncor = float('inf') * np.ones(berr.shape)
         avg_ncor = float('inf')
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
-

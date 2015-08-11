@@ -7,7 +7,7 @@ hardcoded to the parameters given by Rowley et al. [ROWLEY]_.
 
 References
 ~~~~~~~~~~
-.. [ROWLEY] Rowley et al., Journal of Computational Physics, vol. 17, pp. 401-414, 1975
+.. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
 """
 from __future__ import print_function
@@ -30,9 +30,9 @@ CONVERT['energy']['lj', 'J'] = 119.8 * CONSTANTS['kB']['J/K']
 CONVERT['energy']['kcal', 'J'] = 4184.
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
 CONVERT['energy']['lj', 'kcal/mol'] = CONVERT['energy']['lj', 'J'] *\
-                                      (1.0/CONVERT['energy']['kcal', 'J']) * \
+                                      (1.0 / CONVERT['energy']['kcal', 'J']) *\
                                       CONVERT['energy']['kcal', 'kcal/mol']
-CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] * \
+CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] *\
                              (CONVERT['mass']['lj', 'kg'] /
                               CONVERT['energy']['lj', 'J'])**0.5
 CONVERT['time']['lj', 'ps'] = 1.0e12 * CONVERT['time']['lj', 's']
@@ -56,7 +56,7 @@ def _generate_inverse(conversions):
         unit_from, unit_to = unit
         newunit = (unit_to, unit_from)
         if not newunit in conversions:
-            newconvert[newunit] = 1.0/conversions[unit]
+            newconvert[newunit] = 1.0 / conversions[unit]
     for newunit in newconvert:
         conversions[newunit] = newconvert[newunit]
 
