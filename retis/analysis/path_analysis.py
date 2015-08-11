@@ -10,7 +10,8 @@ from .histogram import histogram
 import warnings
 
 
-__all__ = ['analyse_path_ensemble', 'match_probabilities']
+__all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
+           'match_probabilities']
 
 
 def _get_successfull(path_ensemble, idetect):
@@ -440,7 +441,7 @@ def _create_shoot_histograms(shoot_stats, bins):
     return histograms, scale
 
 
-def analyse_path_ensemble(path_ensemble, settings, idetect=None):
+def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     """
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
@@ -505,8 +506,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     return result
 
 
-def analyse_path_ensemble_f(path_ensemble, settings,
-                            idetect=None):
+def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     """
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
