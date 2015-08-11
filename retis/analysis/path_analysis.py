@@ -201,6 +201,25 @@ def _pcross_error(path_ensemble, idetect, maxblock=5000, blockskip=1,
         This is the interface used for detecting if a path is usccessfull
         or not.
 
+    Returns
+    -------
+    out[0] : numpy.array, `blen`.
+        These contains the block lengths considered
+    out[1] : numpy.array, `berr`.
+        Estimate of errors as function of block length
+    out[2] : float, `berr_avg`.
+        Average of the error estimate for blocks with length > maxblock // 2
+    out[3] : numpy.array, `rel_err`.
+        Estimate of relative errors (normalised by the overall average)
+        as a function of block length.
+    out[4] : float, `avg_rel_err`.
+        The average relative error (for blocks with length > maxblock // 2
+    out[5] : numpy.array, `ncor`.
+        The estimated correlation length as a function of block length.
+    out[6] : float, `avg_ncor`.
+        The average (for blocks with length > maxblock // 2) estimated
+        correlation length.
+
     See Also
     --------
     _get_successfull
