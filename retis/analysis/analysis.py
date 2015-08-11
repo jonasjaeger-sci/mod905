@@ -44,9 +44,16 @@ def _chunks(itera, size):
 
     Notes
     -----
-    Source: http://stackoverflow.com/a/312464
+    We are here using range rather than xrange. This is just to ease
+    the transition from python2 to python3. Note that this will probably
+    lead to some inefficiencies for python2 execution
+
+    References
+    ----------
+    .. [1] Stackoverflow, "How do you split ...",
+           http://stackoverflow.com/a/312464
     """
-    for i in xrange(0, len(itera), size):
+    for i in range(0, len(itera), size):
         yield itera[i:i+size]
 
 
