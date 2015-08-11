@@ -379,7 +379,7 @@ def _txt_p_running_average(prun, ensemble, outputfile):
     _txt_save_columns(outputfile, header, prun)
 
 
-def _txt_p_block_error(error, ensemble, outputfile):
+def _txt_block_error(error, title, outputfile):
     """
     This will write the output from the error analysis, to a text file.
 
@@ -387,13 +387,14 @@ def _txt_p_block_error(error, ensemble, outputfile):
     ----------
     error : list
         This is the result from the error analysis
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
+    title : string
+        This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
+        'Kinetic energy', etc.
     outputfile : string
         This is the name of the output file to create.
     """
-    header = 'Ensemble: {0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
-    header = header.format(ensemble, error[4], error[6])
+    header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
+    header = header.format(title, error[4], error[6])
     _txt_save_columns(outputfile, header, error[0], error[3])
 
 
@@ -480,7 +481,8 @@ def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
     _txt_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
                        ens, outfiles['pcross'])
     _txt_p_running_average(results['prun'], ens, outfiles['prun'])
-    _txt_p_block_error(results['blockerror'], ens, outfiles['blockerror'])
+    _txt_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
+                     outfiles['blockerror'])
     _txt_length_histogram(results['pathlength'][0], results['pathlength'][1],
                           ens, outfiles['pathlength'])
     _txt_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
