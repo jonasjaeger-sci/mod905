@@ -16,5 +16,5 @@ Modules:
 - path_analysis.py: Defines methods for analysis of path ensembles.
 """
 from .histogram import histogram, match_all_histograms
-from .analysis import running_average, block_error
+from .analysis import running_average, block_error, block_error_corr
 from .path_analysis import analyse_path_ensemble, match_probabilities

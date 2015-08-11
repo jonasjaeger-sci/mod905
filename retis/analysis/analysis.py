@@ -5,7 +5,8 @@ This file contains some simple methods for numerical analysis.
 
 import numpy as np
 
-__all__ = ['running_average', 'block_error']
+__all__ = ['running_average', 'block_error',
+           'block_error_corr']
 
 
 def running_average(data):
@@ -124,3 +125,57 @@ def block_error(data, maxblock=None, blockskip=1):
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
     return blocklen, block_avg, block_err, block_err_avg
+
+
+def block_error_corr(data, maxblock=5000, blockskip=1):
+    """
+    This function will run the block error analysis and in addition calculate
+    relative errors and estimate the correlation length.
+
+    Parameters
+    ----------
+    data : numpy.array
+        Data to analyse.
+    maxblock : int
+        The maximum block length to consider
+    blockskip = int
+        Intervall between blocks. Blocks are created as 1, 1+blockskip, ...
+        up to maxblock.
+
+    Returns
+    -------
+    out[0] : numpy.array, `blen`.
+        These contains the block lengths considered
+    out[1] : numpy.array, `berr`.
+        Estimate of errors as function of block length
+    out[2] : float, `berr_avg`.
+        Average of the error estimate for blocks with length > maxblock // 2
+    out[3] : numpy.array, `rel_err`.
+        Estimate of relative errors (normalised by the overall average)
+        as a function of block length.
+    out[4] : float, `avg_rel_err`.
+        The average relative error (for blocks with length > maxblock // 2
+    out[5] : numpy.array, `ncor`.
+        The estimated correlation length as a function of block length.
+    out[6] : float, `avg_ncor`.
+        The average (for blocks with length > maxblock // 2) estimated
+        correlation length.
+    """
+    blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
+                                             blockskip=blockskip)
+    # also calculate some relative errors:
+    try:
+        rel_err = berr / abs(bavg[0])
+        avg_rel_err = berr_avg / abs(bavg[0])
+    except ZeroDivisionError:
+        rel_err = float('inf') * np.ones(berr.shape)
+        avg_rel_err = float('inf')
+    # and correlation estimate:
+    try:
+        ncor = (berr / berr[0])**2
+        avg_ncor = (berr_avg / berr[0])**2
+    except ZeroDivisionError:
+        ncor = float('inf') * np.ones(berr.shape)
+        avg_ncor = float('inf')
+    return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
+

@@ -5,7 +5,7 @@ in the object PathEnsemble in retis.core.path
 """
 from __future__ import absolute_import
 import numpy as np
-from .analysis import running_average, block_error
+from .analysis import running_average, block_error_corr
 from .histogram import histogram
 import warnings
 
@@ -176,74 +176,6 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
             pcross[:idx + 1] += weight  # +1 to include up to idx
     pcross /= sumw  # normalization
     return pcross, lamb
-
-
-def _pcross_error(path_ensemble, idetect, maxblock=5000, blockskip=1,
-                  data=None):
-    """
-    This function will run the block error analysis for the
-    path ensemble.
-
-    Parameters
-    ----------
-    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
-        This is the path ensemble we will analyse
-    maxblock : int
-        The maximum block length to consider
-    blockskip = int
-        Intervall between blocks. Blocks are created as 1, 1+blockskip, ...
-        up to maxblock.
-    data : numpy.array
-        This is the data created by ``_get_successfull``.
-        If this function has been executed, the result can be re-used here
-        by specifying data. If not, it will be generated.
-    idetect : float
-        This is the interface used for detecting if a path is usccessfull
-        or not.
-
-    Returns
-    -------
-    out[0] : numpy.array, `blen`.
-        These contains the block lengths considered
-    out[1] : numpy.array, `berr`.
-        Estimate of errors as function of block length
-    out[2] : float, `berr_avg`.
-        Average of the error estimate for blocks with length > maxblock // 2
-    out[3] : numpy.array, `rel_err`.
-        Estimate of relative errors (normalised by the overall average)
-        as a function of block length.
-    out[4] : float, `avg_rel_err`.
-        The average relative error (for blocks with length > maxblock // 2
-    out[5] : numpy.array, `ncor`.
-        The estimated correlation length as a function of block length.
-    out[6] : float, `avg_ncor`.
-        The average (for blocks with length > maxblock // 2) estimated
-        correlation length.
-
-    See Also
-    --------
-    _get_successfull
-    """
-    if data is None:
-        data = _get_successfull(path_ensemble, idetect)
-
-    blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
-                                             blockskip=blockskip)
-    # also calculate some relative errors:
-    try:
-        rel_err = berr / abs(bavg[0])
-        avg_rel_err = berr_avg / abs(bavg[0])
-    except ZeroDivisionError:
-        rel_err = float('inf') * np.ones(berr.shape)
-        avg_rel_err = float('inf')
-    # and correlation estimate:
-    try:
-        ncor = (berr / berr[0])**2
-        avg_ncor = (berr_avg / berr[0])**2
-    except ZeroDivisionError:
-        ncor = float('inf') * np.ones(berr.shape)
-        avg_ncor = float('inf')
-    return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
 
 
 def _get_path_distribution(path_ensemble, bins=1000):
@@ -488,7 +420,6 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     --------
     _pcross_lambda
     _running_pcross
-    _pcross_error
     _get_path_distribution
     _shoot_analysis
     """
@@ -503,10 +434,10 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     prun, pdata = _running_pcross(path_ensemble, idetect)
     result['prun'] = prun
     # next, the error analysis:
-    error = _pcross_error(path_ensemble, idetect, data=pdata,
-                          maxblock=settings['maxblock'],
-                          blockskip=settings['blockskip'])
-    result['blockerror'] = error
+    result['blockerror'] = block_error_corr(pdata,
+                                            maxblock=settings['maxblock'],
+                                            blockskip=settings['blockskip'])
+
     # next length-analysis:
     hist1, hist2 = _get_path_distribution(path_ensemble,
                                           bins=settings['bins'])
@@ -519,7 +450,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     # finally add some simple efficiency metrics:
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
                             path_ensemble.npath * hist2[2][0]]
-    result['efficiency'].append(result['efficiency'][1] * error[4]**2)
+    result['efficiency'].append(result['efficiency'][1] *
+                                result['blockerror'][4]**2)
     result['tis-cycles'] = path_ensemble.npath
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
@@ -553,7 +485,6 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     --------
     _update_shoot_stats
     _pcross_lambda_cumulative
-    _pcross_error
     _create_length_histograms
     _create_shoot_histograms
 
@@ -611,10 +542,9 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
 
     result['pcross'] = [lamb, pcross]
     # 3) block error analysis:
-    result['blockerror'] = _pcross_error(path_ensemble, idetect,
-                                         data=np.repeat(pdata, weights),
-                                         maxblock=settings['maxblock'],
-                                         blockskip=settings['blockskip'])
+    result['blockerror'] = block_error_corr(data=np.repeat(pdata, weights),
+                                            maxblock=settings['maxblock'],
+                                            blockskip=settings['blockskip'])
     # 4) length analysis:
     hist1, hist2 = _create_length_histograms(np.repeat(length_acc, weights),
                                              np.array(length_all),
