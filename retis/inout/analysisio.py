@@ -21,6 +21,7 @@ import os
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
            'mpl_total_matched_probability',
+           'mpl_simple_time_series',
            'txt_output_analysis', 'txt_total_probability',
            'txt_total_matched_probability']
 
@@ -209,6 +210,36 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     axs_scale.legend(prop={'size': 'x-small'})
     _mpl_savefig(fig, outputfile)
     _mpl_savefig(fig_scale, outputfile_scale)
+
+def mpl_simple_time_series(series, outputfile,
+                           xlabel='Time', ylabel='', title=None):
+    """
+    This method will plot time series data.
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    for seri in series:
+        axs.plot(seri[0], seri[1], label=seri[2])
+    axs.set_xlabel(xlabel)
+    axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    axs.legend(prop={'size': 'x-small'})
+    _mpl_savefig(fig, outputfile)
 
 
 def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
