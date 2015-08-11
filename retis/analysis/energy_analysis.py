@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+"""
+This file contains methods for analysis of energy output
+"""
+from __future__ import absolute_import
+from .analysis import running_average, block_error_corr
+from .histogram import histogram
+
+
+__all__ = [analyse_energy]
+
+
+def analyse_energy(energy, settings):
+    """
+    This method will analyse the energies, specifically it will:
+    1) Calculate a running average of the energy
+    2) Obtain histogram for the energy
+    3) Run a block error analysis
+
+    Parameters
+    ----------
+    energy : numpy.array, 1D
+        This numpy.array contain the energies as a function of time
+    settings : dict
+        This dictionary contains settings for the analysis.
+
+    Returns
+    -------
+    out : dict
+        This dict contains the results.
+
+    Notes
+    -----
+    This method assumes that the energies has been read into a numpy.array.
+    For very large/long simulations this might be memory intensive,
+    however, the analysis is fast since we can use numpy functions.
+
+    Also note that range is used here rather than xrange. This is just to
+    ease the transition python2 -> python3.
+    """
+    result = {}
+    # 1) Do the running average
+    result['running'] = running_average(energy)
+    # 2) Obtain distributions:
+    result['distribution'] = []
+    hist, _, bin_mid = histogram(energy,
+                                 bins=settings['bins'],
+                                 limits=(energy.min(), energy.max()),
+                                 density=True)
+    result['distribution'] = (bin_mid, hist)
+    # 3) Do the block error analysis:
+    result['blockerror'] = block_error_corr(energy,
+                                            maxblock=settings['maxblock'],
+                                            blockskip=settings['blockskip'])
+    return result
