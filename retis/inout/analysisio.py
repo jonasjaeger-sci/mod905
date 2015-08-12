@@ -384,87 +384,49 @@ def _txt_save_columns(outputfile, header, *variables):
     np.savetxt(outputfile, mat, header=header)
 
 
-def _txt_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
-    """
-    This method save the output for the crossing probability as a simple
-    text file.
-
-    Parameters
-    ----------
-    lamb : numpy.array
-        These are the values for the order parameter
-    pcross : numpy.array
-        These are the values for the crossing probability
-    idetect : float
-        This is the interface used for the detection.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    header = 'Ensemble: {}, idetect: {}'.format(ensemble, idetect)
-    _txt_save_columns(outputfile, header, lamb, pcross)
-
-
-def _txt_p_running_average(prun, ensemble, outputfile):
-    """
-    This method will write the running average of the probability
-    to a text file.
-
-    Parameters
-    ----------
-    prun : numpy.array
-        The running average of the probability.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    header = 'Ensemble: {}'.format(ensemble)
-    _txt_save_columns(outputfile, header, prun)
-
-
-def _txt_block_error(error, title, outputfile):
+def _txt_block_error(outputfile, error, title):
     """
     This will write the output from the error analysis, to a text file.
 
     Parameters
     ----------
+    outputfile : string
+        This is the name of the output file to create.
     error : list
         This is the result from the error analysis
     title : string
         This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
         'Kinetic energy', etc.
-    outputfile : string
-        This is the name of the output file to create.
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
     _txt_save_columns(outputfile, header, error[0], error[3])
 
 
-def _txt_length_histogram(hist1, hist2, ensemble, outputfile):
+def _txt_histogram(outputfile, title, *histograms):
     """
     This will output the distribution of lengths to a text file.
 
     Parameters
     ----------
-    hist1 : list
-        This is the histogram of accepted paths
-    hist2 : list
-        This is the histogram for all paths.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
     outputfile : string
         This is the name of the output file to create.
+    title : string
+        A descriptive title to add to the header.
+    histograms : tuple
+        The histograms to store.
     """
-    header = r'Ensemble: {0}, <acc>: {1:6.2f}, s(acc): {2:6.2f}, ' \
-             r'<all>: {3:6.2f}, s(all): {4:6.2f}'
-    header = header.format(ensemble, hist1[2][0], hist1[2][1],
-                           hist2[2][0], hist2[2][1])
-    _txt_save_columns(outputfile, header, hist1[1], hist1[0],
-                      hist2[1], hist2[0])
-
+    data = []
+    header = [r'{}'.format(title)]
+    for hist in histograms:
+        header.append(r'avg: {0:6.2f}, std: {1:6.2f}'.format(hist[2][0],
+                                                             hist[2][1]))
+        data.append(hist[1])
+        data.append(hist[0])
+    header = ', '.join(header)
+    _txt_save_columns(outputfile, header, *data)
+    # *data is used here since we want to be flexible and write any number
+    # of histograms to the file.
 
 def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
     """
@@ -493,7 +455,7 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
             data.append(mid)
             data.append(hist)
             data.append(hist_scale)
-            header.append('{}-mid-hist-hist-scale'.format(key))
+            header.append('{} (mid, hist, hist*scale)'.format(key))
         except KeyError:
             continue
     header = ', '.join(header)
@@ -522,13 +484,20 @@ def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
     outfiles = {}
     for key in _OUTFILES:
         outfiles[key] = _OUTFILES[key].format(ens, txt_format)
-    _txt_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
-                       ens, outfiles['pcross'])
-    _txt_p_running_average(results['prun'], ens, outfiles['prun'])
-    _txt_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
-                     outfiles['blockerror'])
-    _txt_length_histogram(results['pathlength'][0], results['pathlength'][1],
-                          ens, outfiles['pathlength'])
+    # 1) Output pcross vs lambda:
+    _txt_save_columns(outfiles['pcross'],
+                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
+                      results['pcross'][0], results['pcross'][1])
+    # 2) Output the running average of p:
+    _txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
+                      results['prun'])
+    # 3) Block error results:
+    _txt_block_error(outfiles['blockerror'], results['blockerror'],
+                     'Ensemble: {0}'.format(ens))
+    # 3) Length histograms
+    _txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
+                   results['pathlength'][0], results['pathlength'][1])
+    # 4) Shoot histograms
     _txt_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'])
 
