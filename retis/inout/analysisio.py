@@ -21,7 +21,7 @@ import os
 
 __all__ = ['mpl_output_analysis', 'mpl_total_probability',
            'mpl_total_matched_probability',
-           'mpl_simple_time_series',
+           'mpl_simple_plot',
            'txt_output_analysis', 'txt_total_probability',
            'txt_total_matched_probability']
 
@@ -212,8 +212,8 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     _mpl_savefig(fig_scale, outputfile_scale)
 
 
-def mpl_simple_time_series(series, outputfile,
-                           xlabel='Time', ylabel='', title=None):
+def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
+                    title=None):
     """
     This method will plot time series data.
 
@@ -233,13 +233,26 @@ def mpl_simple_time_series(series, outputfile,
     """
     fig = plt.figure()
     axs = fig.add_subplot(111)
+    handles = []
+    labels = []
     for seri in series:
-        axs.plot(seri[0], seri[1], label=seri[2])
-    axs.set_xlabel(xlabel)
-    axs.set_ylabel(ylabel)
+        try:
+            if not seri[2] is None:
+                handle, = axs.plot(seri[0], seri[1])
+                handles.append(handle)
+                labels.append(seri[2])
+            else:
+                axs.plot(seri[0], seri[1])
+        except IndexError:
+            axs.plot(seri[0], seri[1])
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
     if not title is None:
         axs.set_title(title, fontsize='x-small', loc='left')
-    axs.legend(prop={'size': 'x-small'})
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
     _mpl_savefig(fig, outputfile)
 
 
