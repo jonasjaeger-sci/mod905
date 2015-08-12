@@ -504,8 +504,7 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
 
 def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
     """
-    This method will output all the figures from the results obtained
-    by the path analysis.
+    This method will output all the results obtained by the path analysis.
 
     Parameters
     ----------
