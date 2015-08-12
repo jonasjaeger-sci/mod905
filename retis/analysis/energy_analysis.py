@@ -4,10 +4,10 @@ This file contains methods for analysis of energy output
 """
 from __future__ import absolute_import
 from .analysis import running_average, block_error_corr
-from .histogram import histogram
+from .histogram import histogram_and_avg
 
 
-__all__ = [analyse_energy]
+__all__ = ['analyse_energy']
 
 
 def analyse_energy(energy, settings):
@@ -42,12 +42,8 @@ def analyse_energy(energy, settings):
     # 1) Do the running average
     result['running'] = running_average(energy)
     # 2) Obtain distributions:
-    result['distribution'] = []
-    hist, _, bin_mid = histogram(energy,
-                                 bins=settings['bins'],
-                                 limits=(energy.min(), energy.max()),
-                                 density=True)
-    result['distribution'] = (bin_mid, hist)
+    result['distribution'] = histogram_and_avg(energy, settings['bins'],
+                                               density=True)
     # 3) Do the block error analysis:
     result['blockerror'] = block_error_corr(energy,
                                             maxblock=settings['maxblock'],

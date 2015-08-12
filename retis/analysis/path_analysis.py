@@ -6,7 +6,7 @@ in the object PathEnsemble in retis.core.path
 from __future__ import absolute_import
 import numpy as np
 from .analysis import running_average, block_error_corr
-from .histogram import histogram
+from .histogram import histogram, histogram_and_avg
 import warnings
 
 
@@ -202,7 +202,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
     See Also
     --------
-    _create_length_histograms
+    histogram_and_avg in .histogram
     """
     # first get lengths of accepted paths:
     length_acc = [path['length'] for path in path_ensemble.get_accepted()]
@@ -213,8 +213,9 @@ def _get_path_distribution(path_ensemble, bins=1000):
         if length is not None:
             length_all.append(length)
     length_all = np.array(length_all)
-    hist1, hist2 = _create_length_histograms(length_acc, length_all, bins)
-    return hist1, hist2
+    hist_acc = histogram_and_avg(length_acc, bins, density=True)
+    hist_all = histogram_and_avg(length_all, bins, density=True)
+    return hist_acc, hist_all
 
 
 def _get_path_length(path):
@@ -242,46 +243,6 @@ def _get_path_length(path):
         msg = 'Ignored unknown mc move: {}'.format(move)
         warnings.warn(msg)
         return None
-
-
-def _create_length_histograms(length_acc, length_all, bins):
-    """
-    This method will create the histograms which are the results
-    from the length analysis.
-
-    Parameters
-    ----------
-    length_acc : 1D numpy.array
-         These are the lengths of the accepted paths
-    length_all : 1D numpy.array
-        These are the lengths of all paths
-    bins : int
-        The number of bins to use for the histograms.
-
-    Returns
-    -------
-    out[0] : list, [numpy.array, numpy.array, tuple]
-        Result for accepted paths (distribution). out[0][0] is the histogram
-        and out[0][1] are the mid points for bins. out[0][2] is a tuple with
-        the average and standard deviation for the length.
-    out[1] : list, [numpy.array, numpy.array, tuple]
-        Result for all paths (distribution). out[1][0] is the histogram and
-        out[1][1] are the mid points for bins. out[1][2] is a tuple with the
-        average and standard deviation for the length.
-
-    See Also
-    --------
-    histogram in .histogram
-    """
-    hist1, _, bin_mid1 = histogram(length_acc, bins=bins,
-                                   limits=(length_acc.min(), length_acc.max()),
-                                   density=True)
-    hist2, _, bin_mid2 = histogram(length_all, bins=bins,
-                                   limits=(length_all.min(), length_all.max()),
-                                   density=True)
-    hist1 = [hist1, bin_mid1, (length_acc.mean(), length_acc.std())]
-    hist2 = [hist2, bin_mid2, (length_all.mean(), length_all.std())]
-    return hist1, hist2
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
@@ -441,7 +402,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     # next length-analysis:
     hist1, hist2 = _get_path_distribution(path_ensemble,
                                           bins=settings['bins'])
-    result['pathlength'] = [hist1, hist2]
+    result['pathlength'] = (hist1, hist2)
     # next, shoots:
     # move so that the analysis returns histograms and scale...
     hist3, scale = _shoot_analysis(path_ensemble,
@@ -485,7 +446,6 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     --------
     _update_shoot_stats
     _pcross_lambda_cumulative
-    _create_length_histograms
     _create_shoot_histograms
 
     References
@@ -546,17 +506,17 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
                                             maxblock=settings['maxblock'],
                                             blockskip=settings['blockskip'])
     # 4) length analysis:
-    hist1, hist2 = _create_length_histograms(np.repeat(length_acc, weights),
-                                             np.array(length_all),
-                                             settings['bins'])
-    result['pathlength'] = [hist1, hist2]
+    hist1 = histogram_and_avg(np.repeat(length_acc, weights),
+                              settings['bins'], density=True)
+    hist2 = histogram_and_avg(np.array(length_all),
+                              settings['bins'], density=True)
+    result['pathlength'] = (hist1, hist2)
     # 5) shoots analysis:
-    hist3, scale = _create_shoot_histograms(shoot_stats,
-                                            settings['bins'])
-    result['shoots'] = [hist3, scale]
+    result['shoots'] = _create_shoot_histograms(shoot_stats,
+                                                settings['bins'])
     # 6) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
-                            float(npath) * hist2[2][0]]
+                            float(npath) * result['pathlength'][1][2][0]]
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = npath

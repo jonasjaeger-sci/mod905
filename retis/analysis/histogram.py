@@ -59,13 +59,12 @@ def histogram_and_avg(data, bins, density=True):
     Returns
     -------
     out[0] : numpy.array
-        The mid points for the bins
-    out[1] : numpy.array
         The histogram (frequency) values
-    out[2] : float
-        The average of the data
-    out[3] : float
-        The standard deviation for the data
+    out[1] : numpy.array
+        The mid points for the bins
+    out[2] : tuple of floats
+        These are some simple statistics, out[2][0] is the average
+        out[2][1] is the standard deviation.
 
     See Also
     --------
@@ -74,7 +73,7 @@ def histogram_and_avg(data, bins, density=True):
     hist, _, bin_mid = histogram(data, bins=bins,
                                  limits=(data.min(), data.max()),
                                  density=density)
-    return (bin_mid, hist, data.mean(), data.std())
+    return (hist, bin_mid, (data.mean(), data.std()))
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):
