@@ -49,3 +49,31 @@ def analyse_energy(energy, settings):
                                             maxblock=settings['maxblock'],
                                             blockskip=settings['blockskip'])
     return result
+
+
+def analyse_all_energies(energies, settings):
+    """
+    This method will run the energy analysis on several energies and 
+    collect the energies into a structure which is convenient for plotting
+    them.
+
+    Parameters
+    ----------
+    energies : numpy.array
+        These are the energies to analyse. It is assumed that the columns are
+        (in order): time, potential, kinetic, total,
+        harmonic (total + hosehoover), temperature and external.
+    settings : dict
+        This dictionary contains settings for the analysis.
+    
+    Returns
+    -------
+    out : dict
+        For each energy key `out[key]` contains the result from the energy
+        analysis.
+    """
+    results = {}
+    for i, key in enumerate(['pot', 'kin', 'tot', 'ham', 'temp', 'elect']):
+        results[key] = analyse_energy(energies[:, i + 1], settings)
+    return results
+
