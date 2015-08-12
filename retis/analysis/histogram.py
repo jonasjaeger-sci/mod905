@@ -5,7 +5,7 @@ This file contains methods for data analysis
 
 import numpy as np
 
-__all__ = ['histogram', 'match_all_histograms']
+__all__ = ['histogram', 'match_all_histograms', 'histogram_and_avg']
 
 
 def histogram(data, bins=10, limits=(-1, 1), density=False,
@@ -38,6 +38,43 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
                               range=limits, density=density, weights=weights)
     bin_mid = 0.5 * (bins[1:] + bins[:-1])
     return hist, bins, bin_mid
+
+
+def histogram_and_avg(data, bins, density=True):
+    """
+    This is a helper method that will create an histogram for the given
+    data and return it together with the bin mid points and some simple
+    statistics (mean value and standard deviation) in a tuple. This structure
+    is useful for some of the plotting routines.
+
+    Parameters
+    ----------
+    data : 1D numpy.array
+        This is the data to create the histogram from
+    bins : int
+        The number of bins to use for the histogram
+    density : boolean, optional
+        If `density` is true, the histogram will be normalized.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The mid points for the bins
+    out[1] : numpy.array
+        The histogram (frequency) values
+    out[2] : float
+        The average of the data
+    out[3] : float
+        The standard deviation for the data
+
+    See Also
+    --------
+    histogram
+    """
+    hist, _, bin_mid = histogram(data, bins=bins,
+                                 limits=(data.min(), data.max()),
+                                 density=density)
+    return (bin_mid, hist, data.mean(), data.std())
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):
