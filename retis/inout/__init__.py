@@ -39,8 +39,8 @@ Folders:
 
 - templates: This folder contains templates for the report.
 """
-from .analysisio import (mpl_output_analysis, mpl_total_probability,
-                         txt_output_analysis, txt_total_probability)
+from .analysisio import (mpl_path_output, mpl_total_probability,
+                         txt_path_output, txt_total_probability)
 from .plotting import set_plotting_style
 from .report import generate_report
 from .txtinout import WriteXYZ, WriteGromacs, FileWriter, TxtTable

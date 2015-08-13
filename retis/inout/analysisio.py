@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods that will output results from the path analysis.
-It will also output matched results.
+This files contains methods that will output results from the
+path analysis and the energy analysis. It currently supports matplotlib
+graphics and a simple txt-table format (i.e. a space-separated format).
+For the path analysis it can also be used to output over-all matched
+results.
 """
 from __future__ import absolute_import
 from .common import create_backup
@@ -19,11 +22,10 @@ import os
 # canvas = FigureCanvas(fig)
 
 
-__all__ = ['mpl_output_analysis', 'mpl_total_probability',
-           'mpl_total_matched_probability',
-           'mpl_simple_plot',
-           'txt_output_analysis', 'txt_total_probability',
-           'txt_total_matched_probability']
+__all__ = ['mpl_path_output', 'txt_path_output',
+           'mpl_total_probability', 'txt_total_probability',
+           'mpl_total_matched_probability', 'txt_total_matched_probability',
+           'mpl_simple_plot']
 
 
 # hard-coded patters for output files:
@@ -256,7 +258,7 @@ def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
     _mpl_savefig(fig, outputfile)
 
 
-def mpl_output_analysis(path_ensemble, results, idetect, mpl_format='png'):
+def mpl_path_output(path_ensemble, results, idetect, mpl_format='png'):
     """
     This method will output all the figures from the results obtained
     by the path analysis.
@@ -331,7 +333,7 @@ def mpl_total_probability(path_ensembles, detect, results, matched,
 
 def mpl_total_matched_probability(detect, matched, outputfile):
     """
-    This method will plot the overall matched probability.
+    This method will plot the overall matched probability only.
 
     Parameters
     ----------
@@ -464,7 +466,7 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
     # written to the output file.
 
 
-def txt_output_analysis(path_ensemble, results, idetect, txt_format='txt.gz'):
+def txt_path_output(path_ensemble, results, idetect, txt_format='txt.gz'):
     """
     This method will output all the results obtained by the path analysis.
 
