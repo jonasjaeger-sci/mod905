@@ -12,6 +12,10 @@ from matplotlib import pyplot as plt
 import warnings
 import numpy as np
 import os
+# pylint: disable=E0611
+from scipy.stats import gamma
+# pylint: enable=E0611
+
 # If desirable pyplot/plt can be exchanged for FigureCanvans, i.e.:
 # from matplotlib.figure import Figure
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -25,16 +29,30 @@ import os
 __all__ = ['mpl_path_output', 'txt_path_output',
            'mpl_total_probability', 'txt_total_probability',
            'mpl_total_matched_probability', 'txt_total_matched_probability',
-           'mpl_simple_plot']
+           'mpl_energy_output', 'txt_energy_output']
 
 
-# hard-coded patters for output files:
-_OUTFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
-             'prun': os.extsep.join(['{}_prun', '{}']),
-             'blockerror': os.extsep.join(['{}_perror', '{}']),
-             'pathlength': os.extsep.join(['{}_lpath', '{}']),
-             'shoots': os.extsep.join(['{}_shoots', '{}']),
-             'shoots-scaled': os.extsep.join(['{}_shoots_scale', '{}'])}
+# hard-coded patters for path analysis output files:
+_PATHFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
+              'prun': os.extsep.join(['{}_prun', '{}']),
+              'perror': os.extsep.join(['{}_perror', '{}']),
+              'pathlength': os.extsep.join(['{}_lpath', '{}']),
+              'shoots': os.extsep.join(['{}_shoots', '{}']),
+              'shoots-scaled': os.extsep.join(['{}_shoots_scale', '{}'])}
+# hard-coded patters for energy analysis output files:
+_ENERFILES = {'energies': os.extsep.join(['energies', '{}']),
+              'run_energies': os.extsep.join(['runenergies', '{}']),
+              'temperature': os.extsep.join(['temperature', '{}']),
+              'run_temp': os.extsep.join(['runtemperature', '{}']),
+              'block': os.extsep.join(['{}block', '{}']),
+              'dist': os.extsep.join(['{}dist', '{}'])}
+# hard-coded information for the energy terms:
+_ENERTITLE = {'pot': 'Potential energy',
+              'kin': 'Kinetic energy',
+              'tot': 'Total energy',
+              'ham': 'Hamilt. energy',
+              'temp': 'Temperature',
+              'elec': 'Energy (externally computed)'}
 
 
 def _mpl_savefig(fig, outputfile):
@@ -214,8 +232,8 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     _mpl_savefig(fig_scale, outputfile_scale)
 
 
-def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
-                    title=None):
+def _mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
+                     title=None):
     """
     This method will plot time series data.
 
@@ -258,7 +276,7 @@ def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
     _mpl_savefig(fig, outputfile)
 
 
-def mpl_path_output(path_ensemble, results, idetect, mpl_format='png'):
+def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
     """
     This method will output all the figures from the results obtained
     by the path analysis.
@@ -271,7 +289,7 @@ def mpl_path_output(path_ensemble, results, idetect, mpl_format='png'):
         This dict contains the result from the analysis.
     idetect : float
         This is the interface used for the detection in the analysis.
-    mpl_format : string, optional
+    out_format : string, optional
         This is the desired format to use for the graphs. Supported are
         png, pdf, svg, etc. (see the matplotlib documentation).
 
@@ -283,13 +301,13 @@ def mpl_path_output(path_ensemble, results, idetect, mpl_format='png'):
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     outfiles = {}
-    for key in _OUTFILES:
-        outfiles[key] = _OUTFILES[key].format(ens, mpl_format)
+    for key in _PATHFILES:
+        outfiles[key] = _PATHFILES[key].format(ens, out_format)
     _mpl_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
                        ens, outfiles['pcross'])
     _mpl_p_running_average(results['prun'], ens, outfiles['prun'])
     _mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
-                     outfiles['blockerror'])
+                     outfiles['perror'])
     _mpl_length_histogram(results['pathlength'][0], results['pathlength'][1],
                           ens, outfiles['pathlength'])
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
@@ -355,6 +373,90 @@ def mpl_total_matched_probability(detect, matched, outputfile):
     titl = 'Matched probability'
     axs.set_title(titl, fontsize='x-small', loc='left')
     _mpl_savefig(fig, outputfile)
+
+
+def mpl_energy_output(results, energies, simulation_settings=None,
+                      out_format='png'):
+    """
+    Save the output from the energy analysis to text files.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        energy. It is assumed to contains the keys 'pot', 'kin', 'tot',
+        'ham', 'temp', 'elec'
+    energies : numpy.array
+        This is the raw-data for the energy analysis
+    simulation_settings : dict, optional
+        This is the simulation settings which are usefull for creating
+        theoretical plots of distributions. It is assumed to contain
+        the number of particles, the dimensionality
+    out_format : string, optional
+        This is the desired format to use for the graphs. Supported are
+        png, pdf, svg, etc. (see the matplotlib documentation).
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {'energies': _ENERFILES['energies'].format(out_format),
+                'run_energies': _ENERFILES['run_energies'].format(out_format),
+                'temperature': _ENERFILES['temperature'].format(out_format),
+                'run_temp': _ENERFILES['run_temp'].format(out_format)}
+    time = energies[:, 0]
+    # make time series plot of the energies
+    series = []
+    for i, key in enumerate(['pot', 'kin', 'tot', 'ham']):
+        series.append((time, energies[:, i + 1],
+                       _ENERTITLE[key]))
+    _mpl_simple_plot(series, outfiles['energies'],
+                     xlabel='Time', ylabel='Energy', title=None)
+    # make running average plot of the energies as function of time
+    series = []
+    for key in ['pot', 'kin', 'tot', 'ham']:
+        series.append((time, results[key]['running'], _ENERTITLE[key]))
+    _mpl_simple_plot(series, outfiles['run_energies'],
+                     xlabel='Time', ylabel='Energy', title=None)
+    # plot temperature
+    series = [(time, energies[:, 5], None)]
+    _mpl_simple_plot(series, outfiles['temperature'],
+                     xlabel='Time', ylabel='Temperature', title=None)
+    # and running average for temperature
+    series = [(time, results['temp']['running'], None)]
+    _mpl_simple_plot(series, outfiles['run_temp'],
+                     xlabel='Time', ylabel='Temperature',
+                     title='Running average')
+
+    # plot block-error results:
+    outfile = _ENERFILES['block'].format('{}', out_format)
+    for key in ['pot', 'kin', 'tot', 'temp']:
+        outfiles['{}block'.format(key)] = outfile.format(key)
+        _mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
+                         outfiles['{}block'.format(key)])
+    # plot distributions
+    outfile = _ENERFILES['dist'].format('{}', out_format)
+    for key in ['pot', 'kin', 'tot', 'temp']:
+        dist = results[key]['distribution']
+        series = [(dist[1], dist[0], _ENERTITLE[key])]
+        title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
+        title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
+        if simulation_settings is not None and key in ['kin', 'temp']:
+            pos = np.linspace(min(0.0, dist[1].min()),
+                              dist[1].max(), 1000)
+            alp = (0.5 * simulation_settings['npart'] *
+                   simulation_settings['dim'])
+            if key == 'kin':
+                scale = 1.0 / simulation_settings['beta']
+            elif key == 'temp':
+                scale = simulation_settings['temp'] / alp
+            series.append((pos, gamma.pdf(pos, alp, loc=0, scale=scale),
+                           'Boltzmann distribution'))
+        outfiles['{}dist'.format(key)] = outfile.format(key)
+        _mpl_simple_plot(series, outfiles['{}dist'.format(key)],
+                         xlabel=None, ylabel=None, title=title)
+    return outfiles
 
 
 def _txt_save_columns(outputfile, header, *variables):
@@ -430,7 +532,8 @@ def _txt_histogram(outputfile, title, *histograms):
     # *data is used here since we want to be flexible and write any number
     # of histograms to the file.
 
-def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
+
+def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
     """
     This method will write the histograms from the shoots analysis to a
     text file.
@@ -466,7 +569,7 @@ def _txt_shoots_histogram(histograms, scale, ensemble, outputfile):
     # written to the output file.
 
 
-def txt_path_output(path_ensemble, results, idetect, txt_format='txt.gz'):
+def txt_path_output(path_ensemble, results, idetect, out_format='txt.gz'):
     """
     This method will output all the results obtained by the path analysis.
 
@@ -478,14 +581,14 @@ def txt_path_output(path_ensemble, results, idetect, txt_format='txt.gz'):
         This dict contains the result from the analysis.
     idetect : float
         This is the interface used for the detection in the analysis.
-    txt_format : string, optional
+    out_format : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     outfiles = {}
-    for key in _OUTFILES:
-        outfiles[key] = _OUTFILES[key].format(ens, txt_format)
+    for key in _PATHFILES:
+        outfiles[key] = _PATHFILES[key].format(ens, out_format)
     # 1) Output pcross vs lambda:
     _txt_save_columns(outfiles['pcross'],
                       'Ensemble: {}, idetect: {}'.format(ens, idetect),
@@ -494,14 +597,14 @@ def txt_path_output(path_ensemble, results, idetect, txt_format='txt.gz'):
     _txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
                       results['prun'])
     # 3) Block error results:
-    _txt_block_error(outfiles['blockerror'], results['blockerror'],
+    _txt_block_error(outfiles['perror'], results['blockerror'],
                      'Ensemble: {0}'.format(ens))
     # 3) Length histograms
     _txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
                    results['pathlength'][0], results['pathlength'][1])
     # 4) Shoot histograms
-    _txt_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
-                          outfiles['shoots'])
+    _txt_shoots_histogram(outfiles['shoots'], results['shoots'][0],
+                          results['shoots'][1], ens)
 
 
 def txt_total_probability(path_ensembles, detect, results, matched,
@@ -552,3 +655,50 @@ def txt_total_matched_probability(detect, matched, outputfile):
     interf = ' , '.join([str(idet) for idet in detect])
     header = header.format(interf)
     _txt_save_columns(outputfile, header, matched[:, 0], matched[:, 1])
+
+
+def txt_energy_output(results, energies, out_format='txt.gz'):
+    """
+    Save the output from the energy analysis to text files.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        energy. It is assumed to contains the keys 'pot', 'kin', 'tot',
+        'ham', 'temp', 'elec'
+    energies : numpy.array
+        This is the raw-data for the energy analysis
+    out_format : string, optional
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {'run_energies': _ENERFILES['run_energies'].format(out_format),
+                'temperature': _ENERFILES['temperature'].format(out_format),
+                'run_temp': _ENERFILES['run_temp'].format(out_format)}
+    time = energies[:, 0]
+    # 1) Store the running average:
+    header = 'Running average of energy data'
+    _txt_save_columns(outfiles['run_energies'], header, time,
+                      results['pot']['running'], results['kin']['running'],
+                      results['tot']['running'], results['ham']['running'],
+                      results['temp']['running'], results['ext']['running'])
+    # 2) Save block error data:
+    outfile = _ENERFILES['block'].format('{}', out_format)
+    for key in ['pot', 'kin', 'tot', 'temp']:
+        outfiles['{}block'.format(key)] = outfile.format(key)
+        _txt_block_error(outfiles['{}block'.format(key)],
+                         results[key]['blockerror'], _ENERTITLE[key])
+    # 3) Save histograms:
+    outfile = _ENERFILES['dist'].format('{}', out_format)
+    for key in ['pot', 'kin', 'tot', 'temp']:
+        outfiles['{}dist'.format(key)] = outfile.format(key)
+        _txt_histogram(outfiles['{}dist'.format(key)],
+                       r'Histogram for {}'.format(_ENERTITLE[key]),
+                       results[key]['distribution'])
+    return outfiles
