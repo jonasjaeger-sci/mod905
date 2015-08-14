@@ -1,5 +1,22 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods that handle output/input of text"""
+"""
+This file contains methods and objects that handle output/input of
+text files.
+
+Objects defined here:
+
+- TxtTable: Table of text with a header and formatted rows.
+
+- FileWriter: Defines a simple object to output to a file.
+
+- WriteXYZ: Writing of coordinates to a file in a xyz format.
+
+- WriteGromacs: Writing of a coordinates to a file in a gromacs format.
+
+- PathEnsembleFile: Writing/reading of path ensemble data to a file.
+
+- EnergyFile: Writing/reading of energy data to a file.
+"""
 import itertools
 import os
 import warnings
@@ -85,6 +102,58 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     else:
         row_str = fmt_str.format(*row)
         return fmt_str, row_str
+
+
+def _read_some_lines(filename, line_parser=None):
+    """
+    This is a helper function, it will open a file and
+    try to read as many lines as possible. The argument line_parser
+    can be used to define how the file should be read.
+    It is able to handle blocks - it will assume that a line starting with
+    a '#' will identify a new block
+
+    Parameter
+    ---------
+    filename : string
+        This is the filename to open and read
+    line_parser : function, optional
+        This is a function which knows how to translate a given line
+        to a desired internal format. If not given, a simple float
+        will be used.
+
+    Yields
+    -------
+    data : list
+        The data read from the file, arranged in dicts
+    """
+    ncol = -1  # The number of columns
+    new_block = None
+    if line_parser is None:
+        # create a default "parser"
+        line_parser = lambda line: [float(col) for col in line.split()]
+    with open(filename, 'r') as fileh:
+        for line in fileh:
+            stripline = line.strip()
+            if stripline[0] == '#':
+                # this is a comment = a new block follows
+                # store the current block:
+                if not new_block is None:
+                    yield new_block
+                new_block = {'comment': stripline, 'data': []}
+                ncol = -1
+            else:
+                linedata = line_parser(stripline)
+                newcol = len(linedata)
+                if ncol == -1:  # first item
+                    ncol = newcol
+                    if new_block is None:
+                        new_block = {'comment': None, 'data': []}
+                if newcol == ncol:
+                    new_block['data'].append(linedata)
+                else:
+                    break
+    if not new_block is None:
+        yield new_block
 
 
 class TxtTable(object):
@@ -232,7 +301,8 @@ class FileWriter(object):
     def __init__(self, filename, filetype, mode='w', oldfile='backup',
                  count=0):
         """
-        Initiates the file writer object.
+        Initiates the file writer object. This will just define and
+        set some variables
 
         Paramters
         ---------
@@ -240,7 +310,9 @@ class FileWriter(object):
             Name of the file to write.
         filetype : string
             Identifies the filetype to write (i.e. the format).
-        oldfile : string
+        mode : string, optional
+            This determines if we write (= 'w') or read (='r') the file.
+        oldfile : string, optional
             Behavior if the `filename` is an existing file.
         frame : int
             Counts the number of frames written
@@ -250,6 +322,26 @@ class FileWriter(object):
         self.filetype = filetype
         self.mode = mode.lower()
         self.fileh = None
+        if self.mode == 'w':
+            self.fileopen(oldfile=oldfile)
+
+    def fileopen(self, oldfile='bakcup'):
+        """
+        Method to open a file, to make it ready for reading/writing.
+        This function is separated from the __init__ in case some derived
+        classes will open the file at a later stage. Default is to run
+        open if the mode it set to 'w'.
+
+        Parameters
+        ----------
+        oldfile : string, optional
+            Behavior if the `filename` is an existing file, i.e. it is only
+            usfull when self.mode = 'w'
+
+        Returns
+        -------
+        None, but self.fileh is set to the open file.
+        """
         if self.mode == 'r':  # Read data
             try:
                 self.fileh = open(self.filename, 'r')
@@ -292,14 +384,17 @@ class FileWriter(object):
         """
         Method to close the file, in case that is explicitly needed.
         """
-        if not self.fileh.closed:
+        if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()
 
     def get_mode(self):
         """
         Method to return mode of the file.
         """
-        return self.fileh.mode
+        try:
+            return self.fileh.mode
+        except AttributeError:
+            return None
 
     def write_string(self, towrite):
         """
@@ -310,7 +405,7 @@ class FileWriter(object):
         towrite : string
             This is the string to output to the file
         """
-        if not self.fileh.closed:
+        if self.fileh is not None and not self.fileh.closed:
             try:
                 self.fileh.write(towrite)
                 self.count += 1
@@ -328,8 +423,8 @@ class FileWriter(object):
 
     def write_line(self, towrite):
         """
-        This method is similar to write_string, however, it write a new
-        line after the given `towrite`.
+        This method is similar to write_string, however, it writes a new-line
+        after the given `towrite`.
 
         Parameters
         ----------
@@ -344,7 +439,7 @@ class FileWriter(object):
         crashes. It is used here as it's not so nice to add a
         with statement to the main script running the simulation.
         """
-        if not self.fileh.closed:
+        if not self.fileh is None and not self.fileh.closed:
             self.fileh.close()
 
 
@@ -709,6 +804,10 @@ class PathEnsembleFile(FileWriter):
     first converting to a ``retis.core.path.PathEnsemble`` and then running
     the analysis. The common methods are ``get_paths`` and ``__str__``.
     The common properties are `ensemble` and `interfaces`
+    In the future, this should be made smarter, for instance could path data
+    be read in portions, or the full path file could be read if it's small
+    enough to fit in the memory. A line-by-line analysis as it is righ now
+    might not be the most efficient way...
 
     Attributes
     ----------
@@ -728,7 +827,7 @@ class PathEnsembleFile(FileWriter):
         Parameters
         ----------
         filename : string
-            Name of file to write.
+            Name of file to read/write.
         ensemble : str
             This is a string representation of the path ensemble. Typically
             something like '0-', '0+', '1', '2', ..., '001' and so on.
@@ -771,16 +870,17 @@ class PathEnsembleFile(FileWriter):
         """
         This will yield the different paths stored in the file. The lines
         are read on-the-fly, converted and yielded one-by-one.
+        Note that the file will be opened here, i.e. it will assumed that
+        it's not open in self.fileh
 
         Yields
         ------
         out : object of type Path, the current path in the file
         """
         try:
-            self.fileh.seek(0)  # just to make sure we rewind
-            for lines in self.fileh:
-                new_path = _line_to_path_data(lines)
-                yield new_path
+            with open(self.filename, 'r') as fileh:
+                for line in fileh:
+                    yield _line_to_path_data(line)
         except IOError as error:
             msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
             warnings.warn(msg)
@@ -797,3 +897,75 @@ class PathEnsembleFile(FileWriter):
         msg += ['\tFile name: {}'.format(self.filename)]
         msg += ['\tFile mode: {}'.format(self.mode)]
         return '\n'.join(msg)
+
+
+class EnergyFile(FileWriter):
+    """
+    EnergyFile(FileWriter)
+
+    This class handles writing/reading of energy data.
+
+    Attributes
+    ----------
+    Same as for the FileWriter object, in addition:
+    """
+    def __init__(self, filename, mode='w', oldfile='backup'):
+        """
+        Initialize the EnergyFile object
+
+        Parameters
+        ----------
+        filename : string
+            Name of file to read/write.
+        mode : string
+            Mode can be used to select if we should write to the file
+            (if mode is equal to 'w') or read from the file (mode equal
+            to 'r'). The default is mode equal to 'w'.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only usefull when the mode is
+            set to 'w'.
+        """
+        super(EnergyFile, self).__init__(filename, 'energyfile',
+                                         mode=mode,
+                                         oldfile=oldfile)
+
+    def load(self):
+        """
+        This method will attempt to load the entire energy file into memory.
+        (Quote of the day: 'memory is cheap, function calls are expensive'.)
+        In the future, a more intelligent way of handling files like this
+        may be in order, but for now the entire file is read as it's very
+        convenient for the subsequent analysis. In case blocks are found in
+        the file, they will be yielded, this is just to reduce the memory
+        usage.
+
+        Yields
+        -------
+        data_dict : dict
+            This is the energy data read from the file, stored in
+            a dict. This is for convenience, so that each energy term
+            can be accessed by data[key]
+
+        See Also
+        --------
+        _read_some_lines
+        """
+        for blocks in _read_some_lines(self.filename):
+            data = np.array(blocks['data'])
+            data_dict = {'comment': blocks['comment'],
+                         'data': {'time': data[:, 0],
+                                  'pot': data[:, 1],
+                                  'kin': data[:, 2],
+                                  'tot': data[:, 3],
+                                  'ham': data[:, 4],
+                                  'temp': data[:, 5],
+                                  'ext': data[:, 6]}}
+            yield data_dict
+
+    def __str__(self):
+        """
+        Return a string with some info about this object
+        """
+        msg = 'Energy file: {} (mode: {})'.format(self.filename, self.mode)
+        return msg
