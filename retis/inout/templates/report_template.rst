@@ -22,7 +22,7 @@ Probability figures
    :width: 30%
 .. image:: @{{ figure['prun'] }}@
    :width: 30%
-.. image:: @{{ figure['blockerror'] }}@
+.. image:: @{{ figure['perror'] }}@
    :width: 30%
 @{% endfor %}@
 
