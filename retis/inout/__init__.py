@@ -26,12 +26,13 @@ Modules:
   is responsible for creating the final output from the analysis of (RE)TIS
   simulations
 
+- traj.py: Module for handling writing and reading of trajectories.
+
 - txtinout.py: Defines objects and some methods for text-based output.
   It defines the TxtTable object (table-like-format) intended to be
   written to the screen during a simulation or to a file.
   Futher it defines the more general FileWriter
-  object and the trajectory-writers for storing trajectories in
-  a 'standard' format, e.g. .xyz or .gro.
+  object and objects for energies, path ensembles etc.
 
 Folders:
 
@@ -43,7 +44,8 @@ from .analysisio import (mpl_path_output, mpl_total_probability,
                          txt_path_output, txt_total_probability)
 from .plotting import set_plotting_style
 from .report import generate_report
-from .txtinout import WriteXYZ, WriteGromacs, FileWriter, TxtTable
+from .traj import WriteGromacs, WriteXYZ
+from .txtinout import TxtTable, FileWriter
 
 
 def create_traj_writer(settings, system):
