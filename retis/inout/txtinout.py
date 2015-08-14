@@ -711,9 +711,7 @@ class OrderFile(FileWriter):
         Yields
         -------
         data_dict : dict
-            This is the energy data read from the file, stored in
-            a dict. This is for convenience, so that each energy term
-            can be accessed by data[key]
+            Data read from the order parameter file.
 
         See Also
         --------
@@ -723,14 +721,9 @@ class OrderFile(FileWriter):
             data = np.array(blocks['data'])
             _, col = data.shape
             data_dict = {'comment': blocks['comment']}
-            data_dict['data'] = {'time': data[:, 0]}
-            for i in range(col - 1):
-                if i % 2 == 0:  # orderp
-                    coord = 'p'
-                else:
-                    coord = 'v'
-                coord = 'order-{0}-{1:03d}'.format(coord, i // 2)
-                data_dict['data'][coord] = data[:, i]
+            data_dict['data'] = []
+            for i in range(col):
+                data_dict['data'].append(data[:, i])
             yield data_dict
 
     def __str__(self):

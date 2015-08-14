@@ -9,6 +9,8 @@ results.
 from __future__ import absolute_import
 from .common import create_backup
 from matplotlib import pyplot as plt
+import matplotlib.colors as colors
+from matplotlib.collections import LineCollection
 import warnings
 import numpy as np
 import os
@@ -53,6 +55,13 @@ _ENERTITLE = {'pot': 'Potential energy',
               'ham': 'Hamilt. energy',
               'temp': 'Temperature',
               'elec': 'Energy (externally computed)'}
+# order files:
+_ORDERFILES = {'order': os.extsep.join(['orderp', '{}']),
+               'ordervel': os.extsep.join(['orderpv', '{}']),
+               'run_order': os.extsep.join(['runorderp', '{}']),
+               'dist': os.extsep.join(['orderdist', '{}']),
+               'block': os.extsep.join(['ordererror', '{}']),
+               'msd': os.extsep.join(['ordermsd', '{}'])}
 
 
 def _mpl_savefig(fig, outputfile):
@@ -276,6 +285,57 @@ def _mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
     _mpl_savefig(fig, outputfile)
 
 
+def _mpl_line_gradient(series, outputfile, xlabel='Time', ylabel='Value',
+                       title=None):
+    """
+    This method will plot time series data and color the lines with
+    a gradient according to 'time'
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    handles = []
+    labels = []
+    for seri in series:
+        points = np.array([seri[0], seri[1]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        cnorm = colors.Normalize(vmin=0, vmax=1)
+        linec = LineCollection(segments, array=np.linspace(0, 1, len(seri[0])),
+                               norm=cnorm)
+        try:
+            if not seri[2] is None:
+                handle, = axs.add_collection(linec)
+                handles.append(handle)
+                labels.append(seri[2])
+            else:
+                axs.add_collection(linec)
+        except IndexError:
+            axs.add_collection(linec)
+    axs.autoscale_view()
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
+    _mpl_savefig(fig, outputfile)
+
+
 def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
     """
     This method will output all the figures from the results obtained
@@ -456,6 +516,59 @@ def mpl_energy_output(results, energies, simulation_settings=None,
         outfiles['{}dist'.format(key)] = outfile.format(key)
         _mpl_simple_plot(series, outfiles['{}dist'.format(key)],
                          xlabel=None, ylabel=None, title=title)
+    return outfiles
+
+
+def mpl_orderp_output(results, orderdata, out_format='png'):
+    """
+    Save the output from the order parameter analysis to text files.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        order parameter.
+    orderdata : dict of numpy.arrays
+        This is the raw-data for the order parameter analysis
+    out_format : string, optional
+        This is the desired format to use for the graphs. Supported are
+        png, pdf, svg, etc. (see the matplotlib documentation).
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {}
+    for key in _ORDERFILES:
+        outfiles[key] = _ORDERFILES[key].format(out_format)
+
+    time = orderdata['data'][0]
+    series = [(time, orderdata['data'][1])]
+    _mpl_simple_plot(series, outfiles['order'],
+                     xlabel='Time', ylabel='Order parameter', title=None)
+    # make running average plot of the energies as function of time
+    series = [(time, results[0]['running'], 'Running average')]
+    _mpl_simple_plot(series, outfiles['run_order'],
+                     xlabel='Time', ylabel='Order parameter', title=None)
+
+    # plot block-error results:
+    _mpl_block_error(results[0]['blockerror'], 'Order parameter',
+                     outfiles['block'])
+    # plot distributions
+    dist = results[0]['distribution']
+    series = [(dist[1], dist[0])]
+    title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
+    title = title.format('Order parameter', dist[2][0], dist[2][1])
+    _mpl_simple_plot(series, outfiles['dist'],
+                     xlabel=None, ylabel=None, title=title)
+
+    # also try a orderp vs ordervel plot:
+    if len(orderdata['data']) >= 3:
+        series = [(orderdata['data'][1], orderdata['data'][2])]
+        _mpl_line_gradient(series, outfiles['ordervel'],
+                           xlabel=r'$\lambda$', ylabel=r'$\dot{\lambda}$',
+                           title='Order parameter vs velocity')
     return outfiles
 
 

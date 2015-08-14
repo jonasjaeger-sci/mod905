@@ -16,14 +16,15 @@ def analyse_orderp(orderdata, settings):
 
     Parameters
     ----------
-    orderdata : dict
-        This dict contains the order parameters to analyse.
+    orderdata : list of numpy.arrays
+        The contents of this list is the data read from the order
+        parameter file.
     settings : dict
         This dictionary contains settings for the analysis.
 
     Returns
     -------
-    results : dict
+    results : numpy.array
         For each order parameter `key`, `results[key]` contains the result
         from the analysis.
 
@@ -33,11 +34,14 @@ def analyse_orderp(orderdata, settings):
 
     Note
     ----
-    Currently, this is identical to energy_analysis.analyse_energies.
-    This might be changed in the near future with a more sophisticated
-    analysis.
+    We here (and in the subsequent plotting) make certain assumptions about
+    the structure, i.e. the positions are assumed to have a specific meaning.
+    (column zero is the time, column one the order parameter etc...)
     """
-    results = {}
-    for key in orderdata:
-        results[key] = analyse_data(orderdata[key], settings)
+    results = []
+    for i, data in enumerate(orderdata):
+        if i == 0:  # first column is just the time, skip it
+            pass
+        else:
+            results.append(analyse_data(data, settings))
     return results
