@@ -11,13 +11,16 @@ Modules:
 
 - analysis.py: Defines methods for numerical analysis.
 
+- energy_analysis.py: Defines methods useful for analysing the energy output.
+
 - histogram.py: Defines methods useful for generating histograms.
 
-- energy_analysis.py: Defines methods useful for analysing the energy output.
+- order_analysis.py: Defines methods useful for analysis of order parameters.
 
 - path_analysis.py: Defines methods for analysis of path ensembles.
 """
 from .analysis import running_average, block_error, block_error_corr
 from .histogram import histogram, match_all_histograms
 from .energy_analysis import analyse_energies
+from .order_analysis import analyse_orderp
 from .path_analysis import analyse_path_ensemble, match_probabilities
