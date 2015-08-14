@@ -386,7 +386,7 @@ def mpl_energy_output(results, energies, simulation_settings=None,
         Each item in `results` contains the results for the corresponding
         energy. It is assumed to contains the keys 'pot', 'kin', 'tot',
         'ham', 'temp', 'elec'
-    energies : numpy.array
+    energies : dict of numpy.arrays
         This is the raw-data for the energy analysis
     simulation_settings : dict, optional
         This is the simulation settings which are usefull for creating
@@ -405,11 +405,11 @@ def mpl_energy_output(results, energies, simulation_settings=None,
                 'run_energies': _ENERFILES['run_energies'].format(out_format),
                 'temperature': _ENERFILES['temperature'].format(out_format),
                 'run_temp': _ENERFILES['run_temp'].format(out_format)}
-    time = energies[:, 0]
+    time = energies['time']
     # make time series plot of the energies
     series = []
-    for i, key in enumerate(['pot', 'kin', 'tot', 'ham']):
-        series.append((time, energies[:, i + 1],
+    for key in ['pot', 'kin', 'tot', 'ham']:
+        series.append((time, energies[key],
                        _ENERTITLE[key]))
     _mpl_simple_plot(series, outfiles['energies'],
                      xlabel='Time', ylabel='Energy', title=None)
@@ -420,7 +420,7 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     _mpl_simple_plot(series, outfiles['run_energies'],
                      xlabel='Time', ylabel='Energy', title=None)
     # plot temperature
-    series = [(time, energies[:, 5], None)]
+    series = [(time, energies['temp'], None)]
     _mpl_simple_plot(series, outfiles['temperature'],
                      xlabel='Time', ylabel='Temperature', title=None)
     # and running average for temperature
@@ -681,7 +681,7 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
     outfiles = {'run_energies': _ENERFILES['run_energies'].format(out_format),
                 'temperature': _ENERFILES['temperature'].format(out_format),
                 'run_temp': _ENERFILES['run_temp'].format(out_format)}
-    time = energies[:, 0]
+    time = energies['time']
     # 1) Store the running average:
     header = 'Running average of energy data'
     _txt_save_columns(outfiles['run_energies'], header, time,
