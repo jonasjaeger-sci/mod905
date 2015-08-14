@@ -42,3 +42,5 @@ xtick.labelsize: medium
 ytick.major.pad: 6
 ytick.color: 262626
 ytick.labelsize: medium
+
+image.cmap: copper
