@@ -27,6 +27,10 @@ def analyse_energies(energies, settings):
     results : dict
         For each energy key `results[key]` contains the result from the energy
         analysis.
+
+    See Also
+    --------
+    analyse_data in .analysis.py
     """
     results = {}
     for key in energies:
