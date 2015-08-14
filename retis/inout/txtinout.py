@@ -15,6 +15,10 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
+__all__ = ['TxtTable', 'FileWriter', 'WriteXYZ', 'WriteGromacs',
+           'PathEnsembleFile']
+
+
 def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
     This will create the header format given the width.
@@ -375,7 +379,8 @@ def _adjust_coordinate(coord):
 
 class WriteXYZ(FileWriter):
     """
-    WriteXYZ(TrajectoryWriter)
+    WriteXYZ(FileWriter)
+
     This class handles writing of a system to a file in a simple xyz format.
 
     Attributes
@@ -469,6 +474,7 @@ class WriteXYZ(FileWriter):
 class WriteGromacs(FileWriter):
     """
     WriteGromacs(FileWriter)
+
     This class handles writing of a system to a file in a simple xyz format.
 
     Attributes
