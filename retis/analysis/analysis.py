@@ -4,6 +4,7 @@ This file contains some simple methods for numerical analysis.
 """
 
 import numpy as np
+from .histogram import histogram_and_avg
 
 __all__ = ['running_average', 'block_error',
            'block_error_corr']
@@ -121,7 +122,7 @@ def block_error(data, maxblock=None, blockskip=1):
         # reset these blocks
         block[k] = 0.0
     block_var = block_var / (nblock - 1)
-    block_err = np.sqrt(block_var/nblock)  # estimate of error
+    block_err = np.sqrt(block_var / nblock)  # estimate of error
     k = np.where(blocklen > maxblock // 2)[0]
     block_err_avg = np.average(block_err[k])
     return blocklen, block_avg, block_err, block_err_avg
@@ -178,3 +179,35 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
         ncor = float('inf') * np.ones(berr.shape)
         avg_ncor = float('inf')
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
+
+
+def analyse_data(data, settings):
+    """
+    This method will analyse data, specifically it will:
+    1) Calculate a running average
+    2) Obtain a histogram
+    3) Run a block error analysis
+
+    Parameters
+    ----------
+    data : numpy.array, 1D
+        This numpy.array contain the data as a function of time
+    settings : dict
+        This dictionary contains settings for the analysis.
+
+    Returns
+    -------
+    out : dict
+        This dict contains the results.
+    """
+    result = {}
+    # 1) Do the running average
+    result['running'] = running_average(data)
+    # 2) Obtain distributions:
+    result['distribution'] = histogram_and_avg(data, settings['bins'],
+                                               density=True)
+    # 3) Do the block error analysis:
+    result['blockerror'] = block_error_corr(data,
+                                            maxblock=settings['maxblock'],
+                                            blockskip=settings['blockskip'])
+    return result

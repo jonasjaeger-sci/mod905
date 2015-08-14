@@ -19,5 +19,5 @@ Modules:
 """
 from .analysis import running_average, block_error, block_error_corr
 from .histogram import histogram, match_all_histograms
-from .energy_analysis import analyse_energy
+from .energy_analysis import analyse_energies
 from .path_analysis import analyse_path_ensemble, match_probabilities
