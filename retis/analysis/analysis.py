@@ -181,9 +181,45 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
 
 
+def mean_square_displacement(data, ndt=None):
+    """
+    This method will calculate the mean square displacement for the given
+    data.
+
+    Parameters
+    ----------
+    data : numpy.array, 1D
+        This numpy.array contain the data as a function of time
+    ndt : int, optional
+        This parameter is the number of time origins. I.e. points up to
+        ndt will be used as time origins. If not specified the size of the
+        input data // 5 will be used.
+
+    Returns
+    -------
+    msd : numpy.array, 2D
+        First column is the mean squared displacement and the second column is
+        the corresponding standard deviation.
+
+    References
+    ----------
+    .. [1] MSD, "Mean Square Displacement",
+           http://www.www.www/source/to_method
+    """
+    length = data.size
+    if ndt is None:
+        ndt = length // 5
+    msd = []
+    for i in range(1, ndt):
+        delta = (data[i:] - data[:-i])**2
+        msd.append((delta.mean(), delta.std()))
+    return np.array(msd)
+
+
 def analyse_data(data, settings):
     """
-    This method will analyse data, specifically it will:
+    This method will analyse the given data and run some common analysis
+    procedures, specifically it will:
     1) Calculate a running average
     2) Obtain a histogram
     3) Run a block error analysis
@@ -197,7 +233,7 @@ def analyse_data(data, settings):
 
     Returns
     -------
-    out : dict
+    result : dict
         This dict contains the results.
     """
     result = {}
