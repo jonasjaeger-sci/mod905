@@ -336,6 +336,59 @@ def _mpl_line_gradient(series, outputfile, xlabel='Time', ylabel='Value',
     _mpl_savefig(fig, outputfile)
 
 
+def _mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
+                    title=None):
+    """
+    This method will plot time series data.
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, y-error, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    handles = []
+    labels = []
+    for seri in series:
+        try:
+            if not seri[3] is None:
+                handle, = axs.plot(seri[0], seri[1])
+                axs.fill_between(seri[0], seri[1] + seri[2],
+                                 seri[1] - seri[2],
+                                 facecolor=handle.get_color(), alpha=0.3)
+                handles.append(handle)
+                labels.append(seri[3])
+            else:
+                handle, = axs.plot(seri[0], seri[1])
+                axs.fill_between(seri[0], seri[1] + seri[2],
+                                 seri[1] - seri[2],
+                                 facecolor=handle.get_color(), alpha=0.3)
+        except IndexError:
+            handle, = axs.plot(seri[0], seri[1])
+            axs.fill_between(seri[0], seri[1] + seri[2],
+                             seri[1] - seri[2],
+                             facecolor=handle.get_color(), alpha=0.3)
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
+    _mpl_savefig(fig, outputfile)
+
+
 def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
     """
     This method will output all the figures from the results obtained
