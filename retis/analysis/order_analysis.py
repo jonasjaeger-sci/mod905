@@ -3,7 +3,7 @@
 This file contains methods for analysis of order parameter
 """
 from __future__ import absolute_import
-from .analysis import analyse_data
+from .analysis import analyse_data, mean_square_displacement
 
 
 __all__ = ['analyse_orderp']
@@ -43,5 +43,9 @@ def analyse_orderp(orderdata, settings):
         if i == 0:  # first column is just the time, skip it
             pass
         else:
-            results.append(analyse_data(data, settings))
+            result = analyse_data(data, settings)
+            if i == 1:  # assume that we want the MSD analysis here:
+                ndt = settings.get('maxordermsd')
+                result['msd'] = mean_square_displacement(data, ndt=ndt)
+            results.append(result)
     return results
