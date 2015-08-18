@@ -200,11 +200,6 @@ def mean_square_displacement(data, ndt=None):
     msd : numpy.array, 2D
         First column is the mean squared displacement and the second column is
         the corresponding standard deviation.
-
-    References
-    ----------
-    .. [1] MSD, "Mean Square Displacement",
-           http://www.www.www/source/to_method
     """
     length = data.size
     if ndt is None:
