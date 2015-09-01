@@ -14,6 +14,10 @@ Objects defined here:
 - EnergyFile: Writing/reading of energy data to a file.
 
 - OrderFile: Writing/reading of order parameter data
+
+Important functions:
+
+- txt_save_columns: Writing a simple column-based output using numpy.
 """
 import itertools
 import os
@@ -24,6 +28,35 @@ from .common import create_backup
 
 
 __all__ = ['TxtTable', 'PathEnsembleFile', 'EnergyFile', 'OrderFile']
+
+
+def txt_save_columns(outputfile, header, *variables):
+    """
+    This will save the different variables to a text file using
+    numpy's savetxt. Note that the variables are assumed to be numpy.arrays of
+    equal shape. Note that the outputfile may also be a zipped gz file.
+
+    Parameters
+    ----------
+    outputfile : string
+        This is the name of the output file to create.
+    header : string
+        String that will be written at the beginning of the file.
+    variables : tuple of numpy.arrays
+        These are the variables that will be save to the text file
+    """
+    msg = create_backup(outputfile)
+    if msg:
+        warnings.warn(msg)
+    nvar = len(variables)
+    mat = np.zeros((len(variables[0]), nvar))
+    for i, vari in enumerate(variables):
+        try:
+            mat[:, i] = vari
+        except ValueError:
+            msg = 'Could not align variables, skipping (writing zeros)'
+            warnings.warn(msg)
+    np.savetxt(outputfile, mat, header=header)
 
 
 def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):

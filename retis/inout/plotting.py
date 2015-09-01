@@ -1,22 +1,34 @@
 # -*- coding: utf-8 -*-
 """
 This file contains methods for creating plots.
+Specifically it defines colors, colorschemes, the reading of styles
+and some common plotting functions.
+
+References
+----------
+.. [1] The colorblind_10 color scheme,
+       https://jiffyclub.github.io/palettable/tableau/
+.. [2] The deep color scheme, from the seaborn project
+       http://stanford.edu/~mwaskom/software/seaborn/index.html
+.. [3] The husl color scheme,
+       http://www.husl-colors.org/
 """
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 import os
-
+import warnings
+from .common import create_backup
 
 __all__ = ['set_plotting_style']
-# These are color definitions that we will use
+
+
+# Custom named colors:
 _COLORS = {'almost_black': '#262626'}
-# next follows some hard-coded color-schemes. The default will be deep.
-# In case we need more colors, we will use one of the husl schemes. Here
-# they are hard-coded with different numbers of colors.
-# Refs:
-# colorblind_10 is from: https://jiffyclub.github.io/palettable/tableau/
-# deep is from the seaborn project
-# husl are from http://www.husl-colors.org/ as implemented in seaborn
+# Custom color-schemes. The default will be defined by the style file.
+# The husl schemes are suited when many different colors are needed. They
+# are hard-coded with different number of colors.
 _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                                    '#5F9ED1', '#C85200', '#898989', '#A2C8EC',
                                    '#FFBC79', '#CFCFCF'],
@@ -36,6 +48,7 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                              '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
+# Define default style file:
 _STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                            'pytismol.mplstyle'])
 
@@ -68,3 +81,172 @@ def set_plotting_style(style='pytismol'):
         else:  # assume this is just a file
             rcpar = mpl.rc_params_from_file(style)
             mpl.rcParams.update(rcpar)
+
+
+def mpl_savefig(fig, outputfile):
+    """
+    This is just a helper function to save matplotlib figures.
+    It will save figures so that old ones are not overwritten.
+
+    Parameters
+    ----------
+    fig : figure object from pyplot
+        This is the figure to be written to the file.
+        We simply use fig.savefig here.
+    outputfile : string
+        This is the name of the output file to create.
+
+    Note
+    ----
+    If desirable pyplot/plt can be exchanged for FigureCanvans, i.e.:
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+    In this method, we then need to do have `mpl_savefig(canvas, outputfile)`
+    and use canvas.print_figure(outputfile).
+    In the plotting functions the figure is then created with a
+    fig = Figure()
+    canvas = FigureCanvas(fig)
+    """
+    msg = create_backup(outputfile)
+    if msg:
+        warnings.warn(msg)
+    fig.savefig(outputfile)
+    plt.close(fig)  # free up memory
+
+
+def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
+                    title=None):
+    """
+    This method will plot time series data.
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    handles = []
+    labels = []
+    for seri in series:
+        try:
+            add_legend = seri[2] is not None
+        except IndexError:
+            add_legend = False
+        handle, = axs.plot(seri[0], seri[1])
+        if add_legend:
+            handles.append(handle)
+            labels.append(seri[2])
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
+    mpl_savefig(fig, outputfile)
+
+
+def mpl_line_gradient(series, outputfile, xlabel='Time', ylabel='Value',
+                      title=None):
+    """
+    This method will plot time series data and color the lines with
+    a gradient according to 'time'
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    handles = []
+    labels = []
+    for seri in series:
+        points = np.array([seri[0], seri[1]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        linec = LineCollection(segments, array=np.linspace(0, 1, len(seri[0])),
+                               norm=mpl.colors.Normalize(vmin=0, vmax=1))
+        try:
+            add_legend = seri[2] is not None
+        except IndexError:
+            add_legend = False
+        handle = axs.add_collection(linec)
+        if add_legend:
+            handles.append(handle)
+            labels.append(seri[2])
+    axs.autoscale_view()
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
+    mpl_savefig(fig, outputfile)
+
+
+def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
+                   title=None):
+    """
+    This method will plot time series data.
+
+    Parameters
+    ----------
+    series : list of tuples
+        `series[i]` is the tuple which will be plotted. It is assumed
+        to be on the form (x-values, y-values, y-error, legend)
+    outputfile : string
+        This is the name of the output file to create.
+    xlabel : string, optional
+        The label to use for the x-axis.
+    ylabel : string, optional
+        The label to use for the y-axis.
+    title : string, optional
+        Title to use for the plot.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    handles = []
+    labels = []
+    for seri in series:
+        try:
+            add_legend = seri[3] is not None
+        except IndexError:
+            add_legend = False
+        handle, = axs.plot(seri[0], seri[1])
+        axs.fill_between(seri[0], seri[1] + seri[2],
+                         seri[1] - seri[2],
+                         facecolor=handle.get_color(), alpha=0.3)
+        if add_legend:
+            handles.append(handle)
+            labels.append(seri[3])
+    if not xlabel is None:
+        axs.set_xlabel(xlabel)
+    if not ylabel is None:
+        axs.set_ylabel(ylabel)
+    if not title is None:
+        axs.set_title(title, fontsize='x-small', loc='left')
+    if len(labels) == len(handles) and len(labels) >= 1:
+        axs.legend(handles, labels, prop={'size': 'x-small'})
+    mpl_savefig(fig, outputfile)

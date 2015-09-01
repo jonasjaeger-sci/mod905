@@ -7,31 +7,23 @@ For the path analysis it can also be used to output over-all matched
 results.
 """
 from __future__ import absolute_import
-from .common import create_backup
 from matplotlib import pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.collections import LineCollection
 import warnings
 import numpy as np
 import os
 # pylint: disable=E0611
 from scipy.stats import gamma
 # pylint: enable=E0611
-
-# If desirable pyplot/plt can be exchanged for FigureCanvans, i.e.:
-# from matplotlib.figure import Figure
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# And in _mpl_savefig(canvas, outputfile) use
-# canvas.print_figure(outputfile)
-# In the _mpl_xxx plotting routines take out fig = plt.figure() and use
-# fig = Figure()
-# canvas = FigureCanvas(fig)
-
+from .plotting import (mpl_error_plot, mpl_line_gradient, mpl_savefig,
+                       mpl_simple_plot)
+from .common import create_backup
+from .txtinout import txt_save_columns
 
 __all__ = ['mpl_path_output', 'txt_path_output',
            'mpl_total_probability', 'txt_total_probability',
            'mpl_total_matched_probability', 'txt_total_matched_probability',
-           'mpl_energy_output', 'txt_energy_output']
+           'mpl_energy_output', 'txt_energy_output',
+           'mpl_orderp_output', 'txt_orderp_output']
 
 
 # hard-coded patters for path analysis output files:
@@ -64,26 +56,6 @@ _ORDERFILES = {'order': os.extsep.join(['orderp', '{}']),
                'msd': os.extsep.join(['ordermsd', '{}'])}
 
 
-def _mpl_savefig(fig, outputfile):
-    """
-    This is just a helper function to save matplotlib figures.
-    It will save figures so that old ones are not overwritten.
-
-    Parameters
-    ----------
-    fig : figure object from pyploy
-        This is the figure to be written to the file.
-        We simply use fig.savefig here.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
-    fig.savefig(outputfile)
-    plt.close(fig)  # free up memory
-
-
 def _mpl_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
     """
     This method will plot the crossing probability as a
@@ -110,7 +82,7 @@ def _mpl_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
     axs.set_ylabel('Probability')
     titl = 'Ensemble: {0}'.format(ensemble)
     axs.set_title(titl, fontsize='x-small', loc='left')
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def _mpl_p_running_average(prun, ensemble, outputfile):
@@ -135,7 +107,7 @@ def _mpl_p_running_average(prun, ensemble, outputfile):
     axs.set_ylabel('Probability (running average)')
     titl = 'Ensemble: {0}'.format(ensemble)
     axs.set_title(titl, fontsize='x-small', loc='left')
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def _mpl_block_error(error, title, outputfile):
@@ -163,7 +135,7 @@ def _mpl_block_error(error, title, outputfile):
     titl = '{0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
     titl = titl.format(title, error[4], error[6])
     axs.set_title(titl, fontsize='x-small', loc='left')
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def _mpl_length_histogram(hist1, hist2, ensemble, outputfile):
@@ -193,7 +165,7 @@ def _mpl_length_histogram(hist1, hist2, ensemble, outputfile):
     titl = 'Ensemble: {0}'.format(ensemble)
     axs.set_title(titl, fontsize='x-small', loc='left')
     axs.legend(prop={'size': 'x-small'})
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
@@ -237,156 +209,8 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     axs.legend(prop={'size': 'x-small'})
     axs_scale.set_title(titl, fontsize='x-small', loc='left')
     axs_scale.legend(prop={'size': 'x-small'})
-    _mpl_savefig(fig, outputfile)
-    _mpl_savefig(fig_scale, outputfile_scale)
-
-
-def _mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
-                     title=None):
-    """
-    This method will plot time series data.
-
-    Parameters
-    ----------
-    series : list of tuples
-        `series[i]` is the tuple which will be plotted. It is assumed
-        to be on the form (x-values, y-values, legend)
-    outputfile : string
-        This is the name of the output file to create.
-    xlabel : string, optional
-        The label to use for the x-axis.
-    ylabel : string, optional
-        The label to use for the y-axis.
-    title : string, optional
-        Title to use for the plot.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    handles = []
-    labels = []
-    for seri in series:
-        try:
-            if not seri[2] is None:
-                handle, = axs.plot(seri[0], seri[1])
-                handles.append(handle)
-                labels.append(seri[2])
-            else:
-                axs.plot(seri[0], seri[1])
-        except IndexError:
-            axs.plot(seri[0], seri[1])
-    if not xlabel is None:
-        axs.set_xlabel(xlabel)
-    if not ylabel is None:
-        axs.set_ylabel(ylabel)
-    if not title is None:
-        axs.set_title(title, fontsize='x-small', loc='left')
-    if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
-    _mpl_savefig(fig, outputfile)
-
-
-def _mpl_line_gradient(series, outputfile, xlabel='Time', ylabel='Value',
-                       title=None):
-    """
-    This method will plot time series data and color the lines with
-    a gradient according to 'time'
-
-    Parameters
-    ----------
-    series : list of tuples
-        `series[i]` is the tuple which will be plotted. It is assumed
-        to be on the form (x-values, y-values, legend)
-    outputfile : string
-        This is the name of the output file to create.
-    xlabel : string, optional
-        The label to use for the x-axis.
-    ylabel : string, optional
-        The label to use for the y-axis.
-    title : string, optional
-        Title to use for the plot.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    handles = []
-    labels = []
-    for seri in series:
-        points = np.array([seri[0], seri[1]]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        cnorm = colors.Normalize(vmin=0, vmax=1)
-        linec = LineCollection(segments, array=np.linspace(0, 1, len(seri[0])),
-                               norm=cnorm)
-        try:
-            if not seri[2] is None:
-                handle, = axs.add_collection(linec)
-                handles.append(handle)
-                labels.append(seri[2])
-            else:
-                axs.add_collection(linec)
-        except IndexError:
-            axs.add_collection(linec)
-    axs.autoscale_view()
-    if not xlabel is None:
-        axs.set_xlabel(xlabel)
-    if not ylabel is None:
-        axs.set_ylabel(ylabel)
-    if not title is None:
-        axs.set_title(title, fontsize='x-small', loc='left')
-    if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
-    _mpl_savefig(fig, outputfile)
-
-
-def _mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
-                    title=None):
-    """
-    This method will plot time series data.
-
-    Parameters
-    ----------
-    series : list of tuples
-        `series[i]` is the tuple which will be plotted. It is assumed
-        to be on the form (x-values, y-values, y-error, legend)
-    outputfile : string
-        This is the name of the output file to create.
-    xlabel : string, optional
-        The label to use for the x-axis.
-    ylabel : string, optional
-        The label to use for the y-axis.
-    title : string, optional
-        Title to use for the plot.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    handles = []
-    labels = []
-    for seri in series:
-        try:
-            if not seri[3] is None:
-                handle, = axs.plot(seri[0], seri[1])
-                axs.fill_between(seri[0], seri[1] + seri[2],
-                                 seri[1] - seri[2],
-                                 facecolor=handle.get_color(), alpha=0.3)
-                handles.append(handle)
-                labels.append(seri[3])
-            else:
-                handle, = axs.plot(seri[0], seri[1])
-                axs.fill_between(seri[0], seri[1] + seri[2],
-                                 seri[1] - seri[2],
-                                 facecolor=handle.get_color(), alpha=0.3)
-        except IndexError:
-            handle, = axs.plot(seri[0], seri[1])
-            axs.fill_between(seri[0], seri[1] + seri[2],
-                             seri[1] - seri[2],
-                             facecolor=handle.get_color(), alpha=0.3)
-    if not xlabel is None:
-        axs.set_xlabel(xlabel)
-    if not ylabel is None:
-        axs.set_ylabel(ylabel)
-    if not title is None:
-        axs.set_title(title, fontsize='x-small', loc='left')
-    if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
+    mpl_savefig(fig_scale, outputfile_scale)
 
 
 def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
@@ -459,7 +283,7 @@ def mpl_total_probability(path_ensembles, detect, results, matched,
     axs.set_ylabel('Probability')
     titl = 'Matched probabilities'
     axs.set_title(titl, fontsize='x-small', loc='left')
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def mpl_total_matched_probability(detect, matched, outputfile):
@@ -485,7 +309,7 @@ def mpl_total_matched_probability(detect, matched, outputfile):
     axs.set_ylabel('Probability')
     titl = 'Matched probability'
     axs.set_title(titl, fontsize='x-small', loc='left')
-    _mpl_savefig(fig, outputfile)
+    mpl_savefig(fig, outputfile)
 
 
 def mpl_energy_output(results, energies, simulation_settings=None,
@@ -524,23 +348,23 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     for key in ['pot', 'kin', 'tot', 'ham']:
         series.append((time, energies[key],
                        _ENERTITLE[key]))
-    _mpl_simple_plot(series, outfiles['energies'],
-                     xlabel='Time', ylabel='Energy', title=None)
+    mpl_simple_plot(series, outfiles['energies'],
+                    xlabel='Time', ylabel='Energy', title=None)
     # make running average plot of the energies as function of time
     series = []
     for key in ['pot', 'kin', 'tot', 'ham']:
         series.append((time, results[key]['running'], _ENERTITLE[key]))
-    _mpl_simple_plot(series, outfiles['run_energies'],
-                     xlabel='Time', ylabel='Energy', title=None)
+    mpl_simple_plot(series, outfiles['run_energies'],
+                    xlabel='Time', ylabel='Energy', title=None)
     # plot temperature
     series = [(time, energies['temp'], None)]
-    _mpl_simple_plot(series, outfiles['temperature'],
-                     xlabel='Time', ylabel='Temperature', title=None)
+    mpl_simple_plot(series, outfiles['temperature'],
+                    xlabel='Time', ylabel='Temperature', title=None)
     # and running average for temperature
     series = [(time, results['temp']['running'], None)]
-    _mpl_simple_plot(series, outfiles['run_temp'],
-                     xlabel='Time', ylabel='Temperature',
-                     title='Running average')
+    mpl_simple_plot(series, outfiles['run_temp'],
+                    xlabel='Time', ylabel='Temperature',
+                    title='Running average')
 
     # plot block-error results:
     outfile = _ENERFILES['block'].format('{}', out_format)
@@ -567,14 +391,14 @@ def mpl_energy_output(results, energies, simulation_settings=None,
             series.append((pos, gamma.pdf(pos, alp, loc=0, scale=scale),
                            'Boltzmann distribution'))
         outfiles['{}dist'.format(key)] = outfile.format(key)
-        _mpl_simple_plot(series, outfiles['{}dist'.format(key)],
-                         xlabel=None, ylabel=None, title=title)
+        mpl_simple_plot(series, outfiles['{}dist'.format(key)],
+                        xlabel=None, ylabel=None, title=title)
     return outfiles
 
 
 def mpl_orderp_output(results, orderdata, out_format='png'):
     """
-    Save the output from the order parameter analysis to text files.
+    Plot the output from the order parameter analysis using matplotlib.
 
     Parameters
     ----------
@@ -591,6 +415,15 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
     -------
     outfiles : dict
         The output files created by this method.
+
+    Note
+    ----
+    We are here only outputting results for the first order parameter.
+    I.e. other order parameters or velocities are not written here. This
+    will be changed when the structure of the output order parameter file
+    has been fixed. Also note that, if present, the first order parameter
+    will be plotted agains the second one - i.e. the second one will be
+    assumed to represent the velocity here.
     """
     outfiles = {}
     for key in _ORDERFILES:
@@ -598,12 +431,12 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
 
     time = orderdata['data'][0]
     series = [(time, orderdata['data'][1])]
-    _mpl_simple_plot(series, outfiles['order'],
-                     xlabel='Time', ylabel='Order parameter', title=None)
+    mpl_simple_plot(series, outfiles['order'],
+                    xlabel='Time', ylabel='Order parameter', title=None)
     # make running average plot of the energies as function of time
     series = [(time, results[0]['running'], 'Running average')]
-    _mpl_simple_plot(series, outfiles['run_order'],
-                     xlabel='Time', ylabel='Order parameter', title=None)
+    mpl_simple_plot(series, outfiles['run_order'],
+                    xlabel='Time', ylabel='Order parameter', title=None)
 
     # plot block-error results:
     _mpl_block_error(results[0]['blockerror'], 'Order parameter',
@@ -613,48 +446,25 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
     series = [(dist[1], dist[0])]
     title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
     title = title.format('Order parameter', dist[2][0], dist[2][1])
-    _mpl_simple_plot(series, outfiles['dist'],
-                     xlabel=None, ylabel=None, title=title)
+    mpl_simple_plot(series, outfiles['dist'],
+                    xlabel=None, ylabel=None, title=title)
 
     # also try a orderp vs ordervel plot:
     if len(orderdata['data']) >= 3:
         series = [(orderdata['data'][1], orderdata['data'][2])]
-        _mpl_line_gradient(series, outfiles['ordervel'],
-                           xlabel=r'$\lambda$', ylabel=r'$\dot{\lambda}$',
-                           title='Order parameter vs velocity')
+        mpl_line_gradient(series, outfiles['ordervel'],
+                          xlabel=r'$\lambda$', ylabel=r'$\dot{\lambda}$',
+                          title='Order parameter vs velocity')
+    # output msd if it was calculated:
+    if 'msd' in results[0]:
+        msd = results[0]['msd']
+        series = [(np.arange(len(msd)), msd[:, 0], msd[:, 1])]
+        mpl_error_plot(series, outfiles['msd'], xlabel='Time', ylabel='MSD',
+                       title=None)
     return outfiles
 
 
-def _txt_save_columns(outputfile, header, *variables):
-    """
-    This will save the different variables to a text file using
-    numpy's savetxt. Note that the variables are assumed to be numpy.arrays of
-    equal shape. Note that the outputfile may also be a zipped gz file.
-
-    Parameters
-    ----------
-    outputfile : string
-        This is the name of the output file to create.
-    header : string
-        String that will be written at the beginning of the file.
-    variables : tuple of numpy.arrays
-        These are the variables that will be save to the text file
-    """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
-    nvar = len(variables)
-    mat = np.zeros((len(variables[0]), nvar))
-    for i, vari in enumerate(variables):
-        try:
-            mat[:, i] = vari
-        except ValueError:
-            msg = 'Could not align variables, skipping (writing zeros)'
-            warnings.warn(msg)
-    np.savetxt(outputfile, mat, header=header)
-
-
-def _txt_block_error(outputfile, error, title):
+def _txt_block_error(outputfile, title, error):
     """
     This will write the output from the error analysis, to a text file.
 
@@ -662,15 +472,15 @@ def _txt_block_error(outputfile, error, title):
     ----------
     outputfile : string
         This is the name of the output file to create.
-    error : list
-        This is the result from the error analysis
     title : string
         This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
         'Kinetic energy', etc.
+    error : list
+        This is the result from the error analysis
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
-    _txt_save_columns(outputfile, header, error[0], error[3])
+    txt_save_columns(outputfile, header, error[0], error[3])
 
 
 def _txt_histogram(outputfile, title, *histograms):
@@ -694,7 +504,7 @@ def _txt_histogram(outputfile, title, *histograms):
         data.append(hist[1])
         data.append(hist[0])
     header = ', '.join(header)
-    _txt_save_columns(outputfile, header, *data)
+    txt_save_columns(outputfile, header, *data)
     # *data is used here since we want to be flexible and write any number
     # of histograms to the file.
 
@@ -730,7 +540,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
         except KeyError:
             continue
     header = ', '.join(header)
-    _txt_save_columns(outputfile, header, *data)
+    txt_save_columns(outputfile, header, *data)
     # *data is used here since empty histograms will not be
     # written to the output file.
 
@@ -756,15 +566,15 @@ def txt_path_output(path_ensemble, results, idetect, out_format='txt.gz'):
     for key in _PATHFILES:
         outfiles[key] = _PATHFILES[key].format(ens, out_format)
     # 1) Output pcross vs lambda:
-    _txt_save_columns(outfiles['pcross'],
-                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
-                      results['pcross'][0], results['pcross'][1])
+    txt_save_columns(outfiles['pcross'],
+                     'Ensemble: {}, idetect: {}'.format(ens, idetect),
+                     results['pcross'][0], results['pcross'][1])
     # 2) Output the running average of p:
-    _txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
-                      results['prun'])
+    txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
+                     results['prun'])
     # 3) Block error results:
-    _txt_block_error(outfiles['perror'], results['blockerror'],
-                     'Ensemble: {0}'.format(ens))
+    _txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
+                     results['blockerror'])
     # 3) Length histograms
     _txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
                    results['pathlength'][0], results['pathlength'][1])
@@ -820,7 +630,7 @@ def txt_total_matched_probability(detect, matched, outputfile):
     header = 'Total matched probability. Interfaces: {}'
     interf = ' , '.join([str(idet) for idet in detect])
     header = header.format(interf)
-    _txt_save_columns(outputfile, header, matched[:, 0], matched[:, 1])
+    txt_save_columns(outputfile, header, matched[:, 0], matched[:, 1])
 
 
 def txt_energy_output(results, energies, out_format='txt.gz'):
@@ -850,16 +660,16 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
     time = energies['time']
     # 1) Store the running average:
     header = 'Running average of energy data'
-    _txt_save_columns(outfiles['run_energies'], header, time,
-                      results['pot']['running'], results['kin']['running'],
-                      results['tot']['running'], results['ham']['running'],
-                      results['temp']['running'], results['ext']['running'])
+    txt_save_columns(outfiles['run_energies'], header, time,
+                     results['pot']['running'], results['kin']['running'],
+                     results['tot']['running'], results['ham']['running'],
+                     results['temp']['running'], results['ext']['running'])
     # 2) Save block error data:
     outfile = _ENERFILES['block'].format('{}', out_format)
     for key in ['pot', 'kin', 'tot', 'temp']:
         outfiles['{}block'.format(key)] = outfile.format(key)
-        _txt_block_error(outfiles['{}block'.format(key)],
-                         results[key]['blockerror'], _ENERTITLE[key])
+        _txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
+                         results[key]['blockerror'])
     # 3) Save histograms:
     outfile = _ENERFILES['dist'].format('{}', out_format)
     for key in ['pot', 'kin', 'tot', 'temp']:
@@ -867,4 +677,58 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
         _txt_histogram(outfiles['{}dist'.format(key)],
                        r'Histogram for {}'.format(_ENERTITLE[key]),
                        results[key]['distribution'])
+    return outfiles
+
+
+def txt_orderp_output(results, orderdata, out_format='txt.gz'):
+    """
+    Save the output from the order parameter analysis to text files.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        order parameter.
+    orderdata : dict of numpy.arrays
+        This is the raw-data for the order parameter analysis
+    out_format : string, optional
+        This is the desired format to use for the graphs. Supported are
+        png, pdf, svg, etc. (see the matplotlib documentation).
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+
+    Note
+    ----
+    We are here only outputting results for the first order parameter.
+    I.e. other order parameters or velocities are not written here. This
+    will be changed when the structure of the output order parameter file
+    has been fixed. Also note that, if present, the first order parameter
+    will be plotted agains the second one - i.e. the second one will be
+    assumed to represent the velocity here.
+    """
+    outfiles = {}
+    for key in _ORDERFILES:
+        outfiles[key] = _ORDERFILES[key].format(out_format)
+
+    time = orderdata['data'][0]
+    # output running average:
+    txt_save_columns(outfiles['run_order'],
+                     'Time, running average',
+                     time, results[0]['running'])
+
+    # plot block-error results:
+    _txt_block_error(outfiles['block'], 'Block error for order param',
+                     results[0]['blockerror'])
+    # plot distributions
+    _txt_histogram(outfiles['dist'], 'Order parameter',
+                   results[0]['distribution'])
+    # output msd if it was calculated:
+    if 'msd' in results[0]:
+        msd = results[0]['msd']
+        txt_save_columns(outfiles['msd'], 'Time MSD Std',
+                         time[:len(msd)], msd[:, 0], msd[:, 1])
+        #TODO: time should here be multiplied with the correct dt
     return outfiles
