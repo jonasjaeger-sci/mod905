@@ -471,6 +471,9 @@ class PathEnsemble(object):
         The number of paths stored.
     nacc : int
         The number of accepted paths stored.
+    nshoot : int
+        The number of accepted paths that were generated through a
+        shooting move.
     maxpath : int
         The maximum number of paths to store.
     """
@@ -490,6 +493,7 @@ class PathEnsemble(object):
         self.interfaces = tuple(interfaces)  # Should not change interfaces
         self.npath = 0
         self.nacc = 0
+        self.nshoot = 0
         self.paths = []
         self.maxpath = maxpath
 
@@ -503,6 +507,7 @@ class PathEnsemble(object):
         self.paths = []
         self.npath = 0
         self.nacc = 0
+        self.nshoot = 0
 
     def add_path_data(self, path, status, cycle=0):
         """
@@ -526,6 +531,8 @@ class PathEnsemble(object):
             path_data = path.get_path_data(status, self.interfaces)
             if path_data['status'] == 'ACC':
                 self.nacc += 1
+                if path_data['generated'][0] == 'sh':
+                    self.nshoot += 1
         path_data['cycle'] = cycle  # also store cycle number
         self.paths.append(path_data)  # store the new data
         self.npath += 1
