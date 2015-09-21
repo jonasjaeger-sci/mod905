@@ -44,11 +44,11 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
         max-length set in tis.
     """
     if rgen.rand() < tis_settings['freq']:
-        #print('Reversing path')
+        # print('Reversing path')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings)
     else:
-        #print('Shooting')
+        # print('Shooting')
         accept, new_path, status = _shoot(rgen, system, path, order_function,
                                           interfaces, integrator, tis_settings)
     return accept, new_path, status
@@ -128,7 +128,8 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         Status of the path, this is one of the strings defined in
         retis.core.path._STATUS
     """
-    accept, trial_path, status = False, None, None  # return values
+    accept, trial_path = False, Path()  # return values
+    # trial_path is just an empty path for now
     # select the shooting point from path at random.
     # (Do not include end-points)
     idx = rgen.random_integers(1, len(path.path) - 2)
@@ -136,6 +137,9 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.force()  # update forces
+    # store info about this point, just in case we have to return
+    # before completing a full new path:
+    trial_path.generated = ('sh', orderp, idx, 0)
     # kick the timeslice:
     dke = _kick_timeslice(rgen, system, aimless=tis_settings['aimless'],
                           momentum=False)
@@ -145,18 +149,16 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp < right:  # Kicked outside of boundaries!'
-        accept, status = False, 'KOB'
-        # Note trial_path is here just None
-        return accept, trial_path, status
+        accept, trial_path.status = False, 'KOB'  # just to be explicit
+        return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
     if not tis_settings['aimless']:
         accept_kick = metropolis_accept_reject(rgen, system, dke)
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
-            accept, status = False, 'MCR'
-            # Note trial_path is here just None
-            return accept, trial_path, status
+            accept, trial_path.status = False, 'MCR'  # just to be explicit
+            return accept, trial_path, trial_path.status
     # ok: kick was either aimless or it was accepted by Metropolis
     # we should now generate trajectories, but first check how long
     # it should be:
@@ -178,17 +180,16 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     if not success_back:
         # something went wrong, most probably the path length was exceeded
         accept = False
-        status = 'BTL'  # backward trajectory too long (maxlenb "too small")
+        trial_path.status = 'BTL'
+        # BTL is backward trajectory too long (maxlenb "too small")
         if len(path_back.path) == tis_settings['maxlength'] - 1:
-            status = 'BTX'  # exceeds maximum memory length
-        # Note trial_path is here just None
-        return accept, trial_path, status
+            trial_path.status = 'BTX'  # exceeds maximum memory length
+        return accept, trial_path, trial_path.status
     # backward seems ok so far, check if the ending point is correct:
     if path_back.get_end_point(left, right) != tis_settings['start_cond']:
         # backward trajectory end at wrong interface
-        accept, status = False, 'BWI'
-        # Note trial_path is here just None
-        return accept, trial_path, status
+        accept, trial_path.status = False, 'BWI'
+        return accept, trial_path, trial_path.status
     # everything seems fine, propagate forward
     maxlenf = maxlen - len(path_back.path) + 1
     path_forw, success_forw, _ = _propagate(system,
@@ -204,25 +205,22 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # and ask later:
     trial_path = paste_paths(path_back, path_forw, overlap=True,
                              maxlen=tis_settings['maxlength'])
-    # here we should also store information about the shooting point:
+    # Also update information about the shooting:
     trial_path.generated = ('sh', orderp, idx, len(path_back.path) - 1)
     if not success_forw:
         accept = False
-        status = 'FTL'
+        trial_path.status = 'FTL'
         if len(trial_path.path) == tis_settings['maxlength']:
-            status = 'FTX'  # exceeds "memory"
-        # trial_path is now different from None, set status:
-        trial_path.status = status
-        return accept, trial_path, status
+            trial_path.status = 'FTX'  # exceeds "memory"
+        return accept, trial_path, trial_path.status
     # we have made it so far, check if we cross middle interface
     # finally, check if middle interface was crossed:
     _, _, _, cross = trial_path.check_interfaces(interfaces)
     if not cross[1]:  # not crossed middle
-        accept, status = False, 'NCR'
+        accept, trial_path.status = False, 'NCR'
     else:
-        accept, status = True, 'ACC'
-    trial_path.status = status
-    return accept, trial_path, status
+        accept, trial_path.status = True, 'ACC'
+    return accept, trial_path, trial_path.status
 
 
 def generate_initial_path(system, interfaces, integrator, rgen,
@@ -299,12 +297,12 @@ def generate_initial_path(system, interfaces, integrator, rgen,
         return initial_path
     # Now we do the other cases:
     if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
-        #print('Initial path is in the wrong direction: Reversing it!')
+        # print('Initial path is in the wrong direction: Reversing it!')
         initial_path = reverse_path(initial_path)
         initial_path.status = 'ACC'
     elif end == start:  # case 2
-        #print('Initial path start & end at wrong interface')
-        #print('Running TIS to fix initial path:')
+        # print('Initial path start & end at wrong interface')
+        # print('Running TIS to fix initial path:')
         initial_path = _fix_path_by_tis(system, interfaces, integrator,
                                         rgen, order_function,
                                         initial_path, tis_settings)
