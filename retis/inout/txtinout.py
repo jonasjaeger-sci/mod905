@@ -127,7 +127,26 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
         return fmt_str, row_str
 
 
-def _read_some_lines(filename, line_parser=None):
+def _simple_line_parser(line):
+    """
+    This is just a simple line parser. It will simply return floats from
+    columns from a file. It is here created as a def to avoid assigning
+    using a lambda expression (see pep8).
+
+    Parameters
+    ----------
+    line : string
+        This string represents a line that we will parse.
+
+    Returns
+    -------
+    out : list
+        This list contains a float for each item in line.split().
+    """
+    return [float(col) for col in line.split()]
+
+
+def _read_some_lines(filename, line_parser=_simple_line_parser):
     """
     This is a helper function, it will open a file and
     try to read as many lines as possible. The argument line_parser
@@ -151,16 +170,13 @@ def _read_some_lines(filename, line_parser=None):
     """
     ncol = -1  # The number of columns
     new_block = None
-    if line_parser is None:
-        # create a default "parser"
-        line_parser = lambda line: [float(col) for col in line.split()]
     with open(filename, 'r') as fileh:
         for line in fileh:
             stripline = line.strip()
             if stripline[0] == '#':
                 # this is a comment = a new block follows
                 # store the current block:
-                if not new_block is None:
+                if new_block is not None:
                     yield new_block
                 new_block = {'comment': stripline, 'data': []}
                 ncol = -1
@@ -175,7 +191,7 @@ def _read_some_lines(filename, line_parser=None):
                     new_block['data'].append(linedata)
                 else:
                     break
-    if not new_block is None:
+    if new_block is not None:
         yield new_block
 
 
@@ -462,7 +478,7 @@ class FileWriter(object):
         crashes. It is used here as it's not so nice to add a
         with statement to the main script running the simulation.
         """
-        if not self.fileh is None and not self.fileh.closed:
+        if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()
 
 
