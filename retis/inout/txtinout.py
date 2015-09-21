@@ -29,6 +29,13 @@ from .common import create_backup
 
 __all__ = ['TxtTable', 'PathEnsembleFile', 'EnergyFile', 'OrderFile']
 
+# define a format used for the path files. Here it's not really needed,
+# we are going to assume that these files will be comma separated anyway.
+# It is included to be compatible with the previous fortran version.
+PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
+            '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
+            '{13:>16.9e} {14:>7d} {15:7d}')
+
 
 def txt_save_columns(outputfile, header, *variables):
     """
@@ -538,6 +545,52 @@ def _line_to_path_data(line):
     return path_info
 
 
+def _path_to_line_data(path, cycle, acc, shoot):
+    """
+    This is a helper function to convert path data from a PathEnsemble object
+    to a simple string which can be used for storing path data. This function
+    is the "inverse" of the ``_line_to_path_data`` function.
+
+    Parameters
+    ----------
+    path : dict
+        This is the simplified path description as contained in the
+        PathEnsemble.path list.
+    cycle : integer
+        This is the current cycle number.
+    acc : integer
+        This is a counter for the number of accepted paths.
+    shoot : integer
+        This is a counter for the number of shooting moved.
+
+    Returns
+    -------
+    out : string
+        A simple string, column separated, with the path information.
+    """
+    interface_list = []
+    for val in path['interface']:
+        if val is None:
+            interface_list.append('*')
+        else:
+            interface_list.append(val)
+    out = PATH_FMT.format(cycle, acc, shoot,
+                          interface_list[0],
+                          interface_list[1],
+                          interface_list[2],
+                          path['length'],
+                          path['status'],
+                          path['generated'][0],
+                          path['ordermin'][0],
+                          path['ordermax'][0],
+                          path['ordermin'][1],
+                          path['ordermax'][1],
+                          path['generated'][1],
+                          path['generated'][2],
+                          path['generated'][3])
+    return out
+
+
 class PathEnsembleFile(FileWriter):
     """
     PathEnsembleFile(FileWriter)
@@ -633,6 +686,32 @@ class PathEnsembleFile(FileWriter):
             msg = 'Error: {}'.format(error)
             warnings.warn(msg)
             raise
+
+    def write(self, path_ensemble, cycle=0, path=None):
+        """
+        This method will write a given path from a path ensemble to the file.
+        If the path is not explicitly given, the latest path from the path
+        ensemble will be written.
+
+        Parameters
+        ----------
+        path_ensemble : object of type PathEnsemble
+            We will write the path defined by PathEnsemble.paths[-1]
+        path : object of type Path
+            This is the path to write to the file.
+        cycle : integer
+            This is the current cycle number. Default is zero.
+        """
+        if path is None:
+            path_dict = path_ensemble.paths[-1]
+        else:
+            path_dict = path.get_path_data(path.status,
+                                           path_ensemble.interfaces)
+        towrite = _path_to_line_data(path_dict,
+                                     cycle,
+                                     path_ensemble.nacc,
+                                     path_ensemble.nshoot)
+        return self.write_line(towrite)
 
     def __str__(self):
         """
