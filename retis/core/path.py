@@ -426,6 +426,21 @@ class Path(object):
         return new_path
 
     def __iadd__(self, other):
+        """
+        This function defines how we add path data to a path from
+        another path, i.e.: self += other.
+        This will simply append the phasepoints from other.
+
+        Parameters
+        ----------
+        other : object of type Path
+            The object to add path data from.
+
+        Returns
+        -------
+        self : object of type Path
+            The updated path object.
+        """
         for phasepoint in other.path:
             app = self.append(np.copy(phasepoint[0]),
                               np.copy(phasepoint[1]),
