@@ -68,7 +68,7 @@ def create_traj_writer(settings, system):
     elif settings['type'] == 'gro':
         trajwriter = WriteGromacs(settings['file'],
                                   system.box,
-                                  system.units)
+                                  units=system.units)
     else:
         trajwriter = None
     return trajwriter
