@@ -81,7 +81,7 @@ def _time_reversal(path, interfaces, tis_settings):
     new_path = reverse_path(path)
     start, _, _, _ = new_path.check_interfaces(interfaces)
     # explicitly set how this was generated
-    new_path.generated = ('tr', None)
+    new_path.generated = ('tr', None, 0, 0)
     if start == tis_settings['start_cond']:
         accept = True
         status = 'ACC'
