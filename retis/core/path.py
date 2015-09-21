@@ -363,8 +363,17 @@ class Path(object):
         path_info['generated'] = self.generated
         path_info['status'] = status
         path_info['length'] = len(self.path)
-        path_info['ordermax'] = tuple(self.ordermax)
-        path_info['ordermin'] = tuple(self.ordermin)
+
+        if self.ordermax is not None:
+            path_info['ordermax'] = tuple(self.ordermax)
+        else:
+            path_info['ordermax'] = (0.0, 0)
+
+        if self.ordermin is not None:
+            path_info['ordermin'] = tuple(self.ordermin)
+        else:
+            path_info['ordermin'] = (0.0, 0)
+
         start, end, middle, _ = self.check_interfaces(interfaces)
         path_info['interface'] = (start, middle, end)
         return path_info
@@ -526,7 +535,7 @@ class PathEnsemble(object):
             pass
         if path is None:
             # just store minimal info
-            path_data = {'status': status, 'generated': (None, 0, 0, 0)}
+            path_data = {'status': status, 'generated': ('', 0, 0, 0)}
         else:
             path_data = path.get_path_data(status, self.interfaces)
             if path_data['status'] == 'ACC':
