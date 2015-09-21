@@ -149,6 +149,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp < right:  # Kicked outside of boundaries!'
+        trial_path.append(pos, vel, orderp)  # just add the shooting point
         accept, trial_path.status = False, 'KOB'  # just to be explicit
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
@@ -157,6 +158,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
+            trial_path.append(pos, vel, orderp)  # just add the shooting point
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
     # ok: kick was either aimless or it was accepted by Metropolis
@@ -179,8 +181,8 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     path_back.time_origin = time_shoot
     if not success_back:
         # something went wrong, most probably the path length was exceeded
-        accept = False
-        trial_path.status = 'BTL'
+        accept, trial_path.status = False, 'BTL'
+        trial_path += path_back  # just store path for analysis
         # BTL is backward trajectory too long (maxlenb "too small")
         if len(path_back.path) == tis_settings['maxlength'] - 1:
             trial_path.status = 'BTX'  # exceeds maximum memory length
@@ -189,6 +191,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     if path_back.get_end_point(left, right) != tis_settings['start_cond']:
         # backward trajectory end at wrong interface
         accept, trial_path.status = False, 'BWI'
+        trial_path += path_back  # just store path for analysis
         return accept, trial_path, trial_path.status
     # everything seems fine, propagate forward
     maxlenf = maxlen - len(path_back.path) + 1
@@ -208,8 +211,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # Also update information about the shooting:
     trial_path.generated = ('sh', orderp, idx, len(path_back.path) - 1)
     if not success_forw:
-        accept = False
-        trial_path.status = 'FTL'
+        accept, trial_path.status = False, 'FTL'
         if len(trial_path.path) == tis_settings['maxlength']:
             trial_path.status = 'FTX'  # exceeds "memory"
         return accept, trial_path, trial_path.status
