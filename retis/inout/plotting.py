@@ -53,6 +53,36 @@ _STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                            'pytismol.mplstyle'])
 
 
+def _read_style_file(filename):
+    """
+    This function is just intended for old versions of matplotlib
+    where we have to read parameters and set them ourselves.
+
+    Parameters
+    ----------
+    filename : string
+        This is the matplotlib rc file to open.
+
+    Returns
+    -------
+    N/A but it modifies mpl.rcParams
+    """
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            linesc = lines.strip().split('#')[0]
+            loc = linesc.find(':')
+            if loc != -1:
+                key = linesc[:loc].strip()
+                value = linesc[loc+1:].strip()
+                if key.find('color') != -1:
+                    value = '#{}'.format(value)
+                try:
+                    mpl.rcParams[key] = value
+                except KeyError:
+                    msg = 'Could not set {}. Please update matplotlib'
+                    warnings.warn(msg.format(key))
+
+
 def set_plotting_style(style='pytismol'):
     """
     This will set up the plotting according to some given style.
@@ -73,8 +103,7 @@ def set_plotting_style(style='pytismol'):
     if style == 'pytismol':
         style = _STYLE_FILE
     if mpl.__version__ < '1.4.0':  # default to loading from file
-        rcpar = mpl.rc_params_from_file(style)
-        mpl.rcParams.update(rcpar)
+        _read_style_file(style)
     else:
         if style in plt.style.available:
             plt.style.use(style)
