@@ -38,7 +38,7 @@ def create_integrator(settings, simulation_type):
             warnings.warn(msg)
             return None
     else:
-        name = settings['type'].lower()
+        name = settings['name'].lower()
         # Avoiding getatttr on purpose:
         if name == 'velocityverlet':
             return VelocityVerlet(settings['timestep'])
@@ -50,7 +50,7 @@ def create_integrator(settings, simulation_type):
                             settings['rgen'],
                             high_friction=settings['high-friction'])
         else:
-            msg = 'Unknown integrator {}'.format(settings['type'])
+            msg = 'Unknown integrator {}'.format(settings['name'])
             warnings.warn(msg)
             return None
 
