@@ -424,11 +424,13 @@ class Langevin(Integrator):
             The system to integrate/act on. Assumed to have a particle list
             in system.particles.
         """
+        system.force()  # update forces
         particles = system.particles
         rands = self.rgen.normal(loc=0.0, scale=self.param_high['sigma'],
                                  size=particles.vel.shape)
         particles.pos += self.param_high['bddt'] * particles.force + rands
         particles.vel = rands
+        system.potential()
         return None
 
     def integration_step_inertia(self, system):
@@ -459,13 +461,15 @@ class Langevin(Integrator):
                     pos_rand[i] = randxv[:, 0]
                     vel_rand[i] = randxv[:, 1]
 
-        particles.pos += self.param_iner['a1'] * particles.vel +\
-                         self.param_iner['a2'] * particles.force + pos_rand
+        particles.pos += (self.param_iner['a1'] * particles.vel +
+                          self.param_iner['a2'] * particles.force + pos_rand)
 
-        vel2 = self.param_iner['c0'] * particles.vel +\
-               self.param_iner['b1'] * particles.force + vel_rand
+        vel2 = (self.param_iner['c0'] * particles.vel +
+                self.param_iner['b1'] * particles.force + vel_rand)
 
         system.force()  # update forces
 
         particles.vel = vel2 + self.param_iner['b2'] * particles.force
+
+        system.potential()
         return None
