@@ -31,7 +31,7 @@ def _check_settings(settings, required):
     """
     result = True
     for setting in required:
-        if not setting in settings:
+        if setting not in settings:
             warnings.warn('Setting `{}` not found!'.format(setting))
             result = False
     return result
@@ -355,7 +355,7 @@ class Simulation(object):
         out : dict
             This dict contains the results from the simulation
         """
-        # do a initial yeld, this is just to output the initial
+        # do a initial yield, this is just to output the initial
         # state before we do any steps:
         results = {'cycle': self.cycle}
         for task in self.task:
@@ -494,22 +494,3 @@ class SimulationNVE(Simulation):
         self.add_task(task_integrate)
         # add calculation task:
         self.add_task(task_thermo)
-
-    def run_simulation(self):
-        """
-        This will run the simulation. It will basically loop over
-        self.run() and do some additional output relevant for NVE
-        simulations.
-
-        Yields
-        ------
-        out : dict
-            The result from each step as given by self.run()
-        """
-        for result in self.run():
-            if 'thermo' in result:
-                thermo = result['thermo'].copy()
-                thermo.update(result['cycle'])
-                yield thermo
-            else:
-                yield result['cycle']

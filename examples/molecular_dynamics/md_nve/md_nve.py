@@ -13,14 +13,17 @@ from retis.inout import (get_predefined_table, create_traj_writer,
                          FileWriter)
 from retis.tools import latticefcc
 import numpy as np
-
+# for plotting:
+from matplotlib import pyplot as plt
+from matplotlib import gridspec as gridspec
+from retis.inout import set_plotting_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 # set up a lattice and create a box
 lattice, size = latticefcc(density=0.9, nrx=3, nry=3, nrz=3)
 box = Box(size, periodic=[True, True, True])
-ljsystem = System(temperature=2.0, units='lj', box=box)  # create system and box
+ljsystem = System(temperature=2.0, units='lj', box=box)
 ljsystem.forcefield = ForceField(potential=[POTENTIAL],
                                  params=[LJPARAMETERS])
 for pos in lattice:
@@ -28,8 +31,10 @@ for pos in lattice:
 # adjust DOF since we are in "NVEMG" with periodic boundaries
 ljsystem.adjust_dof([1, 1, 1])
 ljsystem.generate_velocities(RandomGenerator(seed=0), momentum=True)
-print('Created fcc grid with {} atoms.'.format(ljsystem.particles.npart))
-print('Generated temperatures with average: {}'.format(ljsystem.calculate_temperature()))
+msg = 'Created fcc grid with {} atoms.'
+print(msg.format(ljsystem.particles.npart))
+msg = 'Generated temperatures with average: {}'
+print(msg.format(ljsystem.calculate_temperature()))
 
 # set up simulation:
 settings = {'system': ljsystem,
@@ -39,7 +44,8 @@ settings = {'system': ljsystem,
 simulation_nve = create_simulation(settings, simulation_type='NVE')
 
 # set up output:
-traj_writer = create_traj_writer({'type':'gro', 'file': 'traj.gro'}, ljsystem)
+traj_writer = create_traj_writer({'type': 'gro', 'file': 'traj.gro'},
+                                 ljsystem)
 table = get_predefined_table('energies')
 thermo_file = FileWriter('thermo.txt', 'table')
 
@@ -48,21 +54,19 @@ thermo_file.write_line(table.get_header())
 print(table.get_header())
 store_results = []
 # run the simulation :-)
-for result in simulation_nve.run_simulation():
-    step = result['stepno']
+for result in simulation_nve.run():
+    step = result['cycle']['stepno']
+    result['thermo']['stepno'] = step
     if step % 1 == 0:
-        thermo_file.write_line(table(result))
-        store_results.append(result)
+        thermo_file.write_line(table(result['thermo']))
+        store_results.append(result['thermo'])
     if step % 5 == 0:
         traj_writer.write_system(ljsystem,
                                  header='NVE, step: {}'.format(step))
     if step % 10 == 0:
-        print(table(result))
+        print(table(result['thermo']))
 
 # as an example, do some plotting:
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
-from retis.inout import set_plotting_style
 set_plotting_style()  # load pytismol style
 
 step = [res['stepno'] for res in store_results]
