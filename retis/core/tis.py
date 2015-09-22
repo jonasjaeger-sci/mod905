@@ -295,6 +295,7 @@ def generate_initial_path(system, interfaces, integrator, rgen,
     # 3) We can start at wrong interface and end and the starting condition
     # we just have to reverse the path then.
     if start == tis_settings['start_cond']:  # case 0 and 1
+        initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
         return initial_path
     # Now we do the other cases:
@@ -492,8 +493,9 @@ def _propagate(system, integrator, order_function, interfaces,
 def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
                      initial_path, tis_settings):
     """
-    This method fix a path that starts and ends at the wrong interfaces.
-    This is used in connection with the initialization.
+    This method will fix a path that starts and ends at the wrong interfaces.
+    The fix is performed by makeing TIS moves and this method is intended
+    to be used in a initialization.
 
     Parameters
     ----------
