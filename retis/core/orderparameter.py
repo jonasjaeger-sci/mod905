@@ -110,8 +110,24 @@ class OrderParameter(object):
 
 class OrderParameterPosition(OrderParameter):
     """
+    OrderParameterPosition(OrderParameter)
+
     This class defines a very simple order parameter which is just
     the position of a given particle.
+
+    Attributes
+    ----------
+    name : string
+        A human readable name for the order parameter
+    index : integer
+        This is the index of the atom which will be used, i.e.
+        system.particles.pos[index] will be used.
+    dim : integer
+        This is the dimension of the coordinate to use.
+        0, 1 or 2 for 'x', 'y' or 'z'.
+    periodic : boolean
+        This determines if periodic boundaries should be applied to
+        the position or not.
     """
     def __init__(self, name, index, dim='x', periodic=False):
         """
@@ -192,11 +208,23 @@ class OrderParameterPosition(OrderParameter):
 
 class OrderParameterParse(OrderParameter):
     """
+    OrderParameterParse(OrderParameter)
+
     This class defines a simple order parameter that is
     parsed from a text string given by the user. The reason
     for putting this into a object rather than as a functionality
     to the OrderParameter function is just to limit the possibility
     of parsing to one object only.
+
+    Attributes
+    ----------
+    name : string
+        Human readable name for the order parameter.
+    orderparser : object of type StringFunctionParser
+        This is used for parsing a string to a order parameter.
+    ordervelparser : object of type StringFunctionParser
+        This is used for parsing a string to a velocity for the order
+        parameter.
     """
     def __init__(self, name, orderstr, ordervelstr):
         """
@@ -323,19 +351,19 @@ class StringFunctionParser(object):
         args : string
             These are the arguments that should be passed to function.
         """
-        #print('Calling with:',function, args)
+        # print('Calling with:',function, args)
         xyz = {'x': 0, 'y': 1, 'z': 2}
         particles = self.system.particles
         retval = None
         if function[:8] == 'distance':
-            #print('Calculate dist between particles {} and {}'.format(i, j))
+            # print('Calculate dist between particles {} and {}'.format(i, j))
             i, j = int(args[0]), int(args[1])
             dist = particles.pos[i] - particles.pos[j]
             if function[-4:] == '_pbc':
                 dist = self.system.box.pbc_dist_coordinate(dist)
             retval = dist
         elif function[:3] == 'pbc':
-            #print('Apply pbc {} to: {}'.format(function,args))
+            # print('Apply pbc {} to: {}'.format(function,args))
             dim = xyz[function[-1]]
             retval = self.system.box.pbc_coordinate_dim(args, dim)
         else:
