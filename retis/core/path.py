@@ -119,6 +119,57 @@ def reverse_path(path, order_func=None):
     return new_path
 
 
+def check_crossing(cycle, system, order_function, interfaces,
+                   leftside_prev=None):
+    """
+    This method will check if we have crossed an interface during the
+    last step. If will use a variable to store the previous positions
+    with respect to the interfaces and check if interfaces were crossed
+    here.
+
+    Parameters
+    ----------
+    cycle : int
+        This is the current simulation cycle number.
+    system : object of type retis.core.System
+        This is the system which defines the phase point we are currently
+        investigating
+    order_function : function or object of type order parameter
+        Order parameter objects are defined in ``orderparameter.py``.
+        ``order_function`` is assumed to be a function accepting
+        ``system`` as a parameter and returning at least two scalars.
+    interfaces : list of floats
+        These are the interfaces to check.
+    leftside_prev : list of booleans
+        These are used to store the previous positions with respect
+        to the interfaces.
+
+    Returns
+    -------
+    leftside_curr : list of booleans
+        These are the updated positions with respect to the interfaces.
+    cross : list of tuples
+        If a certain interface is crossed, a tuple will be added to this
+        list. The tuple is of form (cycle number, interface number, direction)
+        where direction is '-' for a crossing in the negative direction and
+        '+' for a crossing in the positive direction.
+    """
+    orderp, _ = order_function(system)
+    cross = []
+    if leftside_prev is None:
+        leftside_curr = [orderp < interf for interf in interfaces]
+    else:
+        leftside_curr = [i for i in leftside_prev]
+        for i, (left, interf) in enumerate(zip(leftside_prev, interfaces)):
+            if left and orderp > interf:
+                leftside_curr[i] = False
+                cross.append((cycle, i, '+'))
+            elif not left and orderp < interf:
+                leftside_curr[i] = True
+                cross.append((cycle, i, '-'))
+    return leftside_curr, cross
+
+
 class Path(object):
     """
     Path(object)
