@@ -7,6 +7,8 @@ import inspect
 import warnings
 from retis.core.particlefunctions import calculate_thermo
 from retis.core.integrators import create_integrator
+from retis.core.path import check_crossing
+
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE',
            'create_simulation']
@@ -67,6 +69,18 @@ def create_simulation(settings, simulation_type='nve'):
         sim = SimulationNVE(settings['system'], intg,
                             endcycle=settings['endcycle'],
                             startcycle=settings.get('startcycle', 0))
+    elif simulation_type == 'md-flux':
+        required = ['system', 'endcycle', 'integrator', 'interfaces',
+                    'orderparameter']
+        if not _check_settings(settings, required):
+            return sim
+        intg = create_integrator(settings.get('integrator', None),
+                                 simulation_type)
+        sim = SimulationMdFlux(settings['system'], intg,
+                               settings['interfaces'],
+                               settings['orderparameter'],
+                               endcycle=settings['endcycle'],
+                               startcycle=settings.get('startcycle', 0))
     elif simulation_type == 'tis':
         # this will set up a TIS simulation
         warnings.warn('Simulation TIS not yet implemented')
@@ -494,3 +508,99 @@ class SimulationNVE(Simulation):
         self.add_task(task_integrate)
         # add calculation task:
         self.add_task(task_thermo)
+
+
+class SimulationMdFlux(Simulation):
+    """
+    SimulationMdFlux(Simulation)
+
+    This class is used to define a MD simulation where the goal is
+    to calculate crossings.
+    """
+    def __init__(self, system, integrator, interfaces, order_function,
+                 endcycle=0, startcycle=0):
+        """
+        Initialization of the MD-Flux simulation.
+
+        Parameters
+        ----------
+        system : object of type System.
+            This is the system we are investigating
+        integrator : object of type Integrator.
+            This is the integrator that is used to propagate the system
+            in time.
+        interfaces : list of floats.
+            These defines the interfaces for which we will check the
+            crossing(s).
+        order_function : function or object of type (derived) OrderParameter
+            This function is used to calculate the order parameter. It is
+            assumed to be called with ``order_function(system)`` and to return
+            at least two values where the first one should be the
+            order parameter.
+        startcycle : int, optional.
+            The cycle we start the simulation on, can be usefull if
+            restarting.
+        endcycle : int, optional.
+            This number represents the cycle number where the simulation
+            should end.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        N/A
+        """
+        super(SimulationMdFlux, self).__init__(endcycle=endcycle,
+                                               startcycle=startcycle)
+        self.system = system
+        self.system.potential_and_force()  # make sure forces are defined.
+        self.integrator = integrator
+        self.interfaces = interfaces
+        self.order_function = order_function
+        # set up for initial crossing
+        self.leftside_prev = None
+        leftside, _ = check_crossing(self.cycle['step'], self.system.
+                                     self.order_function,
+                                     self.interfaces,
+                                     self.leftside_prev)
+        self.leftside_prev = leftside
+
+        # also add a thermo task
+        task_thermo = {'func': calculate_thermo,
+                       'args': [system,
+                                system.temperature['dof'],
+                                system.get_dim(),
+                                system.box.calculate_volume()],
+                       'first': True,
+                       'result': 'thermo'}
+
+        self.add_task(task_thermo)
+
+    def step(self):
+        """
+        Run a simulation step. Rather than using the tasks for the more
+        general simulation, we here just execute what we need.
+
+        Returns
+        -------
+        out : list
+            This list contains the results of the defined tasks.
+        """
+        self.cycle['step'] += 1
+        self.cycle['stepno'] += 1
+        results = {}
+        self.integrator.integration_step(self.system)
+        leftside, cross = check_crossing(self.cycle['step'], self.system.
+                                         self.order_function,
+                                         self.interfaces,
+                                         self.leftside_prev)
+        self.leftside_prev = leftside
+        results['cross'] = cross
+        # do remaining tasks
+        for task in self.task:
+            resi = _do_task(task, self.cycle['stepno'], self.cycle['step'])
+            label = task.get('result', None)
+            if label:
+                results[label] = resi
+        return results
