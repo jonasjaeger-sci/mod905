@@ -33,7 +33,7 @@ print('Generated temperatures with average: {}'.format(ljsystem.calculate_temper
 
 # set up simulation:
 settings = {'system': ljsystem,
-            'integrator': {'type': 'velocityverlet', 'timestep': 0.002},
+            'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 100}
 
 simulation_nve = create_simulation(settings, simulation_type='NVE')
