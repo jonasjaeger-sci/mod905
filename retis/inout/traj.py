@@ -47,8 +47,12 @@ def _adjust_coordinate(coord):
         return coord
     else:
         adjusted = np.zeros((npart, 3))
-        for i in range(dim):
-            adjusted[:, i] = coord[:, i]
+        try:
+            for i in range(dim):
+                adjusted[:, i] = coord[:, i]
+        except IndexError:
+            if dim == 1:
+                adjusted[:, 0] = coord
         return adjusted
 
 
