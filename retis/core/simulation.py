@@ -560,12 +560,11 @@ class SimulationMdFlux(Simulation):
         self.order_function = order_function
         # set up for initial crossing
         self.leftside_prev = None
-        leftside, _ = check_crossing(self.cycle['step'], self.system.
+        leftside, _ = check_crossing(self.cycle['step'], self.system,
                                      self.order_function,
                                      self.interfaces,
                                      self.leftside_prev)
         self.leftside_prev = leftside
-
         # also add a thermo task
         task_thermo = {'func': calculate_thermo,
                        'args': [system,
@@ -574,13 +573,14 @@ class SimulationMdFlux(Simulation):
                                 system.box.calculate_volume()],
                        'first': True,
                        'result': 'thermo'}
-
         self.add_task(task_thermo)
 
     def step(self):
         """
         Run a simulation step. Rather than using the tasks for the more
-        general simulation, we here just execute what we need.
+        general simulation, we here just execute what we need. Since we
+        are integrating and checking the crossing at every step, these tasks
+        are not in the self.tasks list. Other tasks are handled by this list.
 
         Returns
         -------
@@ -591,7 +591,7 @@ class SimulationMdFlux(Simulation):
         self.cycle['stepno'] += 1
         results = {}
         self.integrator.integration_step(self.system)
-        leftside, cross = check_crossing(self.cycle['step'], self.system.
+        leftside, cross = check_crossing(self.cycle['step'], self.system,
                                          self.order_function,
                                          self.interfaces,
                                          self.leftside_prev)
