@@ -244,7 +244,7 @@ class Path(object):
         ordermin = None
         ordermax = None
         for i, phasepoint in enumerate(self.path):
-            orderp = phasepoint[-1]
+            orderp = phasepoint[2]
             if ordermin is None or ordermax is None:
                 ordermin = (orderp, i)
                 ordermax = (orderp, i)
