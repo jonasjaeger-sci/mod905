@@ -17,4 +17,4 @@ More examples
 -------------
 
 These are included in the pytismol/examples directory. More information
-on the `example page(s) <examples-index>`_.
+on the :ref:`example page(s) <examples-index>`.

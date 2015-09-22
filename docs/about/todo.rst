@@ -18,3 +18,6 @@ There is still a lot of simple things that should be included in pytismol:
 - Update analysis tools so that we do not pass through the same data
   in many independent loops. Much of the analysis can be done in a one-pass
   way.
+
+- Consider more carefully the reversing of paths: Will we need to recalculate
+  order parameters here?
