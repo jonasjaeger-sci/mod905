@@ -64,10 +64,12 @@ def create_traj_writer(settings, system):
     """
     if settings['type'] == 'xyz':
         trajwriter = WriteXYZ(settings['file'],
+                              oldfile=settings.get('oldfile', 'backup'),
                               units=system.units)
     elif settings['type'] == 'gro':
         trajwriter = WriteGromacs(settings['file'],
                                   system.box,
+                                  oldfile=settings.get('oldfile', 'backup'),
                                   units=system.units)
     else:
         trajwriter = None
