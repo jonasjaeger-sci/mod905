@@ -897,19 +897,16 @@ class CrossFile(FileWriter):
         super(CrossFile, self).__init__(filename, 'crossingfile',
                                         mode=mode, oldfile=oldfile)
 
-    def load(self):
+    def load_lines(self):
         """
-        This method will attempt to load the entire energy file into memory.
-        (Quote of the day: 'memory is cheap, function calls are expensive'.)
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis.
+        This method will open the file and yield the lines as they
+        are read.
 
         Yields
         -------
-        data_dict : dict
-            Data read from the order parameter file.
-
+        out : tuple of ints
+            out[0] = Step number, out[1] = interface number,
+            out[2] = direction.
         """
         with open(self.filename, 'r') as fileh:
             for lines in fileh:
@@ -920,6 +917,27 @@ class CrossFile(FileWriter):
                     yield (step, inter, direction)
                 except IndexError:
                     pass
+
+    def load(self):
+        """
+        This method will attempt to load the entire energy file into memory.
+        (Quote of the day: 'memory is cheap, function calls are expensive'.)
+        In the future, a more intelligent way of handling files like this
+        may be in order, but for now the entire file is read as it's very
+        convenient for the subsequent analysis.
+
+        Returns
+        -------
+        data : numpy.array (N x 3) of ints.
+            This is the data contained in the file. The columns are the
+            step number, interface number and direction.
+        """
+        data = []
+        for line in self.load_lines():
+            data.append(line)
+        data = np.array(data)
+        data = data.astype(int)
+        return data
 
     def write(self, cross):
         """
