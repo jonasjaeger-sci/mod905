@@ -916,7 +916,7 @@ class CrossFile(FileWriter):
                 linessplit = lines.strip().split()
                 try:
                     step, inter = int(linessplit[0]), int(linessplit[1])
-                    direction = -1 if linessplit[2] == '-' else '+'
+                    direction = -1 if linessplit[2] == '-' else 1
                     yield (step, inter, direction)
                 except IndexError:
                     pass
