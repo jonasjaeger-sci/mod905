@@ -403,14 +403,14 @@ class FileWriter(object):
                 if os.path.isfile(self.filename):
                     msg = 'File {} exist'.format(self.filename)
                     if oldfile == 'overwrite':
-                        msg = '{} -- Will overwrite!'.format(msg)
+                        msg = '{}: Will overwrite!'.format(msg)
                         self.fileh = open(self.filename, 'w')
                     elif oldfile == 'append':
-                        msg = '{} -- Will append to file'.format(msg)
+                        msg = '{}: Will append to file'.format(msg)
                         self.fileh = open(self.filename, 'a')
                     else:
                         msg_back = create_backup(self.filename)
-                        msg = '{} -- {}'.format(msg, msg_back)
+                        msg = '{}: {}'.format(msg, msg_back)
                         self.fileh = open(self.filename, 'w')
                     warnings.warn(msg)
                 else:
