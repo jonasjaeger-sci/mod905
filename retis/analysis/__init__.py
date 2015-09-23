@@ -24,3 +24,4 @@ from .histogram import histogram, match_all_histograms
 from .energy_analysis import analyse_energies
 from .order_analysis import analyse_orderp
 from .path_analysis import analyse_path_ensemble, match_probabilities
+from .flux_analysis import analyse_flux
