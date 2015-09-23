@@ -244,12 +244,22 @@ class Simulation(object):
         This function will have ``side effects`` and update/change
         the state of the system and other variables that are not
         explicitly shown. This is intended. In order to see what actually
-        is happening when running ``step()``, investigate the definition
-        of self.task and its functions in the script where the simulation
-        is defined.
+        is happening when running ``step()``, investigate the defined tasks
+        in self.task.
         """
         self.cycle['step'] += 1
         self.cycle['stepno'] += 1
+        return self.execute_tasks()
+
+    def execute_tasks(self):
+        """
+        This method will execute all the tasks in sequential order.
+
+        Returns
+        -------
+        resuts : dict
+            The results from the different tasks (if any).
+        """
         results = {}
         for task in self.task:
             resi = _do_task(task, self.cycle['stepno'], self.cycle['step'])
@@ -457,12 +467,15 @@ class UmbrellaWindowSimulation(Simulation):
 
 class SimulationNVE(Simulation):
     """
+    SimulationNVE(Simulation)
+
     This class is used to define a NVE simulation with some additional
     additional tasks/calculations.
     """
     def __init__(self, system, integrator, endcycle=0, startcycle=0):
         """
-        Initialization of a NVE simulation.
+        Initialization of a NVE simulation. Here we will set up the
+        tasks that are to be performed in the simulation.
 
         Parameters
         ----------
@@ -544,9 +557,6 @@ class SimulationMdFlux(Simulation):
             This number represents the cycle number where the simulation
             should end.
 
-        Parameters
-        ----------
-
         Returns
         -------
         N/A
@@ -596,11 +606,6 @@ class SimulationMdFlux(Simulation):
                                          self.interfaces,
                                          self.leftside_prev)
         self.leftside_prev = leftside
+        results = self.execute_tasks()
         results['cross'] = cross
-        # do remaining tasks
-        for task in self.task:
-            resi = _do_task(task, self.cycle['stepno'], self.cycle['step'])
-            label = task.get('result', None)
-            if label:
-                results[label] = resi
         return results
