@@ -929,15 +929,13 @@ class CrossFile(FileWriter):
 
         Returns
         -------
-        data : numpy.array (N x 3) of ints.
+        data : list of tuples of int
             This is the data contained in the file. The columns are the
             step number, interface number and direction.
         """
         data = []
         for line in self.load_lines():
             data.append(line)
-        data = np.array(data)
-        data = data.astype(int)
         return data
 
     def write(self, cross):
@@ -956,10 +954,16 @@ class CrossFile(FileWriter):
         --------
         ``check_crossing`` in retis.core.path for definition of the tuples in
         cross.
+
+        Note
+        ----
+        We add 1 to the interface number here. This is for compatibility with
+        the old fortran code where the interfaces are numbered 1,2,... rather
+        than 0,1,... .
         """
         retval = []
         for cro in cross:
-            towrite = '{} {} {}'.format(cro[0], cro[1], cro[2])
+            towrite = '{} {} {}'.format(cro[0], cro[1] + 1, cro[2])
             retval.append(self.write_line(towrite))
         return retval
 
