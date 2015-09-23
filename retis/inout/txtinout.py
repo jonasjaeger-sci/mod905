@@ -15,6 +15,9 @@ Objects defined here:
 
 - OrderFile: Writing/reading of order parameter data
 
+- CrossFile: Writing/reading of crossing data (i.e. data which can be used
+  for calculation of the initial flux).
+
 Important functions:
 
 - txt_save_columns: Writing a simple column-based output using numpy.
@@ -27,7 +30,8 @@ import numpy as np
 from .common import create_backup
 
 
-__all__ = ['TxtTable', 'PathEnsembleFile', 'EnergyFile', 'OrderFile']
+__all__ = ['TxtTable', 'PathEnsembleFile', 'EnergyFile', 'OrderFile',
+           'CrossFile']
 
 # define a format used for the path files. Here it's not really needed,
 # we are going to assume that these files will be comma separated anyway.
@@ -860,4 +864,90 @@ class OrderFile(FileWriter):
         """
         msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
                                                            self.mode)
+        return msg
+
+
+class CrossFile(FileWriter):
+    """
+    CrossFile(FileWriter)
+
+    This class handles writing/reading of crossing data.
+
+    Attributes
+    ----------
+    Same as for the FileWriter object.
+    """
+    def __init__(self, filename, mode='w', oldfile='backup'):
+        """
+        Initialize the CrossFile object
+
+        Parameters
+        ----------
+        filename : string
+            Name of file to read/write.
+        mode : string
+            Mode can be used to select if we should write to the file
+            (if mode is equal to 'w') or read from the file (mode equal
+            to 'r'). The default is mode equal to 'w'.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only usefull when the mode is
+            set to 'w'.
+        """
+        super(CrossFile, self).__init__(filename, 'crossingfile',
+                                        mode=mode, oldfile=oldfile)
+
+    def load(self):
+        """
+        This method will attempt to load the entire energy file into memory.
+        (Quote of the day: 'memory is cheap, function calls are expensive'.)
+        In the future, a more intelligent way of handling files like this
+        may be in order, but for now the entire file is read as it's very
+        convenient for the subsequent analysis.
+
+        Yields
+        -------
+        data_dict : dict
+            Data read from the order parameter file.
+
+        """
+        with open(self.filename, 'r') as fileh:
+            for lines in fileh:
+                linessplit = lines.strip().split()
+                try:
+                    step, inter = int(linessplit[0]), int(linessplit[1])
+                    direction = -1 if linessplit[2] == '-' else '+'
+                    yield (step, inter, direction)
+                except IndexError:
+                    pass
+
+    def write(self, cross):
+        """
+        This method will write the cross data to a file. It will just write a
+        space separated file without fancy formatting.
+
+        Parameters
+        ----------
+        cross : list of tuples
+            The tuples are crossing with interfaces (if any). The typles
+            contain (timestep, interface, direction), where the direction
+            is '-' or '+'.
+
+        See Also
+        --------
+        ``check_crossing`` in retis.core.path for definition of the tuples in
+        cross.
+        """
+        retval = []
+        for cro in cross:
+            towrite = '{} {} {}'.format(cro[0], cro[1], cro[2])
+            retval.append(self.write_line(towrite))
+        return retval
+
+    def __str__(self):
+        """
+        Return a string with some info about this object
+        """
+        msg = 'Crossing file: {} (mode: {})'.format(self.filename,
+                                                    self.mode)
         return msg
