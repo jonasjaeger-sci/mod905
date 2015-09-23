@@ -401,15 +401,16 @@ class FileWriter(object):
         elif self.mode == 'w':  # Write data to file + handle backup:
             try:
                 if os.path.isfile(self.filename):
-                    msg = 'File exist'
+                    msg = 'File {} exist'.format(self.filename)
                     if oldfile == 'overwrite':
-                        msg += '\nWill overwrite!'
+                        msg = '{} -- Will overwrite!'.format(msg)
                         self.fileh = open(self.filename, 'w')
                     elif oldfile == 'append':
-                        msg += '\nWill append to file!'
+                        msg = '{} -- Will append to file'.format(msg)
                         self.fileh = open(self.filename, 'a')
                     else:
-                        msg += create_backup(self.filename)
+                        msg_back = create_backup(self.filename)
+                        msg = '{} -- {}'.format(msg, msg_back)
                         self.fileh = open(self.filename, 'w')
                     warnings.warn(msg)
                 else:

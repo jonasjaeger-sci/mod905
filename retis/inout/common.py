@@ -38,6 +38,6 @@ def create_backup(outputfile):
         filename = '{}_{}'.format(outputfile, fileid)
         fileid += 1
     if fileid > 0:
-        msg = '\nBackup existing file {} to {}'.format(outputfile, filename)
+        msg = 'Backup existing file {} to {}'.format(outputfile, filename)
         os.rename(outputfile, filename)
     return msg
