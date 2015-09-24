@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 This file contains methods that will generate reports for displaying
-the results from the pytismol program.
+the results from the analysis.
 """
 from __future__ import absolute_import
 from retis import __version__ as VERSION
+from retis import __program_name__ as PROGRAM_NAME
 import warnings
 # for converting rst to html and/or latex:
 import docutils.core
@@ -170,6 +171,7 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
         warnings.warn(msg.format(output))
         output = 'rst'
     report = {'version': VERSION,
+              'program': PROGRAM_NAME,
               'figures': analysis['tis-fig'],
               'totalfig': analysis['matched-fig'],
               'table_int': None, 'table_prob': None,
