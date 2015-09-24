@@ -774,3 +774,42 @@ def txt_orderp_output(results, orderdata, out_format='txt.gz'):
                          time[:len(msd)], msd[:, 0], msd[:, 1])
         # TODO: time should here be multiplied with the correct dt
     return outfiles
+
+
+def txt_flux_output(results, out_format='txt.gz'):
+    """
+    Store the output from the flux analysis in text files.
+
+    Parameters
+    ----------
+    results : dict
+        This is the dict with the results from the flux analysis.
+    out_format : string, optional
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+
+    """
+    outfiles = {}
+    for key in _FLUXFILES:
+        outfiles[key] = []
+    # make running average plot and error plot:
+    for i in range(len(results['flux'])):
+        flux = results['flux'][i]
+        runflux = results['runflux'][i]
+        errflux = results['errflux'][i]
+        outfile = _FLUXFILES['runflux'].format(i + 1, out_format)
+        outfiles['runflux'].append(outfile)
+        # output running average:
+        txt_save_columns(outfile, 'Time, running average',
+                         flux[:, 0], runflux)
+        # output block-error results:
+        outfile = _FLUXFILES['block'].format(i + 1, out_format)
+        outfiles['block'].append(outfile)
+        _txt_block_error(outfile, 'Block error for flux analysis',
+                         errflux)
+    return outfiles
