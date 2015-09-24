@@ -55,7 +55,7 @@ _ORDERFILES = {'order': os.extsep.join(['orderp', '{}']),
                'block': os.extsep.join(['ordererror', '{}']),
                'msd': os.extsep.join(['ordermsd', '{}'])}
 # hard-coded patters for flux analysis output files:
-_FLUXFILES = {'run_flux': os.extsep.join(['runflux_{}', '{}']),
+_FLUXFILES = {'runflux': os.extsep.join(['runflux_{}', '{}']),
               'block': os.extsep.join(['errflux_{}', '{}'])}
 
 
