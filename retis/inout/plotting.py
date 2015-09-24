@@ -175,11 +175,11 @@ def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
         if add_legend:
             handles.append(handle)
             labels.append(seri[2])
-    if not xlabel is None:
+    if xlabel is not None:
         axs.set_xlabel(xlabel)
-    if not ylabel is None:
+    if ylabel is not None:
         axs.set_ylabel(ylabel)
-    if not title is None:
+    if title is not None:
         axs.set_title(title, fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
@@ -224,11 +224,11 @@ def mpl_line_gradient(series, outputfile, xlabel='Time', ylabel='Value',
             handles.append(handle)
             labels.append(seri[2])
     axs.autoscale_view()
-    if not xlabel is None:
+    if xlabel is not None:
         axs.set_xlabel(xlabel)
-    if not ylabel is None:
+    if ylabel is not None:
         axs.set_ylabel(ylabel)
-    if not title is None:
+    if title is not None:
         axs.set_title(title, fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
@@ -270,11 +270,11 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
         if add_legend:
             handles.append(handle)
             labels.append(seri[3])
-    if not xlabel is None:
+    if xlabel is not None:
         axs.set_xlabel(xlabel)
-    if not ylabel is None:
+    if ylabel is not None:
         axs.set_ylabel(ylabel)
-    if not title is None:
+    if title is not None:
         axs.set_title(title, fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
