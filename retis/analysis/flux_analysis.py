@@ -4,6 +4,7 @@ This file contains methods for analysis of crossings for the
 flux data
 """
 from __future__ import absolute_import
+from .analysis import running_average, block_error_corr
 import numpy as np
 
 __all__ = ['analyse_flux']
@@ -45,6 +46,12 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
                                              settings['skipcross'], time_step)
         results['flux-{}'.format(i + 1)] = np.column_stack((time, ncross,
                                                             flux))
+        # now it's also a good time to obtain running averages etc.:
+        results['flux-{}-run'.format(i + 1)] = running_average(flux)
+        block_error = block_error_corr(flux,
+                                       maxblock=settings['maxblock'],
+                                       blockskip=settings['blockskip'])
+        results['flux-{}-block'.format(i + 1)] = block_error
     return results
 
 
