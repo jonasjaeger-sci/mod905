@@ -35,7 +35,8 @@ Subpackages:
 from __future__ import absolute_import
 
 __version__ = '0.0.1'
-__version_details__ = 'pre-release and pre-alpha'
+__version_details__ = 'pre-release'
+__program_name__ = 'pytismol'
 
 # imports:
 from . import core
