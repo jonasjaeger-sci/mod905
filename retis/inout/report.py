@@ -17,11 +17,13 @@ import jinja2
 __all__ = ['generate_report_tis']
 
 # the types the program know how to generate:
-_TEMPLATES_TIS = {'rst': 'report_template.rst',
-                  'html': 'report_template.rst',  # html is done via rst,
-                  'latex': 'report_template.tex',
-                  'tex': 'report_template.tex'}
+_TEMPLATES_TIS = {'rst': 'report_template_tis.rst',
+                  'html': 'report_template_tis.rst',  # html is done via rst,
+                  'latex': 'report_template_tis.tex',
+                  'tex': 'report_template_tis.tex'}
 
+_TEMPLATES_MD = {'rst': 'report_template_md.rst',
+                 'html': 'report_template_md.rst'}  # html is done via rst,
 
 def _rst_to_html(rst):
     """
@@ -152,11 +154,11 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
         'detect' : locations of the interfaces used for detection
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES without the prefix '{}-'.
+        formats defined in _TEMPLATES_TIS.
         Default is reStructuredText = 'rst'.
     template : string, optional
         This is the template file to use. The default is given
-        by _TEMPLATES[output].
+        by _TEMPLATES_TIS[output].
 
     Returns
     -------
