@@ -12,16 +12,15 @@ from docutils.writers.html4css1 import Writer as HTMLWriter
 from docutils.writers.html4css1 import HTMLTranslator
 import os
 # for using templates
-#from jinja2 import Environment, FileSystemLoader
 import jinja2
 
-__all__ = ['generate_report']
+__all__ = ['generate_report_tis']
 
 # the types the program know how to generate:
-_TEMPLATES = {'rst': 'report_template.rst',
-              'html': 'report_template.rst',  # html is done via rst,
-              'latex': 'report_template.tex',
-              'tex': 'report_template.tex'}
+_TEMPLATES_TIS = {'rst': 'report_template.rst',
+                  'html': 'report_template.rst',  # html is done via rst,
+                  'latex': 'report_template.tex',
+                  'tex': 'report_template.tex'}
 
 
 def _rst_to_html(rst):
@@ -64,7 +63,81 @@ def _remove_extension(filename):
         return filename
 
 
-def generate_report(path_ensembles, analysis, output='rst', template=None):
+def _get_template(output, default_template, template=None):
+    """
+    This method will return the template to use for a specified
+    output format.
+
+    Parameters
+    ----------
+    output : string
+        This string selects the output format for the template, i.e.,
+        rst, html, latex, tex.
+    default_template : dict
+        default_template[output] defines the default template to use in case
+        template is not specified or not found.
+    template : string, optional
+        The full path to the template to use. If not given/found, the defaults
+        in default_template will be used.
+
+    Returns
+    -------
+    out[0] : string
+        File name of template to use.
+    out[1] : string
+        Path to the template to use.
+    """
+    if template is None or not os.path.isfile(template):
+        # Use default template, this is located in the templates dir:
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(path, 'templates')
+        template = default_template[output]
+    else:
+        # user specified full path to template:
+        path = os.path.dirname(template)
+        template = os.path.basename(template)
+    return template, path
+
+
+def _generate_report(report, output, template, path):
+    """
+    This method will do the actual generation of the report.
+
+    Parameters
+    ----------
+    report : dict
+        This dict contains the data to be reported. It is assumed that
+        this dict matches the specified template.
+    output : string
+        This is the desired output format. Here it's used only for generating
+        html as this is done via rst.
+    template : string
+        This is the template to use (the file name).
+    path :  string
+        This is the template file to use (it's path).
+
+    Returns
+    -------
+    out : string
+        The generated report in the desired format.
+    """
+
+    env = jinja2.Environment(block_start_string='@{%',
+                             block_end_string='%}@',
+                             variable_start_string='@{{',
+                             variable_end_string='}}@',
+                             loader=jinja2.FileSystemLoader(path))
+    # pylint: disable=maybe-no-member
+    render = env.get_template(template).render(report)
+    # pylint: enable=maybe-no-member
+    if output == 'html':
+        return _rst_to_html(render)
+    else:
+        return render
+
+
+def generate_report_tis(path_ensembles, analysis, output='rst',
+                        template=None):
     """
     This will generate the report for the results.
 
@@ -79,7 +152,8 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
         'detect' : locations of the interfaces used for detection
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES. Default is reStructuredText.
+        formats defined in _TEMPLATES without the prefix '{}-'.
+        Default is reStructuredText = 'rst'.
     template : string, optional
         This is the template file to use. The default is given
         by _TEMPLATES[output].
@@ -89,26 +163,12 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
     out : string
         The generated report in the desired format.
     """
-    if not output in _TEMPLATES:
-        warnings.warn('Unknown output {} will use rst'.format(output))
+    if output not in _TEMPLATES_TIS:
+        msg = 'Format {} not defined for TIS report: Will use rst'
+        warnings.warn(msg.format(output))
         output = 'rst'
-    if template is None or not os.path.isfile(template):
-        # Use default template, this is located in the templates dir:
-        path = os.path.dirname(os.path.abspath(__file__))
-        path = os.path.join(path, 'templates')
-        template = _TEMPLATES[output]
-    else:
-        # user specified full path to template:
-        path = os.path.dirname(template)
-        template = os.path.basename(template)
-
-    env = jinja2.Environment(block_start_string='@{%',
-                             block_end_string='%}@',
-                             variable_start_string='@{{',
-                             variable_end_string='}}@',
-                             loader=jinja2.FileSystemLoader(path))
-
-    report = {'version': VERSION, 'figures': analysis['tis-fig'],
+    report = {'version': VERSION,
+              'figures': analysis['tis-fig'],
               'totalfig': analysis['matched-fig'],
               'table_int': None, 'table_prob': None,
               'table_path': None, 'table_eff': None,
@@ -143,16 +203,10 @@ def generate_report(path_ensembles, analysis, output='rst', template=None):
         report['totalfig'] = [_remove_extension(fig) for fig in report['totalfig']]
         for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
                     'pcross_opteff']:
-            #report['pcross'] = _latexify_number(report['pcross'])
-            #report['perr'] = _latexify_number(report['perr'])
             report[key] = _latexify_number(report[key])
-    #pylint: disable=maybe-no-member
-    render = env.get_template(template).render(report)
-    #pylint: enable=maybe-no-member
-    if output == 'html':
-        return _rst_to_html(render)
-    else:
-        return render
+    # get template and generate:
+    template, path = _get_template(output, _TEMPLATES_TIS, template=template)
+    return _generate_report(report, output, template, path)
 
 
 def _apply_format(value, fmt):
@@ -425,7 +479,6 @@ def _generate_latex_table(table, title, headings, fixnum=None):
         These integers identifies the columns where ``_latexify_number`` is
         to be applied.
     """
-    #for col in headings
     str_table = [r'\renewcommand{\arraystretch}{1.25}',
                  r'\noindent', r'\begin{minipage}{\textwidth}', r'\centering',
                  r'\textbf{' + title + r'} \\', r'\medskip'
@@ -454,7 +507,6 @@ def _latexify_number(str_float):
     ----------
     str_float : string
         This is the string representation of a float
-
     """
     if 'e' in str_float:
         base, exp = str_float.split('e')
