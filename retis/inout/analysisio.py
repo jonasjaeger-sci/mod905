@@ -734,8 +734,8 @@ def txt_orderp_output(results, orderdata, out_format='txt.gz'):
     orderdata : dict of numpy.arrays
         This is the raw-data for the order parameter analysis
     out_format : string, optional
-        This is the desired format to use for the graphs. Supported are
-        png, pdf, svg, etc. (see the matplotlib documentation).
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
 
     Returns
     -------
@@ -761,10 +761,10 @@ def txt_orderp_output(results, orderdata, out_format='txt.gz'):
                      'Time, running average',
                      time, results[0]['running'])
 
-    # plot block-error results:
+    # output block-error results:
     _txt_block_error(outfiles['block'], 'Block error for order param',
                      results[0]['blockerror'])
-    # plot distributions
+    # output distributions:
     _txt_histogram(outfiles['dist'], 'Order parameter',
                    results[0]['distribution'])
     # output msd if it was calculated:
