@@ -18,13 +18,12 @@ import jinja2
 __all__ = ['generate_report_tis']
 
 # the types the program know how to generate:
-_TEMPLATES_TIS = {'rst': 'report_template_tis.rst',
-                  'html': 'report_template_tis.rst',  # html is done via rst,
-                  'latex': 'report_template_tis.tex',
-                  'tex': 'report_template_tis.tex'}
 
-_TEMPLATES_MD = {'rst': 'report_template_md.rst',
-                 'html': 'report_template_md.rst'}  # html is done via rst,
+_TEMPLATES = {'rst': 'report_template_{}.rst',
+              'html': 'report_template_{}.rst',  # html is done via rst,
+              'latex': 'report_template_{}.tex',
+              'tex': 'report_template_{}.tex'}
+
 
 def _rst_to_html(rst):
     """
@@ -66,7 +65,7 @@ def _remove_extension(filename):
         return filename
 
 
-def _get_template(output, default_template, template=None):
+def _get_template(output, report_type, template=None):
     """
     This method will return the template to use for a specified
     output format.
@@ -76,12 +75,11 @@ def _get_template(output, default_template, template=None):
     output : string
         This string selects the output format for the template, i.e.,
         rst, html, latex, tex.
-    default_template : dict
-        default_template[output] defines the default template to use in case
-        template is not specified or not found.
     template : string, optional
         The full path to the template to use. If not given/found, the defaults
         in default_template will be used.
+    report_type : string
+        This is the type of report we are doing, e.g. TIS or MD.
 
     Returns
     -------
@@ -90,16 +88,20 @@ def _get_template(output, default_template, template=None):
     out[1] : string
         Path to the template to use.
     """
+    if output not in _TEMPLATES:
+        msg = 'Format {} not defined for {} report: Will use rst'
+        warnings.warn(msg.format(output, report_type))
+        output = 'rst'
     if template is None or not os.path.isfile(template):
         # Use default template, this is located in the templates dir:
         path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(path, 'templates')
-        template = default_template[output]
+        template = _TEMPLATES[output].format(report_type.lower())
     else:
         # user specified full path to template:
         path = os.path.dirname(template)
         template = os.path.basename(template)
-    return template, path
+    return output, template, path
 
 
 def _generate_report(report, output, template, path):
@@ -155,21 +157,19 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
         'detect' : locations of the interfaces used for detection
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES_TIS.
+        formats defined in _TEMPLATES.
         Default is reStructuredText = 'rst'.
     template : string, optional
         This is the template file to use. The default is given
-        by _TEMPLATES_TIS[output].
+        by _TEMPLATES[output].
 
     Returns
     -------
     out : string
         The generated report in the desired format.
     """
-    if output not in _TEMPLATES_TIS:
-        msg = 'Format {} not defined for TIS report: Will use rst'
-        warnings.warn(msg.format(output))
-        output = 'rst'
+    # get template and generate:
+    output, template, path = _get_template(output, 'TIS', template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
               'figures': analysis['tis-fig'],
@@ -178,6 +178,7 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
               'table_path': None, 'table_eff': None,
               'pcross': None, 'perr': None, 'pcross_simt': None,
               'pcross_teff': None, 'pcross_opteff': None}
+    print report['figures']
     # get the efficiency results:
     report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
 
@@ -203,13 +204,51 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
         # remove extensions of figures:
         report['figures'] = []
         for fig in analysis['tis-fig']:
-            report['figures'].append({key: _remove_extension(fig[key]) for key in fig})
-        report['totalfig'] = [_remove_extension(fig) for fig in report['totalfig']]
+            newfig = {key: _remove_extension(fig[key]) for key in fig}
+            report['figures'].append(newfig)
+        report['totalfig'] = [_remove_extension(fig) for fig
+                              in report['totalfig']]
         for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
                     'pcross_opteff']:
             report[key] = _latexify_number(report[key])
-    # get template and generate:
-    template, path = _get_template(output, _TEMPLATES_TIS, template=template)
+    return _generate_report(report, output, template, path)
+
+
+def generate_report_md(analysis, output='rst', template=None):
+    """
+    This will generate the report for the results.
+
+    Parameters
+    ----------
+    analysis : dict
+        This is the output from the analysis. The keys are:
+    output : string, optional
+        This is the desired output format. It must match one of the
+        formats defined in _TEMPLATES.
+        Default is reStructuredText = 'rst'.
+    template : string, optional
+        This is the template file to use. The default is given
+        by _TEMPLATES[output].
+
+    Returns
+    -------
+    out : string
+        The generated report in the desired format.
+    """
+    output, template, path = _get_template(output, 'MD', template=template)
+    report = {'version': VERSION,
+              'program': PROGRAM_NAME,
+              'flux_figures': analysis['flux_figures']}
+    if output in ['latex', 'tex']:
+        # remove extensions of figures:
+        report['flux_figures'] = []
+        for fig in analysis['flux_figures']:
+            newfig = {key: _remove_extension(fig[key]) for key in fig}
+            report['flux_figures'].append(newfig)
+        # latexify some numbers:
+        # for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
+        #            'pcross_opteff']:
+        #    report[key] = _latexify_number(report[key])
     return _generate_report(report, output, template, path)
 
 
@@ -491,7 +530,8 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     str_table.append(' & '.join(headings) + r'\\ \hline')
     for row in table:
         if fixnum:
-            rowl = [_latexify_number(col) if i in fixnum else col for i, col in enumerate(row)]
+            rowl = [_latexify_number(col) if i in fixnum else col for i, col
+                    in enumerate(row)]
             str_table.append(' & '.join(rowl) + r'\\')
         else:
             str_table.append(' & '.join(row) + r'\\')
