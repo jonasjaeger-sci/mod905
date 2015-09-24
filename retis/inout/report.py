@@ -238,7 +238,8 @@ def generate_report_md(analysis, output='rst', template=None):
     output, template, path = _get_template(output, 'MD', template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
-              'flux_figures': analysis['flux_figures']}
+              'flux_figures': analysis['flux_figures'],
+              'energy_figures': analysis['energy_figures']}
     if output in ['latex', 'tex']:
         # remove extensions of figures:
         report['flux_figures'] = []
