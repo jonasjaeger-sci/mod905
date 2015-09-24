@@ -23,7 +23,8 @@ __all__ = ['mpl_path_output', 'txt_path_output',
            'mpl_total_probability', 'txt_total_probability',
            'mpl_total_matched_probability', 'txt_total_matched_probability',
            'mpl_energy_output', 'txt_energy_output',
-           'mpl_orderp_output', 'txt_orderp_output']
+           'mpl_orderp_output', 'txt_orderp_output',
+           'mpl_flux_output', 'txt_flux_output']
 
 
 # hard-coded patters for path analysis output files:
