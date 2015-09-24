@@ -43,7 +43,7 @@ Folders:
 from .analysisio import (mpl_path_output, mpl_total_probability,
                          txt_path_output, txt_total_probability)
 from .plotting import set_plotting_style
-from .report import generate_report
+from .report import generate_report_tis
 from .traj import WriteGromacs, WriteXYZ
 from .txtinout import TxtTable, FileWriter
 
