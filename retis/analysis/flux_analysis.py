@@ -39,19 +39,20 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
     results = {'eff_cross': ret[0],
                'ncross': ret[1],
                'effcross': ret[2],
-               'times': ret[3]}
+               'times': ret[3],
+               'flux': [], 'runflux': [],
+               'errflux': []}
     for i in range(len(interfaces)):
         time, ncross, flux = _calculate_flux(results['eff_cross'][i],
                                              results['times']['OA'],
                                              settings['skipcross'], time_step)
-        results['flux-{}'.format(i + 1)] = np.column_stack((time, ncross,
-                                                            flux))
+        results['flux'].append(np.column_stack((time, ncross, flux)))
         # now it's also a good time to obtain running averages etc.:
-        results['flux-{}-run'.format(i + 1)] = running_average(flux)
+        results['runflux'].append(running_average(flux))
         block_error = block_error_corr(flux,
                                        maxblock=settings['maxblock'],
                                        blockskip=settings['blockskip'])
-        results['flux-{}-block'.format(i + 1)] = block_error
+        results['errflux'].append(block_error)
     return results
 
 
