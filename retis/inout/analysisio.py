@@ -54,6 +54,9 @@ _ORDERFILES = {'order': os.extsep.join(['orderp', '{}']),
                'dist': os.extsep.join(['orderdist', '{}']),
                'block': os.extsep.join(['ordererror', '{}']),
                'msd': os.extsep.join(['ordermsd', '{}'])}
+# hard-coded patters for flux analysis output files:
+_FLUXFILES = {'run_flux': os.extsep.join(['runflux_{}', '{}']),
+              'block': os.extsep.join(['errflux_{}', '{}'])}
 
 
 def _mpl_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
@@ -464,6 +467,45 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
     return outfiles
 
 
+def mpl_flux_output(results, out_format='png'):
+    """
+    Plot the output from the flux analysis using matplotlib.
+
+    Parameters
+    ----------
+    results : dict
+        This is the dict with the results from the flux analysis.
+    out_format : string, optional
+        This is the desired format to use for the graphs. Supported are
+        png, pdf, svg, etc. (see the matplotlib documentation).
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+
+    """
+    outfiles = {}
+    for key in _FLUXFILES:
+        outfiles[key] = []
+    # make running average plot and error plot:
+    for i in range(len(results['flux'])):
+        flux = results['flux'][i]
+        runflux = results['runflux'][i]
+        errflux = results['errflux'][i]
+        outfile = _FLUXFILES['runflux'].format(i + 1, out_format)
+        outfiles['runflux'].append(outfile)
+        series = [(flux[:, 0], runflux, 'Running average')]
+        mpl_simple_plot(series, outfile,
+                        xlabel='Time', ylabel='Flux / internal units',
+                        title='Flux for interface no. {}'.format(i + 1))
+        outfile = _FLUXFILES['block'].format(i + 1, out_format)
+        outfiles['block'].append(outfile)
+        _mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
+                         outfile)
+    return outfiles
+
+
 def _txt_block_error(outputfile, title, error):
     """
     This will write the output from the error analysis, to a text file.
@@ -730,5 +772,5 @@ def txt_orderp_output(results, orderdata, out_format='txt.gz'):
         msd = results[0]['msd']
         txt_save_columns(outfiles['msd'], 'Time MSD Std',
                          time[:len(msd)], msd[:, 0], msd[:, 1])
-        #TODO: time should here be multiplied with the correct dt
+        # TODO: time should here be multiplied with the correct dt
     return outfiles
