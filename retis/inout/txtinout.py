@@ -898,26 +898,29 @@ class CrossFile(FileWriter):
         super(CrossFile, self).__init__(filename, 'crossingfile',
                                         mode=mode, oldfile=oldfile)
 
-    def load_lines(self):
+    @staticmethod
+    def line_parser(line):
         """
-        This method will open the file and yield the lines as they
-        are read.
+        This function defines a simple parser for reading the file.
+        It is used in the self.load() to parse the input file
 
-        Yields
+        Parameters
+        ----------
+        line : string
+            A line to parse
+
+        Returns
         -------
         out : tuple of ints
-            out[0] = Step number, out[1] = interface number,
-            out[2] = direction.
+            out is (step number, interface number and direction).
         """
-        with open(self.filename, 'r') as fileh:
-            for lines in fileh:
-                linessplit = lines.strip().split()
-                try:
-                    step, inter = int(linessplit[0]), int(linessplit[1])
-                    direction = -1 if linessplit[2] == '-' else 1
-                    yield (step, inter, direction)
-                except IndexError:
-                    pass
+        linessplit = line.strip().split()
+        try:
+            step, inter = int(linessplit[0]), int(linessplit[1])
+            direction = -1 if linessplit[2] == '-' else 1
+            return (step, inter, direction)
+        except IndexError:
+            return None
 
     def load(self):
         """
@@ -933,10 +936,11 @@ class CrossFile(FileWriter):
             This is the data contained in the file. The columns are the
             step number, interface number and direction.
         """
-        data = []
-        for line in self.load_lines():
-            data.append(line)
-        return data
+        for blocks in _read_some_lines(self.filename,
+                                       line_parser=self.line_parser):
+            data_dict = {'comment': blocks['comment'],
+                         'data': blocks['data']}
+            yield data_dict
 
     def write(self, cross):
         """
