@@ -54,6 +54,12 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
                                        maxblock=settings['maxblock'],
                                        blockskip=settings['blockskip'])
         results['errflux'].append(block_error)
+    results['cross_time'] = []
+    for neff in results['neffcross']:
+        try:
+            results['cross_time'].append(float(end_step) / float(neff))
+        except ZeroDivisionError:
+            results['cross_time'] = np.nan
     return results
 
 
