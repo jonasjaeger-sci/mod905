@@ -60,6 +60,12 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
             results['cross_time'].append(float(end_step) / float(neff))
         except ZeroDivisionError:
             results['cross_time'].append(np.nan)
+    results['neffc/nc'] = []
+    for neffc, ncr in zip(results['neffcross'], results['ncross']):
+        try:
+            results['neffc/nc'].append(float(neffc) / float(ncr))
+        except ZeroDivisionError:
+            results['neffc/nc'].append(np.nan)
     return results
 
 
