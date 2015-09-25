@@ -42,7 +42,8 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
                'times': ret[3],
                'flux': [], 'runflux': [],
                'errflux': [],
-               'interfaces': [i for i in interfaces]}
+               'interfaces': [i for i in interfaces],
+               'totalcycle': end_step}
     for i in range(len(interfaces)):
         time, ncross, flux = _calculate_flux(results['eff_cross'][i],
                                              results['times']['OA'],
