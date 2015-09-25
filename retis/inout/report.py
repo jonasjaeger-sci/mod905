@@ -271,6 +271,9 @@ def generate_report_md(analysis, output='rst', template=None):
               'flux_figures': analysis['flux_figures'],
               'energy_figures': analysis['energy_figures'],
               'order_figures': analysis['order_figures']}
+    # generate some tables:
+    _, report['table_md_flux'] = _table_md_flux(analysis['flux'], fmt=output)
+    # check if we need some additional latexification:
     if output in ['latex', 'tex']:
         for fig in ['flux_figures', 'energy_figures', 'order_figures']:
             report[fig] = _remove_extensions(report[fig])
@@ -313,6 +316,54 @@ def _apply_format(value, fmt):
         return new_fmt.format(value)
     else:
         return str_fmt
+
+
+def _table_md_flux(results, fmt='rst'):
+    """
+    This will generate the table for the MD-flux results.
+
+    Parameters
+    ----------
+    results : dict
+        These are the results obtained in the ``analyse_flux`` method in
+        the analysis package.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in the desired format which represents
+        the table.
+    """
+    # table for interfaces:
+    table = []
+    for i, idet in enumerate(results['interfaces']):
+        flux = results['runflux'][i][-1]
+        error = results['errflux'][i][2]
+        relerror = results['errflux'][i][4]
+        row = ['{:^4d}'.format(i + 1)]
+        row.append(_apply_format(idet, '{:^8.4f}'))
+        row.append(_apply_format(flux, '{:^10.6f}'))
+        row.append(_apply_format(error, '{:^10.6f}'))
+        row.append(_apply_format(relerror, '{:^10.6f}'))
+        row.append(_apply_format(results['cross_time'][i], '{:^10.6f}'))
+        table.append(row)
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Flux for interfaces',
+                                          ['Int.', 'Position', 'Flux / units',
+                                           'Error', 'Rel. error',
+                                           'Steps per cross'],
+                                          fixnum=set([2, 3, 4, 5]))
+    else:
+        table_str = _generate_rst_table(table, 'Flux for interfaces',
+                                        ['Int.', 'Position', 'Flux / units',
+                                         'Error', 'Rel. error',
+                                         'Steps per cross'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
 
 
 def _table_interface(path_ensembles, detect, fmt='rst'):
