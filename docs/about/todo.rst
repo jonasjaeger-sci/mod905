@@ -24,3 +24,7 @@ There is still a lot of simple things that should be included in pytismol:
 
 - Investigate where we should write c/fortran code. The block error analysis
   is one example where we perhaps can speed up things?
+
+- The reports should be nicer. There should also be an option to select
+  the units to output. Also, raw data should be stored so that it's easy
+  to redo a report with different units for instance.
