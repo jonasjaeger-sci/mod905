@@ -38,7 +38,7 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
     ret = _effective_crossings(fluxdata, len(interfaces), end_step)
     results = {'eff_cross': ret[0],
                'ncross': ret[1],
-               'effcross': ret[2],
+               'neffcross': ret[2],
                'times': ret[3],
                'flux': [], 'runflux': [],
                'errflux': []}
