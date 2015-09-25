@@ -59,7 +59,7 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
         try:
             results['cross_time'].append(float(end_step) / float(neff))
         except ZeroDivisionError:
-            results['cross_time'] = np.nan
+            results['cross_time'].append(np.nan)
     return results
 
 
