@@ -46,9 +46,10 @@ Length and shoots figures
 Total probability
 -----------------
 
-@{% for figure in totalfig %}@
-.. image:: @{{ figure }}@
-   :width: 45% @{% endfor %}@
+.. image:: @{{ totalfig['total'] }}@
+   :width: 45%
+.. image:: @{{ totalfig['match'] }}@
+   :width: 45%
 
 .. _tis-results:
 

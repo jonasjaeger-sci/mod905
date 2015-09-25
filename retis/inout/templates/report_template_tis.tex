@@ -28,23 +28,29 @@ analysis program:
 
 \subsection{Probability figures}
 @{% for figure in figures %}@
+\begin{center}
 \includegraphics[width=0.33\linewidth]{@{{ figure['pcross'] }}@}%
 \includegraphics[width=0.33\linewidth]{@{{ figure['prun'] }}@}%
 \includegraphics[width=0.33\linewidth]{@{{ figure['perror'] }}@}%
-\\@{% endfor %}@
+\end{center}
+@{% endfor %}@
 \clearpage
 
 \subsection{Length and shoots figures}
 @{% for figure in figures %}@
+\begin{center}
 \includegraphics[width=0.33\linewidth]{@{{ figure['pathlength'] }}@}%
 \includegraphics[width=0.33\linewidth]{@{{ figure['shoots'] }}@}%
 \includegraphics[width=0.33\linewidth]{@{{ figure['shoots-scaled'] }}@}%
-\\@{% endfor %}@
+\end{center}
+@{% endfor %}@
 \clearpage
 
 \subsection{Total probability}
-@{% for figure in totalfig %}@
-\includegraphics[width=0.45\linewidth]{@{{ figure }}@} @{% endfor %}@
+\begin{center}
+\includegraphics[width=0.45\linewidth]{@{{ totalfig['total'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ totalfig['match'] }}@}%
+\end{center}
 
 \section{Numerical TIS results}
 

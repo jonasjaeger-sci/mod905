@@ -65,6 +65,42 @@ def _remove_extension(filename):
         return filename
 
 
+def _remove_extensions(list_of_files):
+    """
+    This will strip out extensions for all the files in a given iterable.
+    Here, the iterable might be a simple list which contains dictionaries or
+    it can be a dictionary. How we to the loop will depend on this.
+
+    Parameters
+    ----------
+    list_of_files : list or dict, iterable
+        This is the list for which we will try to remove extensions
+
+    Returns
+    -------
+    newlist : list or dict
+        A copy of list_of_files, where the extensions has been removed.
+
+    Note
+    ----
+    If, for some reason, list_of_files is a list and the items are just
+    integers, the TypeError will not be raised. This is pretty unlikely and
+    we therefor do not check for this.
+    """
+    # we assume that list_of_files is a simple dict
+    try:
+        newlist = {}
+        for key in list_of_files:
+            newlist[key] = _remove_extension(list_of_files[key])
+        return newlist
+    except TypeError:
+        newlist = []
+        for fig in list_of_files:
+            newfig = {key: _remove_extension(fig[key]) for key in fig}
+            newlist.append(newfig)
+        return newlist
+
+
 def _get_template(output, report_type, template=None):
     """
     This method will return the template to use for a specified
@@ -178,7 +214,6 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
               'table_path': None, 'table_eff': None,
               'pcross': None, 'perr': None, 'pcross_simt': None,
               'pcross_teff': None, 'pcross_opteff': None}
-    print report['figures']
     # get the efficiency results:
     report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
 
@@ -201,13 +236,8 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
     _, report['table_eff'] = _table_efficiencies(path_ensembles,
                                                  analysis['tis'], fmt=output)
     if output in ['latex', 'tex']:
-        # remove extensions of figures:
-        report['figures'] = []
-        for fig in analysis['tis-fig']:
-            newfig = {key: _remove_extension(fig[key]) for key in fig}
-            report['figures'].append(newfig)
-        report['totalfig'] = [_remove_extension(fig) for fig
-                              in report['totalfig']]
+        for fig in ['figures', 'totalfig']:
+            report[fig] = _remove_extensions(report[fig])
         for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
                     'pcross_opteff']:
             report[key] = _latexify_number(report[key])
@@ -239,13 +269,11 @@ def generate_report_md(analysis, output='rst', template=None):
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
               'flux_figures': analysis['flux_figures'],
-              'energy_figures': analysis['energy_figures']}
+              'energy_figures': analysis['energy_figures'],
+              'order_figures': analysis['order_figures']}
     if output in ['latex', 'tex']:
-        # remove extensions of figures:
-        report['flux_figures'] = []
-        for fig in analysis['flux_figures']:
-            newfig = {key: _remove_extension(fig[key]) for key in fig}
-            report['flux_figures'].append(newfig)
+        for fig in ['flux_figures', 'energy_figures', 'order_figures']:
+            report[fig] = _remove_extensions(report[fig])
         # latexify some numbers:
         # for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
         #            'pcross_opteff']:
