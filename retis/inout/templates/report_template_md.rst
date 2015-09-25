@@ -11,36 +11,47 @@ Results obtained
 
 .. _energy-figures-output:
 
-Energy figures
+MD energy data
 --------------
+
+Energy and the running average of the energy:
 
 .. image:: @{{ energy_figures['energies'] }}@
    :width: 45%
 .. image:: @{{ energy_figures['run_energies'] }}@
    :width: 45%
 
+Temperature and the running average of the temperature:
+
 .. image:: @{{ energy_figures['temperature'] }}@
    :width: 45%
 .. image:: @{{ energy_figures['run_temp'] }}@
    :width: 45%
 
+Block error analysis for energies:
+
 .. image:: @{{ energy_figures['kinblock'] }}@
-   :width: 23%
+   :width: 30%
 .. image:: @{{ energy_figures['potblock'] }}@
-   :width: 23%
+   :width: 30%
 .. image:: @{{ energy_figures['totblock'] }}@
-   :width: 23%
-.. image:: @{{ energy_figures['tempblock'] }}@
-   :width: 23%
+   :width: 30%
+
+Distribution of energies:
 
 .. image:: @{{ energy_figures['kindist'] }}@
-   :width: 23%
+   :width: 30%
 .. image:: @{{ energy_figures['potdist'] }}@
-   :width: 23%
+   :width: 30%
 .. image:: @{{ energy_figures['totdist'] }}@
-   :width: 23%
+   :width: 30%
+
+Block error and distribution for temperature:
+
+.. image:: @{{ energy_figures['tempblock'] }}@
+   :width: 30%
 .. image:: @{{ energy_figures['tempdist'] }}@
-   :width: 23%
+   :width: 30%
 
 .. _flux-figures-output:
 
