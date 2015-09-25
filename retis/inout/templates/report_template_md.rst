@@ -87,3 +87,5 @@ MD flux data
 
 @{{ table_md_flux }}@
 
+@{{ table_md_cycles }}@
+

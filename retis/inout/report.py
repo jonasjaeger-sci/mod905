@@ -273,6 +273,8 @@ def generate_report_md(analysis, output='rst', template=None):
               'order_figures': analysis['order_figures']}
     # generate some tables:
     _, report['table_md_flux'] = _table_md_flux(analysis['flux'], fmt=output)
+    _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['flux'],
+                                                         fmt=output)
     # check if we need some additional latexification:
     if output in ['latex', 'tex']:
         for fig in ['flux_figures', 'energy_figures', 'order_figures']:
@@ -318,6 +320,46 @@ def _apply_format(value, fmt):
         return str_fmt
 
 
+def _table_md_flux_cycles(results, fmt='rst'):
+    """
+    This will generate the table for the MD-flux results for cycle numbers.
+    The table will display the number of steps in state A, state B,
+    overall state A and B and total number of MD cycles.
+
+    Parameters
+    ----------
+    results : dict
+        These are the results obtained in the ``analyse_flux`` method in
+        the analysis package.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in the desired format which represents
+        the table.
+    """
+    # table for interfaces:
+    table = []
+    table.append(['A', '{:8d}'.format(results['times']['A'])])
+    table.append(['B', '{:8d}'.format(results['times']['B'])])
+    table.append(['overall A', '{:8d}'.format(results['times']['OA'])])
+    table.append(['overall B', '{:8d}'.format(results['times']['OB'])])
+    table.append(['Total cycles', '{:8d}'.format(results['totalcycle'])])
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Cycles spent in state',
+                                          ['State', 'Cycles'],
+                                          fixnum=set([2]))
+    else:
+        table_str = _generate_rst_table(table, 'Cycles spent in state',
+                                        ['State', 'Cycles'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
+
+
 def _table_md_flux(results, fmt='rst'):
     """
     This will generate the table for the MD-flux results.
@@ -349,18 +391,23 @@ def _table_md_flux(results, fmt='rst'):
         row.append(_apply_format(flux, '{:^10.6f}'))
         row.append(_apply_format(error, '{:^10.6f}'))
         row.append(_apply_format(relerror, '{:^10.6f}'))
+        row.append('{:^8d}'.format(results['ncross'][i]))
+        row.append('{:^8d}'.format(results['neffcross'][i]))
+        row.append(_apply_format(results['neffc/nc'][i], '{:^10.6f}'))
         row.append(_apply_format(results['cross_time'][i], '{:^10.6f}'))
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = _generate_latex_table(table, 'Flux for interfaces',
                                           ['Int.', 'Position', 'Flux / units',
-                                           'Error', 'Rel. error',
+                                           'Error', 'Rel. error', 'Ncross',
+                                           'Neffcross', 'Neffcross/Ncross',
                                            'Steps per cross'],
-                                          fixnum=set([2, 3, 4, 5]))
+                                          fixnum=set([2, 3, 4, 5, 6, 7, 8]))
     else:
         table_str = _generate_rst_table(table, 'Flux for interfaces',
                                         ['Int.', 'Position', 'Flux / units',
-                                         'Error', 'Rel. error',
+                                         'Error', 'Rel. error', 'Ncross',
+                                         'Neffcross', 'Neffcross/Ncross',
                                          'Steps per cross'])
     table_str = '\n'.join(table_str)
     return table, table_str
