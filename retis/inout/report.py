@@ -275,14 +275,12 @@ def generate_report_md(analysis, output='rst', template=None):
     _, report['table_md_flux'] = _table_md_flux(analysis['flux'], fmt=output)
     _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['flux'],
                                                          fmt=output)
+    _, report['table_md_efficiency'] = _table_md_efficiency(analysis['flux'],
+                                                            fmt=output)
     # check if we need some additional latexification:
     if output in ['latex', 'tex']:
         for fig in ['flux_figures', 'energy_figures', 'order_figures']:
             report[fig] = _remove_extensions(report[fig])
-        # latexify some numbers:
-        # for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
-        #            'pcross_opteff']:
-        #    report[key] = _latexify_number(report[key])
     return _generate_report(report, output, template, path)
 
 
@@ -318,6 +316,58 @@ def _apply_format(value, fmt):
         return new_fmt.format(value)
     else:
         return str_fmt
+
+
+def _table_md_efficiency(results, fmt='rst'):
+    """
+    This will generate the table for the MD-flux results for efficiencies
+    and correlations.
+
+    Parameters
+    ----------
+    results : dict
+        These are the results obtained in the ``analyse_flux`` method in
+        the analysis package.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or latex ('tex').
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table
+    out[1] : string
+        This is a string in the desired format which represents
+        the table.
+    """
+    # table for interfaces:
+    table = []
+    for i, _ in enumerate(results['interfaces']):
+        pmd = results['pMD'][i]
+        teff = results['teffMD'][i]
+        corr = results['corrMD'][i]
+        prel = results['1-p'][i]
+        row = ['{:^10d}'.format(i + 1)]
+        row.append(_apply_format(pmd, '{:^10.6f}'))
+        row.append(_apply_format(prel, '{:^10.6f}'))
+        row.append(_apply_format(teff, '{:^10.6f}'))
+        row.append(_apply_format(corr, '{:^10.6f}'))
+        table.append(row)
+
+    if fmt in ['tex', 'latex']:
+        table_str = _generate_latex_table(table, 'Efficiency',
+                                          ['Interface',
+                                           r'$p_\text{MD}$',
+                                           r'$\frac{1-p}{p}$',
+                                           'Efficiency time', 'Correlation'],
+                                          fixnum=set([1, 2, 3, 4]))
+    else:
+        table_str = _generate_rst_table(table, 'Efficiency',
+                                        ['Interface',
+                                         r':math:`p_\text{MD}`',
+                                         r':math:`\frac{1-p}{p}`',
+                                         'Efficiency time', 'Correlation'])
+    table_str = '\n'.join(table_str)
+    return table, table_str
 
 
 def _table_md_flux_cycles(results, fmt='rst'):
