@@ -784,13 +784,36 @@ class EnergyFile(FileWriter):
             data = np.array(blocks['data'])
             data_dict = {'comment': blocks['comment'],
                          'data': {'time': data[:, 0],
-                                  'pot': data[:, 1],
-                                  'kin': data[:, 2],
-                                  'tot': data[:, 3],
+                                  'vpot': data[:, 1],
+                                  'ekin': data[:, 2],
+                                  'etot': data[:, 3],
                                   'ham': data[:, 4],
                                   'temp': data[:, 5],
                                   'ext': data[:, 6]}}
             yield data_dict
+
+    def write(self, step, energy):
+        """
+        This function will write the energy data to the file.
+
+        Parameters
+        ----------
+        step : int
+            This is the current step number.
+        energy : dict
+            This is the energy data stored as a dictionary.
+
+        Returns
+        -------
+        out : boolean
+            True if line could be written, False otherwise.
+        """
+        towrite = ['{:>10d}'.format(step)]
+        for key in ['vpot', 'ekin', 'etot', 'ham', 'temp', 'ext']:
+            value = energy.get(key, 0.0)
+            towrite.append('{:>12.6f}'.format(value))
+        towrite = ' '.join(towrite)
+        return self.write_line(towrite)
 
     def __str__(self):
         """
@@ -858,6 +881,28 @@ class OrderFile(FileWriter):
             for i in range(col):
                 data_dict['data'].append(data[:, i])
             yield data_dict
+
+    def write(self, step, orderdata):
+        """
+        This will write the order parameter data to the file.
+
+        Parameters
+        ----------
+        step : int
+            This is the current step number.
+        orderdata : list of floats
+            This is the raw order parameter data.
+
+        Returns
+        -------
+        out : boolean
+            True if line could be written, False otherwise.
+        """
+        towrite = ['{:>10d}'.format(step)]
+        for orderp in orderdata:
+            towrite.append('{:>12.6f}'.format(orderp))
+        towrite = ' '.join(towrite)
+        return self.write_line(towrite)
 
     def __str__(self):
         """

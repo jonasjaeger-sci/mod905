@@ -42,9 +42,9 @@ _ENERFILES = {'energies': os.extsep.join(['energies', '{}']),
               'block': os.extsep.join(['{}block', '{}']),
               'dist': os.extsep.join(['{}dist', '{}'])}
 # hard-coded information for the energy terms:
-_ENERTITLE = {'pot': 'Potential energy',
-              'kin': 'Kinetic energy',
-              'tot': 'Total energy',
+_ENERTITLE = {'vpot': 'Potential energy',
+              'ekin': 'Kinetic energy',
+              'etot': 'Total energy',
               'ham': 'Hamilt. energy',
               'temp': 'Temperature',
               'elec': 'Energy (externally computed)'}
@@ -325,7 +325,7 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     ----------
     results : dict
         Each item in `results` contains the results for the corresponding
-        energy. It is assumed to contains the keys 'pot', 'kin', 'tot',
+        energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
         'ham', 'temp', 'elec'
     energies : dict of numpy.arrays
         This is the raw-data for the energy analysis
@@ -349,14 +349,14 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     time = energies['time']
     # make time series plot of the energies
     series = []
-    for key in ['pot', 'kin', 'tot', 'ham']:
+    for key in ['vpot', 'ekin', 'etot', 'ham']:
         series.append((time, energies[key],
                        _ENERTITLE[key]))
     mpl_simple_plot(series, outfiles['energies'],
                     xlabel='Time', ylabel='Energy', title=None)
     # make running average plot of the energies as function of time
     series = []
-    for key in ['pot', 'kin', 'tot', 'ham']:
+    for key in ['vpot', 'ekin', 'etot', 'ham']:
         series.append((time, results[key]['running'], _ENERTITLE[key]))
     mpl_simple_plot(series, outfiles['run_energies'],
                     xlabel='Time', ylabel='Energy', title=None)
@@ -372,23 +372,23 @@ def mpl_energy_output(results, energies, simulation_settings=None,
 
     # plot block-error results:
     outfile = _ENERFILES['block'].format('{}', out_format)
-    for key in ['pot', 'kin', 'tot', 'temp']:
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}block'.format(key)] = outfile.format(key)
         _mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
                          outfiles['{}block'.format(key)])
     # plot distributions
     outfile = _ENERFILES['dist'].format('{}', out_format)
-    for key in ['pot', 'kin', 'tot', 'temp']:
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
         dist = results[key]['distribution']
         series = [(dist[1], dist[0], _ENERTITLE[key])]
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
         title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
-        if simulation_settings is not None and key in ['kin', 'temp']:
+        if simulation_settings is not None and key in ['ekin', 'temp']:
             pos = np.linspace(min(0.0, dist[1].min()),
                               dist[1].max(), 1000)
             alp = (0.5 * simulation_settings['npart'] *
                    simulation_settings['dim'])
-            if key == 'kin':
+            if key == 'ekin':
                 scale = 1.0 / simulation_settings['beta']
             elif key == 'temp':
                 scale = simulation_settings['temp'] / alp
@@ -684,7 +684,7 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
     ----------
     results : dict
         Each item in `results` contains the results for the corresponding
-        energy. It is assumed to contains the keys 'pot', 'kin', 'tot',
+        energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
         'ham', 'temp', 'elec'
     energies : numpy.array
         This is the raw-data for the energy analysis
@@ -704,18 +704,18 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
     # 1) Store the running average:
     header = 'Running average of energy data'
     txt_save_columns(outfiles['run_energies'], header, time,
-                     results['pot']['running'], results['kin']['running'],
-                     results['tot']['running'], results['ham']['running'],
+                     results['vpot']['running'], results['ekin']['running'],
+                     results['etot']['running'], results['ham']['running'],
                      results['temp']['running'], results['ext']['running'])
     # 2) Save block error data:
     outfile = _ENERFILES['block'].format('{}', out_format)
-    for key in ['pot', 'kin', 'tot', 'temp']:
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}block'.format(key)] = outfile.format(key)
         _txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
                          results[key]['blockerror'])
     # 3) Save histograms:
     outfile = _ENERFILES['dist'].format('{}', out_format)
-    for key in ['pot', 'kin', 'tot', 'temp']:
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}dist'.format(key)] = outfile.format(key)
         _txt_histogram(outfiles['{}dist'.format(key)],
                        r'Histogram for {}'.format(_ENERTITLE[key]),
