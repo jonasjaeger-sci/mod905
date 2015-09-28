@@ -134,10 +134,13 @@ def check_crossing(cycle, system, order_function, interfaces,
     system : object of type retis.core.System
         This is the system which defines the phase point we are currently
         investigating
-    order_function : function or object of type order parameter
+    order_function : function or object of type order parameter or number.
         Order parameter objects are defined in ``orderparameter.py``.
         ``order_function`` is assumed to be a function accepting
-        ``system`` as a parameter and returning at least two scalars.
+        ``system`` as a parameter and returning at least two scalars. 
+        In case a single float is give, the order parameter will not be
+        recalculated and the single float will just be used as the current
+        order parameter.
     interfaces : list of floats
         These are the interfaces to check.
     leftside_prev : list of booleans
@@ -154,7 +157,11 @@ def check_crossing(cycle, system, order_function, interfaces,
         where direction is '-' for a crossing in the negative direction and
         '+' for a crossing in the positive direction.
     """
-    orderp, _ = order_function(system)
+    try:
+        orderp, _ = order_function(system)
+    except TypeError:
+        # Assume TypeError is caused by order_function = a float
+        orderp = order_function
     cross = []
     if leftside_prev is None:
         leftside_curr = [orderp < interf for interf in interfaces]
