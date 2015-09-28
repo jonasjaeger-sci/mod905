@@ -11,6 +11,7 @@ from retis.core.path import check_crossing
 
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE',
+           'SimulationMdFlux',
            'create_simulation']
 
 
@@ -584,6 +585,12 @@ class SimulationMdFlux(Simulation):
                        'first': True,
                        'result': 'thermo'}
         self.add_task(task_thermo)
+        # add a task for calculating the order parameter
+        task_order = {'func': self.order_function.__call__,
+                      'args': [system],
+                      'first': True,
+                      'result': 'orderp'}
+        self.add_task(task_order)
 
     def step(self):
         """
@@ -599,13 +606,21 @@ class SimulationMdFlux(Simulation):
         """
         self.cycle['step'] += 1
         self.cycle['stepno'] += 1
-        results = {}
+        # integrate one step
         self.integrator.integration_step(self.system)
-        leftside, cross = check_crossing(self.cycle['step'], self.system,
-                                         self.order_function,
-                                         self.interfaces,
-                                         self.leftside_prev)
-        self.leftside_prev = leftside
+        # collect energy and order parameter
         results = self.execute_tasks()
+        if 'orderp' in results:
+            leftside, cross = check_crossing(self.cycle['step'], self.system,
+                                             results['orderp'][0],
+                                             self.interfaces,
+                                             self.leftside_prev)
+        else:
+            # order parameter was not calculated at this step, do it:
+            leftside, cross = check_crossing(self.cycle['step'], self.system,
+                                             self.order_function,
+                                             self.interfaces,
+                                             self.leftside_prev)
+        self.leftside_prev = leftside
         results['cross'] = cross
         return results
