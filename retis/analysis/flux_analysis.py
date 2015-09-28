@@ -10,39 +10,38 @@ import numpy as np
 __all__ = ['analyse_flux']
 
 
-def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
+def analyse_flux(fluxdata, settings, simulation_settings):
     """
     This method will run the analysis on several order parameters and
-    collect the results into a structure which is convenient for plotting.
+    collect the results into a structure which is convenient for plotting and
+    reporting the results.
 
     Parameters
     ----------
     fluxdata : list of tuples of ints
         The contents of this array is the data obtained from a MD simulation
         for the fluxes.
-    interfaces : list of floats
-        These are the interfaces used in the simulation.
     settings : dict
         This dict contains the settings for the analysis.
-    end_step : int
-        This is the last step done in the simulation.
-    time_step : int
-        This is the time step used in the simulation.
+    simulation_settings : dict
+        This dict contains information about the simulation that was
+        performed.
 
     Returns
     -------
     results : numpy.array
     """
     results = {}
-    ret = _effective_crossings(fluxdata, len(interfaces), end_step)
-    results = {'eff_cross': ret[0],  # effective crossings times
-               'ncross': ret[1],  # number of crossings
-               'neffcross': ret[2],  # number of effective crossings
-               'times': ret[3],  # time spent in the different states
+    end_step = simulation_settings['end_step']
+    time_step = simulation_settings['time_step']
+    results = {'eff_cross': None,  # effective crossings times
+               'ncross': None,  # number of crossings
+               'neffcross': None,  # number of effective crossings
+               'times': None,  # time spent in the different states
                'flux': [],  # store raw flux data
                'runflux': [],  # running average of flux
                'errflux': [],  # block error analysis
-               'interfaces': [i for i in interfaces],  # store position of int
+               'interfaces': [i for i in simulation_settings['interfaces']],
                'totalcycle': end_step,  # store total number of cycles
                'cross_time': [],  # steps per crossing
                'neffc/nc': [],  # Effective crossings per crossing
@@ -50,7 +49,12 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
                '1-p': [],  #
                'teffMD': [],  #
                'corrMD': []}  #
-    for i in range(len(interfaces)):
+    ret = _effective_crossings(fluxdata, len(results['interfaces']), end_step)
+    results['eff_cross'] = ret[0]
+    results['ncross'] = ret[1]
+    results['neffcross'] = ret[2]
+    results['times'] = ret[3]
+    for i in range(len(results['interfaces'])):
         time, ncross, flux = _calculate_flux(results['eff_cross'][i],
                                              results['times']['OA'],
                                              settings['skipcross'], time_step)
