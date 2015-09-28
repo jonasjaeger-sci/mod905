@@ -42,6 +42,12 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         This is the raw data for the energies.
     orderdata : numpy.array
         This is the raw data for the order parameter.
+    analysis_settings : dict
+        This dict contains settings for running the analysis (e.g block
+        length for error analysis).
+    simulation_settings : dict
+        This dict contains settings from the simulation (interfaces,
+        time step etc).
 
     Returns
     -------
