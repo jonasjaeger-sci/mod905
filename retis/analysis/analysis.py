@@ -165,20 +165,36 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)
     # also calculate some relative errors:
-    try:
-        rel_err = berr / abs(bavg[0])
-        avg_rel_err = berr_avg / abs(bavg[0])
-    except ZeroDivisionError:
-        rel_err = float('inf') * np.ones(berr.shape)
-        avg_rel_err = float('inf')
-    # and correlation estimate:
-    try:
-        ncor = (berr / berr[0])**2
-        avg_ncor = (berr_avg / berr[0])**2
-    except ZeroDivisionError:
-        ncor = float('inf') * np.ones(berr.shape)
-        avg_ncor = float('inf')
+    rel_err = _safe_divide(berr, abs(bavg[0]),
+                           val_if_zero=float('inf') * np.ones(berr.shape))
+    avg_rel_err = _safe_divide(berr_avg, abs(bavg[0]),
+                               val_if_zero=float('inf'))
+    ncor = _safe_divide(berr**2, berr[0]**2,
+                        val_if_zero=float('inf') * np.ones(berr.shape))
+    avg_ncor = _safe_divide(berr_avg**2, berr[0]**2,
+                            val_if_zero=float('inf'))
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
+
+
+def _safe_divide(numerator, denominator, val_if_zero=np.nan):
+    """
+    This function will just attempt to divide two number. If a zero
+    division exction is raised it will handle it.
+
+    Parameters
+    ----------
+    numerator : float or numpy.array
+        The numerator(s)
+    denominator : float or numpy.array
+        The denominator(s)
+    val_if_zero : float or numpy.array
+        The value(s) to return in case of a ZeroDivisionError
+    """
+    try:
+        fraction = numerator / denominator
+    except ZeroDivisionError:
+        fraction = val_if_zero
+    return fraction
 
 
 def mean_square_displacement(data, ndt=None):
