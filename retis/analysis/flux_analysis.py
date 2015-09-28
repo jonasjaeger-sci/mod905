@@ -4,7 +4,7 @@ This file contains methods for analysis of crossings for the
 flux data
 """
 from __future__ import absolute_import
-from .analysis import running_average, block_error_corr
+from .analysis import running_average, block_error_corr, safe_divide
 import numpy as np
 
 __all__ = ['analyse_flux']
@@ -32,18 +32,24 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
     Returns
     -------
     results : numpy.array
-
     """
     results = {}
     ret = _effective_crossings(fluxdata, len(interfaces), end_step)
-    results = {'eff_cross': ret[0],
-               'ncross': ret[1],
-               'neffcross': ret[2],
-               'times': ret[3],
-               'flux': [], 'runflux': [],
-               'errflux': [],
-               'interfaces': [i for i in interfaces],
-               'totalcycle': end_step}
+    results = {'eff_cross': ret[0],  # effective crossings times
+               'ncross': ret[1],  # number of crossings
+               'neffcross': ret[2],  # number of effective crossings
+               'times': ret[3],  # time spent in the different states
+               'flux': [],  # store raw flux data
+               'runflux': [],  # running average of flux
+               'errflux': [],  # block error analysis
+               'interfaces': [i for i in interfaces],  # store position of int
+               'totalcycle': end_step,  # store total number of cycles
+               'cross_time': [],  # steps per crossing
+               'neffc/nc': [],  # Effective crossings per crossing
+               'pMD': [],  #
+               '1-p': [],  #
+               'teffMD': [],  #
+               'corrMD': []}  #
     for i in range(len(interfaces)):
         time, ncross, flux = _calculate_flux(results['eff_cross'][i],
                                              results['times']['OA'],
@@ -55,18 +61,20 @@ def analyse_flux(fluxdata, interfaces, settings, end_step, time_step):
                                        maxblock=settings['maxblock'],
                                        blockskip=settings['blockskip'])
         results['errflux'].append(block_error)
-    results['cross_time'] = []
-    for neff in results['neffcross']:
-        try:
-            results['cross_time'].append(float(end_step) / float(neff))
-        except ZeroDivisionError:
-            results['cross_time'].append(np.nan)
-    results['neffc/nc'] = []
-    for neffc, ncr in zip(results['neffcross'], results['ncross']):
-        try:
-            results['neffc/nc'].append(float(neffc) / float(ncr))
-        except ZeroDivisionError:
-            results['neffc/nc'].append(np.nan)
+
+    # do some additional statistics:
+    results['cross_time'] = [safe_divide(float(end_step), float(neff))
+                             for neff in results['neffcross']]
+
+    results['neffc/nc'] = [safe_divide(float(neff), float(ncr)) for neff, ncr
+                           in zip(results['neffcross'], results['ncross'])]
+    for flux, error in zip(results['runflux'], results['errflux']):
+        results['pMD'].append(flux[-1] * time_step)
+        results['1-p'].append(safe_divide(float(1.0 - results['pMD'][-1]),
+                                          results['pMD'][-1]))
+        results['teffMD'].append(end_step * error[4]**2)
+        results['corrMD'].append(safe_divide(results['teffMD'][-1],
+                                             results['1-p'][-1]))
     return results
 
 
