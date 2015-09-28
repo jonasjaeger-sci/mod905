@@ -349,7 +349,7 @@ class FileWriter(object):
         This is the file handle which can be used for writing etc.
     """
     def __init__(self, filename, filetype, mode='w', oldfile='backup',
-                 count=0):
+                 count=0, header=None):
         """
         Initiates the file writer object. This will just define and
         set some variables
@@ -366,6 +366,9 @@ class FileWriter(object):
             Behavior if the `filename` is an existing file.
         frame : int
             Counts the number of frames written
+        header : dict, optional
+            This determines if we should create a header for the file. For some
+            text files this can help for the readability.
         """
         self.count = count
         self.filename = filename
@@ -374,6 +377,14 @@ class FileWriter(object):
         self.fileh = None
         if self.mode == 'w':
             self.fileopen(oldfile=oldfile)
+        if header is not None:
+            _, self.header = _create_and_format_row(header['text'],
+                                                    header['width'],
+                                                    header=True,
+                                                    spacing=1,
+                                                    fmt_str=None)
+        else:
+            self.header = None
 
     def fileopen(self, oldfile='bakcup'):
         """
@@ -755,9 +766,14 @@ class EnergyFile(FileWriter):
             in `filename`. Note that this is only usefull when the mode is
             set to 'w'.
         """
+        header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
+                           'Hamiltonian', 'Temperature', 'External'],
+                  'width': [10, 12]}
         super(EnergyFile, self).__init__(filename, 'energyfile',
                                          mode=mode,
-                                         oldfile=oldfile)
+                                         oldfile=oldfile,
+                                         header=header)
+        self.out_format = ['{:>10d}'] + ['{:>12.6f}']*6
 
     def load(self):
         """
@@ -808,10 +824,11 @@ class EnergyFile(FileWriter):
         out : boolean
             True if line could be written, False otherwise.
         """
-        towrite = ['{:>10d}'.format(step)]
-        for key in ['vpot', 'ekin', 'etot', 'ham', 'temp', 'ext']:
+        towrite = [self.out_format[0].format(step)]
+        for i, key in enumerate(['vpot', 'ekin', 'etot', 'ham',
+                                 'temp', 'ext']):
             value = energy.get(key, 0.0)
-            towrite.append('{:>12.6f}'.format(value))
+            towrite.append(self.out_format[i + 1].format(value))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
 
@@ -850,8 +867,12 @@ class OrderFile(FileWriter):
             in `filename`. Note that this is only usefull when the mode is
             set to 'w'.
         """
+        header = {'text': ['Time', 'Orderp', 'Orderv'],
+                  'width': [10, 12]}
         super(OrderFile, self).__init__(filename, 'orderparameter',
-                                        mode=mode, oldfile=oldfile)
+                                        mode=mode, oldfile=oldfile,
+                                        header=header)
+        self.out_format = ['{:>10d}', '{:>12.6f}']
 
     def load(self):
         """
@@ -898,9 +919,9 @@ class OrderFile(FileWriter):
         out : boolean
             True if line could be written, False otherwise.
         """
-        towrite = ['{:>10d}'.format(step)]
+        towrite = [self.out_format[0].format(step)]
         for orderp in orderdata:
-            towrite.append('{:>12.6f}'.format(orderp))
+            towrite.append(self.out_format[1].format(orderp))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
 
