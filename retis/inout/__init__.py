@@ -18,6 +18,8 @@ Modules:
 - __init__.py: Imports from the other modules and define some convenience
   functions for creating trajectory writers and text tables.
 
+- energyfile.py: Modile for handling writing and reading of energy data.
+
 - pathfile.py: Module for handling writing and reading of path ensemble
   data.
 
@@ -50,6 +52,7 @@ from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
 from .pathfile import PathEnsembleFile
+from .energyfile import EnergyFile
 
 
 def create_traj_writer(settings, system):
