@@ -52,6 +52,51 @@ def txt_save_columns(outputfile, header, *variables):
     np.savetxt(outputfile, mat, header=header)
 
 
+def txt_block_error(outputfile, title, error):
+    """
+    This will write the output from the error analysis, to a text file.
+
+    Parameters
+    ----------
+    outputfile : string
+        This is the name of the output file to create.
+    title : string
+        This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
+        'Kinetic energy', etc.
+    error : list
+        This is the result from the error analysis
+    """
+    header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
+    header = header.format(title, error[4], error[6])
+    txt_save_columns(outputfile, header, error[0], error[3])
+
+
+def txt_histogram(outputfile, title, *histograms):
+    """
+    This will output histograms to a text file.
+
+    Parameters
+    ----------
+    outputfile : string
+        This is the name of the output file to create.
+    title : string
+        A descriptive title to add to the header.
+    histograms : tuple
+        The histograms to store.
+    """
+    data = []
+    header = [r'{}'.format(title)]
+    for hist in histograms:
+        header.append(r'avg: {0:6.2f}, std: {1:6.2f}'.format(hist[2][0],
+                                                             hist[2][1]))
+        data.append(hist[1])
+        data.append(hist[0])
+    header = ', '.join(header)
+    txt_save_columns(outputfile, header, *data)
+    # *data is used here since we want to be flexible and write any number
+    # of histograms to the file.
+
+
 def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
     This will create the header format given the width.

@@ -143,8 +143,7 @@ def mpl_savefig(fig, outputfile):
     plt.close(fig)  # free up memory
 
 
-def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
-                    title=None):
+def mpl_simple_plot(series, outputfile, fig_settings=None):
     """
     This method will plot time series data.
 
@@ -155,34 +154,52 @@ def mpl_simple_plot(series, outputfile, xlabel='Time', ylabel='Value',
         to be on the form (x-values, y-values, legend)
     outputfile : string
         This is the name of the output file to create.
-    xlabel : string, optional
-        The label to use for the x-axis.
-    ylabel : string, optional
-        The label to use for the y-axis.
-    title : string, optional
-        Title to use for the plot.
+    fig_settings : dict
+        This dict contains settings for the figure, keys are:
+        xlabel : string, the label to use for the x-axis.
+        ylabel : string, the label to use for the y-axis.
+        title : string, title to use for the figure.
+        yscale : string, to change the scale for the y-axis.
     """
     fig = plt.figure()
     axs = fig.add_subplot(111)
     handles = []
     labels = []
     for seri in series:
-        try:
-            add_legend = seri[2] is not None
-        except IndexError:
-            add_legend = False
-        handle, = axs.plot(seri[0], seri[1])
-        if add_legend:
+        handle = None
+        if seri['type'] == 'xy':
+            if 'x' in seri:
+                handle, = axs.plot(seri['x'], seri['y'],
+                                   ls=seri.get('ls', '-'),
+                                   alpha=seri.get('alpha', 1.0),
+                                   lw=seri.get('lw', 2.0))
+            else:
+                handle, = axs.plot(seri['y'],
+                                   ls=seri.get('ls', '-'),
+                                   alpha=seri.get('alpha', 1.0),
+                                   lw=seri.get('lw', 2.0))
+        elif seri['type'] == 'vline':
+            handle = axs.axvline(x=seri['x'], ls=seri.get('ls', '-'),
+                                 alpha=seri.get('alpha', 1.0),
+                                 lw=seri.get('lw', 2.0))
+        elif seri['type'] == 'hline':
+            handle = axs.axhline(y=seri['y'], ls=seri.get('ls', '-'),
+                                 alpha=seri.get('alpha', 1.0),
+                                 lw=seri.get('lw', 2.0))
+        legend = seri.get('label', None)
+        if legend is not None and handle is not None:
             handles.append(handle)
-            labels.append(seri[2])
-    if xlabel is not None:
-        axs.set_xlabel(xlabel)
-    if ylabel is not None:
-        axs.set_ylabel(ylabel)
-    if title is not None:
-        axs.set_title(title, fontsize='x-small', loc='left')
+            labels.append(legend)
+    if 'xlabel' in fig_settings:
+        axs.set_xlabel(fig_settings['xlabel'])
+    if 'ylabel' in fig_settings:
+        axs.set_ylabel(fig_settings['ylabel'])
+    if 'title' in fig_settings:
+        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
+    if 'yscale' in fig_settings:
+        axs.set_yscale(fig_settings['yscale'])
     mpl_savefig(fig, outputfile)
 
 

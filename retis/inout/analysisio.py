@@ -7,17 +7,16 @@ For the path analysis it can also be used to output over-all matched
 results.
 """
 from __future__ import absolute_import
-from matplotlib import pyplot as plt
 import warnings
 import numpy as np
 import os
 # pylint: disable=E0611
 from scipy.stats import gamma
 # pylint: enable=E0611
-from .plotting import (mpl_error_plot, mpl_line_gradient, mpl_savefig,
+from .plotting import (mpl_error_plot, mpl_line_gradient,
                        mpl_simple_plot, mpl_block_error)
 from .common import create_backup
-from .txtinout import txt_save_columns
+from .txtinout import txt_save_columns, txt_block_error, txt_histogram
 
 __all__ = ['mpl_path_output', 'txt_path_output',
            'mpl_total_probability', 'txt_total_probability',
@@ -60,90 +59,6 @@ _FLUXFILES = {'runflux': os.extsep.join(['runflux_{}', '{}']),
               'block': os.extsep.join(['errflux_{}', '{}'])}
 
 
-def _mpl_pcross_lambda(lamb, pcross, idetect, ensemble, outputfile):
-    """
-    This method will plot the crossing probability as a
-    function of the order parameter using matplotlib.
-
-    Parameters
-    ----------
-    lamb : numpy.array
-        These are the values for the order parameter
-    pcross : numpy.array
-        These are the values for the crossing probability
-    idetect : float
-        This is the interface used for the detection.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    axs.plot(lamb, pcross)
-    axs.axvline(x=idetect, ls='--', alpha=0.8)
-    axs.set_xlabel(r'Order parameter ($\lambda$)')
-    axs.set_ylabel('Probability')
-    titl = 'Ensemble: {0}'.format(ensemble)
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(fig, outputfile)
-
-
-def _mpl_p_running_average(prun, ensemble, outputfile):
-    """
-    This method will create the plot of the running average of
-    the probability as a function of cycle number.
-
-    Parameters
-    ----------
-    prun : numpy.array
-        The running average of the probability.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    axs.axhline(y=prun[-1], ls='--', alpha=0.8)
-    axs.plot(prun)
-    axs.set_xlabel('Cycle number')
-    axs.set_ylabel('Probability (running average)')
-    titl = 'Ensemble: {0}'.format(ensemble)
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(fig, outputfile)
-
-
-def _mpl_length_histogram(hist1, hist2, ensemble, outputfile):
-    """
-    This will plot the distribution of lengths
-
-    Parameters
-    ----------
-    hist1 : list
-        This is the histogram of accepted paths
-    hist2 : list
-        This is the histogram for all paths.
-    ensemble : string
-        This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
-    lab1 = labfmt.format('Accepted', hist1[2][0], hist1[2][1])
-    lab2 = labfmt.format('All', hist2[2][0], hist2[2][1])
-    axs.plot(hist1[1], hist1[0], lw=2, label=lab1)
-    axs.plot(hist2[1], hist2[0], lw=2, label=lab2)
-    axs.set_xlabel('MD steps')
-    axs.set_ylabel('Frequency')
-    titl = 'Ensemble: {0}'.format(ensemble)
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    axs.legend(prop={'size': 'x-small'})
-    mpl_savefig(fig, outputfile)
-
-
 def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
                           outputfile_scale):
     """
@@ -165,28 +80,24 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
         This is the name of the output file to create. This will be
         the scaled plot.
     """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    fig_scale = plt.figure()
-    axs_scale = fig_scale.add_subplot(111)
+    series = []
+    series_scale = []
     for key in ['ACC', 'REJ', 'BWI', 'ALL']:
         try:
             mid = histograms[key][2]
             hist = histograms[key][0]
-            axs.plot(mid, hist, lw=2, ls='-', label='{}'.format(key),
-                     alpha=0.8)
-            hist *= scale[key]
-            axs_scale.plot(mid, hist, lw=2, ls='-', label='{}'.format(key),
-                           alpha=0.8)
+            series.append({'type': 'xy', 'x': mid, 'y': hist,
+                           'label': '{}'.format(key), 'alpha': 0.8})
+            series_scale.append({'type': 'xy', 'x': mid, 'y': hist*scale[key],
+                                 'label': '{}'.format(key), 'alpha': 0.8})
         except KeyError:
             continue
-    titl = 'Ensemble: {0}'.format(ensemble)
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    axs.legend(prop={'size': 'x-small'})
-    axs_scale.set_title(titl, fontsize='x-small', loc='left')
-    axs_scale.legend(prop={'size': 'x-small'})
-    mpl_savefig(fig, outputfile)
-    mpl_savefig(fig_scale, outputfile_scale)
+    mpl_simple_plot(series,
+                    outputfile,
+                    fig_settings={'title': 'Ensemble: {0}'.format(ensemble)})
+    mpl_simple_plot(series_scale,
+                    outputfile_scale,
+                    fig_settings={'title': 'Ensemble: {0}'.format(ensemble)})
 
 
 def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
@@ -216,13 +127,42 @@ def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
     outfiles = {}
     for key in _PATHFILES:
         outfiles[key] = _PATHFILES[key].format(ens, out_format)
-    _mpl_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
-                       ens, outfiles['pcross'])
-    _mpl_p_running_average(results['prun'], ens, outfiles['prun'])
+    # first plot pcross vs lambda with the idetect surface
+    series = [{'type': 'xy', 'x': results['pcross'][0],
+               'y': results['pcross'][1]}]
+    series.append({'type': 'vline', 'x': idetect, 'ls': '--', 'alpha': 0.8})
+    mpl_simple_plot(series,
+                    outfiles['pcross'],
+                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
+                                  'ylabel': 'Probability',
+                                  'title': 'Ensemble: {0}'.format(ens)})
+    # next plot running pcross:
+    series = [{'type': 'xy', 'y': results['prun']}]
+    series.append({'type': 'hline', 'y': results['prun'][-1],
+                   'ls': '--', 'alpha': 0.8})
+    mpl_simple_plot(series,
+                    outfiles['prun'],
+                    fig_settings={'xlabel': 'Cycle number',
+                                  'ylabel': 'Probability (running average)',
+                                  'title': 'Ensemble: {0}'.format(ens)})
+    # plot results of block-error analysis:
     mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
                     outfiles['perror'])
-    _mpl_length_histogram(results['pathlength'][0], results['pathlength'][1],
-                          ens, outfiles['pathlength'])
+    # plot length-histogram:
+    hist1 = results['pathlength'][0]
+    hist2 = results['pathlength'][1]
+    labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
+    lab1 = labfmt.format('Accepted', hist1[2][0], hist1[2][1])
+    lab2 = labfmt.format('All', hist2[2][0], hist2[2][1])
+    series = [{'type': 'xy', 'x': hist1[1], 'y': hist1[0],
+               'label': lab1}]
+    series.append({'type': 'xy', 'x': hist2[1], 'y': hist2[0],
+                   'label': lab2})
+    mpl_simple_plot(series,
+                    outfiles['pathlength'],
+                    fig_settings={'xlabel': 'MD steps',
+                                  'ylabel': 'Frequency',
+                                  'title': 'Ensemble: {0}'.format(ens)})
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'], outfiles['shoots-scaled'])
     return outfiles
@@ -247,19 +187,18 @@ def mpl_total_probability(path_ensembles, detect, results, matched,
     outputfile : string
         This is the name of the output file to create.
     """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
+    series = []
     for idetect in detect:
-        axs.axvline(x=idetect, ls='--', alpha=0.8)
+        series.append({'type': 'vline', 'x': idetect,
+                       'ls': '--', 'alpha': 0.8})
     for result, prob, path_e in zip(results, matched, path_ensembles):
-        axs.plot(result['pcross'][0], prob, lw=3, label=path_e.ensemble)
-    axs.set_yscale('log')
-    axs.legend(prop={'size': 'small'})
-    axs.set_xlabel(r'Order parameter ($\lambda$)')
-    axs.set_ylabel('Probability')
-    titl = 'Matched probabilities'
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(fig, outputfile)
+        series.append({'type': 'xy', 'x': result['pcross'][0], 'y': prob,
+                       'lw': 3, 'label': path_e.ensemble})
+    mpl_simple_plot(series, outputfile,
+                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
+                                  'ylabel': 'Probability',
+                                  'title': 'Matched probabilities',
+                                  'yscale': 'log'})
 
 
 def mpl_total_matched_probability(detect, matched, outputfile):
@@ -275,17 +214,17 @@ def mpl_total_matched_probability(detect, matched, outputfile):
     outputfile : string
         This is the name of the output file to create.
     """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
+    series = []
     for idetect in detect:
-        axs.axvline(x=idetect, ls='--', alpha=0.8)
-    axs.plot(matched[:, 0], matched[:, 1], lw=3)
-    axs.set_yscale('log')
-    axs.set_xlabel(r'Order parameter ($\lambda$)')
-    axs.set_ylabel('Probability')
-    titl = 'Matched probability'
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(fig, outputfile)
+        series.append({'type': 'vline', 'x': idetect,
+                       'ls': '--', 'alpha': 0.8})
+    series.append({'type': 'xy', 'x': matched[:, 0],
+                   'y': matched[:, 1], 'lw': 3})
+    mpl_simple_plot(series, outputfile,
+                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
+                                  'ylabel': 'Probability',
+                                  'title': 'Matched probability',
+                                  'yscale': 'log'})
 
 
 def mpl_energy_output(results, energies, simulation_settings=None,
@@ -322,25 +261,26 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     # make time series plot of the energies
     series = []
     for key in ['vpot', 'ekin', 'etot', 'ham']:
-        series.append((time, energies[key],
-                       _ENERTITLE[key]))
+        series.append({'type': 'xy', 'x': time, 'y': energies[key],
+                       'label': _ENERTITLE[key]})
     mpl_simple_plot(series, outfiles['energies'],
-                    xlabel='Time', ylabel='Energy', title=None)
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
     # make running average plot of the energies as function of time
     series = []
     for key in ['vpot', 'ekin', 'etot', 'ham']:
-        series.append((time, results[key]['running'], _ENERTITLE[key]))
+        series.append({'type': 'xy', 'x': time, 'y': results[key]['running'],
+                       'label': _ENERTITLE[key]})
     mpl_simple_plot(series, outfiles['run_energies'],
-                    xlabel='Time', ylabel='Energy', title=None)
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
     # plot temperature
-    series = [(time, energies['temp'], None)]
+    series = [{'type': 'xy', 'x': time, 'y': energies['temp']}]
     mpl_simple_plot(series, outfiles['temperature'],
-                    xlabel='Time', ylabel='Temperature', title=None)
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Temperature'})
     # and running average for temperature
-    series = [(time, results['temp']['running'], None)]
+    series = [{'type': 'xy', 'x': time, 'y': results['temp']['running']}]
     mpl_simple_plot(series, outfiles['run_temp'],
-                    xlabel='Time', ylabel='Temperature',
-                    title='Running average')
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Temperature',
+                                  'title': 'Running average'})
 
     # plot block-error results:
     outfile = _ENERFILES['block'].format('{}', out_format)
@@ -352,7 +292,8 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     outfile = _ENERFILES['dist'].format('{}', out_format)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         dist = results[key]['distribution']
-        series = [(dist[1], dist[0], _ENERTITLE[key])]
+        series = [{'type': 'xy', 'x': dist[1], 'y': dist[0],
+                   'label': _ENERTITLE[key]}]
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
         title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
         if simulation_settings is not None and key in ['ekin', 'temp']:
@@ -364,11 +305,12 @@ def mpl_energy_output(results, energies, simulation_settings=None,
                 scale = 1.0 / simulation_settings['beta']
             elif key == 'temp':
                 scale = simulation_settings['temp'] / alp
-            series.append((pos, gamma.pdf(pos, alp, loc=0, scale=scale),
-                           'Boltzmann distribution'))
+            series.append({'type': 'xy', 'x': pos,
+                           'y': gamma.pdf(pos, alp, loc=0, scale=scale),
+                           'label': 'Boltzmann distribution'})
         outfiles['{}dist'.format(key)] = outfile.format(key)
         mpl_simple_plot(series, outfiles['{}dist'.format(key)],
-                        xlabel=None, ylabel=None, title=title)
+                        fig_settings={'title': title})
     return outfiles
 
 
@@ -406,25 +348,27 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
         outfiles[key] = _ORDERFILES[key].format(out_format)
 
     time = orderdata['data'][0]
-    series = [(time, orderdata['data'][1])]
+    series = [{'type': 'xy', 'x': time, 'y': orderdata['data'][1]}]
     mpl_simple_plot(series, outfiles['order'],
-                    xlabel='Time', ylabel='Order parameter', title=None)
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Order parameter'})
     # make running average plot of the energies as function of time
-    series = [(time, results[0]['running'], 'Running average')]
+    series = [{'type': 'xy', 'x': time, 'y': results[0]['running'],
+               'label': 'Running average'}]
     mpl_simple_plot(series, outfiles['run_order'],
-                    xlabel='Time', ylabel='Order parameter', title=None)
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Order parameter'})
 
     # plot block-error results:
     mpl_block_error(results[0]['blockerror'], 'Order parameter',
                     outfiles['block'])
     # plot distributions
     dist = results[0]['distribution']
-    series = [(dist[1], dist[0])]
+    series = [{'type': 'xy', 'x': dist[1], 'y': dist[0]}]
     title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
     title = title.format('Order parameter', dist[2][0], dist[2][1])
     mpl_simple_plot(series, outfiles['dist'],
-                    xlabel=None, ylabel=None, title=title)
-
+                    fig_settings={'title': title})
     # also try a orderp vs ordervel plot:
     if len(orderdata['data']) >= 3:
         series = [(orderdata['data'][1], orderdata['data'][2])]
@@ -468,60 +412,18 @@ def mpl_flux_output(results, out_format='png'):
         errflux = results['errflux'][i]
         outfile = _FLUXFILES['runflux'].format(i + 1, out_format)
         outfiles['runflux'].append(outfile)
-        series = [(flux[:, 0], runflux, 'Running average')]
+        series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
+                   'label': 'Running average'}]
+        title = 'Flux for interface no. {}'.format(i + 1)
         mpl_simple_plot(series, outfile,
-                        xlabel='Time', ylabel='Flux / internal units',
-                        title='Flux for interface no. {}'.format(i + 1))
+                        fig_settings={'xlabel': 'Time',
+                                      'ylabel': 'Flux / internal units',
+                                      'title': title})
         outfile = _FLUXFILES['block'].format(i + 1, out_format)
         outfiles['block'].append(outfile)
         mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
                         outfile)
     return outfiles
-
-
-def _txt_block_error(outputfile, title, error):
-    """
-    This will write the output from the error analysis, to a text file.
-
-    Parameters
-    ----------
-    outputfile : string
-        This is the name of the output file to create.
-    title : string
-        This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
-        'Kinetic energy', etc.
-    error : list
-        This is the result from the error analysis
-    """
-    header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
-    header = header.format(title, error[4], error[6])
-    txt_save_columns(outputfile, header, error[0], error[3])
-
-
-def _txt_histogram(outputfile, title, *histograms):
-    """
-    This will output the distribution of lengths to a text file.
-
-    Parameters
-    ----------
-    outputfile : string
-        This is the name of the output file to create.
-    title : string
-        A descriptive title to add to the header.
-    histograms : tuple
-        The histograms to store.
-    """
-    data = []
-    header = [r'{}'.format(title)]
-    for hist in histograms:
-        header.append(r'avg: {0:6.2f}, std: {1:6.2f}'.format(hist[2][0],
-                                                             hist[2][1]))
-        data.append(hist[1])
-        data.append(hist[0])
-    header = ', '.join(header)
-    txt_save_columns(outputfile, header, *data)
-    # *data is used here since we want to be flexible and write any number
-    # of histograms to the file.
 
 
 def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
@@ -588,11 +490,11 @@ def txt_path_output(path_ensemble, results, idetect, out_format='txt.gz'):
     txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
                      results['prun'])
     # 3) Block error results:
-    _txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
-                     results['blockerror'])
+    txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
+                    results['blockerror'])
     # 3) Length histograms
-    _txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
-                   results['pathlength'][0], results['pathlength'][1])
+    txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
+                  results['pathlength'][0], results['pathlength'][1])
     # 4) Shoot histograms
     _txt_shoots_histogram(outfiles['shoots'], results['shoots'][0],
                           results['shoots'][1], ens)
@@ -683,15 +585,15 @@ def txt_energy_output(results, energies, out_format='txt.gz'):
     outfile = _ENERFILES['block'].format('{}', out_format)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}block'.format(key)] = outfile.format(key)
-        _txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
-                         results[key]['blockerror'])
+        txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
+                        results[key]['blockerror'])
     # 3) Save histograms:
     outfile = _ENERFILES['dist'].format('{}', out_format)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}dist'.format(key)] = outfile.format(key)
-        _txt_histogram(outfiles['{}dist'.format(key)],
-                       r'Histogram for {}'.format(_ENERTITLE[key]),
-                       results[key]['distribution'])
+        txt_histogram(outfiles['{}dist'.format(key)],
+                      r'Histogram for {}'.format(_ENERTITLE[key]),
+                      results[key]['distribution'])
     return outfiles
 
 
@@ -735,11 +637,11 @@ def txt_orderp_output(results, orderdata, out_format='txt.gz'):
                      time, results[0]['running'])
 
     # output block-error results:
-    _txt_block_error(outfiles['block'], 'Block error for order param',
-                     results[0]['blockerror'])
+    txt_block_error(outfiles['block'], 'Block error for order param',
+                    results[0]['blockerror'])
     # output distributions:
-    _txt_histogram(outfiles['dist'], 'Order parameter',
-                   results[0]['distribution'])
+    txt_histogram(outfiles['dist'], 'Order parameter',
+                  results[0]['distribution'])
     # output msd if it was calculated:
     if 'msd' in results[0]:
         msd = results[0]['msd']
@@ -783,6 +685,6 @@ def txt_flux_output(results, out_format='txt.gz'):
         # output block-error results:
         outfile = _FLUXFILES['block'].format(i + 1, out_format)
         outfiles['block'].append(outfile)
-        _txt_block_error(outfile, 'Block error for flux analysis',
-                         errflux)
+        txt_block_error(outfile, 'Block error for flux analysis',
+                        errflux)
     return outfiles
