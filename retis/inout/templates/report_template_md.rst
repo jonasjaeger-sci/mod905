@@ -30,20 +30,20 @@ Temperature and the running average of the temperature:
 
 Block error analysis for energies:
 
-.. image:: @{{ energy_figures['kinblock'] }}@
+.. image:: @{{ energy_figures['ekinblock'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['potblock'] }}@
+.. image:: @{{ energy_figures['vpotblock'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['totblock'] }}@
+.. image:: @{{ energy_figures['etotblock'] }}@
    :width: 30%
 
 Distribution of energies:
 
-.. image:: @{{ energy_figures['kindist'] }}@
+.. image:: @{{ energy_figures['ekindist'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['potdist'] }}@
+.. image:: @{{ energy_figures['vpotdist'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['totdist'] }}@
+.. image:: @{{ energy_figures['etotdist'] }}@
    :width: 30%
 
 Block error and distribution for temperature:
