@@ -357,16 +357,16 @@ class FileWriter(object):
         self.filetype = filetype
         self.mode = mode.lower()
         self.fileh = None
-        if self.mode == 'w':
-            self.fileopen(oldfile=oldfile)
+        self.header = None
         if header is not None:
             _, self.header = _create_and_format_row(header['text'],
                                                     header['width'],
                                                     header=True,
                                                     spacing=1,
                                                     fmt_str=None)
-        else:
-            self.header = None
+        if self.mode == 'w':
+            self.fileopen(oldfile=oldfile)
+            self.write_line(self.header)
 
     def fileopen(self, oldfile='bakcup'):
         """
@@ -449,6 +449,8 @@ class FileWriter(object):
         towrite : string
             This is the string to output to the file
         """
+        if towrite is None:
+            return False
         if self.fileh is not None and not self.fileh.closed:
             try:
                 self.fileh.write(towrite)
@@ -467,8 +469,8 @@ class FileWriter(object):
 
     def write_line(self, towrite):
         """
-        This method is similar to write_string, however, it writes a new-line
-        after the given `towrite`.
+        This method calls `write_string` adding a new-line to the given
+        string.
 
         Parameters
         ----------
