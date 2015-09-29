@@ -182,9 +182,15 @@ class PathEnsembleFile(FileWriter):
             in `filename`. Note that this is only usefull when the mode is
             set to 'w'.
         """
+        header = {'text': ['Step', 'No. acc', 'No. shoot',
+                           'l', 'm', 'r', 'Length', 'Acc', 'Mc',
+                           'Min-O', 'Max-O', 'Idx-Min', 'Idx-Max',
+                           'O-shoot', 'Idx-sh', 'Idx-shN'],
+                  'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
+                            16, 7, 7]}
         super(PathEnsembleFile, self).__init__(filename, 'pathensemble',
-                                               mode=mode,
-                                               oldfile=oldfile)
+                                               mode=mode, oldfile=oldfile,
+                                               header=header)
         self.ensemble = ensemble
         self.interfaces = interfaces
 
