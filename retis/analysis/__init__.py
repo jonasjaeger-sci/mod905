@@ -57,11 +57,8 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         generating reports.
     """
     results = {}
-    print('Analysing flux data')
     results['flux'] = analyse_flux(crossdata, analysis_settings,
                                    simulation_settings)
-    print('Analysing energy data')
     results['energy'] = analyse_energies(energydata, analysis_settings)
-    print('Order parameter data')
     results['order'] = analyse_orderp(orderdata, analysis_settings)
     return results
