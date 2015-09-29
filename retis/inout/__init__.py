@@ -21,9 +21,11 @@ Modules:
 - fileinout.py: Module for handling writing and reading of crossing,
   energy, order parameter and path ensemble data.
 
+- mpl_plotting.py: Module which defines plotting using matplotlib.
+
 - plotting.py: This file defines some colors etc. for plotting. It
   also defines a function which can be used to load different plotting
-  styles, among them the default pytismol style.
+  objects.
 
 - report.py: Module for creating reports based on analysis. This module
   is responsible for creating the final output from the analysis of (RE)TIS
@@ -43,9 +45,8 @@ Folders:
 
 - templates: This folder contains templates for the report.
 """
-from .analysisio import (mpl_path_output, mpl_total_probability,
-                         txt_path_output, txt_total_probability)
-from .plotting import mpl_set_style
+from .analysisio import txt_path_output, txt_total_probability
+from .plotting import create_plotter
 from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
