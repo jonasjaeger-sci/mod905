@@ -279,3 +279,31 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
     mpl_savefig(fig, outputfile)
+
+
+def mpl_block_error(error, title, outputfile):
+    """
+    This will plot the output from a error analysis; the error
+    as a function of the block length.
+
+    Parameters
+    ----------
+    error : list
+        This list contains the result from the error analysis.
+    title : string
+        String to add to the title to the plot. In addition,
+        the relative error and the correlation length will be written
+        in the title.
+    outputfile : string
+        This is the name of the output file to create.
+    """
+    fig = plt.figure()
+    axs = fig.add_subplot(111)
+    axs.axhline(y=error[4], alpha=0.8, ls='--')
+    axs.plot(error[0], error[3])
+    axs.set_xlabel('Block length')
+    axs.set_ylabel('Estimated error')
+    titl = '{0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
+    titl = titl.format(title, error[4], error[6])
+    axs.set_title(titl, fontsize='x-small', loc='left')
+    mpl_savefig(fig, outputfile)

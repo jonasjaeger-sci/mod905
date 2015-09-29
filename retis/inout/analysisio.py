@@ -15,7 +15,7 @@ import os
 from scipy.stats import gamma
 # pylint: enable=E0611
 from .plotting import (mpl_error_plot, mpl_line_gradient, mpl_savefig,
-                       mpl_simple_plot)
+                       mpl_simple_plot, mpl_block_error)
 from .common import create_backup
 from .txtinout import txt_save_columns
 
@@ -110,34 +110,6 @@ def _mpl_p_running_average(prun, ensemble, outputfile):
     axs.set_xlabel('Cycle number')
     axs.set_ylabel('Probability (running average)')
     titl = 'Ensemble: {0}'.format(ensemble)
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(fig, outputfile)
-
-
-def _mpl_block_error(error, title, outputfile):
-    """
-    This will plot the output from a error analysis; the error
-    as a function of the block length.
-
-    Parameters
-    ----------
-    error : list
-        This list contains the result from the error analysis.
-    title : string
-        String to add to the title to the plot. In addition,
-        the relative error and the correlation length will be written
-        in the title.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    fig = plt.figure()
-    axs = fig.add_subplot(111)
-    axs.axhline(y=error[4], alpha=0.8, ls='--')
-    axs.plot(error[0], error[3])
-    axs.set_xlabel('Block length')
-    axs.set_ylabel('Estimated error')
-    titl = '{0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
-    titl = titl.format(title, error[4], error[6])
     axs.set_title(titl, fontsize='x-small', loc='left')
     mpl_savefig(fig, outputfile)
 
@@ -247,8 +219,8 @@ def mpl_path_output(path_ensemble, results, idetect, out_format='png'):
     _mpl_pcross_lambda(results['pcross'][0], results['pcross'][1], idetect,
                        ens, outfiles['pcross'])
     _mpl_p_running_average(results['prun'], ens, outfiles['prun'])
-    _mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
-                     outfiles['perror'])
+    mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
+                    outfiles['perror'])
     _mpl_length_histogram(results['pathlength'][0], results['pathlength'][1],
                           ens, outfiles['pathlength'])
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
@@ -374,8 +346,8 @@ def mpl_energy_output(results, energies, simulation_settings=None,
     outfile = _ENERFILES['block'].format('{}', out_format)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         outfiles['{}block'.format(key)] = outfile.format(key)
-        _mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
-                         outfiles['{}block'.format(key)])
+        mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
+                        outfiles['{}block'.format(key)])
     # plot distributions
     outfile = _ENERFILES['dist'].format('{}', out_format)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
@@ -443,8 +415,8 @@ def mpl_orderp_output(results, orderdata, out_format='png'):
                     xlabel='Time', ylabel='Order parameter', title=None)
 
     # plot block-error results:
-    _mpl_block_error(results[0]['blockerror'], 'Order parameter',
-                     outfiles['block'])
+    mpl_block_error(results[0]['blockerror'], 'Order parameter',
+                    outfiles['block'])
     # plot distributions
     dist = results[0]['distribution']
     series = [(dist[1], dist[0])]
@@ -502,8 +474,8 @@ def mpl_flux_output(results, out_format='png'):
                         title='Flux for interface no. {}'.format(i + 1))
         outfile = _FLUXFILES['block'].format(i + 1, out_format)
         outfiles['block'].append(outfile)
-        _mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
-                         outfile)
+        mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
+                        outfile)
     return outfiles
 
 
