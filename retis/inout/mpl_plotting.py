@@ -93,8 +93,8 @@ class MplPlotter(object):
         return outfiles
 
     @staticmethod
-    def plot_energy_output(results, energies, simulation_settings=None,
-                           out_fmt='png'):
+    def plot_energy(results, energies, simulation_settings=None,
+                    out_fmt='png'):
         """
         Save the output from the energy analysis to text files.
 
