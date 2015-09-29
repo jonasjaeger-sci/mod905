@@ -18,15 +18,8 @@ Modules:
 - __init__.py: Imports from the other modules and define some convenience
   functions for creating trajectory writers and text tables.
 
-- crossfile.py: Module for handling writing and reading of crossing data.
-
-- energyfile.py: Module for handling writing and reading of energy data.
-
-- orderfile.py: Module for handling writing and reading of order parameter
-  data.
-
-- pathfile.py: Module for handling writing and reading of path ensemble
-  data.
+- fileinout.py: Module for handling writing and reading of crossing,
+  energy, order parameter and path ensemble data.
 
 - plotting.py: This file defines some colors etc. for plotting. It
   also defines a function which can be used to load different plotting
@@ -42,7 +35,7 @@ Modules:
   It defines the TxtTable object (table-like-format) intended to be
   written to the screen during a simulation or to a file.
   Futher it defines the more general FileWriter object, which is used by
-  other file writers (as in traj.py and e.g. pathfile.py).
+  other file writers (as in traj.py and fileinout.py).
 
 Folders:
 
@@ -56,10 +49,7 @@ from .plotting import mpl_set_style
 from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
-from .crossfile import CrossFile
-from .energyfile import EnergyFile
-from .orderfile import OrderFile
-from .pathfile import PathEnsembleFile
+from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
 
 
 def create_traj_writer(settings, system):
