@@ -427,7 +427,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     Parameters
     ----------
     path_ensemble : object of type ``retis.core.path.PathEnsemble`` or
-        ``retis.inout.txtinout.PathEnsembleFile``. This is the path ensemble
+        ``retis.inout.pathfile.PathEnsembleFile``. This is the path ensemble
         to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
