@@ -22,6 +22,9 @@ Modules:
 
 - energyfile.py: Module for handling writing and reading of energy data.
 
+- orderfile.py: Module for handling writing and reading of order parameter
+  data.
+
 - pathfile.py: Module for handling writing and reading of path ensemble
   data.
 
@@ -55,6 +58,7 @@ from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
 from .crossfile import CrossFile
 from .energyfile import EnergyFile
+from .orderfile import OrderFile
 from .pathfile import PathEnsembleFile
 
 
