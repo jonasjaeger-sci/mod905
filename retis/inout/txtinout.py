@@ -366,7 +366,8 @@ class FileWriter(object):
                                                     fmt_str=None)
         if self.mode == 'w':
             self.fileopen(oldfile=oldfile)
-            self.write_line(self.header)
+            if oldfile != 'append':
+                self.write_line(self.header)
 
     def fileopen(self, oldfile='bakcup'):
         """
