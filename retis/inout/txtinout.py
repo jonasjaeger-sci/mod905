@@ -39,7 +39,14 @@ __all__ = ['TxtTable', 'PathEnsembleFile', 'EnergyFile', 'OrderFile',
 PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
             '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
             '{13:>16.9e} {14:>7d} {15:7d}')
-
+# format for crossing files:
+CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
+# format for order files, here as a tuple since we don't know how many
+# parameters we will write:
+ORDER_FMT = ['{:>10d}', '{:>12.6f}']
+# format for the energy files, here also as a tuple since this makes
+# convenient for outputting in a specific order:
+ENERGY_FMT = ['{:>10d}'] + 6*['{:>12.6f}']
 
 def txt_save_columns(outputfile, header, *variables):
     """
@@ -632,6 +639,8 @@ class PathEnsembleFile(FileWriter):
     interfaces : list of ints
         These are the interfaces specified with the values
         for the order parameters: [left, middle, right]
+        This variable is used when creating a ``PathEnsemble`` object
+        in ``to_path_ensemble``.
     """
     def __init__(self, filename, ensemble, interfaces, mode='w',
                  oldfile='backup'):
@@ -773,7 +782,6 @@ class EnergyFile(FileWriter):
                                          mode=mode,
                                          oldfile=oldfile,
                                          header=header)
-        self.out_format = ['{:>10d}'] + ['{:>12.6f}']*6
 
     def load(self):
         """
@@ -824,11 +832,11 @@ class EnergyFile(FileWriter):
         out : boolean
             True if line could be written, False otherwise.
         """
-        towrite = [self.out_format[0].format(step)]
+        towrite = [ENERGY_FMT[0].format(step)]
         for i, key in enumerate(['vpot', 'ekin', 'etot', 'ham',
                                  'temp', 'ext']):
             value = energy.get(key, 0.0)
-            towrite.append(self.out_format[i + 1].format(value))
+            towrite.append(ENERGY_FMT[i + 1].format(value))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
 
@@ -872,7 +880,6 @@ class OrderFile(FileWriter):
         super(OrderFile, self).__init__(filename, 'orderparameter',
                                         mode=mode, oldfile=oldfile,
                                         header=header)
-        self.out_format = ['{:>10d}', '{:>12.6f}']
 
     def load(self):
         """
@@ -919,9 +926,9 @@ class OrderFile(FileWriter):
         out : boolean
             True if line could be written, False otherwise.
         """
-        towrite = [self.out_format[0].format(step)]
+        towrite = [ORDER_FMT[0].format(step)]
         for orderp in orderdata:
-            towrite.append(self.out_format[1].format(orderp))
+            towrite.append(ORDER_FMT[1].format(orderp))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
 
@@ -961,8 +968,11 @@ class CrossFile(FileWriter):
             in `filename`. Note that this is only usefull when the mode is
             set to 'w'.
         """
+        header = {'text': ['Step', 'Int', 'Dir'],
+                  'width': [10, 4, 3]}
         super(CrossFile, self).__init__(filename, 'crossingfile',
-                                        mode=mode, oldfile=oldfile)
+                                        mode=mode, oldfile=oldfile,
+                                        header=header)
 
     @staticmethod
     def line_parser(line):
@@ -1033,7 +1043,7 @@ class CrossFile(FileWriter):
         """
         retval = []
         for cro in cross:
-            towrite = '{} {} {}'.format(cro[0], cro[1] + 1, cro[2])
+            towrite = CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
             retval.append(self.write_line(towrite))
         return retval
 
