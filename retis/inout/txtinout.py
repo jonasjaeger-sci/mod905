@@ -512,7 +512,7 @@ class FileWriter(object):
             self.fileh.close()
 
 
-def _line_to_path(line):
+def _line_to_path_object(line):
     """
     This is a helper function to convert a text line to a Path object.
 
@@ -524,6 +524,12 @@ def _line_to_path(line):
     Returns
     -------
     out : object of type Path
+
+    Note
+    ----
+    TODO: This function is considered for deletion - is it going to be
+    usefull or are we always going to create path data from a file. It might
+    be usefull in the future for restart files.
     """
     path = Path()
     data = line.split()
