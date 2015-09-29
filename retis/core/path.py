@@ -137,7 +137,7 @@ def check_crossing(cycle, system, order_function, interfaces,
     order_function : function or object of type order parameter or number.
         Order parameter objects are defined in ``orderparameter.py``.
         ``order_function`` is assumed to be a function accepting
-        ``system`` as a parameter and returning at least two scalars. 
+        ``system`` as a parameter and returning at least two scalars.
         In case a single float is give, the order parameter will not be
         recalculated and the single float will just be used as the current
         order parameter.
