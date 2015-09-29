@@ -155,7 +155,7 @@ def _simple_line_parser(line):
     return [float(col) for col in line.split()]
 
 
-def _read_some_lines(filename, line_parser=_simple_line_parser):
+def read_some_lines(filename, line_parser=_simple_line_parser):
     """
     This is a helper function, it will open a file and
     try to read as many lines as possible. The argument line_parser
@@ -557,9 +557,9 @@ class EnergyFile(FileWriter):
 
         See Also
         --------
-        _read_some_lines
+        read_some_lines
         """
-        for blocks in _read_some_lines(self.filename):
+        for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])
             data_dict = {'comment': blocks['comment'],
                          'data': {'time': data[:, 0],
@@ -654,9 +654,9 @@ class OrderFile(FileWriter):
 
         See Also
         --------
-        _read_some_lines
+        read_some_lines
         """
-        for blocks in _read_some_lines(self.filename):
+        for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])
             _, col = data.shape
             data_dict = {'comment': blocks['comment']}
@@ -767,8 +767,8 @@ class CrossFile(FileWriter):
             This is the data contained in the file. The columns are the
             step number, interface number and direction.
         """
-        for blocks in _read_some_lines(self.filename,
-                                       line_parser=self.line_parser):
+        for blocks in read_some_lines(self.filename,
+                                      line_parser=self.line_parser):
             data_dict = {'comment': blocks['comment'],
                          'data': blocks['data']}
             yield data_dict
