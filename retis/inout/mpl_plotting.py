@@ -93,7 +93,7 @@ class MplPlotter(object):
         return outfiles
 
     @staticmethod
-    def plot_energy(results, energies, simulation_settings=None,
+    def plot_energy(results, energies, sim_settings=None,
                     out_fmt='png'):
         """
         Save the output from the energy analysis to text files.
@@ -106,7 +106,7 @@ class MplPlotter(object):
             'ham', 'temp', 'elec'
         energies : dict of numpy.arrays
             This is the raw-data for the energy analysis
-        simulation_settings : dict, optional
+        sim_settings : dict, optional
             This is the simulation settings which are usefull for creating
             theoretical plots of distributions. It is assumed to contain
             the number of particles, the dimensionality
@@ -164,15 +164,15 @@ class MplPlotter(object):
                        'label': _ENERTITLE[key]}]
             title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
             title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
-            if simulation_settings is not None and key in ['ekin', 'temp']:
+            if sim_settings is not None and key in ['ekin', 'temp']:
                 pos = np.linspace(min(0.0, dist[1].min()),
                                   dist[1].max(), 1000)
-                alp = (0.5 * simulation_settings['npart'] *
-                       simulation_settings['dim'])
+                alp = (0.5 * sim_settings['npart'] *
+                       sim_settings['dim'])
                 if key == 'ekin':
-                    scale = 1.0 / simulation_settings['beta']
+                    scale = 1.0 / sim_settings['beta']
                 elif key == 'temp':
-                    scale = simulation_settings['temp'] / alp
+                    scale = sim_settings['temp'] / alp
                 series.append({'type': 'xy', 'x': pos,
                                'y': gamma.pdf(pos, alp, loc=0, scale=scale),
                                'label': 'Boltzmann distribution'})
