@@ -656,7 +656,7 @@ class PathEnsemble(object):
         This will yield the different paths stored in the path ensemble.
         It is included here in order to have a simple compatibility between
         the `PathEnsemble` object and the `PathEnsembleFile` object defined in
-        ``retis.core.txtinout``. This is useful for the analysis.
+        ``retis.inout``. This is useful for the analysis.
 
         Yields
         ------
