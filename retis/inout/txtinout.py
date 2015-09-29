@@ -9,8 +9,6 @@ Objects defined here:
 
 - FileWriter: Defines a simple object to output to a file.
 
-- PathEnsembleFile: Writing/reading of path ensemble data to a file.
-
 - EnergyFile: Writing/reading of energy data to a file.
 
 - OrderFile: Writing/reading of order parameter data
