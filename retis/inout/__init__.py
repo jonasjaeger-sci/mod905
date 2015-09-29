@@ -18,6 +18,9 @@ Modules:
 - __init__.py: Imports from the other modules and define some convenience
   functions for creating trajectory writers and text tables.
 
+- pathfile.py: Module for handling writing and reading of path ensemble
+  data.
+
 - plotting.py: This file defines some colors etc. for plotting. It
   also defines a function which can be used to load different plotting
   styles, among them the default pytismol style.
@@ -32,7 +35,7 @@ Modules:
   It defines the TxtTable object (table-like-format) intended to be
   written to the screen during a simulation or to a file.
   Futher it defines the more general FileWriter
-  object and objects for energies, path ensembles etc.
+  object and objects for energies etc.
 
 Folders:
 
@@ -44,8 +47,9 @@ from .analysisio import (mpl_path_output, mpl_total_probability,
                          txt_path_output, txt_total_probability)
 from .plotting import set_plotting_style
 from .report import generate_report_tis, generate_report_md
-from .traj import WriteGromacs, WriteXYZ
 from .txtinout import TxtTable, FileWriter
+from .traj import WriteGromacs, WriteXYZ
+from .pathfile import PathEnsembleFile
 
 
 def create_traj_writer(settings, system):
