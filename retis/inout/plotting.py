@@ -21,7 +21,7 @@ import os
 import warnings
 from .common import create_backup
 
-__all__ = ['set_plotting_style']
+__all__ = ['mpl_set_style']
 
 
 # Custom named colors:
@@ -49,11 +49,11 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
 
 
 # Define default style file:
-_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
-                           'pytismol.mplstyle'])
+_MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
+                               'pytismol.mplstyle'])
 
 
-def _read_style_file(filename):
+def _mpl_read_style_file(filename):
     """
     This function is just intended for old versions of matplotlib
     where we have to read parameters and set them ourselves.
@@ -83,13 +83,13 @@ def _read_style_file(filename):
                     warnings.warn(msg.format(key))
 
 
-def set_plotting_style(style='pytismol'):
+def mpl_set_style(style='pytismol'):
     """
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
     'grayscale' (i.e. one of the styles in plt.style.available) or
     as a file (full path is needed). The default pytismol style
-    is stored in _STYLE_FILE and can be selected with 'pytismol'.
+    is stored in _MPL_STYLE_FILE and can be selected with 'pytismol'.
     Style equal to None is just the default matplotlib style.
 
     Parameters
@@ -101,9 +101,9 @@ def set_plotting_style(style='pytismol'):
     if style is None:
         return
     if style == 'pytismol':
-        style = _STYLE_FILE
+        style = _MPL_STYLE_FILE
     if mpl.__version__ < '1.4.0':  # default to loading from file
-        _read_style_file(style)
+        _mpl_read_style_file(style)
     else:
         if style in plt.style.available:
             plt.style.use(style)
