@@ -250,8 +250,7 @@ class MplPlotter(object):
                            ylabel='MSD', title=None)
         return outfiles
 
-    @staticmethod
-    def plot_path(path_ensemble, results, idetect, out_fmt='png'):
+    def plot_path(self, path_ensemble, results, idetect):
         """
         This method will output all the figures from the results obtained
         by the path analysis.
@@ -264,9 +263,6 @@ class MplPlotter(object):
             This dict contains the result from the analysis.
         idetect : float
             This is the interface used for the detection in the analysis.
-        out_fmt : string, optional
-            This is the desired format to use for the graphs. Supported are
-            png, pdf, svg, etc. (see the matplotlib documentation).
 
         Returns
         -------
@@ -277,7 +273,7 @@ class MplPlotter(object):
         ens = path_ensemble.ensemble  # identify the ensemble
         outfiles = {}
         for key in _PATHFILES:
-            outfiles[key] = _PATHFILES[key].format(ens, out_fmt)
+            outfiles[key] = _PATHFILES[key].format(ens, self.out_fmt)
         # first plot pcross vs lambda with the idetect surface
         series = [{'type': 'xy', 'x': results['pcross'][0],
                    'y': results['pcross'][1]}]
