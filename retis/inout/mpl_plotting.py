@@ -38,7 +38,7 @@ class MplPlotter(object):
     ----------
 
     """
-    def __init__(self, style=None):
+    def __init__(self, out_fmt, style=None):
         """
         To initiate the plotting object. Here we only define the style.
 
@@ -50,9 +50,19 @@ class MplPlotter(object):
         """
         self.style = style
         _mpl_set_style(self.style)
+        fig = plt.figure()
+        supported = fig.canvas.get_supported_filetypes()
+        plt.close(fig)
+        if out_fmt not in supported:
+            msg = ['Output format {} is not supported.'.format(out_fmt),
+                   'Please try:']
+            for key in supported:
+                msg.append(key)
+            raise ValueError(msg)
+        else:
+            self.out_fmt = out_fmt
 
-    @staticmethod
-    def plot_flux(results, out_fmt='png'):
+    def plot_flux(self, results):
         """
         Plot the output from the flux analysis using matplotlib.
 
@@ -60,9 +70,6 @@ class MplPlotter(object):
         ----------
         results : dict
             This is the dict with the results from the flux analysis.
-        out_fmt : string, optional
-            This is the desired format to use for the graphs. Supported are
-            png, pdf, svg, etc. (see the matplotlib documentation).
 
         Returns
         -------
@@ -77,7 +84,7 @@ class MplPlotter(object):
             flux = results['flux'][i]
             runflux = results['runflux'][i]
             errflux = results['errflux'][i]
-            outfile = _FLUXFILES['runflux'].format(i + 1, out_fmt)
+            outfile = _FLUXFILES['runflux'].format(i + 1, self.out_fmt)
             outfiles['runflux'].append(outfile)
             series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
                        'label': 'Running average'}]
@@ -86,15 +93,13 @@ class MplPlotter(object):
                             fig_settings={'xlabel': 'Time',
                                           'ylabel': 'Flux / internal units',
                                           'title': title})
-            outfile = _FLUXFILES['block'].format(i + 1, out_fmt)
+            outfile = _FLUXFILES['block'].format(i + 1, self.out_fmt)
             outfiles['block'].append(outfile)
             mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
                             outfile)
         return outfiles
 
-    @staticmethod
-    def plot_energy(results, energies, sim_settings=None,
-                    out_fmt='png'):
+    def plot_energy(self, results, energies, sim_settings=None):
         """
         Save the output from the energy analysis to text files.
 
@@ -110,15 +115,13 @@ class MplPlotter(object):
             This is the simulation settings which are usefull for creating
             theoretical plots of distributions. It is assumed to contain
             the number of particles, the dimensionality
-        out_fmt : string, optional
-            This is the desired format to use for the graphs. Supported are
-            png, pdf, svg, etc. (see the matplotlib documentation).
 
         Returns
         -------
         outfiles : dict
             The output files created by this method.
         """
+        out_fmt = self.out_fmt
         outfiles = {'energies': _ENERFILES['energies'].format(out_fmt),
                     'run_energies': _ENERFILES['run_energies'].format(out_fmt),
                     'temperature': _ENERFILES['temperature'].format(out_fmt),
@@ -181,8 +184,7 @@ class MplPlotter(object):
                             fig_settings={'title': title})
         return outfiles
 
-    @staticmethod
-    def plot_orderp(results, orderdata, out_fmt='png'):
+    def plot_orderp(self, results, orderdata):
         """
         Plot the output from the order parameter analysis using matplotlib.
 
@@ -193,9 +195,6 @@ class MplPlotter(object):
             order parameter.
         orderdata : dict of numpy.arrays
             This is the raw-data for the order parameter analysis
-        out_fmt : string, optional
-            This is the desired format to use for the graphs. Supported are
-            png, pdf, svg, etc. (see the matplotlib documentation).
 
         Returns
         -------
@@ -213,7 +212,7 @@ class MplPlotter(object):
         """
         outfiles = {}
         for key in _ORDERFILES:
-            outfiles[key] = _ORDERFILES[key].format(out_fmt)
+            outfiles[key] = _ORDERFILES[key].format(self.out_fmt)
 
         time = orderdata['data'][0]
         series = [{'type': 'xy', 'x': time, 'y': orderdata['data'][1]}]

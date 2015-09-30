@@ -42,7 +42,7 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                              '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
-def create_plotter(plotter, style):
+def create_plotter(plotter, out_fmt, style):
     """
     Method to create a plotter.
 
@@ -50,12 +50,15 @@ def create_plotter(plotter, style):
     ----------
     plotter : string
         This string selects the plotter
+    out_fmt : string
+        This string selects the output format for the plot. Typically,
+        'png', 'eps', 'svg', 'pdf' and so on.
     style : string
         This string defines a style for the plotter. It can be
         a filepath or a string which have a meaning to the plotter.
         How the style should be handled is defined in the plotter.
     """
     if plotter.lower() in ['mpl', 'matplotlib']:
-        return MplPlotter(style)
+        return MplPlotter(out_fmt, style)
     else:
         raise ValueError
