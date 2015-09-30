@@ -193,7 +193,7 @@ class MplPlotter(object):
         results : dict
             Each item in `results` contains the results for the corresponding
             order parameter.
-        orderdata : dict of numpy.arrays
+        orderdata : list of numpy.arrays
             This is the raw-data for the order parameter analysis
 
         Returns
@@ -214,8 +214,8 @@ class MplPlotter(object):
         for key in _ORDERFILES:
             outfiles[key] = _ORDERFILES[key].format(self.out_fmt)
 
-        time = orderdata['data'][0]
-        series = [{'type': 'xy', 'x': time, 'y': orderdata['data'][1]}]
+        time = orderdata[0]
+        series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
         mpl_simple_plot(series, outfiles['order'],
                         fig_settings={'xlabel': 'Time',
                                       'ylabel': 'Order parameter'})
@@ -237,8 +237,8 @@ class MplPlotter(object):
         mpl_simple_plot(series, outfiles['dist'],
                         fig_settings={'title': title})
         # also try a orderp vs ordervel plot:
-        if len(orderdata['data']) >= 3:
-            series = [(orderdata['data'][1], orderdata['data'][2])]
+        if len(orderdata) >= 3:
+            series = [(orderdata[1], orderdata[2])]
             mpl_line_gradient(series, outfiles['ordervel'],
                               xlabel=r'$\lambda$', ylabel=r'$\dot{\lambda}$',
                               title='Order parameter vs velocity')
