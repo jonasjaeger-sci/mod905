@@ -40,6 +40,9 @@ _PATHFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
               'pathlength': os.extsep.join(['{}_lpath', '{}']),
               'shoots': os.extsep.join(['{}_shoots', '{}']),
               'shoots-scaled': os.extsep.join(['{}_shoots_scale', '{}'])}
+# hard-coded patters for report outputs:
+_REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
+                'tis': os.extsep.join(['tis_report', '{}'])}
 
 
 def create_backup(outputfile):

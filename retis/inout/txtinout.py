@@ -157,7 +157,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     results : dict
         Each item in `results` contains the results for the corresponding
         order parameter.
-    orderdata : dict of numpy.arrays
+    orderdata : list of numpy.arrays
         This is the raw-data for the order parameter analysis
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
@@ -181,7 +181,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     for key in _ORDERFILES:
         outfiles[key] = _ORDERFILES[key].format(out_fmt)
 
-    time = orderdata['data'][0]
+    time = orderdata[0]
     # output running average:
     txt_save_columns(outfiles['run_order'],
                      'Time, running average',

@@ -44,9 +44,8 @@ Folders:
 
 - templates: This folder contains templates for the report.
 """
-from .analysisio import run_md_flux_files
+from .analysisio import run_md_flux_analysis
 from .plotting import create_plotter
-from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile

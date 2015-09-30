@@ -15,15 +15,16 @@ import os
 # for using templates
 import jinja2
 
+
 __all__ = ['generate_report_tis']
 
-# the types the program know how to generate:
 
+# filename for known templates:
 _TEMPLATES = {'rst': 'report_template_{}.rst',
               'html': 'report_template_{}.rst',  # html is done via rst,
               'latex': 'report_template_{}.tex',
               'tex': 'report_template_{}.tex'}
-
+# look-up table for file extensions
 _EXT = {'rst': 'rst',
         'html': 'html',
         'latex': 'tex',
@@ -164,7 +165,7 @@ def _generate_report(report, output, template, path):
 
     Returns
     -------
-    out[2] : string
+    out[0] : string
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
@@ -208,8 +209,10 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
 
     Returns
     -------
-    out : string
+    out[0] : string
         The generated report in the desired format.
+    out[1] : string
+        The file extension (i.e. file type) for the generated report.
     """
     # get template and generate:
     output, template, path = _get_template(output, 'TIS', template=template)
@@ -269,8 +272,10 @@ def generate_report_md(analysis, output='rst', template=None):
 
     Returns
     -------
-    out : string
+    out[0] : string
         The generated report in the desired format.
+    out[1] : string
+        The file extension (i.e. file type) for the generated report.
     """
     output, template, path = _get_template(output, 'MD', template=template)
     report = {'version': VERSION,
