@@ -17,6 +17,7 @@ from .txtinout import txt_energy_output, txt_flux_output, txt_orderp_output
 from .report import generate_report_md
 from .common import _REPORTFILES
 
+
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     """
     This method will analyse the output from a MD-flux simulation,
