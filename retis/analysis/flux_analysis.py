@@ -29,7 +29,9 @@ def analyse_flux(fluxdata, settings, simulation_settings):
 
     Returns
     -------
-    results : numpy.array
+    results : dict
+        This dict contains the results from the flux analysis. See the keys
+        defined below.
     """
     results = {}
     end_step = simulation_settings['end_step']
