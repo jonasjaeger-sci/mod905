@@ -54,11 +54,11 @@ class MplPlotter(object):
         supported = fig.canvas.get_supported_filetypes()
         plt.close(fig)
         if out_fmt not in supported:
-            msg = ['Output format {} is not supported.'.format(out_fmt),
+            msg = ['Output format "{}" is not supported.'.format(out_fmt),
                    'Please try:']
             for key in supported:
                 msg.append(key)
-            raise ValueError(msg)
+            raise ValueError(' '.join(msg))
         else:
             self.out_fmt = out_fmt
 

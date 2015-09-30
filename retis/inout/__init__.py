@@ -45,7 +45,6 @@ Folders:
 
 - templates: This folder contains templates for the report.
 """
-from .analysisio import txt_path_output, txt_total_probability
 from .plotting import create_plotter
 from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
