@@ -8,8 +8,7 @@ Package structure
 Modules:
 
 - analysisio.py: This is a module to output the analysis of (RE)TIS
-  simulation. It defines functions for outputting to text files
-  (using numpy.savetxt) or plotting files using pyplot.
+  simulation.
 
 - common.py: This module contains some common functions. These functions
   are mainly intended for internal use and are not currently imported
@@ -45,6 +44,7 @@ Folders:
 
 - templates: This folder contains templates for the report.
 """
+from .analysisio import run_md_flux_files
 from .plotting import create_plotter
 from .report import generate_report_tis, generate_report_md
 from .txtinout import TxtTable, FileWriter
