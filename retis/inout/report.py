@@ -24,6 +24,11 @@ _TEMPLATES = {'rst': 'report_template_{}.rst',
               'latex': 'report_template_{}.tex',
               'tex': 'report_template_{}.tex'}
 
+_EXT = {'rst': 'rst',
+        'html': 'html',
+        'latex': 'tex',
+        'tex': 'tex'}
+
 
 def _rst_to_html(rst):
     """
@@ -159,8 +164,10 @@ def _generate_report(report, output, template, path):
 
     Returns
     -------
-    out : string
+    out[2] : string
         The generated report in the desired format.
+    out[1] : string
+        The file extension (i.e. file type) for the generated report.
     """
 
     env = jinja2.Environment(block_start_string='@{%',
@@ -172,9 +179,9 @@ def _generate_report(report, output, template, path):
     render = env.get_template(template).render(report)
     # pylint: enable=maybe-no-member
     if output == 'html':
-        return _rst_to_html(render)
+        return _rst_to_html(render), _EXT[output]
     else:
-        return render
+        return render, _EXT[output]
 
 
 def generate_report_tis(path_ensembles, analysis, output='rst',
