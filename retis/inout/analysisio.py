@@ -84,7 +84,6 @@ def run_md_flux_files(analysis_settings, simulation_settings,
     plotter = create_plotter(analysis_settings.get('plotter', 'mpl'),
                              analysis_settings.get('plot-format', 'png'),
                              analysis_settings.get('plot-style', 'pytismol'))
-    txtout = analysis_settings.get('txt-format', None)
     results = {'txtfile': {}}
     analysis = {'flux': {'func': run_flux_analysis,
                          'fileobj': CrossFile(crossfile, mode='r')},
@@ -97,7 +96,7 @@ def run_md_flux_files(analysis_settings, simulation_settings,
                                      analysis[key]['fileobj'])
         out, fig, txtfile = run_func(analysis_settings,
                                      simulation_settings,
-                                     plotter, txt=txtout)
+                                     plotter)
         if txtfile is not None:
             results['txtfile'].update(txtfile)
         results[key] = out
@@ -125,9 +124,24 @@ def run_analysis_file(analysis_func, fileobject):
         The decorated variant of analysis_func. This function can now be used
         to analyse a file.
     """
-    def wrapper(analysis_settings, simulation_settings, plotter, txt=None):
+    def wrapper(analysis_settings, simulation_settings, plotter):
         """
         This is a wrapper for the analysis from files.
+
+        Parameters
+        ----------
+        analysis_settings : dict
+            This dict contains settings which dictates how the
+            analysis should be performed.
+        simulation_settings : dict
+            This dict contains information on how the simulation
+            was performed.
+        plotter : object as defined in plotting.py
+            This is the object that handles the plotting. It is here assumed
+            to define the function plot_flux(...).
+        txt : string, optional
+            If txt is different from None it is assumed to be the format for
+            writing txt files. I.e. the text files will then be written!
         """
         first_block = True
         for block in fileobject.load():
@@ -138,15 +152,63 @@ def run_analysis_file(analysis_func, fileobject):
                        'with correct input?']
                 warnings.warn(' '.join(msg).format(fileobject.filename))
                 break
-            try:
-                return analysis_func(analysis_settings, simulation_settings,
-                                     block['data'], plotter, txt=txt)
-            except TypeError:  # not all functions need the sim settings:
-                return analysis_func(analysis_settings,
-                                     block['data'], plotter, txt=txt)
+            # Here it's save to call analysis_func with all parameters,
+            # since the handling of different number of parameters is done
+            # in the set_up_output wrapper defined below.
+            return analysis_func(analysis_settings, simulation_settings,
+                                 block['data'], plotter)
     return wrapper
 
 
+def set_up_output(func):
+    """
+    This is a decorator to automatically create a plotter if it's
+    not given. It will also set up txt writing based on the settings
+    given as input.
+
+    Parameters
+    ----------
+    func : function
+        The function to wrap, typically one of the run_..._analysis
+        functions.
+    """
+    def wrapper(analysis_settings, simulation_settings, rawdata,
+                plotter=None):
+        """
+        This method will generate the plotter if it's needed.
+
+        Parameters
+        ----------
+        analysis_settings : dict
+            This dict contains settings which dictates how the
+            analysis should be performed.
+        simulation_settings : dict
+            This dict contains information on how the simulation
+            was performed.
+        raw_data : list/dict etc.
+            The raw data to analyse.
+        plotter : object as defined in plotting.py
+            This is the object that handles the plotting. It is here assumed
+            to define the function plot_flux(...).
+        txt : string, optional
+            If txt is different from None it is assumed to be the format for
+            writing txt files. I.e. the text files will then be written!
+        """
+        if plotter is None:
+            plot = analysis_settings.get('plotter', 'mpl')
+            fmt = analysis_settings.get('plot-format', 'png')
+            style = analysis_settings.get('plot-style', 'pytismol')
+            plotter = create_plotter(plot, fmt, style)
+        txtout = analysis_settings.get('txt-format', None)
+        try:
+            return func(analysis_settings, simulation_settings,
+                        rawdata, plotter, txt=txtout)
+        except TypeError:
+            return func(analysis_settings, rawdata, plotter, txt=txtout)
+    return wrapper
+
+
+@set_up_output
 def run_flux_analysis(analysis_settings, simulation_settings,
                       crossdata, plotter, txt=None):
     """
@@ -161,7 +223,7 @@ def run_flux_analysis(analysis_settings, simulation_settings,
     simulation_settings : dict
         This dict contains information on how the simulation
         was performed.
-    crossdata : string
+    crossdata : list
         The crossing data to analyse.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
@@ -198,6 +260,7 @@ def run_flux_analysis(analysis_settings, simulation_settings,
     return flux_result, figures, outtxt
 
 
+@set_up_output
 def run_order_analysis(analysis_settings, orderdata, plotter, txt=None):
     """
     This method will just run the order analysis and plot the results
@@ -208,7 +271,7 @@ def run_order_analysis(analysis_settings, orderdata, plotter, txt=None):
     analysis_settings : dict
         This dict contains settings which dictates how the
         analysis should be performed.
-    orderdata : string
+    orderdata : numpy.array
         The order parameter data to analyse.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
@@ -240,6 +303,7 @@ def run_order_analysis(analysis_settings, orderdata, plotter, txt=None):
     return order_result, figures, outtxt
 
 
+@set_up_output
 def run_energy_analysis(analysis_settings, simulation_settings,
                         energydata, plotter, txt=None):
     """
@@ -254,7 +318,7 @@ def run_energy_analysis(analysis_settings, simulation_settings,
     simulation_settings : dict
         This dict contains information on how the simulation
         was performed.
-    energydata : string
+    energydata : dict of numpy.arrays
         The energy data to analyse.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
