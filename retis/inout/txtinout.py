@@ -35,7 +35,7 @@ __all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
            'txt_path_output']
 
 
-def txt_save_columns(outputfile, header, *variables):
+def txt_save_columns(outputfile, header, variables):
     """
     This will save the different variables to a text file using
     numpy's savetxt. Note that the variables are assumed to be numpy.arrays of
@@ -80,7 +80,7 @@ def txt_block_error(outputfile, title, error):
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
-    txt_save_columns(outputfile, header, error[0], error[3])
+    txt_save_columns(outputfile, header, (error[0], error[3]))
 
 
 def txt_histogram(outputfile, title, *histograms):
@@ -104,9 +104,7 @@ def txt_histogram(outputfile, title, *histograms):
         data.append(hist[1])
         data.append(hist[0])
     header = ', '.join(header)
-    txt_save_columns(outputfile, header, *data)
-    # *data is used here since we want to be flexible and write any number
-    # of histograms to the file.
+    txt_save_columns(outputfile, header, data)
 
 
 def txt_flux_output(results, out_fmt='txt.gz'):
@@ -139,7 +137,7 @@ def txt_flux_output(results, out_fmt='txt.gz'):
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
-                         flux[:, 0], runflux)
+                         (flux[:, 0], runflux))
         # output block-error results:
         outfile = _FLUXFILES['block'].format(i + 1, out_fmt)
         outfiles['block'].append(outfile)
@@ -185,7 +183,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     # output running average:
     txt_save_columns(outfiles['run_order'],
                      'Time, running average',
-                     time, results[0]['running'])
+                     (time, results[0]['running']))
 
     # output block-error results:
     txt_block_error(outfiles['block'], 'Block error for order param',
@@ -197,7 +195,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     if 'msd' in results[0]:
         msd = results[0]['msd']
         txt_save_columns(outfiles['msd'], 'Time MSD Std',
-                         time[:len(msd)], msd[:, 0], msd[:, 1])
+                         (time[:len(msd)], msd[:, 0], msd[:, 1]))
         # TODO: time should here be multiplied with the correct dt
     return outfiles
 
@@ -228,20 +226,27 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
                 'run_temp': _ENERFILES['run_temp'].format(out_fmt)}
     time = energies['time']
     # 1) Store the running average:
-    header = 'Running average of energy data'
-    txt_save_columns(outfiles['run_energies'], header, time,
-                     results['vpot']['running'], results['ekin']['running'],
-                     results['etot']['running'], results['ham']['running'],
-                     results['temp']['running'], results['ext']['running'])
+    header = ['Running average of energy data: time']
+    data = [time]
+    for key in ['vpot', 'ekin', 'etot', 'ham', 'temp', 'ext']:
+        if key in results:
+            data.append(results[key]['running'])
+            header.append(key)
+    header = ' '.join(header)
+    txt_save_columns(outfiles['run_energies'], header, data)
     # 2) Save block error data:
     outfile = _ENERFILES['block'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
+        if key not in results:
+            continue
         outfiles['{}block'.format(key)] = outfile.format(key)
         txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
                         results[key]['blockerror'])
     # 3) Save histograms:
     outfile = _ENERFILES['dist'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
+        if key not in results:
+            continue
         outfiles['{}dist'.format(key)] = outfile.format(key)
         txt_histogram(outfiles['{}dist'.format(key)],
                       r'Histogram for {}'.format(_ENERTITLE[key]),
@@ -280,9 +285,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
         except KeyError:
             continue
     header = ', '.join(header)
-    txt_save_columns(outputfile, header, *data)
-    # *data is used here since empty histograms will not be
-    # written to the output file.
+    txt_save_columns(outputfile, header, data)
 
 
 def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
@@ -308,10 +311,10 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     # 1) Output pcross vs lambda:
     txt_save_columns(outfiles['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
-                     results['pcross'][0], results['pcross'][1])
+                     (results['pcross'][0], results['pcross'][1]))
     # 2) Output the running average of p:
     txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
-                     results['prun'])
+                     (results['prun']))
     # 3) Block error results:
     txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
                     results['blockerror'])
@@ -370,7 +373,7 @@ def txt_total_matched_probability(detect, matched, outputfile):
     header = 'Total matched probability. Interfaces: {}'
     interf = ' , '.join([str(idet) for idet in detect])
     header = header.format(interf)
-    txt_save_columns(outputfile, header, matched[:, 0], matched[:, 1])
+    txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]))
 
 
 def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
