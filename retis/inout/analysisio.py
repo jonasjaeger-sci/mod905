@@ -156,7 +156,7 @@ def run_analysis_file(analysis_func, fileobject):
             # since the handling of different number of parameters is done
             # in the set_up_output wrapper defined below.
             return analysis_func(analysis_settings, simulation_settings,
-                                 block['data'], plotter)
+                                 block['data'], plotter=plotter)
     return wrapper
 
 
@@ -202,15 +202,16 @@ def set_up_output(func):
         txtout = analysis_settings.get('txt-format', None)
         try:
             return func(analysis_settings, simulation_settings,
-                        rawdata, plotter, txt=txtout)
+                        rawdata, plotter=plotter, txt=txtout)
         except TypeError:
-            return func(analysis_settings, rawdata, plotter, txt=txtout)
+            return func(analysis_settings, rawdata, plotter=plotter,
+                        txt=txtout)
     return wrapper
 
 
 @set_up_output
 def run_flux_analysis(analysis_settings, simulation_settings,
-                      crossdata, plotter, txt=None):
+                      crossdata, plotter=None, txt=None):
     """
     This method will just run the md flux analysis and output some
     figures.
@@ -261,7 +262,7 @@ def run_flux_analysis(analysis_settings, simulation_settings,
 
 
 @set_up_output
-def run_order_analysis(analysis_settings, orderdata, plotter, txt=None):
+def run_order_analysis(analysis_settings, orderdata, plotter=None, txt=None):
     """
     This method will just run the order analysis and plot the results
     to files.
@@ -305,7 +306,7 @@ def run_order_analysis(analysis_settings, orderdata, plotter, txt=None):
 
 @set_up_output
 def run_energy_analysis(analysis_settings, simulation_settings,
-                        energydata, plotter, txt=None):
+                        energydata, plotter=None, txt=None):
     """
     This method will just run the md flux analysis and output some
     figures.
