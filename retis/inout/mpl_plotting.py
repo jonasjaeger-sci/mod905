@@ -178,12 +178,12 @@ class MplPlotter(object):
             if sim_settings is not None and key in ['ekin', 'temp']:
                 pos = np.linspace(min(0.0, dist[1].min()),
                                   dist[1].max(), 1000)
-                alp = (0.5 * sim_settings['system'].particles.npart *
-                       sim_settings['system'].get_dim())
+                alp = (0.5 * sim_settings['npart'] *
+                       sim_settings['dim'])
                 if key == 'ekin':
-                    scale = 1.0 / sim_settings['system'].temperature['beta']
+                    scale = 1.0 / sim_settings['beta']
                 elif key == 'temp':
-                    scale = sim_settings['system'].temperature['set'] / alp
+                    scale = sim_settings['temperature'] / alp
                 series.append({'type': 'xy', 'x': pos,
                                'y': gamma.pdf(pos, alp, loc=0, scale=scale),
                                'label': 'Boltzmann distribution'})
