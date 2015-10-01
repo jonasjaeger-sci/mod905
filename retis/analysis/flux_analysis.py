@@ -200,6 +200,8 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     ncross = np.zeros(max_windows, dtype=np.int)
     for crossing in effective_cross:
         idx = np.floor((crossing[0] - 0.0) / time_window)
+        if idx >= max_windows:
+            idx = max_windows - 1
         ncross[idx] += 1
     flux = (1.0 * ncross) / delta_t
     time = np.arange(1, max_windows+1) * time_window
