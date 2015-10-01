@@ -7,6 +7,8 @@ import warnings
 from .units import CONSTANTS
 from .particles import Particles
 from .particlefunctions import calculate_kinetic_temperature
+from .random import RandomGenerator
+
 
 __all__ = ['System']
 
@@ -329,8 +331,8 @@ class System(object):
         else:
             return self.forcefield.evaluate_potential_and_force(**args)
 
-    def generate_velocities(self, rgen, momentum=True, temperature=None,
-                            distribution='maxwell'):
+    def generate_velocities(self, rgen=None, seed=0, momentum=True,
+                            temperature=None, distribution='maxwell'):
         """
         This method will set the velocities of the particles
         according to the desired temperature. The temperature can
@@ -341,6 +343,8 @@ class System(object):
         rgen : object of type RandomGenerator
             This is the random generator which handles the drawing of
             velocities
+        seed : int, optional
+            Seed for the RandomGenerator in case rgen is not given.
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
@@ -352,6 +356,8 @@ class System(object):
         -------
         N/A but updates system.particles.vel
         """
+        if rgen is None:
+            rgen = RandomGenerator(seed=seed)
         if temperature is None:
             temperature = self.temperature['set']
         dof = self.temperature['dof']
