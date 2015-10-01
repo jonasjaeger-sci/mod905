@@ -130,6 +130,8 @@ class MplPlotter(object):
         # make time series plot of the energies
         series = []
         for key in ['vpot', 'ekin', 'etot', 'ham']:
+            if key not in energies:
+                continue
             series.append({'type': 'xy', 'x': time, 'y': energies[key],
                            'label': _ENERTITLE[key]})
         mpl_simple_plot(series, outfiles['energies'],
@@ -137,6 +139,8 @@ class MplPlotter(object):
         # make running average plot of the energies as function of time
         series = []
         for key in ['vpot', 'ekin', 'etot', 'ham']:
+            if key not in results:
+                continue
             series.append({'type': 'xy', 'x': time,
                            'y': results[key]['running'],
                            'label': _ENERTITLE[key]})
@@ -156,12 +160,16 @@ class MplPlotter(object):
         # plot block-error results:
         outfile = _ENERFILES['block'].format('{}', out_fmt)
         for key in ['vpot', 'ekin', 'etot', 'temp']:
+            if key not in results:
+                continue
             outfiles['{}block'.format(key)] = outfile.format(key)
             mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
                             outfiles['{}block'.format(key)])
         # plot distributions
         outfile = _ENERFILES['dist'].format('{}', out_fmt)
         for key in ['vpot', 'ekin', 'etot', 'temp']:
+            if key not in results:
+                continue
             dist = results[key]['distribution']
             series = [{'type': 'xy', 'x': dist[1], 'y': dist[0],
                        'label': _ENERTITLE[key]}]
