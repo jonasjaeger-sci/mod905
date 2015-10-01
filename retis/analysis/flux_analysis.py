@@ -34,8 +34,8 @@ def analyse_flux(fluxdata, settings, simulation_settings):
         defined below.
     """
     results = {}
-    end_step = simulation_settings['end_step']
-    time_step = simulation_settings['time_step']
+    end_step = simulation_settings['endcycle']
+    time_step = simulation_settings['integrator']['timestep']
     results = {'eff_cross': None,  # effective crossings times
                'ncross': None,  # number of crossings
                'neffcross': None,  # number of effective crossings
