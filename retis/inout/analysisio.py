@@ -152,9 +152,6 @@ def run_analysis_file(analysis_func, fileobject):
                        'with correct input?']
                 warnings.warn(' '.join(msg).format(fileobject.filename))
                 break
-            # Here it's save to call analysis_func with all parameters,
-            # since the handling of different number of parameters is done
-            # in the set_up_output wrapper defined below.
             return analysis_func(analysis_settings, simulation_settings,
                                  block['data'], plotter=plotter)
     return wrapper
@@ -200,12 +197,8 @@ def set_up_output(func):
             style = analysis_settings.get('plot-style', 'pytismol')
             plotter = create_plotter(plot, fmt, style)
         txtout = analysis_settings.get('txt-format', None)
-        try:
-            return func(analysis_settings, simulation_settings,
-                        rawdata, plotter=plotter, txt=txtout)
-        except TypeError:
-            return func(analysis_settings, rawdata, plotter=plotter,
-                        txt=txtout)
+        return func(analysis_settings, simulation_settings,
+                    rawdata, plotter=plotter, txt=txtout)
     return wrapper
 
 
@@ -262,7 +255,8 @@ def run_flux_analysis(analysis_settings, simulation_settings,
 
 
 @set_up_output
-def run_order_analysis(analysis_settings, orderdata, plotter=None, txt=None):
+def run_order_analysis(analysis_settings, simulation_settings,
+                       orderdata, plotter=None, txt=None):
     """
     This method will just run the order analysis and plot the results
     to files.
@@ -272,6 +266,9 @@ def run_order_analysis(analysis_settings, orderdata, plotter=None, txt=None):
     analysis_settings : dict
         This dict contains settings which dictates how the
         analysis should be performed.
+    simulation_settings : dict
+        This dict contains information on how the simulation
+        was performed.
     orderdata : numpy.array
         The order parameter data to analyse.
     plotter : object as defined in plotting.py
@@ -296,6 +293,8 @@ def run_order_analysis(analysis_settings, orderdata, plotter=None, txt=None):
     --------
     `analyse_orderp` in retis.analysis.order_analysis.py
     """
+    if 'units' in simulation_settings:
+        warnings.warn('Change of units is not implemented yet!')
     order_result = analyse_orderp(orderdata, analysis_settings)
     figures = plotter.plot_orderp(order_result, orderdata)
     outtxt = None
