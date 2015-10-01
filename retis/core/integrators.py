@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import numpy as np
 import warnings
+from .random import RandomGenerator
 
 
 __all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']
@@ -47,7 +48,8 @@ def create_integrator(settings, simulation_type):
         elif name == 'langevin':
             return Langevin(settings['timestep'],
                             settings['gamma'],
-                            settings['rgen'],
+                            rgen=settings.get('rgen', None),
+                            seed=settings.get('seed', 0),
                             high_friction=settings['high-friction'])
         else:
             msg = 'Unknown integrator {}'.format(settings['name'])
@@ -308,7 +310,7 @@ class Langevin(Integrator):
     Currently, we are using a multinormal distribution from numpy.
     Consider replacing this one as it seems somewhat slow.
     """
-    def __init__(self, delta_t, gamma, rgen, high_friction=False,
+    def __init__(self, delta_t, gamma, rgen=None, seed=0, high_friction=False,
                  desc='Langevin integrator'):
         """
         Initiates the Langevin integrator. Actually, it is very convenient to
@@ -324,9 +326,11 @@ class Langevin(Integrator):
             The time step.
         gamma : float
             The gamma parameter for the Langevin integrator
-        rgen : object of type RandomGenerator
+        rgen : object of type RandomGenerator, optional
             This is the class that will handle random number generation
-            for us.
+            for us. If not given, a RandomGenerator will be created.
+        seed : integer, optional.
+            A seed which can be used if RandomGenerator is to be created here.
         desc : string
             Description of the integrator.
         param_high : dict
@@ -338,7 +342,10 @@ class Langevin(Integrator):
                                        dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
-        self.rgen = rgen
+        if rgen is None:
+            self.rgen = RandomGenerator(seed=seed)
+        else:
+            self.rgen = rgen
         self.param_high = {'sigma': None, 'bddt': None}
         self.param_iner = {'c0': None, 'a1': None, 'a2': None,
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
