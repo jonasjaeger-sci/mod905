@@ -171,8 +171,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(particles,
                                                      selection=selection)
-    #dof = system.temperature['dof']
-    if not dof is None:
+    if dof is not None:
         ndof = ndof - dof
     temperature = 2.0 * kin_tensor.diagonal() / ndof
     return temperature, np.average(temperature), kin_tensor
@@ -202,7 +201,7 @@ def reset_momentum(particles, selection=None, dim=None):
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
     mom = np.sum(vel*mass, axis=0)
-    if not dim is None:
+    if dim is not None:
         for i, reset in enumerate(dim):
             if not reset:
                 mom[i] = 0
