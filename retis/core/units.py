@@ -55,7 +55,7 @@ def _generate_inverse(conversions):
     for unit in conversions:
         unit_from, unit_to = unit
         newunit = (unit_to, unit_from)
-        if not newunit in conversions:
+        if newunit not in conversions:
             newconvert[newunit] = 1.0 / conversions[unit]
     for newunit in newconvert:
         conversions[newunit] = newconvert[newunit]
