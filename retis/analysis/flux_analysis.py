@@ -51,6 +51,8 @@ def analyse_flux(fluxdata, settings, simulation_settings):
                '1-p': [],  #
                'teffMD': [],  #
                'corrMD': []}  #
+    if len(fluxdata) < 1:
+        return results
     ret = _effective_crossings(fluxdata, len(results['interfaces']), end_step)
     results['eff_cross'] = ret[0]
     results['ncross'] = ret[1]
