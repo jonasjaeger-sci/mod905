@@ -30,7 +30,7 @@ def _check_settings(settings, required):
     Returns
     -------
     out : boolean
-        True if all required settings are persent, False otherwise.
+        True if all required settings are present, False otherwise.
     """
     result = True
     for setting in required:
@@ -112,7 +112,7 @@ def _do_task(task, stepnumber, currentstep):
     stepnumber : int
         The number of steps the simulation has done since it started.
     currentstep : int
-        The current stepnumber of the simulation.
+        The current step number of the simulation.
 
     Raises
     ------
@@ -125,6 +125,8 @@ def _do_task(task, stepnumber, currentstep):
     """
     func = task['func']
     if not callable(func):
+        # just check again since people might add without using the
+        # add_task method of the Simulation object.
         msg = 'Task is not callable! Will not do: {}'.format(task)
         warnings.warn(msg)
         return None
@@ -154,6 +156,98 @@ def _do_task(task, stepnumber, currentstep):
         return result
     else:
         return None
+
+
+def _check_task(task):
+    """
+    This is a helper function to inspect a given task.
+    It will check:
+    1) If the task can be executed
+    2) If the correct number of arguments are given
+    3) If the default arguments are correct if given.
+
+    Parameters
+    ----------
+    task : dict
+        The task to investigate. The keys are:
+        taks['func'] : this should be a callable function
+        task['args'] : this should be a list with arguments (if needed)
+        task['kwargs'] : this should be a dict with kwargs (if needed)
+
+    Returns
+    -------
+    out : boolean
+        False if task should not be added, True otherwise
+
+    Note
+    ----
+    Tasks that will fail might still be returned as True. Here we
+    only test if the task is executable and if the task has the correct
+    arguments in task['args'] and task['kwargs']. False is only returned
+    if the function is not executable or if the wrong number of arguments
+    are given.
+    """
+    # Check 1)
+    if not callable(task['func']):
+        msg = 'Task {} cannot be executed. Not added!'.format(task['func'])
+        warnings.warn(msg)
+        return False
+    # Check 2)
+    arguments = inspect.getargspec(task['func'])
+    if not arguments.defaults:
+        args = arguments.args
+        defaults = None
+    else:
+        defaults = arguments.args[-len(arguments.defaults):]
+        args = [arg for arg in arguments.args if arg not in defaults]
+    # remove self from args, this is passed implicitly to objects
+    args = [arg for arg in args if arg is not 'self']
+    # first test the required arguments:
+    task_args = task.get('args', None)
+    if task_args:
+        # here we need to be carefull. The expected input is a list or
+        # a tuple (at least a sequence of some sort). However, it can be
+        # just a single variable. It this single variable happens to be
+        # a string, len(task_args) will not be correct. Here we attempt
+        # to correct this. TODO: Consider if this block is needed.
+        try:
+            # will fail in python 3
+            isstring = isinstance(task_args, basestring)
+        except NameError:
+            isstring = isinstance(task_args, str)
+        isiterab = isinstance(task_args, collections.Iterable)
+        if isstring or not isiterab:
+            task['args'] = [task_args]
+            msg = ['Argument is expected to be a list or tuple',
+                   'Corrected {} to {}'.format(task_args, task['args']),
+                   'Please verify that this is correct!']
+            warnings.warn('\n'.join(msg))
+            task_args = task['args']
+        ntask_args = len(task_args)
+    try:
+        ntask_args = len(task_args)
+    except TypeError:
+        ntask_args = 0
+    if not len(args) == ntask_args:
+        msg = ['Wrong number of arguments for task {}:'.format(task['func']),
+               'Expected args: {}'.format(args),
+               'Arguments found in task["args"]: {}'.format(task_args)]
+        warnings.warn('\n'.join(msg))
+        return False
+    # Check 3)
+    kwargs = task.get('kwargs', None)
+    if kwargs:
+        if defaults:
+            extra = [key for key in kwargs if key not in defaults]
+            if extra:
+                msg = ['Task Keyword arguments: {}'.format(defaults)]
+                msg += ['Attempting to pass extra: {}'.format(extra)]
+                msg = '\n'.join(msg)
+                warnings.warn(msg)
+        else:
+            msg = 'Passing keyword arguments to a non-keyword function {}!'
+            warnings.warn(msg.format(task['func']))
+    return True
 
 
 class Simulation(object):
@@ -290,90 +384,42 @@ class Simulation(object):
         Parameters
         ----------
         task : dict
-            A dict defining the task. See also ``_do_taks`` for a more
+            A dict defining the task. See also `_do_tasks` for a more
             eleborate description of what this dict contains.
         position : int
             Can be used to placed the task at a specific position.
 
         Note
         ----
-        Tasks that will fail are still added to the list of tasks. This is
-        done because the program will then fail while trying to execute tasks.
-        This is intended: if a task cannot be executed the program will fail,
-        and the task should be corrected. The only exception are tasks that
-        cannot be executed, these are not added.
+        Tasks that will fail might still added to the list of tasks. See
+        the checks carried out in `_check_task`.
+
+        See Also
+        --------
+        `_check_task` function for doing some simple checks before a task is
+        added.
         """
-        if not callable(task['func']):
-            msg = 'Task {} cannot be executed. Not added!'.format(task['func'])
-            warnings.warn(msg)
+        if not _check_task(task):
             return False
-        arguments = inspect.getargspec(task['func'])
-        if not arguments.defaults:
-            args = arguments.args
-            defaults = None
         else:
-            args = arguments.args[:len(arguments.defaults)]
-            defaults = arguments.args[-len(arguments.defaults):]
-        # first test the required arguments:
-        task_args = task.get('args', None)
-        if task_args:
-            # here we need to be carefull. The expected input is a list or
-            # a tuple (at least a sequence of some sort). However, it can be
-            # just a single variable. It this single variable happens to be
-            # a string, len(task_args) will not be correct. Here we attempt
-            # to correct this, perhaps it can be done better elsewhere.
-            isstring = isinstance(task_args, str)
-            isiterab = isinstance(task_args, collections.Iterable)
-            if isstring or not isiterab:
-                msg = ['Argument is expected to be a list or tuple']
-                task['args'] = [task_args]
-                msg += ['Corrected {} to {}'.format(task_args, task['args'])]
-                msg += ['Please verify that this is correct!']
-                msg = '\n'.join(msg)
-                warnings.warn(msg)
-                task_args = task['args']
-            ntask_args = len(task_args)
-        args = [argsi for argsi in args if argsi is not 'self']
-        try:
-            ntask_args = len(task_args)
-        except TypeError:
-            ntask_args = 0
-        if not len(args) == ntask_args:
-            msg = ['Wrong number of arguments for task:']
-            msg += ['Expected args: {}'.format(args)]
-            msg += ["Arguments found in task['args']: {}".format(task_args)]
-            msg = '\n'.join(msg)
-            warnings.warn(msg)
-        # also test keyword arguments if present.
-        # here we only see if we give some arguments that the
-        # function does not need.
-        if defaults:
-            kwargs = task.get('kwargs', None)
-            if kwargs:
-                extra = [key for key in kwargs if key not in defaults]
-                if extra:
-                    msg = ['Task Keyword arguments: {}'.format(defaults)]
-                    msg += ['Attempting to pass extra: {}'.format(extra)]
-                    msg = '\n'.join(msg)
-                    warnings.warn(msg)
-        if position is None:
-            self.task.append(task)
-        else:
-            self.task.insert(position, task)
-        return True
+            if position is None:
+                self.task.append(task)
+            else:
+                self.task.insert(position, task)
+            return True
 
     def run(self):
         """
-        This method can be used to run a simulation.
-        The intented usage is for simulations where all tasks have been
-        defined in the system object. This means that all input/output are
-        also assumed to be defined as tasks.
+        This method can be used to run a simulation. The intended usage is
+        for simulations where all tasks have been defined in the system
+        object. Also input/output can be defined as tasks.
 
         Note
         ----
         This method will simply run the tasks. In general this is probably
         too generic for the simulation you want. It is perhaps best to
-        modify the `run` method of your simulation object.
+        modify the `run` method of your simulation object to tailor the
+        simulation more.
 
         Yields
         ------
@@ -486,7 +532,7 @@ class SimulationNVE(Simulation):
             This is the integrator that is used to propagate the system
             in time.
         startcycle : int, optional.
-            The cycle we start the simulation on, can be usefull if
+            The cycle we start the simulation on, can be useful if
             restarting.
         endcycle : int, optional.
             This number represents the cycle number where the simulation
@@ -511,10 +557,10 @@ class SimulationNVE(Simulation):
         task_integrate = {'func': self.integrator.integration_step,
                           'args': [self.system]}
         task_thermo = {'func': calculate_thermo,
-                       'args': [system,
-                                system.temperature['dof'],
-                                system.get_dim(),
-                                system.box.calculate_volume()],
+                       'args': [system],
+                       'kwargs': {'dof': system.temperature['dof'],
+                                  'dim': system.get_dim(),
+                                  'volume': system.box.calculate_volume()},
                        'first': True,
                        'result': 'thermo'}
         # task thermo is set up to execute at all steps
@@ -552,7 +598,7 @@ class SimulationMdFlux(Simulation):
             at least two values where the first one should be the
             order parameter.
         startcycle : int, optional.
-            The cycle we start the simulation on, can be usefull if
+            The cycle we start the simulation on, can be useful if
             restarting.
         endcycle : int, optional.
             This number represents the cycle number where the simulation
@@ -578,10 +624,10 @@ class SimulationMdFlux(Simulation):
         self.leftside_prev = leftside
         # also add a thermo task
         task_thermo = {'func': calculate_thermo,
-                       'args': [system,
-                                system.temperature['dof'],
-                                system.get_dim(),
-                                system.box.calculate_volume()],
+                       'args': [system],
+                       'kwargs': {'dof': system.temperature['dof'],
+                                  'dim': system.get_dim(),
+                                  'volume': system.box.calculate_volume()},
                        'first': True,
                        'result': 'thermo'}
         self.add_task(task_thermo)
