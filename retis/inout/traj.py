@@ -113,7 +113,7 @@ class WriteXYZ(FileWriter):
         self.frame += 1
         return status
 
-    def write_system(self, system, header=None):
+    def write(self, system, header=None):
         """
         This is a method for writing a configuration in
         xyz-format. It is similar to `write_frame` and it's
@@ -132,7 +132,7 @@ class WriteXYZ(FileWriter):
     def __call__(self, system, header=None):
         """
         This is a method for writing a configuration in
-        xyz-format. This method will just call write_system and is
+        xyz-format. This method will just call write and is
         included here for convenience.
 
         Parameters
@@ -142,7 +142,7 @@ class WriteXYZ(FileWriter):
         header : string, optional
             Header to use for writing the xyz-frame.
         """
-        return self.write_system(system, header=header)
+        return self.write(system, header=header)
 
 
 class WriteGromacs(FileWriter):
@@ -241,7 +241,7 @@ class WriteGromacs(FileWriter):
         self.frame += 1
         return status
 
-    def write_system(self, system, header=None, write_vel=False):
+    def write(self, system, header=None, write_vel=False):
         """
         This is a method for writing a configuration in
         gro-format. It is similar to `write_frame` and it's
@@ -269,7 +269,7 @@ class WriteGromacs(FileWriter):
     def __call__(self, system, header=None, write_vel=False):
         """
         This is a method for writing a configuration in gro-format.
-        This method will just call write_system and is
+        This method will just call write and is
         included here for convenience.
 
         Parameters
@@ -281,7 +281,7 @@ class WriteGromacs(FileWriter):
         write_vel : boolean, optional
             If true, velocities will be written
         """
-        return self.write_system(system, header=header, write_vel=write_vel)
+        return self.write(system, header=header, write_vel=write_vel)
 
     def _box_lengths(self):
         """
