@@ -61,7 +61,7 @@ for result in simulation_nve.run():
         thermo_file.write_line(table(result['thermo']))
         store_results.append(result['thermo'])
     if step % 5 == 0:
-        traj_writer.write_system(ljsystem,
+        traj_writer.write(ljsystem,
                                  header='NVE, step: {}'.format(step))
     if step % 10 == 0:
         print(table(result['thermo']))
