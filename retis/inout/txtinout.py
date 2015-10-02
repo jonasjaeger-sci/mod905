@@ -596,7 +596,7 @@ class TxtTable(object):
         ----------
         row_dict : dict
             This is the row values (columns) to write. Variables will
-            be selected accordint to self.variables. This is just so that
+            be selected according to self.variables. This is just so that
             we can enforce a ordering.
         header : boolean, optional
             If this is true, we are creating the header.
@@ -618,8 +618,10 @@ class TxtTable(object):
 
         Parameters
         ----------
-        row : list
-            This is the row values (columns) to write.
+        row : dict
+            This is the row values (columns) to write. Variables will
+            be selected according to self.variables. This is just so that
+            we can enforce a ordering.
         header : boolean, optional
             If this is true, we are creating the header.
         """
