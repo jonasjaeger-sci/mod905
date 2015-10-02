@@ -8,11 +8,26 @@ import warnings
 from retis.core.particlefunctions import calculate_thermo
 from retis.core.integrators import create_integrator
 from retis.core.path import check_crossing
+from retis.inout import (CrossFile, EnergyFile, OrderFile,
+                         create_traj_writer, get_predefined_table)
 
 
 __all__ = ['Simulation', 'UmbrellaWindowSimulation', 'SimulationNVE',
            'SimulationMdFlux',
            'create_simulation']
+
+
+# define default outputs for the different simulations:
+_OUTPUT = {'md-flux': [{'target': 'file', 'type': 'orderp', 'every': 10},
+                       {'target': 'file', 'type': 'thermo', 'every': 100},
+                       {'target': 'file', 'type': 'cross', 'every': 1},
+                       {'target': 'file', 'type': 'traj', 'every': 10,
+                        'header': 'MD-Flux simulation. Step: {}'},
+                       {'target': 'screen', 'type': 'thermo', 'every': 10}],
+           'nve': [{'target': 'file', 'type': 'thermo', 'every': 100},
+                   {'target': 'file', 'type': 'traj', 'every': 10,
+                    'header': 'NVE simulation. Step: {}'},
+                   {'target': 'screen', 'type': 'thermo', 'every': 10}]}
 
 
 def _check_settings(settings, required):
@@ -40,7 +55,7 @@ def _check_settings(settings, required):
     return result
 
 
-def create_simulation(settings, simulation_type='nve'):
+def create_simulation(settings):
     """
     This method will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
@@ -58,23 +73,24 @@ def create_simulation(settings, simulation_type='nve'):
     out : object that represents the simulation.
         This object will correspond to the selected simulation type.
     """
-    simulation_type = simulation_type.lower()
+    simulation_type = settings.get('type', 'nve').lower()
     sim = None
+    required = {'nve': ['system', 'endcycle'],
+                'md-flux': ['system', 'endcycle', 'integrator', 'interfaces',
+                            'orderparameter']}
+    if simulation_type in required:
+        # just check if all the required settings were given:
+        if not _check_settings(settings, required[simulation_type]):
+            return None
     if simulation_type == 'nve':
-        # this will set up a MD NVE simulation.
-        required = ['system', 'endcycle']
-        if not _check_settings(settings, required):
-            return sim
+        # set up a MD NVE simulation.
         intg = create_integrator(settings.get('integrator', None),
                                  simulation_type)
         sim = SimulationNVE(settings['system'], intg,
                             endcycle=settings['endcycle'],
                             startcycle=settings.get('startcycle', 0))
     elif simulation_type == 'md-flux':
-        required = ['system', 'endcycle', 'integrator', 'interfaces',
-                    'orderparameter']
-        if not _check_settings(settings, required):
-            return sim
+        # set up a simulation for MD FLUX
         intg = create_integrator(settings.get('integrator', None),
                                  simulation_type)
         sim = SimulationMdFlux(settings['system'], intg,
@@ -89,7 +105,68 @@ def create_simulation(settings, simulation_type='nve'):
         warnings.warn('Simulation reTIS not yet implemented')
     else:
         warnings.warn('Unknown simulation {}'.format(simulation_type))
+    if sim is not None:
+        if simulation_type in _OUTPUT:  # add defaults:
+            for task in _OUTPUT[simulation_type]:
+                sim.add_output(task)
+        for task in settings.get('output', []):
+            sim.add_output(task)
     return sim
+
+
+def _create_output_task(task, system=None):
+    """
+    This method will create an object for a given output task.
+    It will make use of some of the pre-define output possibilities
+    defined in retis.inout
+
+    Parameters
+    ----------
+    task : dict
+        This dict describes the task.
+    system : object
+        The system we are describing. Needed for creating the
+        trajectory writer.
+    """
+    writer = None
+    if task['target'] == 'file':
+        # we have to create different files for the different
+        # outputs:
+        if task['type'] == 'orderp':
+            writer = OrderFile(task.get('filename', 'order.dat'),
+                               mode='w',
+                               oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'thermo':
+            writer = EnergyFile(task.get('filename', 'energy.dat'),
+                                mode='w',
+                                oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'cross':
+            writer = CrossFile(task.get('filename', 'cross.dat'),
+                               mode='w',
+                               oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'traj':
+            fmt = task.get('format', 'gro')
+            default_file = 'traj.{}'.format(fmt)
+            writer = create_traj_writer({'type': fmt,
+                                         'file': task.get('filename',
+                                                          default_file),
+                                         'oldfile': 'overwrite'}, system)
+        else:
+            msg = 'Unknown type {} for target file'.format(task['type'])
+            warnings.warn(msg)
+            return False
+        if writer is not None:
+            task['filename'] = writer.filename
+    elif task['target'] == 'screen':
+        if task['type'] == 'thermo':
+            writer = get_predefined_table('energies')
+    else:
+        msg = 'Unknown output target {}. Will not add task!'
+        warnings.warn(msg.format(task['target']))
+        return False
+    if writer is not None:
+        task['writer'] = writer
+    return True
 
 
 def _do_task(task, stepnumber, currentstep):
@@ -293,7 +370,9 @@ class Simulation(object):
         """
         self.cycle = {'step': startcycle, 'end': endcycle,
                       'start': startcycle, 'stepno': 0}
+        self.system = None
         self.task = []
+        self.output_task = []
 
     def extend_cycles(self, steps):
         """
@@ -346,7 +425,7 @@ class Simulation(object):
         self.cycle['stepno'] += 1
         return self.execute_tasks()
 
-    def execute_tasks(self):
+    def execute_tasks(self, first=False):
         """
         This method will execute all the tasks in sequential order.
 
@@ -354,13 +433,18 @@ class Simulation(object):
         -------
         resuts : dict
             The results from the different tasks (if any).
+        first : boolean
+            This is just to do the initial tasks, i.e. tasks that should
+            be done before the simulation starts.
         """
         results = {}
         for task in self.task:
-            resi = _do_task(task, self.cycle['stepno'], self.cycle['step'])
-            label = task.get('result', None)
-            if label:
-                results[label] = resi
+            if not first or (task.get('first', False)):  # and first
+                resi = _do_task(task, self.cycle['stepno'],
+                                self.cycle['step'])
+                label = task.get('result', None)
+                if label:
+                    results[label] = resi
         return results
 
     def add_tasks(self, *tasks):
@@ -408,11 +492,78 @@ class Simulation(object):
                 self.task.insert(position, task)
             return True
 
+    def add_output(self, output):
+        """
+        The output tasks are added slightly different than the other tasks.
+        This is since we need to create some objects here and possibly new
+        files
+
+        Parameters
+        ----------
+        output : dict
+            This dict describes the output task.
+        """
+        if _create_output_task(output, system=self.system):
+            # check if we should update or add:
+            for task in self.output_task:
+                if output['target'] == 'file':
+                    equ = True
+                    for key in ['type', 'filename']:
+                        equ = equ and task[key] == output[key]
+                        if not equ:
+                            break
+                    if equ:
+                        task.update(output)
+                        return True
+            # we did not update, just add:
+            self.output_task.append(output)
+            return True
+
+    def output(self, results):
+        """
+        This method handles all the outputs that should be done.
+
+        Parameters
+        ----------
+        """
+        for task in self.output_task:
+            if not task['type'] in results and task['type'] != 'traj':
+                # the desired output was not calculated at this step for
+                # some reason. This can for instance happen for the flux.
+                continue
+            every = task.get('every', None)
+            at_step = task.get('at', None)
+            exe_out = False
+            step = self.cycle['step']
+            if every:
+                exe_out = self.cycle['stepno'] % every == 0
+            if at_step:
+                try:
+                    exe_out = step in at_step
+                except TypeError:
+                    exe_out = step == at_step
+            if exe_out:
+                # ok, do writing
+                if task['target'] == 'file':
+                    if task['type'] == 'traj':
+                        header = task['header'].format(step)
+                        task['writer'].write(self.system, header=header)
+                    else:
+                        if task['type'] == 'cross':
+                            task['writer'].write(results[task['type']])
+                        else:
+                            task['writer'].write(step, results[task['type']])
+                elif task['target'] == 'screen':
+                    results[task['type']]['stepno'] = step
+                    out = task['writer'].write(results[task['type']])
+                    print '\n'.join(out)
+
     def run(self):
         """
         This method can be used to run a simulation. The intended usage is
         for simulations where all tasks have been defined in the system
-        object. Also input/output can be defined as tasks.
+        object. Outputs are defined as separate tasks and are handled by
+        `self.output(results)`.
 
         Note
         ----
@@ -428,15 +579,9 @@ class Simulation(object):
         """
         # do a initial yield, this is just to output the initial
         # state before we do any steps:
-        results = {'cycle': self.cycle}
-        for task in self.task:
-            # check we we should do any initial calculations:
-            if task.get('first', False):
-                resi = _do_task(task, self.cycle['stepno'],
-                                self.cycle['step'])
-                label = task.get('result', None)
-                if label:
-                    results[label] = resi
+        results = self.execute_tasks(first=True)
+        results['cycle'] = self.cycle
+        self.output(results)
         yield results
         # now, run the simulation :-)
         while not self.is_finished():
@@ -444,6 +589,7 @@ class Simulation(object):
             if results is None:
                 results = {}
             results['cycle'] = self.cycle
+            self.output(results)
             yield results
 
 
