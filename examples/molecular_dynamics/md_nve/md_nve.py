@@ -51,20 +51,19 @@ thermo_file = FileWriter('thermo.txt', 'table',
                          header={'text': table.get_header()})
 
 # write/display table header:
-print(table.get_header())
 store_results = []
 # run the simulation :-)
 for result in simulation_nve.run():
     step = result['cycle']['stepno']
     result['thermo']['stepno'] = step
+    if step % 10 == 0:
+        print('\n'.join(table(result['thermo'])))
     if step % 1 == 0:
-        thermo_file.write_line(table(result['thermo']))
+        thermo_file.write_line('\n'.join(table(result['thermo'])))
         store_results.append(result['thermo'])
     if step % 5 == 0:
         traj_writer.write(ljsystem,
-                                 header='NVE, step: {}'.format(step))
-    if step % 10 == 0:
-        print(table(result['thermo']))
+                          header='NVE, step: {}'.format(step))
 
 # as an example, do some plotting:
 mpl_set_style()  # load pytismol style
