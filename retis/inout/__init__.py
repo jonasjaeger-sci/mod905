@@ -49,7 +49,7 @@ from .plotting import create_plotter
 from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
-
+from .mpl_plotting import mpl_set_style
 
 def create_traj_writer(settings, system):
     """

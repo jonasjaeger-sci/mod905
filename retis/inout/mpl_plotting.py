@@ -49,7 +49,7 @@ class MplPlotter(object):
         string with the style name.
         """
         self.style = style
-        _mpl_set_style(self.style)
+        mpl_set_style(self.style)
         fig = plt.figure()
         supported = fig.canvas.get_supported_filetypes()
         plt.close(fig)
@@ -414,7 +414,7 @@ def _mpl_read_style_file(filename):
                     warnings.warn(msg.format(key))
 
 
-def _mpl_set_style(style='pytismol'):
+def mpl_set_style(style='pytismol'):
     """
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
