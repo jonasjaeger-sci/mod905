@@ -9,8 +9,7 @@ from retis.core import Box, System
 from retis.core import create_simulation
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
-from retis.inout import (get_predefined_table, create_traj_writer,
-                         FileWriter)
+from retis.inout import (get_predefined_table, FileWriter)
 from retis.tools import latticefcc
 import numpy as np
 # for plotting:
@@ -37,15 +36,16 @@ msg = 'Generated temperatures with average: {}'
 print(msg.format(ljsystem.calculate_temperature()))
 
 # set up simulation:
-settings = {'system': ljsystem,
+settings = {'type': 'NVE',
+            'system': ljsystem,
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
-            'endcycle': 100}
+            'endcycle': 100,
+            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+                        'format': 'gro'}]}
 
-simulation_nve = create_simulation(settings, simulation_type='NVE')
+simulation_nve = create_simulation(settings)
 
 # set up output:
-traj_writer = create_traj_writer({'type': 'gro', 'file': 'traj.gro'},
-                                 ljsystem)
 table = get_predefined_table('energies')
 thermo_file = FileWriter('thermo.txt', 'table',
                          header={'text': table.get_header()})
@@ -56,14 +56,9 @@ store_results = []
 for result in simulation_nve.run():
     step = result['cycle']['stepno']
     result['thermo']['stepno'] = step
-    if step % 10 == 0:
-        print('\n'.join(table(result['thermo'])))
     if step % 1 == 0:
         thermo_file.write_line('\n'.join(table(result['thermo'])))
         store_results.append(result['thermo'])
-    if step % 5 == 0:
-        traj_writer.write(ljsystem,
-                          header='NVE, step: {}'.format(step))
 
 # as an example, do some plotting:
 mpl_set_style()  # load pytismol style
