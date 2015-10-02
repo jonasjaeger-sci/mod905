@@ -5,7 +5,7 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Box, RandomGenerator, System
+from retis.core import Box, System
 from retis.core import create_simulation
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
@@ -16,7 +16,7 @@ import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from retis.inout import set_plotting_style
+from retis.inout import mpl_set_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
@@ -30,7 +30,7 @@ for pos in lattice:
     ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
 # adjust DOF since we are in "NVEMG" with periodic boundaries
 ljsystem.adjust_dof([1, 1, 1])
-ljsystem.generate_velocities(RandomGenerator(seed=0), momentum=True)
+ljsystem.generate_velocities(seed=0, momentum=True)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 msg = 'Generated temperatures with average: {}'
@@ -47,10 +47,10 @@ simulation_nve = create_simulation(settings, simulation_type='NVE')
 traj_writer = create_traj_writer({'type': 'gro', 'file': 'traj.gro'},
                                  ljsystem)
 table = get_predefined_table('energies')
-thermo_file = FileWriter('thermo.txt', 'table')
+thermo_file = FileWriter('thermo.txt', 'table',
+                         header={'text': table.get_header()})
 
 # write/display table header:
-thermo_file.write_line(table.get_header())
 print(table.get_header())
 store_results = []
 # run the simulation :-)
@@ -67,7 +67,7 @@ for result in simulation_nve.run():
         print(table(result['thermo']))
 
 # as an example, do some plotting:
-set_plotting_style()  # load pytismol style
+mpl_set_style()  # load pytismol style
 
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]
