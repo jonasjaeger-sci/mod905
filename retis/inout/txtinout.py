@@ -557,6 +557,7 @@ class TxtTable(object):
         self.spacing = spacing  # zeros are correctly handled by get_header
         self.headers, self.header = self.make_header(headers=headers)
         self.row_fmt = None
+        self.first_write = True
 
     def make_header(self, headers=None):
         """
@@ -609,7 +610,11 @@ class TxtTable(object):
                                                   fmt_str=self.row_fmt)
         if self.row_fmt is None:  # store the row format for re-usage
             self.row_fmt = row_fmt
-        return str_row
+        if self.first_write:
+            self.first_write = False
+            return [self.header, str_row]
+        else:
+            return [str_row]
 
     def __call__(self, row, header=False):
         """
