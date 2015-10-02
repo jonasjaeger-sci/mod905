@@ -653,6 +653,8 @@ class FileWriter(object):
         This is just a counter of how many times write has been called.
     fileh : file
         This is the file handle which can be used for writing etc.
+    header : string
+        A header (comment) for the first line of the file.
     """
     def __init__(self, filename, filetype, mode='w', oldfile='backup',
                  count=0, header=None):
@@ -683,11 +685,14 @@ class FileWriter(object):
         self.fileh = None
         self.header = None
         if header is not None:
-            _, self.header = _create_and_format_row(header['text'],
-                                                    header['width'],
-                                                    header=True,
-                                                    spacing=1,
-                                                    fmt_str=None)
+            if 'width' in header:
+                _, self.header = _create_and_format_row(header['text'],
+                                                        header['width'],
+                                                        header=True,
+                                                        spacing=1,
+                                                        fmt_str=None)
+            else:
+                self.header = header['text']
         if self.mode == 'w':
             self.fileopen(oldfile=oldfile)
             if oldfile != 'append' and self.header is not None:
