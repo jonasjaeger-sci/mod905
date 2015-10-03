@@ -5,12 +5,10 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Simulation, System, Box
-from retis.core.integrators import VelocityVerlet
+from retis.core import System, Box, create_simulation
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
-from retis.inout import WriteGromacs
 from retis.tools import lattice_simple_cubic
 from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_kinetic_temperature)
@@ -37,28 +35,28 @@ npart = float(npart)
 # generate velocities:
 ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
 DOF = ljsystem.temperature['dof']
-ljsystem.generate_velocities(seed=0, momentum=False)
+ljsystem.generate_velocities(seed=0, momentum=True)
 _, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
 print('Generated temperatures with average: {}'.format(gentemp))
 
 ljsystem.forcefield = forcefield
 # also initiate forces:
-ljsystem.potential_and_force()
 
-write_gro = WriteGromacs('test.gro', box, units=ljsystem.units)
+# set up simulation:
+settings = {'type': 'NVE',
+            'system': ljsystem,
+            'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
+            'endcycle': 950,
+            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+                        'format': 'gro'}]}
+simulation_nve = create_simulation(settings)
 
-numberofsteps = 950
-simulationNVE = Simulation(endcycle=numberofsteps)
+
 timestep = 0.0025
-timeunit = timestep * CONVERT['time']['lj', 'fs']
-integrator = VelocityVerlet(timestep)
-timeendfs = numberofsteps * timeunit
+timeunit = (settings['integrator']['timestep'] *
+            CONVERT['time'][ljsystem.units, 'fs'])
+timeendfs = settings['endcycle'] * timeunit
 
-task_integrate = {'func': integrator.integration_step,
-                  'args': [ljsystem]}
-simulationNVE.add_task(task_integrate)
-
-outfmt = '{0:8d} {1:12.7f} {2:12.7f} {3:12.7f} {4:12.7f}'
 step, v_pot, e_kin, e_tot, temperature = [], [], [], [], []
 time = []
 
@@ -231,14 +229,14 @@ def update(frame, system):
     vel_arrow.set_visible(True)
     patches.append(vel_arrow)
 
-    if not simulationNVE.is_finished():
+    if not simulation_nve.is_finished():
+        result = simulation_nve.step()
         # here we calculate some energies and updates the energy plots:
-        step.append(simulationNVE.cycle['step'])
+        step.append(result['cycle']['step'])
         time.append(step[-1] * timeunit)
-        temp, vpot, ekin = energy_calculation(system)
-        temperature.append(temp)
-        v_pot.append(ECONV * vpot / npart)
-        e_kin.append(ECONV * ekin / npart)
+        temperature.append(result['thermo']['temp'])
+        v_pot.append(ECONV * result['thermo']['vpot'])
+        e_kin.append(ECONV * result['thermo']['ekin'])
         e_tot.append(e_kin[-1] + v_pot[-1])
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
@@ -251,13 +249,7 @@ def update(frame, system):
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
                                                                    frame))
         patches.append(time_text)
-        # output energies to the screen:
-        print(outfmt.format(step[-1], temperature[-1], v_pot[-1],
-                            e_kin[-1], e_tot[-1]))
         # store the trajectory to a .gro file:
-        write_gro.write_frame(pos)
-        # finally, do the simultion step:
-        simulationNVE.step()
         return patches
     else:
         print('Simulation is done.')
@@ -287,7 +279,7 @@ def init():
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=numberofsteps,
+anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
                                fargs=[ljsystem], repeat=False, interval=2,
                                blit=True, init_func=init)
 # for making a movie:
