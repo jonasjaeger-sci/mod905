@@ -821,23 +821,26 @@ class SimulationMdFlux(Simulation):
         out : dict
             This list contains the results of the defined tasks.
         """
-        self.cycle['step'] += 1
-        self.cycle['stepno'] += 1
-        # integrate one step
-        self.integrator.integration_step(self.system)
-        # collect energy and order parameter
-        results = self.execute_tasks()
-        if 'orderp' in results:
-            leftside, cross = check_crossing(self.cycle['step'], self.system,
+        if not self.first_step:
+            self.cycle['step'] += 1
+            self.cycle['stepno'] += 1
+            self.integrator.integration_step(self.system)
+        # collect energy and order parameter, this is done at all steps
+        results = {}
+        system = self.system
+        results['thermo'] = calculate_thermo(self.system)
+        results['orderp'] = self.order_function(system)
+        # do not check crossing at step 0
+        if not self.first_step:
+            leftside, cross = check_crossing(self.cycle['step'],
+                                             self.system,
                                              results['orderp'][0],
                                              self.interfaces,
                                              self.leftside_prev)
-        else:
-            # order parameter was not calculated at this step, do it:
-            leftside, cross = check_crossing(self.cycle['step'], self.system,
-                                             self.order_function,
-                                             self.interfaces,
-                                             self.leftside_prev)
-        self.leftside_prev = leftside
-        results['cross'] = cross
+            self.leftside_prev = leftside
+            results['cross'] = cross
+        # just output:
+        self.output(results, first=self.first_step)
+        if self.first_step:
+            self.first_step = False
         return results
