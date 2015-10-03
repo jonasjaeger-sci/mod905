@@ -57,7 +57,7 @@ for result in simulation_nve.run():
     step = result['cycle']['stepno']
     result['thermo']['stepno'] = step
     if step % 1 == 0:
-        thermo_file.write_line('\n'.join(table(result['thermo'])))
+        thermo_file.write_line(table(result['thermo']))
         store_results.append(result['thermo'])
 
 # as an example, do some plotting:
@@ -78,7 +78,7 @@ ax1.plot(step, kin_e, label='Kinetic')
 ax1.plot(step, tot_e, label='Total')
 ax1.set_xlabel('Step no.')
 ax1.set_ylabel('Energy per particle')
-ax1.legend(fontsize='small', loc='center left')
+ax1.legend(loc='center left', prop={'size': 'small'})
 
 ax2 = fig1.add_subplot(gs[0, 1])
 ax2.plot(step, temp)
@@ -99,5 +99,5 @@ ax4.plot(step, momentum[:, 1], lw=4, alpha=0.7, label='y')
 ax4.plot(step, momentum[:, 2], lw=4, alpha=0.7, label='z')
 ax4.set_xlabel('Step')
 ax4.set_ylabel('Linear momentum')
-ax4.legend(loc='upper center', fontsize='small', ncol=3)
+ax4.legend(loc='upper center', prop={'size': 'small'}, ncol=3)
 plt.show()
