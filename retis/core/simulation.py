@@ -373,6 +373,7 @@ class Simulation(object):
         self.system = None
         self.task = []
         self.output_task = []
+        self.first_step = True
 
     def extend_cycles(self, steps):
         """
@@ -422,9 +423,14 @@ class Simulation(object):
         is happening when running ``step()``, investigate the defined tasks
         in self.task.
         """
-        self.cycle['step'] += 1
-        self.cycle['stepno'] += 1
-        return self.execute_tasks()
+        if not self.first_step:
+            self.cycle['step'] += 1
+            self.cycle['stepno'] += 1
+        results = self.execute_tasks(first=self.first_step)
+        self.output(results, first=self.first_step)
+        if self.first_step:
+            self.first_step = False
+        return results
 
     def execute_tasks(self, first=False):
         """
@@ -607,16 +613,9 @@ class Simulation(object):
         out : dict
             This dict contains the results from the simulation
         """
-        # do a initial yield, this is just to output the initial
-        # state before we do any steps:
-        results = self.execute_tasks(first=True)
-        self.output(results, first=True)
-        yield results
-        # now, run the simulation :-)
+        # run the simulation :-)
         while not self.is_finished():
-            results = self.step()
-            self.output(results)
-            yield results
+            yield self.step()
 
 
 class UmbrellaWindowSimulation(Simulation):
