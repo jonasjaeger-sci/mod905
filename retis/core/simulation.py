@@ -793,21 +793,6 @@ class SimulationMdFlux(Simulation):
                                      self.interfaces,
                                      self.leftside_prev)
         self.leftside_prev = leftside
-        # also add a thermo task
-        task_thermo = {'func': calculate_thermo,
-                       'args': [system],
-                       'kwargs': {'dof': system.temperature['dof'],
-                                  'dim': system.get_dim(),
-                                  'volume': system.box.calculate_volume()},
-                       'first': True,
-                       'result': 'thermo'}
-        self.add_task(task_thermo)
-        # add a task for calculating the order parameter
-        task_order = {'func': self.order_function.__call__,
-                      'args': [system],
-                      'first': True,
-                      'result': 'orderp'}
-        self.add_task(task_order)
 
     def step(self):
         """
@@ -827,9 +812,8 @@ class SimulationMdFlux(Simulation):
             self.integrator.integration_step(self.system)
         # collect energy and order parameter, this is done at all steps
         results = {}
-        system = self.system
         results['thermo'] = calculate_thermo(self.system)
-        results['orderp'] = self.order_function(system)
+        results['orderp'] = self.order_function(self.system)
         # do not check crossing at step 0
         if not self.first_step:
             leftside, cross = check_crossing(self.cycle['step'],
