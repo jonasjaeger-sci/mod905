@@ -410,7 +410,7 @@ def _mpl_read_style_file(filename):
                 try:
                     mpl.rcParams[key] = value
                 except KeyError:
-                    msg = 'Could not set {}. Please update matplotlib'
+                    msg = 'Unknown setting "{}". Please update matplotlib'
                     warnings.warn(msg.format(key))
 
 
@@ -434,6 +434,8 @@ def mpl_set_style(style='pytismol'):
     if style == 'pytismol':
         style = _MPL_STYLE_FILE
     if mpl.__version__ < '1.4.0':  # default to loading from file
+        msg = 'Using matplotlib version < 1.4.0, please upgrade matplotlib.'
+        warnings.warn(msg)
         _mpl_read_style_file(style)
     else:
         if style in plt.style.available:
