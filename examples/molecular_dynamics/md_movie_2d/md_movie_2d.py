@@ -5,7 +5,7 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Simulation, System, Box, RandomGenerator
+from retis.core import Simulation, System, Box
 from retis.core.integrators import VelocityVerlet
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField
@@ -37,8 +37,7 @@ npart = float(npart)
 # generate velocities:
 ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
 DOF = ljsystem.temperature['dof']
-rgen = RandomGenerator(seed=0)
-ljsystem.generate_velocities(rgen, momentum=False)
+ljsystem.generate_velocities(seed=0, momentum=False)
 _, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
 print('Generated temperatures with average: {}'.format(gentemp))
 
@@ -281,6 +280,9 @@ def init():
     patches.append(vel_arrow)
     time_text.set_text('')
     patches.append(time_text)
+    for ci in circles:
+        ci.set_visible(False)
+        patches.append(ci)
     return patches
 
 
@@ -289,5 +291,5 @@ anim = animation.FuncAnimation(fig, update, frames=numberofsteps,
                                fargs=[ljsystem], repeat=False, interval=2,
                                blit=True, init_func=init)
 # for making a movie:
-#anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()
