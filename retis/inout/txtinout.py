@@ -557,7 +557,6 @@ class TxtTable(object):
         self.spacing = spacing  # zeros are correctly handled by get_header
         self.headers, self.header = self.make_header(headers=headers)
         self.row_fmt = None
-        self.first_write = True
 
     def make_header(self, headers=None):
         """
@@ -589,7 +588,7 @@ class TxtTable(object):
         """Function to just return the current header."""
         return self.header
 
-    def write(self, row_dict, header=False):
+    def get_row(self, row_dict, header=False):
         """
         This method will write a row.
 
@@ -610,16 +609,12 @@ class TxtTable(object):
                                                   fmt_str=self.row_fmt)
         if self.row_fmt is None:  # store the row format for re-usage
             self.row_fmt = row_fmt
-        if self.first_write:
-            self.first_write = False
-            return [self.header, str_row]
-        else:
-            return [str_row]
+        return str_row
 
     def __call__(self, row, header=False):
         """
         This method is just for convenience. It will just
-        call self.write with the parameters.
+        call self.get_row() with the parameters.
 
         Parameters
         ----------
@@ -630,7 +625,7 @@ class TxtTable(object):
         header : boolean, optional
             If this is true, we are creating the header.
         """
-        return self.write(row, header=header)
+        return self.get_row(row, header=header)
 
 
 class FileWriter(object):

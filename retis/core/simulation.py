@@ -410,8 +410,9 @@ class Simulation(object):
 
         Returns
         -------
-        out : list
-            This list contains the results of the defined tasks.
+        out : dict
+            This dict contains the results of the defined tasks. Here, this
+            dict is obtained as the return value from self.execute_tasks().
 
         Note
         ----
@@ -445,6 +446,9 @@ class Simulation(object):
                 label = task.get('result', None)
                 if label:
                     results[label] = resi
+        # also add the cycle number to results, this is just for
+        # convenience:
+        results['cycle'] = self.cycle
         return results
 
     def add_tasks(self, *tasks):
@@ -496,12 +500,19 @@ class Simulation(object):
         """
         The output tasks are added slightly different than the other tasks.
         This is since we need to create some objects here and possibly new
-        files
+        files. We also have to possibility of someone just wanting to
+        update a default output task, for instance change the requence of
+        output etc.
 
         Parameters
         ----------
         output : dict
             This dict describes the output task.
+
+        Returns
+        -------
+        out : boolean
+            True if task was added, false otherwise
         """
         if _create_output_task(output, system=self.system):
             # check if we should update or add:
@@ -518,18 +529,33 @@ class Simulation(object):
             # we did not update, just add:
             self.output_task.append(output)
             return True
+        else:
+            return False
 
-    def output(self, results):
+    def output(self, results, first=False):
         """
-        This method handles all the outputs that should be done.
+        This method handles all the outputs that should be done. These
+        are defined as tasks in self.output_task.
 
         Parameters
         ----------
+        results : dict
+            These are the results from the current simulation step.
+        first : boolean
+            This is just to determine if this is the first step or
+            not. In some cases we might to do something special on the first
+            output. For instance when writing to the screen, we typically
+            want to output a table heading.
+
+        Returns
+        -------
+        N/A
         """
         for task in self.output_task:
             if not task['type'] in results and task['type'] != 'traj':
                 # the desired output was not calculated at this step for
-                # some reason. This can for instance happen for the flux.
+                # some reason. This can for instance happen for the crossing
+                # output which is calculated when a crossing occurs.
                 continue
             every = task.get('every', None)
             at_step = task.get('at', None)
@@ -554,9 +580,13 @@ class Simulation(object):
                         else:
                             task['writer'].write(step, results[task['type']])
                 elif task['target'] == 'screen':
+                    # all these output tasks will be tables, just return the
+                    # new row:
                     results[task['type']]['stepno'] = step
-                    out = task['writer'].write(results[task['type']])
-                    print '\n'.join(out)
+                    out = task['writer'].get_row(results[task['type']])
+                    if first:
+                        out = '\n'.join([task['writer'].get_header()] + [out])
+                    print out
 
     def run(self):
         """
@@ -580,15 +610,11 @@ class Simulation(object):
         # do a initial yield, this is just to output the initial
         # state before we do any steps:
         results = self.execute_tasks(first=True)
-        results['cycle'] = self.cycle
-        self.output(results)
+        self.output(results, first=True)
         yield results
         # now, run the simulation :-)
         while not self.is_finished():
             results = self.step()
-            if results is None:
-                results = {}
-            results['cycle'] = self.cycle
             self.output(results)
             yield results
 
@@ -793,7 +819,7 @@ class SimulationMdFlux(Simulation):
 
         Returns
         -------
-        out : list
+        out : dict
             This list contains the results of the defined tasks.
         """
         self.cycle['step'] += 1
