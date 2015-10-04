@@ -16,6 +16,11 @@ from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
                                           calculate_scalar_pressure)
 import numpy as np
 import os
+# for plotting:
+from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator
+from matplotlib import gridspec as gridspec
+from retis.inout import mpl_set_style
 
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
@@ -60,7 +65,6 @@ task_integrate = {'func': integrator.integration_step,
                   'args': [ljsystem]}
 
 simulationLAMMPS.add_task(task_integrate)
-ljsystem.adjust_dof([1, 1, 1])
 
 
 def common_calculations(system):
@@ -97,6 +101,8 @@ outfmt2 = '# {0:>6s} {1:>12s} {2:>12s} {3:>12s} {4:>12s} {5:>12s}'
 print(outfmt2.format('Step', 'Temp', 'Press', 'Pot', 'Kin', 'Total'))
 
 while not simulationLAMMPS.is_finished():
+    # do a step
+    simulationLAMMPS.step()
     vpot, ekin, etot, avgtemp, press, presstens = common_calculations(ljsystem)
     v_pot.append(vpot / npart)
     e_kin.append(ekin / npart)
@@ -107,16 +113,10 @@ while not simulationLAMMPS.is_finished():
     step.append(simulationLAMMPS.cycle['step'])
     print(outfmt.format(step[-1], temp[-1], pressure[-1],
                         v_pot[-1], e_kin[-1], e_tot[-1]))
-    # do a step
-    simulationLAMMPS.step()
 
 # The simulation have now ended, we will plot some results and compare
 # with output from LAMMPS:
-from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from matplotlib import gridspec as gridspec
-from retis.inout import set_plotting_style
-set_plotting_style()  # load pytismol style
+mpl_set_style()  # load pytismol style
 
 dirname = 'output_data'
 d = np.loadtxt(os.path.join(dirname, 'lammps-output_mixture.txt.gz'))
@@ -156,7 +156,7 @@ ax1.yaxis.set_major_locator(MaxNLocator(nbins=3 + 1,  # + 1 due to prune lower
 ax2.yaxis.set_major_locator(MaxNLocator(nbins=3 + 2,  # + 2 due to prune both
                                         prune='both'))
 ax3.yaxis.set_major_locator(MaxNLocator(nbins=4))
-ax1.legend(loc='upper right', fontsize='small')
+ax1.legend(loc='upper right', prop={'size': 'small'})
 fig.tight_layout()
 plt.subplots_adjust(hspace=0.0)
 
@@ -169,7 +169,7 @@ ax1.plot(d[:n, 0], d[:n, 1], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
 ax1.plot(step[:n], temp[:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pytismol')
-ax1.legend(loc='lower right', fontsize='small')
+ax1.legend(loc='lower right', prop={'size': 'small'})
 ax1.set_xticklabels(())
 
 ax2 = fig2.add_subplot(212)
@@ -201,7 +201,7 @@ for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
     ax.plot(step[:n], pressure_tensor[:n, idx[0], idx[1]], lw=4, ls='--',
             color='k', alpha=0.5, label='pytismol')
     if i == 0:
-        ax.legend(loc='upper left', fontsize='small', ncol=1)
+        ax.legend(loc='upper left', prop={'size': 'small'}, ncol=1)
     if i == 2 or i == 5:
         ax.yaxis.set_major_locator(MaxNLocator(nbins=3 + 1,
                                                prune='lower'))
