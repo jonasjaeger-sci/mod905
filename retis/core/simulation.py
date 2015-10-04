@@ -55,7 +55,7 @@ def _check_settings(settings, required):
     return result
 
 
-def create_simulation(settings):
+def create_simulation(settings, system):
     """
     This method will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
@@ -65,8 +65,8 @@ def create_simulation(settings):
     ---------
     settings : dict
         This dictionary contains the settings for the simulation.
-    simulation_type : string
-        This selects what kind of simulation we shall be doing
+    system : object of type restis.core.system.System
+        This is the system for which the simulation will run.
 
     Returns
     -------
@@ -74,9 +74,9 @@ def create_simulation(settings):
         This object will correspond to the selected simulation type.
     """
     simulation_type = settings.get('type', 'nve').lower()
-    sim = None
-    required = {'nve': ['system', 'endcycle'],
-                'md-flux': ['system', 'endcycle', 'integrator', 'interfaces',
+    simulation = None
+    required = {'nve': ['endcycle'],
+                'md-flux': ['endcycle', 'integrator', 'interfaces',
                             'orderparameter']}
     if simulation_type in required:
         # just check if all the required settings were given:
@@ -86,18 +86,18 @@ def create_simulation(settings):
         # set up a MD NVE simulation.
         intg = create_integrator(settings.get('integrator', None),
                                  simulation_type)
-        sim = SimulationNVE(settings['system'], intg,
-                            endcycle=settings['endcycle'],
-                            startcycle=settings.get('startcycle', 0))
+        simulation = SimulationNVE(system, intg,
+                                   endcycle=settings['endcycle'],
+                                   startcycle=settings.get('startcycle', 0))
     elif simulation_type == 'md-flux':
         # set up a simulation for MD FLUX
         intg = create_integrator(settings.get('integrator', None),
                                  simulation_type)
-        sim = SimulationMdFlux(settings['system'], intg,
-                               settings['interfaces'],
-                               settings['orderparameter'],
-                               endcycle=settings['endcycle'],
-                               startcycle=settings.get('startcycle', 0))
+        simulation = SimulationMdFlux(system, intg,
+                                      settings['interfaces'],
+                                      settings['orderparameter'],
+                                      endcycle=settings['endcycle'],
+                                      startcycle=settings.get('startcycle', 0))
     elif simulation_type == 'tis':
         # this will set up a TIS simulation
         warnings.warn('Simulation TIS not yet implemented')
@@ -105,13 +105,13 @@ def create_simulation(settings):
         warnings.warn('Simulation reTIS not yet implemented')
     else:
         warnings.warn('Unknown simulation {}'.format(simulation_type))
-    if sim is not None:
+    if simulation is not None:
         if simulation_type in _OUTPUT:  # add defaults:
             for task in _OUTPUT[simulation_type]:
-                sim.add_output(task)
+                simulation.add_output(task)
         for task in settings.get('output', []):
-            sim.add_output(task)
-    return sim
+            simulation.add_output(task)
+    return simulation
 
 
 def _create_output_task(task, system=None):
