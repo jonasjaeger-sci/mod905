@@ -5,88 +5,94 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+# retis imports:
 from retis.core import System, Box, create_simulation
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
 from retis.tools import lattice_simple_cubic
-from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
-                                          calculate_kinetic_temperature)
+from retis.inout.plotting import _COLORS, _COLOR_SCHEME
+# imports for the plotting:
+from matplotlib import pyplot as plt
+from matplotlib import animation
+import matplotlib as mpl
+# other imports:
 import numpy as np
 
+
+# set up simulation settings:
+settings = {'type': 'NVE',
+            'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
+            'endcycle': 950,
+            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+                        'format': 'gro'}],
+            'units': 'lj',
+            'temperature': 1.0,
+            'generate-vel': {'seed': 0, 'momentum': True,
+                             'distribution': 'maxwell'}}
 # set up potential function(s) and force field:
 ljpot = PairLennardJonesCutnp(dim=2, shift=True)
 ljparams = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
             'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[ljparams])
 
+# create a box:
 size = np.array([[0.0, 12.0 / 3.405], [0.0, 12.0 / 3.405]])
 box = Box(size)
-ljsystem = System(temperature=1.0, units='lj', box=box)
-# generate some lattice points, this will give approx 9 points
+
+# create a system:
+ljsystem = System(temperature=settings['temperature'],
+                  units=settings['units'], box=box)
+
+# generate some lattice points, this will give 9 points
+# also add particles at (some of) the lattice locations
 lattice = lattice_simple_cubic(box.size, spacing=1.0)
 for i, lattice_pos in enumerate(lattice):
     if i == 4:
         continue
     ljsystem.add_particle(name='Ar', pos=lattice_pos, mass=1.0, ptype='Ar')
+
 npart = ljsystem.particles.npart
-print('Added {} particles to a simple square lattice'.format(npart))
+msg = 'Added {:d} particles to a simple square lattice'
+print(msg.format(npart))
 npart = float(npart)
+
 # generate velocities:
-ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
-DOF = ljsystem.temperature['dof']
-ljsystem.generate_velocities(seed=0, momentum=True)
-_, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
-print('Generated temperatures with average: {}'.format(gentemp))
+if 'generate-vel' in settings:
+    ljsystem.generate_velocities(**settings['generate-vel'])
+    msg = 'Generated temperatures with average: {}'
+    print(msg.format(ljsystem.calculate_temperature()))
 
+# attach the force field:
 ljsystem.forcefield = forcefield
-# also initiate forces:
 
-# set up simulation:
-settings = {'type': 'NVE',
-            'system': ljsystem,
-            'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
-            'endcycle': 950,
-            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
-                        'format': 'gro'}]}
-simulation_nve = create_simulation(settings)
+# create simulation :-)
+simulation_nve = create_simulation(settings, ljsystem)
 
-
-timestep = 0.0025
+# We will in this example animate on the flym then we will have to do some
+# extra set up. The actual simulation is carried out by calling
+# `simulation_nve.step()` in the `update` function which is executed by
+# the animation.FuncAnimation() call. In effect animation.FuncAnimation will
+# run the simulation one step, update the plot and display it and continue
+# this loop until the simulation is done.
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][ljsystem.units, 'fs'])
 timeendfs = settings['endcycle'] * timeunit
-
-step, v_pot, e_kin, e_tot, temperature = [], [], [], [], []
-time = []
-
-# We will in this example animate
-# on the fly. We will then have to set up some matplotlib-specific
-# stuff:
-from matplotlib import pyplot as plt
-from matplotlib import animation
-from matplotlib import rc
-rc('axes', labelsize='large')
-rc('font', family='serif')
-fig = plt.figure(figsize=(12, 6))
-
-# This will just set up some dimensions etc. for the plotting:
-dx = size[0][1] - size[0][0]
-f = 0.12
-dx = dx * f * np.array([-1.0, 1.0])
-dy = size[1][1] - size[1][0]
-dy = dy * f * 0.1 * np.array([-1.0, 1.0])
+time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
 SIGMA = CONVERT['length']['lj', 'Å']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
+mpl.rc('axes', labelsize='large')
+mpl.rc('font', family='serif')
+fig = plt.figure(figsize=(12, 6))
 # This adds the first axis. Here we will plot the
 # particles with velocity and force vectors.
 ax = fig.add_subplot(121)
-ax.set_xlim((size[0] + dx) * SIGMA)
-ax.set_ylim((size[1] + dy) * SIGMA)
+ax.set_xlim((size[0] + np.array([-0.5, 0.5])) * SIGMA)
+ax.set_ylim((size[1] + np.array([-0.5, 0.5])) * SIGMA)
 ax.set_aspect('equal', 'datalim')
-ax.set_xlabel(r'$x/\AA{}$')
-ax.set_ylabel(r'$y/\AA{}$')
+ax.set_xlabel(u'x / Å')
+ax.set_ylabel(u'y / Å')
 ax.set_xticks([size[0][0] * SIGMA, size[0][1] * SIGMA])
 ax.set_yticks([size[1][0] * SIGMA, size[1][1] * SIGMA])
 ax.xaxis.labelpad = -5
@@ -96,56 +102,41 @@ pos0 = box.pbc_wrap(ljsystem.particles.pos)
 # set up circles to represent the particles:
 circles = []
 for _ in range(int(npart)):
-    circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5))
+    circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5,
+                              color='blue'))
     circles[-1].set_visible(False)
     ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
-force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], zorder=4)
-vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], color='darkgreen', zorder=4)
+force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
+                         color=_COLORS['almost_black'], zorder=4)
+vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
+                       color=_COLOR_SCHEME['colorblind_10'][1], zorder=4)
 # also add arrows for a "legend":
-plt.quiverkey(force_arrow, 1, -4, 6, 'Forces', coordinates='data',
-              color='black')
-plt.quiverkey(vel_arrow, 4, -4, 6, 'Velocities', coordinates='data',
-              color='darkgreen')
+plt.quiverkey(force_arrow, 3, -3.5, 9, 'Forces', coordinates='data',
+              color=_COLORS['almost_black'], fontproperties={'size': 'large'})
+plt.quiverkey(vel_arrow, 9, -3.5, 9, 'Velocities', coordinates='data',
+              color=_COLOR_SCHEME['colorblind_10'][1],
+              fontproperties={'size': 'large'})
 # this will draw the lines representing the box boundaries:
-ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color='k')
-ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color='k')
-
+ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+# add second axis for plotting the energies
 ax2 = fig.add_subplot(122)
 ax2.set_xlim(0, timeendfs)
 ax2.set_ylim(-0.6, 0.6)
-ax2.set_xlabel('Time/fs')
-ax2.set_ylabel('Energy/kcal/mol')
+ax2.set_xlabel('Time / fs')
+ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
-linepot, = ax2.plot(None, None, lw=3, ls='-', color='blue', alpha=0.5,
-                    label='Potential')
-linekin, = ax2.plot(None, None, lw=3, ls='-', color='green', alpha=0.5,
-                    label='Kinetic')
-linetot, = ax2.plot(None, None, lw=3, ls='-', color='k', alpha=0.5,
-                    label='Total')
+linepot, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
+                    alpha=0.8, label='Potential')
+linekin, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
+                    alpha=0.8, label='Kinetic')
+linetot, = ax2.plot(None, None, lw=4, ls='-', color=_COLORS['almost_black'],
+                    alpha=0.8, label='Total')
 ax2.legend(loc='lower left', ncol=2, frameon=False)
-plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
-
-
-def energy_calculation(system):
-    """
-    This is a helper function to calculate energies for the system.
-
-    Parameters
-    ----------
-    system : object
-        The system object, with a particle list, which we can use to compute
-        the energies.
-    """
-    particles = system.particles
-    dof = system.temperature['dof']
-    kin_tens = calculate_kinetic_energy_tensor(particles)
-    _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
-                                                  kin_tensor=kin_tens)
-    kini = kin_tens.trace()
-    return avgtemp, system.v_pot, kini
+plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.15)
 
 
 def get_max_vector(vectors):
@@ -249,7 +240,6 @@ def update(frame, system):
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
                                                                    frame))
         patches.append(time_text)
-        # store the trajectory to a .gro file:
         return patches
     else:
         print('Simulation is done.')
