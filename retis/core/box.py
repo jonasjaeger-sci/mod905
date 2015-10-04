@@ -261,6 +261,6 @@ class Box(object):
         for i, periodic in enumerate(self.periodic):
             low = self.low[i]
             high = self.high[i]
-            msg = 'Low: {}, high: {}, periodic: {}'
-            boxstr.append(msg.format(low, high, periodic))
+            msg = 'Dim: {}, Low: {}, high: {}, periodic: {}'
+            boxstr.append(msg.format(i, low, high, periodic))
         return '\n'.join(boxstr)
