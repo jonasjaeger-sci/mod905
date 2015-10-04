@@ -19,6 +19,16 @@ from retis.inout import mpl_set_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
+
+# simulation settings:
+settings = {'type': 'NVE',
+            'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
+            'endcycle': 100,
+            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+                        'format': 'gro'}],
+            'generate-vel': {'seed': 0, 'momentum': True,
+                             'distribution': 'maxwell'}}
+
 # set up a lattice and create a box
 lattice, size = latticefcc(density=0.9, nrx=3, nry=3, nrz=3)
 box = Box(size, periodic=[True, True, True])
@@ -27,39 +37,29 @@ ljsystem.forcefield = ForceField(potential=[POTENTIAL],
                                  params=[LJPARAMETERS])
 for pos in lattice:
     ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
-# adjust DOF since we are in "NVEMG" with periodic boundaries
-ljsystem.adjust_dof([1, 1, 1])
-ljsystem.generate_velocities(seed=0, momentum=True)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
-msg = 'Generated temperatures with average: {}'
-print(msg.format(ljsystem.calculate_temperature()))
 
-# set up simulation:
-settings = {'type': 'NVE',
-            'system': ljsystem,
-            'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
-            'endcycle': 100,
-            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
-                        'format': 'gro'}]}
+if 'generate-vel' in settings:
+    ljsystem.generate_velocities(**settings['generate-vel'])
+    msg = 'Generated temperatures with average: {}'
+    print(msg.format(ljsystem.calculate_temperature()))
 
-simulation_nve = create_simulation(settings)
+simulation_nve = create_simulation(settings, ljsystem)
 
-# set up output:
+# set up extra output:
 table = get_predefined_table('energies')
 thermo_file = FileWriter('thermo.txt', 'table',
                          header={'text': table.get_header()})
-
-# write/display table header:
 store_results = []
 # run the simulation :-)
 for result in simulation_nve.run():
     step = result['cycle']['stepno']
     result['thermo']['stepno'] = step
-    if step % 1 == 0:
-        thermo_file.write_line(table(result['thermo']))
-        store_results.append(result['thermo'])
+    thermo_file.write_line(table(result['thermo']))
+    store_results.append(result['thermo'])
 
+# the rest is now just plotting:
 # as an example, do some plotting:
 mpl_set_style()  # load pytismol style
 
