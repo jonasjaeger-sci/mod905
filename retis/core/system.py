@@ -82,23 +82,23 @@ class System(object):
         Parameters
         ----------
         dof : numpy.array
-            The degrees of freedom to add.
+            The degrees of freedom to neglect, in addition to the ones
+            we already have neglected.
         """
-        if isinstance(dof, list):
-            dof = np.array(dof)
         if self.temperature['dof'] is None:
-            self.temperature['dof'] = dof
+            self.temperature['dof'] = np.array(dof)
         else:
-            self.temperature['dof'] += dof
+            self.temperature['dof'] += np.array(dof)
 
     def get_boltzmann(self):
         """
-        This function returns the value of Boltzmanns constant
+        This function returns the value of the Boltzmann constant
         in the correct units for the system
 
         Returns
         -------
-        Boltzmanns constant as a float
+        out : float
+            The Boltzmann constant.
         """
         return CONSTANTS['kB'][self.units]
 
@@ -120,19 +120,23 @@ class System(object):
             return 1
 
     def calculate_beta(self, temperature=None):
-        """
-        Updates the temperature and beta for the system
+        r"""
+        Returns the beta factor for the system. Beta is defined
+        as :math:`\beta = 1/(k_\text{B} \times T` where :math:`k_\text{B}` is
+        the Boltzmann constant and the temperature `T` is either specified in
+        the parameters or assumed equal to the set temperature of the system.
 
         Parameters
         ----------
         temperature : float, optional
-            The temperature of the syste. If the temperature
+            The temperature of the system. If the temperature
             is not given, self.temperature will be used.
 
         Returns
         -------
         out : float
-            The calculated 1.0/(kB*T)
+            The calculated beta factor, or None if no temperature data
+            is available.
         """
         if temperature is None:
             if self.temperature['set'] is None:
@@ -144,7 +148,7 @@ class System(object):
     def add_particle(self, pos, vel=None, force=None,
                      mass=1.0, name='?', ptype='?'):
         """
-        Adds a particle to the system.
+        Add a particle to the system.
 
         Parameters
         ----------
@@ -309,10 +313,10 @@ class System(object):
         what : string
             This selects what we are to evaluate. 'potential' selects
             the potential energy only, 'force' selects the force only and
-            antyhing else will give both.
+            anything else will give both.
         kwargs : dict
             This dictionary can be used to override position, name, types,
-            particles and/or box. Default values are taken from selv.box or
+            particles and/or box. Default values are taken from self.box or
             self.particles.
         """
         args = {}
@@ -340,11 +344,12 @@ class System(object):
 
         Parameters
         ----------
-        rgen : object of type RandomGenerator
+        rgen : object of type RandomGenerator, optional
             This is the random generator which handles the drawing of
-            velocities
+            velocities. If not given, a RandomGenerator object will
+            be created with a given `seed` (see below).
         seed : int, optional
-            Seed for the RandomGenerator in case rgen is not given.
+            Seed for the RandomGenerator in case `rgen` is not given.
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
@@ -373,7 +378,7 @@ class System(object):
         Function to calculate the temperature of the current configuration
         of the system. It is included here for convenience since the dof's
         are easily accessible and it's a very common calculation to perform,
-        even though it might be cleaner to include it as a particlefunction.
+        even though it might be cleaner to include it as a particle function.
 
         Returns
         -------
