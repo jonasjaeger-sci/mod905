@@ -4,17 +4,29 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Simulation, System, Box, RandomGenerator
-from retis.core.integrators import VelocityVerlet
+from retis.core import System, Box, create_simulation
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
-from retis.inout import WriteGromacs
 from retis.tools import lattice_simple_cubic
-from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
-                                          calculate_kinetic_temperature)
+from retis.inout.plotting import _COLORS, _COLOR_SCHEME
+# imports for the plotting:
+from matplotlib import pyplot as plt
+from matplotlib import animation
+import matplotlib as mpl
+import matplotlib.gridspec as gridspec
+# other imports
 import numpy as np
-
+# simulation settings:
+settings = {'type': 'NVE',
+            'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
+            'endcycle': 1100,
+            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+                        'format': 'gro'}],
+            'generate-vel': {'seed': 0, 'momentum': True,
+                             'distribution': 'maxwell'},
+            'temperature': 2.0,
+            'units': 'lj'}
 # set up potential function(s) and force field:
 wca = PairWCAnp(dim=2)
 wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0},
@@ -27,78 +39,53 @@ dwca_parameters = {'types': [('B', 'B')], 'rzero': 1.0 * (2.0**(1.0/6.0)),
 forcefield = ForceField(potential=[wca, dwca], params=[wca_parameters,
                                                        dwca_parameters])
 
-colors = {'A': 'blue', 'B': 'magenta'}
+PCOLOR = {'A': 'blue', 'B': 'magenta'}
 size = np.array([[0.0, 3.4], [0.0, 3.4]])
 box = Box(size)
-ljsystem = System(temperature=2.0, units='lj', box=box)
+ljsystem = System(temperature=settings['temperature'],
+                  units=settings['units'], box=box)
 # generate some lattice points, this will give 9 points
 lattice = lattice_simple_cubic(box.size, spacing=1.0)
+BIDX = [7, 8]
 for i, lattice_pos in enumerate(lattice):
-    ljsystem.add_particle(name='A', pos=lattice_pos, mass=1.0, ptype='A')
-# mutate two particles to be of type B
-bidx = [7, 8]
-for i in bidx:
-    ljsystem.particles.ptype[i] = 'B'
+    if i in BIDX:
+        ljsystem.add_particle(name='B', pos=lattice_pos, mass=1.0, ptype='B')
+    else:
+        ljsystem.add_particle(name='A', pos=lattice_pos, mass=1.0, ptype='A')
 npart = ljsystem.particles.npart
-print('Added {} particles to a simple square lattice'.format(npart))
+print('Added {:d} particles to a simple square lattice'.format(npart))
 npart = float(npart)
 # generate velocities:
-ljsystem.adjust_dof([1, 1])  # adjust DOF since we are in "NVEMG"
-DOF = ljsystem.temperature['dof']
-rgen = RandomGenerator(seed=0)
-ljsystem.generate_velocities(rgen, momentum=True)
-_, gentemp, _ = calculate_kinetic_temperature(ljsystem.particles, dof=DOF)
-print('Generated temperatures with average: {}'.format(gentemp))
+if 'generate-vel' in settings:
+    ljsystem.generate_velocities(**settings['generate-vel'])
+    msg = 'Generated temperatures with average: {}'
+    print(msg.format(ljsystem.calculate_temperature()))
+# attach force field:
 ljsystem.forcefield = forcefield
-# also initiate forces:
-ljsystem.potential_and_force()
+# create the simulation :-)
+simulationNVE = create_simulation(settings, ljsystem)
+# some additional set-up for the animation
+timeunit = (settings['integrator']['timestep'] *
+            CONVERT['time'][settings['units'], 'fs'])
+timeendfs = settings['endcycle'] * timeunit
 
-write_gro = WriteGromacs('test.gro', box, units=ljsystem.units)
-
-numberofsteps = 1100
-simulationNVE = Simulation(endcycle=numberofsteps)
-timestep = 0.0025
-integrator = VelocityVerlet(timestep)
-timeunit = timestep * CONVERT['time']['lj', 'fs']
-timeendfs = numberofsteps * timeunit
-
-task_integrate = {'func': integrator.integration_step,
-                  'args': [ljsystem]}
-simulationNVE.add_task(task_integrate)
-
-outfmt = '{0:8d} {1:12.7f} {2:12.7f} {3:12.7f} {4:12.7f}'
-step, v_pot, e_kin, e_tot, temperature = [], [], [], [], []
-time = []
-
-# We will in this example animate
-# on the fly. We will then have to set up some matplotlib-specific
-# stuff:
-from matplotlib import pyplot as plt
-from matplotlib import animation
-from matplotlib import rc
-import matplotlib.gridspec as gridspec
-rc('axes', labelsize='large')
-rc('font', family='serif')
+time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
+SIGMA = CONVERT['length'][settings['units'], 'Å']
+ECONV = CONVERT['energy'][settings['units'], 'kcal/mol']
+# We will in this example animate on the fly. Here we do some additional
+# set-up to be able to do just that :-)
+mpl.rc('axes', labelsize='large')
+mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
 gs = gridspec.GridSpec(2, 2)
-
-# This will just set up some dimensions etc. for the plotting:
-dx = size[0][1] - size[0][0]
-f = 0.12
-dx = dx * f * np.array([-1.0, 1.0])
-dy = size[1][1] - size[1][0]
-dy = dy * f * 0.1 * np.array([-1.0, 1.0])
-SIGMA = CONVERT['length']['lj', 'Å']
-ECONV = CONVERT['energy']['lj', 'kcal/mol']
-
 # This adds the first axis. Here we will plot the
 # particles with velocity and force vectors.
 ax = fig.add_subplot(gs[:, 0])
-ax.set_xlim((size[0] + dx) * SIGMA)
-ax.set_ylim((size[1] + dy) * SIGMA)
+ax.set_xlim((size[0] + np.array([-0.5, 0.5])) * SIGMA)
+ax.set_ylim((size[1] + np.array([-0.5, 0.5])) * SIGMA)
 ax.set_aspect('equal', 'datalim')
-ax.set_xlabel(r'$x/\AA{}$')
-ax.set_ylabel(r'$y/\AA{}$')
+ax.set_xlabel(u'x / Å')
+ax.set_ylabel(u'y / Å')
 ax.set_xticks([size[0][0] * SIGMA, size[0][1] * SIGMA])
 ax.set_yticks([size[1][0] * SIGMA, size[1][1] * SIGMA])
 ax.xaxis.labelpad = -5
@@ -112,34 +99,38 @@ for _ in range(int(npart)):
     circles[-1].set_visible(False)
     ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
-force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], zorder=4)
-vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1], color='darkgreen', zorder=4)
+force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
+                         color=_COLORS['almost_black'], zorder=4)
+vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
+                       color=_COLOR_SCHEME['colorblind_10'][1], zorder=4)
 # also add arrows for a "legend":
-plt.quiverkey(force_arrow, 1, -3.5, 6, 'Forces', coordinates='data',
-              color='black')
-plt.quiverkey(vel_arrow, 4, -3.5, 6, 'Velocities', coordinates='data',
-              color='darkgreen')
+plt.quiverkey(force_arrow, 3, -3.5, 9, 'Forces', coordinates='data',
+              color=_COLORS['almost_black'], fontproperties={'size': 'large'})
+plt.quiverkey(vel_arrow, 9, -3.5, 9, 'Velocities', coordinates='data',
+              color=_COLOR_SCHEME['colorblind_10'][1],
+              fontproperties={'size': 'large'})
 # also add a line representing the bond
-linebond, = ax.plot(None, None, lw=2, ls='-', color='magenta', alpha=0.7)
-# this will draw the lines representing the box boundaries:
-ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color='k')
-ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color='k')
-ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color='k')
-
+linebond, = ax.plot(None, None, lw=3, ls='-', color=PCOLOR['B'], alpha=0.8)
+# draw lines representing the box boundaries:
+ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+# add second axis for displaying energies:
 ax2 = fig.add_subplot(gs[0, 1])
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.6, 0.6)
-ax2.set_xlabel('Time/fs')
-ax2.set_ylabel('Energy/kcal/mol')
+ax2.set_ylim(-0.55, 0.55)
+ax2.set_xlabel('Time / fs')
+ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.90, '', transform=ax2.transAxes)
-linepot, = ax2.plot(None, None, lw=3, ls='-', color='blue', alpha=0.5,
-                    label='Potential')
-linekin, = ax2.plot(None, None, lw=3, ls='-', color='green', alpha=0.5,
-                    label='Kinetic')
-linetot, = ax2.plot(None, None, lw=3, ls='-', color='k', alpha=0.5,
-                    label='Total')
-ax2.legend(loc='lower left', ncol=2, frameon=False)
+linepot, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
+                    alpha=0.8, label='Potential')
+linekin, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
+                    alpha=0.8, label='Kinetic')
+linetot, = ax2.plot(None, None, lw=4, ls='-', color=_COLORS['almost_black'],
+                    alpha=0.8, label='Total')
+ax2.legend(loc='lower left', ncol=3, frameon=False,
+           columnspacing=1, labelspacing=1)
 
 
 def plot_dwca_potential():
@@ -160,36 +151,20 @@ def plot_dwca_potential():
         potdwca.append(dwca.potential(fakesys.particles, fakebox))
     return rpos, np.array(potdwca)
 
+
+# add third axis for plotting the potential and order parameter:
 ax3 = fig.add_subplot(gs[1, 1])
 rbond, pot_dwca = plot_dwca_potential()
-linedwpot, = ax3.plot(rbond, pot_dwca, lw=3, ls='-', color='black')
+linedwpot, = ax3.plot(rbond, pot_dwca, lw=3, ls='-',
+                      color=_COLORS['almost_black'])
 ax3.set_ylim(0, dwca.height + 1)
 min_max = dwca.min_max()
 ax3.set_xlim(min_max[0] - 0.2, min_max[1] + 0.2)
-ax3.set_ylabel('Potential')
-ax3.set_xlabel('Bond length')
-orderscatter = ax3.scatter(None, None, alpha=0.5, color='magenta',
+ax3.set_ylabel('Double well potential')
+ax3.set_xlabel('Bond length (circle)')
+orderscatter = ax3.scatter([], [], alpha=0.5, color=PCOLOR['B'],
                            marker='o', s=200)
-plt.subplots_adjust(left=0.1, top=0.95, bottom=0.15, right=0.95, hspace=0.3)
-
-
-def energy_calculation(system):
-    """
-    This is a helper function to calculate energies for the system.
-
-    Parameters
-    ----------
-    system : object
-        The system object, with a particle list, which we can use to compute
-        the energies.
-    """
-    particles = system.particles
-    dof = system.temperature['dof']
-    kin_tens = calculate_kinetic_energy_tensor(particles)
-    _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
-                                                  kin_tensor=kin_tens)
-    kini = kin_tens.trace()
-    return avgtemp, system.v_pot, kini
+plt.subplots_adjust(left=0.08, top=0.95, bottom=0.15, right=0.95, hspace=0.3)
 
 
 def init():
@@ -260,6 +235,57 @@ def get_velocity_force_arrows(forces, vels):
     return FU, FV, VU, VV
 
 
+def spring_bond(delta, dr, part1, part2):
+    """
+    This is a function that will create positions which can be used to
+    create a zig-zag bond. It is here used to illustrate a spring bond
+    between two atoms
+
+    Parameters
+    ----------
+    delta : numpy.array
+        Distance vector between part1 and part2, subjected to periodic boundary
+        conditions.
+    dr : float
+        Length of `delta` vector.
+    part1 : numpy.array
+        Particle 1 position. Bond is drawn from `part1`.
+    part2 : numpy.array
+        Particle 2 position. Bond is drawn to `part2`.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        X-coordinates for the line
+    out[1] : numpy.array
+        Y-coordinates for the line
+    """
+    delta_u = delta / dr
+    xpos = [part1[0]]
+    ypos = [part1[1]]
+    for pidx, add in enumerate(np.linspace(0.0, dr-1, 11)):
+        point = part1 + (add + 0.5) * delta_u
+        if pidx in [2, 4, 6, 8]:
+            try:
+                dperp = np.array([-delta_u[1] / delta_u[0], 1.0])
+                dperp = dperp / np.sqrt(np.dot(dperp, dperp))
+            except ZeroDivisionError:
+                dperp = 0.0
+            sig = 1 if delta_u[0] > 0.0 else -1.0
+            if pidx in [2, 6]:
+                dvec = sig*0.2*dperp
+            else:
+                dvec = -sig*0.2*dperp
+            point = point + dvec
+        xpos.append(point[0])
+        ypos.append(point[1])
+    xpos.append(part2[0])
+    ypos.append(part2[1])
+    xpos = np.array(xpos) * SIGMA
+    ypos = np.array(ypos) * SIGMA
+    return xpos, ypos
+
+
 def update(frame, system):
     """
     This function will be running the simulation and updating the plots.
@@ -280,10 +306,9 @@ def update(frame, system):
     """
     pos = box.pbc_wrap(system.particles.pos)
     patches = []
-    ptypes = system.particles.ptype
-    for ci, pi, itype in zip(circles, pos, ptypes):
+    for ci, pi, itype in zip(circles, pos, system.particles.ptype):
         ci.center = np.array([pi[0], pi[1]]) * SIGMA
-        ci.set_color(colors[itype])
+        ci.set_color(PCOLOR[itype])
         ci.set_visible(True)
         patches.append(ci)
     # update the force and velocity vectors:
@@ -299,25 +324,26 @@ def update(frame, system):
     patches.append(vel_arrow)
 
     if not simulationNVE.is_finished():
+        result = simulationNVE.step()
         # reaction coordinate:
-        delta = box.pbc_dist_coordinate(system.particles.pos[bidx[0]] -
-                                        system.particles.pos[bidx[1]])
+        delta = box.pbc_dist_coordinate(system.particles.pos[BIDX[1]] -
+                                        system.particles.pos[BIDX[0]])
         dr = np.sqrt(np.dot(delta, delta))
         points = [dr, dwca.potential(system.particles, box)]
         orderscatter.set_offsets(points)
         patches.append(orderscatter)
         # draw the bond:
-        xpos = np.array([pos[bidx[1], 0], pos[bidx[1], 0] + delta[0]]) * SIGMA
-        ypos = np.array([pos[bidx[1], 1], pos[bidx[1], 1] + delta[1]]) * SIGMA
+        xpos, ypos = spring_bond(delta, dr,
+                                 system.particles.pos[BIDX[0]],
+                                 system.particles.pos[BIDX[1]])
         linebond.set_data(xpos, ypos)
         patches.append(linebond)
         # here we calculate some energies and updates the energy plots:
-        step.append(simulationNVE.cycle['step'])
-        time.append(step[-1] * timeunit)
-        temp, vpot, ekin = energy_calculation(system)
-        temperature.append(temp)
-        v_pot.append(ECONV * vpot / npart)
-        e_kin.append(ECONV * ekin / npart)
+        step.append(result['cycle']['step'])
+        time.append(result['cycle']['step'] * timeunit)
+        temperature.append(result['thermo']['temp'])
+        v_pot.append(ECONV * result['thermo']['vpot'])
+        e_kin.append(ECONV * result['thermo']['ekin'])
         e_tot.append(e_kin[-1] + v_pot[-1])
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
@@ -330,13 +356,6 @@ def update(frame, system):
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
                                                                    frame))
         patches.append(time_text)
-        # output energies to the screen:
-        print(outfmt.format(step[-1], temperature[-1], v_pot[-1],
-                            e_kin[-1], e_tot[-1]))
-        # store the trajectory to a .gro file:
-        write_gro.write_frame(pos, atomname=system.particles.ptype)
-        # finally, do the simultion step:
-        simulationNVE.step()
         return patches
     else:
         print('Simulation is done')
@@ -344,9 +363,9 @@ def update(frame, system):
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=numberofsteps,
+anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
                                fargs=[ljsystem], repeat=False, interval=2,
                                blit=True, init_func=init)
 # for making a movie:
-#anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()
