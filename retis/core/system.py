@@ -65,10 +65,11 @@ class System(object):
         degrees of freedom of the system here. In the future one could
         possibly have a more general temperature object.
         """
-        self.box = box
         self.units = units
         self.temperature = {'set': temperature, 'dof': None}
         self.temperature['beta'] = self.calculate_beta()
+        self.box = box
+        self._adjust_dof_according_to_box()
         # intialize other variables:
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
@@ -89,6 +90,19 @@ class System(object):
             self.temperature['dof'] = np.array(dof)
         else:
             self.temperature['dof'] += np.array(dof)
+
+    def _adjust_dof_according_to_box(self):
+        """
+        This function will adjust the dof's according to the box connected
+        to the system. For each 'True' in the periodic settings of the box,
+        we subtract one degree of freedom for that dimension.
+        """
+        try:
+            dof = [1 if peri else 0 for peri in self.box.periodic]
+            self.adjust_dof(dof)
+            return True
+        except AttributeError:
+            return False
 
     def get_boltzmann(self):
         """
