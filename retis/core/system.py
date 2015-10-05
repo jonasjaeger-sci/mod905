@@ -98,8 +98,15 @@ class System(object):
         we subtract one degree of freedom for that dimension.
         """
         try:
-            dof = [1 if peri else 0 for peri in self.box.periodic]
-            self.adjust_dof(dof)
+            dof = []
+            all_false = True
+            for peri in self.box.periodic:
+                dof.append(1 if peri else 0)
+                all_false = all_false and not peri
+            # If all items in self.box.periodic are false, then we
+            # will not bother setting the dof to just zeros
+            if not all_false:
+                self.adjust_dof(dof)
             return True
         except AttributeError:
             return False
