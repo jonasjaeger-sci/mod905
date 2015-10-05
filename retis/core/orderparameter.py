@@ -366,7 +366,7 @@ class StringFunctionParser(object):
             retval = self.system.box.pbc_coordinate_dim(args, dim)
         else:
             # simple look-up of velocity or position
-            idx = int(args) - 1  # NOTE: NUMBERING STARTS AT 0 in PYTHON
+            idx = int(args)
             if function[0] == 'v':
                 dim = xyz[function[1]]
                 coord = particles.vel[idx]
