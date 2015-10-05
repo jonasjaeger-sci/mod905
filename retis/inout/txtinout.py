@@ -378,7 +378,7 @@ def txt_total_matched_probability(detect, matched, outputfile):
 
 def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
-    This will create the header format given the width.
+    This will format a row according to the given width(s).
     The specified width can either be a fixed number which will be
     applied to all cells, or it can be an iterable.
 
@@ -389,7 +389,7 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     width : int or iterable
         This is the width of the cells in the table. If it's given as an
         iterable it will be applied to headers untill it's exhausted. In that
-        case the last entry will be repeated.
+        case the last entry will be repeated and used for the remaining items.
     header : boolean, optional
         To tell if we are formatting for a header or not.
         The header will include a '#' to indicate that it's a header.
@@ -422,7 +422,7 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
                                                  fillvalue=width[-1]):
             if header:
                 # if this is the header, just assume that all will be strings:
-                if fmt is None:
+                if fmt is None:  # first item includes a "# " in front.
                     fmt = ['# {{:>{}s}}'.format(wid - 2)]
                 else:
                     fmt.append('{{:>{}s}}'.format(wid))
@@ -546,11 +546,13 @@ class TxtTable(object):
         ----------
         variables : list of strings
             This is the variables to output to the table.
+        width : int or iterable, optional
+            This defines the maximum width of one cell.
         headers : list of strings, optional
             These can be used as headers for the table. If they are
             not given, the strings in variables will be used.
-        width : int or iterable
-            This defines the maximum width of one cell.
+        spacing : int, optional
+            This is the white space to include between columns.
         """
         self.width = width
         self.variables = variables
