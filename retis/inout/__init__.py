@@ -112,7 +112,6 @@ def get_predefined_table(table):
         tab = TxtTable(settings['var'], width=settings['width'],
                        headers=settings['headers'],
                        spacing=settings['spacing'])
-        print settings
         if 'row_fmt' in settings:  # override the row-format:
             tab.row_fmt = (' ') * settings['spacing']
             tab.row_fmt = tab.row_fmt.join(settings['row_fmt'])
