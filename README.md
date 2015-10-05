@@ -1,6 +1,6 @@
-pytismol
+pyretis
 =========
 
-This is the development branch for pytismol.
+This is the development branch for pyretis.
 
 
