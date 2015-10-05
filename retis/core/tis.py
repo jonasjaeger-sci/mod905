@@ -6,7 +6,7 @@ from .path import Path, paste_paths, reverse_path
 from .montecarlo import metropolis_accept_reject
 from .particlefunctions import calculate_kinetic_energy
 
-__all__ = ['make_tis_step', 'generate_initial_path']
+__all__ = ['make_tis_step', 'generate_initial_path_kick']
 
 
 def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
@@ -225,8 +225,8 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     return accept, trial_path, trial_path.status
 
 
-def generate_initial_path(system, interfaces, integrator, rgen,
-                          order_function, tis_settings):
+def generate_initial_path_kick(system, interfaces, integrator, rgen,
+                               order_function, tis_settings):
     """
     Simple method to generate an initial path
     This method will generate an initial path by repeatedly
@@ -348,7 +348,7 @@ def _kick_across_middle(system, integrator, rgen, order_function, middle):
     ----
     This function will update the system state so that the
     system.particles.get_phase_point() == out[1]. This is more convenient
-    for the following usage in the ``generate_initial_path`` method.
+    for the following usage in the `generate_initial_path_kick` method.
     """
     # first we search for crossing with the middle interface
     # this is done by sequentially kicking the initial phase point
