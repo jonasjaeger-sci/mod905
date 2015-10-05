@@ -617,6 +617,19 @@ class Simulation(object):
         while not self.is_finished():
             yield self.step()
 
+    def __str__(self):
+        """Just a small function to return some info about the simulation"""
+        ntask = len(self.task)
+        mtask = 'task' if ntask == 1 else 'tasks'
+        msg = ['General simulation with {} {}.'.format(ntask, mtask)]
+        otask = len(self.output_task)
+        if otask == 0:
+            msg += ['No output tasks are defined.']
+        else:
+            mtask = 'task' if otask == 1 else 'tasks'
+            msg += ['{} output {} are defined.'.format(otask, mtask)]
+        return '\n'.join(msg)
+
 
 class UmbrellaWindowSimulation(Simulation):
     """
@@ -682,6 +695,14 @@ class UmbrellaWindowSimulation(Simulation):
         return (self.cycle['step'] > self.cycle['end'] and
                 np.all(system.particles.pos > self.overlap))
 
+    def __str__(self):
+        """Just a small function to return some info about the simulation"""
+        msg = ['Umbrella window simulation']
+        msg += ['Umbrella: {}, Overlap: {}.'.format(self.umbrella,
+                                                    self.overlap)]
+        msg += ['Miminum number of cycles: {}'.format(self.cycle['end'])]
+        return '\n'.join(msg)
+
 
 class SimulationNVE(Simulation):
     """
@@ -739,6 +760,15 @@ class SimulationNVE(Simulation):
         self.add_task(task_integrate)
         # add calculation task:
         self.add_task(task_thermo)
+
+    def __str__(self):
+        """Just a small function to return some info about the simulation"""
+        msg = ['NVE simulation']
+        nstep = self.cycle['end'] - self.cycle['start']
+        msg += ['Number of steps to do: {}'.format(nstep)]
+        msg += ['Integrator: {}'.format(self.integrator)]
+        msg += ['Time step: {}'.format(self.integrator.delta_t)]
+        return '\n'.join(msg)
 
 
 class SimulationMdFlux(Simulation):
@@ -828,3 +858,12 @@ class SimulationMdFlux(Simulation):
         if self.first_step:
             self.first_step = False
         return results
+
+    def __str__(self):
+        """Just a small function to return some info about the simulation"""
+        msg = ['MD-flux simulation']
+        nstep = self.cycle['end'] - self.cycle['start']
+        msg += ['Number of steps to do: {}'.format(nstep)]
+        msg += ['Integrator: {}'.format(self.integrator)]
+        msg += ['Time step: {}'.format(self.integrator.delta_t)]
+        return '\n'.join(msg)
