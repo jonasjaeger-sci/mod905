@@ -51,6 +51,7 @@ from .traj import WriteGromacs, WriteXYZ
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
 from .mpl_plotting import mpl_set_style
 
+
 def create_traj_writer(settings, system):
     """
     This is a method which will set up a trajectory writer object from
@@ -85,7 +86,8 @@ _DEFINED_TABLES = {'energies': {'title': 'Energy output',
                                         'ekin', 'etot', 'press'],
                                 'headers': ['Step', 'Temp', 'Pot',
                                             'Kin', 'Tot', 'Press'],
-                                'width': (10, 12), 'spacing': 2}}
+                                'width': (10, 12), 'spacing': 2,
+                                'row_fmt': ['{:> 10d}'] + 5 * ['{:> 12.6g}']}}
 
 
 def get_predefined_table(table):
@@ -110,4 +112,8 @@ def get_predefined_table(table):
         tab = TxtTable(settings['var'], width=settings['width'],
                        headers=settings['headers'],
                        spacing=settings['spacing'])
+        print settings
+        if 'row_fmt' in settings:  # override the row-format:
+            tab.row_fmt = (' ') * settings['spacing']
+            tab.row_fmt = tab.row_fmt.join(settings['row_fmt'])
         return tab
