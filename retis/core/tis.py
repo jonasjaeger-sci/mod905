@@ -144,7 +144,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     dke = _kick_timeslice(rgen, system, aimless=tis_settings['aimless'],
                           momentum=False)
     # update the order paramater since it could depend on velocity
-    orderp, _ = order_function(system)
+    orderp = order_function(system)[0]
     # We now check if the kick was ok or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
@@ -353,7 +353,7 @@ def _kick_across_middle(system, integrator, rgen, order_function, middle):
     # first we search for crossing with the middle interface
     # this is done by sequentially kicking the initial phase point
     particles = system.particles
-    curr, _ = order_function(system)
+    curr = order_function(system)[0]
     while True:
         # save current state:
         previous = particles.get_phase_point()
@@ -364,7 +364,7 @@ def _kick_across_middle(system, integrator, rgen, order_function, middle):
         integrator.integration_step(system)
         # compare previous order parameter and the new one:
         prev = curr
-        curr, _ = order_function(system)
+        curr = order_function(system)[0]
         if (prev <= middle < curr) or (curr < middle <= prev):
             # have crossed middle interface, just stop the loop
             break
@@ -459,7 +459,7 @@ def _propagate(system, integrator, order_function, interfaces,
     new_path = Path(maxlen=maxlen)
     status = 'Empty path'
     while True:
-        orderp, _ = order_function(system)
+        orderp = order_function(system)[0]
         add = new_path.append(system.particles.pos, system.particles.vel,
                               orderp)
         if not add:

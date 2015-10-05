@@ -158,7 +158,7 @@ def check_crossing(cycle, system, order_function, interfaces,
         '+' for a crossing in the positive direction.
     """
     try:
-        orderp, _ = order_function(system)
+        orderp = order_function(system)[0]
     except TypeError:
         # Assume TypeError is caused by order_function = a float
         orderp = order_function

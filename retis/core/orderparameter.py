@@ -29,6 +29,11 @@ class OrderParameter(object):
         This is a short description of the order parameter
     name : string
         A name for the order parameter (useful for output)
+    extra : list of functions
+        This is a list of extra order parameters to calculate.
+        We will assume that this list contains functions that all
+        accept a retis.core.system.System object as input and returns
+        a single float.
     """
     def __init__(self, name, desc='General order parameter'):
         """
@@ -43,6 +48,7 @@ class OrderParameter(object):
         """
         self.name = name
         self.desc = desc
+        self.extra = []
 
     def calculate(self, system):
         """
@@ -81,7 +87,8 @@ class OrderParameter(object):
 
     def __call__(self, system):
         """
-        Method to conveniently call calculate and calculate_velocity.
+        Method to conveniently call calculate and calculate_velocity. It will
+        also call the additional order parameters defined in self.extra if any.
 
         Parameters
         ----------
@@ -94,10 +101,41 @@ class OrderParameter(object):
             The order parameter
         out[1] : float
             The velocity of the order parameter
+        out[2:] : float
+            Additional order parameters, if any.
         """
         orderp = self.calculate(system)
         orderv = self.calculate_velocity(system)
-        return orderp, orderv
+        ret_val = [orderp, orderv]
+        if self.extra is None:
+            return ret_val
+        else:
+            for func in self.extra:
+                try:
+                    extra = func(system)
+                except TypeError:
+                    extra = float('nan')
+                ret_val.append(extra)
+            return ret_val
+
+    def add_orderparameter(self, func):
+        """
+        This will add a extra order parameter to calculate.
+        The given function should accept a retis.core.system.System object as
+        parameter.
+
+        Parameters
+        ----------
+        func : function
+            Extra function for calculation of an extra order parameter. It
+            is assumed to accept only a retis.core.system.System object as its
+            parameter.
+        """
+        if not callable(func):
+            msg = 'The given function is not callable, it will not be added!'
+            warnings.warn(msg)
+            return False
+        self.extra.append(func)
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""
@@ -277,6 +315,25 @@ class OrderParameterParse(OrderParameter):
             The velocity of the order parameter
         """
         return self.ordervelparser.evaluate(system=system)
+
+    def add_orderparameter(self, strfunc):
+        """
+        This will add a extra order parameter to calculate. Here, we assume
+        that the function is given as a string, which we will parse.
+
+        Parameters
+        ----------
+        strfunc : string
+            Extra function for calculation of an extra order parameter. It
+            is assumed to accept a retis.core.system object as its
+            parameter.
+        """
+        func = StringFunctionParser(string_function=strfunc)
+        if not callable(func):
+            msg = 'The given function is not callable, it will not be added!'
+            warnings.warn(msg)
+            return False
+        self.extra.append(func)
 
 
 class StringFunctionParser(object):
@@ -488,6 +545,10 @@ class StringFunctionParser(object):
         else:
             self.system = system
             return self.evaluate_stack(self.exprstack[:])
+
+    def __call__(self, system=None):
+        """Function to call self.evaluate"""
+        return self.evaluate(system=system)
 
     def _initiate_parser(self):
         """
