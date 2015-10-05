@@ -1,0 +1,21 @@
+Numerical TIS results
+=====================
+
+@{{ table_int }}@
+
+@{{ table_prob }}@
+
+@{{ table_path }}@
+
+@{{ table_eff }}@
+
+
+Combined results
+================
+
+P_cross = @{{ pcross }}@ +- @{{ perr }}@
+
+sim.time = @{{ pcross_simt }}@ tau_eff = @{{ pcross_teff}}@ 
+
+Optimized P_cross tau_eff: @{{ pcross_opteff }}@
+

@@ -16,19 +16,21 @@ import os
 import jinja2
 
 
-__all__ = ['generate_report_tis']
+__all__ = ['generate_report_tis', 'generate_report_md']
 
 
 # filename for known templates:
 _TEMPLATES = {'rst': 'report_template_{}.rst',
               'html': 'report_template_{}.rst',  # html is done via rst,
               'latex': 'report_template_{}.tex',
-              'tex': 'report_template_{}.tex'}
+              'tex': 'report_template_{}.tex',
+              'txt': 'report_template_{}.txt'}
 # look-up table for file extensions
 _EXT = {'rst': 'rst',
         'html': 'html',
         'latex': 'tex',
-        'tex': 'tex'}
+        'tex': 'tex',
+        'txt': 'txt'}
 
 
 def _rst_to_html(rst):
@@ -218,8 +220,8 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
     output, template, path = _get_template(output, 'TIS', template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
-              'figures': analysis['tis-fig'],
-              'totalfig': analysis['matched-fig'],
+              'figures': analysis.get('tis-fig', None),
+              'totalfig': analysis.get('matched-fig', None),
               'table_int': None, 'table_prob': None,
               'table_path': None, 'table_eff': None,
               'pcross': None, 'perr': None, 'pcross_simt': None,
@@ -280,9 +282,9 @@ def generate_report_md(analysis, output='rst', template=None):
     output, template, path = _get_template(output, 'MD', template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
-              'flux_figures': analysis['flux_figures'],
-              'energy_figures': analysis['energy_figures'],
-              'order_figures': analysis['order_figures']}
+              'flux_figures': analysis.get('flux_figures', None),
+              'energy_figures': analysis.get('energy_figures', None),
+              'order_figures': analysis.get('order_figures', None)}
     # generate some tables:
     _, report['table_md_flux'] = _table_md_flux(analysis['flux'], fmt=output)
     _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['flux'],
@@ -372,6 +374,12 @@ def _table_md_efficiency(results, fmt='rst'):
                                            r'$\frac{1-p}{p}$',
                                            'Efficiency time', 'Correlation'],
                                           fixnum=set([1, 2, 3, 4]))
+    elif fmt in ['txt']:
+        table_str = _generate_rst_table(table, 'Efficiency',
+                                        ['Interface',
+                                         'p_MD',
+                                         '(1-p_MD)/p_MD',
+                                         'Efficiency time', 'Correlation'])
     else:
         table_str = _generate_rst_table(table, 'Efficiency',
                                         ['Interface',

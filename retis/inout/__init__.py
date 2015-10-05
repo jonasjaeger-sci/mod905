@@ -50,6 +50,7 @@ from .txtinout import TxtTable, FileWriter
 from .traj import WriteGromacs, WriteXYZ
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
 from .mpl_plotting import mpl_set_style
+from .report import generate_report_md, generate_report_tis
 
 
 def create_traj_writer(settings, system):
