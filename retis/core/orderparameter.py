@@ -100,9 +100,7 @@ class OrderParameter(object):
         return orderp, orderv
 
     def __str__(self):
-        """
-        Return a simple string representation of the order parameter
-        """
+        """Return a simple string representation of the order parameter."""
         msg = ['Order parameter {}'.format(self.name)]
         msg += ['{}'.format(self.desc)]
         return '\n'.join(msg)
@@ -538,6 +536,7 @@ class StringFunctionParser(object):
         return expr
 
     def __str__(self):
+        """Return a simple string representation of the parser."""
         msg = ['{}:'.format(self.__class__.__name__)]
         msg += ['Function: {}'.format(self.string_function)]
         msg += ['Expression stack:']
