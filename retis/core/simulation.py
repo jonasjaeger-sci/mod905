@@ -842,6 +842,7 @@ class SimulationMdFlux(Simulation):
             self.integrator.integration_step(self.system)
         # collect energy and order parameter, this is done at all steps
         results = {}
+        results['cycle'] = self.cycle
         results['thermo'] = calculate_thermo(self.system)
         results['orderp'] = self.order_function(self.system)
         # do not check crossing at step 0
