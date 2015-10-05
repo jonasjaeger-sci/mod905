@@ -81,7 +81,7 @@ class ForceField(object):
         inspect.getargspec(potential.force)
     """
 
-    def __init__(self, desc='', potential=None, params=None):
+    def __init__(self, desc='No description', potential=None, params=None):
         """
         Initiates the force field object.
 
@@ -102,7 +102,7 @@ class ForceField(object):
         self.potential = []
         self.params = []
         self.arguments = {'force': [], 'potential': [], 'pot-and-force': []}
-        if not potential is None:
+        if potential is not None:
             if params is None:
                 for pot in potential:
                     self.add_potential(pot)
@@ -141,7 +141,7 @@ class ForceField(object):
         self.arguments['potential'].append(arg_pot)
         self.arguments['pot-and-force'].append(arg_pot_force)
         self.potential.append(potential)
-        if not parameters is None:
+        if parameters is not None:
             potential.add_parameters(parameters)
         self.params.append(potential.params)
 
@@ -311,7 +311,10 @@ class ForceField(object):
         Description of force field and the potential functions included
         in the force field.
         """
-        pots = '\n *'.join([ff.desc for ff in self.potential])
+        pots = []
+        for i, pot in enumerate(self.potential):
+            pots.append('\t{}: {}'.format(i + 1, pot.desc))
+        pots = '\n'.join(pots)
         force = 'Force field: {}'.format(self.desc)
-        desc = '{}\nPotential functions: \n *{}'.format(force, pots)
+        desc = '{}\nPotential functions:\n {}'.format(force, pots)
         return desc
