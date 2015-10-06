@@ -46,8 +46,7 @@ Modules:
 - units.py: This module defines conversion between units.
 
 """
-
-from .simulation import *
+from . import simulation
 from .system import *
 from .properties import *
 from .montecarlo import *
