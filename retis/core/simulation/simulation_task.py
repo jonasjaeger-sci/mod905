@@ -114,8 +114,14 @@ class Task(object):
         List of arguments to the function.
     kwargs : dict
         The keyword arguments to the function.
+    first : boolean
+        True if this task should be executed before the first
+        step of the simulation.
+    result : string
+        This is a label for the result created by the task.
     """
-    def __init__(self, function, args=None, kwargs=None, when=None):
+    def __init__(self, function, args=None, kwargs=None, when=None,
+                 result=None, first=False):
         """
         Parameters
         ----------
@@ -139,6 +145,8 @@ class Task(object):
         self.args = args
         self.kwargs = kwargs
         self.when = when
+        self.result = result
+        self.first = first
 
     def execute(self, step):
         """
@@ -175,6 +183,34 @@ class Task(object):
                     return self.function(*args, **kwargs)
         else:
             return None
+
+    def update_when(self, when):
+        """
+        This will update when to new values. It will only update
+        `when` for the keys given in when.
+
+        Parameters
+        ----------
+        when : dict
+            This dict contains the settings to update.
+
+        Returns
+        -------
+        N/A but modifies self.when.
+        """
+        if self.when is None:
+            self.when = when
+        else:
+            for key in when:
+                self.when[key] = when[key]
+
+    def get_result_label(self):
+        """Returns the result label"""
+        return self.result
+
+    def run_first(self):
+        """Returns True if task should be executed before first step"""
+        return self.first
 
     def __call__(self, step):
         """
