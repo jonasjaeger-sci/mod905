@@ -63,5 +63,5 @@ anim = animation.FuncAnimation(fig, update, np.arange(len(traj_data)),
                                init_func=init, interval=25, blit=True,
                                repeat=False)
 # for making a movie:
-#anim.save('simple.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# anim.save('simple.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()

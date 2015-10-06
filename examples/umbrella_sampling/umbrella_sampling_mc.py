@@ -10,10 +10,11 @@ landscape by performing umbrella simulations.
 from __future__ import print_function
 from retis.core import System, RandomGenerator
 from retis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from retis.core.montecarlo import max_displace_step
 from retis.forcefield import ForceField
 from retis.forcefield.potentials import DoubleWell, RectangularWell
+from retis.analysis import histogram, match_all_histograms
 import numpy as np
+from matplotlib import pyplot as plt
 
 # Define system with a temperature in K
 mysystem = System(temperature=500, units='eV/K')
@@ -56,7 +57,7 @@ for i, umbrella in enumerate(umbrellas):
     mysystem.potential()  # recalculate potential energy
     over = umbrellas[min(i + 1, n_umb - 1)][0]  # position we must cross
     # Create the umbrella simulation :-)
-    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over, 
+    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over,
                                           RGEN, MAXDX,
                                           mincycle=MINCYCLES)
     # Also create empy list for storing some data:
@@ -71,7 +72,6 @@ for i, umbrella in enumerate(umbrellas):
                                     simulation.cycle['start']))
 
 # We can now post-process the simulation output.
-from retis.analysis import histogram, match_all_histograms
 BINS = 100
 LIM = (-1.1, 1.1)
 histograms = [histogram(traj, bins=BINS, limits=LIM) for traj in trajectory]
@@ -83,7 +83,6 @@ print('Matching histograms...')
 histograms_s, _, hist_avg = match_all_histograms(histograms, umbrellas)
 
 # let us create some simple plots using matplotlib:
-from matplotlib import pyplot as plt
 # first, let us plot the matched histograms on a log-scale:
 print('Plotting matched histograms')
 fig = plt.figure()

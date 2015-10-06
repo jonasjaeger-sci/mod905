@@ -3,11 +3,18 @@
 Example of running a simulation
 """
 from __future__ import print_function
-from retis.core import UmbrellaWindowSimulation, System, RandomGenerator
+from retis.core import System, RandomGenerator
+from retis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from retis.core.montecarlo import max_displace_step
 from retis.forcefield import ForceField
 from retis.forcefield.potentials import DoubleWell, RectangularWell
+from retis.analysis.histogram import histogram, match_all_histograms
 import numpy as np
+import matplotlib
+from matplotlib import pyplot as plt
+import matplotlib.gridspec as gridspec
+matplotlib.use('Agg')
+
 
 # Define system with a temperature in K
 mysystem = System(temperature=500, units='eV/K')
@@ -32,31 +39,10 @@ n_umb = len(umbrellas)
 RANDSEED = 1  # seed for random number generator:
 RGEN = RandomGenerator(seed=RANDSEED)
 # and define some common variables for the simulations
-mincycles = 1e4
+MINCYCLES = 1e4
 MAXDX = 0.1  # maximum allowed displacement in the MC step(s).
 
-
-# In pytismol, a simulation is defined by defining certain tasks
-# the simulation will perform. Here we need to create a task
-# to perform Monte Carlo moves to sample the potential energy.
-# Let's make use of the predefined method `max_displace_step`
-# defined in the `retis.core.montecarlo` module which we
-# have imported from `mc`.
-def mc_task(rgen, system, maxdx):
-    """
-    Function to perform monte carlo moves.
-    Will update positions and potential energy as needed.
-    """
-    accepted_r, _, trial_r, v_trial, status = max_displace_step(rgen, system,
-                                                                maxdx=maxdx)
-    if status:
-        system.particles.pos = accepted_r
-        system.v_pot = v_trial
-    return status, accepted_r, trial_r
-
-# define function as simulation task
-monte_carlo_task = {'func': mc_task, 'args': [RGEN, mysystem, MAXDX]}
-trajectory, energy = [], []  # to store all trajectories and energies
+trajectory, energy = [], []  # to store all trajectories & energies
 # we run all the umbrella simulations by looping over
 # the different umbrellas we defined:
 print('Starting simulations:')
@@ -67,18 +53,17 @@ for i, umbrella in enumerate(umbrellas):
     mysystem.forcefield.update_potential_parameters(potential_rw, params)
     mysystem.potential()  # recalculate potential energy
     over = umbrellas[min(i + 1, n_umb - 1)][0]  # position we must cross
-    # Initiate the umbrella simulation:
-    simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over,
-                                          mincycle=mincycles)
-    simulation.add_task(monte_carlo_task)
+    # Create the umbrella simulation :-)
+    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over,
+                                          RGEN, MAXDX,
+                                          mincycle=MINCYCLES)
 
     pos, trial, ener, ener_trial = [], [], [], []
     success = []
-    while not simulation.is_finished(mysystem):
-        step = simulation.step()
+    for result in simulation.run():
         pos.append(mysystem.particles.pos)
-        trial.append(step[0][-1])
-        success.append(step[0][0])
+        trial.append(result['displace_step'][2])
+        success.append(result['displace_step'][3])
         ener.append(mysystem.v_pot)
     trajectory.append([np.array(pos), np.array(trial), success])
     energy.append(np.array(ener))
@@ -89,11 +74,6 @@ for i, umbrella in enumerate(umbrellas):
 
 # We can now post-process the simulation output.
 # Here, we make use of some of the analysis tools in retis:
-from retis.analysis.histogram import histogram, match_all_histograms
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot as plt
-import matplotlib.gridspec as gridspec
 
 bins = 50
 lim = (-1.2, 1.2)

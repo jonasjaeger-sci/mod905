@@ -23,12 +23,12 @@ def mc_task(rgen, system, maxdx):
     maxdx : float
         Maximum displacement step for the Monte Carlo move.
     """
-    accepted_r, _, _, v_trial, status = max_displace_step(rgen, system,
-                                                          maxdx)
+    accepted_r, _, trial_r, v_trial, status = max_displace_step(rgen, system,
+                                                                maxdx)
     if status:
         system.particles.pos = accepted_r
         system.v_pot = v_trial
-    return accepted_r, v_trial, status
+    return accepted_r, v_trial, trial_r, status
 
 
 class UmbrellaWindowSimulation(Simulation):
@@ -92,6 +92,7 @@ class UmbrellaWindowSimulation(Simulation):
                             'args': [self.rgen, self.system, self.maxdx],
                             'result': 'displace_step'}
         self.add_task(task_monte_carlo)
+        self.first_step = False
 
     def is_finished(self):
         """
