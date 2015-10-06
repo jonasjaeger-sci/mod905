@@ -68,10 +68,10 @@ class SimulationNVE(Simulation):
                                   'volume': system.box.calculate_volume()},
                        'first': True,
                        'result': 'thermo'}
-        # task thermo is set up to execute at all steps
+        # task_thermo is set up to execute at all steps
         # add propagation task:
         self.add_task(task_integrate)
-        # add calculation task:
+        # add task_thermo:
         self.add_task(task_thermo)
 
     def __str__(self):
