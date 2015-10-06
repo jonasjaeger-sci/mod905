@@ -36,6 +36,8 @@ class Simulation(object):
         This is a list of output tasks the simulation will perform.
     first_step : boolean
         True if the first step has not been executed yet.
+    system : object of type System (from retis.core.system)
+        This is the system the simulation will act on.
     """
     def __init__(self, endcycle=0, startcycle=0):
         """
@@ -61,6 +63,7 @@ class Simulation(object):
         self.task = []
         self.output_task = []
         self.first_step = True
+        self.system = None
 
     def extend_cycles(self, steps):
         """
@@ -133,10 +136,9 @@ class Simulation(object):
         """
         results = {'cycle': self.cycle}
         for task in self.task:
-            if not self.first_step or task['first']:
-                func = task['func']
-                res = func(self.cycle)
-                label = task.get('result', None)
+            if not self.first_step or task.run_first():
+                res = task(self.cycle)
+                label = task.get_result_label()
                 if label is not None:
                     results[label] = res
         return results
@@ -169,15 +171,10 @@ class Simulation(object):
             args = task.get('args', None)
             kwargs = task.get('kwargs', None)
             when = task.get('when', None)
-            new_task = {}
             # store just in case
-            new_task['func'] = Task(task['func'], args=args, kwargs=kwargs,
-                                    when=when)
-            new_task['result'] = task.get('result', None)
-            new_task['first'] = task.get('first', False)
-            new_task['args'] = args
-            new_task['kwargs'] = kwargs
-            new_task['when'] = when
+            new_task = Task(task['func'], args=args, kwargs=kwargs,
+                            when=when, result=task.get('result', None),
+                            first=task.get('first', False))
             # finally add the task:
             if position is None:
                 self.task.append(new_task)
@@ -189,7 +186,7 @@ class Simulation(object):
             warnings.warn(msg.format(task))
             return False
 
-    def output(self, results, first=False):
+    def output(self, results):
         """
         This method handles all the outputs that should be done. These
         are defined as tasks in self.output_task.
@@ -198,15 +195,28 @@ class Simulation(object):
         ----------
         results : dict
             These are the results from the current simulation step.
-        first : boolean
-            This is just to determine if this is the first step or
-            not. In some cases we might to do something special on the first
-            output. For instance when writing to the screen, we typically
-            want to output a table heading.
 
         Returns
         -------
         N/A
+        """
+        for task in self.output_task:
+            if task.get_output() == 'traj':
+                result = {'system': self.system, 'header': task['header']}
+            else:
+                result = results[task.get_output()]
+            task(self.step, result)
+
+    def add_output_task(self, task):
+        """
+        This will add a output task to the simulation.
+
+        Parameters
+        ----------
+        task : object of type OutputTask
+            This is the object representation of OutputTask
+        settings : dict
+            This dict contains some settings for the output task.
         """
         pass
 
