@@ -6,7 +6,7 @@ This system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 from __future__ import print_function
 from retis.core import Box, System
-from retis.core import create_simulation
+from retis.core.simulation import create_simulation
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
 from retis.inout import (get_predefined_table, FileWriter)
