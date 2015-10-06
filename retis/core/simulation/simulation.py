@@ -137,10 +137,7 @@ class Simulation(object):
         results = {'cycle': self.cycle}
         for task in self.task:
             if not self.first_step or task.run_first():
-                res = task(self.cycle)
-                label = task.get_result_label()
-                if label is not None:
-                    results[label] = res
+                results[task.get_result_label()] = task.execute(self.cycle)
         return results
 
     def add_task(self, task, position=None):
@@ -205,7 +202,7 @@ class Simulation(object):
                 result = {'system': self.system, 'header': task['header']}
             else:
                 result = results[task.get_output()]
-            task(self.step, result)
+            task.output(self.cycle, result)
 
     def add_output_task(self, task):
         """
@@ -215,10 +212,8 @@ class Simulation(object):
         ----------
         task : object of type OutputTask
             This is the object representation of OutputTask
-        settings : dict
-            This dict contains some settings for the output task.
         """
-        pass
+        self.output_task.append(task)
 
     def run(self):
         """

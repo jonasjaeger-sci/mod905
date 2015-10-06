@@ -2,6 +2,9 @@
 """Definition of a class for tasks."""
 import inspect
 import warnings
+# imports for creating predefined output tasks:
+from retis.inout import (CrossFile, EnergyFile, OrderFile, PathEnsembleFile,
+                         create_traj_writer, get_predefined_table)
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
@@ -133,6 +136,11 @@ class Task(object):
             The keyword arguments to the function
         when : dict
             Determines if the task should be executed.
+        first : boolean
+            True if this task should be executed before the first
+            step of the simulation.
+        result : string
+            This is a label for the result created by the task.
         """
         if not callable(function):
             msg = 'The given function for the task is not callable!'
@@ -219,7 +227,159 @@ class Task(object):
         Parameters
         ----------
         step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at start
-            'stepno' the number of cycles we have performed so far.
+            Keys are 'step' (current cycle number), 'start' cycle number at
+            start and 'stepno' the number of cycles we have performed so far.
+
+        Returns
+        -------
+        out : the result of self.execute(step)
         """
         return self.execute(step)
+
+
+class OutputTask(object):
+    """
+    Class OutputTask(object) - Representation for simulation output tasks.
+
+    This class will handle output tasks for a simulation.
+
+    Attributes
+    ----------
+    first : boolean
+        True if we have not written anything yet, this is just convenient
+        for writing to the screen, as this allows us to write a header if we
+        want to.
+    output_type : string
+        Identify the output type. This is redundant as the information
+        can in principle be deduced from the `writer`. However
+        it's very convenient to have a simple string representation as
+        well.
+    target : string
+        This determines what kind out output target we have in mind,
+        'file' and 'screen' are handled slightly differently.
+    when : dict
+        Determines if the task should be executed.
+    writer : object
+        This object will handle the actual writing of the result.
+    """
+    def __init__(self, writer, output_type, target, when=None):
+        """
+        Initiate the OutputTask
+
+        Parameters
+        ----------
+        writer : object
+            This object will handle the actual writing of the result.
+        output_type : string
+            Identify the output type. This is redundant as the information
+            can in principle be deduced from the `writer`. However
+            it's very convenient to have a simple string representation as
+            well.
+        target : string
+            This determines what kind out output target we have in mind,
+            'file' and 'screen' are handled slightly differently.
+        when : dict
+            Determines if the task should be executed.
+        """
+        self.writer = writer
+        self.output_type = output_type
+        assert target in ['screen', 'file'], 'Unknown target!'
+        self.target = target
+        self.when = when
+        self.first = True
+
+    def get_output(self):
+        """Simple function to return the output type"""
+        return self.output_type
+
+    def output(self, step, result):
+        """
+        This will ouput the task.
+
+        Parameters
+        ----------
+        step : dict of ints
+            Keys are 'step' (current cycle number), 'start' cycle number at
+            start and 'stepno' the number of cycles we have performed so far.
+        result : unknown type
+            The result to output.
+
+        Returns
+        -------
+        N/A
+        """
+        if _execute_now(step, self.when):
+            if self.target == 'screen':
+                result['stepno'] = step['step']
+                out = self.writer.get_row(result)
+                if self.first:
+                    out = '\n'.join([self.writer.get_header()] + [out])
+                print out
+            else:
+                if self.output_type == 'traj':
+                    header = result['header'].format(step['step'])
+                    self.writer.write(result['system'], header=header)
+                elif self.output_type == 'cross':
+                    self.writer.write(result)
+                else:
+                    self.writer.write(step['step'], result)
+            if self.first:
+                self.first = False
+
+
+def create_output_task(task, system=None):
+    """
+    This method will create an object for a given output task.
+    It will make use of some of the pre-defined output possibilities
+    defined in retis.inout
+
+    Parameters
+    ----------
+    task : dict
+        This dict describes the task.
+    system : object
+        The system we are describing. Needed for creating the
+        trajectory writer.
+    """
+    writer = None
+    if task['target'] == 'file':
+        if task['type'] == 'orderp':
+            writer = OrderFile(task.get('filename', 'order.dat'),
+                               mode=task.get('mode', 'w'),
+                               oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'thermo':
+            writer = EnergyFile(task.get('filename', 'energy.dat'),
+                                mode=task.get('mode', 'w'),
+                                oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'cross':
+            writer = CrossFile(task.get('filename', 'cross.dat'),
+                               mode=task.get('mode', 'w'),
+                               oldfile=task.get('oldfile', 'overwrite'))
+        elif task['type'] == 'traj':
+            fmt = task.get('format', 'gro')
+            default_file = 'traj.{}'.format(fmt)
+            writer = create_traj_writer({'type': fmt,
+                                         'file': task.get('filename',
+                                                          default_file),
+                                         'oldfile': 'overwrite'}, system)
+        elif task['type'] == 'pathensemble':
+            writer = PathEnsembleFile(task.get('filename', 'path.dat'),
+                                      task.get('ensemble', '000'),
+                                      task.get('interfaces', [0.0, 0.0, 0.0]),
+                                      mode=task.get('mode', 'w'),
+                                      oldfile=task.get('oldfile', 'overwrite'))
+        else:
+            msg = 'Unknown type {} for target file'.format(task['type'])
+            warnings.warn(msg)
+            return False
+
+    elif task['target'] == 'screen':
+        if task['type'] == 'thermo':
+            writer = get_predefined_table('energies')
+    else:
+        pass
+    if writer is not None:
+        return OutputTask(writer, task['type'], task['target'],
+                          when=task.get('when', None))
+    else:
+        return None
