@@ -8,7 +8,8 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-from retis.core import UmbrellaWindowSimulation, System, RandomGenerator
+from retis.core import System, RandomGenerator
+from retis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from retis.core.montecarlo import max_displace_step
 from retis.forcefield import ForceField
 from retis.forcefield.potentials import DoubleWell, RectangularWell
@@ -42,40 +43,6 @@ RGEN = RandomGenerator(seed=RANDSEED)
 MINCYCLES = 1e4
 MAXDX = 0.1  # maximum allowed displacement in the MC step(s).
 
-# In pytismol, a simulation is defined by defining certain tasks
-# the simulation will perform. Here we need to create a task
-# to perform Monte Carlo moves to sample the potential energy.
-# Let's make use of the predefined method `max_displace_step`
-# defined in the `retis.core.montecarlo` module which we
-# have imported from `mc`.
-
-
-def mc_task(rgen, system, maxdx):
-    """
-    Function to perform monte carlo moves.
-    Will update positions and potential energy as needed.
-    """
-    accepted_r, _, _, v_trial, status = max_displace_step(rgen, system,
-                                                          maxdx)
-    if status:
-        system.particles.pos = accepted_r
-        system.v_pot = v_trial
-
-# For convenience, we also create a function to
-# store all accepted positions and energies
-
-
-def record(system, traj_prop, ener_prop):
-    """
-    Function to store positions and energy
-    Here, in case we use more than one particle, we will
-    simply replicate the energy of the system correspondingly.
-    """
-    for pos in system.particles.pos:
-        traj_prop.append(pos)
-        ener_prop.append(system.v_pot)
-
-
 trajectory, energy = [], []  # to store all trajectories & energies
 # we run all the umbrella simulations by looping over
 # the different umbrellas we defined:
@@ -88,19 +55,16 @@ for i, umbrella in enumerate(umbrellas):
     mysystem.forcefield.update_potential_parameters(potential_rw, params)
     mysystem.potential()  # recalculate potential energy
     over = umbrellas[min(i + 1, n_umb - 1)][0]  # position we must cross
-    # Initiate the umbrella simulation:
-    simulation = UmbrellaWindowSimulation(umbrella=umbrella, overlap=over,
+    # Create the umbrella simulation :-)
+    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over, 
+                                          RGEN, MAXDX,
                                           mincycle=MINCYCLES)
     # Also create empy list for storing some data:
     traj, ener = [], []
-    # let us add the two task we defined previously:
-    task_monte_carlo = {'func': mc_task, 'args': [RGEN, mysystem, MAXDX]}
-    task_record = {'func': record, 'args': [mysystem, traj, ener]}
-    simulation.add_task(task_monte_carlo)
-    simulation.add_task(task_record)
-
-    while not simulation.is_finished(mysystem):
-        simulation.step()
+    for result in simulation.run():
+        for pos in mysystem.particles.pos:
+            traj.append(pos)
+            ener.append(mysystem.v_pot)
     trajectory.append(np.array(traj))
     energy.append(np.array(ener))
     print('Done. Cycles: {}'.format(simulation.cycle['step'] -
