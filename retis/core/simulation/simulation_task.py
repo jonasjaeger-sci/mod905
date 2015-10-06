@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Definition of a class for tasks."""
+from __future__ import print_function
 import inspect
 import warnings
 # imports for creating predefined output tasks:
@@ -324,7 +325,7 @@ class OutputTask(object):
                 out = self.writer.get_row(result)
                 if self.first:
                     out = '\n'.join([self.writer.get_header()] + [out])
-                print out
+                print(out)
             else:
                 if self.output_type == 'traj':
                     try:
