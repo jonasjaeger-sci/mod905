@@ -3,9 +3,29 @@
 import inspect
 import warnings
 
+
 def _check_args(function, given_args=None, given_kwargs=None):
     """
-    Will check if the given args match the given function
+    This method will just check the consistency between a
+    function and the given arguments and keyword arguments.
+    Here we assume that the arguments are given in a list and that
+    the keyword arguments are given as a dict.
+
+    Parameters
+    ----------
+    function : function
+        The function we will inspect
+    given_args : list
+        A list of the arguments to pass to the function. 'self' will not
+        be considered here since it passed implicitly.
+    given_kwargs : dict
+        A dictionary with keyword arguments.
+
+    Returns
+    -------
+    out : boolean
+        False if there is some inconsistencies, the calling of the function
+        will probably fail. True otherwise.
     """
     arguments = inspect.getargspec(function)
     if not arguments.defaults:
@@ -16,8 +36,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         args = [arg for arg in arguments.args if arg not in defaults]
     # remove self from args, this is passed implicitly to objects
     args = [arg for arg in args if arg is not 'self']
-
-    # first test the required arguments:
+    # first test, do we give correct number of required arguments?
     if given_args is not None:
         given = len(given_args)
     else:
@@ -26,7 +45,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         msg = 'Wrong number of arguments given'
         warnings.warn(msg)
         return False
-    # Check kwargs, only check in case some kwargs are given
+    # Check kwargs but nly check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
     # and that the default kwargs will be used.
     if given_kwargs is not None:
@@ -45,21 +64,56 @@ def _check_args(function, given_args=None, given_kwargs=None):
     return True
 
 
+def _execute_now(step, when):
+    """
+    Determines if a task should be executed.
+
+    Parameters
+    ----------
+    step : dict of ints
+        Keys are 'step' (current cycle number), 'start' cycle number at start
+        'stepno' the number of cycles we have performed so far.
+    when : dict
+        This dict determines when the function should be executed.
+
+    Returns
+    -------
+    out : boolean
+        True of the task should be executed
+    """
+    if when is None:
+        return True
+    else:
+        exe = False
+        if 'every' in when:
+            exe = step['stepno'] % when['every'] == 0
+        if not exe and 'at' in when:
+            try:
+                exe = step['step'] in when['at']
+            except TypeError:
+                exe = step['step'] == when['at']
+        return exe
+
+
 class Task(object):
     """
+    Class Task(object) - A object representation of simulation Tasks.
+
     This class defines a task object. A task is executed at specific points,
-    regular interval etc. in a simulation. A task will also produce a result.
+    at regular intervals etc. in a simulation. A task will typically provide
+    a result, but it does not need to. I can simply just alter the state of
+    the passed argument(s).
 
     Attributes
     ----------
     function : function
-        The function to execute
+        The function to execute.
     when : dict
         Determines if the task should be executed.
     args : list
-        List of arguments to the function
+        List of arguments to the function.
     kwargs : dict
-        The keyword arguments to the function
+        The keyword arguments to the function.
     """
     def __init__(self, function, args=None, kwargs=None, when=None):
         """
@@ -74,7 +128,6 @@ class Task(object):
         when : dict
             Determines if the task should be executed.
         """
-        # 1) make sure function is callable
         if not callable(function):
             msg = 'The given function for the task is not callable!'
             raise AssertionError(msg)
@@ -87,34 +140,6 @@ class Task(object):
         self.kwargs = kwargs
         self.when = when
 
-    def _execute_now(self, step):
-        """
-        Should a task be executed now?
-
-        Parameters
-        ----------
-        step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at start
-            'stepno' the number of cycles we have performed so far.
-
-        Returns
-        -------
-        out : boolean
-            True of the task should be executed
-        """
-        if self.when is None:
-            return True
-        else:
-            exe = False
-            if 'every' in self.when:
-                exe = step['stepno'] % self.when['every'] == 0
-            if 'at' in self.when:
-                try:
-                    exe = step['step'] in self.when['at']
-                except TypeError:
-                    exe = step['step'] == self.when['at']
-            return exe
-
     def execute(self, step):
         """
         This will execute the task.
@@ -122,18 +147,22 @@ class Task(object):
         Parameters
         ----------
         step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at start
-            'stepno' the number of cycles we have performed so far.
+            Keys are 'step' (current cycle number), 'start' cycle number at
+            start and 'stepno' the number of cycles we have performed so far.
         args : list
             These are the arguments to the function. Can be used to override
             self.args
         kwargs : dict
             These are keyword arguments to the function.
             Can be used to override self.kwargs
+
+        Returns
+        -------
+        out : the result of running self.function
         """
         args = self.args
         kwargs = self.kwargs
-        if self._execute_now(step):
+        if _execute_now(step, self.when):
             if args is None:
                 if kwargs is None:
                     return self.function()
