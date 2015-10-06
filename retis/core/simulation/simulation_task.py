@@ -261,8 +261,13 @@ class OutputTask(object):
         Determines if the task should be executed.
     writer : object
         This object will handle the actual writing of the result.
+    header : string
+        Some object will have a header written each time the we use the
+        write routine. This is for instance used in the trajectory writer to
+        display the current step for a written frame.
     """
-    def __init__(self, writer, output_type, target, when=None):
+    def __init__(self, writer, output_type, target, when=None,
+                 header=None):
         """
         Initiate the OutputTask
 
@@ -280,6 +285,10 @@ class OutputTask(object):
             'file' and 'screen' are handled slightly differently.
         when : dict
             Determines if the task should be executed.
+        header : string
+            Some object will have a header written each time the we use the
+            write routine. This is for instance used in the trajectory writer
+            to display the current step for a written frame.
         """
         self.writer = writer
         self.output_type = output_type
@@ -287,6 +296,7 @@ class OutputTask(object):
         self.target = target
         self.when = when
         self.first = True
+        self.header = header
 
     def get_output(self):
         """Simple function to return the output type"""
@@ -317,8 +327,11 @@ class OutputTask(object):
                 print out
             else:
                 if self.output_type == 'traj':
-                    header = result['header'].format(step['step'])
-                    self.writer.write(result['system'], header=header)
+                    try:
+                        header = self.header.format(step['step'])
+                    except AttributeError:
+                        header = None
+                    self.writer.write(result, header=header)
                 elif self.output_type == 'cross':
                     self.writer.write(result)
                 else:
@@ -380,6 +393,7 @@ def create_output_task(task, system=None):
         pass
     if writer is not None:
         return OutputTask(writer, task['type'], task['target'],
-                          when=task.get('when', None))
+                          when=task.get('when', None),
+                          header=task.get('header', None))
     else:
         return None

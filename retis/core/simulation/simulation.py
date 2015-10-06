@@ -199,7 +199,7 @@ class Simulation(object):
         """
         for task in self.output_task:
             if task.get_output() == 'traj':
-                result = {'system': self.system, 'header': task['header']}
+                result = self.system
             else:
                 result = results[task.get_output()]
             task.output(self.cycle, result)

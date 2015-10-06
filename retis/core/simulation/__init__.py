@@ -6,8 +6,8 @@ from .simulation_task import create_output_task
 from retis.core.integrators import create_integrator
 
 _OUTPUT = {'nve': [{'target': 'file', 'type': 'thermo', 'every': 10},
-                   #{'target': 'file', 'type': 'traj', 'every': 10,
-                   # 'header': 'NVE simulation. Step: {}'},
+                   {'target': 'file', 'type': 'traj', 'every': 10,
+                    'header': 'NVE simulation. Step: {}'},
                     {'target': 'screen', 'type': 'thermo', 'every': 10}]}
 
 def create_simulation(settings, system):
