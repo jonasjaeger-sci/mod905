@@ -102,10 +102,10 @@ class Task(object):
         out : boolean
             True of the task should be executed
         """
-        exe = False
         if self.when is None:
-            exe = True
+            return True
         else:
+            exe = False
             if 'every' in self.when:
                 exe = step['stepno'] % self.when['every'] == 0
             if 'at' in self.when:
@@ -113,7 +113,7 @@ class Task(object):
                     exe = step['step'] in self.when['at']
                 except TypeError:
                     exe = step['step'] == self.when['at']
-        return exe
+            return exe
 
     def execute(self, step):
         """
@@ -157,4 +157,4 @@ class Task(object):
             Keys are 'step' (current cycle number), 'start' cycle number at start
             'stepno' the number of cycles we have performed so far.
         """
-        self.execute(step)
+        return self.execute(step)

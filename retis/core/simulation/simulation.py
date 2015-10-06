@@ -31,7 +31,7 @@ class Simulation(object):
         function, 'when' which stores when the task should be executed,
         'first' which is a boolean which determines if the task should be
         executed on the initial step, i.e. before the full simulation starts
-        and 'label' which is used to label the result.
+        and 'result' which is used to label the result.
     output_task : list
         This is a list of output tasks the simulation will perform.
     first_step : boolean
@@ -136,7 +136,7 @@ class Simulation(object):
             if not self.first_step or task['first']:
                 func = task['func']
                 res = func(self.cycle)
-                label = task.get('label', None)
+                label = task.get('result', None)
                 if label is not None:
                     results[label] = res
         return results
@@ -173,7 +173,7 @@ class Simulation(object):
             # store just in case
             new_task['func'] = Task(task['func'], args=args, kwargs=kwargs,
                                     when=when)
-            new_task['label'] = task.get('label', None)
+            new_task['result'] = task.get('result', None)
             new_task['first'] = task.get('first', False)
             new_task['args'] = args
             new_task['kwargs'] = kwargs
