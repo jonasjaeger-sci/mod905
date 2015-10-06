@@ -340,6 +340,54 @@ class OutputTask(object):
             if self.first:
                 self.first = False
 
+    def update(self, other):
+        """
+        Method to update a task with some settings from another task
+
+        Parameters
+        ----------
+        other : object of type OutputTaks
+            The object to get settings from.
+
+        Returns
+        -------
+        N/A but updates self
+        """
+        self.when = other.when
+        self.first = other.first
+        self.header = other.header
+
+    def __eq__(self, other):
+        """
+        Test for equality. Here we will check if both objects are of the
+        same class and if they further are equal. Two objects are equal if
+        their output_type is the same and
+        1) For output_type 'file' filenames of the output file is the same.
+        2) For screen, if __dict__ matches between the two object
+
+        Parameters
+        ----------
+        other : object of type OutputTask
+            This is the object to compare with.
+
+        Returns
+        -------
+        out : boolean
+            True if they are equal.
+        """
+        if isinstance(other, self.__class__):
+            if self.output_type == 'screen':
+                return self.__dict__ == other.__dict__
+            else:
+                equal_type = self.output_type == other.output_type
+                equal_file = self.writer.filename == other.writer.filename
+                return equal_type and equal_file
+        else:
+            return False
+
+    def __ne__(self, other):
+        """Implementation of not equal to. See self.__eq__"""
+        return not self.__eq__(other)
 
 def create_output_task(task, system=None):
     """

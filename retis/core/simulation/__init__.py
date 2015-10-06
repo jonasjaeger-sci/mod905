@@ -31,6 +31,7 @@ from .simulation_task import create_output_task
 from retis.core.integrators import create_integrator
 import warnings
 
+
 _OUTPUT = {'nve': [{'target': 'file', 'type': 'thermo', 'every': 10},
                    {'target': 'file', 'type': 'traj', 'every': 10,
                     'header': 'NVE simulation. Step: {}'},
@@ -92,8 +93,10 @@ def create_simulation(settings, system):
         simulation = SimulationNVE(system, intg,
                                    endcycle=settings['endcycle'],
                                    startcycle=settings.get('startcycle', 0))
-        # add default output:
-        for output in _OUTPUT['nve']:
+    # add default output:
+    if simulation_type in output:  # add default output:
+        for output in _OUTPUT[simulation_type]:
             task = create_output_task(output, system)
             simulation.add_output_task(task)
+    # check if specific outputs were also given:
         return simulation

@@ -204,15 +204,24 @@ class Simulation(object):
                 result = results[task.get_output()]
             task.output(self.cycle, result)
 
-    def add_output_task(self, task):
+    def add_output_task(self, newtask):
         """
-        This will add a output task to the simulation.
+        This will add a output task to the simulation. Here, we will check if
+        a identical task already exists, and if it does, we will just update
+        that one. Two tasks are identical if they are of the same type and
+        outputs to the same file.
 
         Parameters
         ----------
-        task : object of type OutputTask
+        newtask : object of type OutputTask
             This is the object representation of OutputTask
         """
+        for task in self.output_task:
+            if newtask == task:
+                print 'Found similar taks, will update it'
+                print newtask
+                print task
+                task.update(newtask)
         self.output_task.append(task)
 
     def run(self):
