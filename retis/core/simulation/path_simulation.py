@@ -117,13 +117,16 @@ class SimulationTIS(Simulation):
         results = {}
         if self.first_step:
             initial_path = self._initialize_path()
-            results['accept'] = True
-            results['trial'] = None
-            results['status'] = 'ACC'
+            accept = True
+            trial = None
+            status = 'ACC'
             self.path = initial_path
-            self.first_step = False
-            self.path_ensemble.add_path_data(initial_path, results['status'],
+            self.path_ensemble.add_path_data(initial_path, status,
                                              cycle=self.cycle['step'])
+            self.first_step = False
+            results['accept'] = accept
+            results['trial'] = trial
+            results['status'] = status
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
@@ -146,7 +149,6 @@ class SimulationTIS(Simulation):
         results['pathensemble'] = self.path_ensemble
         self.output(results)
         return results
-
 
     def __str__(self):
         """Just a small function to return some info about the simulation"""
