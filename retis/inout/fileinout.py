@@ -560,7 +560,7 @@ class PathEnsembleFile(FileWriter):
             warnings.warn(msg)
             raise
 
-    def write(self, path_ensemble, cycle=0, path=None):
+    def write(self, cycle, path_ensemble, path=None):
         """
         This method will write a given path from a path ensemble to the file.
         If the path is not explicitly given, the latest path from the path
@@ -568,12 +568,12 @@ class PathEnsembleFile(FileWriter):
 
         Parameters
         ----------
+        cycle : integer
+            This is the current cycle number.
         path_ensemble : object of type PathEnsemble
             We will write the path defined by PathEnsemble.paths[-1]
         path : object of type Path
             This is the path to write to the file.
-        cycle : integer
-            This is the current cycle number. Default is zero.
         """
         if path is None:
             path_dict = path_ensemble.paths[-1]
