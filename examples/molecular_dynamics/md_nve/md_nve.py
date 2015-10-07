@@ -24,7 +24,7 @@ POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 settings = {'type': 'NVE',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 100,
-            'output': [{'target': 'file', 'type': 'traj', 'every': 1,
+            'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
                         'format': 'gro'}],
             'generate-vel': {'seed': 0, 'momentum': True,
                              'distribution': 'maxwell'}}
