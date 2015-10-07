@@ -54,7 +54,9 @@ _OUTPUT = {'nve': [{'type': 'thermo', 'target': 'file', 'when': {'every': 10},
                         'when': {'every': 10}, 'filename': 'traj.gro',
                         'header': 'MD FLUX simulation. Step: {}'},
                        {'type': 'thermo', 'target': 'screen',
-                        'when': {'every': 10}}]}
+                        'when': {'every': 10}}],
+           'tis': [{'type': 'pathensemble', 'target': 'file',
+                    'when': {'every': 10}, 'filename': 'path.dat'}]}
 
 
 def _check_settings(settings, required):
@@ -104,7 +106,8 @@ def create_simulation(settings, system):
     simulation = None
     required = {'nve': ['endcycle'],
                 'md-flux': ['endcycle', 'integrator', 'interfaces',
-                            'orderparameter']}
+                            'orderparameter'],
+                'tis': ['endcycle', 'tis', 'integrator', 'interfaces']}
     msg = 'Unknown simulation type {} requested'.format(simulation_type)
     assert simulation_type in required, msg
     if not _check_settings(settings, required[simulation_type]):
@@ -125,10 +128,16 @@ def create_simulation(settings, system):
                                       settings['orderparameter'],
                                       endcycle=settings['endcycle'],
                                       startcycle=settings.get('startcycle', 0))
+    elif simulation_type == 'tis':
+        intg = create_integrator(settings.get('integrator', None),
+                                 simulation_type)
+        simulation = SimulationTIS(system, intg, settings,
+                                   endcycle=settings['endcycle'],
+                                   startcycle=settings.get('startcycle', 0))
     # add output tasks:
     for out_task in _get_output_tasks(settings.get('output', []),
                                       simulation_type):
-        task = create_output_task(out_task, system)
+        task = create_output_task(out_task, system, settings)
         simulation.add_output_task(task)
     return simulation
 
@@ -218,7 +227,7 @@ def _task_dict_eq(task1, task2):
         return False
 
 
-def create_output_task(task, system=None):
+def create_output_task(task, system, settings):
     """
     This method will create an object for a given output task.
     It will make use of some of the pre-defined output possibilities
@@ -231,6 +240,10 @@ def create_output_task(task, system=None):
     system : object
         The system we are describing. Needed for creating the
         trajectory writer.
+    settings : dict
+        These are the settings used for setting up the simulation.
+        Some of these settings might be usefull for creating the
+        output tasks.
     """
     writer = None
     if task['target'] == 'file':
@@ -252,8 +265,8 @@ def create_output_task(task, system=None):
                                         system)
         elif task['type'] == 'pathensemble':
             writer = PathEnsembleFile(task['filename'],
-                                      task.get('ensemble', '000'),
-                                      task.get('interfaces', [0.0, 0.0, 0.0]),
+                                      settings.get('ensemble', '000'),
+                                      settings.get('interfaces', None),
                                       mode=task.get('mode', 'w'),
                                       oldfile=task.get('oldfile', 'overwrite'))
         else:

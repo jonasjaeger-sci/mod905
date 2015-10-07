@@ -143,32 +143,10 @@ class SimulationTIS(Simulation):
                 self.path = trial
         results['path'] = self.path
         results['cycle'] = self.cycle
+        results['pathensemble'] = self.path_ensemble
         self.output(results)
         return results
 
-    def output(self, results):
-        """
-        This method handles all the outputs that should be done. These
-        are defined as tasks in self.output_task.
-
-        Parameters
-        ----------
-        results : dict
-            These are the results from the current simulation step.
-        first : boolean
-            This is just to determine if this is the first step or
-            not. In some cases we might to do something special on the first
-            output. For instance when writing to the screen, we typically
-            want to output a table heading.
-
-        Returns
-        -------
-        N/A
-        """
-        for task in self.output_task:
-            if task['type'] == 'pathensemble':
-                task['writer'].write(self.path_ensemble,
-                                     cycle=results['cycle']['step'])
 
     def __str__(self):
         """Just a small function to return some info about the simulation"""
