@@ -3,9 +3,6 @@
 from __future__ import print_function
 import inspect
 import warnings
-# imports for creating predefined output tasks:
-from retis.inout import (CrossFile, EnergyFile, OrderFile, PathEnsembleFile,
-                         create_traj_writer, get_predefined_table)
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
@@ -339,62 +336,3 @@ class OutputTask(object):
                     self.writer.write(step['step'], result)
             if self.first:
                 self.first = False
-
-
-def create_output_task(task, system=None):
-    """
-    This method will create an object for a given output task.
-    It will make use of some of the pre-defined output possibilities
-    defined in retis.inout
-
-    Parameters
-    ----------
-    task : dict
-        This dict describes the task.
-    system : object
-        The system we are describing. Needed for creating the
-        trajectory writer.
-    """
-    writer = None
-    if task['target'] == 'file':
-        if task['type'] == 'orderp':
-            writer = OrderFile(task.get('filename', 'order.dat'),
-                               mode=task.get('mode', 'w'),
-                               oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'thermo':
-            writer = EnergyFile(task.get('filename', 'energy.dat'),
-                                mode=task.get('mode', 'w'),
-                                oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'cross':
-            writer = CrossFile(task.get('filename', 'cross.dat'),
-                               mode=task.get('mode', 'w'),
-                               oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'traj':
-            fmt = task.get('format', 'gro')
-            default_file = 'traj.{}'.format(fmt)
-            writer = create_traj_writer({'type': fmt,
-                                         'file': task.get('filename',
-                                                          default_file),
-                                         'oldfile': 'overwrite'}, system)
-        elif task['type'] == 'pathensemble':
-            writer = PathEnsembleFile(task.get('filename', 'path.dat'),
-                                      task.get('ensemble', '000'),
-                                      task.get('interfaces', [0.0, 0.0, 0.0]),
-                                      mode=task.get('mode', 'w'),
-                                      oldfile=task.get('oldfile', 'overwrite'))
-        else:
-            msg = 'Unknown type {} for target file'.format(task['type'])
-            warnings.warn(msg)
-            return False
-
-    elif task['target'] == 'screen':
-        if task['type'] == 'thermo':
-            writer = get_predefined_table('energies')
-    else:
-        pass
-    if writer is not None:
-        return OutputTask(writer, task['type'], task['target'],
-                          when=task.get('when', None),
-                          header=task.get('header', None))
-    else:
-        return None
