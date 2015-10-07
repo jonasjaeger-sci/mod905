@@ -53,28 +53,31 @@ from .mpl_plotting import mpl_set_style
 from .report import generate_report_md, generate_report_tis
 
 
-def create_traj_writer(settings, system):
+def create_traj_writer(filename, filefmt, oldfile, system):
     """
     This is a method which will set up a trajectory writer object from
     the settings in a given dictionary.
 
     Parameters
     ----------
-    settings : dict
-        These are the settings (filename etc) to use for creating the
-        trajectory writer
+    filename : string
+        Name of file to create
+    filefmt : string
+        Format of file, 'xyz' for xyz, 'gro' for gromacs.
+    oldfile : string
+        How to deal with backups of old files with the same name.
     system : object of type system
         This object is included since information about the units (and
         possibly the box) is needed.
     """
-    if settings['type'] == 'xyz':
-        trajwriter = WriteXYZ(settings['file'],
-                              oldfile=settings.get('oldfile', 'backup'),
+    if filefmt == 'xyz':
+        trajwriter = WriteXYZ(filename,
+                              oldfile=oldfile,
                               units=system.units)
-    elif settings['type'] == 'gro':
-        trajwriter = WriteGromacs(settings['file'],
+    elif filefmt == 'gro':
+        trajwriter = WriteGromacs(filename,
                                   system.box,
-                                  oldfile=settings.get('oldfile', 'backup'),
+                                  oldfile=oldfile,
                                   units=system.units)
     else:
         trajwriter = None
