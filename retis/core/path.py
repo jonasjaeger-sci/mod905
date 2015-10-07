@@ -560,7 +560,7 @@ class PathEnsemble(object):
     maxpath : int
         The maximum number of paths to store.
     """
-    def __init__(self, ensemble, interfaces, maxpath=100000):
+    def __init__(self, ensemble, interfaces, maxpath=10000000):
         """
         Initialize the PathEnsemble object.
 
@@ -605,8 +605,11 @@ class PathEnsemble(object):
         cycle : int, optional
             The current cycle number
         """
-        if self.npath >= self.maxpath:
-            pass
+        if len(self.paths) >= self.maxpath:
+            msg = ['PathEnsemble.maxpath exceeded. Resetting paths = []!']
+            msg += ['Note that this might influence the analysis']
+            warnings.warn('\n'.join(msg))
+            self.paths = []
         if path is None:
             # just store minimal info
             path_data = {'status': status, 'generated': ('', 0, 0, 0)}
