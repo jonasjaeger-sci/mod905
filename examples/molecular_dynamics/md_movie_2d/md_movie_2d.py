@@ -6,7 +6,8 @@ In this example we animate the output.
 # pylint: disable=C0103
 from __future__ import print_function
 # retis imports:
-from retis.core import System, Box, create_simulation
+from retis.core import System, Box
+from retis.core.simulation import create_simulation
 from retis.core.units import CONVERT
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
