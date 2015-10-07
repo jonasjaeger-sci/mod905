@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Definitions of simulation objects."""
 from __future__ import absolute_import
-from .simulation_task import Task
+from .simulation_task import SimulationTask
 import warnings
 
 
@@ -149,30 +149,31 @@ class Simulation(object):
         Parameters
         ----------
         task : dict
-            A dict defining the task. See also `_do_tasks` for a more
-            eleborate description of what this dict contains.
+            A dict defining the task. The recongnized keys are 'func'
+            'args', 'kwargs', 'first', 'when', 'result' which correspond
+            to attributes of a (new) `SimulationTask` object.
+            for a definition of the different attributes
         position : int
             Can be used to placed the task at a specific position.
 
         Note
         ----
-        Tasks that will fail might still added to the list of tasks. See
-        the checks carried out in `_check_task`.
+        SimulationTask will do some tests on the consistency of the keys
+        'func', 'args' and 'kwargs'. If this is not consistent, it will
+        throw am AssertionError.
 
         See Also
         --------
-        `_check_task` function for doing some simple checks before a task is
-        added.
+        `SimulationTask` object in `retis.core.simulation.simulation_task`.
         """
         try:
-            args = task.get('args', None)
-            kwargs = task.get('kwargs', None)
-            when = task.get('when', None)
-            # store just in case
-            new_task = Task(task['func'], args=args, kwargs=kwargs,
-                            when=when, result=task.get('result', None),
-                            first=task.get('first', False))
-            # finally add the task:
+            # create task in an explicit way - use 'get'.
+            new_task = SimulationTask(task['func'],
+                                      args=task.get('args', None),
+                                      kwargs=task.get('kwargs', None),
+                                      when=task.get('when', None),
+                                      result=task.get('result', None),
+                                      first=task.get('first', False))
             if position is None:
                 self.task.append(new_task)
             else:
@@ -216,13 +217,7 @@ class Simulation(object):
         newtask : object of type OutputTask
             This is the object representation of OutputTask
         """
-        for task in self.output_task:
-            if newtask == task:
-                print 'Found similar taks, will update it'
-                print newtask
-                print task
-                task.update(newtask)
-        self.output_task.append(task)
+        self.output_task.append(newtask)
 
     def run(self):
         """
