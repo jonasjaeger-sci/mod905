@@ -6,7 +6,8 @@ a mixture of 3 Lennard-Jones particles.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Simulation, System, Box
+from retis.core.simulation import Simulation
+from retis.core import System, Box
 from retis.core.integrators import VelocityVerlet
 from retis.forcefield import ForceField
 from retis.forcefield.pairpotentials import PairLennardJonesCutnp
