@@ -199,11 +199,16 @@ class Simulation(object):
         N/A
         """
         for task in self.output_task:
+            result = None
             if task.get_output() == 'traj':
                 result = self.system
             else:
-                result = results[task.get_output()]
-            task.output(self.cycle, result)
+                try:
+                    result = results[task.get_output()]
+                except KeyError:  # result was not calculated at this step
+                    result = None
+            if result is not None:
+                task.output(self.cycle, result)
 
     def add_output_task(self, newtask):
         """

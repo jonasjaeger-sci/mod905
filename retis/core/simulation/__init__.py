@@ -26,7 +26,7 @@ Modules:
 # local retis imports
 from .simulation import Simulation
 from .mc_simulation import UmbrellaWindowSimulation
-from .md_simulation import SimulationNVE
+from .md_simulation import SimulationNVE, SimulationMDFlux
 from .path_simulation import SimulationTIS
 from .simulation_task import OutputTask
 # other retis imports
@@ -43,7 +43,18 @@ _OUTPUT = {'nve': [{'type': 'thermo', 'target': 'file', 'when': {'every': 10},
                     'filename': 'traj.gro', 'format': 'gro',
                     'header': 'NVE simulation. Step: {}'},
                    {'type': 'thermo', 'target': 'screen',
-                    'when': {'every': 10}}]}
+                    'when': {'every': 10}}],
+           'md-flux': [{'type': 'orderp', 'target': 'file',
+                        'when': {'every': 10}, 'filename': 'order.dat'},
+                       {'type': 'thermo', 'target': 'file',
+                        'when': {'every': 100}, 'filename': 'energy.dat'},
+                       {'type': 'cross', 'target': 'file',
+                        'when': {'every': 1}, 'filename': 'cross.dat'},
+                       {'type': 'traj', 'target': 'file', 'format': 'gro',
+                        'when': {'every': 10}, 'filename': 'traj.gro',
+                        'header': 'MD FLUX simulation. Step: {}'},
+                       {'type': 'thermo', 'target': 'screen',
+                        'when': {'every': 10}}]}
 
 
 def _check_settings(settings, required):
@@ -91,16 +102,29 @@ def create_simulation(settings, system):
     """
     simulation_type = settings.get('type', 'nve').lower()
     simulation = None
-    required = {'nve': ['endcycle']}
+    required = {'nve': ['endcycle'],
+                'md-flux': ['endcycle', 'integrator', 'interfaces',
+                            'orderparameter']}
+    msg = 'Unknown simulation type {} requested'.format(simulation_type)
+    assert simulation_type in required, msg
     if not _check_settings(settings, required[simulation_type]):
         return None
     if simulation_type == 'nve':
-        # set up a MD NVE simulation.
+        # Set up a MD NVE simulation.
         intg = create_integrator(settings.get('integrator', None),
                                  simulation_type)
         simulation = SimulationNVE(system, intg,
                                    endcycle=settings['endcycle'],
                                    startcycle=settings.get('startcycle', 0))
+    elif simulation_type == 'md-flux':
+        # Set up MD FLUX simulation.
+        intg = create_integrator(settings.get('integrator', None),
+                                 simulation_type)
+        simulation = SimulationMDFlux(system, intg,
+                                      settings['interfaces'],
+                                      settings['orderparameter'],
+                                      endcycle=settings['endcycle'],
+                                      startcycle=settings.get('startcycle', 0))
     # add output tasks:
     for out_task in _get_output_tasks(settings.get('output', []),
                                       simulation_type):

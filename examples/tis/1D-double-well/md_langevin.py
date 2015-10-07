@@ -7,7 +7,8 @@ the initial flux for a TIS rate calculation.
 from __future__ import print_function
 import numpy as np
 # retis imports:
-from retis.core import Box, System, create_simulation
+from retis.core import Box, System
+from retis.core.simulation import create_simulation
 from retis.forcefield import ForceField
 from retis.forcefield.potentials import DoubleWell
 from retis.core.orderparameter import OrderParameterPosition
