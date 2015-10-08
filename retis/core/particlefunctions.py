@@ -316,7 +316,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     dim : float
         The dimensionality of, typically provieded with a system.get_dim().
     volume : float
-        This is the volume ``occupied`` by the particles. It can typically
+        This is the volume 'occupied' by the particles. It can typically
         be obtained by a box.calculate_volume().
     vpot : float
         The potential energy of the particles. It can typically be obtained
