@@ -87,7 +87,7 @@ def run_md_flux_files(analysis_settings, simulation_settings,
     """
     plotter = create_plotter(analysis_settings.get('plotter', 'mpl'),
                              analysis_settings.get('plot-format', 'png'),
-                             analysis_settings.get('plot-style', 'pytismol'))
+                             analysis_settings.get('plot-style', 'pyretis'))
     results = {'txtfile': {}}
     analysis = {'flux': {'func': run_flux_analysis,
                          'fileobj': CrossFile(crossfile, mode='r')},
@@ -198,7 +198,7 @@ def set_up_output(func):
         if plotter is None:
             plot = analysis_settings.get('plotter', 'mpl')
             fmt = analysis_settings.get('plot-format', 'png')
-            style = analysis_settings.get('plot-style', 'pytismol')
+            style = analysis_settings.get('plot-style', 'pyretis')
             plotter = create_plotter(plot, fmt, style)
         txtout = analysis_settings.get('txt-format', None)
         return func(analysis_settings, simulation_settings,

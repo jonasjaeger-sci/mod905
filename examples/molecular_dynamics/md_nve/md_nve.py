@@ -61,7 +61,7 @@ for result in simulation_nve.run():
 
 # the rest is now just plotting:
 # as an example, do some plotting:
-mpl_set_style()  # load pytismol style
+mpl_set_style()  # load pyretis style
 
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]

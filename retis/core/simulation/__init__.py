@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This package defines different simulations for use with pytismol
+This package defines different simulations for use with pyretis
 
 Package structure
 =================

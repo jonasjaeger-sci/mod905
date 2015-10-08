@@ -1,24 +1,24 @@
-.. pytismol documentation master file, created by
+.. pyretis documentation master file, created by
    sphinx-quickstart on Fri Jun 19 11:01:24 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 ####################
-Welcome to pytismol!
+Welcome to pyretis!
 ####################
 
-*pytismol - rare event simulations with python*
+*pyretis - rare event simulations with python*
 
 Overview
 ========
 
-pytismol is a molecular simulation toolkit for **rare events** with
+pyretis is a molecular simulation toolkit for **rare events** with
 emphasis on `transition interface
 sampling <http://en.wikipedia.org/wiki/Transition_path_sampling#Transition_interface_sampling>`_
 and `replica exchange transition interface
 sampling <http://www.van-erp.org>`_.
 
-pytismol is open source (:ref:`license <pytismol-license>`), written in
+pyretis is open source (:ref:`license <pyretis-license>`), written in
 `python <https://www.python.org>`_ and simulations are defined, set up
 and executed using a high-level python script:
 
@@ -33,7 +33,7 @@ and executed using a high-level python script:
 Installation
 ============
 
-The current version of pytismol (|version|) can be
+The current version of pyretis (|version|) can be
 installed by:
 
 .. tip::

@@ -4,7 +4,7 @@
 Todo
 #####
 
-There is still a lot of simple things that should be included in pytismol:
+There is still a lot of simple things that should be included in pyretis:
 
 - Move from pyplot to (for example)
 

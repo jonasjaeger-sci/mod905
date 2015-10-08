@@ -1,7 +1,7 @@
 .. _about-index:
 
 ##############
-About pytismol
+About pyretis
 ##############
 
 .. htmlonly::

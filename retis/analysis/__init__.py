@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This package defines analysis tools for the pytismol program.
+This package defines analysis tools for the pyretis program.
 
 Package structure
 =================

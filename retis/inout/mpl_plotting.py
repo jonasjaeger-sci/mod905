@@ -21,7 +21,7 @@ __all__ = ['MplPlotter']
 
 # Define default style file:
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
-                               'pytismol.mplstyle'])
+                               'pyretis.mplstyle'])
 
 
 class MplPlotter(object):
@@ -414,13 +414,13 @@ def _mpl_read_style_file(filename):
                     warnings.warn(msg.format(key))
 
 
-def mpl_set_style(style='pytismol'):
+def mpl_set_style(style='pyretis'):
     """
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
     'grayscale' (i.e. one of the styles in plt.style.available) or
-    as a file (full path is needed). The default pytismol style
-    is stored in _MPL_STYLE_FILE and can be selected with 'pytismol'.
+    as a file (full path is needed). The default pyretis style
+    is stored in _MPL_STYLE_FILE and can be selected with 'pyretis'.
     Style equal to None is just the default matplotlib style.
 
     Parameters
@@ -431,7 +431,7 @@ def mpl_set_style(style='pytismol'):
     """
     if style is None:
         return
-    if style == 'pytismol':
+    if style == 'pyretis':
         style = _MPL_STYLE_FILE
     if mpl.__version__ < '1.4.0':  # default to loading from file
         msg = 'Using matplotlib version < 1.4.0, please upgrade matplotlib.'

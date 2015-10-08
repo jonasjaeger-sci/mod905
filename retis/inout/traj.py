@@ -95,7 +95,7 @@ class WriteXYZ(FileWriter):
         npart = len(pos)
         self.write_string('{0}\n'.format(npart))
         if header is None:
-            header = 'pytismol ouput. Frame: {}'.format(self.frame)
+            header = 'Trajectory ouput. Frame: {}'.format(self.frame)
         self.write_string('{}\n'.format(header))
         if names is None:
             if len(self.atomnames) != npart:
@@ -205,7 +205,7 @@ class WriteGromacs(FileWriter):
         if residuename is None:  # just reuse atomnames
             residuename = atomname
         if header is None:
-            header = 'pytismol ouput. Frame: {}'.format(self.frame)
+            header = 'Trajectory ouput. Frame: {}'.format(self.frame)
 
         self.write_string('{}\n'.format(header))
         self.write_string('{}\n'.format(npart))

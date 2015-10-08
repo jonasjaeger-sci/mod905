@@ -1,10 +1,10 @@
 .. _users-guide-getting-started:
 
-Getting started with pytismol
-=============================
+Getting started with pyretis
+============================
 
-pytismol structure
-------------------
+pyretis structure
+-----------------
 
 Introduction to the structure and how to set up simulations.
 
@@ -16,5 +16,5 @@ A simple hello world example
 More examples
 -------------
 
-These are included in the pytismol/examples directory. More information
+These are included in the pyretis/examples directory. More information
 on the :ref:`example page(s) <examples-index>`.

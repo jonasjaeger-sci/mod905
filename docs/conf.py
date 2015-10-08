@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pytismol documentation build configuration file, created by
+# pyretis documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun 19 11:01:24 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -49,9 +49,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pytismol'
-copyright = u'2015, The pytismol team'
-author = u'The pytismol team'
+project = u'pyretis'
+copyright = u'2015, The pyretis team'
+author = u'The pyretis team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -207,7 +207,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pytismoldoc'
+htmlhelp_basename = 'pyretisdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -229,8 +229,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'pytismol.tex', u'pytismol Documentation',
-   u'The pytismol team', 'manual'),
+  (master_doc, 'pyretis.tex', u'pyretis Documentation',
+   u'The pyretis team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -259,7 +259,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pytismol', u'pytismol Documentation',
+    (master_doc, 'pyretis', u'pyretis Documentation',
      [author], 1)
 ]
 
@@ -273,8 +273,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'pytismol', u'pytismol Documentation',
-   author, 'pytismol', 'pytismol - rare events with python.',
+  (master_doc, 'pyretis', u'pyretis Documentation',
+   author, 'pyretis', 'pyretis - rare events with python.',
    'Miscellaneous'),
 ]
 

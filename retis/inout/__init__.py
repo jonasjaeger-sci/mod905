@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This library handles the input and output for pytismol.
+This library handles the input and output for pyretis.
 
 Package structure
 =================
