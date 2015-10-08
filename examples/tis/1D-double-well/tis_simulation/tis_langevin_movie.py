@@ -141,8 +141,6 @@ patch_leg = []
 for key in MYORDER:
     leg = mpatches.Patch(color=status_color[key], label=key)
     patch_leg.append(leg)
-#patch_leg.append(scatter_start)
-#patch_leg.append(scatter_end)
 legend1 = plt.legend(handles=patch_leg, ncol=3,
                      bbox_to_anchor=(1.0, 1.1))
 ax.add_artist(legend1)
@@ -177,6 +175,32 @@ def init():
     return patches
 
 
+def update_scatter(scatter_queue, orderp, ordervel, status):
+    """
+    To update the scatter points. Used by `update` defined below.
+
+    Parameters
+    ----------
+    scatter_queue : collections.deque
+        The list of scatter points
+    orderp : float
+        The order parameter
+    ordervel : float
+        The velocity of the order parameter
+    status : string
+        Status for the path
+    """
+    patches = []
+    new_point = scatter_queue.popleft()
+    new_point.set_offsets([orderp, ordervel])
+    new_point.set_color(status_color[status])
+    scatter_queue.append(new_point)
+    for i, point in enumerate(scatter_queue):
+        point.set_alpha(alpha[i])
+        patches.append(point)
+    return patches
+
+
 def update(frame, simulation):
     """
     This function will be running the simulation and updating the plots.
@@ -200,35 +224,33 @@ def update(frame, simulation):
         result = simulation.step()
         trial = result['trial']
         status = result['status']
-        if trial is not None:
-            orderp = np.array([p[-1] for p in trial.path[::6]])
-            vel = np.array([p[1][0] for p in trial.path[::6]])
+        if trial is None:
+            initial = True
+            path = result['path']
         else:
-            orderp = np.array([p[-1] for p in result['path'].path[::6]])
-            vel = np.array([p[1][0] for p in result['path'].path[::6]])
+            initial = False
+            path = trial
+
+        orderp = np.array([p[2][0] for p in path.path[::6]])
+        ordervel = np.array([p[2][1] for p in path.path[::6]])
+
         new_line = last_paths.popleft()
-        new_line.set_data(orderp, vel)
-        new_line.set_color(status_color[status])
+        new_line.set_data(orderp, ordervel)
+        if initial:
+            new_line.set_color(_COLORS['almost_black'])
+        else:
+            new_line.set_color(status_color[status])
         last_paths.append(new_line)
         for i, line in enumerate(last_paths):
             line.set_alpha(alpha[i])
             patches.append(line)
 
-        new_point = last_start_points.popleft()
-        new_point.set_offsets([orderp[0], vel[0]])
-        new_point.set_color(status_color[status])
-        last_start_points.append(new_point)
-        for i, point in enumerate(last_start_points):
-            point.set_alpha(alpha[i])
-            patches.append(point)
-
-        new_point = last_end_points.popleft()
-        new_point.set_offsets([orderp[-1], vel[-1]])
-        new_point.set_color(status_color[status])
-        last_end_points.append(new_point)
-        for i, point in enumerate(last_end_points):
-            point.set_alpha(alpha[i])
-            patches.append(point)
+        pscatter = update_scatter(last_start_points, orderp[0], ordervel[0],
+                                  status)
+        patches += pscatter
+        pscatter = update_scatter(last_end_points, orderp[-1], ordervel[-1],
+                                  status)
+        patches += pscatter
         time_text.set_text('Cycle: {:d}'.format(frame))
         patches.append(time_text)
         return patches
