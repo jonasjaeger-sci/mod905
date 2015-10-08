@@ -79,23 +79,3 @@ def lattice_simple_cubic(box, spacing=1.0):
     avgp = np.average(positions, axis=0)
     newavg = np.array([boxi[0] + 0.5*(boxi[1] - boxi[0]) for boxi in box])
     return positions + (newavg - avgp)
-
-#system.particles.npart/system.box.calculate_volume()
-    #size = [[0.0, n*lcon] for n in (nx, ny, nz)]
-
-#a = 5.260 # lattice constant in Ångtröm
-#a = a/3.405 # lattice constant in reduced distance
-#unit_cell_density = 4.0/a**3
-#density = 0.90
-#b = (a**3 * (unit_cell_density/density))**(1.0/3.0)
-#a = b
-
-#nx, ny, nz = 6, 6, 6
-#size = [[0.0, nx*a], [0.0, ny*a], [0.0, nz*a]]
-#box = Box(size)
-#system = System(temperature=1.5, units='lj', dim=3, box=box)
-#print(unit_cell_density)
-#for n in itertools.product(range(nx), range(ny), range(nz)):
-#    position = a*(np.array(n)+unit_cell)
-#    for pos in position:
-#        system.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
