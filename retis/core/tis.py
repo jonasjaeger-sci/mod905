@@ -139,16 +139,16 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     system.force()  # update forces
     # store info about this point, just in case we have to return
     # before completing a full new path:
-    trial_path.generated = ('sh', orderp, idx, 0)
+    trial_path.generated = ('sh', orderp[0], idx, 0)
     # kick the timeslice:
     dke = _kick_timeslice(rgen, system, aimless=tis_settings['aimless'],
                           momentum=False)
     # update the order paramater since it could depend on velocity
-    orderp = order_function(system)[0]
+    orderp = order_function(system)
     # We now check if the kick was ok or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
-    if not left < orderp < right:  # Kicked outside of boundaries!'
+    if not left < orderp[0] < right:  # Kicked outside of boundaries!'
         trial_path.append(pos, vel, orderp)  # just add the shooting point
         accept, trial_path.status = False, 'KOB'  # just to be explicit
         return accept, trial_path, trial_path.status
@@ -209,7 +209,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     trial_path = paste_paths(path_back, path_forw, overlap=True,
                              maxlen=tis_settings['maxlength'])
     # Also update information about the shooting:
-    trial_path.generated = ('sh', orderp, idx, len(path_back.path) - 1)
+    trial_path.generated = ('sh', orderp[0], idx, len(path_back.path) - 1)
     if not success_forw:
         accept, trial_path.status = False, 'FTL'
         if len(trial_path.path) == tis_settings['maxlength']:
@@ -459,7 +459,7 @@ def _propagate(system, integrator, order_function, interfaces,
     new_path = Path(maxlen=maxlen)
     status = 'Empty path'
     while True:
-        orderp = order_function(system)[0]
+        orderp = order_function(system)
         add = new_path.append(system.particles.pos, system.particles.vel,
                               orderp)
         if not add:

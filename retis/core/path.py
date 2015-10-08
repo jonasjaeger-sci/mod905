@@ -258,12 +258,14 @@ class Path(object):
             The positions of the particles
         vel: numpy.array
             The velocities of the particles
-        orderp : float
-            This variable is the order parameter for the given point.
+        orderp : list of floats
+            This variable is the order parameter for the given point. The actual
+            order parameter used is orderp[0] while the other ones can represent
+            velocities etc.
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             self.path.append([np.copy(pos), np.copy(vel), copy.copy(orderp)])
-            self._update_orderp(orderp, len(self.path) - 1)
+            self._update_orderp(orderp[0], len(self.path) - 1)
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
@@ -302,7 +304,7 @@ class Path(object):
         ordermin = None
         ordermax = None
         for i, phasepoint in enumerate(self.path):
-            orderp = phasepoint[2]
+            orderp = phasepoint[2][0]
             if ordermin is None or ordermax is None:
                 ordermin = (orderp, i)
                 ordermax = (orderp, i)
@@ -371,9 +373,9 @@ class Path(object):
             String representing where the end point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[-1][-1] < left:
+        if self.path[-1][2][0] < left:
             end = 'L'
-        elif self.path[-1][-1] > right:
+        elif self.path[-1][2][0] > right:
             end = 'R'
         else:
             end = None
@@ -397,9 +399,9 @@ class Path(object):
             String representing where the start point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[0][-1] <= left:
+        if self.path[0][2][0] <= left:
             start = 'L'
-        elif self.path[0][-1] >= right:
+        elif self.path[0][2][0] >= right:
             start = 'R'
         else:
             start = None
@@ -519,8 +521,8 @@ class Path(object):
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
         msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
         if len(self.path) > 0:
-            msg += ['\tStart {}'.format(self.path[0][-1])]
-            msg += ['\tEnd {}'.format(self.path[-1][-1])]
+            msg += ['\tStart {}'.format(self.path[0][2][0])]
+            msg += ['\tEnd {}'.format(self.path[-1][2][0])]
         if self.status:
             msg += ['\tStatus: {}'.format(_STATUS[self.status])]
         if self.generated:
