@@ -195,7 +195,7 @@ grid = gridspec.GridSpec(3, 2)
 presslab = ['pxx', 'pyy', 'pzz', 'pxy', 'pxz', 'pyz']
 pressindex = [(0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2)]
 for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
-    ax = fig3.add_subplot(grid[i % 3, i / 3])
+    ax = fig3.add_subplot(grid[int(i % 3), int(i / 3)])
     ax.set_ylabel(pi)
     ax.plot(d[:n, 0], d[:n, i + 6], lw=4, ls='-',
             color='b', alpha=0.5, label='lammps')
