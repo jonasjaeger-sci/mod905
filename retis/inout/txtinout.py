@@ -30,6 +30,12 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
+try:  # this will fail in python 3
+    zip_longest = itertools.izip_longest
+except AttributeError:  # python 3 name:
+    zip_longest = itertools.zip_longest
+
+
 __all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
            'txt_energy_output', 'txt_flux_output', 'txt_orderp_output',
            'txt_path_output']
@@ -418,8 +424,8 @@ def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
         width = [width]
     if fmt_str is None:
         fmt = None
-        for (col, wid) in itertools.izip_longest(row, width,
-                                                 fillvalue=width[-1]):
+        for (col, wid) in zip_longest(row, width,
+                                      fillvalue=width[-1]):
             if header:
                 # if this is the header, just assume that all will be strings:
                 if fmt is None:  # first item includes a "# " in front.
