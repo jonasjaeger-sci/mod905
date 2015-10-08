@@ -121,7 +121,7 @@ for _ in range(N):
     last_end_points.append(scatter_end)
 scatter_test = ax.scatter([], [], alpha=0.5, color='blue',
                           marker='o', s=100, label='Path start/end')
-alpha = np.linspace(0.1, 1.0, N)
+alpha = np.linspace(0.05, 1.0, N)
 MAP = 'husl_10'
 status_color = {'ACC': _COLOR_SCHEME[MAP][7],
                 'MCR': _COLOR_SCHEME[MAP][1],
@@ -266,5 +266,5 @@ anim = animation.FuncAnimation(fig, update,
                                interval=2,
                                blit=True, init_func=init)
 # for making a movie:
-# anim.save('tis.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+anim.save('tis.mpeg', fps=30)
 plt.show()
