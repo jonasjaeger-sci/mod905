@@ -3,7 +3,7 @@
 This file contains methods for analysis of energy output
 """
 from __future__ import absolute_import
-from .analysis import analyse_data
+from retis.analysis.analysis import analyse_data
 
 
 __all__ = ['analyse_energies']

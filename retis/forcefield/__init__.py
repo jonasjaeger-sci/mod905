@@ -24,5 +24,5 @@ Modules:
 
 from .forcefield import ForceField
 from .potential import PotentialFunction
-from . import potentials
-from . import pairpotentials
+from retis.forcefield import potentials
+from retis.forcefield import pairpotentials

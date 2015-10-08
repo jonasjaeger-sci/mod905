@@ -26,8 +26,8 @@ import itertools
 import os
 import warnings
 import numpy as np
-from .common import (create_backup, _ENERFILES, _ENERTITLE, _FLUXFILES,
-                     _ORDERFILES, _PATHFILES)
+from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
+                                _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
 __all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',

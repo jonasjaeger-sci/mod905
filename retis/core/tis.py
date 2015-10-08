@@ -2,9 +2,9 @@
 """This file contains methods used in the TIS method."""
 from __future__ import absolute_import
 import numpy as np
-from .path import Path, paste_paths, reverse_path
-from .montecarlo import metropolis_accept_reject
-from .particlefunctions import calculate_kinetic_energy
+from retis.core.path import Path, paste_paths, reverse_path
+from retis.core.montecarlo import metropolis_accept_reject
+from retis.core.particlefunctions import calculate_kinetic_energy
 
 __all__ = ['make_tis_step', 'generate_initial_path_kick']
 

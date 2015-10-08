@@ -4,9 +4,10 @@ This file contains a WCA pair potential
 """
 from __future__ import absolute_import
 import numpy as np
-from .pairlennardjones import PairLennardJonesCutnp
-from ..potential import PotentialFunction
+from retis.forcefield.pairpotentials.lennardjones import PairLennardJonesCutnp
+from retis.forcefield.potential import PotentialFunction
 import warnings
+
 
 __all__ = ['PairWCAnp', 'DoubleWellWCA']
 
@@ -92,7 +93,7 @@ class DoubleWellWCA(PotentialFunction):
                 msg = 'Unknown parameter {} - ignored!'.format(key)
                 warnings.warn(msg)
         self.types = self.params.get('types', None)
-        if not self.types is None:
+        if self.types is not None:
             self.types = set(self.types)
         self.rzero = self.params.get('rzero', 0.0)
         self.width = self.params.get('width', 0.0)
@@ -166,8 +167,8 @@ class DoubleWellWCA(PotentialFunction):
                 delta = box.pbc_dist_coordinate(particles.pos[i] -
                                                 particles.pos[j])
                 delr = np.sqrt(np.dot(delta, delta))
-                v_pot += self.height *\
-                         (1.0 - (((delr - self.rwidth)**2)/self.width2))**2
+                v_pot += (self.height *
+                          (1.0 - (((delr - self.rwidth)**2)/self.width2))**2)
         return v_pot
 
     def force(self, particles, box):
@@ -197,9 +198,9 @@ class DoubleWellWCA(PotentialFunction):
                 delta = box.pbc_dist_coordinate(particles.pos[i] -
                                                 particles.pos[j])
                 delr = np.sqrt(np.dot(delta, delta))
-                forceij = self.height4 *\
-                          (1.0 - (delr - self.rwidth)**2/self.width2) *\
-                          ((delr - self.rwidth)/self.width2)
+                forceij = (self.height4 *
+                           (1.0 - (delr - self.rwidth)**2/self.width2) *
+                           ((delr - self.rwidth)/self.width2))
                 forceij = forceij * delta / delr
                 forces[i] += forceij
                 forces[j] -= forceij
@@ -239,11 +240,11 @@ class DoubleWellWCA(PotentialFunction):
                 delta = box.pbc_dist_coordinate(particles.pos[i] -
                                                 particles.pos[j])
                 delr = np.sqrt(np.dot(delta, delta))
-                v_pot += self.height *\
-                         (1.0 - (delr - self.rwidth)**2/self.width2)**2
-                forceij = self.height4 *\
-                          (1.0 - (delr - self.rwidth)**2/self.width2) *\
-                          ((delr - self.rwidth)/self.width2)
+                v_pot += (self.height *
+                          (1.0 - (delr - self.rwidth)**2/self.width2)**2)
+                forceij = (self.height4 *
+                           (1.0 - (delr - self.rwidth)**2/self.width2) *
+                           ((delr - self.rwidth)/self.width2))
                 forceij = forceij * delta / delr
                 forces[i] += forceij
                 forces[j] -= forceij

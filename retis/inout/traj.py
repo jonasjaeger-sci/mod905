@@ -9,9 +9,9 @@ Objects defined here:
 
 - WriteGromacs: Writing of a coordinates to a file in a gromacs format.
 """
-from retis.core.units import CONVERT  # unit conversion in trajectory
 import numpy as np
-from .txtinout import FileWriter
+from retis.core.units import CONVERT  # unit conversion in trajectory
+from retis.inout.txtinout import FileWriter
 
 # define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'

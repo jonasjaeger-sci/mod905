@@ -11,11 +11,12 @@ Important methods defined here:
 from __future__ import absolute_import
 import warnings
 from retis.analysis import analyse_flux, analyse_energies, analyse_orderp
-from .fileinout import CrossFile, EnergyFile, OrderFile
-from .plotting import create_plotter
-from .txtinout import txt_energy_output, txt_flux_output, txt_orderp_output
-from .report import generate_report_md
-from .common import _REPORTFILES
+from retis.inout.fileinout import CrossFile, EnergyFile, OrderFile
+from retis.inout.plotting import create_plotter
+from retis.inout.txtinout import (txt_energy_output, txt_flux_output,
+                                  txt_orderp_output)
+from retis.inout.report import generate_report_md
+from retis.inout.common import _REPORTFILES
 
 
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):

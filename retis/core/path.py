@@ -259,9 +259,10 @@ class Path(object):
         vel: numpy.array
             The velocities of the particles
         orderp : list of floats
-            This variable is the order parameter for the given point. The actual
-            order parameter used is orderp[0] while the other ones can represent
-            velocities etc.
+            This variable is the order parameter for the given point.
+            orderp[0] is the actual order parameter used in path sampling
+            methods wihle orderp[1:] can represent other order parameters
+            for instance in orderp[1] typically the velocity of orderp[0].
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             self.path.append([np.copy(pos), np.copy(vel), copy.copy(orderp)])

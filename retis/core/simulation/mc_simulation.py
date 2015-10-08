@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 import numpy as np
 from retis.core.montecarlo import max_displace_step
-from .simulation import Simulation
+from retis.core.simulation import Simulation
 
 
 __all__ = ['UmbrellaWindowSimulation']

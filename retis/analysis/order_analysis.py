@@ -3,7 +3,7 @@
 This file contains methods for analysis of order parameter
 """
 from __future__ import absolute_import
-from .analysis import analyse_data, mean_square_displacement
+from retis.analysis.analysis import analyse_data, mean_square_displacement
 
 
 __all__ = ['analyse_orderp']

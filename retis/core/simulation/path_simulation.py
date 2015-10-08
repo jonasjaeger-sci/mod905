@@ -2,9 +2,9 @@
 """Definitions of simulation objects."""
 from __future__ import absolute_import
 import numpy as np
-from .simulation import Simulation
+from retis.core.simulation import Simulation
 from retis.core.path import PathEnsemble
-from retis.core.random import RandomGenerator
+from retis.core.random_gen import RandomGenerator
 from retis.core.tis import generate_initial_path_kick, make_tis_step
 
 

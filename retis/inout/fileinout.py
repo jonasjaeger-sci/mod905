@@ -17,7 +17,7 @@ Objects defined here:
 import numpy as np
 import warnings
 # local imports
-from .txtinout import FileWriter, read_some_lines
+from retis.inout.txtinout import FileWriter, read_some_lines
 from retis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 
 

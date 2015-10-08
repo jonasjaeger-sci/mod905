@@ -12,8 +12,8 @@ from scipy.stats import gamma
 # pylint: enable=E0611
 import os
 import warnings
-from .common import (create_backup, _ENERFILES, _ENERTITLE, _FLUXFILES,
-                     _ORDERFILES, _PATHFILES)
+from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
+                                _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
 __all__ = ['MplPlotter']

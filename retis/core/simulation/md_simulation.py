@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Definitions of simulation objects."""
 from __future__ import absolute_import
-from .simulation import Simulation
+from retis.core.simulation import Simulation
 from retis.core.particlefunctions import calculate_thermo
 from retis.core.path import check_crossing
 import warnings

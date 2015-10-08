@@ -4,7 +4,7 @@ This file contains some simple methods for numerical analysis.
 """
 
 import numpy as np
-from .histogram import histogram_and_avg
+from retis.analysis.histogram import histogram_and_avg
 
 __all__ = ['running_average', 'block_error',
            'block_error_corr']

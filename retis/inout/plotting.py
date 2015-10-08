@@ -13,7 +13,7 @@ References
 .. [3] The husl color scheme,
        http://www.husl-colors.org/
 """
-from .mpl_plotting import MplPlotter
+from retis.inout.mpl_plotting import MplPlotter
 
 __all__ = ['create_plotter']
 

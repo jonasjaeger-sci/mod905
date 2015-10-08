@@ -200,7 +200,7 @@ class Particles(object):
         A list with the properties in the order they were asked for
         in the properties argument.
         """
-        #if selection is None:
+        # if selection is None:
         #    selection = range(self.npart)
         sel_prop = []
         for prop in properties:

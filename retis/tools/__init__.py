@@ -4,4 +4,4 @@ Some RETIS tools
 =========================
 """
 
-from .tools import *
+from retis.tools.tools import latticefcc, lattice_simple_cubic

@@ -5,7 +5,8 @@ It derives most of the random number procedures from RandomState
 in numpy.random
 """
 from __future__ import absolute_import
-from .particlefunctions import calculate_kinetic_temperature, reset_momentum
+from retis.core.particlefunctions import (calculate_kinetic_temperature,
+                                          reset_momentum)
 import numpy as np
 from numpy.random import RandomState
 

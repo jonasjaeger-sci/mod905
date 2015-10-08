@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 import numpy as np
 import warnings
-from .random import RandomGenerator
+from retis.core.random_gen import RandomGenerator
 
 
 __all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']

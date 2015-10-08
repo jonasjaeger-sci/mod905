@@ -5,9 +5,9 @@ in the object PathEnsemble in retis.core.path
 """
 from __future__ import absolute_import
 import numpy as np
-from .analysis import running_average, block_error_corr
-from .histogram import histogram, histogram_and_avg
 import warnings
+from retis.analysis.analysis import running_average, block_error_corr
+from retis.analysis.histogram import histogram, histogram_and_avg
 
 
 __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
@@ -302,7 +302,7 @@ def _update_shoot_stats(shoot_stats, path):
     if move == 'sh':
         orderp = path['generated'][1]
         status = path['status']
-        if not status in shoot_stats:
+        if status not in shoot_stats:
             shoot_stats[status] = []
         shoot_stats[status].append(orderp)
         if status != 'ACC':
@@ -480,8 +480,9 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
         if len(result['prun']) == 0:
             result['prun'] = [success]
         else:  # update average
-            result['prun'].append((success + result['prun'][-1] * (npath - 1))
-                                  / float(npath))
+            result['prun'].append(float(success +
+                                        result['prun'][-1] * (npath - 1)) /
+                                  float(npath))
         # get the length - note that this length depends on the type of move
         # see the _get_path_length function.
         length = _get_path_length(path)
@@ -572,6 +573,5 @@ def match_probabilities(results, detect):
              'relerror': accprob_err,  # error in probability
              'simtime': prob_simtime,  # simulation time: cycles * path-lenght
              'opteff': prob_opt_eff,  # optimized TIS efficiency
-             'eff': prob_eff  # over-all TIS efficiency
-            }
+             'eff': prob_eff}  # over-all TIS efficiency
     return all_prob, matched_prob, other

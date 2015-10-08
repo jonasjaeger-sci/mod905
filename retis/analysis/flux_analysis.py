@@ -4,7 +4,8 @@ This file contains methods for analysis of crossings for the
 flux data
 """
 from __future__ import absolute_import
-from .analysis import running_average, block_error_corr, safe_divide
+from retis.analysis.analysis import (running_average, block_error_corr,
+                                     safe_divide)
 import numpy as np
 
 __all__ = ['analyse_flux']

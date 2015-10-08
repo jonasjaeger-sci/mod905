@@ -248,7 +248,7 @@ class ForceField(object):
         """
         v_pot = None
         for pot, argu in zip(self.potential, self.arguments['potential']):
-            #arguments = inspect.getargspec(pot.potential)
+            # arguments = inspect.getargspec(pot.potential)
             var = argu.args
             args = [kwargs[vari] for vari in var if vari is not 'self']
             if v_pot is None:

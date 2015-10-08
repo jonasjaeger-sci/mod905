@@ -5,7 +5,7 @@ This file contains positions dependent potentials
 from __future__ import absolute_import
 import numpy as np
 import warnings
-from .potential import PotentialFunction
+from retis.forcefield.potential import PotentialFunction
 
 __all__ = ['DoubleWell', 'RectangularWell']
 
@@ -171,7 +171,7 @@ class RectangularWell(PotentialFunction):
         N/A
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
-        #self.largenumber = float('inf') # possible to use this, NOTE FOR LATER
+        # largenumber = float('inf') # possible to use this, NOTE FOR LATER
         self.largenumber = largenumber
         self.left = left
         self.right = right

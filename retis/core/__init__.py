@@ -30,7 +30,7 @@ Modules:
 
 - properties.py: This module define an object for a generic property.
 
-- random.py: This module define an object for generating random numbers.
+- random_gen.py: This module define an object for generating random numbers.
 
 - simulation.py: This module defines the Simulation object which is used for
   setting up generic simulations. It also defines objects for more
@@ -53,6 +53,6 @@ from .montecarlo import *
 from .box import *
 from .particles import *
 from .path import *
-from .random import *
+from .random_gen import *
 from .orderparameter import *
 from .tis import *

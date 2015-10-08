@@ -7,9 +7,9 @@ from __future__ import absolute_import
 import numpy as np
 import itertools
 import warnings
+from retis.forcefield.potential import PotentialFunction
+from retis.forcefield import forcefield
 
-from ..potential import PotentialFunction
-from .. import forcefield
 
 __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
@@ -295,9 +295,9 @@ class PairLennardJonesCut(PotentialFunction):
             if rsq < self.rcut2[itype, jtype]:
                 r2inv = 1.0/rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * (self.lj3[itype, jtype] * r6inv -
-                                  self.lj4[itype, jtype]) -\
-                         self.offset[itype, jtype]
+                v_pot += r6inv * ((self.lj3[itype, jtype] * r6inv -
+                                   self.lj4[itype, jtype]) -
+                                  self.offset[itype, jtype])
         return v_pot
 
     def force(self, particles, box):
@@ -381,9 +381,9 @@ class PairLennardJonesCut(PotentialFunction):
             if rsq < self.rcut2[itype, jtype]:
                 r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * (self.lj3[itype, jtype] * r6inv -
-                                  self.lj4[itype, jtype]) -\
-                         self.offset[itype, jtype]
+                v_pot += r6inv * ((self.lj3[itype, jtype] * r6inv -
+                                   self.lj4[itype, jtype]) -
+                                  self.offset[itype, jtype])
                 forcelj = r2inv * r6inv * (self.lj1[itype, jtype] * r6inv -
                                            self.lj2[itype, jtype])
                 forceij = forcelj * delta

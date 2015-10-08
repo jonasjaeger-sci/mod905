@@ -4,10 +4,10 @@ from __future__ import absolute_import
 import numpy as np
 import warnings
 # from the retis package
-from .units import CONSTANTS
-from .particles import Particles
-from .particlefunctions import calculate_kinetic_temperature
-from .random import RandomGenerator
+from retis.core.units import CONSTANTS
+from retis.core.particles import Particles
+from retis.core.particlefunctions import calculate_kinetic_temperature
+from retis.core.random_gen import RandomGenerator
 
 
 __all__ = ['System']
