@@ -52,8 +52,11 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
         for report_type in analysis_settings.get('report', ['rst']):
             report, ext = generate_report_md(results, output=report_type)
             outfile = _REPORTFILES['md-flux'].format(ext)
-            with open(outfile, 'w') as report_fh:
-                report_fh.write(report)
+            with open(outfile, 'wt') as report_fh:
+                try:  # will work in python 3
+                    report_fh.write(report)
+                except UnicodeEncodeError:  # for python 2
+                    report_fh.write(report.encode('utf-8'))
     return results
 
 

@@ -49,7 +49,9 @@ def _rst_to_html(rst):
     """
     htmlwriter = HTMLWriter()
     htmlwriter.translator_class = HTMLTranslator
-    html = docutils.core.publish_string(rst, writer=htmlwriter)
+    override = {'output_encoding': 'unicode'}
+    html = docutils.core.publish_string(rst, writer=htmlwriter,
+                                        settings_overrides=override)
     return html
 
 
