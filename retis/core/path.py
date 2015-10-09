@@ -2,7 +2,6 @@
 """This file contains classes/methods for paths and path ensembles."""
 import numpy as np
 import warnings
-import copy
 import itertools
 
 __all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path']
@@ -82,9 +81,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         iter_path_forw = path_forw.path
 
     for phasepoint in itertools.chain(iter_path_back, iter_path_forw):
-        app = new_path.append(phasepoint[0],
-                              phasepoint[1],
-                              phasepoint[2])
+        app = new_path.append(*phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(len(new_path.path))
             warnings.warn(msg)
@@ -478,9 +475,7 @@ class Path(object):
         new_path = Path(maxlen=maxlen)
 
         for phasepoint in itertools.chain(self.path, other.path):
-            app = new_path.append(phasepoint[0],
-                                  phasepoint[1],
-                                  phasepoint[2])
+            app = new_path.append(*phasepoint)
             if not app:
                 msg = 'Truncated path at: {}'.format(len(new_path.path))
                 warnings.warn(msg)
@@ -504,9 +499,7 @@ class Path(object):
             The updated path object.
         """
         for phasepoint in other.path:
-            app = self.append(phasepoint[0],
-                              phasepoint[1],
-                              phasepoint[2])
+            app = self.append(*phasepoint)
             if not app:
                 msg = 'Truncated path at: {}'.format(len(self.path))
                 warnings.warn(msg)
