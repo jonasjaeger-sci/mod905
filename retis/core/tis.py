@@ -142,7 +142,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     trial_path.generated = ('sh', orderp[0], idx, 0)
     # kick the timeslice:
     dke = _kick_timeslice(rgen, system, aimless=tis_settings['aimless'],
-                          momentum=False)
+                          momentum=False)[0]
     # update the order paramater since it could depend on velocity
     orderp = order_function(system)
     # We now check if the kick was ok or not:
@@ -396,8 +396,10 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
 
     Returns
     -------
-    out : float
+    dek : float
         The change in the kinetic energy
+    kin_new : float
+        The new kinetic energy
     """
     # NOTE: kin_old might be set/optained differently according to
     # the dynamics. E.g. In NVE it is just E-Epot.
@@ -414,7 +416,7 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
     kin_new = calculate_kinetic_energy(particles)
     # NOTE velocity should for some dynamics be rescaled
     dek = kin_new[0] - kin_old[0]
-    return dek
+    return dek, kin_new
 
 
 def _propagate(system, integrator, order_function, interfaces,
