@@ -47,12 +47,13 @@ Modules:
 
 """
 from . import simulation
-from .system import *
-from .properties import *
-from .montecarlo import *
-from .box import *
-from .particles import *
-from .path import *
-from .random_gen import *
-from .orderparameter import *
-from .tis import *
+from .system import System
+# from .properties import Property
+# from .montecarlo import *
+from .box import Box
+from .particles import Particles
+from .path import Path, PathEnsemble
+from .random_gen import RandomGenerator
+from .orderparameter import (OrderParameter, OrderParameterPosition,
+                             OrderParameterParse)
+# from .tis import *
