@@ -34,7 +34,6 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
-
 __all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
            'txt_energy_output', 'txt_flux_output', 'txt_orderp_output',
            'txt_path_output']
@@ -381,7 +380,7 @@ def txt_total_matched_probability(detect, matched, outputfile):
     txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]))
 
 
-def _create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
+def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
     This will format a row according to the given width(s).
     The specified width can either be a fixed number which will be
@@ -468,13 +467,14 @@ def _simple_line_parser(line):
     return [float(col) for col in line.split()]
 
 
-def read_some_lines(filename, line_parser=_simple_line_parser):
+def read_some_lines(filename, line_parser=_simple_line_parser,
+                    block_label='#'):
     """
-    This is a helper function, it will open a file and
-    try to read as many lines as possible. The argument line_parser
-    can be used to define how the file should be read.
-    It is able to handle blocks - it will assume that a line starting with
-    a '#' will identify a new block
+    This function fill open a file and try to read as many lines as
+    possible - it the given line_parser can not be used on a line in a
+    file the function will stop here. The function will read data in blocks
+    and yield the block when a new block is found. A special string is assumed
+    to idenity the blocks.
 
     Parameter
     ---------
@@ -484,18 +484,21 @@ def read_some_lines(filename, line_parser=_simple_line_parser):
         This is a function which knows how to translate a given line
         to a desired internal format. If not given, a simple float
         will be used.
+    block_label : string
+        This string is used to identify blocks.
 
     Yields
     -------
     data : list
         The data read from the file, arranged in dicts
     """
+    nblock = len(block_label)
     ncol = -1  # The number of columns
     new_block = None
     with open(filename, 'r') as fileh:
         for line in fileh:
             stripline = line.strip()
-            if stripline[0] == '#':
+            if stripline[:nblock] == block_label:
                 # this is a comment = a new block follows
                 # store the current block:
                 if new_block is not None:
@@ -587,8 +590,8 @@ class TxtTable(object):
             new_headers = [var.title() for var in self.variables]
         else:
             new_headers = [var.title() for var in headers]
-        _, header = _create_and_format_row(new_headers, width=self.width,
-                                           header=True, spacing=self.spacing)
+        _, header = create_and_format_row(new_headers, width=self.width,
+                                          header=True, spacing=self.spacing)
         return new_headers, header
 
     def get_header(self):
@@ -609,11 +612,11 @@ class TxtTable(object):
             If this is true, we are creating the header.
         """
         row = [row_dict.get(var, None) for var in self.variables]
-        row_fmt, str_row = _create_and_format_row(row,
-                                                  width=self.width,
-                                                  header=header,
-                                                  spacing=self.spacing,
-                                                  fmt_str=self.row_fmt)
+        row_fmt, str_row = create_and_format_row(row,
+                                                 width=self.width,
+                                                 header=header,
+                                                 spacing=self.spacing,
+                                                 fmt_str=self.row_fmt)
         if self.row_fmt is None:  # store the row format for re-usage
             self.row_fmt = row_fmt
         return str_row
@@ -695,11 +698,11 @@ class FileWriter(object):
         self.header = None
         if header is not None:
             if 'width' in header:
-                _, self.header = _create_and_format_row(header['text'],
-                                                        header['width'],
-                                                        header=True,
-                                                        spacing=1,
-                                                        fmt_str=None)
+                _, self.header = create_and_format_row(header['text'],
+                                                       header['width'],
+                                                       header=True,
+                                                       spacing=1,
+                                                       fmt_str=None)
             else:
                 self.header = header['text']
         if self.mode == 'w':

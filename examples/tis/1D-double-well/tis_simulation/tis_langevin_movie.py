@@ -222,7 +222,7 @@ def update(frame, simulation):
     patches = []
     if not simulation.is_finished():
         result = simulation.step()
-        trial = result['trial']
+        trial = result['trialpath']
         status = result['status']
         if trial is None:
             initial = True
@@ -266,5 +266,5 @@ anim = animation.FuncAnimation(fig, update,
                                interval=2,
                                blit=True, init_func=init)
 # for making a movie:
-anim.save('tis.mpeg', fps=30)
+# anim.save('tis.mpeg', fps=30)
 plt.show()

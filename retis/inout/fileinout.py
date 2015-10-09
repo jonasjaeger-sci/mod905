@@ -16,8 +16,13 @@ Objects defined here:
 """
 import numpy as np
 import warnings
+try:  # this will fail in python3
+    from itertools import izip_longest as zip_longest
+except ImportError:  # for python3
+    from itertools import zip_longest as zip_longest
 # local imports
-from retis.inout.txtinout import FileWriter, read_some_lines
+from retis.inout.txtinout import FileWriter
+from retis.inout.txtinout import read_some_lines, create_and_format_row
 from retis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 
 
@@ -38,6 +43,8 @@ ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
             '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
             '{13:>16.9e} {14:>7d} {15:7d}')
+# define a format for position and velocities in the path file:
+POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
 
 
 class CrossFile(FileWriter):
@@ -99,8 +106,8 @@ class CrossFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load the entire energy file into memory.
-        (Quote of the day: 'memory is cheap, function calls are expensive'.)
+        This method will attempt to load entire blocks from the cross file
+        into memory.
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
         convenient for the subsequent analysis.
@@ -192,13 +199,11 @@ class EnergyFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load the entire energy file into memory.
+        This method will attempt to load entire energy blocks into memory.
         (Quote of the day: 'memory is cheap, function calls are expensive'.)
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis. In case blocks are found in
-        the file, they will be yielded, this is just to reduce the memory
-        usage.
+        convenient for the subsequent analysis.
 
         Yields
         -------
@@ -290,14 +295,16 @@ class OrderFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load the entire energy file into memory.
-        (Quote of the day: 'memory is cheap, function calls are expensive'.)
+        This method will attempt to load the entire order parameter blocks
+        into memory.
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
         convenient for the subsequent analysis. In case blocks are found in
         the file, they will be yielded, this is just to reduce the memory
         usage.
-        The format is `time` `orderp0` `orderv0` `orderp1` `orderv1` etc...
+        The format is `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
+        where the actual meaning of `orderp1` `orderp2` and the following
+        order parameters are left to be defined by the user.
 
         Yields
         -------
@@ -338,6 +345,138 @@ class OrderFile(FileWriter):
             towrite.append(ORDER_FMT[1].format(orderp))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
+
+    def __str__(self):
+        """
+        Return a string with some info about this object
+        """
+        msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
+                                                           self.mode)
+        return msg
+
+
+class PathFile(FileWriter):
+    """
+    PathFile(FileWriter)
+
+    This class handles writing/reading of path data.
+
+    Attributes
+    ----------
+    Same as for the FileWriter object.
+    """
+    def __init__(self, filename, mode='w', oldfile='backup'):
+        """
+        Initialize the PathFile object
+
+        Parameters
+        ----------
+        filename : string
+            Name of file to read/write.
+        mode : string
+            Mode can be used to select if we should write to the file
+            (if mode is equal to 'w') or read from the file (mode equal
+            to 'r'). The default is mode equal to 'w'.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only usefull when the mode is
+            set to 'w'.
+        """
+        super(PathFile, self).__init__(filename, 'pathfile',
+                                       mode=mode, oldfile=oldfile,
+                                       header=None)
+        header = {'text': ['Time', 'Orderp', 'Orderv'],
+                  'width': [10, 12]}
+        self.header_order = create_and_format_row(header['text'],
+                                                  header['width'],
+                                                  header=True,
+                                                  spacing=1,
+                                                  fmt_str=None)
+        header = {'text': ['Time', 'Potential', 'Kinetic',
+                           'Total', 'Hamiltonian',
+                           'Temperature', 'External'],
+                  'width': [10, 12]}
+        self.header_energy = create_and_format_row(header['text'],
+                                                   header['width'],
+                                                   header=True,
+                                                   spacing=1,
+                                                   fmt_str=None)
+        self.block_label = '#>'
+        self.block_head = ' '.join([self.block_label,
+                                    'Cycle: {}, Path status: {}, Length: {}'])
+
+    @staticmethod
+    def line_parser(line):
+        """
+        This function defines a simple parser for reading the file.
+        It is used in the self.load() to parse the input file
+
+        Parameters
+        ----------
+        line : string
+            A line to parse
+
+        Returns
+        -------
+        out : tuple of ints
+            out is (step number, interface number and direction).
+        """
+        return line.strip().split()
+
+    def load(self):
+        """
+        This method will attempt to load a path into the memory. The paths
+        are assumed to be organized into blocks defined by self.block_label.
+        This method will yield blocks successively.
+
+        Yields
+        -------
+        data_dict : dict
+            Data read from the order parameter file.
+
+        See Also
+        --------
+        read_some_lines
+        """
+        for blocks in read_some_lines(self.filename,
+                                      line_parser=self.line_parser,
+                                      block_label=self.block_label):
+            data_dict = {'comment': blocks['comment'],
+                         'data': blocks['data']}
+            yield data_dict
+
+    def write(self, step, path):
+        """
+        This will write a path to the file.
+
+        Parameters
+        ----------
+        step : int
+            This is the current step number.
+        orderdata : list of floats
+            This is the raw order parameter data.
+
+        Returns
+        -------
+        out : boolean
+            True if line could be written, False otherwise.
+        """
+        block_head = self.block_head.format(step, path.status, len(path.path))
+        self.write_line(block_head)
+        for i, (pos, vel, orderp) in enumerate(path.path):
+            self.write_line('# Frame: {}'.format(i))
+            order_write = (['# Order:'] +
+                           [ORDER_FMT[1].format(val) for val in orderp])
+            self.write_line(' '.join(order_write))
+            self.write_line('# Energy:')
+            self.write_line('# Trajectory in INTERNAL UNITS')
+            traj = []
+            for fmt, posi in zip_longest(POSVEL_FMT, pos, fillvalue=0.0):
+                traj.append(fmt.format(posi))
+            for fmt, veli in zip_longest(POSVEL_FMT, vel, fillvalue=0.0):
+                traj.append(fmt.format(veli))
+            self.write_line(''.join(traj))
+        return None
 
     def __str__(self):
         """

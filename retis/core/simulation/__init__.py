@@ -31,8 +31,9 @@ from .path_simulation import SimulationTIS
 from .simulation_task import OutputTask
 # other retis imports
 from retis.core.integrators import create_integrator
-from retis.inout import (CrossFile, EnergyFile, OrderFile, PathEnsembleFile,
-                         create_traj_writer, get_predefined_table)
+from retis.inout.fileinout import (CrossFile, EnergyFile, OrderFile, PathFile,
+                                   PathEnsembleFile)
+from retis.inout import create_traj_writer, get_predefined_table
 # other imports
 import warnings
 
@@ -56,7 +57,9 @@ _OUTPUT = {'nve': [{'type': 'thermo', 'target': 'file', 'when': {'every': 10},
                        {'type': 'thermo', 'target': 'screen',
                         'when': {'every': 10}}],
            'tis': [{'type': 'pathensemble', 'target': 'file',
-                    'when': {'every': 10}, 'filename': 'path.dat'}]}
+                    'when': {'every': 10}, 'filename': 'pathensemble.dat'},
+                   {'type': 'trialpath', 'target': 'file',
+                    'when': {'every': 10}, 'filename': 'paths.dat'}]}
 
 
 def _check_settings(settings, required):
@@ -227,6 +230,54 @@ def _task_dict_eq(task1, task2):
         return False
 
 
+def _create_file_writer(task, system, settings):
+    """
+    This will create an object for writing to files.
+
+    Parameters
+    ----------
+    task : dict
+        This dict describes the task.
+    system : object
+        The system we are describing. Needed for creating the
+        trajectory writer.
+    settings : dict
+        These are the settings used for setting up the simulation.
+        Some of these settings might be usefull for creating the
+        output tasks.
+    """
+    writer = None
+    if task['type'] == 'orderp':
+        writer = OrderFile(task['filename'],
+                           mode=task.get('mode', 'w'),
+                           oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'thermo':
+        writer = EnergyFile(task['filename'],
+                            mode=task.get('mode', 'w'),
+                            oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'cross':
+        writer = CrossFile(task['filename'],
+                           mode=task.get('mode', 'w'),
+                           oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'traj':
+        writer = create_traj_writer(task['filename'], task['format'],
+                                    task.get('oldfile', 'overwrite'),
+                                    system)
+    elif task['type'] == 'pathensemble':
+        writer = PathEnsembleFile(task['filename'],
+                                  settings.get('ensemble', '000'),
+                                  settings.get('interfaces', None),
+                                  mode=task.get('mode', 'w'),
+                                  oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'trialpath':
+        writer = PathFile(task['filename'],
+                          mode=task.get('mode', 'w'),
+                          oldfile=task.get('oldfile', 'overwrite'))
+    else:
+        msg = 'Unknown type {} for target file'.format(task['type'])
+        warnings.warn(msg)
+    return writer
+
 def create_output_task(task, system, settings):
     """
     This method will create an object for a given output task.
@@ -247,33 +298,7 @@ def create_output_task(task, system, settings):
     """
     writer = None
     if task['target'] == 'file':
-        if task['type'] == 'orderp':
-            writer = OrderFile(task['filename'],
-                               mode=task.get('mode', 'w'),
-                               oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'thermo':
-            writer = EnergyFile(task['filename'],
-                                mode=task.get('mode', 'w'),
-                                oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'cross':
-            writer = CrossFile(task['filename'],
-                               mode=task.get('mode', 'w'),
-                               oldfile=task.get('oldfile', 'overwrite'))
-        elif task['type'] == 'traj':
-            writer = create_traj_writer(task['filename'], task['format'],
-                                        task.get('oldfile', 'overwrite'),
-                                        system)
-        elif task['type'] == 'pathensemble':
-            writer = PathEnsembleFile(task['filename'],
-                                      settings.get('ensemble', '000'),
-                                      settings.get('interfaces', None),
-                                      mode=task.get('mode', 'w'),
-                                      oldfile=task.get('oldfile', 'overwrite'))
-        else:
-            msg = 'Unknown type {} for target file'.format(task['type'])
-            warnings.warn(msg)
-            return False
-
+        writer = _create_file_writer(task, system, settings)
     elif task['target'] == 'screen':
         if task['type'] == 'thermo':
             writer = get_predefined_table('energies')

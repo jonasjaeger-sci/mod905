@@ -125,7 +125,7 @@ class SimulationTIS(Simulation):
                                              cycle=self.cycle['step'])
             self.first_step = False
             results['accept'] = accept
-            results['trial'] = trial
+            results['trialpath'] = trial
             results['status'] = status
         else:
             self.cycle['step'] += 1
@@ -140,7 +140,7 @@ class SimulationTIS(Simulation):
             self.path_ensemble.add_path_data(trial, status,
                                              cycle=self.cycle['step'])
             results['accept'] = accept
-            results['trial'] = trial
+            results['trialpath'] = trial
             results['status'] = status
             if accept:
                 self.path = trial
