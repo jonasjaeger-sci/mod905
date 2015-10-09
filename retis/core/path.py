@@ -265,7 +265,7 @@ class Path(object):
             for instance in orderp[1] typically the velocity of orderp[0].
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
-            self.path.append([np.copy(pos), np.copy(vel), copy.copy(orderp)])
+            self.path.append([np.copy(pos), np.copy(vel), orderp])
             self._update_orderp(orderp[0], len(self.path) - 1)
             return True
         else:
@@ -478,9 +478,9 @@ class Path(object):
         new_path = Path(maxlen=maxlen)
 
         for phasepoint in itertools.chain(self.path, other.path):
-            app = new_path.append(np.copy(phasepoint[0]),
-                                  np.copy(phasepoint[1]),
-                                  copy.copy(phasepoint[2]))
+            app = new_path.append(phasepoint[0],
+                                  phasepoint[1],
+                                  phasepoint[2])
             if not app:
                 msg = 'Truncated path at: {}'.format(len(new_path.path))
                 warnings.warn(msg)
@@ -504,9 +504,9 @@ class Path(object):
             The updated path object.
         """
         for phasepoint in other.path:
-            app = self.append(np.copy(phasepoint[0]),
-                              np.copy(phasepoint[1]),
-                              copy.copy(phasepoint[2]))
+            app = self.append(phasepoint[0],
+                              phasepoint[1],
+                              phasepoint[2])
             if not app:
                 msg = 'Truncated path at: {}'.format(len(self.path))
                 warnings.warn(msg)
