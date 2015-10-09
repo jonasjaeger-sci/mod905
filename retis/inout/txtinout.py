@@ -22,18 +22,17 @@ Important functions:
 
 - txt_save_columns: Writing a simple column-based output using numpy.
 """
-import itertools
 import os
 import warnings
 import numpy as np
+try:  # this will fail in python3
+    from itertools import izip_longest as zip_longest
+except ImportError:  # for python3
+    from itertools import zip_longest as zip_longest
+
 from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
-
-try:  # this will fail in python 3
-    zip_longest = itertools.izip_longest
-except AttributeError:  # python 3 name:
-    zip_longest = itertools.zip_longest
 
 
 __all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
