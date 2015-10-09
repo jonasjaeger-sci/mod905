@@ -105,11 +105,12 @@ def reverse_path(path, order_func=None):
     new_path = Path(maxlen=path.maxlen)
     for phasepoint in reversed(path.path):
         pos, vel = phasepoint[0], -1.0 * phasepoint[1]
+        energy = phasepoint[3]
         if order_func:
             orderp = order_func(pos, vel)
         else:
             orderp = phasepoint[2]
-        app = new_path.append(pos, vel, orderp)
+        app = new_path.append(pos, vel, orderp, energy)
         if not app:
             msg = 'Could not reverse path'
             warnings.warn(msg)
@@ -243,7 +244,7 @@ class Path(object):
         for phasepoint in self.path:
             yield phasepoint
 
-    def append(self, pos, vel, orderp):
+    def append(self, pos, vel, orderp, energy):
         """
         Method to append a new phase point to the path. The phasepoint is
         assumed to be given by positions and velocities with
@@ -262,7 +263,7 @@ class Path(object):
             for instance in orderp[1] typically the velocity of orderp[0].
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
-            self.path.append([np.copy(pos), np.copy(vel), orderp])
+            self.path.append([np.copy(pos), np.copy(vel), orderp, energy])
             self._update_orderp(orderp[0], len(self.path) - 1)
             return True
         else:

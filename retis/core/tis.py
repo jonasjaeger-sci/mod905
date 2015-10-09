@@ -133,10 +133,10 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # select the shooting point from path at random.
     # (Do not include end-points)
     idx = rgen.random_integers(1, len(path.path) - 2)
-    pos, vel, orderp = path.path[idx]  # extract phase point
+    pos, vel, orderp = path.path[idx][0:3]  # extract phase point
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.force()  # update forces
+    system.potential_and_force()  # update forces and potential
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
@@ -149,7 +149,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(pos, vel, orderp)  # just add the shooting point
+        trial_path.append(pos, vel, orderp, system.v_pot)  # add shooting point
         accept, trial_path.status = False, 'KOB'  # just to be explicit
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
@@ -158,7 +158,7 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
-            trial_path.append(pos, vel, orderp)  # just add the shooting point
+            trial_path.append(pos, vel, orderp, system.v_pot)
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
     # ok: kick was either aimless or it was accepted by Metropolis
@@ -463,7 +463,7 @@ def _propagate(system, integrator, order_function, interfaces,
     while True:
         orderp = order_function(system)
         add = new_path.append(system.particles.pos, system.particles.vel,
-                              orderp)
+                              orderp, system.v_pot)
         if not add:
             if len(new_path.path) >= new_path.maxlen:
                 status = 'Max. path length exceeded'

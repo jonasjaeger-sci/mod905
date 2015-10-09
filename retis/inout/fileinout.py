@@ -463,12 +463,12 @@ class PathFile(FileWriter):
         """
         block_head = self.block_head.format(step, path.status, len(path.path))
         self.write_line(block_head)
-        for i, (pos, vel, orderp) in enumerate(path.path):
+        for i, (pos, vel, orderp, energy) in enumerate(path.path):
             self.write_line('# Frame: {}'.format(i))
             order_write = (['# Order:'] +
                            [ORDER_FMT[1].format(val) for val in orderp])
             self.write_line(' '.join(order_write))
-            self.write_line('# Energy:')
+            self.write_line('# Energy: {}'.format(energy))
             self.write_line('# Trajectory in INTERNAL UNITS')
             traj = []
             for fmt, posi in zip_longest(POSVEL_FMT, pos, fillvalue=0.0):
