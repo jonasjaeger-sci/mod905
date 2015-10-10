@@ -5,6 +5,7 @@ It also defines some standard plots that are done in the analysis.
 """
 import numpy as np
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 # pylint: disable=E0611
