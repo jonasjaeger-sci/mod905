@@ -477,6 +477,79 @@ def mpl_savefig(fig, outputfile):
     plt.close(fig)  # free up memory
 
 
+def mpl_plot_in_chunks(axs, series, chunksize=20000):
+    """
+    This is a helper function to plot xval vs yval with matplotlib.
+    When plotting 'large' datasets, matplotlib might give an
+    'OverflowError: Allocated too many blocks' error.
+    Here we avoid this error by plotting the data in chunks. We could
+    also downsample the data, but this is perhaps something best left
+    to the user.
+
+    Parameters
+    ----------
+    axs : Axes object from matplotlib
+        Where to do the plotting
+    series : dict
+        Represents the data to be plotted.
+    chunksize : int
+        This is the maximim size we will try to plot in one go.
+    """
+    color = None
+    line = None
+    leny = len(series['y'])
+    if leny > chunksize:
+        nchunk, rest = divmod(leny, chunksize)
+        for i in range(nchunk):
+            low = i * chunksize
+            high = low + chunksize
+            line = _mpl_plot_xy_chunk(axs, series, low=low, high=high,
+                                      color=color)
+            color = line.get_color()
+        if rest > 0:
+            line = _mpl_plot_xy_chunk(axs, series, low=(-rest+1), high=None,
+                                      color=color)
+    else:
+        line = _mpl_plot_xy_chunk(axs, series)
+    return line
+
+
+def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
+    """
+    Helper function to do the actual plotting.
+
+    Parameters
+    ----------
+    axs : Axes object from matplotlib
+        Where to do the plotting
+    series : dict
+        Represents the data to be plotted.
+    low : int, optional
+        Lower index to start plotting
+    high : int, optional
+        Index where to end the plotting, this index is not plotted.
+    color : string, optional
+        A string representing the color to use
+
+    Returns
+    -------
+        handle : object of type matplotlib.lines.Line2D
+            A handle forthe plotted line.
+    """
+    # pick out just a few keys - we want to limit what we change here:
+    kwargs = {'linestyle': series.get('ls', '-'),
+              'alpha': series.get('alpha', 1.0),
+              'linewidth': series.get('lw', 2.0)}
+    if color is not None:
+        kwargs['color'] = color
+    if 'x' in series:
+        handle, = axs.plot(series['x'][low:high], series['y'][low:high],
+                           **kwargs)
+    else:
+        handle, = axs.plot(series['y'][low:high], **kwargs)
+    return handle
+
+
 def mpl_simple_plot(series, outputfile, fig_settings=None):
     """
     This method will plot time series data.
@@ -502,16 +575,7 @@ def mpl_simple_plot(series, outputfile, fig_settings=None):
     for seri in series:
         handle = None
         if seri['type'] == 'xy':
-            if 'x' in seri:
-                handle, = axs.plot(seri['x'], seri['y'],
-                                   ls=seri.get('ls', '-'),
-                                   alpha=seri.get('alpha', 1.0),
-                                   lw=seri.get('lw', 2.0))
-            else:
-                handle, = axs.plot(seri['y'],
-                                   ls=seri.get('ls', '-'),
-                                   alpha=seri.get('alpha', 1.0),
-                                   lw=seri.get('lw', 2.0))
+            handle = mpl_plot_in_chunks(axs, seri)
         elif seri['type'] == 'vline':
             handle = axs.axvline(x=seri['x'], ls=seri.get('ls', '-'),
                                  alpha=seri.get('alpha', 1.0),
