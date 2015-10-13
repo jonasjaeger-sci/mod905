@@ -594,7 +594,7 @@ def mpl_simple_plot(series, outputfile, fig_settings=None):
     mpl_savefig(canvas, outputfile)
 
 
-def _mpl_add_linecollection(axs, series, low=0, high=None):
+def mpl_linecollection_gradient(axs, series):
     """
     Helper function to do the actual plotting of a line gradient.
 
@@ -604,34 +604,67 @@ def _mpl_add_linecollection(axs, series, low=0, high=None):
         Where to do the plotting
     series : dict
         Represents the data to be plotted.
-    low : int, optional
-        Lower index to start plotting
-    high : int, optional
-        Index where to end the plotting, this index is not plotted.
 
     Returns
     -------
-        handle : object of type matplotlib.lines.Line2D
-            A handle forthe plotted line.
+    handle : object of type matplotlib.collections.LineCollection
+        A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
     kwargs = {'linestyle': series.get('ls', '-'),
               'alpha': series.get('alpha', 1.0),
               'linewidth': series.get('lw', 2.0)}
-    points = np.array([series['x'][low:high],
-                       series['y'][low:high]]).T.reshape(-1, 1, 2)
+    points = np.array([series['x'], series['y']]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
-    if low == 0 and high == None:
-        values = np.linspace(0, 1, len(series['x']))
-    else:
-        values = np.arange(low, high, 1) / len(series['x'])
+    values = np.linspace(0, 1, len(series['x']))
     linec = LineCollection(segments, array=values,
                            norm=matplotlib.colors.Normalize(vmin=0, vmax=1),
                            **kwargs)
-    handle = axs.add_collection(linec)
+    handle = axs.add_collection(linec, autolim=False)
     return handle
 
-def mpl_line_gradient(series, outputfile, fig_settings, chunksize=20000):
+
+def mpl_chunks_gradient(axs, series, chunksize=20000):
+    """
+    Method to draw a line gradient using chunks. Here we will plot lines
+    with length equal to chunksize and color that line with one color. This
+    method will be used when chunksize << length of the data to plot so that
+    each chunksize will have approximately the same color.
+
+    Paremters
+    ---------
+    axs : Axes object from matplotlib
+        Where to do the plotting
+    series : dict
+        Represents the data to be plotted.
+
+    Returns
+    -------
+    handle : object of type matplotlib.lines.Line2D
+        A handle for the plotted line.
+    """
+    kwargs = {'linestyle': series.get('ls', '-'),
+              'alpha': series.get('alpha', 1.0),
+              'linewidth': series.get('lw', 2.0)}
+    line = None
+    lenx = len(series['x'])
+    nchunk, rest = divmod(lenx, chunksize)
+    cnorm = matplotlib.colors.Normalize(vmin=0, vmax=nchunk)
+    cmap = matplotlib.cm.ScalarMappable(norm=cnorm)
+    for i in range(nchunk):
+        low = i * chunksize
+        high = low + chunksize
+        kwargs['color'] = cmap.to_rgba(i)
+        line, = axs.plot(series['x'][low:high], series['y'][low:high],
+                         **kwargs)
+    if rest > 0:
+        kwargs['color'] = cmap.to_rgba(nchunk)
+        line, = axs.plot(series['x'][-(rest+1):], series['y'][-(rest+1):],
+                         **kwargs)
+    return line
+
+
+def mpl_line_gradient(series, outputfile, fig_settings):
     """
     This method will plot time series data and color the lines with
     a gradient according to 'time'
@@ -661,18 +694,10 @@ def mpl_line_gradient(series, outputfile, fig_settings, chunksize=20000):
     labels = []
     for seri in series:
         lenx = len(seri['x'])
-        if lenx > chunksize:
-            nchunk, rest = divmod(lenx, chunksize)
-            for i in range(nchunk):
-                low = i * chunksize
-                high = low + chunksize
-                handle = _mpl_add_linecollection(axs, seri,
-                                                 low=low, high=high)
-            if rest > 0:
-                handle = _mpl_add_linecollection(axs, seri,
-                                                 low=-(rest+1))
-        else:
-            handle = _mpl_add_linecollection(axs, seri)
+        if lenx >= 1000000:  # plot in chunks
+            handle = mpl_chunks_gradient(axs, seri)
+        else:  # just plot it all
+            handle = mpl_linecollection_gradient(axs, seri)
         legend = seri.get('label', None)
         if legend is not None and handle is not None:
             handles.append(handle)
