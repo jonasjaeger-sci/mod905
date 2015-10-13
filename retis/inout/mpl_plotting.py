@@ -620,7 +620,7 @@ def mpl_linecollection_gradient(axs, series):
     linec = LineCollection(segments, array=values,
                            norm=matplotlib.colors.Normalize(vmin=0, vmax=1),
                            **kwargs)
-    handle = axs.add_collection(linec, autolim=False)
+    handle = axs.add_collection(linec)
     return handle
 
 
@@ -642,6 +642,11 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     -------
     handle : object of type matplotlib.lines.Line2D
         A handle for the plotted line.
+
+    Note
+    ----
+    Color maps in matplotlib will typically have 256 colors. The number
+    of different colors we can get is currently limited to 256.
     """
     kwargs = {'linestyle': series.get('ls', '-'),
               'alpha': series.get('alpha', 1.0),
@@ -649,18 +654,19 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     line = None
     lenx = len(series['x'])
     nchunk, rest = divmod(lenx, chunksize)
-    cnorm = matplotlib.colors.Normalize(vmin=0, vmax=nchunk)
-    cmap = matplotlib.cm.ScalarMappable(norm=cnorm)
+    cnorm = matplotlib.colors.Normalize(vmin=0, vmax=nchunk+1)
+    color_map = matplotlib.cm.ScalarMappable(norm=cnorm)
     for i in range(nchunk):
         low = i * chunksize
         high = low + chunksize
-        kwargs['color'] = cmap.to_rgba(i)
         line, = axs.plot(series['x'][low:high], series['y'][low:high],
                          **kwargs)
+        line.set_color(color_map.to_rgba(i))
     if rest > 0:
-        kwargs['color'] = cmap.to_rgba(nchunk)
-        line, = axs.plot(series['x'][-(rest+1):], series['y'][-(rest+1):],
+        last = rest + 1
+        line, = axs.plot(series['x'][-last:], series['y'][-last:],
                          **kwargs)
+        line.set_color(color_map.to_rgba(nchunk))
     return line
 
 
@@ -694,7 +700,7 @@ def mpl_line_gradient(series, outputfile, fig_settings):
     labels = []
     for seri in series:
         lenx = len(seri['x'])
-        if lenx >= 1000000:  # plot in chunks
+        if lenx >= 10**6:  # plot in chunks
             handle = mpl_chunks_gradient(axs, seri)
         else:  # just plot it all
             handle = mpl_linecollection_gradient(axs, seri)
