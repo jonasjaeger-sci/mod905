@@ -500,7 +500,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
                                       color=color)
             color = line.get_color()
         if rest > 0:
-            line = _mpl_plot_xy_chunk(axs, series, low=(-rest+1), high=None,
+            line = _mpl_plot_xy_chunk(axs, series, low=-(rest+1), high=None,
                                       color=color)
     else:
         line = _mpl_plot_xy_chunk(axs, series)
