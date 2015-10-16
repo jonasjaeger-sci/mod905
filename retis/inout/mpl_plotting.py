@@ -25,7 +25,8 @@ else:
 from scipy.stats import gamma
 # pylint: enable=E0611
 from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
-                                _FLUXFILES, _ORDERFILES, _PATHFILES)
+                                _FLUXFILES, _ORDERFILES, _PATHFILES,
+                                _PATH_MATCH)
 
 
 __all__ = ['MplPlotter']
@@ -77,266 +78,27 @@ class MplPlotter(object):
             self.out_fmt = out_fmt
 
     def plot_flux(self, results):
-        """
-        Plot the output from the flux analysis using matplotlib.
-
-        Parameters
-        ----------
-        results : dict
-            This is the dict with the results from the flux analysis.
-
-        Returns
-        -------
-        outfiles : dict
-            The output files created by this method.
-        """
-        outfiles = {}
-        for key in _FLUXFILES:
-            outfiles[key] = []
-        # make running average plot and error plot:
-        for i in range(len(results['flux'])):
-            flux = results['flux'][i]
-            runflux = results['runflux'][i]
-            errflux = results['errflux'][i]
-            outfile = _FLUXFILES['runflux'].format(i + 1, self.out_fmt)
-            outfiles['runflux'].append(outfile)
-            series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
-                       'label': 'Running average'}]
-            title = 'Flux for interface no. {}'.format(i + 1)
-            mpl_simple_plot(series, outfile,
-                            fig_settings={'xlabel': 'Time',
-                                          'ylabel': 'Flux / internal units',
-                                          'title': title})
-            outfile = _FLUXFILES['block'].format(i + 1, self.out_fmt)
-            outfiles['block'].append(outfile)
-            mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
-                            outfile)
-        return outfiles
+        """Function to call ``mpl_plot_flux``"""
+        return mpl_plot_flux(results, self.out_fmt)
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """
-        Save the output from the energy analysis to text files.
-
-        Parameters
-        ----------
-        results : dict
-            Each item in `results` contains the results for the corresponding
-            energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
-            'ham', 'temp', 'elec'
-        energies : dict of numpy.arrays
-            This is the raw-data for the energy analysis
-        sim_settings : dict, optional
-            This is the simulation settings which are usefull for creating
-            theoretical plots of distributions. It is assumed to contain
-            the number of particles, the dimensionality
-
-        Returns
-        -------
-        outfiles : dict
-            The output files created by this method.
-        """
-        out_fmt = self.out_fmt
-        outfiles = {'energies': _ENERFILES['energies'].format(out_fmt),
-                    'run_energies': _ENERFILES['run_energies'].format(out_fmt),
-                    'temperature': _ENERFILES['temperature'].format(out_fmt),
-                    'run_temp': _ENERFILES['run_temp'].format(out_fmt)}
-        time = energies['time']
-        # make time series plot of the energies
-        series = []
-        for key in ['vpot', 'ekin', 'etot', 'ham']:
-            if key not in energies:
-                continue
-            series.append({'type': 'xy', 'x': time, 'y': energies[key],
-                           'label': _ENERTITLE[key]})
-        mpl_simple_plot(series, outfiles['energies'],
-                        fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
-        # make running average plot of the energies as function of time
-        series = []
-        for key in ['vpot', 'ekin', 'etot', 'ham']:
-            if key not in results:
-                continue
-            series.append({'type': 'xy', 'x': time,
-                           'y': results[key]['running'],
-                           'label': _ENERTITLE[key]})
-        mpl_simple_plot(series, outfiles['run_energies'],
-                        fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
-        # plot temperature
-        series = [{'type': 'xy', 'x': time, 'y': energies['temp']}]
-        mpl_simple_plot(series, outfiles['temperature'],
-                        fig_settings={'xlabel': 'Time',
-                                      'ylabel': 'Temperature'})
-        # and running average for temperature
-        series = [{'type': 'xy', 'x': time, 'y': results['temp']['running']}]
-        mpl_simple_plot(series, outfiles['run_temp'],
-                        fig_settings={'xlabel': 'Time',
-                                      'ylabel': 'Temperature',
-                                      'title': 'Running average'})
-        # plot block-error results:
-        outfile = _ENERFILES['block'].format('{}', out_fmt)
-        for key in ['vpot', 'ekin', 'etot', 'temp']:
-            if key not in results:
-                continue
-            outfiles['{}block'.format(key)] = outfile.format(key)
-            mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
-                            outfiles['{}block'.format(key)])
-        # plot distributions
-        outfile = _ENERFILES['dist'].format('{}', out_fmt)
-        for key in ['vpot', 'ekin', 'etot', 'temp']:
-            if key not in results:
-                continue
-            dist = results[key]['distribution']
-            series = [{'type': 'xy', 'x': dist[1], 'y': dist[0],
-                       'label': _ENERTITLE[key]}]
-            title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
-            title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
-            if sim_settings is not None and key in ['ekin', 'temp']:
-                pos = np.linspace(min(0.0, dist[1].min()),
-                                  dist[1].max(), 1000)
-                alp = (0.5 * sim_settings['npart'] *
-                       sim_settings['dim'])
-                if key == 'ekin':
-                    scale = 1.0 / sim_settings['beta']
-                elif key == 'temp':
-                    scale = sim_settings['temperature'] / alp
-                series.append({'type': 'xy', 'x': pos,
-                               'y': gamma.pdf(pos, alp, loc=0, scale=scale),
-                               'label': 'Boltzmann distribution'})
-            outfiles['{}dist'.format(key)] = outfile.format(key)
-            mpl_simple_plot(series, outfiles['{}dist'.format(key)],
-                            fig_settings={'title': title})
-        return outfiles
+        """Function to call ``mpl_plot_energy``"""
+        return mpl_plot_energy(results, energies, self.out_fmt,
+                               sim_settings=sim_settings)
 
     def plot_orderp(self, results, orderdata):
-        """
-        Plot the output from the order parameter analysis using matplotlib.
-
-        Parameters
-        ----------
-        results : dict
-            Each item in `results` contains the results for the corresponding
-            order parameter.
-        orderdata : list of numpy.arrays
-            This is the raw-data for the order parameter analysis
-
-        Returns
-        -------
-        outfiles : dict
-            The output files created by this method.
-
-        Note
-        ----
-        We are here only outputting results for the first order parameter.
-        I.e. other order parameters or velocities are not written here. This
-        will be changed when the structure of the output order parameter file
-        has been fixed. Also note that, if present, the first order parameter
-        will be plotted agains the second one - i.e. the second one will be
-        assumed to represent the velocity here.
-        """
-        outfiles = {}
-        for key in _ORDERFILES:
-            outfiles[key] = _ORDERFILES[key].format(self.out_fmt)
-
-        time = orderdata[0]
-        series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
-        mpl_simple_plot(series, outfiles['order'],
-                        fig_settings={'xlabel': 'Time',
-                                      'ylabel': 'Order parameter'})
-        # make running average plot of the energies as function of time
-        series = [{'type': 'xy', 'x': time, 'y': results[0]['running'],
-                   'label': 'Running average'}]
-        mpl_simple_plot(series, outfiles['run_order'],
-                        fig_settings={'xlabel': 'Time',
-                                      'ylabel': 'Order parameter'})
-
-        # plot block-error results:
-        mpl_block_error(results[0]['blockerror'], 'Order parameter',
-                        outfiles['block'])
-        # plot distributions
-        dist = results[0]['distribution']
-        series = [{'type': 'xy', 'x': dist[1], 'y': dist[0]}]
-        title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
-        title = title.format('Order parameter', dist[2][0], dist[2][1])
-        mpl_simple_plot(series, outfiles['dist'],
-                        fig_settings={'title': title})
-        # also try a orderp vs ordervel plot:
-        if len(orderdata) >= 3:
-            series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
-            fig_settings = {'xlabel': r'$\lambda$',
-                            'ylabel': r'$\dot{\lambda}$',
-                            'title': 'Order parameter vs velocity'}
-            mpl_line_gradient(series, outfiles['ordervel'],
-                              fig_settings=fig_settings)
-        # output msd if it was calculated:
-        if 'msd' in results[0]:
-            msd = results[0]['msd']
-            series = [(np.arange(len(msd)), msd[:, 0], msd[:, 1])]
-            mpl_error_plot(series, outfiles['msd'], xlabel='Time',
-                           ylabel='MSD', title=None)
-        return outfiles
+        """Function to just call ``mpl_plot_orderp``"""
+        return mpl_plot_orderp(results, orderdata, self.out_fmt)
 
     def plot_path(self, path_ensemble, results, idetect):
         """Function to just ``call mpl_plot_path``"""
         return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
 
-    @staticmethod
-    def plot_total_probability(path_ensembles, detect, results, matched,
-                               outputfile):
-        """
-        This method will plot the overall matched probabilities for the
-        different ensembles.
-
-        Parameters
-        ----------
-        path_ensembles : list of PathEnsemble objects
-            This is the path ensembles we have analysed.
-        results : list of dicts
-            This dict contains the results from the analysis.
-        detect : list of floats
-            These are the detect interfaces used in the analysis.
-        matched : list of numpy.arrays
-            These are the matched/scaled probabilities
-        outputfile : string
-            This is the name of the output file to create.
-        """
-        series = []
-        for idetect in detect:
-            series.append({'type': 'vline', 'x': idetect,
-                           'ls': '--', 'alpha': 0.8})
-        for result, prob, path_e in zip(results, matched, path_ensembles):
-            series.append({'type': 'xy', 'x': result['pcross'][0], 'y': prob,
-                           'lw': 3, 'label': path_e.ensemble})
-        mpl_simple_plot(series, outputfile,
-                        fig_settings={'xlabel': r'Order parameter ($\lambda$)',
-                                      'ylabel': 'Probability',
-                                      'title': 'Matched probabilities',
-                                      'yscale': 'log'})
-
-    @staticmethod
-    def plot_total_matched_probability(detect, matched, outputfile):
-        """
-        This method will plot the overall matched probability only.
-
-        Parameters
-        ----------
-        detect : list of floats
-            These are the detect interfaces used in the analysis.
-        matched : numpy.array
-            The matched probability.
-        outputfile : string
-            This is the name of the output file to create.
-        """
-        series = []
-        for idetect in detect:
-            series.append({'type': 'vline', 'x': idetect,
-                           'ls': '--', 'alpha': 0.8})
-        series.append({'type': 'xy', 'x': matched[:, 0],
-                       'y': matched[:, 1], 'lw': 3})
-        fig_setts = {'xlabel': r'Order parameter ($\lambda$)',
-                     'ylabel': 'Probability',
-                     'title': 'Matched probability',
-                     'yscale': 'log'}
-        mpl_simple_plot(series, outputfile,
-                        fig_settings=fig_setts)
+    def plot_total_probability(self, path_ensembles, detect, results,
+                               matched):
+        """Function to just call ``mpl_plot_matched``"""
+        return mpl_plot_matched(path_ensembles, detect, results, matched,
+                                self.out_fmt)
 
 
 def _mpl_read_style_file(filename):
@@ -852,3 +614,268 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'], outfiles['shoots-scaled'])
     return outfiles
+
+
+def mpl_plot_orderp(results, orderdata, out_fmt):
+    """
+    Plot the output from the order parameter analysis using matplotlib.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        order parameter.
+    orderdata : list of numpy.arrays
+        This is the raw-data for the order parameter analysis
+    out_fmt : string
+        This is the desired output format for the plots.
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+
+    Note
+    ----
+    We are here only outputting results for the first order parameter.
+    I.e. other order parameters or velocities are not written here. This
+    will be changed when the structure of the output order parameter file
+    has been fixed. Also note that, if present, the first order parameter
+    will be plotted agains the second one - i.e. the second one will be
+    assumed to represent the velocity here.
+    """
+    outfiles = {}
+    for key in _ORDERFILES:
+        outfiles[key] = _ORDERFILES[key].format(out_fmt)
+
+    time = orderdata[0]
+    series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
+    mpl_simple_plot(series, outfiles['order'],
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Order parameter'})
+    # make running average plot of the energies as function of time
+    series = [{'type': 'xy', 'x': time, 'y': results[0]['running'],
+               'label': 'Running average'}]
+    mpl_simple_plot(series, outfiles['run_order'],
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Order parameter'})
+
+    # plot block-error results:
+    mpl_block_error(results[0]['blockerror'], 'Order parameter',
+                    outfiles['block'])
+    # plot distributions
+    dist = results[0]['distribution']
+    series = [{'type': 'xy', 'x': dist[1], 'y': dist[0]}]
+    title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
+    title = title.format('Order parameter', dist[2][0], dist[2][1])
+    mpl_simple_plot(series, outfiles['dist'],
+                    fig_settings={'title': title})
+    # also try a orderp vs ordervel plot:
+    if len(orderdata) >= 3:
+        series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
+        fig_settings = {'xlabel': r'$\lambda$',
+                        'ylabel': r'$\dot{\lambda}$',
+                        'title': 'Order parameter vs velocity'}
+        mpl_line_gradient(series, outfiles['ordervel'],
+                          fig_settings=fig_settings)
+    # output msd if it was calculated:
+    if 'msd' in results[0]:
+        msd = results[0]['msd']
+        series = [(np.arange(len(msd)), msd[:, 0], msd[:, 1])]
+        mpl_error_plot(series, outfiles['msd'], xlabel='Time',
+                       ylabel='MSD', title=None)
+    return outfiles
+
+
+def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
+    """
+    Save the output from the energy analysis to text files.
+
+    Parameters
+    ----------
+    results : dict
+        Each item in `results` contains the results for the corresponding
+        energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
+        'ham', 'temp', 'elec'
+    energies : dict of numpy.arrays
+        This is the raw-data for the energy analysis
+    out_fmt : string
+        This is the desired output format for the plots.
+    sim_settings : dict, optional
+        This is the simulation settings which are usefull for creating
+        theoretical plots of distributions. It is assumed to contain
+        the number of particles, the dimensionality
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {'energies': _ENERFILES['energies'].format(out_fmt),
+                'run_energies': _ENERFILES['run_energies'].format(out_fmt),
+                'temperature': _ENERFILES['temperature'].format(out_fmt),
+                'run_temp': _ENERFILES['run_temp'].format(out_fmt)}
+    time = energies['time']
+    # make time series plot of the energies
+    series = []
+    for key in ['vpot', 'ekin', 'etot', 'ham']:
+        if key not in energies:
+            continue
+        series.append({'type': 'xy', 'x': time, 'y': energies[key],
+                       'label': _ENERTITLE[key]})
+    mpl_simple_plot(series, outfiles['energies'],
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
+    # make running average plot of the energies as function of time
+    series = []
+    for key in ['vpot', 'ekin', 'etot', 'ham']:
+        if key not in results:
+            continue
+        series.append({'type': 'xy', 'x': time,
+                       'y': results[key]['running'],
+                       'label': _ENERTITLE[key]})
+    mpl_simple_plot(series, outfiles['run_energies'],
+                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
+    # plot temperature
+    series = [{'type': 'xy', 'x': time, 'y': energies['temp']}]
+    mpl_simple_plot(series, outfiles['temperature'],
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Temperature'})
+    # and running average for temperature
+    series = [{'type': 'xy', 'x': time, 'y': results['temp']['running']}]
+    mpl_simple_plot(series, outfiles['run_temp'],
+                    fig_settings={'xlabel': 'Time',
+                                  'ylabel': 'Temperature',
+                                  'title': 'Running average'})
+    # plot block-error results:
+    outfile = _ENERFILES['block'].format('{}', out_fmt)
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
+        if key not in results:
+            continue
+        outfiles['{}block'.format(key)] = outfile.format(key)
+        mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
+                        outfiles['{}block'.format(key)])
+    # plot distributions
+    outfile = _ENERFILES['dist'].format('{}', out_fmt)
+    for key in ['vpot', 'ekin', 'etot', 'temp']:
+        if key not in results:
+            continue
+        dist = results[key]['distribution']
+        series = [{'type': 'xy', 'x': dist[1], 'y': dist[0],
+                   'label': _ENERTITLE[key]}]
+        title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
+        title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
+        if sim_settings is not None and key in ['ekin', 'temp']:
+            pos = np.linspace(min(0.0, dist[1].min()),
+                              dist[1].max(), 1000)
+            alp = (0.5 * sim_settings['npart'] *
+                   sim_settings['dim'])
+            if key == 'ekin':
+                scale = 1.0 / sim_settings['beta']
+            elif key == 'temp':
+                scale = sim_settings['temperature'] / alp
+            series.append({'type': 'xy', 'x': pos,
+                           'y': gamma.pdf(pos, alp, loc=0, scale=scale),
+                           'label': 'Boltzmann distribution'})
+        outfiles['{}dist'.format(key)] = outfile.format(key)
+        mpl_simple_plot(series, outfiles['{}dist'.format(key)],
+                        fig_settings={'title': title})
+    return outfiles
+
+
+def mpl_plot_flux(results, out_fmt):
+    """
+    Plot the output from the flux analysis using matplotlib.
+
+    Parameters
+    ----------
+    results : dict
+        This is the dict with the results from the flux analysis.
+    out_fmt : string
+        This is the desired output format for the plots.
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {}
+    for key in _FLUXFILES:
+        outfiles[key] = []
+    # make running average plot and error plot:
+    for i in range(len(results['flux'])):
+        flux = results['flux'][i]
+        runflux = results['runflux'][i]
+        errflux = results['errflux'][i]
+        outfile = _FLUXFILES['runflux'].format(i + 1, out_fmt)
+        outfiles['runflux'].append(outfile)
+        series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
+                   'label': 'Running average'}]
+        title = 'Flux for interface no. {}'.format(i + 1)
+        mpl_simple_plot(series, outfile,
+                        fig_settings={'xlabel': 'Time',
+                                      'ylabel': 'Flux / internal units',
+                                      'title': title})
+        outfile = _FLUXFILES['block'].format(i + 1, out_fmt)
+        outfiles['block'].append(outfile)
+        mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
+                        outfile)
+    return outfiles
+
+
+def mpl_plot_matched(path_ensembles, detect, results, matched,
+                     out_fmt):
+    """
+    This method will plot the overall matched probabilities for the
+    different ensembles and a plot with just the over-all matched
+    probability.
+
+    Parameters
+    ----------
+    path_ensembles : list of PathEnsemble objects
+        This is the path ensembles we have analysed.
+    results : list of dicts
+        This dict contains the results from the analysis.
+    detect : list of floats
+        These are the detect interfaces used in the analysis.
+    matched : list of numpy.arrays
+        These are the matched/scaled probabilities
+    outputfile : string
+        This is the name of the output file to create.
+    out_fmt : string
+        This is the desired output format for the plots.
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
+    """
+    outfiles = {}
+    for key in _PATH_MATCH:
+        outfiles[key] = []
+    outputfile = _PATH_MATCH['total'].format(out_fmt)
+    series = []
+    for idetect in detect:
+        series.append({'type': 'vline', 'x': idetect,
+                       'ls': '--', 'alpha': 0.8})
+    for result, prob, path_e in zip(results, matched, path_ensembles):
+        series.append({'type': 'xy', 'x': result['pcross'][0], 'y': prob,
+                       'lw': 3, 'label': path_e.ensemble})
+    mpl_simple_plot(series, outfiles['total'],
+                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
+                                  'ylabel': 'Probability',
+                                  'title': 'Matched probabilities',
+                                  'yscale': 'log'})
+    # also make a plot with just the overall matched probability:
+    series = []
+    for idetect in detect:
+        series.append({'type': 'vline', 'x': idetect,
+                       'ls': '--', 'alpha': 0.8})
+    series.append({'type': 'xy', 'x': matched[:, 0],
+                   'y': matched[:, 1], 'lw': 3})
+    fig_setts = {'xlabel': r'Order parameter ($\lambda$)',
+                 'ylabel': 'Probability',
+                 'title': 'Matched probability',
+                 'yscale': 'log'}
+    mpl_simple_plot(series, outfiles['match'],
+                    fig_settings=fig_setts)
+    return outputfile
