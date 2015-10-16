@@ -4,16 +4,26 @@ This file contains methods for generating plots using matplotlib.
 It also defines some standard plots that are done in the analysis.
 """
 import numpy as np
+import os
+import warnings
 import matplotlib
-import matplotlib.style
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
+# import styles for newer matplotlibs:
+if matplotlib.__version__ < '1.4.0':
+    HAS_STYLE = False
+    warnings.warn('Using Matplotlib version < 1.4.0, please upgrade it!')
+else:
+    try:
+        import matplotlib.style
+        HAS_STYLE = True
+    except ImportError:
+        HAS_STYLE = False
+
 # pylint: disable=E0611
 from scipy.stats import gamma
 # pylint: enable=E0611
-import os
-import warnings
 from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
@@ -439,8 +449,8 @@ def mpl_set_style(style='pyretis'):
         return
     if style == 'pyretis':
         style = _MPL_STYLE_FILE
-    if matplotlib.__version__ < '1.4.0':  # default to loading from file
-        msg = 'Using matplotlib version < 1.4.0, please upgrade matplotlib.'
+    if not HAS_STYLE:  # default to loading from file
+        msg = 'Cannot use styles, will load from file'
         warnings.warn(msg)
         _mpl_read_style_file(style)
     else:
