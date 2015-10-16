@@ -534,7 +534,13 @@ def _line_to_path_data(line):
     out : dict
         This dict contains the path information.
     """
-    data = [col.strip() for col in line.split()]
+    if line.find('#') != -1:
+        linec = line.split('#')[0].strip()
+    else:
+        linec = line.strip()
+    data = [col.strip() for col in linec.split()]
+    if len(data) < 16:  # valid data should have 15 columns!
+        return None
     path_info = {}
     path_info['generated'] = [str(data[8]), float(data[13]),
                               int(data[14]), int(data[15])]
@@ -690,7 +696,9 @@ class PathEnsembleFile(FileWriter):
         try:
             with open(self.filename, 'r') as fileh:
                 for line in fileh:
-                    yield _line_to_path_data(line)
+                    path_data = _line_to_path_data(line)
+                    if path_data is not None:
+                        yield path_data
         except IOError as error:
             msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
             warnings.warn(msg)
