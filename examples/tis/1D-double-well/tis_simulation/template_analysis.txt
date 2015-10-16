@@ -1,0 +1,21 @@
+from __future__ import print_function
+import numpy as np
+from retis.analysis.path_analysis import analyse_path_ensemble
+from retis.inout import PathEnsembleFile
+from retis.inout.mpl_plotting import mpl_plot_path
+
+analysis_settings = {'bins':1000, 'ngrid': 1001, 'maxblock':5000, 'blockskip':1}
+
+INTERFACES = @{{ interfaces }}@
+ENSEMBLE = @{{ ensemble }}@
+IDETECT = @{{ idetect }}@
+
+path_ensemble = PathEnsembleFile('pathensemble.dat', ENSEMBLE,
+                                 INTERFACES, mode='r')
+print('Analysing path ensemble: {}'.format(ENSEMBLE))
+results = analyse_path_ensemble(path_ensemble, analysis_settings,
+                                idetect=IDETECT)
+print(results['prun'][-1])
+print('Analysis done.')
+print('Making some plots...')
+outfiles = mpl_plot_path(path_ensemble, results, IDETECT, 'png')
