@@ -301,7 +301,7 @@ class Langevin(Integrator):
             The means for the bivariate gaussian distribution
         param_iner['cov'] : numpy.array (2,2)
             This array contains the covariance for the bivariate gaussian
-            distribution param_iner['mean'] and param_iner['cov'] are used
+            distribution. param_iner['mean'] and param_iner['cov'] are used
             as parameters when drawing dr and dv from the bivariate
             distribution.
 
@@ -388,16 +388,12 @@ class Langevin(Integrator):
             self.param_iner['cho'] = []
 
             for imass in imasses:
-                sig_ri = (self.delta_t * imass / (beta * self.gamma)) \
-                         * (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt)
-                sig_ri = np.sqrt(sig_ri)
-                sig_vi = np.sqrt((1.0 - exp_gdt**2) * imass / beta)
+                sig_ri2 = ((self.delta_t * imass / (beta * self.gamma)) *
+                           (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
+                sig_vi2 = ((1.0 - exp_gdt**2) * imass / beta)
                 cov_rvi = (imass/(beta * self.gamma)) * (1.0 - exp_gdt)**2
-                cov_matrix = np.zeros((2, 2))
-                cov_matrix[0, 0] = sig_ri**2
-                cov_matrix[1, 1] = sig_vi**2
-                cov_matrix[0, 1] = cov_rvi
-                cov_matrix[1, 0] = cov_rvi
+                cov_matrix = np.array([[sig_ri2, cov_rvi],
+                                       [cov_rvi, sig_vi2]])
                 self.param_iner['cov'].append(cov_matrix)
                 self.param_iner['cho'].append(np.linalg.cholesky(cov_matrix))
                 self.param_iner['mean'].append(np.zeros(2))
