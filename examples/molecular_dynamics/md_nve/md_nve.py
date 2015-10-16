@@ -15,7 +15,7 @@ import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from retis.inout import mpl_set_style
+from retis.inout.mpl_plotting import mpl_set_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential

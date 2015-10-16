@@ -20,7 +20,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib import gridspec as gridspec
-from retis.inout import mpl_set_style
+from retis.inout.mpl_plotting import mpl_set_style
 
 
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
