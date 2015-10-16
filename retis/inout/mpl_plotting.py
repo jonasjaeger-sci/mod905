@@ -275,69 +275,8 @@ class MplPlotter(object):
         return outfiles
 
     def plot_path(self, path_ensemble, results, idetect):
-        """
-        This method will output all the figures from the results obtained
-        by the path analysis.
-
-        Parameters
-        ----------
-        path_ensemble : object of type PathEnsemble
-            This is the path ensemble we have analysed.
-        results : dict
-            This dict contains the result from the analysis.
-        idetect : float
-            This is the interface used for the detection in the analysis.
-
-        Returns
-        -------
-        out : dict
-            This dictionary contains the filenames of the figures that
-            we wrote.
-        """
-        ens = path_ensemble.ensemble  # identify the ensemble
-        outfiles = {}
-        for key in _PATHFILES:
-            outfiles[key] = _PATHFILES[key].format(ens, self.out_fmt)
-        # first plot pcross vs lambda with the idetect surface
-        series = [{'type': 'xy', 'x': results['pcross'][0],
-                   'y': results['pcross'][1]}]
-        series.append({'type': 'vline', 'x': idetect, 'ls': '--',
-                       'alpha': 0.8})
-        mpl_simple_plot(series,
-                        outfiles['pcross'],
-                        fig_settings={'xlabel': r'Order parameter ($\lambda$)',
-                                      'ylabel': 'Probability',
-                                      'title': 'Ensemble: {0}'.format(ens)})
-        # next plot running pcross:
-        series = [{'type': 'xy', 'y': results['prun']}]
-        series.append({'type': 'hline', 'y': results['prun'][-1],
-                       'ls': '--', 'alpha': 0.8})
-        mpl_simple_plot(series,
-                        outfiles['prun'],
-                        fig_settings={'xlabel': 'Cycle number',
-                                      'ylabel': 'Probability (running avg.)',
-                                      'title': 'Ensemble: {0}'.format(ens)})
-        # plot results of block-error analysis:
-        mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
-                        outfiles['perror'])
-        # plot length-histogram:
-        hist1 = results['pathlength'][0]
-        hist2 = results['pathlength'][1]
-        labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
-        lab1 = labfmt.format('Accepted', hist1[2][0], hist1[2][1])
-        lab2 = labfmt.format('All', hist2[2][0], hist2[2][1])
-        series = [{'type': 'xy', 'x': hist1[1], 'y': hist1[0],
-                   'label': lab1}]
-        series.append({'type': 'xy', 'x': hist2[1], 'y': hist2[0],
-                       'label': lab2})
-        mpl_simple_plot(series,
-                        outfiles['pathlength'],
-                        fig_settings={'xlabel': 'MD steps',
-                                      'ylabel': 'Frequency',
-                                      'title': 'Ensemble: {0}'.format(ens)})
-        _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
-                              outfiles['shoots'], outfiles['shoots-scaled'])
-        return outfiles
+        """Function to just ``call mpl_plot_path``"""
+        return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
 
     @staticmethod
     def plot_total_probability(path_ensembles, detect, results, matched,
@@ -845,3 +784,71 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
     mpl_simple_plot(series_scale,
                     outputfile_scale,
                     fig_settings={'title': 'Ensemble: {0}'.format(ensemble)})
+
+
+def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
+    """
+    This method will output all the figures from the results obtained
+    by the path analysis.
+
+    Parameters
+    ----------
+    path_ensemble : object of type PathEnsemble
+        This is the path ensemble we have analysed.
+    results : dict
+        This dict contains the result from the analysis.
+    idetect : float
+        This is the interface used for the detection in the analysis.
+    out_fmt : string
+        This is the desired output format for the plots.
+
+    Returns
+    -------
+    out : dict
+        This dictionary contains the filenames of the figures that
+        we wrote.
+    """
+    ens = path_ensemble.ensemble  # identify the ensemble
+    outfiles = {}
+    for key in _PATHFILES:
+        outfiles[key] = _PATHFILES[key].format(ens, out_fmt)
+    # first plot pcross vs lambda with the idetect surface
+    series = [{'type': 'xy', 'x': results['pcross'][0],
+               'y': results['pcross'][1]}]
+    series.append({'type': 'vline', 'x': idetect, 'ls': '--',
+                   'alpha': 0.8})
+    mpl_simple_plot(series,
+                    outfiles['pcross'],
+                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
+                                  'ylabel': 'Probability',
+                                  'title': 'Ensemble: {0}'.format(ens)})
+    # next plot running pcross:
+    series = [{'type': 'xy', 'y': results['prun']}]
+    series.append({'type': 'hline', 'y': results['prun'][-1],
+                   'ls': '--', 'alpha': 0.8})
+    mpl_simple_plot(series,
+                    outfiles['prun'],
+                    fig_settings={'xlabel': 'Cycle number',
+                                  'ylabel': 'Probability (running avg.)',
+                                  'title': 'Ensemble: {0}'.format(ens)})
+    # plot results of block-error analysis:
+    mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
+                    outfiles['perror'])
+    # plot length-histogram:
+    hist1 = results['pathlength'][0]
+    hist2 = results['pathlength'][1]
+    labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
+    lab1 = labfmt.format('Accepted', hist1[2][0], hist1[2][1])
+    lab2 = labfmt.format('All', hist2[2][0], hist2[2][1])
+    series = [{'type': 'xy', 'x': hist1[1], 'y': hist1[0],
+               'label': lab1}]
+    series.append({'type': 'xy', 'x': hist2[1], 'y': hist2[0],
+                   'label': lab2})
+    mpl_simple_plot(series,
+                    outfiles['pathlength'],
+                    fig_settings={'xlabel': 'MD steps',
+                                  'ylabel': 'Frequency',
+                                  'title': 'Ensemble: {0}'.format(ens)})
+    _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
+                          outfiles['shoots'], outfiles['shoots-scaled'])
+    return outfiles
