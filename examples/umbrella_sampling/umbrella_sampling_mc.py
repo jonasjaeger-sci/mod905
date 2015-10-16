@@ -97,7 +97,9 @@ for i, histo in enumerate(histograms_s):
 axs.plot(bin_x, hist_avg, lw=7, color='orangered', alpha=0.6,
          label='Average after matching')
 axs.legend()
-plt.xlim((-1.1, 1.1))
+axs.set_xlim((-1.1, 1.1))
+axs.set_ylim((0.1, 1200))
+fig.tight_layout()
 
 print('Plotting the free energy')
 fig2 = plt.figure()
@@ -112,6 +114,8 @@ ax2.plot(bin_x, free, lw=7, alpha=0.5, color='green', label='Free energy')
 ax2.set_xlabel('Position ($x$)', fontsize='large')
 ax2.set_ylabel('Potential energy ($V(x)$) / eV', fontsize='large')
 ax2.legend()
-plt.xlim((-1.1, 1.1))
-plt.ylim((-0.3, 0.05))
+ax2.set_xlim((-1.1, 1.1))
+ax2.set_ylim((-0.3, 0.05))
+fig2.tight_layout()
+
 plt.show()
