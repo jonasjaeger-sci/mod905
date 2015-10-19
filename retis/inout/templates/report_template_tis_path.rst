@@ -1,0 +1,14 @@
+
+.. _tis-results:
+
+TIS results for ensemble: @{{ ensemble }}@
+==========================================
+
+@{{ table_int }}@
+
+@{{ table_prob }}@
+
+@{{ table_path }}@
+
+@{{ table_eff }}@
+

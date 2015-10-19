@@ -189,10 +189,65 @@ def _generate_report(report, output, template, path):
         return render, _EXT[output]
 
 
+def generate_report_tis_path(path_ensemble, analysis, output='rst', template=None):
+    """
+    This will generate a report for a single TIS simulation.
+
+    Parameters
+    ----------
+    analysis : dict
+        This is the output (and some input) for the analysis. The keys are:
+        'tis' : dict with the results from analysing path ensembles
+        'tis-fig' : list of correponding figures (to 'tis')
+        'matched' : results from the matchin of probability
+        'matched-fig' : the figure corresponding to 'matched'
+        'detect' : locations of the interfaces used for detection
+    output : string, optional
+        This is the desired output format. It must match one of the
+        formats defined in _TEMPLATES.
+        Default is reStructuredText = 'rst'.
+    template : string, optional
+        This is the template file to use. The default is given
+        by _TEMPLATES[output].
+
+    Returns
+    -------
+    out[0] : string
+        The generated report in the desired format.
+    out[1] : string
+        The file extension (i.e. file type) for the generated report.
+    """
+    # get template and generate:
+    output, template, path = _get_template(output, 'TIS_PATH', template=template)
+    report = {'version': VERSION,
+              'program': PROGRAM_NAME,
+              'ensemble': path_ensemble.ensemble,
+              'table_int': None,
+              'table_prob': None,
+              'table_path': None,
+              'table_eff': None}
+    # get the efficiency results:
+    report['table_int'] = _table_interface([path_ensemble],
+                                           [analysis['detect']],
+                                           fmt=output)[1]
+    report['table_prob'] = _table_probability([path_ensemble],
+                                              [analysis], fmt=output)[1]
+    report['table_path'] = _table_path([path_ensemble],
+                                       [analysis], fmt=output)[1]
+    report['table_eff'] = _table_efficiencies([path_ensemble],
+                                              [analysis], fmt=output)[1]
+    if output in ['latex', 'tex']:
+        pass
+        #for fig in ['figures', 'totalfig']:
+        #    report[fig] = _remove_extensions(report[fig])
+    return _generate_report(report, output, template, path)
+
+
 def generate_report_tis(path_ensembles, analysis, output='rst',
                         template=None):
     """
-    This will generate the report for the results.
+    This will generate a report for the over-all results from a TIS
+    simulation.
 
     Parameters
     ----------
