@@ -358,7 +358,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
-    is an object of type ``retis.core.path.PathEnsemble``.
+    is an object of type ``retis.core.path.PathEnsemble`` and that this path
+    ensemble contains all the paths that are needed.
 
     Parameters
     ----------
@@ -385,6 +386,12 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     _shoot_analysis
     """
     result = {}
+    if path_ensemble.npath != len(path_ensemble.paths):
+        msg = ('The number of paths stored in path ensemble does not',
+               'correspond to the number of paths seen by the path',
+               ' ensemble! Consider re-running the analysis using',
+               'the path ensemble file!')
+        warnings.warn(msg)
     if idetect is None:
         idetect = path_ensemble.interfaces[-1]
     # first analysis is pcross as a function of lambda:
@@ -484,7 +491,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
                                         result['prun'][-1] * (npath - 1)) /
                                   float(npath))
         # get the length - note that this length depends on the type of move
-        # see the _get_path_length function.
+        # see the `_get_path_length` function.
         length = _get_path_length(path)
         if length is not None:
             length_all.append(length)
@@ -517,7 +524,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
                                                 settings['bins'])
     # 6) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
-                            float(npath) * result['pathlength'][1][2][0]]
+                            float(npath) * hist2[2][0]]
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = npath
