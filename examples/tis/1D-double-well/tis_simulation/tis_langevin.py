@@ -4,10 +4,11 @@ This is a convenience script for creating TIS simulations.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import jinja2
+import pprint
 import os
-import re
 
-def simple_template_write(template, variables, outfile):
+def simple_template_write(template, variables, outfile, path=None):
     """
     This will write a new file, inserting the value of
     `variables[key]` in locations @{{ key @}} in the given
@@ -21,23 +22,23 @@ def simple_template_write(template, variables, outfile):
         A dict with the keys we want to write
     outfile : string
         The file to create
-    
+    path : string
+        Path to where the template is stored.
+
     Returns
     """
-    regexp = re.compile(r'@{{(.*?)}}@')
+    if path is None:
+        path = os.path.dirname(os.path.abspath(__file__))
+    env = jinja2.Environment(block_start_string='@{%',
+                             block_end_string='%}@',
+                             variable_start_string='@{{',
+                             variable_end_string='}}@',
+                             loader=jinja2.FileSystemLoader(path))
+    # pylint: disable=maybe-no-member
+    render = env.get_template(template).render(variables)
+    # pylint: enable=maybe-no-member
     with open(outfile, 'w') as fileout:
-        with open(template, 'r') as filein:
-            for lines in filein:
-                if lines.find('@{{') != -1:
-                    out = lines
-                    for key in regexp.findall(lines.strip()):
-                        keys = key.strip()
-                        repl = '@{{{{{}}}}}@'.format(key)
-                        news = str(variables.get(keys, '{}'.format(keys)))
-                        out = out.replace(repl, news)
-                    fileout.write(out)
-                else:
-                    fileout.write(lines)
+        fileout.write(render)
     return None
 
 simulation_settings = {'type': 'TIS',
@@ -46,7 +47,7 @@ simulation_settings = {'type': 'TIS',
                                       'high-friction': False},
                        'endcycle': 100000,
                        'temperature': 0.07,
-                       'interfaces': [-0.9, -0.8, -0.7, -0.6, 
+                       'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                       -0.5, -0.4, -0.3],
                        'reactant': -0.9,
                        'product': 1.0,
@@ -63,11 +64,14 @@ simulation_settings = {'type': 'TIS',
                                'seed': 0,
                                'initial_path': 'kick'},
                        'output': [{'type': 'pathensemble', 'target': 'file',
-                                   'when': {'every': 10}}]}
-TEMPLATE = 'template_tis.txt'
+                                   'when': {'every': 10}},
+                                  {'type': 'trialpath', 'target': 'file',
+                                   'when': {'every': 100}}]}
+TEMPLATE_TIS = 'template_tis.txt'
 TEMPLATE_A = 'template_analysis.txt'
+
 print('Simulation type: {}'.format(simulation_settings['type']))
-print('Setting up TIS simulations...')
+print('Setting up TIS simulations:')
 stateA = simulation_settings['reactant']
 stateB = simulation_settings['product']
 detect = []
@@ -82,7 +86,7 @@ for i, middle in enumerate(simulation_settings['interfaces']):
         detect.append(simulation_settings['interfaces'][i+1])
     except IndexError:
         detect.append(stateB)
-    print('* Detect (for analysis): {}'.format(detect[-1]))
+    print('* "Detect" interface for analysis: {}'.format(detect[-1]))
     settings = {key: simulation_settings[key] for key in simulation_settings}
     settings['interfaces'] = interface
     settings['detect'] = detect[-1]
@@ -95,11 +99,11 @@ for i, middle in enumerate(simulation_settings['interfaces']):
         print('* Folder "{}" already exist, will use it.'.format(ensemble))
     sim_file = os.path.join(ensemble, 'tis_langevin.py')
     analysis_file = os.path.join(ensemble, 'analysis_tis.py')
-    print('* Creating run script in {}'.format(sim_file))
-    to_write = {'simulation_settings': settings,
+    print('* Creating run script in "{}"'.format(sim_file))
+    to_write = {'simulation_settings': pprint.pformat(settings, width=79),
                 'interfaces': interface,
                 'ensemble': "'{}'".format(ensemble),
                 'idetect': detect[-1]}
-    simple_template_write(TEMPLATE, to_write , sim_file)
-    print('* Creating analysis script in {}'.format(analysis_file))
+    simple_template_write(TEMPLATE_TIS, to_write, sim_file)
+    print('* Creating analysis script in "{}"'.format(analysis_file))
     simple_template_write(TEMPLATE_A, to_write, analysis_file)
