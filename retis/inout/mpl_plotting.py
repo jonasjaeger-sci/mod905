@@ -94,11 +94,9 @@ class MplPlotter(object):
         """Function to just ``call mpl_plot_path``"""
         return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
 
-    def plot_total_probability(self, path_ensembles, detect, results,
-                               matched):
+    def plot_total_probability(self, path_ensembles, detect, matched):
         """Function to just call ``mpl_plot_matched``"""
-        return mpl_plot_matched(path_ensembles, detect, results, matched,
-                                self.out_fmt)
+        return mpl_plot_matched(path_ensembles, detect, matched, self.out_fmt)
 
 
 def _mpl_read_style_file(filename):
@@ -822,8 +820,7 @@ def mpl_plot_flux(results, out_fmt):
     return outfiles
 
 
-def mpl_plot_matched(path_ensembles, detect, results, matched,
-                     out_fmt):
+def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
     """
     This method will plot the overall matched probabilities for the
     different ensembles and a plot with just the over-all matched
@@ -833,12 +830,11 @@ def mpl_plot_matched(path_ensembles, detect, results, matched,
     ----------
     path_ensembles : list of PathEnsemble objects
         This is the path ensembles we have analysed.
-    results : list of dicts
-        This dict contains the results from the analysis.
     detect : list of floats
         These are the detect interfaces used in the analysis.
-    matched : list of numpy.arrays
-        These are the matched/scaled probabilities
+    matched : dict
+        This dict contains the results from the matching of the probabilities.
+        `matched['overall-prob']` and `matched['matched-prob']` are used here.
     outputfile : string
         This is the name of the output file to create.
     out_fmt : string
@@ -851,31 +847,36 @@ def mpl_plot_matched(path_ensembles, detect, results, matched,
     """
     outfiles = {}
     for key in _PATH_MATCH:
-        outfiles[key] = []
-    outputfile = _PATH_MATCH['total'].format(out_fmt)
+        outfiles[key] = _PATH_MATCH[key].format(out_fmt)
+
+    # first plot the matched probabilities for each ensemble:
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
                        'ls': '--', 'alpha': 0.8})
-    for result, prob, path_e in zip(results, matched, path_ensembles):
-        series.append({'type': 'xy', 'x': result['pcross'][0], 'y': prob,
+    for prob, path_e in zip(matched['matched-prob'], path_ensembles):
+        series.append({'type': 'xy',
+                       'x': prob[:, 0],
+                       'y': prob[:, 1],
                        'lw': 3, 'label': path_e.ensemble})
     mpl_simple_plot(series, outfiles['total'],
                     fig_settings={'xlabel': r'Order parameter ($\lambda$)',
                                   'ylabel': 'Probability',
                                   'title': 'Matched probabilities',
                                   'yscale': 'log'})
-    # also make a plot with just the overall matched probability:
+    # also make a plot with the overall matched probability:
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
                        'ls': '--', 'alpha': 0.8})
-    series.append({'type': 'xy', 'x': matched[:, 0],
-                   'y': matched[:, 1], 'lw': 3})
+    series.append({'type': 'xy',
+                   'x': matched['overall-prob'][:, 0],
+                   'y': matched['overall-prob'][:, 1],
+                   'lw': 3})
     fig_setts = {'xlabel': r'Order parameter ($\lambda$)',
                  'ylabel': 'Probability',
                  'title': 'Matched probability',
                  'yscale': 'log'}
     mpl_simple_plot(series, outfiles['match'],
                     fig_settings=fig_setts)
-    return outputfile
+    return outfiles

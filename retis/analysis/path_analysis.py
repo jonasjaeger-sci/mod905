@@ -525,53 +525,50 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     return result
 
 
-def match_probabilities(results, detect):
+def match_probabilities(path_results, detect):
     """
     This method will match probabilities from several path ensembles.
     It will also calculate efficiencies and error for the matched probability.
 
     Parameters
     ----------
-    results : list
-        These are the results from the path analysis. `results[i]` is the
-        output from ``analyse_path_ensemble`` when applied to ensemble i.
+    path_results : list
+        These are the results from the path analysis. `path_results[i]`
+        contains the output from ``analyse_path_ensemble`` applied to
+        ensemble i.
     detect : list of floats
         These are the detect interfaces used in the analysis.
 
     Returns
     -------
-    out[0] : list of numpy.arrays
-        out[0][i] is the matched probability for ensemble i
-    out[1] : numpy.array
-        Collected results, out[1][:,0] is the order parameter and
-        out[1][:,1] is the probability.
-    out[2] : dict
+    results : dict
         These are results for the over-all probability and error
         and also some over-all TIS efficiencies.
     """
+    results = {}
+    results['matched-prob'] = []
+    results['overall-prob'] = [[], []]
     accprob = 1.0
     accprob_err = 0.0
     prob_simtime = 0.0
     prob_opt_eff = 0.0
-    all_prob = []
-    matched_prob = [[], []]
-    for idet, result in zip(detect, results):
+    for idet, result in zip(detect, path_results):
+        # do matching only in part left of idetect:
         idx = np.where(result['pcross'][0] <= idet)[0]
-        matched_prob[0].extend(result['pcross'][0][idx])
-        matched_prob[1].extend(result['pcross'][1][idx] * accprob)
-        all_prob.append(result['pcross'][1] * accprob)
+        results['overall-prob'][0].extend(result['pcross'][0][idx])
+        results['overall-prob'][1].extend(result['pcross'][1][idx] * accprob)
+        # update probabilities, error and efficiency:
+        mat = np.column_stack((result['pcross'][0], result['pcross'][1]))
+        mat[:, 1] *= accprob
+        results['matched-prob'].append(mat)
         accprob *= result['prun'][-1]
         accprob_err += result['blockerror'][4]**2
         prob_simtime += result['efficiency'][1]
         prob_opt_eff += np.sqrt(result['efficiency'][2])
-    matched_prob = np.transpose(np.array(matched_prob))
-    prob_eff = accprob_err * prob_simtime
-    accprob_err = np.sqrt(accprob_err)
-    prob_opt_eff *= prob_opt_eff
-    # gather the other results into one dict
-    other = {'prob': accprob,  # over-all probability
-             'relerror': accprob_err,  # error in probability
-             'simtime': prob_simtime,  # simulation time: cycles * path-lenght
-             'opteff': prob_opt_eff,  # optimized TIS efficiency
-             'eff': prob_eff}  # over-all TIS efficiency
-    return all_prob, matched_prob, other
+    results['overall-prob'] = np.transpose(results['overall-prob'])
+    results['prob'] = accprob
+    results['relerror'] = np.sqrt(accprob_err)
+    results['simtime'] = prob_simtime  # simulation time: cycles * path-lenght
+    results['opteff'] = prob_opt_eff**2  # optimized TIS efficiency
+    results['eff'] = accprob_err * prob_simtime  # over-all TIS efficiency
+    return results
