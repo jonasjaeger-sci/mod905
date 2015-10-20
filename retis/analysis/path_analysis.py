@@ -401,7 +401,12 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     # next get the running average of the crossing probability
     prun, pdata = _running_pcross(path_ensemble, idetect)
     result['prun'] = prun
-    result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
+    try:
+        result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
+    except KeyError:
+        msg = 'Could not obtain cycle number!'
+        warnings.warn(msg)
+        result['cycle'] = np.arange(len(prun))
     # next, the error analysis:
     result['blockerror'] = block_error_corr(pdata,
                                             maxblock=settings['maxblock'],
