@@ -12,10 +12,11 @@ __all__ = ['make_tis_step', 'generate_initial_path_kick']
 def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
                   tis_settings):
     """
-    This method will perform a TIS step and generate a new trajectory
-    from an existing one, either by performing a time-reversal move or
-    by shooting. T(h)is is determined randomly by drawing a random number
-    from a uniform distribution.
+    Perform a TIS step and generate a new path/trajectory.
+
+    The new path will be generated from an existing one, either by performing
+    a time-reversal move or by shooting. T(h)is is determined randomly by
+    drawing a random number from a uniform distribution.
 
     Parameters
     ----------
@@ -228,9 +229,10 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
 def generate_initial_path_kick(system, interfaces, integrator, rgen,
                                order_function, tis_settings):
     """
-    Simple method to generate an initial path
-    This method will generate an initial path by repeatedly
-    kicking a phase-space point until the middle interface is crossed.
+    Simple method to generate an initial path.
+
+    This method will generate an initial path by repeatedly kicking a
+    phase-space point until the middle interface is crossed.
     The point before and after kicking are stored, so when the
     middle interface is crossed we have two points we can integrate
     forward and backward in time.
@@ -316,8 +318,7 @@ def generate_initial_path_kick(system, interfaces, integrator, rgen,
 
 def _kick_across_middle(system, integrator, rgen, order_function, middle):
     """
-    This method will repeatadely kick a phase point so that it crosses
-    the middle interface.
+    Repeatedly kick a phase point so that it crosses the middle interface.
 
     Parameters
     ----------
@@ -379,8 +380,7 @@ def _kick_across_middle(system, integrator, rgen, order_function, middle):
 
 def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
     """
-    This method will make a random modification to a time slice.
-    It will only modify the velocities.
+    Make a random modification to a time slice (modify the velocities).
 
     Parameters
     ----------
@@ -388,11 +388,11 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
         This is the random generator that will be used.
     system : object of type system
         System is used here since we need access to the temperature
-        and to the particle list
+        and to the particle list.
     aimless : boolean, optional
-        Determines if we should do aimless shooting or not
+        Determines if we should do aimless shooting or not.
     momentum : boolean, optional
-        This handles resetting of the momentum
+        This handles resetting of the momentum.
 
     Returns
     -------
@@ -422,9 +422,10 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
 def _propagate(system, integrator, order_function, interfaces,
                maxlen=None, reverse=False):
     """
-    This function will propagate a system in time. During the propagation,
-    the system will be modified. However, at the end, the positions, velocities
-    and forces will be reset to the initial state.
+    Propagate a system in time.
+
+    During the propagation, the system will be modified. However, at the end,
+    the positions, velocities and forces will be reset to the initial state.
 
     Parameters
     ----------
@@ -495,7 +496,8 @@ def _propagate(system, integrator, order_function, interfaces,
 def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
                      initial_path, tis_settings):
     """
-    This method will fix a path that starts and ends at the wrong interfaces.
+    Fix a path that starts and ends at the wrong interfaces.
+
     The fix is performed by makeing TIS moves and this method is intended
     to be used in a initialization.
 

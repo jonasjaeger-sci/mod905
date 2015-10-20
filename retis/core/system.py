@@ -10,7 +10,7 @@ from retis.core.particlefunctions import calculate_kinetic_temperature
 from retis.core.random_gen import RandomGenerator
 
 
-__all__ = ['System']
+__all__ = ('System')
 
 
 class System(object):
@@ -40,6 +40,7 @@ class System(object):
         Units to use for the system/simulation. Should match the defined units
         in retis.core.units.
     """
+
     def __init__(self, units='eV/K', box=None, temperature=None):
         """
         Initialization of the system.
@@ -77,8 +78,7 @@ class System(object):
 
     def adjust_dof(self, dof):
         """
-        This method adjusts the degrees of freedom we are going to
-        neglect for the system.
+        Adjust the degrees of freedom we are going to neglect for the system.
 
         Parameters
         ----------
@@ -93,9 +93,10 @@ class System(object):
 
     def _adjust_dof_according_to_box(self):
         """
-        This function will adjust the dof's according to the box connected
-        to the system. For each 'True' in the periodic settings of the box,
-        we subtract one degree of freedom for that dimension.
+        Adjust the dof's according to the box connected to the system.
+
+        For each 'True' in the periodic settings of the box, we subtract
+        one degree of freedom for that dimension.
         """
         try:
             dof = []
@@ -113,8 +114,7 @@ class System(object):
 
     def get_boltzmann(self):
         """
-        This function returns the value of the Boltzmann constant
-        in the correct units for the system
+        Return the Boltzmann constant in correct units for the system.
 
         Returns
         -------
@@ -125,7 +125,8 @@ class System(object):
 
     def get_dim(self):
         """
-        This function returns the dimensionality of the system.
+        Return the dimensionality of the system.
+
         The value is obtained from the box. In other words,
         it is the box object that defines the dimensionality of
         the system.
@@ -142,10 +143,12 @@ class System(object):
 
     def calculate_beta(self, temperature=None):
         r"""
-        Returns the beta factor for the system. Beta is defined
-        as :math:`\beta = 1/(k_\text{B} \times T` where :math:`k_\text{B}` is
-        the Boltzmann constant and the temperature `T` is either specified in
-        the parameters or assumed equal to the set temperature of the system.
+        Return the so-called beta factor for the system.
+
+        Beta is defined as :math:`\beta = 1/(k_\text{B} \times T`
+        where :math:`k_\text{B}` is the Boltzmann constant and the
+        temperature `T` is either specified in the parameters or assumed
+        equal to the set temperature of the system.
 
         Parameters
         ----------
@@ -200,7 +203,7 @@ class System(object):
 
     def force(self):
         """
-        Updates the forces by calling self._evaluate_potential_force()
+        Update the forces by calling `self._evaluate_potential_force`.
 
         Returns
         -------
@@ -217,7 +220,7 @@ class System(object):
 
     def potential(self):
         """
-        Updates self.v_pot by calling self._evaluate_potential_force()
+        Update `self.v_pot` by calling `self._evaluate_potential_force()`.
 
         Returns
         -------
@@ -229,8 +232,11 @@ class System(object):
 
     def potential_and_force(self):
         """
-        Updates the potential energy in self.v_pot and the forces in
-        self.particles.force by calling self._evaluate_potential_force()
+        Update the potential energy and forces.
+
+        The potential in `self.v_pot` and the forces in
+        `self.particles.force` are here updated by calling
+        `self._evaluate_potential_force()`.
 
         Returns
         -------
@@ -326,8 +332,7 @@ class System(object):
 
     def _evaluate_potential_force(self, what='both', **kwargs):
         """
-        Helper function to evaluate the potential or force
-        or both.
+        Evaluate the potential or force or both.
 
         Parameters
         ----------
@@ -359,9 +364,10 @@ class System(object):
     def generate_velocities(self, rgen=None, seed=0, momentum=True,
                             temperature=None, distribution='maxwell'):
         """
-        This method will set the velocities of the particles
-        according to the desired temperature. The temperature can
-        be specified, or it can be taken from self.temperature['set'].
+        Set the velocities of the particles according to a given temperature.
+
+        The temperature can be specified, or it can be taken from
+        `self.temperature['set']`.
 
         Parameters
         ----------
@@ -396,8 +402,9 @@ class System(object):
 
     def calculate_temperature(self):
         """
-        Function to calculate the temperature of the current configuration
-        of the system. It is included here for convenience since the dof's
+        Calculate the temperature of the current configuration of the system.
+
+        It is included here for convenience since the dof's
         are easily accessible and it's a very common calculation to perform,
         even though it might be cleaner to include it as a particle function.
 

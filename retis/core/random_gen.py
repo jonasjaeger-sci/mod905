@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 This module handles random number generation.
-It derives most of the random number procedures from RandomState
-in numpy.random
+
+It derives most of the random number procedures from `RandomState` in
+`numpy.random`.
 """
 from __future__ import absolute_import
 from retis.core.particlefunctions import (calculate_kinetic_temperature,
@@ -10,12 +11,12 @@ from retis.core.particlefunctions import (calculate_kinetic_temperature,
 import numpy as np
 from numpy.random import RandomState
 
-__all__ = ['RandomGenerator']
+__all__ = ('RandomGenerator')
 
 
 class RandomGenerator(object):
     """
-    RandomGenerator(object)
+    RandomGenerator(object).
 
     This class that defines a random number generator.
     It will use numpy.random.RandomState for the actual generation, see the
@@ -30,10 +31,12 @@ class RandomGenerator(object):
         This is a container for the Mersenne Twiser pseudo-random number
         generator as implemented in numpy.
     """
+
     def __init__(self, seed=None):
         """
-        This initiates the random number generator, if a seed
-        is given, the random number generator will be seeded.
+        Initiate the random number generator.
+
+        If a seed is given, the random number generator will be seeded.
 
         Parameters
         ----------
@@ -44,8 +47,7 @@ class RandomGenerator(object):
 
     def rand(self, shape=1):
         """
-        This will just call self.rgen.rand(), see the description of this
-        class.
+        Call `self.rgen.rand()`, see the description of this method.
 
         Parameters
         ----------
@@ -61,8 +63,7 @@ class RandomGenerator(object):
 
     def random_integers(self, low, high):
         """
-        This will just call self.rgen.random_integers(low, high), see the
-        description of this class.
+        Draw random integers using `self.rgen.random_integers(low, high)`.
 
         Parameters
         ----------
@@ -80,8 +81,7 @@ class RandomGenerator(object):
 
     def normal(self, loc=0.0, scale=1.0, size=None):
         """
-        This function just runs self.rgen.normal and returns
-        values from a normal distribution.
+        Run `self.rgen.normal` and return values from a normal distribution.
 
         Parameters
         ----------
@@ -102,7 +102,8 @@ class RandomGenerator(object):
 
     def multivariate_normal(self, mean, cov, cho=None, size=1):
         """
-        Function to return numbers from a multivariate distribution.
+        Draw numbers from a multivariate distribution.
+
         This is an attempt on speeding up the call of
         RandomState.multivariate_normal if we need to call it over and
         over again. Such repeated calling will do a svd repeatedly, which
@@ -140,9 +141,10 @@ class RandomGenerator(object):
     def generate_maxwellian_velocities(self, particles, temperature, dof,
                                        selection=None, momentum=True):
         """
-        This function will generate velocities from a Maxwell distribution
-        for a group of particles with a given temperature. This is done in
-        three steps:
+        Generate velocities from a Maxwell distribution for a group of
+        particles with a given temperature.
+
+        The generation is done in three steps:
         1) We generate velocities from a standard normal distribution
         2) We scale the velocity of particle i with 1.0/sqrt(mass_i) and
         reset the momentum

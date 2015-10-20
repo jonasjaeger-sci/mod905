@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This module defines some natural constants, in different units
-and unit conversions.
+This module defines natural constants and unit conversions.
+
 For the Lennard-Jones potential, the conversions are currently
 hardcoded to the parameters given by Rowley et al. [ROWLEY]_.
 
@@ -29,22 +29,24 @@ CONVERT['mass']['lj', 'g/mol'] = 39.948
 CONVERT['energy']['lj', 'J'] = 119.8 * CONSTANTS['kB']['J/K']
 CONVERT['energy']['kcal', 'J'] = 4184.
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
-CONVERT['energy']['lj', 'kcal/mol'] = CONVERT['energy']['lj', 'J'] *\
-                                      (1.0 / CONVERT['energy']['kcal', 'J']) *\
-                                      CONVERT['energy']['kcal', 'kcal/mol']
-CONVERT['time']['lj', 's'] = CONVERT['length']['lj', 'm'] *\
-                             (CONVERT['mass']['lj', 'kg'] /
-                              CONVERT['energy']['lj', 'J'])**0.5
+CONVERT['energy']['lj', 'kcal/mol'] = (CONVERT['energy']['lj', 'J'] *
+                                       (1.0 / CONVERT['energy']['kcal', 'J']) *
+                                       CONVERT['energy']['kcal', 'kcal/mol'])
+CONVERT['time']['lj', 's'] = (CONVERT['length']['lj', 'm'] *
+                              (CONVERT['mass']['lj', 'kg'] /
+                               CONVERT['energy']['lj', 'J'])**0.5)
 CONVERT['time']['lj', 'ps'] = 1.0e12 * CONVERT['time']['lj', 's']
 CONVERT['time']['lj', 'fs'] = 1.0e15 * CONVERT['time']['lj', 's']
-CONVERT['velocity']['lj', 'nm/ps'] = CONVERT['length']['lj', 'nm'] /\
-                                     CONVERT['time']['lj', 'ps']
+CONVERT['velocity']['lj', 'nm/ps'] = (CONVERT['length']['lj', 'nm'] /
+                                      CONVERT['time']['lj', 'ps'])
 
 
 def _generate_inverse(conversions):
     """
-    This helper method is intended to generate all inverse
-    conversions for simple conversions.
+    Generate all simple inverse conversions.
+
+    A simple inverse conversion is something we can obtain by doing
+    a ``1 / unit`` type of conversion.
 
     Parameters
     ----------
@@ -63,9 +65,10 @@ def _generate_inverse(conversions):
 
 def _convert_from_to(conversions, unit_from, unit_to):
     """
-    This method is intented to generate a unit conversion between
-    the provided units, given that a "path" between these units exist.
-    This path is obtained by a BFS.
+    Generate unit conversion between the provided units.
+
+    The unit conversion can be obtained given that a "path" between these
+    units exist. This path is obtained by a BFS.
 
     Parameters
     ----------

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Definition of a class for a simulation box"""
-
+"""Definition of a class for a simulation box."""
 import numpy as np
 
-__all__ = ['Box']
+
+__all__ = ('Box')
 
 
 class Box(object):
     """
-    Box(object)
+    Box(object).
 
     This class defines a simple simulation box. The box will handle
     periodic boundaries if needed. A non-periodic dummy-box can be created
@@ -87,7 +87,7 @@ class Box(object):
 
     def calculate_volume(self):
         """
-        Calculates the volume of the box.
+        Calculate the volume of the box.
 
         Returns
         -------
@@ -98,9 +98,8 @@ class Box(object):
 
     def pbc_coordinate_dim(self, pos, dim):
         """
-        This function applies the periodic boundaries to the selected
-        dimension only. This can be usefull for instance in connection
-        with order parameters.
+        Apply periodic boundaries to the selected dimension only. This can be
+        useful for instance in connection with order parameters.
 
         Parameters
         ----------
@@ -171,10 +170,10 @@ class Box(object):
 
     def pbc_wrap(self, pos):
         """
-        This method applies periodic boundaries to the given position.
+        Apply periodic boundaries to the given position.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         pos : nump.array
             Positions to apply periodic boundaries to.
 
@@ -199,8 +198,7 @@ class Box(object):
 
     def pbc_dist_matrix(self, distance):
         """
-        This method applies periodic boundaries to a distance
-        matrix/vector.
+        Apply periodic boundaries to a distance matrix/vector.
 
         Parameters
         ----------
@@ -224,7 +222,7 @@ class Box(object):
 
     def pbc_dist_coordinate(self, distance):
         """
-        This function applies periodic boundaries to a distance.
+        Apply periodic boundaries to a distance.
         The distance can be a vector, but not a matrix of several
         distance vectors.
 
@@ -249,7 +247,7 @@ class Box(object):
 
     def __str__(self):
         """
-        This method returns a string describing the box.
+        Return a string describing the box.
 
         Returns
         -------

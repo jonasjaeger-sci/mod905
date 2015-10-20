@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-This files contains methods that will output results from the
-path analysis and the energy analysis.
+Methods that will output results from the different analysis methods.
 
 Important methods defined here:
 
-- run_md_flux_analysis: Method to run the MD flux analysis on a set
+- `run_md_flux_analysis`: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
 """
 from __future__ import absolute_import
@@ -21,9 +20,10 @@ from retis.inout.common import _REPORTFILES
 
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     """
-    This method will analyse the output from a MD-flux simulation,
-    it will determine if the data should be read from files or if it's
-    passed as other structures, directly from he simulation.
+    Analyse the output from a MD-flux simulation.
+
+    This method will will determine if the data should be read from files or
+    if it's passed as other structures directly from the simulation.
 
     Parameters
     ----------
@@ -63,12 +63,14 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
 def run_md_flux_files(analysis_settings, simulation_settings,
                       crossfile, energyfile, orderfile):
     """
-    This method will analyse the output from a MD-flux simulation, by reading
-    in raw data from output files obtained in the MD-flux simulation.
-    This method will output a series of plots and generate a report based on
-    the analysis. The function calls for performing the actual analysis are
-    here wrapped with run_analysis_file, this is just to ensure that we are
-    only analysing one block and ignoring the rest of the block in the file.
+    Analyse the output from a MD-flux simulation.
+
+    The raw data will be read from output files obtained by the MD-flux
+    simulation. This method will output a series of plots and generate a
+    report based on the analysis. The function calls for performing the
+    actual analysis are here wrapped with run_analysis_file, this is just
+    to ensure that we are only analysing one block and ignoring the rest
+    of the possible blocks in the file.
 
     Parameters
     ----------
@@ -110,6 +112,8 @@ def run_md_flux_files(analysis_settings, simulation_settings,
 
 def run_analysis_file(analysis_func, fileobject):
     """
+    Run analysis on the first block in a file.
+
     This is a wrapper for analysing files, it will simply only
     consider the first block in the file and exit if more are
     found with a warning.
@@ -130,7 +134,7 @@ def run_analysis_file(analysis_func, fileobject):
     """
     def wrapper(analysis_settings, simulation_settings, plotter):
         """
-        This is a wrapper for the analysis from files.
+        Wrap the analysis from files.
 
         Parameters
         ----------
@@ -163,6 +167,8 @@ def run_analysis_file(analysis_func, fileobject):
 
 def set_up_output(func):
     """
+    Decorator that will automatically create a plotter if needed.
+
     This is a decorator to automatically create a plotter if it's
     not given. It will also set up txt writing based on the settings
     given as input.
@@ -176,7 +182,7 @@ def set_up_output(func):
     def wrapper(analysis_settings, simulation_settings, rawdata,
                 plotter=None):
         """
-        This method will generate the plotter if it's needed.
+        Generate the plotter if it's needed.
 
         Parameters
         ----------
@@ -210,8 +216,7 @@ def set_up_output(func):
 def run_flux_analysis(analysis_settings, simulation_settings,
                       crossdata, plotter=None, txt=None):
     """
-    This method will just run the md flux analysis and output some
-    figures.
+    Run the md flux analysis and output some figures.
 
     Parameters
     ----------
@@ -262,8 +267,7 @@ def run_flux_analysis(analysis_settings, simulation_settings,
 def run_order_analysis(analysis_settings, simulation_settings,
                        orderdata, plotter=None, txt=None):
     """
-    This method will just run the order analysis and plot the results
-    to files.
+    Run the order analysis and plot the results to files.
 
     Parameters
     ----------
@@ -311,8 +315,7 @@ def run_order_analysis(analysis_settings, simulation_settings,
 def run_energy_analysis(analysis_settings, simulation_settings,
                         energydata, plotter=None, txt=None):
     """
-    This method will just run the md flux analysis and output some
-    figures.
+    Run the energy analysis and output some results to figures.
 
     Parameters
     ----------

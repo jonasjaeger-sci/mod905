@@ -7,15 +7,16 @@ import warnings
 
 def _check_args(function, given_args=None, given_kwargs=None):
     """
-    This method will just check the consistency between a
-    function and the given arguments and keyword arguments.
+    Check consistency for function and the given (keyword) arguments.
+
     Here we assume that the arguments are given in a list and that
-    the keyword arguments are given as a dict.
+    the keyword arguments are given as a dict. The function
+    `inspect.getargspec` is used to check the input function.
 
     Parameters
     ----------
     function : function
-        The function we will inspect
+        The function we will inspect.
     given_args : list
         A list of the arguments to pass to the function. 'self' will not
         be considered here since it passed implicitly.
@@ -67,7 +68,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
 
 def _execute_now(step, when):
     """
-    Determines if a task should be executed.
+    Determine if a task should be executed or not at this `step`.
 
     Parameters
     ----------
@@ -80,7 +81,7 @@ def _execute_now(step, when):
     Returns
     -------
     out : boolean
-        True of the task should be executed
+        True of the task should be executed.
     """
     if when is None:
         return True
@@ -121,17 +122,20 @@ class SimulationTask(object):
     result : string
         This is a label for the result created by the task.
     """
+
     def __init__(self, function, args=None, kwargs=None, when=None,
                  result=None, first=False):
         """
+        Initialize the task.
+
         Parameters
         ----------
         function : function
-            The function to execute
+            The function to execute.
         args : list, optional
-            List of arguments to the function
+            List of arguments to the function.
         kwargs : dict, optional
-            The keyword arguments to the function
+            The keyword arguments to the function.
         when : dict
             Determines if the task should be executed.
         first : boolean
@@ -156,7 +160,7 @@ class SimulationTask(object):
 
     def execute(self, step):
         """
-        This will execute the task.
+        Execute the task.
 
         Parameters
         ----------
@@ -165,10 +169,10 @@ class SimulationTask(object):
             start and 'stepno' the number of cycles we have performed so far.
         args : list
             These are the arguments to the function. Can be used to override
-            self.args
+            `self.args`.
         kwargs : dict
             These are keyword arguments to the function.
-            Can be used to override self.kwargs
+            Can be used to override `self.kwargs`.
 
         Returns
         -------
@@ -192,8 +196,10 @@ class SimulationTask(object):
 
     def update_when(self, when):
         """
-        This will update when to new values. It will only update
-        `when` for the keys given in when.
+        Update when to new value(s).
+
+        It will only update `self.when` for the keys given in the
+        input `when`.
 
         Parameters
         ----------
@@ -211,16 +217,16 @@ class SimulationTask(object):
                 self.when[key] = when[key]
 
     def get_result_label(self):
-        """Returns the result label"""
+        """Return the result label."""
         return self.result
 
     def run_first(self):
-        """Returns True if task should be executed before first step"""
+        """Return True if task should be executed before first step."""
         return self.first
 
     def __call__(self, step):
         """
-        This will execute the task.
+        Execute the task.
 
         Parameters
         ----------
@@ -264,10 +270,11 @@ class OutputTask(object):
         write routine. This is for instance used in the trajectory writer to
         display the current step for a written frame.
     """
+
     def __init__(self, writer, output_type, target, when=None,
                  header=None):
         """
-        Initiate the OutputTask
+        Initiate the OutputTask object.
 
         Parameters
         ----------
@@ -297,12 +304,12 @@ class OutputTask(object):
         self.header = header
 
     def get_output(self):
-        """Simple function to return the output type"""
+        """Simple function to return the output type."""
         return self.output_type
 
     def output(self, step, result):
         """
-        This will ouput the task.
+        Output the task.
 
         Parameters
         ----------

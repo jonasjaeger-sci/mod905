@@ -6,20 +6,21 @@ from retis.core.montecarlo import max_displace_step
 from retis.core.simulation import Simulation
 
 
-__all__ = ['UmbrellaWindowSimulation']
+__all__ = ('UmbrellaWindowSimulation')
 
 
 def mc_task(rgen, system, maxdx):
     """
-    Function to perform monte carlo moves.
+    Function to perform Monte Carlo moves.
+
     Will update positions and potential energy as needed.
 
     Parameters
     ----------
     rgen : object of type RandomGenerator (from retis.core.random)
         This object is used for generating random numbers.
-    system :
-        The system we act on,
+    system : object of type retis.core.system
+        The system we act on.
     maxdx : float
         Maximum displacement step for the Monte Carlo move.
     """
@@ -33,7 +34,9 @@ def mc_task(rgen, system, maxdx):
 
 class UmbrellaWindowSimulation(Simulation):
     """
-    This class defines a Umbrella simulation which is a special case of
+    This class defines a Umbrella simulation.
+
+    The Umbrella simulation is a special case of
     the simulation class with settings to simplify the
     execution of the umbrella simulation.
 
@@ -54,6 +57,7 @@ class UmbrellaWindowSimulation(Simulation):
     maxdx : float
         Maximum allowed displacement in the Monte Carlo step.
     """
+
     def __init__(self, system, umbrella, overlap, rgen, maxdx,
                  mincycle=0, startcycle=0):
         """
@@ -109,15 +113,16 @@ class UmbrellaWindowSimulation(Simulation):
 
         Returns
         -------
-        out : True if simulation is finished, false otherwise.
+        out : boolean
+            True if simulation is finished, False otherwise.
         """
         return (self.cycle['step'] > self.cycle['end'] and
                 np.all(self.system.particles.pos > self.overlap))
 
     def __str__(self):
-        """Just a small function to return some info about the simulation"""
+        """Just a small function to return some info about the simulation."""
         msg = ['Umbrella window simulation']
         msg += ['Umbrella: {}, Overlap: {}.'.format(self.umbrella,
                                                     self.overlap)]
-        msg += ['Miminum number of cycles: {}'.format(self.cycle['end'])]
+        msg += ['Minimum number of cycles: {}'.format(self.cycle['end'])]
         return '\n'.join(msg)

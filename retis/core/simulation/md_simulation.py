@@ -7,12 +7,12 @@ from retis.core.path import check_crossing
 import warnings
 
 
-__all__ = ['SimulationNVE', 'SimulationMDFlux']
+__all__ = ('SimulationNVE', 'SimulationMDFlux')
 
 
 class SimulationNVE(Simulation):
     """
-    SimulationNVE(Simulation)
+    SimulationNVE(Simulation).
 
     This class is used to define a NVE simulation with some additional
     additional tasks/calculations.
@@ -26,15 +26,18 @@ class SimulationNVE(Simulation):
         The integrator must have integrator.dynamics == 'NVE' in order
         for it to be usable in this simulation.
     """
+
     def __init__(self, system, integrator, endcycle=0, startcycle=0):
         """
-        Initialization of a NVE simulation. Here we will set up the
-        tasks that are to be performed in the simulation.
+        Initialization of a NVE simulation.
+
+        Here we will set up the tasks that are to be performed in the
+        simulation, such as the integration and thermodynamics calculation(s).
 
         Parameters
         ----------
         system : object of type System
-            This is the system we are investigating
+            This is the system we are investigating.
         integrator : object of type Integrator
             This is the integrator that is used to propagate the system
             in time.
@@ -77,7 +80,7 @@ class SimulationNVE(Simulation):
         self.add_task(task_thermo)
 
     def __str__(self):
-        """Return info about the simulation"""
+        """Return a string with info about the simulation."""
         msg = ['NVE simulation']
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
@@ -88,10 +91,11 @@ class SimulationNVE(Simulation):
 
 class SimulationMDFlux(Simulation):
     """
-    SimulationMDFlux(Simulation)
+    SimulationMDFlux(Simulation).
 
     This class is used to define a MD simulation where the goal is
-    to calculate crossings.
+    to calculate crossings in order to obtain the initial flux for a TIS
+    calculation.
 
     Attributes
     ----------
@@ -112,6 +116,7 @@ class SimulationMDFlux(Simulation):
         These are used to store the previous positions with respect
         to the interfaces.
     """
+
     def __init__(self, system, integrator, interfaces, order_function,
                  endcycle=0, startcycle=0):
         """
@@ -160,10 +165,12 @@ class SimulationMDFlux(Simulation):
 
     def step(self):
         """
-        Run a simulation step. Rather than using the tasks for the more
-        general simulation, we here just execute what we need.
-        The output tasks are handled by the routines for the base Simulation
-        object.
+        Run a simulation step.
+
+        Rather than using the tasks for the more general simulation, we here
+        just executing what we need. The output tasks are handled by the
+        routines for the base Simulation object (that is the function
+        ``self.output(results)``).
 
         Returns
         -------
@@ -195,7 +202,7 @@ class SimulationMDFlux(Simulation):
         return results
 
     def __str__(self):
-        """Return info about the simulation"""
+        """Return a string with info about the simulation."""
         msg = ['MD-flux simulation']
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]

@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for analysis of crossings for the
-flux data
-"""
+"""Methods for analysis of crossings for the flux data."""
 from __future__ import absolute_import
 from retis.analysis.analysis import (running_average, block_error_corr,
                                      safe_divide)
 import numpy as np
 
-__all__ = ['analyse_flux']
+
+__all__ = ('analyse_flux')
 
 
 def analyse_flux(fluxdata, settings, simulation_settings):
     """
-    This method will run the analysis on several order parameters and
-    collect the results into a structure which is convenient for plotting and
-    reporting the results.
+    Run the analysis on the given flux data.
+
+    This will run the flux analysis and collect the results into a structure
+    which is convenient for plotting and reporting the results.
 
     Parameters
     ----------
@@ -89,8 +88,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
 
 def _effective_crossings(fluxdata, nint, end_step):
     """
-    This method will analyse the flux output and obtain the effective
-    crossings.
+    Analyse `fluxdata` and obtain effective crossings.
 
     Parameters
     ----------
@@ -173,7 +171,7 @@ def _effective_crossings(fluxdata, nint, end_step):
 
 def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     """
-    This method will calculate the flux in different time windows.
+    Calculate the flux in different time windows.
 
     Parameters
     ----------

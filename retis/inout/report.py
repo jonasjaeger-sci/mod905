@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods that will generate reports for displaying
-the results from the analysis.
+This file contains methods that will generate reports.
+
+The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
 from retis import __version__ as VERSION
@@ -16,7 +17,7 @@ import os
 import jinja2
 
 
-__all__ = ['generate_report_tis', 'generate_report_md']
+__all__ = ('generate_report_tis', 'generate_report_md')
 
 
 # filename for known templates:
@@ -35,7 +36,7 @@ _EXT = {'rst': 'rst',
 
 def _rst_to_html(rst):
     """
-    This will convert a reStrcuturedText string to simple html.
+    Convert a reStrcuturedText string to simple html.
 
     Parameters
     ----------
@@ -57,17 +58,17 @@ def _rst_to_html(rst):
 
 def _remove_extension(filename):
     """
-    This method will remove the extension of a given filename
+    Remove the extension of a given filename.
 
     Parameters
     ----------
     filename : string
-        The filename to check
+        The filename to check.
 
     Returns
     -------
     out : string
-        The filename with the extension removed
+        The filename with the extension removed.
     """
     try:
         return os.path.splitext(filename)[0]
@@ -77,6 +78,8 @@ def _remove_extension(filename):
 
 def _remove_extensions(list_of_files):
     """
+    Remove extensions for a list of files.
+
     This will strip out extensions for all the files in a given iterable.
     Here, the iterable might be a simple list which contains dictionaries or
     it can be a dictionary. How we to the loop will depend on this.
@@ -84,7 +87,7 @@ def _remove_extensions(list_of_files):
     Parameters
     ----------
     list_of_files : list or dict, iterable
-        This is the list for which we will try to remove extensions
+        This is the list for which we will try to remove extensions.
 
     Returns
     -------
@@ -113,8 +116,7 @@ def _remove_extensions(list_of_files):
 
 def _get_template(output, report_type, template=None):
     """
-    This method will return the template to use for a specified
-    output format.
+    Return the template to use for a specified output format.
 
     Parameters
     ----------
@@ -152,7 +154,7 @@ def _get_template(output, report_type, template=None):
 
 def _generate_report(report, output, template, path):
     """
-    This method will do the actual generation of the report.
+    Do the actual generation of a report.
 
     Parameters
     ----------
@@ -174,7 +176,6 @@ def _generate_report(report, output, template, path):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-
     env = jinja2.Environment(block_start_string='@{%',
                              block_end_string='%}@',
                              variable_start_string='@{{',
@@ -189,17 +190,18 @@ def _generate_report(report, output, template, path):
         return render, _EXT[output]
 
 
-def generate_report_tis_path(path_ensemble, analysis, output='rst', template=None):
+def generate_report_tis_path(path_ensemble, analysis, output='rst',
+                             template=None):
     """
-    This will generate a report for a single TIS simulation.
+    Generate a report for a single TIS simulation.
 
     Parameters
     ----------
     analysis : dict
         This is the output (and some input) for the analysis. The keys are:
         'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of correponding figures (to 'tis')
-        'matched' : results from the matchin of probability
+        'tis-fig' : list of corresponding figures (to 'tis')
+        'matched' : results from the matching of probability
         'matched-fig' : the figure corresponding to 'matched'
         'detect' : locations of the interfaces used for detection
     output : string, optional
@@ -218,7 +220,8 @@ def generate_report_tis_path(path_ensemble, analysis, output='rst', template=Non
         The file extension (i.e. file type) for the generated report.
     """
     # get template and generate:
-    output, template, path = _get_template(output, 'TIS_PATH', template=template)
+    output, template, path = _get_template(output, 'TIS_PATH',
+                                           template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
               'ensemble': path_ensemble.ensemble,
@@ -246,16 +249,15 @@ def generate_report_tis_path(path_ensemble, analysis, output='rst', template=Non
 def generate_report_tis(path_ensembles, analysis, output='rst',
                         template=None):
     """
-    This will generate a report for the over-all results from a TIS
-    simulation.
+    Generate a report for the over-all results from a TIS simulation.
 
     Parameters
     ----------
     analysis : dict
         This is the output (and some input) for the analysis. The keys are:
         'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of correponding figures (to 'tis')
-        'matched' : results from the matchin of probability
+        'tis-fig' : list of corresponding figures (to 'tis')
+        'matched' : results from the matching of probability
         'matched-fig' : the figure corresponding to 'matched'
         'detect' : locations of the interfaces used for detection
     output : string, optional
@@ -315,12 +317,12 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
 
 def generate_report_md(analysis, output='rst', template=None):
     """
-    This will generate the report for the results.
+    Generate a report for MD results.
 
     Parameters
     ----------
     analysis : dict
-        This is the output from the analysis. The keys are:
+        This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in _TEMPLATES.
@@ -357,6 +359,8 @@ def generate_report_md(analysis, output='rst', template=None):
 
 def _apply_format(value, fmt):
     """
+    Apply format string to a given value.
+
     This method is to check the formatting of a float. Here we are
     going to force a maximum length on the resulting string.
     This is to avoid problems like: '{:7.2f}'.format(12345.7) which
@@ -367,7 +371,7 @@ def _apply_format(value, fmt):
     Parameters
     ----------
     value : float
-        The float to format
+        The float to format.
     fmt : string
         The format to use.
     """
@@ -391,8 +395,7 @@ def _apply_format(value, fmt):
 
 def _table_md_efficiency(results, fmt='rst'):
     """
-    This will generate the table for the MD-flux results for efficiencies
-    and correlations.
+    Generate a table with  MD-flux results for efficiencies and correlations.
 
     Parameters
     ----------
@@ -405,7 +408,7 @@ def _table_md_efficiency(results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in the desired format which represents
         the table.
@@ -449,7 +452,8 @@ def _table_md_efficiency(results, fmt='rst'):
 
 def _table_md_flux_cycles(results, fmt='rst'):
     """
-    This will generate the table for the MD-flux results for cycle numbers.
+    Generate the table for the MD-flux results for cycle numbers.
+
     The table will display the number of steps in state A, state B,
     overall state A and B and total number of MD cycles.
 
@@ -464,7 +468,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in the desired format which represents
         the table.
@@ -489,7 +493,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
 
 def _table_md_flux(results, fmt='rst'):
     """
-    This will generate the table for the MD-flux results.
+    Generate the table for the MD-flux results.
 
     Parameters
     ----------
@@ -502,7 +506,7 @@ def _table_md_flux(results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in the desired format which represents
         the table.
@@ -542,7 +546,10 @@ def _table_md_flux(results, fmt='rst'):
 
 def _table_interface(path_ensembles, detect, fmt='rst'):
     """
-    This will generate the table for the interfaces.
+    Generate the table for the interfaces.
+
+    This table will display the location of the different
+    interfaces.
 
     Parameters
     ----------
@@ -556,12 +563,11 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in the desired format which represents
         the table.
     """
-    # table for interfaces:
     table = []
     for path_e, idet in zip(path_ensembles, detect):
         row = ['{:^8s}'.format(path_e.ensemble)]
@@ -585,7 +591,10 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
 
 def _table_probability(path_ensembles, results, fmt='rst'):
     """
-    This will generate the table for the probabilities.
+    Generate the table for the probabilities.
+
+    This table will display the crossing probabilities with
+    uncertainties.
 
     Parameters
     ----------
@@ -599,12 +608,11 @@ def _table_probability(path_ensembles, results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in reStrucutredText format which represents
         the table.
     """
-    # table for probabilities:
     table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
@@ -627,7 +635,10 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
 def _table_path(path_ensembles, results, fmt='rst'):
     """
-    This will generate the table for the probabilities.
+    Generate the table for the path lengths.
+
+    This table will display the path lengths and also show the ratio of
+    path lengths for all paths and accepted paths.
 
     Parameters
     ----------
@@ -641,7 +652,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in reStrucutredText format which represents
         the table.
@@ -670,7 +681,10 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
 def _table_efficiencies(path_ensembles, results, fmt='rst'):
     """
-    This will generate the table for the probabilities.
+    Generate table for efficiencies.
+
+    This table will display results for the efficiencies, acceptance
+    ratios and correlation.
 
     Parameters
     ----------
@@ -684,12 +698,11 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
     Returns
     -------
     out[0] : list of strings
-        These are the rows of the table
+        These are the rows of the table.
     out[1] : string
         This is a string in reStrucutredText format which represents
         the table.
     """
-    # table for efficiency:
     table = []
     for path_e, result in zip(path_ensembles, results):
         row = ['{:^8s}'.format(path_e.ensemble)]
@@ -716,14 +729,14 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
 
 def _generate_rst_table(table, title, headings):
     """
-    This method will generate the reStructuredText for a table.
+    Generate the reStructuredText for a table.
 
     Parameters
     ----------
     table : list of lists
         table[i][j] is the string contents of column j of table i of the table.
     title : string
-        The header/title for the table
+        The header/title for the table.
     headings : list of strings
         These are the headings for each table column.
     """
@@ -762,14 +775,14 @@ def _generate_rst_table(table, title, headings):
 
 def _generate_latex_table(table, title, headings, fixnum=None):
     """
-    This method will generate the latex code for a table.
+    Generate the latex code for a table.
 
     Parameters
     ----------
     table : list of lists
         table[i][j] is the string contents of column j of table i of the table.
     title : string
-        The header/title for the table
+        The header/title for the table.
     headings : list of strings
         These are the headings for each table column.
     fixnum : list/set of integers
@@ -798,13 +811,15 @@ def _generate_latex_table(table, title, headings, fixnum=None):
 
 def _latexify_number(str_float):
     r"""
-    This will change exponential notation, e.g 1.2e-03, into
-    1.2 \times 10^{-3} for latex output.
+    Change exponential notation into something nicer for latex.
+
+    This will change exponential notation, e.g ``1.2e-03``, into
+    ``1.2 \times 10^{-3}`` for latex output.
 
     Parameters
     ----------
     str_float : string
-        This is the string representation of a float
+        This is the string representation of a float.
     """
     if 'e' in str_float:
         base, exp = str_float.split('e')

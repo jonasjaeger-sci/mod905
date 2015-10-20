@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This file contains methods for generating plots using matplotlib.
+
 It also defines some standard plots that are done in the analysis.
 """
 import numpy as np
@@ -29,7 +30,7 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _PATH_MATCH)
 
 
-__all__ = ['MplPlotter']
+__all__ = ('MplPlotter')
 
 
 # Define default style file:
@@ -39,7 +40,7 @@ _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
 
 class MplPlotter(object):
     """
-    Class MplPlotter(object)
+    Class MplPlotter(object).
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which conveniently can be called in
@@ -49,8 +50,12 @@ class MplPlotter(object):
 
     Attributes
     ----------
-
+    style : string
+        Defines what style to use for the plotting.
+    out_fmt : string
+        Selects format for output plots.
     """
+
     def __init__(self, out_fmt, style=None):
         """
         To initiate the plotting object. Here we only define the style.
@@ -58,8 +63,8 @@ class MplPlotter(object):
         Parameters
         ----------
         style : string, optional
-        This selects the style to use, it can be a file path or the
-        string with the style name.
+            This selects the style to use, it can be a file path or the
+            string with the style name.
         """
         self.style = style
         mpl_set_style(self.style)
@@ -78,29 +83,31 @@ class MplPlotter(object):
             self.out_fmt = out_fmt
 
     def plot_flux(self, results):
-        """Function to call ``mpl_plot_flux``"""
+        """Function to call ``mpl_plot_flux``."""
         return mpl_plot_flux(results, self.out_fmt)
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """Function to call ``mpl_plot_energy``"""
+        """Function to call ``mpl_plot_energy``."""
         return mpl_plot_energy(results, energies, self.out_fmt,
                                sim_settings=sim_settings)
 
     def plot_orderp(self, results, orderdata):
-        """Function to just call ``mpl_plot_orderp``"""
+        """Function to just call ``mpl_plot_orderp``."""
         return mpl_plot_orderp(results, orderdata, self.out_fmt)
 
     def plot_path(self, path_ensemble, results, idetect):
-        """Function to just ``call mpl_plot_path``"""
+        """Function to just ``call mpl_plot_path``."""
         return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
 
     def plot_total_probability(self, path_ensembles, detect, matched):
-        """Function to just call ``mpl_plot_matched``"""
+        """Function to just call ``mpl_plot_matched``."""
         return mpl_plot_matched(path_ensembles, detect, matched, self.out_fmt)
 
 
 def _mpl_read_style_file(filename):
     """
+    Read style files for old versions of matplotlib.
+
     This function is just intended for old versions of matplotlib
     where we have to read parameters and set them ourselves.
 
@@ -111,7 +118,7 @@ def _mpl_read_style_file(filename):
 
     Returns
     -------
-    N/A but it modifies matplotlib.rcParams
+    N/A but it modifies matplotlib.rcParams.
     """
     with open(filename, 'r') as fileh:
         for lines in fileh:
@@ -131,6 +138,8 @@ def _mpl_read_style_file(filename):
 
 def mpl_set_style(style='pyretis'):
     """
+    Set the plotting style for matplotlib.
+
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
     'grayscale' (i.e. one of the styles in matplotlib.style.available) or
@@ -162,7 +171,8 @@ def mpl_set_style(style='pyretis'):
 
 def mpl_savefig(canvas, outputfile):
     """
-    This is just a helper function to save matplotlib figures.
+    Function to save matplotlib figures.
+
     It will save figures so that old ones are not overwritten.
 
     Parameters
@@ -181,7 +191,8 @@ def mpl_savefig(canvas, outputfile):
 
 def mpl_plot_in_chunks(axs, series, chunksize=20000):
     """
-    This is a helper function to plot xval vs yval with matplotlib.
+    Plot a series in chunks using matplotlib.
+
     When plotting 'large' datasets, matplotlib might give an
     'OverflowError: Allocated too many blocks' error.
     Here we avoid this error by plotting the data in chunks. We could
@@ -218,12 +229,12 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
 
 def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
     """
-    Helper function to do the actual plotting.
+    Do the actual plotting in chunks for x-vs-y data.
 
     Parameters
     ----------
     axs : Axes object from matplotlib
-        Where to do the plotting
+        Where to do the plotting.
     series : dict
         Represents the data to be plotted.
     low : int, optional
@@ -232,7 +243,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
         Index where to end the plotting, this index is not plotted. `high`
         is assumed to always be > 0 or None.
     color : string, optional
-        A string representing the color to use
+        A string representing the color to use.
 
     Returns
     -------
@@ -253,7 +264,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
 def mpl_simple_plot(series, outputfile, fig_settings=None):
     """
-    This method will plot time series data.
+    Plot simple time series data (i.e. x vs y data).
 
     Parameters
     ----------
@@ -304,12 +315,12 @@ def mpl_simple_plot(series, outputfile, fig_settings=None):
 
 def mpl_linecollection_gradient(axs, series):
     """
-    Helper function to do the actual plotting of a line gradient.
+    Plot a line with a color gradient along the line.
 
     Parameters
     ----------
     axs : Axes object from matplotlib
-        Where to do the plotting
+        Where to do the plotting.
     series : dict
         Represents the data to be plotted.
 
@@ -334,15 +345,17 @@ def mpl_linecollection_gradient(axs, series):
 
 def mpl_chunks_gradient(axs, series, chunksize=20000):
     """
-    Method to draw a line gradient using chunks. Here we will plot lines
-    with length equal to chunksize and color that line with one color. This
-    method will be used when chunksize << length of the data to plot so that
+    Plot a line gradient in chunks.
+
+    Here we will plot lines with length equal to chunksize and color
+    that line-chunk with one color. This method will be used when
+    chunksize << length of the data to plot so that
     each chunksize will have approximately the same color.
 
     Paremters
     ---------
     axs : Axes object from matplotlib
-        Where to do the plotting
+        Where to do the plotting.
     series : dict
         Represents the data to be plotted.
 
@@ -380,6 +393,8 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
 def mpl_line_gradient(series, outputfile, fig_settings):
     """
+    Plot time series and color the line with a color gradient.
+
     This method will plot time series data and color the lines with
     a gradient according to 'time'
 
@@ -431,13 +446,15 @@ def mpl_line_gradient(series, outputfile, fig_settings):
 def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
                    title=None):
     """
-    This method will plot time series data.
+    Plot series with error values.
+
+    The error values will be displayed as a filled region.
 
     Parameters
     ----------
     series : list of tuples
         `series[i]` is the tuple which will be plotted. It is assumed
-        to be on the form (x-values, y-values, y-error, legend)
+        to be on the form (x-values, y-values, y-error, legend).
     outputfile : string
         This is the name of the output file to create.
     xlabel : string, optional
@@ -477,6 +494,8 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
 
 def mpl_block_error(error, title, outputfile):
     """
+    Plot results from a block error analysis.
+
     This will plot the output from a error analysis; the error
     as a function of the block length.
 
@@ -507,7 +526,7 @@ def mpl_block_error(error, title, outputfile):
 def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
                           outputfile_scale):
     """
-    This method will plot the histograms from the shoots analysis.
+    Plot the histograms from the shoots analysis.
 
     Parameters
     ----------
@@ -547,8 +566,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
 
 def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
     """
-    This method will output all the figures from the results obtained
-    by the path analysis.
+    Plot all figures from the path analysis.
 
     Parameters
     ----------
@@ -687,7 +705,7 @@ def mpl_plot_orderp(results, orderdata, out_fmt):
 
 def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
     """
-    Save the output from the energy analysis to text files.
+    Plot the output from the energy analysis using matplotlib.
 
     Parameters
     ----------
@@ -822,6 +840,8 @@ def mpl_plot_flux(results, out_fmt):
 
 def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
     """
+    Plot matched probabilities using matplotlib.
+
     This method will plot the overall matched probabilities for the
     different ensembles and a plot with just the over-all matched
     probability.

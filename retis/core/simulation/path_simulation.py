@@ -8,12 +8,12 @@ from retis.core.random_gen import RandomGenerator
 from retis.core.tis import generate_initial_path_kick, make_tis_step
 
 
-__all__ = ['SimulationTIS']
+__all__ = ('SimulationTIS')
 
 
 class SimulationTIS(Simulation):
     """
-    SimulationTIS(Simulation)
+    SimulationTIS(Simulation).
 
     This class is used to define a TIS simulation where the goal is
     to calculate crossing probabilities.
@@ -43,6 +43,7 @@ class SimulationTIS(Simulation):
     path_ensemble : object of type PathEnsemble
         This is used for storing results for the simulation.
     """
+
     def __init__(self, system, integrator, settings,
                  endcycle=0, startcycle=0):
         """
@@ -86,7 +87,8 @@ class SimulationTIS(Simulation):
 
     def _initialize_path(self):
         """
-        This is a method to initialize the TIS simulation.
+        Initialize the TIS simulation.
+
         It will select the initialization method based on the setting given
         in `self.tis_settings['initial_path']`.
         """
@@ -104,10 +106,12 @@ class SimulationTIS(Simulation):
 
     def step(self):
         """
-        Run a simulation step. Rather than using the tasks for the more
-        general simulation, we here just execute what we need. Since we
-        are integrating and checking the crossing at every step, these tasks
-        are not in the self.tasks list. Other tasks are handled by this list.
+        Perform a simulation step.
+
+        Rather than using the tasks for the more general simulation, we here
+        just execute what we need. Since we are integrating and checking the
+        crossing at every step, these tasks are not in the self.tasks list.
+        Other tasks are handled by this list.
 
         Returns
         -------
@@ -151,7 +155,7 @@ class SimulationTIS(Simulation):
         return results
 
     def __str__(self):
-        """Just a small function to return some info about the simulation"""
+        """Just a small function to return some info about the simulation."""
         msg = ['TIS simulation']
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]

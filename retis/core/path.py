@@ -26,32 +26,33 @@ _GENERATED = {'sh': 'Path was generated with a shooting move',
 
 def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     """
-    This function will merge two paths - one is in the backward time
-    direction and the other is in the forward direction. The resulting
-    path is equal to the two paths stacked on top of each-other in correct
-    time. Note that the ordering is important here:
-    paste_paths(path1, path2) != paste_paths(path2, path1).
+    Merge two paths: one is in the backward and the other in the forward
+    time direction.
 
-    The code is very similar to Path.__add__ but we have to take care:
-    - path_back must be iterated in reverse (it is assumed to be a
-      backward trajectory)
-    - we may have to remove one point in path2 (if the paths overlap)
+    The resulting path is equal to the two paths stacked in correct time.
+    Note that the ordering is important here:
+    ``paste_paths(path1, path2) != paste_paths(path2, path1)``.
+
+    The code is very similar to `Path.__add__` but we have to take care:
+    - `path_back` must be iterated in reverse (it is assumed to be a
+      backward trajectory).
+    - we may have to remove one point in `path2` (if the paths overlap).
 
     Parameters
     ----------
     path_back : object of type Path
-        This is the backward trajectory
+        This is the backward trajectory.
     path_forw : object of type Path
-        This is the forward trajectory
+        This is the forward trajectory.
     overlap : boolean, default is True
-        If true, path_back and path_forw have a common starting-point,
-        that is, the first point in path_forw is identical to the first point
-        in path_back. In time-space this means that the first point in
-        path_forw is identical to the last point in path_back (the backward
+        If true, `path_back` and `path_forw` have a common starting-point,
+        that is, the first point in `path_forw` is identical to the first point
+        in `path_back`. In time-space this means that the first point in
+        `path_forw` is identical to the last point in path_back (the backward
         and forward path started at the same location in space).
     maxlen : float, optional
         This is the maximum length for the new path. If it's not given, it will
-        just be set to the largest of the maxlen of the two given paths.
+        just be set to the largest of the `maxlen` of the two given paths.
 
     Note
     ----
@@ -91,8 +92,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 
 def reverse_path(path, order_func=None):
     """
-    This method will reverse a path and return the reverse path as
-    a new Path object.
+    Reverse a path and return the reverse path as a new Path object.
 
     Parameters
     ----------
@@ -120,10 +120,10 @@ def reverse_path(path, order_func=None):
 def check_crossing(cycle, system, order_function, interfaces,
                    leftside_prev=None):
     """
-    This method will check if we have crossed an interface during the
-    last step. If will use a variable to store the previous positions
-    with respect to the interfaces and check if interfaces were crossed
-    here.
+    Check if we have crossed an interface during the last step.
+
+    If will use a variable to store the previous positions with respect to
+    the interfaces and check if interfaces were crossed here.
 
     Parameters
     ----------
@@ -131,11 +131,11 @@ def check_crossing(cycle, system, order_function, interfaces,
         This is the current simulation cycle number.
     system : object of type retis.core.System
         This is the system which defines the phase point we are currently
-        investigating
+        investigating.
     order_function : function or object of type order parameter or number.
-        Order parameter objects are defined in ``orderparameter.py``.
-        ``order_function`` is assumed to be a function accepting
-        ``system`` as a parameter and returning at least two scalars.
+        Order parameter objects are defined in `orderparameter.py`.
+        `order_function` is assumed to be a function accepting
+        `system` as a parameter and returning at least two scalars.
         In case a single float is give, the order parameter will not be
         recalculated and the single float will just be used as the current
         order parameter.
@@ -177,7 +177,7 @@ def check_crossing(cycle, system, order_function, interfaces,
 
 class Path(object):
     """
-    Path(object)
+    Path(object).
 
     This class represents a path. A path consist of a series of consecutive
     snapshots (the trajectory) with the corresponding order parameter.
@@ -187,31 +187,32 @@ class Path(object):
     ----------
     maxlen : int
         This is the maximum path length. Some algorithms requires this to
-        be set. Others don't, which is indicated by setting maxlen equal to
+        be set. Others don't, which is indicated by setting `maxlen` equal to
         None.
     path : list
         This is the trajectory/series of snapshots, stored as a list of tuples.
-        Each tuple stores (positions, velocities, order parameter).
+        Each tuple stores (positions, velocities, order parameters, energy).
     ordermin : tuple
         This is the (current) minimum order parameter for the path.
-        ordermin[0] is the value, ordermin[1] is the index in self.path.
+        `ordermin[0]` is the value, `ordermin[1]` is the index in `self.path`.
     ordermax : tuple
         This is the (current) maximum order parameter for the path.
-        ordermax[0] is the value, ordermax[1] is the index in self.path.
+        `ordermax[0]` is the value, `ordermax[1]` is the index in `self.path`.
     time_origin : int
-        This is the location of the phasepoint path[0] relative to it's
-        parent. This might be usefull for plotting.
+        This is the location of the phase point `path[0]` relative to its
+        parent. This might be useful for plotting.
     status : str or None
         The status of the path. The possibilities are defined
-        in the variable _STATUS
+        in the variable `_STATUS`
     generated : tuple
         This contains information on how the path was generated.
-        generated[0] : string, one of _GENERATED
-        generated[1:] : additional information:
-        For generated[0] == 'sh' the additional information is the index
+        `generated[0]` : string, as defined in the variable `_GENERATED`
+        `generated[1:]` : additional information:
+        For ``generated[0] == 'sh'`` the additional information is the index
         of the shooting point on the old path, the new path and the
         corresponding order parameter.
     """
+
     def __init__(self, maxlen=None, time_origin=0):
         """
         Initialize the Path object.
@@ -235,7 +236,7 @@ class Path(object):
 
     def __iter__(self):
         """
-        To iterate over the phase-space points
+        Iterate over the phase-space points.
 
         Returns
         -------
@@ -246,21 +247,22 @@ class Path(object):
 
     def append(self, pos, vel, orderp, energy):
         """
-        Method to append a new phase point to the path. The phasepoint is
-        assumed to be given by positions and velocities with
-        a corresponding scalar order parameter.
+        Append a new phase point to the path.
+
+        The phase point is assumed to be given by positions and velocities
+        with a corresponding scalar order parameter and energy.
 
         Parameters
         ----------
         pos : numpy.array
-            The positions of the particles
+            The positions of the particles,
         vel: numpy.array
-            The velocities of the particles
+            The velocities of the particles,
         orderp : list of floats
             This variable is the order parameter for the given point.
-            orderp[0] is the actual order parameter used in path sampling
-            methods wihle orderp[1:] can represent other order parameters
-            for instance in orderp[1] typically the velocity of orderp[0].
+            `orderp[0]` is the actual order parameter used in path sampling
+            methods while `orderp[1:]` can represent other order parameters
+            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             self.path.append([np.copy(pos), np.copy(vel), orderp, energy])
@@ -273,15 +275,14 @@ class Path(object):
 
     def _update_orderp(self, orderp, idx):
         """
-        Function to update the max/min order parameter given a new
-        order parameter.
+        Update the min/max order parameter given a new order parameter.
 
-        Paramters
-        ---------
+        Parameters
+        -----------
         orderp : float
-            This is the new order parameter
+            This is the new order parameter.
         idx : integer
-            This is the index of the new order parameter in self.path
+            This is the index of the new order parameter in `self.path`.
         """
         if self.ordermax is None or orderp > self.ordermax[0]:
             self.ordermax = (orderp, idx)
@@ -290,8 +291,10 @@ class Path(object):
 
     def get_min_max_orderp(self):
         """
-        Function to check the order parameters. This will
-        explicitly loop over the path and find the max/min order paramter.
+        Get the minimum and maximum order parameter on the path.
+
+        This function will explicitly loop over the path, check all points
+        and find the minimum and maximum order parameter.
 
         Returns
         -------
@@ -318,9 +321,10 @@ class Path(object):
 
     def check_interfaces(self, interfaces):
         """
-        Method to get the current status of the path with respect
-        to the given interfaces. This is intended to determine if we
-        have crossed certain interfaces or not.
+        Get the current status of the path with respect to the `interfaces`.
+
+        This is intended to determine if we have crossed certain interfaces or
+        not.
 
         Parameters
         ----------
@@ -356,8 +360,10 @@ class Path(object):
 
     def get_end_point(self, left, right):
         """
-        This function just returns the end point of the path as
-        a string.
+        Return the end point of the path as a string.
+
+        The end point is either to the left of the `left` interface or to
+        the right of the `right` interface, or somewhere in between.
 
         Parameters
         ----------
@@ -382,8 +388,10 @@ class Path(object):
 
     def get_start_point(self, left, right):
         """
-        This function just returns the start point of the path as
-        a string.
+        Return the start point of the path as a string.
+
+        The start point is either to the left of the `left` interface or to
+        the right of the `right` interface.
 
         Parameters
         ----------
@@ -409,8 +417,9 @@ class Path(object):
 
     def get_path_data(self, status, interfaces):
         """
-        This function will return the information about the path which
-        will be stored in the path ensemble.
+        Return information about the Path.
+
+        This information can (and is typically) stored in a `PathEnsemble`.
 
         Parameters
         ----------
@@ -440,9 +449,11 @@ class Path(object):
 
     def success(self, idetect):
         """
-        This function will check if the path is successfull, as given
-        by the maximum order parameter and the value of idetect. It is
-        successfor if the maximum order parameter > idetect.
+        Check if the path is successful.
+
+        The check is based on the maximum order parameter and the value of
+        `idetect`. It is successful if the maximum order parameter is greater
+        than `idetect`.
 
         Parameters
         ----------
@@ -453,8 +464,7 @@ class Path(object):
 
     def __add__(self, other):
         """
-        This functions defines how we add two paths,
-        i.e. new_path = self + other
+        Define how we add two paths, i.e.: ``new_path = self + other``.
 
         Parameters
         ----------
@@ -463,6 +473,7 @@ class Path(object):
         Returns
         -------
         out : object of type Path
+            The Path obtained as ``out = self + other``.
         """
         if self.maxlen == other.maxlen:
             # everything is ok, they have the same length
@@ -485,9 +496,9 @@ class Path(object):
 
     def __iadd__(self, other):
         """
-        This function defines how we add path data to a path from
-        another path, i.e.: self += other.
-        This will simply append the phasepoints from other.
+        Add path data to a path from another path, i.e.: ``self += other``.
+
+        This will simply append the phasepoints from `other`.
 
         Parameters
         ----------
@@ -508,9 +519,7 @@ class Path(object):
         return self
 
     def __str__(self):
-        """
-        Return a simple string representation of the Path.
-        """
+        """Return a simple string representation of the Path."""
         msg = ['Path with length {} (max: {})'.format(len(self.path),
                                                       self.maxlen)]
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
@@ -527,7 +536,7 @@ class Path(object):
 
 class PathEnsemble(object):
     """
-    PathEnsemble(object)
+    PathEnsemble(object).
 
     This class represents a collection of Paths or a Path ensemble.
     The Path ensemble will not save the phase-space points of the paths,
@@ -557,6 +566,7 @@ class PathEnsemble(object):
     maxpath : int
         The maximum number of paths to store.
     """
+
     def __init__(self, ensemble, interfaces, maxpath=10000000):
         """
         Initialize the PathEnsemble object.
@@ -579,7 +589,8 @@ class PathEnsemble(object):
 
     def reset_data(self):
         """
-        This method will just erase the stored data in path_data.
+        Erase the stored data in the path ensemble.
+
         It can be used in combination with flushing the data to a
         file in order to periodically write and empty the amount of data
         stored in memory.
@@ -591,7 +602,7 @@ class PathEnsemble(object):
 
     def add_path_data(self, path, status, cycle=0):
         """
-        This will append data from the given path to self.path_data
+        Append data from the given path to `self.path_data`.
 
         Parameters
         ----------
@@ -622,6 +633,8 @@ class PathEnsemble(object):
 
     def get_accepted(self):
         """
+        Yield accepted paths from the PathEnsemble.
+
         This method will give an iterator usefull for iterating over
         accepted paths only. In the PathEnsemble we store both accepted
         and rejected paths. This method will loop over all paths stored
@@ -635,8 +648,10 @@ class PathEnsemble(object):
 
     def get_acceptance_rate(self):
         """
-        This method will simply return the fraction of accepted paths to
-        total number of paths in the path ensemble.
+        Return the acceptance rate for the path ensemble.
+
+        The acceptance rate is obtained as the fraction of accepted paths to
+        the total number of paths in the path ensemble.
 
         Returns
         -------
@@ -653,7 +668,8 @@ class PathEnsemble(object):
 
     def get_paths(self):
         """
-        This will yield the different paths stored in the path ensemble.
+        Yield the different paths stored in the path ensemble.
+
         It is included here in order to have a simple compatibility between
         the `PathEnsemble` object and the `PathEnsembleFile` object defined in
         ``retis.inout``. This is useful for the analysis.
@@ -667,9 +683,7 @@ class PathEnsemble(object):
             yield path
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about this object."""
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tNumber of paths stored: {}'.format(self.npath)]
         msg += ['\tNumber of accepted paths: {}'.format(self.nacc)]

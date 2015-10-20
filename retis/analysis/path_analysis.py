@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for analysis of path ensembles as defined
-in the object PathEnsemble in retis.core.path
+"""Methods for analysis of path ensembles.
+
+Path ensembles are defined in the object `PathEnsemble`
+in `retis.core.path`.
 """
 from __future__ import absolute_import
 import numpy as np
@@ -10,32 +11,33 @@ from retis.analysis.analysis import running_average, block_error_corr
 from retis.analysis.histogram import histogram, histogram_and_avg
 
 
-__all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
-           'match_probabilities']
+__all__ = ('analyse_path_ensemble', 'analyse_path_ensemble_object',
+           'match_probabilities')
 
 
 def _get_successfull(path_ensemble, idetect):
     """
-    This is a helper function to build the data of accepted paths.
+    Build the data of accepted (successful) paths.
+
     In the PathEmsemble object all paths are stored, both accepted
     and rejected and the PathEnsemble.get_accepted() is used here to
-    iterate over accepted paths. Successfull paths are defined as paths
-    which are able to reach the interface specified with idetect. For
+    iterate over accepted paths. Successful paths are defined as paths
+    which are able to reach the interface specified with `idetect`. For
     each accepted path, this function will give a value of 1 if the path
-    was successfull and 0 otherwise.
+    was successful and 0 otherwise.
 
     Parameters
     ----------
     path_ensemble : object of type `retis.core.path.PathEnsemble`.
-        This is the PathEnsemble we will analyse
+        This is the PathEnsemble we will analyse.
     idetect : float
-        This is the interface used for detecting if a path is usccessfull
+        This is the interface used for detecting if a path is successful
         or not.
 
     Returns
     -------
     out : numpy.array
-        out[i] = 1 if path no. i is successfull 0 otherwise.
+        ``out[i] = 1`` if path no. `i` is successful 0 otherwise.
     """
     data = []
     for path in path_ensemble.get_accepted():
@@ -47,21 +49,23 @@ def _get_successfull(path_ensemble, idetect):
 
 def _running_pcross(path_ensemble, idetect, data=None):
     """
-    Function to create a running average of the crossing probability
-    as function of the cycle number. Note that the accepted paths are used
-    to create an array which is then averaged. This could possibly
-    be replaced by a simple on-the-fly calculation of the running average,
+    Create a running average of the crossing probability.
+
+    The running average is created as a function of the cycle number.
+    Note that the accepted paths are used to create an array which is
+    then averaged. This could possibly be replaced by a simple
+    'on-the-fly' calculation of the running average,
     as detailed in: http://en.wikipedia.org/wiki/Moving_average
 
     Parameters
     ----------
     path_ensemble : object of type retis.core.path.PathEnsemble
-        This is the PathEnsemble we will analyse
+        This is the PathEnsemble we will analyse.
     idetect : float
-        This is the interface used for detecting if a path is usccessfull
-        or not. I
+        This is the interface used for detecting if a path is successful
+        or not.
     data : numpy.array
-        This is the data created by _get_successfull(path_ensemble)
+        This is the data created by `_get_successfull(path_ensemble)`
         If this function has been executed, the result can be re-used here
         by specifying data. If not, it will be generated.
 
@@ -83,31 +87,31 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
 def _pcross_lambda(path_ensemble, ngrid=1000):
     """
-    This function will calculate the crossing probability for an ensemble as
-    a function of the value of the order parameter.
+    Calculate crossing probability for an ensemble as function of
+    the order parameter.
 
     Parameters
     ----------
     path_ensemble : object of type retis.core.path.PathEnsemble
-        This is the PathEnsemble we will analyse
+        This is the PathEnsemble we will analyse.
     ngrid : int
-        This is the number of grid points
+        This is the number of grid points.
 
     Returns
     -------
     out[0] : numpy.array
-        The crossing probability
+        The crossing probability.
     out[1] : numpy.array
-        The order parameters
+        The order parameters.
 
     See Also
     --------
-    _pcross_lambda_cumulative
+    `_pcross_lambda_cumulative`
 
     Notes
     -----
     This routine could perhaps be made shorter by making use of
-    numpy.digitize etc.
+    `numpy.digitize` etc.
     """
     # first, get the boundaries and order parameters of the
     # accepted paths
@@ -130,24 +134,23 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
                               weights=None):
     """
-    This is a helper function for obtaining the crossing probability
-    as a function of the order parameter. It will do the actual calculation
-    of the crossing probability as a function of order parameter.
+    Calculate crossing probability as a function of the order parameter.
 
-    It is split off from ``pcross_lambda`` since the analysis is intented
-    to be backwards compatible with the output/results from the old
-    tismol FORTRAN program.
+    It will do the actual calculation of the crossing probability as
+    a function of order parameter. It is split off from `pcross_lambda`
+    since the analysis is intended to be backwards compatible with the
+    output/results from the old tismol FORTRAN program.
 
     Parameters
     ----------
     orderparam : numpy.array
-        Array containing the order parameters
+        Array containing the order parameters.
     ordermin : float
-        Minimum allowed order parameter
+        Minimum allowed order parameter.
     ordermax : float
-        Maximum allowed order parameter
+        Maximum allowed order parameter.
     ngrid : int
-        This is the number of grid points
+        This is the number of grid point.s
     weights : numpy.array, optional
         The weight of each order parameter. This is used in order to
         count a specific order parameter more than once. If not given, the
@@ -180,7 +183,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
 
 def _get_path_distribution(path_ensemble, bins=1000):
     """
-    This function will get the distribution of path lengths.
+    Calculate the distribution of path lengths.
 
     Parameters
     ----------
@@ -192,17 +195,17 @@ def _get_path_distribution(path_ensemble, bins=1000):
     Returns
     -------
     out[0] : list, [numpy.array, numpy.array, tuple]
-        Result for accepted paths (distribution). out[0][0] is the histogram
-        and out[0][1] are the mid points for bins. out[0][2] is a tuple with
+        Result for accepted paths (distribution). `out[0][0]` is the histogram
+        and out[0][1] are the mid points for bins. `out[0][2]` is a tuple with
         the average and standard deviation for the length.
     out[1] : list, [numpy.array, numpy.array, tuple]
-        Result for all paths (distribution). out[1][0] is the histogram and
-        out[1][1] are the mid points for bins. out[1][2] is a tuple with the
+        Result for all paths (distribution). `out[1][0]` is the histogram and
+        out[1][1] are the mid points for bins. `out[1][2]` is a tuple with the
         average and standard deviation for the length.
 
     See Also
     --------
-    histogram_and_avg in .histogram
+    `histogram_and_avg` in .histogram
     """
     # first get lengths of accepted paths:
     length_acc = [path['length'] for path in path_ensemble.get_accepted()]
@@ -220,8 +223,10 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
 def _get_path_length(path):
     """
-    This is a helper function to return the path length for different
-    moves.
+    Return the path length for different moves.
+
+    Different moves may have a different way of obtaining the path length.
+    (Example time-reversal vs. shooting move).
 
     Parameters
     ----------
@@ -247,7 +252,7 @@ def _get_path_length(path):
 
 def _shoot_analysis(path_ensemble, bins=1000):
     """
-    This method will do a shoot analysis of the path ensemble.
+    Analyse the shooting performed in the path ensemble.
 
     Parameters
     ----------
@@ -281,8 +286,7 @@ def _shoot_analysis(path_ensemble, bins=1000):
 
 def _update_shoot_stats(shoot_stats, path):
     """
-    This method will update the shoot_stats with the status of the
-    given path.
+    Update the shooting statistics with the status of the given `path`.
 
     Parameters
     ----------
@@ -312,7 +316,7 @@ def _update_shoot_stats(shoot_stats, path):
 
 def _create_shoot_histograms(shoot_stats, bins):
     """
-    To create histograms and scale for the shoot analysis.
+    Create histograms and scale for the shoot analysis.
 
     Parameters
     ----------
@@ -322,7 +326,7 @@ def _create_shoot_histograms(shoot_stats, bins):
         `key` which can be the different statuses defined in
         ``retis.core.path._STATUS`` or 'REJ' (for rejected).
     bins : int
-        The number of bins to use for the histograms
+        The number of bins to use for the histograms.
 
     Returns
     -------
@@ -338,7 +342,7 @@ def _create_shoot_histograms(shoot_stats, bins):
 
     See Also
     --------
-    histogram in ``retis.analysis.histogram``.
+    histogram in `retis.analysis.histogram`.
     """
     histograms = {}
     scale = {}
@@ -355,22 +359,24 @@ def _create_shoot_histograms(shoot_stats, bins):
 
 def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     """
+    Analyse a path ensemble object.
+
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
-    is an object of type ``retis.core.path.PathEnsemble`` and that this path
+    is an object of type `retis.core.path.PathEnsemble` and that this path
     ensemble contains all the paths that are needed.
 
     Parameters
     ----------
-    path_ensemble : object of type ``retis.core.path.PathEnsemble``.
+    path_ensemble : object of type `retis.core.path.PathEnsemble`.
         The path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
     idetect : float, optional
-        This is the interface used for detecting if a path is usccessfull
-        or not. If no value is given, `path_ensemble.interfaces[-1]` will be
-        assumed.
+        This is the interface used for detecting if a path is successful
+        or not. If no value is given, ``path_ensemble.interfaces[-1]`` will
+        be assumed.
 
     Returns
     -------
@@ -433,9 +439,13 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
 
 def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     """
+    Analyse a path ensemble.
+
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
-    output object.
+    output object. This function is more general than the
+    `analyse_path_ensemble_object` function in that it should work on both
+    `PathEnsemble` and `PathEnsembleFile` objects.
 
     Parameters
     ----------
@@ -445,9 +455,9 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     settings : dict
         This dictionary contains settings for the analysis.
     idetect : float, optional
-        This is the interface used for detecting if a path is usccessfull
-        or not. If no value is given, `path_ensemble.interfaces[-1]` will be
-        use
+        This is the interface used for detecting if a path is successful
+        or not. If no value is given, ``path_ensemble.interfaces[-1]`` will
+        be used.
 
     Returns
     -------
@@ -543,7 +553,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
 
 def match_probabilities(path_results, detect):
     """
-    This method will match probabilities from several path ensembles.
+    Match probabilities from several path ensembles.
+
     It will also calculate efficiencies and error for the matched probability.
 
     Parameters
@@ -551,7 +562,7 @@ def match_probabilities(path_results, detect):
     path_results : list
         These are the results from the path analysis. `path_results[i]`
         contains the output from ``analyse_path_ensemble`` applied to
-        ensemble i.
+        ensemble `i`.
     detect : list of floats
         These are the detect interfaces used in the analysis.
 

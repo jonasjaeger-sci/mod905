@@ -2,12 +2,12 @@
 """This file contains a class for a generic property."""
 import numpy as np
 
-__all__ = ['Property']
+__all__ = ('Property')
 
 
 class Property(object):
     """
-    Property(object)
+    Property(object).
 
     A generic object to store values obtained during a simulation.
     It will maintain the mean and variance as values are added using
@@ -42,6 +42,7 @@ class Property(object):
     >>> ener.add(99.22)
     >>> ener.mean
     """
+
     def __init__(self, desc=''):
         """
         Initialize the property.
@@ -64,8 +65,7 @@ class Property(object):
 
     def add(self, val):
         """
-        Adds a element/value to the property
-        and updated the mean and variance.
+        Add a value to the property and updated the mean and variance.
 
         Parameters
         ----------
@@ -82,7 +82,8 @@ class Property(object):
 
     def update_mean_and_variance(self):
         """
-        Calculates the mean and variance on the fly.
+        Calculate the mean and variance on the fly.
+
         Source:
         http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
 
@@ -106,7 +107,7 @@ class Property(object):
 
     def dump_to_file(self, filename):
         """
-        Dumpts the contents in self.val to a file.
+        Dump the contents in `self.val` to a file.
 
         Parameters
         ----------
@@ -122,5 +123,5 @@ class Property(object):
         np.savetxt(filename, self.val)
 
     def __str__(self):
-        """Simply return the string description of the property"""
+        """Simply return the string description of the property."""
         return self.desc

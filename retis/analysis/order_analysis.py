@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for analysis of order parameter
-"""
+"""This file contains methods for analysis of order parameter."""
 from __future__ import absolute_import
 from retis.analysis.analysis import analyse_data, mean_square_displacement
 
 
-__all__ = ['analyse_orderp']
+__all__ = ('analyse_orderp')
 
 
 def analyse_orderp(orderdata, settings):
     """
-    This method will run the analysis on several order parameters and
-    collect the results into a structure which is convenient for plotting.
+    Run the analysis on several order parameters.
+
+    The results are collected into a strucutre which is convenient for
+    plotting.
 
     Parameters
     ----------

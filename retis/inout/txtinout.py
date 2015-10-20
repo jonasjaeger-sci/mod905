@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods and objects that handle output/input of
-text files.
+This file contains methods and objects that handle output/input of text files.
 
 Objects defined here:
 
@@ -34,15 +33,16 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
-__all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
+__all__ = ('TxtTable', 'FileWriter', 'txt_save_columns',
            'txt_energy_output', 'txt_flux_output', 'txt_orderp_output',
-           'txt_path_output']
+           'txt_path_output')
 
 
 def txt_save_columns(outputfile, header, variables):
     """
-    This will save the different variables to a text file using
-    numpy's savetxt. Note that the variables are assumed to be numpy.arrays of
+    Save the different variables to a text file using numpy's savetxt.
+
+    Note that the variables are assumed to be numpy.arrays of
     equal shape. Note that the outputfile may also be a zipped gz file.
 
     Parameters
@@ -52,7 +52,7 @@ def txt_save_columns(outputfile, header, variables):
     header : string
         String that will be written at the beginning of the file.
     variables : tuple of numpy.arrays
-        These are the variables that will be save to the text file
+        These are the variables that will be save to the text file.
     """
     msg = create_backup(outputfile)
     if msg:
@@ -70,7 +70,7 @@ def txt_save_columns(outputfile, header, variables):
 
 def txt_block_error(outputfile, title, error):
     """
-    This will write the output from the error analysis, to a text file.
+    Write the output from the error analysis to a text file.
 
     Parameters
     ----------
@@ -80,7 +80,7 @@ def txt_block_error(outputfile, title, error):
         This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
         'Kinetic energy', etc.
     error : list
-        This is the result from the error analysis
+        This is the result from the error analysis.
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
@@ -89,7 +89,7 @@ def txt_block_error(outputfile, title, error):
 
 def txt_histogram(outputfile, title, *histograms):
     """
-    This will output histograms to a text file.
+    Write histograms to a text file.
 
     Parameters
     ----------
@@ -260,8 +260,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
 
 def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
     """
-    This method will write the histograms from the shoots analysis to a
-    text file.
+    Write the histograms from the shoots analysis to a text file.
 
     Parameters
     ----------
@@ -294,7 +293,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
 
 def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     """
-    This method will output all the results obtained by the path analysis.
+    Output all the results obtained by the path analysis.
 
     Parameters
     ----------
@@ -333,7 +332,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
 def txt_total_probability(path_ensembles, detect, results, matched,
                           outputfile):
     """
-    This method will output the overall matched probabilities.
+    Output the overall matched probabilities.
 
     Parameters
     ----------
@@ -363,7 +362,7 @@ def txt_total_probability(path_ensembles, detect, results, matched,
 
 def txt_total_matched_probability(detect, matched, outputfile):
     """
-    This method will output the overall matched probability.
+    Output the overall matched probability.
 
     Parameters
     ----------
@@ -382,7 +381,8 @@ def txt_total_matched_probability(detect, matched, outputfile):
 
 def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
     """
-    This will format a row according to the given width(s).
+    Format a row according to the given width(s).
+
     The specified width can either be a fixed number which will be
     applied to all cells, or it can be an iterable.
 
@@ -450,6 +450,8 @@ def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
 
 def _simple_line_parser(line):
     """
+    A simple line parser. Returns floats from columns in a file.
+
     This is just a simple line parser. It will simply return floats from
     columns from a file. It is here created as a def to avoid assigning
     using a lambda expression (see pep8).
@@ -470,11 +472,13 @@ def _simple_line_parser(line):
 def read_some_lines(filename, line_parser=_simple_line_parser,
                     block_label='#'):
     """
-    This function fill open a file and try to read as many lines as
-    possible - it the given line_parser can not be used on a line in a
-    file the function will stop here. The function will read data in blocks
-    and yield the block when a new block is found. A special string is assumed
-    to idenity the blocks.
+    Open a file and try to read as many lines as possible.
+
+    This function will read a file using the given `line_parser`.
+    If the given line_parser can not be used on a line in a file, the function
+    will stop here. The function will read data in blocks and yield the block
+    when a new block is found. A special string is assumed to idenity
+    the blocks.
 
     Parameter
     ---------
@@ -522,7 +526,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
 
 class TxtTable(object):
     """
-    TxtTable(object)
+    TxtTable(object).
 
     This object will return a table of text with a header and
     with formatted rows.
@@ -545,10 +549,12 @@ class TxtTable(object):
         This is a format string which can be used to format the rows of the
         table.
     """
+
     def __init__(self, variables, width=12, headers=None, spacing=1):
         """
-        Initialize the table. Here we can specify default formats for
-        floats and for integers.
+        Initialize the table.
+
+        Here we can specify default formats for floats and for integers.
 
         Parameters
         ----------
@@ -570,8 +576,7 @@ class TxtTable(object):
 
     def make_header(self, headers=None):
         """
-        This is just a function to return the header. It will also
-        create it if needed.
+        Return the header. It will be created if needed.
 
         Parameters
         ----------
@@ -600,7 +605,7 @@ class TxtTable(object):
 
     def get_row(self, row_dict, header=False):
         """
-        This method will write a row.
+        Write a row to the file.
 
         Parameters
         ----------
@@ -623,8 +628,7 @@ class TxtTable(object):
 
     def __call__(self, row, header=False):
         """
-        This method is just for convenience. It will just
-        call self.get_row() with the parameters.
+        Method to make `self.get_row` callable.
 
         Parameters
         ----------
@@ -640,7 +644,7 @@ class TxtTable(object):
 
 class FileWriter(object):
     """
-    FileWriter(object)
+    FileWriter(object).
 
     This class defines a simple object to output to a file.
     Actual formatting are handled by derived objects such as the trajectory
@@ -668,11 +672,11 @@ class FileWriter(object):
     header : string
         A header (comment) for the first line of the file.
     """
+
     def __init__(self, filename, filetype, mode='w', oldfile='backup',
                  count=0, header=None):
         """
-        Initiates the file writer object. This will just define and
-        set some variables
+        Initiate the file writer object.
 
         Paramters
         ---------
@@ -712,6 +716,8 @@ class FileWriter(object):
 
     def fileopen(self, oldfile='bakcup'):
         """
+        Open a file and make it ready for reading/writing.
+
         Method to open a file, to make it ready for reading/writing.
         This function is separated from the __init__ in case some derived
         classes will open the file at a later stage. Default is to run
@@ -767,16 +773,12 @@ class FileWriter(object):
             raise
 
     def close(self):
-        """
-        Method to close the file, in case that is explicitly needed.
-        """
+        """Close the file, in case that is explicitly needed."""
         if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()
 
     def get_mode(self):
-        """
-        Method to return mode of the file.
-        """
+        """Return mode of the file."""
         try:
             return self.fileh.mode
         except AttributeError:
@@ -811,7 +813,9 @@ class FileWriter(object):
 
     def write_line(self, towrite):
         """
-        This method calls `write_string` adding a new-line to the given
+        Write a line with a newline at the end.
+
+        This method will call `write_string` adding a new-line to the given
         string.
 
         Parameters
@@ -823,6 +827,8 @@ class FileWriter(object):
 
     def __del__(self):
         """
+        Close a file in case the program crashes.
+
         This method in just to close the file in case the program
         crashes. It is used here as it's not so nice to add a
         with statement to the main script running the simulation.

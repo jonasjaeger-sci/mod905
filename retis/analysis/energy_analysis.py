@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for analysis of energy output
-"""
+"""This file contains methods for analysis of energy output."""
 from __future__ import absolute_import
 from retis.analysis.analysis import analyse_data
 
 
-__all__ = ['analyse_energies']
+__all__ = ('analyse_energies')
 
 
 def analyse_energies(energies, settings):
     """
-    This method will run the energy analysis on several energies and
+    Run the energy analysis on several energy types.
+
+    The function will run the energy analysis on several energy types and
     collect the energies into a structure which is convenient for plotting
     them.
 

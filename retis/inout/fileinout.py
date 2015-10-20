@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods and objects that handle output/input of
-crossing data.
+This file contains methods and objects that handle output/input to files.
 
 Objects defined here:
 
@@ -26,7 +25,7 @@ from retis.inout.txtinout import read_some_lines, create_and_format_row
 from retis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 
 
-__all__ = ['CrossFile', 'EnergyFile', 'OrderFile', 'PathEnsembleFile']
+__all__ = ('CrossFile', 'EnergyFile', 'OrderFile', 'PathEnsembleFile')
 
 
 # format for crossing files:
@@ -49,7 +48,7 @@ POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
 
 class CrossFile(FileWriter):
     """
-    CrossFile(FileWriter)
+    CrossFile(FileWriter).
 
     This class handles writing/reading of crossing data.
 
@@ -57,9 +56,10 @@ class CrossFile(FileWriter):
     ----------
     Same as for the FileWriter object.
     """
+
     def __init__(self, filename, mode='w', oldfile='backup'):
         """
-        Initialize the CrossFile object
+        Initialize the CrossFile object.
 
         Parameters
         ----------
@@ -83,13 +83,14 @@ class CrossFile(FileWriter):
     @staticmethod
     def line_parser(line):
         """
-        This function defines a simple parser for reading the file.
-        It is used in the self.load() to parse the input file
+        Define a simple parser for reading the file.
+
+        It is used in the self.load() to parse the input file.
 
         Parameters
         ----------
         line : string
-            A line to parse
+            A line to parse.
 
         Returns
         -------
@@ -106,8 +107,8 @@ class CrossFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load entire blocks from the cross file
-        into memory.
+        Load entire blocks from the cross file into memory.
+
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
         convenient for the subsequent analysis.
@@ -126,8 +127,9 @@ class CrossFile(FileWriter):
 
     def write(self, cross):
         """
-        This method will write the cross data to a file. It will just write a
-        space separated file without fancy formatting.
+        Write the cross data to a file.
+
+        It will just write a space separated file without fancy formatting.
 
         Parameters
         ----------
@@ -154,9 +156,7 @@ class CrossFile(FileWriter):
         return retval
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about this object."""
         msg = 'Crossing file: {} (mode: {})'.format(self.filename,
                                                     self.mode)
         return msg
@@ -164,7 +164,7 @@ class CrossFile(FileWriter):
 
 class EnergyFile(FileWriter):
     """
-    EnergyFile(FileWriter)
+    EnergyFile(FileWriter).
 
     This class handles writing/reading of energy data.
 
@@ -172,9 +172,10 @@ class EnergyFile(FileWriter):
     ----------
     Same as for the FileWriter object.
     """
+
     def __init__(self, filename, mode='w', oldfile='backup'):
         """
-        Initialize the EnergyFile object
+        Initialize the EnergyFile object.
 
         Parameters
         ----------
@@ -199,7 +200,8 @@ class EnergyFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load entire energy blocks into memory.
+        Load entire energy blocks into memory.
+
         (Quote of the day: 'memory is cheap, function calls are expensive'.)
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
@@ -210,7 +212,7 @@ class EnergyFile(FileWriter):
         data_dict : dict
             This is the energy data read from the file, stored in
             a dict. This is for convenience, so that each energy term
-            can be accessed by data[key]
+            can be accessed by data[key].
 
         See Also
         --------
@@ -230,7 +232,7 @@ class EnergyFile(FileWriter):
 
     def write(self, step, energy):
         """
-        This function will write the energy data to the file.
+        Write the energy data to the file.
 
         Parameters
         ----------
@@ -253,16 +255,14 @@ class EnergyFile(FileWriter):
         return self.write_line(towrite)
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about the energy file."""
         msg = 'Energy file: {} (mode: {})'.format(self.filename, self.mode)
         return msg
 
 
 class OrderFile(FileWriter):
     """
-    OrderFile(FileWriter)
+    OrderFile(FileWriter).
 
     This class handles writing/reading of order parameter data.
 
@@ -270,9 +270,10 @@ class OrderFile(FileWriter):
     ----------
     Same as for the FileWriter object.
     """
+
     def __init__(self, filename, mode='w', oldfile='backup'):
         """
-        Initialize the OrderFile object
+        Initialize the OrderFile object.
 
         Parameters
         ----------
@@ -295,8 +296,8 @@ class OrderFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load the entire order parameter blocks
-        into memory.
+        Load the entire order parameter blocks into memory.
+
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
         convenient for the subsequent analysis. In case blocks are found in
@@ -326,7 +327,7 @@ class OrderFile(FileWriter):
 
     def write(self, step, orderdata):
         """
-        This will write the order parameter data to the file.
+        Write the order parameter data to the file.
 
         Parameters
         ----------
@@ -347,9 +348,7 @@ class OrderFile(FileWriter):
         return self.write_line(towrite)
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about the order parameter file."""
         msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
                                                            self.mode)
         return msg
@@ -357,7 +356,7 @@ class OrderFile(FileWriter):
 
 class PathFile(FileWriter):
     """
-    PathFile(FileWriter)
+    PathFile(FileWriter).
 
     This class handles writing/reading of path data.
 
@@ -365,9 +364,10 @@ class PathFile(FileWriter):
     ----------
     Same as for the FileWriter object.
     """
+
     def __init__(self, filename, mode='w', oldfile='backup'):
         """
-        Initialize the PathFile object
+        Initialize the PathFile object.
 
         Parameters
         ----------
@@ -408,8 +408,9 @@ class PathFile(FileWriter):
     @staticmethod
     def line_parser(line):
         """
-        This function defines a simple parser for reading the file.
-        It is used in the self.load() to parse the input file
+        Define a simple parser for reading the path file.
+
+        It is used in the self.load() to parse the input file.
 
         Parameters
         ----------
@@ -425,9 +426,10 @@ class PathFile(FileWriter):
 
     def load(self):
         """
-        This method will attempt to load a path into the memory. The paths
-        are assumed to be organized into blocks defined by self.block_label.
-        This method will yield blocks successively.
+        Load a path file into the memory.
+
+        The paths are assumed to be organized into blocks defined
+        by `self.block_label`. This method will yield blocks successively.
 
         Yields
         -------
@@ -447,7 +449,7 @@ class PathFile(FileWriter):
 
     def write(self, step, path):
         """
-        This will write a path to the file.
+        Write a path to the file.
 
         Parameters
         ----------
@@ -479,9 +481,7 @@ class PathFile(FileWriter):
         return None
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about the path file."""
         msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
                                                            self.mode)
         return msg
@@ -489,22 +489,23 @@ class PathFile(FileWriter):
 
 def _line_to_path_object(line):
     """
-    This is a helper function to convert a text line to a Path object.
+    Convert a text line to a Path object.
 
     Parameters
     ----------
     line : string
-        The line of text to convert
+        The line of text to convert.
 
     Returns
     -------
-    out : object of type Path
+    out : object of type Path.
+        The path created from the given input text.
 
     Note
     ----
     TODO: This function is considered for deletion - is it going to be
-    usefull or are we always going to create path data from a file. It might
-    be usefull in the future for restart files.
+    useful or are we always going to create path data from a file. It might
+    be useful in the future for restart files.
     """
     path = Path()
     data = line.split()
@@ -521,8 +522,9 @@ def _line_to_path_object(line):
 
 def _line_to_path_data(line):
     """
-    This is a helper function to convert a text line to simplified
-    representation of a path. This can be used to parse a file with path data.
+    Convert a text line to simplified representation of a path.
+
+    This is used to parse a file with path data.
 
     Parameters
     ----------
@@ -558,8 +560,9 @@ def _line_to_path_data(line):
 
 def _path_to_line_data(path, cycle, acc, shoot):
     """
-    This is a helper function to convert path data from a PathEnsemble object
-    to a simple string which can be used for storing path data. This function
+    Convert path data from a PathEnsemble object to a string.
+
+    The string representation is useful from storing path data. This function
     is the "inverse" of the ``_line_to_path_data`` function.
 
     Parameters
@@ -604,7 +607,7 @@ def _path_to_line_data(path, cycle, acc, shoot):
 
 class PathEnsembleFile(FileWriter):
     """
-    PathEnsembleFile(FileWriter)
+    PathEnsembleFile(FileWriter).
 
     This class handles writing/reading of path ensemble data to a file.
     It also supports some attributes and functions found in the
@@ -630,10 +633,11 @@ class PathEnsembleFile(FileWriter):
         This variable is used when creating a ``PathEnsemble`` object
         in ``to_path_ensemble``.
     """
+
     def __init__(self, filename, ensemble, interfaces, mode='w',
                  oldfile='backup'):
         """
-        Initialize the PathEnsembleFile object
+        Initialize the PathEnsembleFile object.
 
         Parameters
         ----------
@@ -668,10 +672,12 @@ class PathEnsembleFile(FileWriter):
 
     def to_path_ensemble(self):
         """
+        Read a file and return a path ensemble object.
+
         This will read an entire file and return a path ensemble object.
-        Note that this might not be the fastes way of using the path ensemble
+        Note that this might not be the fastest way of using the path ensemble
         file and that this can require a lot of memory. For analysis
-        purposes, this object also supports a on-line analysis
+        purposes, this object also supports a on-line analysis.
 
         Returns
         -------
@@ -685,14 +691,16 @@ class PathEnsembleFile(FileWriter):
 
     def get_paths(self):
         """
-        This will yield the different paths stored in the file. The lines
-        are read on-the-fly, converted and yielded one-by-one.
+        Yield the different paths stored in the file.
+
+        The lines are read on-the-fly, converted and yielded one-by-one.
         Note that the file will be opened here, i.e. it will assumed that
-        it's not open in self.fileh
+        it's not open in `self.fileh`.
 
         Yields
         ------
-        out : object of type Path, the current path in the file
+        out : object of type Path
+            The current path in the file.
         """
         try:
             with open(self.filename, 'r') as fileh:
@@ -710,7 +718,8 @@ class PathEnsembleFile(FileWriter):
 
     def write(self, cycle, path_ensemble, path=None):
         """
-        This method will write a given path from a path ensemble to the file.
+        Write a given path from a path ensemble to the file.
+
         If the path is not explicitly given, the latest path from the path
         ensemble will be written.
 
@@ -735,9 +744,7 @@ class PathEnsembleFile(FileWriter):
         return self.write_line(towrite)
 
     def __str__(self):
-        """
-        Return a string with some info about this object
-        """
+        """Return a string with some info about the path ensemble file."""
         msg = ['Path (file) ensemble : {}'.format(self.ensemble)]
         msg += ['\tFile name: {}'.format(self.filename)]
         msg += ['\tFile mode: {}'.format(self.mode)]

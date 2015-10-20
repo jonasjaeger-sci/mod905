@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains classes to represent order parameters"""
+"""This file contains classes to represent order parameters."""
 from __future__ import division  # for StringFunctionParser
 import numpy as np
 import warnings
@@ -9,12 +9,12 @@ from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
 import operator
 
 
-__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
+__all__ = ('OrderParameter', 'OrderParameterPosition', 'OrderParameterParse')
 
 
 class OrderParameter(object):
     """
-    OrderParameter(object)
+    OrderParameter(object).
 
     This class represents an order parameter. The order parameter
     is assumed to be a function that can uniquely be determined by
@@ -35,6 +35,7 @@ class OrderParameter(object):
         accept a `retis.core.system.System` object as input and returns
         a single float.
     """
+
     def __init__(self, name, desc='General order parameter'):
         """
         Initialize the OrderParameter object.
@@ -52,7 +53,7 @@ class OrderParameter(object):
 
     def calculate(self, system):
         """
-        This function calculates the order parameter.
+        Calculate the order parameter and return it.
 
         Parameters
         ----------
@@ -71,7 +72,7 @@ class OrderParameter(object):
 
     def calculate_velocity(self, system):
         """
-        This function calculates the time derivative of the order parameter.
+        Calculate the time derivative of the order parameter and return it.
 
         Parameters
         ----------
@@ -90,9 +91,10 @@ class OrderParameter(object):
 
     def __call__(self, system):
         """
-        Method to conveniently call calculate and calculate_velocity. It will
-        also call the additional order parameters defined in `self.extra`,
-        if any.
+        Method to conveniently call `calculate` and `calculate_velocity`.
+
+        It will also call the additional order parameters defined in
+        `self.extra`, if any.
 
         Parameters
         ----------
@@ -124,7 +126,8 @@ class OrderParameter(object):
 
     def add_orderparameter(self, func):
         """
-        This will add a extra order parameter to calculate.
+        Add an extra order parameter to calculate.
+
         The given function should accept a retis.core.system.System object as
         parameter.
 
@@ -150,7 +153,7 @@ class OrderParameter(object):
 
 class OrderParameterPosition(OrderParameter):
     """
-    OrderParameterPosition(OrderParameter)
+    OrderParameterPosition(OrderParameter).
 
     This class defines a very simple order parameter which is just
     the position of a given particle.
@@ -169,9 +172,10 @@ class OrderParameterPosition(OrderParameter):
         This determines if periodic boundaries should be applied to
         the position or not.
     """
+
     def __init__(self, name, index, dim='x', periodic=False):
         """
-        Initialize the OrderParameterPosition object
+        Initialize the OrderParameterPosition object.
 
         Parameters
         ----------
@@ -199,8 +203,10 @@ class OrderParameterPosition(OrderParameter):
 
     def calculate(self, system):
         """
-        This function calculates the order parameter. Here, the order
-        parameter is just the coordinate of one of the particles.
+        Calculate the order parameter.
+
+        Here, the order parameter is just the coordinate of one of the
+        particles.
 
         Parameters
         ----------
@@ -226,7 +232,8 @@ class OrderParameterPosition(OrderParameter):
 
     def calculate_velocity(self, system):
         """
-        This function calculates the time derivative of the order parameter.
+        Calculate the time derivative of the order parameter.
+
         For this order parameter we just return the velocity.
 
         Parameters
@@ -248,7 +255,7 @@ class OrderParameterPosition(OrderParameter):
 
 class OrderParameterParse(OrderParameter):
     """
-    OrderParameterParse(OrderParameter)
+    OrderParameterParse(OrderParameter).
 
     This class defines a simple order parameter that is
     parsed from a text string given by the user. The reason
@@ -266,9 +273,10 @@ class OrderParameterParse(OrderParameter):
         This is used for parsing a string to a velocity for the order
         parameter.
     """
+
     def __init__(self, name, orderstr, ordervelstr):
         """
-        Initialize the OrderParameterParse object
+        Initialize the OrderParameterParse object.
 
         Parameters
         ----------
@@ -287,7 +295,7 @@ class OrderParameterParse(OrderParameter):
 
     def calculate(self, system):
         """
-        This function calculates the order parameter.
+        Calculate the order parameter.
 
         Parameters
         ----------
@@ -306,7 +314,7 @@ class OrderParameterParse(OrderParameter):
 
     def calculate_velocity(self, system):
         """
-        This function calculates the time derivative of the order parameter.
+        Calculate the time derivative of the order parameter.
 
         Parameters
         ----------
@@ -322,8 +330,10 @@ class OrderParameterParse(OrderParameter):
 
     def add_orderparameter(self, strfunc):
         """
-        This will add a extra order parameter to calculate. Here, we assume
-        that the function is given as a string, which we will parse.
+        Add an extra order parameter to calculate.
+
+        Here, we assume that the function is given as a string, which we
+        will parse.
 
         Parameters
         ----------
@@ -343,8 +353,8 @@ class OrderParameterParse(OrderParameter):
 class StringFunctionParser(object):
     """
     This class defines a simple parser for user-defined order parameters.
-    It is based on fourFn.py, see:
 
+    It is based on fourFn.py, see:
     http://pyparsing.wikispaces.com/file/view/fourFn.py
 
     Attributes
@@ -365,6 +375,7 @@ class StringFunctionParser(object):
     string_function : string
         String representation of the function that we wish to evaluate.
     """
+
     def __init__(self, string_function=None):
         """
         Initiate the StringFunctionParser.
@@ -402,7 +413,7 @@ class StringFunctionParser(object):
 
     def system_function(self, function, args):
         """
-        This handles the calls that need to envoke system functions.
+        Handle calls that need to invoke 'system' functions.
 
         Parameters
         ----------
@@ -441,7 +452,7 @@ class StringFunctionParser(object):
 
     def push_first(self, toks):
         """
-        This will append parsed string elements to the stack.
+        Append parsed string elements to the stack.
 
         Parameters
         ----------
@@ -463,9 +474,10 @@ class StringFunctionParser(object):
 
     def push_uminus(self, toks):
         """
-        This will push to the expression stack,
-        similar to `push_first`, however this function is needed for
-        handling expressions like `-x`.
+        Push to the expression stack.
+
+        `push_uminus` is similar to `push_first`, however `push_uminus` is
+        needed for handling expressions like `-x`.
 
         Parameters
         ----------
@@ -488,7 +500,8 @@ class StringFunctionParser(object):
 
     def evaluate_stack(self, stack):
         """
-        The method evaluates the stack recursively.
+        Evaluate the expression stack recursively.
+
         Here, we also might pass the system in case we need to
         use it for accessing positions, velocities etc.
 
@@ -524,10 +537,7 @@ class StringFunctionParser(object):
         return result
 
     def parse_function(self, string_function):
-        """
-        This method will parse the string and set up the expression stack
-        `self.exprstack`.
-        """
+        """Parse the string and set up the expression stack."""
         self.exprstack = []
         self.pars.parseString(string_function, True)
         self.string_function = string_function
@@ -551,13 +561,11 @@ class StringFunctionParser(object):
             return self.evaluate_stack(self.exprstack[:])
 
     def __call__(self, system=None):
-        """Function to call `self.evaluate`"""
+        """Function to call `self.evaluate`."""
         return self.evaluate(system=system)
 
     def _initiate_parser(self):
-        """
-        Helper function to initiate the parser.
-        """
+        """Helper function to initiate the parser."""
         point = Literal('.')
         exp = CaselessLiteral('E')
         fnumber = Combine(Word('+-' + nums, nums) +

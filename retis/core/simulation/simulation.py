@@ -39,6 +39,7 @@ class Simulation(object):
     system : object of type System (from retis.core.system)
         This is the system the simulation will act on.
     """
+
     def __init__(self, endcycle=0, startcycle=0):
         """
         Initialization of the simulation.
@@ -83,8 +84,9 @@ class Simulation(object):
 
     def is_finished(self):
         """
-        Function to determine if simulation is finished. In this
-        version, the simulation is done if the current step number
+        Determine if the simulation is finished.
+
+        In this object, the simulation is done if the current step number
         is larger than the end cycle. Note that the number of steps
         performed is dependent of the value of self.cycle['start'].
 
@@ -96,8 +98,9 @@ class Simulation(object):
 
     def step(self):
         """
-        Run a simulation step. Here, the tasks in self.task
-        will be executed sequentially.
+        Execute a simulation step.
+
+        Here, the tasks in `self.task` will be executed sequentially.
 
         Returns
         -------
@@ -124,7 +127,7 @@ class Simulation(object):
 
     def execute_tasks(self):
         """
-        This method will execute all the tasks in sequential order.
+        Execute all the tasks in sequential order.
 
         Returns
         -------
@@ -142,17 +145,19 @@ class Simulation(object):
 
     def add_task(self, task, position=None):
         """
-        Method for adding a task. A task can still be added manually by
-        simply appending to self.task. This method will however do some
-        checks so that the task added can be executed.
+        Adding a new simulation task.
+
+        A task can still be added manually by simply appending to `self.task`.
+        This method will however do some checks so that the task added can
+        be executed.
 
         Parameters
         ----------
         task : dict
-            A dict defining the task. The recongnized keys are 'func'
+            A dict defining the task. The recognized keys are 'func'
             'args', 'kwargs', 'first', 'when', 'result' which correspond
-            to attributes of a (new) `SimulationTask` object.
-            for a definition of the different attributes
+            to attributes of a (new) `SimulationTask` object. See this object
+            for a definition of the different attributes.
         position : int
             Can be used to placed the task at a specific position.
 
@@ -186,8 +191,9 @@ class Simulation(object):
 
     def output(self, results):
         """
-        This method handles all the outputs that should be done. These
-        are defined as tasks in self.output_task.
+        Handle all the outputs that should be done.
+
+        The outputs are defined as tasks in `self.output_task`.
 
         Parameters
         ----------
@@ -212,22 +218,25 @@ class Simulation(object):
 
     def add_output_task(self, newtask):
         """
-        This will add a output task to the simulation. Here, we will check if
-        a identical task already exists, and if it does, we will just update
-        that one. Two tasks are identical if they are of the same type and
-        outputs to the same file.
+        Add an output task to the simulation.
+
+        Here, we will check if a identical task already exists. If it can find
+        a identical task, we will just update that one. Two tasks are
+        'identical' if they are of the same type and outputs to the same file.
 
         Parameters
         ----------
         newtask : object of type OutputTask
-            This is the object representation of OutputTask
+            This is the object representation of OutputTask.
         """
         self.output_task.append(newtask)
 
     def run(self):
         """
-        This method can be used to run a simulation. The intended usage is
-        for simulations where all tasks have been defined in self.tasks.
+        Run a simulation.
+
+        The intended usage is for simulations where all tasks have
+        been defined in `self.tasks`.
 
         Note
         ----
@@ -239,13 +248,13 @@ class Simulation(object):
         Yields
         ------
         out : dict
-            This dict contains the results from the simulation
+            This dict contains the results from the simulation.
         """
         while not self.is_finished():
             yield self.step()
 
     def __str__(self):
-        """Just a small function to return some info about the simulation"""
+        """Just a small function to return some info about the simulation."""
         ntask = len(self.task)
         mtask = 'task' if ntask == 1 else 'tasks'
         msg = ['General simulation with {} {}.'.format(ntask, mtask)]

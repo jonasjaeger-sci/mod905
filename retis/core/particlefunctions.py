@@ -3,17 +3,16 @@
 import numpy as np
 
 
-__all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
+__all__ = ('calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',
            'calculate_scalar_pressure', 'calculate_pressure_tensor',
            'calculate_linear_momentum', 'atomic_kinetic_energy_tensor',
-           'calculate_thermo']
+           'calculate_thermo')
 
 
 def calculate_linear_momentum(particles, selection=None):
     """
-    This function calculate the linear momentum for a collection
-    of particles.
+    Calculate the linear momentum for a collection of particles.
 
     Parameters
     ----------
@@ -36,9 +35,9 @@ def calculate_linear_momentum(particles, selection=None):
 
 def calculate_kinetic_energy_tensor(particles, selection=None):
     """
-    This function returns the kinetic energy as a tensor
-    for a selection of particles. The tensor is formed as the
-    outer product of the velocities.
+    Return the kinetic energy tensor for a selection of particles.
+
+    The tensor is formed as the outer product of the velocities.
 
     Parameters
     ----------
@@ -70,8 +69,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
 
 def atomic_kinetic_energy_tensor(particles, selection=None):
     """
-    This function returns the kinetic energy tensor for
-    each atom in a selection of particles.
+    Return the kinetic energy tensor for each atom in a selection of particles.
 
     Parameters
     ----------
@@ -104,8 +102,7 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
 
 def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     """
-    This function returns the kinetic energy of a collection of
-    particles.
+    Return the kinetic energy of a collection of particles.
 
     Parameters
     ----------
@@ -133,8 +130,7 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
 def calculate_kinetic_temperature(particles, dof=None, selection=None,
                                   kin_tensor=None):
     """
-    This method returns the kinetic temperature of a
-    collection of particles.
+    Return the kinetic temperature of a collection of particles.
 
     Parameters
     ----------
@@ -181,8 +177,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
 
 def reset_momentum(particles, selection=None, dim=None):
     """
-    This method sets the linear momentum of a selection
-    of particles to zero.
+    Set the linear momentum of a selection of particles to zero.
 
     Parameters
     ----------
@@ -213,7 +208,9 @@ def reset_momentum(particles, selection=None, dim=None):
 def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
                                  dof=None):
     """
-    This method evaluates the scalar pressure using the temperature
+    Evaluate the scalar pressure.
+
+    The scalar pressure is here calculated  using the temperature
     and the degrees of freedom.
 
     Parameters
@@ -259,7 +256,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
 def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
                               kin_tensor=None):
     """
-    This method evaluates the scalar pressure using the pressure tensor.
+    Evaluate the scalar pressure using the pressure tensor.
 
     Parameters
     ----------
@@ -292,7 +289,7 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
 
 def calculate_pressure_tensor(particles, volume, kin_tensor=None):
     """
-    This method evaluates the pressure tensor.
+    Calculate the pressure tensor.
 
     Parameters
     ----------
@@ -319,7 +316,11 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
 
 def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     """
-    This method will calculate and return several thermodynamic properties.
+    Calculate and return several thermodynamic properties.
+
+    The calculated properties are the potential, kinetic and total
+    energies per particle, the temperature, the pressure and the
+    momentum.
 
     Parameters
     ----------

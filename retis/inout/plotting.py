@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This file contains methods for creating plots.
+
 Specifically it defines colors, colorschemes, the reading of styles
 and some common plotting functions.
 
@@ -15,7 +16,8 @@ References
 """
 from retis.inout.mpl_plotting import MplPlotter
 
-__all__ = ['create_plotter']
+
+__all__ = ('create_plotter')
 
 
 # Custom named colors:

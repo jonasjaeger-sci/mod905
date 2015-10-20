@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains some convenient methods
-"""
+"""This file contains some convenient methods."""
 
 import itertools
 import numpy as np
 
-__all__ = ['latticefcc', 'lattice_simple_cubic']
+__all__ = ('latticefcc', 'lattice_simple_cubic')
 
 
 def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
     """
-    This method generates points on a simple
-    fcc lattice.
+    Generate points on a simple fcc lattice.
 
     Parameters
     ----------
@@ -56,8 +53,7 @@ def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
 
 def lattice_simple_cubic(box, spacing=1.0):
     """
-    This method creates a simple cubic lattice with
-    the given spacing.
+    Create a simple cubic lattice with the given spacing.
 
     Parameters
     ----------

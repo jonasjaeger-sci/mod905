@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains positions dependent potentials
-"""
+"""This file contains positions dependent potentials."""
 from __future__ import absolute_import
 import numpy as np
 import warnings
 from retis.forcefield.potential import PotentialFunction
 
-__all__ = ['DoubleWell', 'RectangularWell']
+__all__ = ('DoubleWell', 'RectangularWell')
 
 
 class DoubleWell(PotentialFunction):
     """
-    DoubleWell(PotentialFunction)
+    DoubleWell(PotentialFunction).
 
     This class defines a one-dimensional double well potential.
 
@@ -30,7 +28,7 @@ class DoubleWell(PotentialFunction):
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
         """
-        Initiates the one dimensional double well potential.
+        Initiate the one dimensional double well potential.
 
         Parameters
         ----------
@@ -42,10 +40,6 @@ class DoubleWell(PotentialFunction):
             Parameter for the potential.
         desc : string, optional.
             Description of the force field.
-
-        Returns
-        -------
-        N/A
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
         self.a = a
@@ -67,7 +61,7 @@ class DoubleWell(PotentialFunction):
         out : float
             The potential energy.
         """
-        v_pot = self.a*pos**4 - self.b*(pos - self.c)**2
+        v_pot = self.a * pos**4 - self.b * (pos - self.c)**2
         return v_pot.sum()
 
     def force(self, pos):
@@ -117,8 +111,7 @@ class DoubleWell(PotentialFunction):
 
     def parameters_to_dict(self):
         """
-        Generate a dictionary with the parameters of
-        the potential.
+        Generate a dictionary with the parameters of the potential.
 
         Returns
         -------
@@ -134,7 +127,7 @@ class DoubleWell(PotentialFunction):
 
 class RectangularWell(PotentialFunction):
     """
-    RectangularWell(PotentialFunction)
+    RectangularWell(PotentialFunction).
 
     This class defines a one-dimensional rectangular well potential.
 
@@ -151,7 +144,7 @@ class RectangularWell(PotentialFunction):
     def __init__(self, left=0.0, right=1.0, largenumber=1e10,
                  desc='1D Rectangular well potential'):
         """
-        Initiates a one-dimensional rectangular well.
+        Initiate the one-dimensional rectangular well.
 
         Parameters
         ----------
@@ -179,7 +172,7 @@ class RectangularWell(PotentialFunction):
 
     def check_parameters(self):
         """
-        Function to check the consistensy of the parameters.
+        Check the consistency of the parameters.
 
         Returns
         -------
@@ -209,8 +202,7 @@ class RectangularWell(PotentialFunction):
 
     def parameters_to_dict(self):
         """
-        Generate a dictionary with the parameters of
-        the potential.
+        Generate a dictionary with the parameters of the potential.
 
         Returns
         -------

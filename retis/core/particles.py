@@ -4,12 +4,12 @@ import numpy as np
 import warnings
 
 
-__all__ = ['Particles']
+__all__ = ('Particles')
 
 
 class Particles(object):
     """
-    Particles(object)
+    Particles(object).
 
     This is a simple particle list. It stores the positions,
     velocities, forces, masses (and inverse masses) and type information
@@ -42,10 +42,12 @@ class Particles(object):
         to be able to access the dimensionality directly from the particle
         list. It is therefore set as an attribute here.
     """
+
     def __init__(self, dim=1):
         """
-        Initialize the Particle list. Here we dictate that the particle list
-        is created with zero particles.
+        Initialize the Particle list.
+
+        Here we dictate that the particle list is created with zero particles.
         """
         self.npart = 0
         self.pos = None
@@ -60,8 +62,10 @@ class Particles(object):
 
     def empty_list(self):
         """
-        This is a method to reset the particle list.
-        It will delete all particles in the list.
+        Reset the particle list.
+
+        It will delete all particles in the list and set other variables to
+        `None`.
 
         Note
         ----
@@ -81,7 +85,7 @@ class Particles(object):
         self.virial = None
 
     def get_dim(self):
-        """Function to get the dimensionality, it just returns `self.dim`"""
+        """Function to get the dimensionality, it just returns `self.dim`."""
         return self.dim
 
 #    def get_dim(self):
@@ -107,9 +111,10 @@ class Particles(object):
 
     def get_phase_point(self):
         """
-        This function returns a copy of the current phase point, that is
-        `self.pos` and `self.vel`. In addition it returns the accompanying
-        forces from `self.force`.
+        Return a copy of the current phase point.
+
+        The phase point includes `self.pos` and `self.vel`. In addition it
+        returns the accompanying forces from `self.force`.
 
         Returns
         -------
@@ -123,9 +128,10 @@ class Particles(object):
 
     def set_phase_point(self, phasepoint):
         """
-        This function sets the position, velocities (and forces) and
-        included here for convenience - it can be used together with
-        `self.get_phase_point()` for easy change of the particle state.
+        Set the position, velocities (and forces) for the particles.
+
+        The function is included here for convenience - it can be used together
+        with `self.get_phase_point()` for easy change of the particle state.
 
         Returns
         -------
@@ -142,7 +148,7 @@ class Particles(object):
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
         """
-        Adds a particle to the system.
+        Add a particle to the system.
 
         Parameters
         ----------
@@ -183,8 +189,7 @@ class Particles(object):
 
     def get_selection(self, properties, selection=None):
         """
-        This is a helper method to return properties
-        for a selection of particles.
+        Return selected properties for a selection of particles.
 
         Parameters
         ----------
@@ -219,9 +224,9 @@ class Particles(object):
 
     def __iter__(self):
         """
-        This is to iterate over the particles.
-        This function will yield the properties of the different
-        particles.
+        Iterate over the particles.
+
+        This function will yield the properties of the different particles.
 
         Returns
         -------
@@ -235,9 +240,10 @@ class Particles(object):
 
     def pairs(self):
         """
-        This is a function to iterate over all pairs of particles.
-        For more sophisticated particle lists this can be
-        a implementation of a smart neighbor list.
+        Iterate over all pairs of particles.
+
+        For more sophisticated particle lists this can/should be an
+        implementation of a 'smart' neighbor list.
 
         Returns
         -------

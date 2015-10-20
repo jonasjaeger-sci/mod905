@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-Module for Monte Carlo Algorithms and other
-"random" functions.
-"""
+"""Module for Monte Carlo Algorithms and other "random" functions."""
 from __future__ import absolute_import
 import numpy as np
 
 
-__all__ = ['metropolis_accept_reject', 'max_displace_step']
+__all__ = ('metropolis_accept_reject', 'max_displace_step')
 
 
 def accept_reject_displace(rgen, system, trial):
     """
-    Routine for accepting or rejecting a MC move
+    Routine for accepting or rejecting a MC move.
 
     Parameters
     ----------
@@ -53,8 +50,8 @@ def accept_reject_displace(rgen, system, trial):
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):
     """
-    This will accept/reject a change in momenta given
-    the corresponding change in kinetic energy
+    Accept or reject a change in momenta based on the given change
+    in kinetic energy.
 
     Parameters
     ----------
@@ -64,7 +61,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
         The system object we are investigating. This is used
         to access the beta factor.
     dke : float
-        The change in kinetic energy
+        The change in kinetic energy.
     """
     if aimless:  # for the aimless shooting we accept
         return True
@@ -74,8 +71,9 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
 def metropolis_accept_reject(rgen, system, deltae):
     """
-    This will accept/reject a change of energy according
+    Accept or reject a change of energy according
     to the metropolis rule.
+
     FIXME: Check if metropolis really is a good name here.
 
     Parameters
@@ -86,7 +84,7 @@ def metropolis_accept_reject(rgen, system, deltae):
         The system object we are investigating. This is used
         to access the beta factor.
     deltae : float
-        The change in energy
+        The change in energy.
     """
     if deltae < 0.0:  # short-cut to avoid calculating np.exp()
         return True

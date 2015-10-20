@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for data analysis
-"""
+"""Histogram methods for data analysis."""
 
 import numpy as np
 
-__all__ = ['histogram', 'match_all_histograms', 'histogram_and_avg']
+__all__ = ('histogram', 'match_all_histograms', 'histogram_and_avg')
 
 
 def histogram(data, bins=10, limits=(-1, 1), density=False,
               weights=None):
     """
-    Function to create a histogram of the data stored
-    in data.
+    Create a histogram of the given `data`.
 
     Parameters
     ----------
@@ -42,26 +39,26 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
 
 def histogram_and_avg(data, bins, density=True):
     """
-    This is a helper method that will create an histogram for the given
-    data and return it together with the bin mid points and some simple
-    statistics (mean value and standard deviation) in a tuple. This structure
-    is useful for some of the plotting routines.
+    Create histogram an return bin, midpoints and simples statistics.
+
+    The simple statistics includes the mean value and the standard deviation.
+    The return structure is useful for plotting routines.
 
     Parameters
     ----------
     data : 1D numpy.array
-        This is the data to create the histogram from
+        This is the data to create the histogram from.
     bins : int
-        The number of bins to use for the histogram
+        The number of bins to use for the histogram.
     density : boolean, optional
         If `density` is true, the histogram will be normalized.
 
     Returns
     -------
     out[0] : numpy.array
-        The histogram (frequency) values
+        The histogram (frequency) values.
     out[1] : numpy.array
-        The mid points for the bins
+        The mid points for the bins.
     out[2] : tuple of floats
         These are some simple statistics, out[2][0] is the average
         out[2][1] is the standard deviation.
@@ -78,8 +75,9 @@ def histogram_and_avg(data, bins, density=True):
 
 def _match_histograms(histo1, histo2, bin_x, overlap):
     """
-    Function to mach two histograms. The matching is done
-    so that the integral of the overlapping regions of
+    Function to match two histograms.
+
+    The matching is done so that the integral of the overlapping regions of
     the two histograms are equal.
 
     Parameters

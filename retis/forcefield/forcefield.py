@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains a class for a generic force field
-"""
+"""This file contains a class for a generic force field."""
 import numpy as np
 import warnings
 import inspect
 
-__all__ = ['ForceField']
+__all__ = ('ForceField')
 
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
     """
-    This function defines so-called mixing rules which may be usefull
-    for some force fields for generating parameters.
+    Define the so-called mixing rules.
+
+    These mixing rules are used for some force fields when generating cross
+    interactions.
 
     Parameters
     ----------
@@ -60,7 +60,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
 class ForceField(object):
     """
-    ForceField(object)
+    ForceField(object).
 
     This class described a generic Force Field.
     A force field is assumed to consist of a number of potential
@@ -83,7 +83,7 @@ class ForceField(object):
 
     def __init__(self, desc='No description', potential=None, params=None):
         """
-        Initiates the force field object.
+        Initiate the force field object.
 
         Parameters
         ----------
@@ -112,7 +112,7 @@ class ForceField(object):
 
     def add_potential(self, potential, parameters=None):
         """
-        Adds a potential with parameters to the force field
+        Add a potential with parameters to the force field.
 
         Parameters
         ----------
@@ -147,7 +147,7 @@ class ForceField(object):
 
     def remove_potential(self, potential):
         """
-        Removes a selected potential from the force field
+        Remove a selected potential from the force field.
 
         Parameters
         ----------
@@ -156,7 +156,7 @@ class ForceField(object):
 
         Returns
         -------
-        N/A but it will upsate self.potential and self.params
+        N/A but it will update `self.potential` and `self.params`.
         """
         if potential in self.potential:
             idx = self.potential.index(potential)
@@ -172,20 +172,19 @@ class ForceField(object):
 
     def update_potential_parameters(self, potential, params):
         """
-        This method will update the potential parameters of the
-        given potential function.
+        Update the potential parameters of the given potential function.
 
         Parameters
         ----------
         potential : object
-            Potential to update. Should be in the self.potential list.
+            Potential to update. Should be in `self.potential`.
         params : dict
             The new parameters to set.
 
         Returns
         -------
         N/A, but will update parameters of the selected potential
-        and modified the corresponding self.params
+        and modified the corresponding `self.params`.
         """
         if potential in self.potential:
             potential.update_parameters(params)
@@ -303,7 +302,8 @@ class ForceField(object):
     def __str__(self):
         """
         A string representation of the force field.
-        It it returns the string descriptions of the potential functions.
+
+        It returns the string descriptions of the potential functions.
 
         Returns
         -------

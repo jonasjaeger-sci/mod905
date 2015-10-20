@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file contains methods and objects that handle the output/input
-of trajectory data.
+Methods and objects that handle the output/input of trajectory data.
 
 Objects defined here:
 
@@ -20,14 +19,15 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
-__all__ = ['WriteXYZ', 'WriteGromacs']
+__all__ = ('WriteXYZ', 'WriteGromacs')
 
 
 def _adjust_coordinate(coord):
     """
-    Method to adjust the dimensionality. A lot of the different
-    formats expects us to have 3 dimensional data. This methods just
-    adds dummy dimensions equal to zero
+    Method to adjust the dimensionality of coordinates.
+
+    A lot of the different formats expects us to have 3 dimensional data.
+    This methods just adds dummy dimensions equal to zero.
 
     Parameters
     ----------
@@ -57,8 +57,8 @@ def _adjust_coordinate(coord):
 
 
 class WriteXYZ(FileWriter):
-    """
-    WriteXYZ(FileWriter)
+    u"""
+    WriteXYZ(FileWriter).
 
     This class handles writing of a system to a file in a simple xyz format.
 
@@ -70,7 +70,9 @@ class WriteXYZ(FileWriter):
     atomnames : list
         These are the atomnames used for the output.
     """
+
     def __init__(self, filename, oldfile='backup', units='lj'):
+        """Initialization of the XYZ writer."""
         self.convert = {'pos': CONVERT['length'][units, 'Å']}
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -79,8 +81,7 @@ class WriteXYZ(FileWriter):
 
     def write_frame(self, pos, names=None, header=None):
         """
-        This is a method for writing a configuration in
-        xyz-format.
+        Write a configuration in xyz-format.
 
         Parameters
         ----------
@@ -115,6 +116,8 @@ class WriteXYZ(FileWriter):
 
     def write(self, system, header=None):
         """
+        Write a configuration in xyz-format.
+
         This is a method for writing a configuration in
         xyz-format. It is similar to `write_frame` and it's
         meant for convenience: atoms names will not have to be specified.
@@ -131,6 +134,8 @@ class WriteXYZ(FileWriter):
 
     def __call__(self, system, header=None):
         """
+        Write the configuration in xyz-format.
+
         This is a method for writing a configuration in
         xyz-format. This method will just call write and is
         included here for convenience.
@@ -147,7 +152,7 @@ class WriteXYZ(FileWriter):
 
 class WriteGromacs(FileWriter):
     """
-    WriteGromacs(FileWriter)
+    WriteGromacs(FileWriter).
 
     This class handles writing of a system to a file in a simple xyz format.
 
@@ -160,7 +165,9 @@ class WriteGromacs(FileWriter):
         Defines the conversion of positions from internal units to nm
         and nm/ps.
     """
+
     def __init__(self, filename, box, oldfile='backup', units='lj'):
+        """Initiate the gromacs writer."""
         self.atomnames = []
         self.box = box
         self.frame = 0  # number of frames written
@@ -172,8 +179,7 @@ class WriteGromacs(FileWriter):
     def write_frame(self, pos, vel=None, residuenum=None, residuename=None,
                     atomname=None, atomnum=None, header=None):
         """
-        This is a method for writing a configuration frame in
-        gromacs-format.
+        Write a configuration in gromacs format.
 
         Parameters
         ----------
@@ -243,6 +249,8 @@ class WriteGromacs(FileWriter):
 
     def write(self, system, header=None, write_vel=False):
         """
+        Write a configuration in gromacs format.
+
         This is a method for writing a configuration in
         gro-format. It is similar to `write_frame` and it's
         meant for convenience: atoms names will not have to be specified.
@@ -268,6 +276,8 @@ class WriteGromacs(FileWriter):
 
     def __call__(self, system, header=None, write_vel=False):
         """
+        Write a gromacs configuration.
+
         This is a method for writing a configuration in gro-format.
         This method will just call write and is
         included here for convenience.
@@ -284,10 +294,7 @@ class WriteGromacs(FileWriter):
         return self.write(system, header=header, write_vel=write_vel)
 
     def _box_lengths(self):
-        """
-        This is a helper method to obtain the box lengths from the
-        box object
-        """
+        """Obtain the box lengths from the box object."""
         missing = 3 - self.box.dim
         if missing > 0:
             boxlength = np.ones(3)

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-This file contains a class for a generic potential function
-This class is subclassed in all potential functions
+Define the class for a generic potential function.
+
+This class is subclassed in all potential functions.
 """
-
 import warnings
-
-
-__all__ = []
 
 
 class PotentialFunction(object):
     """
-    PotentialFunction(object)
+    PotentialFunction(object).
 
     Generic class for potential functions.
 
@@ -27,9 +24,10 @@ class PotentialFunction(object):
         for convenience in case other methods/classes wants to know all
         the parameters of the potential.
     """
+
     def __init__(self, dim=1, desc=''):
         """
-        Initiates the potential
+        Initiate the potential.
 
         Parameters
         ----------
@@ -48,9 +46,9 @@ class PotentialFunction(object):
 
     def check_parameters(self):
         """
-        This function is check on the consistency of
-        the parameters. This can be implemented for the
-        different potential functions.
+        Check on the consistency of the parameters.
+
+        This can be implemented for the different potential functions.
 
         Returns
         -------
@@ -64,8 +62,10 @@ class PotentialFunction(object):
 
     def update_parameters(self, params):
         """
-        Updates the parameters for the potential. In this generic function,
-        it will just try to set attributes for the object.
+        Update the parameters for the potential.
+
+        In this generic function, it will just try to set attributes
+        for the object.
 
         Parameters
         ----------
@@ -99,8 +99,7 @@ class PotentialFunction(object):
 
     def get_parameters(self):
         """
-        Method that returns information about the parameters for
-        the potential.
+        Return information about the parameters for the potential.
 
         Returns
         -------
@@ -117,22 +116,14 @@ class PotentialFunction(object):
 
     def parameters_to_dict(self):
         """
-        This method is intended to generate a dictionary
-        containing the parameters for the potential
+        Generate a dictionary containing the parameters for the potential.
 
         Returns
         -------
-        N/A, but is should modify self.params
+        N/A, but it modifies `self.params`.
         """
         self.params = {}
 
     def __str__(self):
-        """
-        Return the string description of the potential.
-
-        Returns
-        -------
-        out : string
-            Just returns self.desc.
-        """
+        """Return the string description of the potential."""
         return self.desc

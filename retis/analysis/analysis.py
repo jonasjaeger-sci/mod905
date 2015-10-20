@@ -1,29 +1,28 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains some simple methods for numerical analysis.
-"""
+"""This file contains some simple methods for numerical analysis."""
 
 import numpy as np
 from retis.analysis.histogram import histogram_and_avg
 
-__all__ = ['running_average', 'block_error',
-           'block_error_corr']
+__all__ = ('running_average', 'block_error',
+           'block_error_corr')
 
 
 def running_average(data):
     """
     Function to create a running average of the given data.
+
     The running average will be calculated over the rows.
 
     Parameters
     ----------
     data : numpy.array
-        This is the data we will average
+        This is the data we will average.
 
     Returns
     -------
     out : numpy.array
-        The running average
+        The running average.
     """
     one = np.ones(np.shape(data))
     return data.cumsum(axis=0) / one.cumsum(axis=0)
@@ -31,24 +30,24 @@ def running_average(data):
 
 def _chunks(itera, size):
     """
-    Yield successive size-sized chunks from itera.
+    Yield successive size-sized chunks from `itera`.
 
     Parameters
     ----------
-    itera : iterabel
-        This is the iterabel we will return chunks of
+    itera : iterable
+        This is the iterable we will return chunks of.
     size : int
-        The size of the chunks
+        The size of the chunks.
 
     Returns
     -------
-    This is an iterator and will yield the chunks
+    This is an iterator and will yield the chunks.
 
     Notes
     -----
     We are here using range rather than xrange. This is just to ease
     the transition from python2 to python3. Note that this will probably
-    lead to some inefficiencies for python2 execution
+    lead to some inefficiencies for python2 execution.
 
     References
     ----------
@@ -61,6 +60,8 @@ def _chunks(itera, size):
 
 def block_error(data, maxblock=None, blockskip=1):
     """
+    Perform block error analysis.
+
     This method will estimate the standard deviation in the input
     data by performing a block analysis. The number of blocks
     to consider can be specified or it will be taken as the
@@ -71,7 +72,7 @@ def block_error(data, maxblock=None, blockskip=1):
     Parameters
     ----------
     data : numpy.array (or iterable with data points)
-        The data to analyse
+        The data to analyse.
     maxblock : int
         Can be used to set the max length of the blocks to consider.
         Note that the maxbloc will never be set longer than half
@@ -85,13 +86,13 @@ def block_error(data, maxblock=None, blockskip=1):
     Returns
     -------
     blocklen : numpy.array
-        These contains the block lengths considered
+        These contains the block lengths considered.
     block_avg : numpy.array
-        The averages as function of block length
+        The averages as function of block length.
     block_err : numpy.array
-        Estimate of errors as function of block length
+        Estimate of errors as function of block length.
     block_err_avg : float
-        Average of the error estimate for blocks with length > maxblock//2
+        Average of the error estimate for blocks with ``length > maxblock//2``.
     """
     if maxblock is None:
         maxblock = len(data) // 2
@@ -130,32 +131,33 @@ def block_error(data, maxblock=None, blockskip=1):
 
 def block_error_corr(data, maxblock=5000, blockskip=1):
     """
-    This function will run the block error analysis and in addition calculate
-    relative errors and estimate the correlation length.
+    Run block error analysis, obtain relative errors and correlation length.
 
     Parameters
     ----------
     data : numpy.array
         Data to analyse.
     maxblock : int
-        The maximum block length to consider
+        The maximum block length to consider.
     blockskip = int
-        Intervall between blocks. Blocks are created as 1, 1+blockskip, ...
+        Interval between blocks. Blocks are created as 1, 1+blockskip, ...
         up to maxblock.
 
     Returns
     -------
     out[0] : numpy.array, `blen`.
-        These contains the block lengths considered
+        These contains the block lengths considered.
     out[1] : numpy.array, `berr`.
-        Estimate of errors as function of block length
+        Estimate of errors as function of block length.
     out[2] : float, `berr_avg`.
-        Average of the error estimate for blocks with length > maxblock // 2
+        Average of the error estimate for blocks
+        with ``length > maxblock // 2``.
     out[3] : numpy.array, `rel_err`.
         Estimate of relative errors (normalised by the overall average)
         as a function of block length.
     out[4] : float, `avg_rel_err`.
-        The average relative error (for blocks with length > maxblock // 2
+        The average relative error, for blocks
+        with ``length > maxblock // 2``.
     out[5] : numpy.array, `ncor`.
         The estimated correlation length as a function of block length.
     out[6] : float, `avg_ncor`.
@@ -178,17 +180,18 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
 
 def safe_divide(numerator, denominator, val_if_zero=np.nan):
     """
-    This function will just attempt to divide two number. If a zero
-    division exction is raised it will handle it.
+    Function to divide two numbers safely.
+
+    If a zero division exception is raised this function will handle it.
 
     Parameters
     ----------
     numerator : float or numpy.array
-        The numerator(s)
+        The numerator(s).
     denominator : float or numpy.array
-        The denominator(s)
+        The denominator(s).
     val_if_zero : float or numpy.array
-        The value(s) to return in case of a ZeroDivisionError
+        The value(s) to return in case of a ZeroDivisionError.
     """
     try:
         fraction = numerator / denominator
@@ -199,17 +202,16 @@ def safe_divide(numerator, denominator, val_if_zero=np.nan):
 
 def mean_square_displacement(data, ndt=None):
     """
-    This method will calculate the mean square displacement for the given
-    data.
+    Calculate the mean square displacement for the given data.
 
     Parameters
     ----------
     data : numpy.array, 1D
-        This numpy.array contain the data as a function of time
+        This numpy.array contain the data as a function of time.
     ndt : int, optional
         This parameter is the number of time origins. I.e. points up to
         ndt will be used as time origins. If not specified the size of the
-        input data // 5 will be used.
+        input ``data // 5`` will be used.
 
     Returns
     -------
@@ -229,16 +231,17 @@ def mean_square_displacement(data, ndt=None):
 
 def analyse_data(data, settings):
     """
-    This method will analyse the given data and run some common analysis
-    procedures, specifically it will:
-    1) Calculate a running average
-    2) Obtain a histogram
-    3) Run a block error analysis
+    Analyse the given data and run some common analysis procedures.
+
+    Specifically it will:
+    1) Calculate a running average.
+    2) Obtain a histogram.
+    3) Run a block error analysis.
 
     Parameters
     ----------
     data : numpy.array, 1D
-        This numpy.array contain the data as a function of time
+        This numpy.array contain the data as a function of time.
     settings : dict
         This dictionary contains settings for the analysis.
 

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains common methods and functions for the input/output.
-"""
+"""This file contains common methods and functions for the input/output."""
 from __future__ import absolute_import
 import os
 
 
-__all__ = ['create_backup']
+__all__ = ('create_backup')
 
 
 # hard-coded patters for energy analysis output files:
@@ -50,6 +48,8 @@ _REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
 
 def create_backup(outputfile):
     """
+    Check if a file exist and create backup if requested.
+
     This method will check if the given filename exist and if it
     does, it will move that file to a new filename such that the given
     one can be used without overwriting.
@@ -57,7 +57,7 @@ def create_backup(outputfile):
     Parameters
     ----------
     outputfile : string
-        This is the name of the file we wish to create
+        This is the name of the file we wish to create.
 
     Returns
     -------
