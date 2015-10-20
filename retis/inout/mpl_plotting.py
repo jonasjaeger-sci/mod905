@@ -227,9 +227,10 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
     series : dict
         Represents the data to be plotted.
     low : int, optional
-        Lower index to start plotting
+        Lower index to start plotting. `low` can be negative.
     high : int, optional
-        Index where to end the plotting, this index is not plotted.
+        Index where to end the plotting, this index is not plotted. `high`
+        is assumed to always be > 0 or None.
     color : string, optional
         A string representing the color to use
 
@@ -244,11 +245,9 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
               'linewidth': series.get('lw', 2.0)}
     if color is not None:
         kwargs['color'] = color
-    if 'x' in series:
-        handle, = axs.plot(series['x'][low:high], series['y'][low:high],
-                           **kwargs)
-    else:
-        handle, = axs.plot(series['y'][low:high], **kwargs)
+
+    handle, = axs.plot(series['x'][low:high], series['y'][low:high],
+                       **kwargs)
     return handle
 
 
@@ -583,7 +582,8 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                                   'ylabel': 'Probability',
                                   'title': 'Ensemble: {0}'.format(ens)})
     # next plot running pcross:
-    series = [{'type': 'xy', 'y': results['prun']}]
+    series = [{'type': 'xy', 'x': results['cycle'],
+               'y': results['prun']}]
     series.append({'type': 'hline', 'y': results['prun'][-1],
                    'ls': '--', 'alpha': 0.8})
     mpl_simple_plot(series,
@@ -606,7 +606,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                    'label': lab2})
     mpl_simple_plot(series,
                     outfiles['pathlength'],
-                    fig_settings={'xlabel': 'MD steps',
+                    fig_settings={'xlabel': 'No. of MD steps',
                                   'ylabel': 'Frequency',
                                   'title': 'Ensemble: {0}'.format(ens)})
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,

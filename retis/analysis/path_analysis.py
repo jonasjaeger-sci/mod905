@@ -401,6 +401,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     # next get the running average of the crossing probability
     prun, pdata = _running_pcross(path_ensemble, idetect)
     result['prun'] = prun
+    result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
     # next, the error analysis:
     result['blockerror'] = block_error_corr(pdata,
                                             maxblock=settings['maxblock'],
@@ -460,7 +461,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     .. [1] Wikipedia, "Moving Average",
            http://en.wikipedia.org/wiki/Moving_average
     """
-    result = {'prun': []}
+    result = {'prun': [], 'cycle': []}
     if idetect is None:
         idetect = path_ensemble.interfaces[-1]
     orderparam = []  # list of all accepted order parameters
@@ -490,6 +491,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
             result['prun'].append(float(success +
                                         result['prun'][-1] * (npath - 1)) /
                                   float(npath))
+        result['cycle'].append(path['cycle'])
         # get the length - note that this length depends on the type of move
         # see the `_get_path_length` function.
         length = _get_path_length(path)
@@ -499,6 +501,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
         _update_shoot_stats(shoot_stats, path)
     # Perform the different analysis tasks:
     # 1) result['prun'] is already calculated.
+    result['cycle'] = np.array(result['cycle'])
+    result['prun'] = np.array(result['prun'])
     # 2) lambda pcross:
     orderparam = np.array(orderparam)
     ordermax = min(orderparam.max(), max(path_ensemble.interfaces))
