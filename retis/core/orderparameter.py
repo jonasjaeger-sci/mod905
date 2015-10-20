@@ -406,19 +406,16 @@ class StringFunctionParser(object):
         args : string
             These are the arguments that should be passed to function.
         """
-        # print('Calling with:',function, args)
         xyz = {'x': 0, 'y': 1, 'z': 2}
         particles = self.system.particles
         retval = None
         if function[:8] == 'distance':
-            # print('Calculate dist between particles {} and {}'.format(i, j))
             i, j = int(args[0]), int(args[1])
             dist = particles.pos[i] - particles.pos[j]
             if function[-4:] == '_pbc':
                 dist = self.system.box.pbc_dist_coordinate(dist)
             retval = dist
         elif function[:3] == 'pbc':
-            # print('Apply pbc {} to: {}'.format(function,args))
             dim = xyz[function[-1]]
             retval = self.system.box.pbc_coordinate_dim(args, dim)
         else:
