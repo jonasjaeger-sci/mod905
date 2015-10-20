@@ -8,31 +8,32 @@ __all__ = ['Box']
 
 class Box(object):
     """
-    Box(object) defines a simple simulation box. The box will handle
-    periodic boundaries if needed.
-    A non-periodic dummy-box can be created using Box(periodic=[False, ...])
-    which may be usefull for setting the dimensionality.
-    Otherwise, a box will typically be created with a size, Box(size=[...]).
-    Periodocity can be explicity set (default is assumed periodic in all
-    dimensions).
+    Box(object)
+
+    This class defines a simple simulation box. The box will handle
+    periodic boundaries if needed. A non-periodic dummy-box can be created
+    using `Box(periodic=[False, ...])` which may be usefull for setting the
+    dimensionality for a simulation. Otherwise, a box will typically be
+    created with a size, `Box(size=[...])`.  Periodicity can be explicity
+    set and the default behavior is periodic in all dimensions.
 
     Attributes
     ----------
     size : list
-        size[i] = [low, high] are the box boundaries in dimension i
+        size[i] = [low, high] are the box boundaries in dimension i.
     length : list
         length[i] = length of box in dimension i, equals
-        size[i][1] - size[i][0]
+        size[i][1] - size[i][0].
     periodic : list
         periodic[i] = True if periodic boundaries are to be used in
         dimension i, False otherwise.
     dim : int
-        the number of dimensions the box is made up of.
+        The number of dimensions the box is made up of.
     """
 
     def __init__(self, size=None, periodic=None):
         """
-        Initialize the box
+        Initialize the box.
 
         Parameters
         ----------
@@ -104,9 +105,9 @@ class Box(object):
         Parameters
         ----------
         pos : float
-            Coordinate to wrap around
+            Coordinate to wrap around.
         dim : int
-            This selects the dimension to consider
+            This selects the dimension to consider.
         """
         if self.periodic[dim]:
             low, length = self.low[dim], self.length[dim]
@@ -170,8 +171,7 @@ class Box(object):
 
     def pbc_wrap(self, pos):
         """
-        This method applies periodic boundaries to the
-        given position
+        This method applies periodic boundaries to the given position.
 
         Paramters
         ---------
@@ -230,7 +230,7 @@ class Box(object):
 
         Parameters
         ----------
-        distance : numpy.array, shape (self.dim,)
+        distance : numpy.array with shape (self.dim,)
             A distance vector.
 
         Returns
@@ -249,11 +249,11 @@ class Box(object):
 
     def __str__(self):
         """
-        This method returns a string describing the box
+        This method returns a string describing the box.
 
         Returns
         -------
-        out : string,
+        out : string
             String with type of box, extent of the box and
             information about the periodicity.
         """

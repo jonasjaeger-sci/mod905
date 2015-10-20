@@ -20,31 +20,31 @@ class OrderParameter(object):
     is assumed to be a function that can uniquely be determined by
     the system object and its attributes.
 
-    The order parameter implements __call__ so it can be calculated
-    using OrderParameter(System)
+    The order parameter implements `__call__` so it can be calculated
+    using `OrderParameter(System)`.
 
     Attributes
     ----------
     desc : string
-        This is a short description of the order parameter
+        This is a short description of the order parameter.
     name : string
-        A name for the order parameter (useful for output)
+        A name for the order parameter (useful for output).
     extra : list of functions
         This is a list of extra order parameters to calculate.
         We will assume that this list contains functions that all
-        accept a retis.core.system.System object as input and returns
+        accept a `retis.core.system.System` object as input and returns
         a single float.
     """
     def __init__(self, name, desc='General order parameter'):
         """
-        Initialize the OrderParameter object
+        Initialize the OrderParameter object.
 
         Parameters
         ----------
         name : string
-            The name for the order parameter
+            The name for the order parameter.
         desc : string
-            Short description of the order parameter
+            Short description of the order parameter.
         """
         self.name = name
         self.desc = desc
@@ -52,20 +52,20 @@ class OrderParameter(object):
 
     def calculate(self, system):
         """
-        This function calculates the order parameter
+        This function calculates the order parameter.
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation, typically only
-            system.particles.pos and/or system.particles.vel will be used.
-            In some cases system.forcefield can also be used to include
-            specific energies for the order parameter
+            `system.particles.pos` and/or `system.particles.vel` will be
+            used. In some cases system.forcefield can also be used to include
+            specific energies for the order parameter.
 
         Returns
         -------
         out : float
-            The order parameter
+            The order parameter.
         """
         pass
 
@@ -75,32 +75,36 @@ class OrderParameter(object):
 
         Parameters
         ----------
-        system : object of type retis.core.system
-            This object is used for the actual calculation.
+        system : object of type retis.core.system.System
+            This object is used for the actual calculation, typically only
+            `system.particles.pos` and/or `system.particles.vel` will be
+            used. In some cases system.forcefield can also be used to include
+            specific energies for the order parameter.
 
         Returns
         -------
         out : float
-            The velocity of the order parameter
+            The velocity of the order parameter.
         """
         pass
 
     def __call__(self, system):
         """
         Method to conveniently call calculate and calculate_velocity. It will
-        also call the additional order parameters defined in self.extra if any.
+        also call the additional order parameters defined in `self.extra`,
+        if any.
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation.
 
         Returns
         -------
         out[0] : float
-            The order parameter
+            The order parameter.
         out[1] : float
-            The velocity of the order parameter
+            The velocity of the order parameter.
         out[2:] : float
             Additional order parameters, if any.
         """
@@ -200,16 +204,16 @@ class OrderParameterPosition(OrderParameter):
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation, typically only
-            system.particles.pos and/or system.particles.vel will be used.
-            In some cases system.forcefield can also be used to include
-            specific energies for the order parameter
+            `system.particles.pos` and/or `system.particles.vel` will be
+            used. In some cases `system.forcefield` can also be used to
+            include specific energies for the order parameter.
 
         Returns
         -------
         out : float
-            The order parameter
+            The order parameter.
         """
         pos = system.particles.pos[self.index]
         if self.periodic:
@@ -227,7 +231,7 @@ class OrderParameterPosition(OrderParameter):
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation.
 
         Returns
@@ -269,12 +273,12 @@ class OrderParameterParse(OrderParameter):
         Parameters
         ----------
         name : string
-            The name for the order parameter
+            The name for the order parameter.
         orderstr : string
-            This is the string representing the order parameter
+            This is the string representing the order parameter.
         ordervelstr : string
             This is the string representing the velocity of the order
-            parameter
+            parameter.
         """
         description = 'Parsed order parameter'
         super(OrderParameterParse, self).__init__(name, desc=description)
@@ -283,20 +287,20 @@ class OrderParameterParse(OrderParameter):
 
     def calculate(self, system):
         """
-        This function calculates the order parameter
+        This function calculates the order parameter.
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation, typically only
-            system.particles.pos and/or system.particles.vel will be used.
-            In some cases system.forcefield can also be used to include
-            specific energies for the order parameter
+            `system.particles.pos` and/or `system.particles.vel` will be
+            used. In some cases `system.forcefield` can also be used to
+            include specific energies for the order parameter.
 
         Returns
         -------
         out : float
-            The order parameter
+            The order parameter.
         """
         return self.orderparser.evaluate(system=system)
 
@@ -306,13 +310,13 @@ class OrderParameterParse(OrderParameter):
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             This object is used for the actual calculation.
 
         Returns
         -------
         out : float
-            The velocity of the order parameter
+            The velocity of the order parameter.
         """
         return self.ordervelparser.evaluate(system=system)
 
@@ -325,7 +329,7 @@ class OrderParameterParse(OrderParameter):
         ----------
         strfunc : string
             Extra function for calculation of an extra order parameter. It
-            is assumed to accept a retis.core.system object as its
+            is assumed to accept a retis.core.system.System object as its
             parameter.
         """
         func = StringFunctionParser(string_function=strfunc)
@@ -339,21 +343,23 @@ class OrderParameterParse(OrderParameter):
 class StringFunctionParser(object):
     """
     This class defines a simple parser for user-defined order parameters.
-    It is based on fourFn.py, see
+    It is based on fourFn.py, see:
+
     http://pyparsing.wikispaces.com/file/view/fourFn.py
 
     Attributes
     ----------
-    pars :
-        This is responsible for the actual parsing
+    pars : object of type Forward from pyparsing
+        Forward is a subclass of ParseElementEnhance and is used here
+        for the actual parsing.
     operators : dict
         This dict defines the different operators that can be used.
     functs : dict
         This dict defines the different scalar functions that can be used.
     system_functs : set
         This set defines the different functions that will make use of
-        the system object
-    system : object of type retis.core.system
+        the system object.
+    system : object of type retis.core.system.System
         This object is used to access system properties, e.g. partilces
         and the box.
     string_function : string
@@ -361,7 +367,7 @@ class StringFunctionParser(object):
     """
     def __init__(self, string_function=None):
         """
-        Initialte the function
+        Initiate the StringFunctionParser.
 
         Parameters
         ----------
@@ -401,8 +407,8 @@ class StringFunctionParser(object):
         Parameters
         ----------
         function : string
-            This is the function that should be called. I will need
-            to be one of the strings defined in self.system_functs
+            This is the function that should be called. It will need
+            to be one of the strings defined in `self.system_functs`.
         args : string
             These are the arguments that should be passed to function.
         """
@@ -435,46 +441,47 @@ class StringFunctionParser(object):
 
     def push_first(self, toks):
         """
-        This will append parsed string elements
-        to the stack.
+        This will append parsed string elements to the stack.
 
         Parameters
         ----------
         toks: list of strings
-            Tokens, toks[0] is to be added
+            Tokens, toks[0] is to be added.
 
         Returns
         -------
-        N/A but updates self.exprstack
+        N/A but updates `self.exprstack`.
 
         Note
         ----
-        The function can also be defined as push_first(self, strg, loc, toks)
-        where strg is the original string being parsed and loc is the location
-        of the matching substring.
+        The function can also be defined as
+        `push_first(self, strg, loc, toks)` where `strg` is the original
+        string being parsed and `loc` is the location of the matching
+        substring.
         """
         self.exprstack.append(toks[0])
 
     def push_uminus(self, toks):
         """
         This will push to the expression stack,
-        similar to ``push_first``, however this function is needed for
-        handling expressions like ``-x''
+        similar to `push_first`, however this function is needed for
+        handling expressions like `-x`.
 
         Parameters
         ----------
         toks: list of strings
-            Tokens, toks[0] is to be added
+            Tokens, toks[0] is to be added.
 
         Returns
         -------
-        N/A but updates self.exprstack
+        N/A but updates `self.exprstack`.
 
         Note
         ----
-        The function can also be defined as push_first(self, strg, loc, toks)
-        where strg is the original string being parsed and loc is the location
-        of the matching substring.
+        The function can also be defined as
+        `push_first(self, strg, loc, toks)` where `strg` is the original
+        string being parsed and `loc` is the location of the matching
+        substring.
         """
         if toks and toks[0] == '-':
             self.exprstack.append('unary -')
@@ -518,8 +525,8 @@ class StringFunctionParser(object):
 
     def parse_function(self, string_function):
         """
-        This method will parse the string and set up
-        self.exprstack.
+        This method will parse the string and set up the expression stack
+        `self.exprstack`.
         """
         self.exprstack = []
         self.pars.parseString(string_function, True)
@@ -531,9 +538,9 @@ class StringFunctionParser(object):
 
         Parameters
         ----------
-        system : object of type retis.core.system
+        system : object of type retis.core.system.System
             The system object is used to access particles and
-            also the box. Here we set self.system to point to this
+            also the box. Here we set `self.system` to point to this
             object as it is a convenient way of accessing the required
             paramters.
         """
@@ -544,7 +551,7 @@ class StringFunctionParser(object):
             return self.evaluate_stack(self.exprstack[:])
 
     def __call__(self, system=None):
-        """Function to call self.evaluate"""
+        """Function to call `self.evaluate`"""
         return self.evaluate(system=system)
 
     def _initiate_parser(self):

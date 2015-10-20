@@ -13,8 +13,8 @@ class Particles(object):
 
     This is a simple particle list. It stores the positions,
     velocities, forces, masses (and inverse masses) and type information
-    for a set of particles.
-    In general particle lists are intended to define neighbor lists etc.
+    for a set of particles. In general the particle lists are intended to
+    define neighbor lists etc. This class will just define an all-pairs list.
 
     Attributes
     ----------
@@ -29,12 +29,12 @@ class Particles(object):
     mass : numpy.array
         Masses of the particles.
     imass : np.array
-        Inverse masses, 1.0/self.mass.
+        Inverse masses, `1.0 / self.mass`.
     name : list of strings
         A name for the particle. This may be used as short text
         describing the particle.
     ptype : list of strings
-        A type for the particle. Particles with identical ptype are of the
+        A type for the particle. Particles with identical `ptype` are of the
         same kind.
     dim : int
         This variable is the dimensionality of the particle list. This
@@ -62,9 +62,13 @@ class Particles(object):
         """
         This is a method to reset the particle list.
         It will delete all particles in the list.
-        Note, this is almost __init__ repeated. The reason for __init__ to be
-        repeated is simply that we want to define all attributes in __init__
-        and not get any surprise attributes elsewhere.
+
+        Note
+        ----
+        This is almost `self.__init__` repeated. The reason for this is
+        simply that we want to define all attributes in `self.__init__`
+        and not get any 'surprise attributes' defined elsewhere. Also note
+        that the dimensionality (`self.dim`) is not changed here.
         """
         self.npart = 0
         self.pos = None
@@ -77,19 +81,13 @@ class Particles(object):
         self.virial = None
 
     def get_dim(self):
-        """
-        Function to get the dimensionality, it simply returns self.dim
-
-        Returns
-        -------
-        out : int
-            The dimensionality
-        """
+        """Function to get the dimensionality, it just returns `self.dim`"""
         return self.dim
+
 #    def get_dim(self):
 #        """
-#        Function to get the dimensionality, based on self.pos, self.vel
-#        and self.force
+#        Function to get the dimensionality, based on `self.pos`, `self.vel`
+#        and `self.force`.
 #
 #        Returns
 #        -------
@@ -110,7 +108,8 @@ class Particles(object):
     def get_phase_point(self):
         """
         This function returns a copy of the current phase point, that is
-        self.pos and self.vel. In addition in returns the accompanying forces.
+        `self.pos` and `self.vel`. In addition it returns the accompanying
+        forces from `self.force`.
 
         Returns
         -------
@@ -126,11 +125,11 @@ class Particles(object):
         """
         This function sets the position, velocities (and forces) and
         included here for convenience - it can be used together with
-        ``get_phase_point()`` for easy change of the particle state.
+        `self.get_phase_point()` for easy change of the particle state.
 
         Returns
         -------
-        N/A but updates self.pos, self.vel and self.force
+        N/A but updates `self.pos`, `self.vel` and `self.force` (if given).
         """
         self.pos = np.copy(phasepoint['pos'])
         self.vel = np.copy(phasepoint['vel'])
@@ -162,7 +161,7 @@ class Particles(object):
 
         Returns
         -------
-        N/A, but increments self.N and updates self.particles.
+        N/A, but increments `self.npart` and updates `self.particles`.
         """
         if self.npart == 0:
             self.name = [name]
@@ -226,7 +225,7 @@ class Particles(object):
 
         Returns
         -------
-        yields the information in self.pos, self.vel, ... etc.
+        yields the information in `self.pos`, `self.vel`, ... etc.
         """
         for i, pos in enumerate(self.pos):
             part = {'pos': pos, 'vel': self.vel[i], 'force': self.force[i],
