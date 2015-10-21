@@ -492,7 +492,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
         This string is used to identify blocks.
 
     Yields
-    -------
+    ------
     data : list
         The data read from the file, arranged in dicts
     """

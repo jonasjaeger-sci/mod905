@@ -208,7 +208,7 @@ class EnergyFile(FileWriter):
         convenient for the subsequent analysis.
 
         Yields
-        -------
+        ------
         data_dict : dict
             This is the energy data read from the file, stored in
             a dict. This is for convenience, so that each energy term
@@ -308,7 +308,7 @@ class OrderFile(FileWriter):
         order parameters are left to be defined by the user.
 
         Yields
-        -------
+        ------
         data_dict : dict
             Data read from the order parameter file.
 
@@ -432,7 +432,7 @@ class PathFile(FileWriter):
         by `self.block_label`. This method will yield blocks successively.
 
         Yields
-        -------
+        ------
         data_dict : dict
             Data read from the order parameter file.
 
