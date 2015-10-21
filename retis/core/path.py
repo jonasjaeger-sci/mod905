@@ -34,6 +34,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     ``paste_paths(path1, path2) != paste_paths(path2, path1)``.
 
     The code is very similar to `Path.__add__` but we have to take care:
+
     - `path_back` must be iterated in reverse (it is assumed to be a
       backward trajectory).
     - we may have to remove one point in `path2` (if the paths overlap).
@@ -57,9 +58,8 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     Note
     ----
     Some information about the path will not be set here. This must be set
-    elsewhere. This includes:
-        path.generated
-        path.status
+    elsewhere. This includes how the path was generated (`path.generated`)
+    and the status of the path (`path.status`).
     """
     if maxlen is None:
         if path_back.maxlen == path_forw.maxlen:
@@ -555,7 +555,7 @@ class PathEnsemble(object):
     paths : list
         This list contains the stored information for the paths.
         The information that is stored is obtained through the
-        ``get_path_data''function of the Path object.
+        ``get_path_data`` function of the Path object.
     npath : int
         The number of paths stored.
     nacc : int

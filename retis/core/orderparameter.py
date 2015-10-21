@@ -107,7 +107,7 @@ class OrderParameter(object):
             The order parameter.
         out[1] : float
             The velocity of the order parameter.
-        out[2:] : float
+        out[2, ...] : float(s)
             Additional order parameters, if any.
         """
         orderp = self.calculate(system)

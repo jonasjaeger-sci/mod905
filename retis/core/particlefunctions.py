@@ -186,9 +186,10 @@ def reset_momentum(particles, selection=None, dim=None):
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
     dim : list
-        If dim is None, ``reset_momentum'' will be applied to
+        If dim is None, ``reset_momentum`` will be applied to
         all dimensions. Otherwise it will only be applied to the
         dimensions where dim is True.
+
     Returns
     -------
     N/A, but modifies the velocities of the selected particles.

@@ -271,10 +271,12 @@ class Langevin(Integrator):
     param_high : dict
         This contains the parameters for the high friction limit. Here
         we integrate the equations of motion according to:
-        ``r(t + dt) = r(t) + dt * f(t)/m*gamma + dr``
-        param_high['sigma'] : float
+        ``r(t + dt) = r(t) + dt * f(t)/m*gamma + dr``.
+        The items in the dict are:
+
+        * `sigma` : float
             standard deviation for the positions, used when drawing dr
-        param_high['bddt'] : numpy.array
+        * `bddt` : numpy.array
             Equal to ``dt*gamma/masses``, since the masses is an numpy.array
             this will have the same shape.
     param_iner : dict
@@ -282,31 +284,32 @@ class Langevin(Integrator):
         where we integrate the equations of motion according to:
         ``r(t + dt) = r(t) + c1 * dt * v(t) + c2*dt*dt*a(t) + dr``
         and
-        ``v(r + dt) = c0 * v(t) + (c1-c2)*dt*a(t) + c2*dt*a(t+dt) + dv``
+        ``v(r + dt) = c0 * v(t) + (c1-c2)*dt*a(t) + c2*dt*a(t+dt) + dv``.
         The dict contains:
-        param_iner['c0'] : float
-            Corresponds to `c0` in the equation above.
-        param_iner['a1'] : float
-            Correcponds to `c1*dt` in the equation above.
-        param_iner['a2'] : numpy.array
-            Corresponds to `c2*dt*dt/mass` in the equation above.
+
+        * `c0` : float
+            Corresponds to ``c0`` in the equation above.
+        * `a1` : float
+            Correcponds to ``c1*dt`` in the equation above.
+        * 'a2' : numpy.array
+            Corresponds to ``c2*dt*dt/mass`` in the equation above.
             Here we divide by the masses in order to use the forces rather
-            than the acceleration a. Since the masses might be different for
+            than the acceleration. Since the masses might be different for
             different particles, this will result in a numpy.array with shape
             equal to the shape of the masses.
-        param_iner['b1'] : numpy.array
-            Corresponds to `(c1-c2)*dt/mass` in the equation above.
+        * `b1` : numpy.array
+            Corresponds to ``(c1-c2)*dt/mass`` in the equation above.
             Here we also divide by the masses, resulting in a numpy.array
-        param_iner['b2'] : numpy.array
-            Corresponds to `c2*dt/mass` in the equation above.
+        * `b2` : numpy.array
+            Corresponds to ``c2*dt/mass`` in the equation above.
             Here we also divide by the masses, resulting in a numpy.array
-        param_iner['mean'] : numpy.array (2,)
+        * `mean` : numpy.array (2,)
             The means for the bivariate gaussian distribution
-        param_iner['cov'] : numpy.array (2,2)
+        * `cov` : numpy.array (2,2)
             This array contains the covariance for the bivariate gaussian
-            distribution. param_iner['mean'] and param_iner['cov'] are used
-            as parameters when drawing dr and dv from the bivariate
-            distribution.
+            distribution. `param_iner['mean']` and `param_iner['cov']` are
+            used as parameters when drawing ``dr`` and ``dv`` from the
+            bivariate distribution.
 
     Note
     ----
