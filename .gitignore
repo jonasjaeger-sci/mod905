@@ -10,16 +10,23 @@
 *.swo
 *~
 
-# gro and xyz files
-*.gro
-*.xyz
-
-# movie files
-*.mp4
-
 site/
 
 # for readthedocs:
 _build
 _static
 _templates
+
+# for examples:
+# md wca: energy and trajectory
+examples/molecular_dynamics/md_wca/energy.dat*
+examples/molecular_dynamics/md_wca/traj.gro*
+# md nve: energy, thermo and trajectory
+examples/molecular_dynamics/md_nve/energy.dat*
+examples/molecular_dynamics/md_nve/thermo.txt*
+examples/molecular_dynamics/md_nve/traj.gro*
+# md movied 2: energy and trajectory
+examples/molecular_dynamics/md_movie_2d/energy.dat*
+examples/molecular_dynamics/md_movie_2d/traj.gro*
+# umbrella sampling, temp files for movie
+examples/umbrella_sampling/fancy_movie/*.png
