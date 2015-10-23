@@ -13,6 +13,14 @@ Modules:
   interactions.
 
 - wca.py: Defines potential functions for the WCA interaction.
+
+Important classes and functions
+-------------------------------
+
+- PairLennardJonesCut: A class defining a Lennard-Jones potential
+
+- PairWCAnp: A class defining a WCA potential. The 'np' in the name
+  reflects that this class is using numpy for calculations.
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
 from .wca import PairWCAnp, DoubleWellWCA

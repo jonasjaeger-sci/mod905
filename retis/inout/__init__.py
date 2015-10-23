@@ -2,10 +2,17 @@
 """
 This library handles the input and output for pyretis.
 
+This package is intended for creating various forms of output
+from the pyretis program. It include writers for simple text based
+output and plotters for creating figures. Figures and the text results
+can be combined into reports, which can be templated.
+
 Package structure
 =================
 
+
 Modules:
+--------
 
 - analysisio.py: This is a module to output the analysis of (RE)TIS
   simulation.
@@ -38,7 +45,26 @@ Modules:
   Futher it defines the more general FileWriter object, which is used by
   other file writers (as in traj.py and fileinout.py).
 
+Important classes and functions
+-------------------------------
+
+- WriteGromacs & WriteXYZ: Classes for writing coordinates.
+
+- CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
+  (for initial the flux), energy data and order parameter data.
+
+- PathEnembleFile: A writer of path ensemble data.
+
+- generate_report: A function to generate reports from analysis output(s).
+
+- create_traj_writer: A function to create a trajectory writer from given
+  settings.
+
+- get_predefined_table: A function to get an object which can be used to
+  pretty-print tables to the screen/file during a simulation.
+
 Folders:
+--------
 
 - styles: This folder contains style files for matplotlib.
 

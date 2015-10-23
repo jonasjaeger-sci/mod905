@@ -2,12 +2,20 @@
 """
 This package defines analysis tools for the pyretis program.
 
+The analysis tools are intended to be used for analysis of the
+simulation output from the pyretis program. The typically use of this
+package is in post-processing of the results from a simulation (or several
+simulations).
+
 Package structure
 =================
 
 Modules:
+--------
 
-- __init__.py: Imports from the other modules.
+- __init__.py: This file, imports from the other modules. The method to
+  analyse results from MD flux simulations is defined here since it uses
+  analysis tools from `energy_analysis.py` and `order_analysis.py`.
 
 - analysis.py: Defines methods for numerical analysis.
 
@@ -18,14 +26,43 @@ Modules:
 - order_analysis.py: Defines methods useful for analysis of order parameters.
 
 - path_analysis.py: Defines methods for analysis of path ensembles.
+
+Important functions:
+--------------------
+
+- analyse_energies: Analyse energy data from a simulation.
+  It will calculate a running average, a distribution and do a block
+  error analysis.
+
+- analyse_flux: Analyse flux data from a MD flux simulation.
+  It will calculate a running average, a distribution and do a block
+  error analysis.
+
+- analyse_orderp: Analyse order parameter data.
+  It will calculate a running average, a distribution and do a block
+  error analysis. In addition if will analyse the mean square displacement
+  if requested.
+
+- analyse_path_ensemble: Analyse the results from a single path ensemble.
+  It will calculate a running average of the probabilities, a crossing
+  probability, perform an block error analysis, analyse lengths of paths,
+  type of Monte Carlo moves and calculate an efficiency.
+
+- match_probabilities: Method to match probabilities from several
+  path simulations. Useful for obtaining the overall crossing probability.
+
+- histogram: Generates histogram, basically a wrapper around numpy's
+  histogram.
+
+- match_all_histograms: Function to match histograms from
+  umbrella simulations.
 """
-from __future__ import print_function
 from .analysis import running_average, block_error, block_error_corr
-from .histogram import histogram, match_all_histograms
 from .energy_analysis import analyse_energies
+from .flux_analysis import analyse_flux
+from .histogram import histogram, match_all_histograms
 from .order_analysis import analyse_orderp
 from .path_analysis import analyse_path_ensemble, match_probabilities
-from .flux_analysis import analyse_flux
 
 
 def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,

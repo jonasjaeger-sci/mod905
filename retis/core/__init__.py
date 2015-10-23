@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-This package defines the core retis tools.
+This package defines the core pyretis tools.
+
+The core tools are intended to set up simulations and run
+them. This module is not intended to handle output or analysis.
 
 Package structure
 =================
 
 Modules:
 
-- __init__.py: Imports __all__ from the other modules.
+- __init__.py: Import core functions from the other modules.
 
 - box.py: This module defines the simulation box object.
 
@@ -45,6 +48,34 @@ Modules:
 
 - units.py: This module defines conversion between units.
 
+Important classes/functions
+---------------------------
+
+- Box: A class which defines the simulation box. This box will also
+  handle the periodic boundaries.
+
+- System: A class which defines the system we are working with. This
+  class contain a lot of information and is used to group the information
+  into a structure which the simulations will make use of. Typically the
+  system will contain a reference to a Box, a list of particles and also
+  a force field.
+
+- Particles: A class defining a list of  particles. This will contain the
+  positions, velocities and forces for the particles.
+
+- Path: A class representing a path. The path contains shapshots with some
+  additional information (energies and order parameters).
+
+- PathEnsemble: A class representing a collection of paths. The path ensemble
+  will not store the full trajectories of path, only a simplified
+  representation of the paths.
+
+- RandomGenerator: A class for generating random numbers.
+
+- OrderParameter: A general class for order parameters. Prototype for all
+  other order parameters.
+
+- Simulation: A sub-packages (and a class) defining the simulations.
 """
 from . import simulation
 from .system import System

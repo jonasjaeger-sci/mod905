@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-This package defines different simulations for use with pyretis
+This package defines different simulations for use with pyretis.
+
+The different simulations are defined as objects which inherits from
+the base Simulation object defined in `simulation.py`. The simulation
+object defines as simulation as a series of tasks to be executed,
+typically at each step of the simulation. Output is handled with a
+different set out 'ouput' tasks which make use of the results obtained
+in the simulation steps.
 
 Package structure
 =================
@@ -10,26 +17,41 @@ Modules:
 - __init__.py: Imports simulations from the other modules and defines a method
   for creating simulations from a dict with settings.
 
-- simulation.py: Defines the Simulation object which is the base object for
-  simulations.
-
 - md_simulation.py: Defines simulation objects for molecular dynamics
   simulations.
 
 - mc_simulation.py: Define simulation objects for monte carlo simulations.
 
-- simulation_task: Defines objects for handling of simulation tasks and
+- path_simulation.py: Defines simulation objects for path simulations.
+
+- simulation.py: Defines the Simulation object which is the base object for
+  simulations.
+
+- simulation_task.py: Defines objects for handling of simulation tasks and
   output tasks.
 
-- path_simulation.py: Defines simulation objects for path simulations.
+Important classes and functions
+-------------------------------
+
+- Simulation: The base class for simulations.
+
+- SimulationTask: A class for creating tasks for simulations.
+
+- OutputTask: A class for handling output tasks for simulations.
+
+- create_simulation: A function to create a simulation object from
+  a dictionary of given settings.
+
+- create_output_task: A function to create output tasks for simulations
+  from a dictionary of settings.
 """
-# local retis imports
+# local pyretis imports
 from .simulation import Simulation
 from .mc_simulation import UmbrellaWindowSimulation
 from .md_simulation import SimulationNVE, SimulationMDFlux
 from .path_simulation import SimulationTIS
-from .simulation_task import OutputTask
-# other retis imports
+from .simulation_task import OutputTask, SimulationTask
+# other pyretis imports
 from retis.core.integrators import create_integrator
 from retis.inout.fileinout import (CrossFile, EnergyFile, OrderFile, PathFile,
                                    PathEnsembleFile)

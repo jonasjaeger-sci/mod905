@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-"""This file contains some convenient methods."""
+"""Some convenient methods for generating initial structures.
 
+This module is defining some tools which may be usefull for generating
+initial structures: ``latticefcc`` will return a fcc lattice and
+``lattice_simple_cubic`` will return a simple cubic lattice.
+"""
 import itertools
 import numpy as np
 
-__all__ = ('latticefcc', 'lattice_simple_cubic')
+
+__all__ = ['latticefcc', 'lattice_simple_cubic']
 
 
 def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
