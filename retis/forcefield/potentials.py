@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 from retis.forcefield.potential import PotentialFunction
 
-__all__ = ('DoubleWell', 'RectangularWell')
+__all__ = ['DoubleWell', 'RectangularWell']
 
 
 class DoubleWell(PotentialFunction):

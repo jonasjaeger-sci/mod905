@@ -25,7 +25,7 @@ from retis.inout.txtinout import read_some_lines, create_and_format_row
 from retis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 
 
-__all__ = ('CrossFile', 'EnergyFile', 'OrderFile', 'PathEnsembleFile')
+__all__ = ['CrossFile', 'EnergyFile', 'OrderFile', 'PathEnsembleFile']
 
 
 # format for crossing files:

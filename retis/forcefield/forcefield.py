@@ -4,7 +4,7 @@ import numpy as np
 import warnings
 import inspect
 
-__all__ = ('ForceField')
+__all__ = ['ForceField']
 
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,

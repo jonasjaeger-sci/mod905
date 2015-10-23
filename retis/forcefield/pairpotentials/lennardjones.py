@@ -8,7 +8,7 @@ from retis.forcefield.potential import PotentialFunction
 from retis.forcefield import forcefield
 
 
-__all__ = ('PairLennardJonesCut', 'PairLennardJonesCutnp')
+__all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
 
 class PairLennardJonesCut(PotentialFunction):

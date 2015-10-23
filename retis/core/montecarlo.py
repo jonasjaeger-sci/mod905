@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import numpy as np
 
 
-__all__ = ('metropolis_accept_reject', 'max_displace_step')
+__all__ = ['metropolis_accept_reject', 'max_displace_step']
 
 
 def accept_reject_displace(rgen, system, trial):

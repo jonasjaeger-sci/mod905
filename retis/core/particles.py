@@ -4,7 +4,7 @@ import numpy as np
 import warnings
 
 
-__all__ = ('Particles')
+__all__ = ['Particles']
 
 
 class Particles(object):

@@ -19,7 +19,7 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
-__all__ = ('WriteXYZ', 'WriteGromacs')
+__all__ = ['WriteXYZ', 'WriteGromacs']
 
 
 def _adjust_coordinate(coord):

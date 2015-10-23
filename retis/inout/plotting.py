@@ -17,7 +17,7 @@ References
 from retis.inout.mpl_plotting import MplPlotter
 
 
-__all__ = ('create_plotter')
+__all__ = ['create_plotter']
 
 
 # Custom named colors:

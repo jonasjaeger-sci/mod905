@@ -9,7 +9,7 @@ from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
 import operator
 
 
-__all__ = ('OrderParameter', 'OrderParameterPosition', 'OrderParameterParse')
+__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
 
 
 class OrderParameter(object):

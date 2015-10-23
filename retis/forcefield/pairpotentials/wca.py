@@ -7,7 +7,7 @@ from retis.forcefield.potential import PotentialFunction
 import warnings
 
 
-__all__ = ('PairWCAnp', 'DoubleWellWCA')
+__all__ = ['PairWCAnp', 'DoubleWellWCA']
 
 
 class PairWCAnp(PairLennardJonesCutnp):

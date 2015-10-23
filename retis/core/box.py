@@ -3,7 +3,7 @@
 import numpy as np
 
 
-__all__ = ('Box')
+__all__ = ['Box']
 
 
 class Box(object):

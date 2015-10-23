@@ -6,7 +6,7 @@ from retis.analysis.analysis import (running_average, block_error_corr,
 import numpy as np
 
 
-__all__ = ('analyse_flux')
+__all__ = ['analyse_flux']
 
 
 def analyse_flux(fluxdata, settings, simulation_settings):

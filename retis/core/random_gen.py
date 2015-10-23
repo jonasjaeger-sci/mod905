@@ -11,7 +11,7 @@ from retis.core.particlefunctions import (calculate_kinetic_temperature,
 import numpy as np
 from numpy.random import RandomState
 
-__all__ = ('RandomGenerator')
+__all__ = ['RandomGenerator']
 
 
 class RandomGenerator(object):

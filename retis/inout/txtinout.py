@@ -33,9 +33,9 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
-__all__ = ('TxtTable', 'FileWriter', 'txt_save_columns',
+__all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
            'txt_energy_output', 'txt_flux_output', 'txt_orderp_output',
-           'txt_path_output')
+           'txt_path_output']
 
 
 def txt_save_columns(outputfile, header, variables):

@@ -6,7 +6,7 @@ import warnings
 from retis.core.random_gen import RandomGenerator
 
 
-__all__ = ('VelocityVerlet', 'Langevin', 'create_integrator')
+__all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']
 
 
 def create_integrator(settings, simulation_type):

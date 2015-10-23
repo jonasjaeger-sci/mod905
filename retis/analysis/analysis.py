@@ -4,8 +4,8 @@
 import numpy as np
 from retis.analysis.histogram import histogram_and_avg
 
-__all__ = ('running_average', 'block_error',
-           'block_error_corr')
+__all__ = ['running_average', 'block_error',
+           'block_error_corr']
 
 
 def running_average(data):

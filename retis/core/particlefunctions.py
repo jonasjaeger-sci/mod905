@@ -3,11 +3,11 @@
 import numpy as np
 
 
-__all__ = ('calculate_kinetic_energy', 'calculate_kinetic_temperature',
+__all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
            'reset_momentum', 'calculate_kinetic_energy_tensor',
            'calculate_scalar_pressure', 'calculate_pressure_tensor',
            'calculate_linear_momentum', 'atomic_kinetic_energy_tensor',
-           'calculate_thermo')
+           'calculate_thermo']
 
 
 def calculate_linear_momentum(particles, selection=None):

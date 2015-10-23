@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from retis.analysis.analysis import analyse_data
 
 
-__all__ = ('analyse_energies')
+__all__ = ['analyse_energies']
 
 
 def analyse_energies(energies, settings):

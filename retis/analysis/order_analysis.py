@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from retis.analysis.analysis import analyse_data, mean_square_displacement
 
 
-__all__ = ('analyse_orderp')
+__all__ = ['analyse_orderp']
 
 
 def analyse_orderp(orderdata, settings):

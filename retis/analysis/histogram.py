@@ -3,7 +3,7 @@
 
 import numpy as np
 
-__all__ = ('histogram', 'match_all_histograms', 'histogram_and_avg')
+__all__ = ['histogram', 'match_all_histograms', 'histogram_and_avg']
 
 
 def histogram(data, bins=10, limits=(-1, 1), density=False,

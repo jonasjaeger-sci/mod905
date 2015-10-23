@@ -10,7 +10,7 @@ from retis.core.particlefunctions import calculate_kinetic_temperature
 from retis.core.random_gen import RandomGenerator
 
 
-__all__ = ('System')
+__all__ = ['System']
 
 
 class System(object):

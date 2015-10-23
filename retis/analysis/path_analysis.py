@@ -11,8 +11,8 @@ from retis.analysis.analysis import running_average, block_error_corr
 from retis.analysis.histogram import histogram, histogram_and_avg
 
 
-__all__ = ('analyse_path_ensemble', 'analyse_path_ensemble_object',
-           'match_probabilities')
+__all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
+           'match_probabilities']
 
 
 def _get_successfull(path_ensemble, idetect):

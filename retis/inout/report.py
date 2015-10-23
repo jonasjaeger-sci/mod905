@@ -17,7 +17,7 @@ import os
 import jinja2
 
 
-__all__ = ('generate_report_tis', 'generate_report_md')
+__all__ = ['generate_report_tis', 'generate_report_md']
 
 
 # filename for known templates:

@@ -30,7 +30,7 @@ from retis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                 _PATH_MATCH)
 
 
-__all__ = ('MplPlotter')
+__all__ = ['MplPlotter']
 
 
 # Define default style file:
