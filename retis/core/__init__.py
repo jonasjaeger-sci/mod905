@@ -8,7 +8,8 @@ them. This module is not intended to handle output or analysis.
 Package structure
 =================
 
-Modules:
+Modules
+-------
 
 - __init__.py: Import core functions from the other modules.
 
@@ -48,8 +49,8 @@ Modules:
 
 - units.py: This module defines conversion between units.
 
-Important classes/functions
----------------------------
+Important classes and functions
+-------------------------------
 
 - Box: A class which defines the simulation box. This box will also
   handle the periodic boundaries.

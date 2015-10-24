@@ -7,8 +7,8 @@ creating simulations.
 Package structure
 =================
 
-Modules:
---------
+Modules
+-------
 
 - tools.py: Defines tools for setting up and generating lattice points.
 

@@ -10,12 +10,14 @@ simulations with python.
 pyretis Structure
 =================
 
-Modules:
+Modules
+-------
 
 - __init__.py: This is the main pyretis module. It will import usefull
   subpackages and define the version number.
 
-Subpackages:
+Subpackages
+-----------
 
 - core: The core objects, methods and functions used for running the rare
   event simulations. This includes objects for defining the system,

@@ -176,7 +176,7 @@ def set_up_output(func):
     Parameters
     ----------
     func : function
-        The function to wrap, typically one of the run_..._analysis
+        The function to wrap, typically one of the `run_..._analysis`
         functions.
     """
     def wrapper(analysis_settings, simulation_settings, rawdata,

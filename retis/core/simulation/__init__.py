@@ -12,7 +12,8 @@ in the simulation steps.
 Package structure
 =================
 
-Modules:
+Modules
+-------
 
 - __init__.py: Imports simulations from the other modules and defines a method
   for creating simulations from a dict with settings.
@@ -115,14 +116,14 @@ def create_simulation(settings, system):
     It is meant as a helper function to automate some very common set-up
     tasks
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     settings : dict
         This dictionary contains the settings for the simulation.
     system : object of type restis.core.system.System
         This is the system for which the simulation will run.
 
-   Returns
+    Returns
     -------
     out : object that represents the simulation.
         This object will correspond to the selected simulation type.

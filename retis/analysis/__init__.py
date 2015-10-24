@@ -10,8 +10,8 @@ simulations).
 Package structure
 =================
 
-Modules:
---------
+Modules
+-------
 
 - __init__.py: This file, imports from the other modules. The method to
   analyse results from MD flux simulations is defined here since it uses
@@ -27,8 +27,8 @@ Modules:
 
 - path_analysis.py: Defines methods for analysis of path ensembles.
 
-Important functions:
---------------------
+Important classes and functions
+-------------------------------
 
 - analyse_energies: Analyse energy data from a simulation.
   It will calculate a running average, a distribution and do a block

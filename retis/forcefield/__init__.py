@@ -8,7 +8,8 @@ potential functions that can be used to build up force fields.
 Package structure
 =================
 
-Modules:
+Modules
+-------
 
 - __init__.py: Imports from the modules.
 

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-This sub-package defines different pair potentials.
+"""Classes for pair potentials.
+
+This package defines different pair potentials for use with internal
+calculation in pyretis.
 
 Package structure
 =================
 
-Modules:
+Modules
+-------
 
 - __init__.py: Imports the different pair potential functions.
 

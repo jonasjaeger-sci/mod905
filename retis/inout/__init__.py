@@ -10,9 +10,8 @@ can be combined into reports, which can be templated.
 Package structure
 =================
 
-
-Modules:
---------
+Modules
+-------
 
 - analysisio.py: This is a module to output the analysis of (RE)TIS
   simulation.
@@ -63,8 +62,8 @@ Important classes and functions
 - get_predefined_table: A function to get an object which can be used to
   pretty-print tables to the screen/file during a simulation.
 
-Folders:
---------
+Folders
+-------
 
 - styles: This folder contains style files for matplotlib.
 

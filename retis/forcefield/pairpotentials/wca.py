@@ -35,16 +35,17 @@ class DoubleWellWCA(PotentialFunction):
     ----------
     params : dict
         Containins the parameters. These are:
-        rzero : float
+
+        * `rzero` : float
             Parameter for the potential, defines the two minima.
-            One is located at rzero, the other at rzero+2*width
-        width : float
+            One is located at ``rzero``, the other at ``rzero+2*width``.
+        * `width` : float
             Parameter for the potential, describes the "width" of
             the potential.
-        height : float
+        * `height` : float
             Parameter for the potential, describes the "height" of
             the potential.
-        types: set
+        * `types` : set
             Types defines what kind of particle pairs to consider
             for this interaction. If types is not set (i.e. set to None),
             it will be assumed to apply to ALL partilces.
@@ -83,9 +84,9 @@ class DoubleWellWCA(PotentialFunction):
         Parameters
         ----------
         parameters : dict
-            The new parameters, they are assume to be dicts of
-            type {'types': set(('A','A')), 'rzero': 1.0, 'width': 0.25,
-                  'height': 6.0}
+            The new parameters, they are assume to be dicts on the form
+            {'types': set(('A','A')), 'rzero': 1.0, 'width': 0.25,
+            'height': 6.0}
         """
         for key in parameters:
             if key in self.params:
@@ -137,7 +138,7 @@ class DoubleWellWCA(PotentialFunction):
         maximum at ``rzero+width``.
 
         Returns
-        ------
+        -------
         out[0] : float
             Minimum number one, located at: `rzero`.
         out[1] : float
