@@ -29,13 +29,12 @@ Unit conversions
 The keys for `CONVERT` defines how a unit conversion should be done. The
 format is CONVERT['quantity']['from', 'to'] where 'quantity' is one of the
 defined quantities
-(
-:ref:`length <units-length>`
-, :ref:`mass <units-mass>`
-, :ref:`energy <units-energy>`
-, :ref:`time <units-time>`
-, :ref:`velocity <units-velocity>`
-and :ref:`charge <units-charge>`)
+(:ref:`length <units-length>`,
+:ref:`mass <units-mass>`,
+:ref:`energy <units-energy>`,
+:ref:`time <units-time>`,
+:ref:`velocity <units-velocity>` and
+:ref:`charge <units-charge>`)
 and 'from' and 'to' defines the unit conversion.
 The known units are given below.
 
@@ -47,37 +46,40 @@ Defined units
 Length
 ~~~~~~
 
-- `m`, `nm`, `Å`: Meter, nanometer and Ångstrøm.
+- ``m``, ``nm``, ``Å``: Meter, nano-meter and Ångstrøm.
 
-- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
-   by Rowley et al. [ROWLEY]_).
+- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+  by Rowley et al. [ROWLEY]_).
+
 
 .. _units-mass:
 
 Mass
 ~~~~
 
-- `kg`: Kilograms.
+- ``kg``: Kilograms.
 
-- `g/mol`: Grams per mole.
+- ``g/mol``: Grams per mole.
 
-- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
-   by Rowley et al. [ROWLEY]_).
+- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+  by Rowley et al. [ROWLEY]_).
 
 
 .. _units-energy:
 
 Energy
 ~~~~~~
-- `kcal`: Kilocalories. This is the *Thermochemical calorie*, equal to
-   4184 Joule.
 
-- `J`: Joule.
+- ``kcal``: Kilocalories. This is the 
+  `thermochemical calorie <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>`_
+  equal to 4184 Joule.
 
-- `kcal/mol`: Kilocalories per mole.
+- ``J``: Joule.
 
-- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
-   by Rowley et al. [ROWLEY]_).
+- ``kcal/mol``: Kilocalories per mole.
+
+- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+  by Rowley et al. [ROWLEY]_).
 
 
 .. _units-time:
@@ -85,10 +87,10 @@ Energy
 Time
 ~~~~
 
-- `s`, `ps`, `fs`: Seconds, pico-seconds and femto-seconds.
+- ``s``, ``ps``, ``fs``: Seconds, pico-seconds and femto-seconds.
 
-- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
-   by Rowley et al. [ROWLEY]_).
+- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+  by Rowley et al. [ROWLEY]_).
 
 
 .. _units-velocity:
@@ -96,22 +98,27 @@ Time
 Velocity
 ~~~~~~~~
 
-- `nm/ps`: Nanometer per picosecond.
+- ``nm/ps``: Nano-meter per pico-second.
 
-- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
-   by Rowley et al. [ROWLEY]_).
+- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+  by Rowley et al. [ROWLEY]_).
+
 
 .. _units-charge:
 
 Charge
 ~~~~~~
 
-- `e`: Charge in units of elementary charge.
+- ``e``: Charge in units of elementary charge.
 
-- `C`: Coulomb.
+- ``C``: Coulomb.
+
+
+.. _unit-references:
 
 References
 ----------
+
 .. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
 
 .. [NA] https://en.wikipedia.org/wiki/Avogadro_constant
@@ -120,6 +127,7 @@ References
 
 .. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
+
 """
 from __future__ import print_function
 from collections import deque
