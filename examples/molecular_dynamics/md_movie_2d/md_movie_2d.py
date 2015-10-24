@@ -9,7 +9,7 @@ from __future__ import print_function
 from pyretis.core import System, Box
 from pyretis.core.simulation import create_simulation
 from pyretis.core.units import CONVERT
-from pypyretis.forcefield import ForceField
+from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.tools import lattice_simple_cubic
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
