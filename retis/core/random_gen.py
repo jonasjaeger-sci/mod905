@@ -19,17 +19,22 @@ class RandomGenerator(object):
     RandomGenerator(object).
 
     This class that defines a random number generator.
-    It will use numpy.random.RandomState for the actual generation, see the
-    docstring for this class for extensive documentation.
+    It will use `numpy.random.RandomState` for the actual generation, and we
+    refer to the numpy documentation [1]_.
     Here we could inherit from RandomState but here we do not wish (?) to
-    inherit from an old-style class. This then results in some unfortunate(?)
-    small functions here that will actually just call RandomState.
+    inherit from an old-style class. Here, this results in some unfortunate(?)
+    small functions here that will actually just call `RandomState`.
 
     Attributes
     ----------
-    rgen : object of type RandomState
+    rgen : object of type `RandomState`
         This is a container for the Mersenne Twiser pseudo-random number
         generator as implemented in numpy.
+
+    References
+    ----------
+
+    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
     """
 
     def __init__(self, seed=None):

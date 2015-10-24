@@ -2,10 +2,12 @@
 """
 Methods that will output results from the different analysis methods.
 
-Important methods defined here:
+Important classes and functions
+-------------------------------
 
 - `run_md_flux_analysis`: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
+
 """
 from __future__ import absolute_import
 import warnings

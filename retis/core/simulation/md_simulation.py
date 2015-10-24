@@ -1,5 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Definitions of simulation objects."""
+"""Definitions of simulation objects for molecular dynamcis simulations.
+
+This module contains definitions of classes for performing molecular dynamics
+simulations.
+
+Important classes and functions
+-------------------------------
+
+- SimulationNVE: Definition of a simple NVE simulation. The integrator used
+  for this simulation must have dynamics equal to 'NVE'.
+
+- SimulationMDFlux: Definition of a simulation for determining the initial
+  flux. This is used for calculating rates in TIS simulations.
+
+"""
 from __future__ import absolute_import
 from retis.core.simulation import Simulation
 from retis.core.particlefunctions import calculate_thermo
@@ -7,7 +21,7 @@ from retis.core.path import check_crossing
 import warnings
 
 
-__all__ = ('SimulationNVE', 'SimulationMDFlux')
+__all__ = ['SimulationNVE', 'SimulationMDFlux']
 
 
 class SimulationNVE(Simulation):

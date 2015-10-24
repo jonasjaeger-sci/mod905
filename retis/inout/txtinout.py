@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods and objects that handle output/input of text files.
+"""Methods and objects for text based output and input.
 
-Objects defined here:
+This file contains methods and objects that handle output/input of text 
+files.
 
-- TxtTable: Table of text with a header and formatted rows.
+Important classes and functions
+-------------------------------
 
-- FileWriter: Defines a simple object to output to a file.
+- TxtTable: Class for a table of text with a header and formatted rows.
 
-Important functions:
+- FileWriter: Class for outputting to a file.
 
 - txt_energy_output: For writing the output from a energy analysis.
 

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Definition of the system object."""
+"""Definition of the system object.
+
+The system object defines the system the simulation acts on. The system
+object contains particles, a force field and a box.
+"""
 from __future__ import absolute_import
 import numpy as np
 import warnings

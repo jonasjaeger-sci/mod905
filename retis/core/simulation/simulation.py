@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Definitions of simulation objects."""
+"""Definitions of generic simulation objects.
+
+This module defines the genering simulation object. This is the base
+class for all other simulations.
+
+Important classes and functions
+-------------------------------
+
+- Simulation: Object defining a generic simulation.
+"""
 from __future__ import absolute_import
 from .simulation_task import SimulationTask
 import warnings

@@ -1,12 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Definitions of simulation objects."""
+"""Definition of simulation objects for Monte Carlo simulations
+
+This module defines some classes and feunctions for performing
+Monte Carlo simulations.
+
+Important classes and functions
+-------------------------------
+
+- UmbrellaWindowSimulation: Defines a simulation for performing umbrella
+  window simulations. Several umbrella window simulations can be joined
+  to perform a umbrella simulation.
+
+"""
 from __future__ import absolute_import
 import numpy as np
 from retis.core.montecarlo import max_displace_step
 from retis.core.simulation import Simulation
 
 
-__all__ = ('UmbrellaWindowSimulation')
+__all__ = ['UmbrellaWindowSimulation']
 
 
 def mc_task(rgen, system, maxdx):

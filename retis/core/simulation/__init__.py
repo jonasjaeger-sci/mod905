@@ -301,6 +301,7 @@ def _create_file_writer(task, system, settings):
         warnings.warn(msg)
     return writer
 
+
 def create_output_task(task, system, settings):
     """
     This method will create an object for a given output task.

@@ -1,5 +1,43 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods that act on (a selection of) particles."""
+"""This file contains methods that act on (a selection of) particles.
+
+These methods are intended for calculating particle properties as the
+kinetic temperature, pressure etc.
+
+Important classes and functions
+-------------------------------
+
+- calculate_linear_momentum: Calculates the linear momentum of a collection
+  of particles
+
+- calculate_kinetic_energy_tensor: Return the kinetic energy tensor for
+  a selection of particles.
+
+- atomic_kinetic_energy_tensor: Return the kinetic energy tensor for each
+  atom in a selection of particles
+
+- calculate_kinetic_energy: Return the kinetic energy of a collection of
+  particles
+
+- calculate_kinetic_temperature: Return the kinetic temperature of a
+  collection of particles.
+
+- reset_momentum: Set linear momentum (for a selection of particles) to zero.
+
+- calculate_pressure_from_temp: Return the scalar pressure using the
+  temperature and the virial.
+
+- calculate_scalar_pressure: Return the scalar pressure (from the trace of
+  the pressure tensor).
+
+- calculate_pressure_tensor: Return the pressure tensor, obtained from
+  the virial and the kinetic energy tensor.
+
+- calculate_thermo: Calculate and return several 'thermodynamic' properties
+  as the potential, kinetic and total energies per particle, the temperature,
+  the pressure and the  momentum.
+
+"""
 import numpy as np
 
 
@@ -289,8 +327,10 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
 
 
 def calculate_pressure_tensor(particles, volume, kin_tensor=None):
-    """
-    Calculate the pressure tensor.
+    """Calculate the pressure tensor.
+
+    The pressure tensor is obtained from the virial the kinetic
+    energy tensor.
 
     Parameters
     ----------

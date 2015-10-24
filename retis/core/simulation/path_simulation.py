@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Definitions of simulation objects."""
+"""Definitions of simulation objects for path sampling simulations.
+
+This module defines simulations for performing path sampling simulations.
+
+Important classes and functions
+-------------------------------
+
+- SimulationTIS: Definition of a TIS simulation.
+"""
 from __future__ import absolute_import
 import numpy as np
 from retis.core.simulation import Simulation
@@ -8,7 +16,7 @@ from retis.core.random_gen import RandomGenerator
 from retis.core.tis import generate_initial_path_kick, make_tis_step
 
 
-__all__ = ('SimulationTIS')
+__all__ = ['SimulationTIS']
 
 
 class SimulationTIS(Simulation):

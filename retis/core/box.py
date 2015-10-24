@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Definition of a class for a simulation box."""
+"""Definition of a class for a simulation box.
+
+The simulation box handles the periodic boundaries if needed.
+It is typically referenced via the `system`, i.e. as `system.box`.
+"""
 import numpy as np
 
 
@@ -12,21 +16,21 @@ class Box(object):
 
     This class defines a simple simulation box. The box will handle
     periodic boundaries if needed. A non-periodic dummy-box can be created
-    using `Box(periodic=[False, ...])` which may be usefull for setting the
+    using `Box(periodic=[False, ...])` which may be useful for setting the
     dimensionality for a simulation. Otherwise, a box will typically be
-    created with a size, `Box(size=[...])`.  Periodicity can be explicity
+    created with a size, `Box(size=[...])`.  Periodicity can be explicitly
     set and the default behavior is periodic in all dimensions.
 
     Attributes
     ----------
     size : list
-        size[i] = [low, high] are the box boundaries in dimension i.
+        `size[i] = [low, high]` are the box boundaries in dimension `i`.
     length : list
-        length[i] = length of box in dimension i, equals
-        size[i][1] - size[i][0].
+        `length[i]` = length of box in dimension `i`, equals
+        `size[i][1] - size[i][0]`.
     periodic : list
-        periodic[i] = True if periodic boundaries are to be used in
-        dimension i, False otherwise.
+        `periodic[i] = True` if periodic boundaries are to be used in
+        dimension `i`, `False` otherwise.
     dim : int
         The number of dimensions the box is made up of.
     """
@@ -38,13 +42,13 @@ class Box(object):
         Parameters
         ----------
         size : list.
-            The size of the box, can be given with size[i] = length_i
-            which defines the box-length in dimension i. The box will then be
-            assumed to have size[i] = [0, length_i]. Alternatively the
-            boundaries can be defined explicitly: size[i] = [low, high].
+            The size of the box, can be given with `size[i] = length_i`
+            which defines the box-length in dimension `i`. The box will
+            then be assumed to have `size[i] = [0, length_i]`. Alternatively
+            the boundaries can be defined explicitly: `size[i] = [low, high]`.
         periodic : list, optional.
-            periodic[i] is True if periodic boundaries will be applied in
-            dimension i. Default is True for each dimension in size.
+            `periodic[i]` is `True` if periodic boundaries will be applied in
+            dimension `i`. Default is `True` for each dimension in size.
         """
         self.length = []
         self.periodic = []

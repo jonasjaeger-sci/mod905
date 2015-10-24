@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Module for Monte Carlo Algorithms and other "random" functions."""
+"""Module for Monte Carlo Algorithms and other "random" functions.
+
+In this module, Monte Carlo Algorithms are defined. Note that some derived
+or "random" functions are also defined in the TIS module.
+"""
 from __future__ import absolute_import
 import numpy as np
 
@@ -8,8 +12,12 @@ __all__ = ['metropolis_accept_reject', 'max_displace_step']
 
 
 def accept_reject_displace(rgen, system, trial):
-    """
-    Routine for accepting or rejecting a MC move.
+    """Routine for accepting or rejecting a MC move.
+
+    This routine will accept or reject a Monte Carlo move based on a
+    the Metropolis accept/reject criterion as defined in the function
+    `metropolis_accept_reject`. Here, the change in potential energy is
+    used as input to `metropolis_accept_reject`.
 
     Parameters
     ----------
@@ -32,13 +40,6 @@ def accept_reject_displace(rgen, system, trial):
         The potential energy of the trial positions.
     out[4] : boolean
         True if move is acceped, False otherwise.
-
-    Notes
-    -----
-    A overflow is possible when using np.exp() here.
-    This can for instance happen in a umbrella simulation
-    where the bias potential is infinite or very large.
-    Right now, this is just ignored.
     """
     v_trial = system.evaluate_potential(pos=trial)
     deltae = v_trial - system.v_pot
@@ -62,6 +63,11 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
         to access the beta factor.
     dke : float
         The change in kinetic energy.
+
+    Returns
+    -------
+    out : boolean
+        True if the move is accepted, False otherwise.
     """
     if aimless:  # for the aimless shooting we accept
         return True
@@ -85,6 +91,18 @@ def metropolis_accept_reject(rgen, system, deltae):
         to access the beta factor.
     deltae : float
         The change in energy.
+
+    Returns
+    -------
+    out : boolean
+        True if the move is accepted, False otherwise.
+
+    Notes
+    -----
+    A overflow is possible when using np.exp() here.
+    This can for instance happen in a umbrella simulation
+    where the bias potential is infinite or very large.
+    Right now, this is just ignored.
     """
     if deltae < 0.0:  # short-cut to avoid calculating np.exp()
         return True

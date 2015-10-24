@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
-"""This file contains classes to represent order parameters."""
+"""This file contains classes to represent order parameters.
+
+The order parameters are assumed to all be completely determined
+by the `system` properties and they will all return at least two
+values - the order parameter and the rate of change in the order parameter
+(i.e. the velocity).
+
+Important classes and functions
+-------------------------------
+
+- OrderParameter: Base class for the order parameters.
+"""
 from __future__ import division  # for StringFunctionParser
 import numpy as np
 import warnings

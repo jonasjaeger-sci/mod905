@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods used in the TIS method."""
+"""This file contains methods used in the TIS method.
+
+This module defines the methods needed to perform TIS simulations.
+
+Important classes and functions
+-------------------------------
+
+- make_tis_step: Method that will perform a single TIS step.
+
+- generate_initial_path_kick: Method for generating an initial path by
+  repeatedly kicking a phase point.
+"""
 from __future__ import absolute_import
 import numpy as np
 from retis.core.path import Path, paste_paths, reverse_path

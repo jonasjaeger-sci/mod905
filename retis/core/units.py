@@ -1,12 +1,102 @@
 # -*- coding: utf-8 -*-
-"""
-This module defines natural constants and unit conversions.
+u"""This module defines natural constants and unit conversions.
 
-For the Lennard-Jones potential, the conversions are currently
-hardcoded to the parameters given by Rowley et al. [ROWLEY]_.
+The natural constants and units are available as the dictionaries
+`CONSTANTS` and `CONVERT`. These are further described in the
+:ref:`natural constants <natural-constants>`and the
+:ref:`unit conversion <unit-conversions>` sections below.
+
+.. _natural-constants:
+
+Natural constants
+-----------------
+The keys for `CONSTANTS` defines the
+natural constant and its units, for instance `CONSTANTS['kB']['J/K']` is
+the Boltzmann constants in units of Joule per Kelvin. The currently defined
+natural constants are
+
+- ``kB``: The Boltzmann constant [KB]_.
+
+- ``NA``: The Avogadro constant [NA]_.
+
+- ``e``: The elementary charge [E]_.
+
+
+.. _unit-conversions:
+
+Unit conversions
+----------------
+The keys for `CONVERT` defines how a unit conversion should be done. The
+format is CONVERT['quantity']['from', 'to'] where 'quantity' is one of the
+defined quantities ('length',  'mass', 'time', 'energy' and 'velocity')
+and 'from' and 'to' defines the unit conversion.
+The known units are given below.
+
+Defined units
+-------------
+
+Length
+~~~~~~
+
+- `m`, `nm`, `Å`: Meter, nanometer and Ångstrøm.
+
+- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
+   by Rowley et al. [ROWLEY]_).
+
+
+Mass
+~~~~
+
+- `kg`: Kilograms.
+
+- `g/mol`: Grams per mole.
+
+- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
+   by Rowley et al. [ROWLEY]_).
+
+Energy
+~~~~~~
+- `kcal`: Kilocalories. This is the *Thermochemical calorie*, equal to
+   4184 Joule.
+
+- `J`: Joule.
+
+- `kcal/mol`: Kilocalories per mole.
+
+- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
+   by Rowley et al. [ROWLEY]_).
+
+Time
+~~~~
+
+- `s`, `ps`, `fs`: Seconds, pico-seconds and femto-seconds.
+
+- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
+   by Rowley et al. [ROWLEY]_).
+
+Velocity
+~~~~~~~~
+
+- `nm/ps`: Nanometer per picosecond.
+
+- `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
+   by Rowley et al. [ROWLEY]_).
+
+Charge
+~~~~~~
+
+- `e`: Charge in units of elementary charge.
+
+- `C`: Coulomb.
 
 References
-~~~~~~~~~~
+----------
+.. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
+
+.. [NA] https://en.wikipedia.org/wiki/Avogadro_constant
+
+.. [E] https://en.wikipedia.org/wiki/Elementary_charge
+
 .. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
 """
@@ -14,10 +104,11 @@ from __future__ import print_function
 from collections import deque
 
 CONSTANTS = {'kB': {'eV/K': 8.6173324e-05, 'J/K': 1.3806488e-23, 'lj': 1.0},
-             'NA': {'1/mol': 6.02214129e23}}
+             'NA': {'1/mol': 6.02214129e23},
+             'e': {'C':  1.6021766208e-19}}
 
 CONVERT = {'length': {}, 'mass': {}, 'time': {},
-           'energy': {}, 'velocity': {}}
+           'energy': {}, 'velocity': {}, 'charge': {}}
 
 CONVERT['length']['nm', 'Å'] = 10.0
 CONVERT['length']['nm', 'm'] = 1.0e-9
@@ -39,6 +130,7 @@ CONVERT['time']['lj', 'ps'] = 1.0e12 * CONVERT['time']['lj', 's']
 CONVERT['time']['lj', 'fs'] = 1.0e15 * CONVERT['time']['lj', 's']
 CONVERT['velocity']['lj', 'nm/ps'] = (CONVERT['length']['lj', 'nm'] /
                                       CONVERT['time']['lj', 'ps'])
+CONVERT['charge']['e', 'C'] = CONSTANTS['e']
 
 
 def _generate_inverse(conversions):

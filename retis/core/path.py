@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-"""This file contains classes/methods for paths and path ensembles."""
+"""Classes and methods for paths and path ensembles.
+
+The classes and methods defined in this module are useful for representing
+paths and path ensembles.
+
+Important classes and functions
+-------------------------------
+
+- Path: Class for defining paths.
+
+- PathEnsemble: Class for defining path ensembles.
+
+- paste_paths: Method for joining two paths, one is in a backward time
+  direction and the other is in the forward time direction.
+
+- reverse_path: Method for reversing a path.
+"""
 import numpy as np
 import warnings
 import itertools
@@ -635,7 +651,7 @@ class PathEnsemble(object):
         """
         Yield accepted paths from the PathEnsemble.
 
-        This method will give an iterator usefull for iterating over
+        This method will give an iterator useful for iterating over
         accepted paths only. In the PathEnsemble we store both accepted
         and rejected paths. This method will loop over all paths stored
         and yield the accepted paths the correct number of times.

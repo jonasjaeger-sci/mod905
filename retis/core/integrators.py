@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Definition of numerical integrators."""
+"""Definition of numerical integrators.
+
+These integrators are typically used to integrate and propagate
+Newtons equations of motion in time, the dynamics in molecular dynamics.
+"""
 from __future__ import absolute_import
 import numpy as np
 import warnings
