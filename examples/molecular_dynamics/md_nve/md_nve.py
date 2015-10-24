@@ -5,17 +5,17 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import Box, System
-from retis.core.simulation import create_simulation
-from retis.forcefield import ForceField
-from retis.forcefield.pairpotentials import PairLennardJonesCutnp
-from retis.inout import (get_predefined_table, FileWriter)
-from retis.tools import latticefcc
+from pyretis.core import Box, System
+from pyretis.core.simulation import create_simulation
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
+from pyretis.inout import (get_predefined_table, FileWriter)
+from pyretis.tools import latticefcc
 import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from retis.inout.mpl_plotting import mpl_set_style
+from pyretis.inout.mpl_plotting import mpl_set_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential

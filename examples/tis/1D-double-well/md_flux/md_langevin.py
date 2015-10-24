@@ -6,14 +6,14 @@ the initial flux for a TIS rate calculation.
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
-# retis imports:
-from retis.core import Box, System
-from retis.core.simulation import create_simulation
-from retis.forcefield import ForceField
-from retis.forcefield.potentials import DoubleWell
-from retis.core.orderparameter import OrderParameterPosition
-from retis.analysis import analyse_flux
-from retis.inout import generate_report_md
+# pyretis imports:
+from pyretis.core import Box, System
+from pyretis.core.simulation import create_simulation
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.potentials import DoubleWell
+from pyretis.core.orderparameter import OrderParameterPosition
+from pyretis.analysis import analyse_flux
+from pyretis.inout import generate_report_md
 
 
 print('MD flux simulation!')

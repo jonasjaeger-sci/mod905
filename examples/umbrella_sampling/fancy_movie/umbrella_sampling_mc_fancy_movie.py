@@ -3,12 +3,12 @@
 Example of running a simulation
 """
 from __future__ import print_function
-from retis.core import System, RandomGenerator
-from retis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from retis.core.montecarlo import max_displace_step
-from retis.forcefield import ForceField
-from retis.forcefield.potentials import DoubleWell, RectangularWell
-from retis.analysis.histogram import histogram, match_all_histograms
+from pyretis.core import System, RandomGenerator
+from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.core.montecarlo import max_displace_step
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.potentials import DoubleWell, RectangularWell
+from pyretis.analysis.histogram import histogram, match_all_histograms
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
@@ -73,7 +73,7 @@ for i, umbrella in enumerate(umbrellas):
 
 
 # We can now post-process the simulation output.
-# Here, we make use of some of the analysis tools in retis:
+# Here, we make use of some of the analysis tools in pyretis:
 
 bins = 50
 lim = (-1.2, 1.2)

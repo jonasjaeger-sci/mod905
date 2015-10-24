@@ -1,0 +1,320 @@
+# -*- coding: utf-8 -*-
+"""This file contains a class for a generic force field."""
+import numpy as np
+import warnings
+import inspect
+
+__all__ = ['ForceField']
+
+
+def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
+                      mixing='geometric'):
+    """
+    Define the so-called mixing rules.
+
+    These mixing rules are used for some force fields when generating cross
+    interactions.
+
+    Parameters
+    ----------
+    epsilon_i and epsilon_j : floats
+        For a Lennard-Jones potential, this corresponds to the
+        the epsilon parameters.
+    sigma_i and sigma_j : floats
+        For a Lennard-Jones potential, this corresponds to the
+        sigma parameters.
+    mixing :  string
+        Represents what kind of mixing that should be done.
+
+    Returns
+    -------
+    out[0] : float
+        The mixed epsilon_ij parameter.
+    out[1] : float
+        The mixed sigma_ij parameter.
+    """
+    if mixing == 'geometric':
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
+        sigma_ij = np.sqrt(sigma_i * sigma_j)
+        rcut_ij = np.sqrt(rcut_i * rcut_j)
+    elif mixing == 'arithmetic':
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
+        sigma_ij = 0.5 * (sigma_i + sigma_j)
+        rcut_ij = 0.5 * (rcut_i + rcut_j)
+    elif mixing == 'sixthpower':
+        si3 = sigma_i**3
+        si6 = si3**2
+        sj3 = sigma_j**3
+        sj6 = sj3**2
+        avgs6 = 0.5 * (si6 + sj6)
+        epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
+        sigma_ij = avgs6**(1.0/6.0)
+        rcut_ij = (0.5*(rcut_i**6 + rcut_j**6))**(1.0/6.0)
+    else:
+        warnings.warn('Unknown mixing rule requested!')
+        epsilon_ij = 0.5 * (epsilon_i + epsilon_j)
+        sigma_ij = 0.5 * (sigma_i + sigma_j)
+        rcut_ij = 0.5 * (rcut_i + rcut_j)
+    return epsilon_ij, sigma_ij, rcut_ij
+
+
+class ForceField(object):
+    """
+    ForceField(object).
+
+    This class described a generic Force Field.
+    A force field is assumed to consist of a number of potential
+    functions with parameters.
+
+    Attributes
+    ----------
+    desc : string
+        Description of the force field.
+    potential : list
+        The potential functions that the force field is built up from.
+    param : list
+        The parameters for the corresponding potential functions.
+    arguments : dict
+        Contains information on how to call the different functions.
+        arguments['force'] = list with information on how to call the
+        corresponding potential function, i.e. it is equal to
+        inspect.getargspec(potential.force)
+    """
+
+    def __init__(self, desc='No description', potential=None, params=None):
+        """
+        Initiate the force field object.
+
+        Parameters
+        ----------
+        desc : string, optional.
+            Description of the force field.
+        potential : list, optional.
+            Potential functions that the force field is built up from.
+        params : list, optional
+            Parameters for the potential(s).
+
+        Returns
+        -------
+        N/A
+        """
+        self.desc = desc
+        self.potential = []
+        self.params = []
+        self.arguments = {'force': [], 'potential': [], 'pot-and-force': []}
+        if potential is not None:
+            if params is None:
+                for pot in potential:
+                    self.add_potential(pot)
+            else:
+                for pot, param in zip(potential, params):
+                    self.add_potential(pot, parameters=param)
+
+    def add_potential(self, potential, parameters=None):
+        """
+        Add a potential with parameters to the force field.
+
+        Parameters
+        ----------
+        potential : object
+            Potential function to add.
+        parameters : dict, optional
+            Parameters for the potential.
+
+        Returns
+        -------
+        N/A but it will update self.potential and self.params
+        """
+        try:
+            arg_force = inspect.getargspec(potential.force)
+        except AttributeError:
+            arg_force = None
+        try:
+            arg_pot = inspect.getargspec(potential.potential)
+        except AttributeError:
+            arg_pot = None
+        try:
+            arg_pot_force = inspect.getargspec(potential.potential_and_force)
+        except AttributeError:
+            arg_pot_force = None
+        self.arguments['force'].append(arg_force)
+        self.arguments['potential'].append(arg_pot)
+        self.arguments['pot-and-force'].append(arg_pot_force)
+        self.potential.append(potential)
+        if parameters is not None:
+            potential.add_parameters(parameters)
+        self.params.append(potential.params)
+
+    def remove_potential(self, potential):
+        """
+        Remove a selected potential from the force field.
+
+        Parameters
+        ----------
+        potential : object
+            The potential function to remove.
+
+        Returns
+        -------
+        N/A but it will update `self.potential` and `self.params`.
+        """
+        if potential in self.potential:
+            idx = self.potential.index(potential)
+            potrm = self.potential.pop(idx)
+            paramrm = self.params.pop(idx)
+            self.arguments['force'].pop(idx)
+            self.arguments['pot'].pop(idx)
+            self.arguments['pot-and-force'].pop(idx)
+            return (potrm, paramrm)
+        else:
+            warnings.warn('Potential not found in the force field functions')
+            return None
+
+    def update_potential_parameters(self, potential, params):
+        """
+        Update the potential parameters of the given potential function.
+
+        Parameters
+        ----------
+        potential : object
+            Potential to update. Should be in `self.potential`.
+        params : dict
+            The new parameters to set.
+
+        Returns
+        -------
+        N/A, but will update parameters of the selected potential
+        and modified the corresponding `self.params`.
+        """
+        if potential in self.potential:
+            potential.update_parameters(params)
+            self.params[self.potential.index(potential)] = potential.params
+        else:
+            warnings.warn('Unknow potential')
+
+    def evaluate_force(self, **kwargs):
+        """
+        Evaluate the force on the particles.
+
+        Parameters
+        ----------
+        kwargs : dict
+            Variables needed to evaluate the forces.
+            Typically this is the positions and the particle names/types.
+
+        Returns
+        -------
+        out[0] : numpy.array
+            The forces on the particles.
+        out[1] : float
+            The virial.
+
+        Note
+        ----
+        See note in :py:func:`pyretis.forcefield.evaluate_potential_and_force`
+        """
+        force = None
+        virial = None
+        for pot, argu in zip(self.potential, self.arguments['force']):
+            var = argu.args
+            args = [kwargs[vari] for vari in var if vari is not 'self']
+            if force is None or virial is None:
+                force, virial = pot.force(*args)
+            else:
+                forcei, viriali = pot.force(*args)
+                force += forcei
+                virial += viriali
+        return force, virial
+
+    def evaluate_potential(self, **kwargs):
+        """
+        Evaluate the potential energy.
+
+        Parameters
+        ----------
+        kwargs : dict
+            Variables needed to evaluate the potential.
+            Typically this is the positions and the particle names/types.
+
+        Returns
+        -------
+        out : float
+            The potential energy.
+
+        Note
+        ----
+        See note in :py:func:`pyretis.forcefield.evaluate_potential_and_force`
+        """
+        v_pot = None
+        for pot, argu in zip(self.potential, self.arguments['potential']):
+            # arguments = inspect.getargspec(pot.potential)
+            var = argu.args
+            args = [kwargs[vari] for vari in var if vari is not 'self']
+            if v_pot is None:
+                v_pot = pot.potential(*args)
+            else:
+                v_pot += pot.potential(*args)
+        return v_pot
+
+    def evaluate_potential_and_force(self, **kwargs):
+        """
+        Evaluate the potential energy and the force.
+
+        Parameters
+        ----------
+        kwargs : dict
+            Variables needed to evaluate the potential and force.
+            Typically this is the positions and the particle names/types.
+
+        Returns
+        -------
+        out[0] : float
+            The potential energy.
+        out[1] : numpy.array
+            The calculated forces.
+        out[2] : float
+            The calculated virial.
+
+        Note
+        ----
+        In this function each potential function picks out the variable that
+        it needs. This means that this function will be passed too many
+        parameters. One solution might be to just pass the system to the
+        potential, with additional optional arguments on what to
+        override (override is here usefull when calculating the energies
+        in Monte Carlo moves - i.e. to use the trial positions).
+        """
+        v_pot = None
+        force = None
+        virial = None
+        for pot, argu in zip(self.potential, self.arguments['pot-and-force']):
+            var = argu.args
+            args = [kwargs[vari] for vari in var if vari is not 'self']
+            if v_pot is None or force is None or virial is None:
+                v_pot, force, virial = pot.potential_and_force(*args)
+            else:
+                v_poti, forcei, viriali = pot.potential_and_force(*args)
+                v_pot += v_poti
+                force += forcei
+                virial += viriali
+        return v_pot, force, virial
+
+    def __str__(self):
+        """
+        A string representation of the force field.
+
+        It returns the string descriptions of the potential functions.
+
+        Returns
+        -------
+        out : string
+        Description of force field and the potential functions included
+        in the force field.
+        """
+        pots = []
+        for i, pot in enumerate(self.potential):
+            pots.append('\t{}: {}'.format(i + 1, pot.desc))
+        pots = '\n'.join(pots)
+        force = 'Force field: {}'.format(self.desc)
+        desc = '{}\nPotential functions:\n {}'.format(force, pots)
+        return desc

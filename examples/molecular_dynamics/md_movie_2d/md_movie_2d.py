@@ -5,14 +5,14 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-# retis imports:
-from retis.core import System, Box
-from retis.core.simulation import create_simulation
-from retis.core.units import CONVERT
-from retis.forcefield import ForceField
-from retis.forcefield.pairpotentials import PairLennardJonesCutnp
-from retis.tools import lattice_simple_cubic
-from retis.inout.plotting import _COLORS, _COLOR_SCHEME
+# pyretis imports:
+from pyretis.core import System, Box
+from pyretis.core.simulation import create_simulation
+from pyretis.core.units import CONVERT
+from pypyretis.forcefield import ForceField
+from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
+from pyretis.tools import lattice_simple_cubic
+from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation

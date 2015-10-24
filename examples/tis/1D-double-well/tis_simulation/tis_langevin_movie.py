@@ -5,14 +5,14 @@ This is an example on how to perform a simple TIS simulation.
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
-# retis imports:
-from retis.core import Box, System
-from retis.core.simulation import create_simulation
-from retis.forcefield import ForceField
-from retis.forcefield.potentials import DoubleWell
-from retis.core.orderparameter import OrderParameterPosition
+# pyretis imports:
+from pyretis.core import Box, System
+from pyretis.core.simulation import create_simulation
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.potentials import DoubleWell
+from pyretis.core.orderparameter import OrderParameterPosition
 # imports for the plotting:
-from retis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 import collections
 from matplotlib import pyplot as plt
 from matplotlib import animation

@@ -5,22 +5,22 @@ In this example we re-run a LAMMPS simulation using pyretis.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import System, Box
-from retis.core.simulation import Simulation
-from retis.core.integrators import VelocityVerlet
-from retis.forcefield import ForceField
-from retis.forcefield.pairpotentials import PairLennardJonesCutnp
-from retis.core.particlefunctions import (calculate_kinetic_energy_tensor,
-                                          calculate_pressure_tensor,
-                                          calculate_kinetic_temperature,
-                                          calculate_scalar_pressure)
+from pyretis.core import System, Box
+from pyretis.core.simulation import Simulation
+from pyretis.core.integrators import VelocityVerlet
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
+from pyretis.core.particlefunctions import (calculate_kinetic_energy_tensor,
+                                            calculate_pressure_tensor,
+                                            calculate_kinetic_temperature,
+                                            calculate_scalar_pressure)
 import numpy as np
 import os
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib import gridspec as gridspec
-from retis.inout.mpl_plotting import mpl_set_style
+from pyretis.inout.mpl_plotting import mpl_set_style
 
 
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size

@@ -4,13 +4,13 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from retis.core import System, Box
-from retis.core.simulation import create_simulation
-from retis.core.units import CONVERT
-from retis.forcefield import ForceField
-from retis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
-from retis.tools import lattice_simple_cubic
-from retis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.core import System, Box
+from pyretis.core.simulation import create_simulation
+from pyretis.core.units import CONVERT
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
+from pyretis.tools import lattice_simple_cubic
+from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation

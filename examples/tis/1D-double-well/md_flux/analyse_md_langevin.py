@@ -2,7 +2,7 @@
 """
 This is an example on how to analyse the output from a MD flux simulation.
 """
-from retis.inout import run_md_flux_analysis
+from pyretis.inout import run_md_flux_analysis
 RAW_DATA = {'files': {'cross': 'cross.dat', 'energy': 'energy.dat',
                       'order': 'order.dat'}}
 ANALYSIS_SETTINGS = {'skipcross': 1001,

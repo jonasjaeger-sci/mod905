@@ -8,11 +8,11 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-from retis.core import System, RandomGenerator
-from retis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from retis.forcefield import ForceField
-from retis.forcefield.potentials import DoubleWell, RectangularWell
-from retis.analysis import histogram, match_all_histograms
+from pyretis.core import System, RandomGenerator
+from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.potentials import DoubleWell, RectangularWell
+from pyretis.analysis import histogram, match_all_histograms
 import numpy as np
 from matplotlib import pyplot as plt
 
