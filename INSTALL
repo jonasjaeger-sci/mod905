@@ -1,19 +1,17 @@
 
-Installing the retis libraty
-============================
+Installing the pyretis library
+==============================
 
-1. Place the retis library somewhere you can access it, to /some/dir/pytismol
+1. Place the pyretis library somewhere you can access it, to 
+   `/some/dir/pytismol`
 
 2. Export the python path:
 
 export PYTHONPATH=$PYTHONPATH:/some/dir/pytismol
+
 
 Building the documentation
 ==========================
 
 The documentation can be created by running `make html` in the
 `docs` directory.
-
-
-
-
