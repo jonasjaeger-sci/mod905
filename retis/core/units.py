@@ -3,7 +3,7 @@ u"""This module defines natural constants and unit conversions.
 
 The natural constants and units are available as the dictionaries
 `CONSTANTS` and `CONVERT`. These are further described in the
-:ref:`natural constants <natural-constants>`and the
+:ref:`natural constants <natural-constants>` and the
 :ref:`unit conversion <unit-conversions>` sections below.
 
 .. _natural-constants:
@@ -28,12 +28,20 @@ Unit conversions
 ----------------
 The keys for `CONVERT` defines how a unit conversion should be done. The
 format is CONVERT['quantity']['from', 'to'] where 'quantity' is one of the
-defined quantities ('length',  'mass', 'time', 'energy' and 'velocity')
+defined quantities
+(:ref:`length <units-length>`,
+:ref:`mass <units-mass>`,
+:ref:`energy <units-energy>`,
+:ref:`time <units-time>`,
+:ref:`velocity <units-velocity>`, and
+:ref:`charge <units-charge>`)
 and 'from' and 'to' defines the unit conversion.
 The known units are given below.
 
 Defined units
 -------------
+
+.. _units-length
 
 Length
 ~~~~~~
@@ -43,6 +51,7 @@ Length
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
 
+.. _units-mass
 
 Mass
 ~~~~
@@ -53,6 +62,9 @@ Mass
 
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
+
+
+.. _units-energy
 
 Energy
 ~~~~~~
@@ -66,6 +78,9 @@ Energy
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
 
+
+.. _units-time
+
 Time
 ~~~~
 
@@ -74,6 +89,9 @@ Time
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
 
+
+.. _units-velocity
+
 Velocity
 ~~~~~~~~
 
@@ -81,6 +99,8 @@ Velocity
 
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
+
+.. _units-charge
 
 Charge
 ~~~~~~
