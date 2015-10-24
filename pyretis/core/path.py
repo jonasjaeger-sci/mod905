@@ -57,9 +57,9 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 
     Parameters
     ----------
-    path_back : object of type Path
+    path_back : object like `Path`
         This is the backward trajectory.
-    path_forw : object of type Path
+    path_forw : object like `Path`
         This is the forward trajectory.
     overlap : boolean, default is True
         If true, `path_back` and `path_forw` have a common starting-point,
@@ -112,7 +112,7 @@ def reverse_path(path, order_func=None):
 
     Parameters
     ----------
-    path : object of type Path
+    path : object like `Path`
         This is the path we wish to reverse
     order_func : function, optional
         In case the order parameter should be re-calculated for the reverse
@@ -148,13 +148,13 @@ def check_crossing(cycle, system, order_function, interfaces,
     system : object like `System` from `pyretis.core.system`
         This is the system which defines the phase point we are currently
         investigating.
-    order_function : function or object of type order parameter or number.
-        Order parameter objects are defined in `orderparameter.py`.
+    order_function : function or object like `OrderParameter` or float.
+        `OrderParameter` is defined in `pyretis.core.orderparameter`.
         `order_function` is assumed to be a function accepting
         `system` as a parameter and returning at least two scalars.
-        In case a single float is give, the order parameter will not be
-        recalculated and the single float will just be used as the current
-        order parameter.
+        In case a single float is given, the order parameter will not be
+        recalculated and this float will just be used as the current order
+        parameter.
     interfaces : list of floats
         These are the interfaces to check.
     leftside_prev : list of booleans
@@ -484,11 +484,11 @@ class Path(object):
 
         Parameters
         ----------
-        self, other : objects of type Path
+        self, other : objects of type like `Path`
 
         Returns
         -------
-        out : object of type Path
+        out : object of type `Path`
             The Path obtained as ``out = self + other``.
         """
         if self.maxlen == other.maxlen:
@@ -518,12 +518,12 @@ class Path(object):
 
         Parameters
         ----------
-        other : object of type Path
+        other : object of type `Path`
             The object to add path data from.
 
         Returns
         -------
-        self : object of type Path
+        self : object of type `Path`
             The updated path object.
         """
         for phasepoint in other.path:
@@ -622,10 +622,10 @@ class PathEnsemble(object):
 
         Parameters
         ----------
-        path : object of type Path
+        path : object like `Path`
             This is the object to store data from.
         status : string
-            This is the status of the Path.
+            This is the status of the path.
         cycle : int, optional
             The current cycle number
         """

@@ -177,7 +177,7 @@ def mpl_savefig(canvas, outputfile):
 
     Parameters
     ----------
-    canvas : object of type FigureCanvas
+    canvas : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
         This is the figure to be written to the file by
         using canvas.print_figure().
     outputfile : string
@@ -570,7 +570,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
 
     Parameters
     ----------
-    path_ensemble : object of type PathEnsemble
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we have analysed.
     results : dict
         This dict contains the result from the analysis.

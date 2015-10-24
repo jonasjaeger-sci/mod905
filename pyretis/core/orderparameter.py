@@ -278,9 +278,9 @@ class OrderParameterParse(OrderParameter):
     ----------
     name : string
         Human readable name for the order parameter.
-    orderparser : object of type StringFunctionParser
+    orderparser : object of type `StringFunctionParser`
         This is used for parsing a string to a order parameter.
-    ordervelparser : object of type StringFunctionParser
+    ordervelparser : object of type `StringFunctionParser`
         This is used for parsing a string to a velocity for the order
         parameter.
     """
@@ -370,8 +370,8 @@ class StringFunctionParser(object):
 
     Attributes
     ----------
-    pars : object of type Forward from pyparsing
-        Forward is a subclass of ParseElementEnhance and is used here
+    pars : object of type `Forward` from `pyparsing`
+        `Forward` is a subclass of `ParseElementEnhance` and is used here
         for the actual parsing.
     operators : dict
         This dict defines the different operators that can be used.

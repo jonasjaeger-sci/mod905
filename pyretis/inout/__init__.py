@@ -88,7 +88,7 @@ def create_traj_writer(filename, filefmt, oldfile, system):
         Format of file, 'xyz' for xyz, 'gro' for gromacs.
     oldfile : string
         How to deal with backups of old files with the same name.
-    system : object of type system
+    system : object like `System` from `pyretis.core.system`
         This object is included since information about the units (and
         possibly the box) is needed.
     """
@@ -129,7 +129,8 @@ def get_predefined_table(table):
 
     Returns
     -------
-    out : object of type TxtTable
+    out : object of type `TxtTable` from `pyretis.inout.txtinout`
+        This is the text table that can be used for output.
     """
     settings = _DEFINED_TABLES.get(table.lower(), None)
     if settings is None:

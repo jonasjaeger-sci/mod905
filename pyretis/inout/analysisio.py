@@ -124,7 +124,7 @@ def run_analysis_file(analysis_func, fileobject):
     ----------
     analysis_func : function
         This is the function to use for the analysis.
-    fileobject : object of type FileWriter
+    fileobject : object like `FileWriter` from `pyretis.inout.txtinout`
         This is one of the objects derived from the FileWriter object, this is
         typically one of CrossFile, EnergyFile, OrderFile.
 

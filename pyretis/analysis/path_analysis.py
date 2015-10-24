@@ -28,8 +28,8 @@ def _get_successfull(path_ensemble, idetect):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`.
-        This is the PathEnsemble we will analyse.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is the path ensemble we will analyse.
     idetect : float
         This is the interface used for detecting if a path is successful
         or not.
@@ -59,8 +59,8 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`
-        This is the PathEnsemble we will analyse.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is the path ensemble we will analyse.
     idetect : float
         This is the interface used for detecting if a path is successful
         or not.
@@ -92,8 +92,8 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`
-        This is the PathEnsemble we will analyse.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is the path ensemble we will analyse.
     ngrid : int
         This is the number of grid points.
 
@@ -187,7 +187,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
@@ -256,7 +256,7 @@ def _shoot_analysis(path_ensemble, bins=1000):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
@@ -364,12 +364,12 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
-    is an object of type `pyretis.core.path.PathEnsemble` and that this path
+    is an object like `pyretis.core.path.PathEnsemble` and that this path
     ensemble contains all the paths that are needed.
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble`.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         The path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
@@ -449,9 +449,9 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
 
     Parameters
     ----------
-    path_ensemble : object of type `pyretis.core.path.PathEnsemble` or
-        `pyretis.inout.pathfile.PathEnsembleFile`. This is the path ensemble
-        to analyse.
+    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile` from
+        `pyretis.core.path and `pyretis.inout.pathfile`. This is the path
+        ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
     idetect : float, optional

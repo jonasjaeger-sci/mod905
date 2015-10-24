@@ -23,7 +23,7 @@ class System(object):
 
     Attributes
     ----------
-    box : object of type like `pyretis.core.box.Box`
+    box : object like `Box` from `pyretis.core.box`
         Defines the simulation box.
     temperature : dict
         the float temperature['set'] defines the set temperature of the
@@ -37,7 +37,7 @@ class System(object):
     particles : oject like `pyretis.core.particles.Particles`
         Defines the particleslist which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
-    forcefield : object of type `pyretis.forcefield.ForceField`
+    forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
         and potential calculation.
     units : string
@@ -51,7 +51,7 @@ class System(object):
 
         Parameters
         ----------
-        box : object of type Box
+        box : object like `Box` from `pyretis.core.box`
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float
@@ -65,7 +65,7 @@ class System(object):
 
         Note
         ----
-        self.temperature is defined as a dictionary. This is just
+        `self.temperature` is defined as a dictionary. This is just
         because it's convenient to include information about the
         degrees of freedom of the system here. In the future one could
         possibly have a more general temperature object.
@@ -137,7 +137,8 @@ class System(object):
 
         Returns
         -------
-        integer, representing the number of dimensions
+        out : integer
+            The number of dimensions of the system.
         """
         try:
             return self.box.dim
@@ -158,7 +159,7 @@ class System(object):
         ----------
         temperature : float, optional
             The temperature of the system. If the temperature
-            is not given, self.temperature will be used.
+            is not given, `self.temperature` will be used.
 
         Returns
         -------
@@ -195,7 +196,7 @@ class System(object):
 
         Returns
         -------
-        N/A, updates self.particles
+        N/A, updates `self.particles`
         """
         dim = self.get_dim()
         if vel is None:
@@ -212,10 +213,10 @@ class System(object):
         Returns
         -------
         out[1] : numpy.array.
-            Forces on the particles. Note that self.particles.force will
+            Forces on the particles. Note that `self.particles.force` will
             also be updated.
         out[2] : float.
-            The virial. Note that self.particles.virial will also be updated.
+            The virial. Note that `self.particles.virial` will be updated.
         """
         force, virial = self._evaluate_potential_force(what='force')
         self.particles.force = force
@@ -229,7 +230,7 @@ class System(object):
         Returns
         -------
         out : float.
-            The potential energy, note self.v_pot is also updated.
+            The potential energy, note `self.v_pot` is also updated.
         """
         self.v_pot = self._evaluate_potential_force(what='potential')
         return self.v_pot
@@ -250,7 +251,7 @@ class System(object):
             Forces on the particles. Note that self.particles.force will
             also be updated.
         out[3] : float.
-            The virial. Note that self.particles.virial will also be updated.
+            The virial. Note that `self.particles.virial` will also be updated.
         """
         v_pot, force, virial = self._evaluate_potential_force(what='both')
         self.v_pot = v_pot
@@ -303,7 +304,7 @@ class System(object):
         ----
         This method will not update self.v_pot but it will just return it's
         value for the (possibly given) configuration.
-        The method `self.potential` can be used to update self.v_pot.
+        The method `self.potential` can be used to update `self.v_pot`.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
 
@@ -330,7 +331,7 @@ class System(object):
         Note
         ----
         This function will not update the forces on the particles nor
-        self.v_pot. To update these, call `self.potential_and_force`.
+        `self.v_pot`. To update these, call `self.potential_and_force`.
         """
         return self._evaluate_potential_force(what='both', **kwargs)
 
@@ -346,8 +347,8 @@ class System(object):
             anything else will give both.
         kwargs : dict
             This dictionary can be used to override position, name, types,
-            particles and/or box. Default values are taken from self.box or
-            self.particles.
+            particles and/or box. Default values are taken from `self.box` or
+            `self.particles`.
         """
         args = {}
         args['pos'] = kwargs.get('pos', self.particles.pos)
@@ -375,12 +376,12 @@ class System(object):
 
         Parameters
         ----------
-        rgen : object of type RandomGenerator, optional
+        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
             This is the random generator which handles the drawing of
-            velocities. If not given, a RandomGenerator object will
+            velocities. If not given, a `RandomGenerator` object will
             be created with a given `seed` (see below).
         seed : int, optional
-            Seed for the RandomGenerator in case `rgen` is not given.
+            Seed for the `RandomGenerator` in case `rgen` is not given.
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
@@ -390,7 +391,7 @@ class System(object):
 
         Returns
         -------
-        N/A but updates system.particles.vel
+        N/A but updates `system.particles.vel`
         """
         if rgen is None:
             rgen = RandomGenerator(seed=seed)

@@ -54,7 +54,7 @@ def calculate_linear_momentum(particles, selection=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
@@ -79,7 +79,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
@@ -111,7 +111,7 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
@@ -144,7 +144,7 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
@@ -172,7 +172,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     dof : list of floats, optional
         dof is the degrees of freedom to subtract. It's shape should
@@ -219,7 +219,7 @@ def reset_momentum(particles, selection=None, dim=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indices of particles to use in calculation.
@@ -254,7 +254,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     dim : int
         This is the dimensionality of the system.
@@ -299,7 +299,7 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
@@ -334,7 +334,7 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
@@ -365,7 +365,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
 
     Parameters
     ----------
-    particles : object of type Particles from `pyretis.core.particles`
+    particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     dof : list of floats
         `dof` is the degrees of freedom, typically provided with

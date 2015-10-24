@@ -498,7 +498,7 @@ def _line_to_path_object(line):
 
     Returns
     -------
-    out : object of type Path.
+    out : object like `Path` from `pyretis.core.path`
         The path created from the given input text.
 
     Note
@@ -681,7 +681,7 @@ class PathEnsembleFile(FileWriter):
 
         Returns
         -------
-        out : object of type PathEnsemble
+        out : object like `PathEnsemble` from `pyretis.core.path`
             The path ensemble read from the file.
         """
         path_ensemble = PathEnsemble(self.ensemble, self.interfaces)
@@ -699,7 +699,7 @@ class PathEnsembleFile(FileWriter):
 
         Yields
         ------
-        out : object of type Path
+        out : object like `Path` from `pyretis.core.path`
             The current path in the file.
         """
         try:
@@ -727,9 +727,9 @@ class PathEnsembleFile(FileWriter):
         ----------
         cycle : integer
             This is the current cycle number.
-        path_ensemble : object of type PathEnsemble
+        path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
             We will write the path defined by PathEnsemble.paths[-1]
-        path : object of type Path
+        path : object like `Path` from `pyretis.core.path`
             This is the path to write to the file.
         """
         if path is None:

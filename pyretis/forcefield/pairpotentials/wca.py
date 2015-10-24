@@ -2,7 +2,7 @@
 """This file contains a WCA pair potential."""
 from __future__ import absolute_import
 import numpy as np
-from pyretis.forcefield.pairpotentials.lennardjones import PairLennardJonesCutnp
+from .lennardjones import PairLennardJonesCutnp
 from pyretis.forcefield.potential import PotentialFunction
 import warnings
 

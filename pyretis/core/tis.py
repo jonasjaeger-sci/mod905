@@ -34,7 +34,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list.
-    path : object of type Path
+    path : object like `Path` from `pyretis.core.path`
         This is the input path wich will be used for generating a
         new path.
     order_function : function
@@ -42,7 +42,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
         which is equal to the order parameter.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the tis-settings
@@ -72,7 +72,7 @@ def _time_reversal(path, interfaces, tis_settings):
 
     Parameters
     ----------
-    path : object of type Path
+    path : object like `Path` from `pyretis.core.path`
         This is the input path wich will be used for generating a new path.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
@@ -84,8 +84,9 @@ def _time_reversal(path, interfaces, tis_settings):
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object of type `Path` or `None`
+    out[1] : object like `Path` or `None`
         Returns the generated path if something was generated
+        `Path` is defined in `pyretis.core.path`.
     out[2] : string
         Status of the path, this is one of the strings defined in
         `pyretis.core.path._STATUS`.
@@ -111,12 +112,12 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list.
-    path : object of type Path
+    path : object like `Path` from `pyretis.core.path`
         This is the input path wich will be used for generating a new path.
     order_function : function
         This function takes the system as it's argument and returns a float
@@ -134,8 +135,9 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object of type `Path` or `None`
-        Returns the generated path if something was generated
+    out[1] : object like `Path` or `None`
+        Returns the generated path if something was generated.
+        `Path` is defined in `pyretis.core.path`.
     out[2] : string
         Status of the path, this is one of the strings defined in
         `pyretis.core.path._STATUS`.
@@ -254,9 +256,9 @@ def generate_initial_path_kick(system, interfaces, integrator, rgen,
         This is the system that contains the particles we are investigating
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    integrator : object of type Integrator
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the propagator of the simulation
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     order_function : function
         This is a function that calculates the order parameter for a
@@ -268,7 +270,7 @@ def generate_initial_path_kick(system, interfaces, integrator, rgen,
 
     Returns
     -------
-    out : object of type Path
+    out : object of type `Path` from `pyretis.core.path`
         This is the generated initial path
     """
     previous, _ = _kick_across_middle(system, integrator,
@@ -335,9 +337,9 @@ def _kick_across_middle(system, integrator, rgen, order_function, middle):
     ----------
     system : object like `System` from `pyretis.core.system`
         This is the system that contains the particles we are investigating
-    integrator : object of type Integrator
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the propagator of the simulation
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     order_function : function
         This is a function that calculates the order parameter for a
@@ -395,7 +397,7 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
@@ -444,7 +446,7 @@ def _propagate(system, integrator, order_function, interfaces,
         The system object given is assumed to be defined with the correct
         particle list for the system to be propagated. It is also assumed
         to contain the force field.
-    integrator : object of type Integrator
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         The integrator will be used to propagate the system. It is assumed
         to be correctly set up for the system under consideration.
     order_function : function
@@ -459,7 +461,7 @@ def _propagate(system, integrator, order_function, interfaces,
 
     Returns
     -------
-    out[0] : object of type Path
+    out[0] : object of type `Path` from `pyretis.core.path`
         The generated path from integrating the system in time
     out[1] : boolean
         False if something in propagate went wrong. This is described
@@ -518,22 +520,22 @@ def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
         This is the system that contains the particles we are investigating
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    integrator : object of type Integrator
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the propagator of the simulation
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the random generator that will be used.
     order_function : function
         This is a function that calculates the order parameter for a
         system.
     tis_settings : dict
         Settings for TIS
-    initial_path : object of type path
+    initial_path : object like `Path` from `pyretis.core.path`
         This is the initial path to fix. It starts & ends at the
         wrong interface.
 
     Returns
     -------
-    out : object of type Path
+    out : object of type `Path` from `pyretis.core.path`
         The amended path
     """
     left, middle, right = interfaces

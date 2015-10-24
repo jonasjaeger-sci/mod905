@@ -52,7 +52,7 @@ class SimulationNVE(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating.
-        integrator : object of type Integrator
+        integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
         startcycle : int, optional.
@@ -115,17 +115,17 @@ class SimulationMDFlux(Simulation):
     ----------
     system : object like `System` from `pyretis.core.system`
         This is the system the simulation will act on.
-    integrator : object of type Integrator.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
         These floats defines the interfaces used in the crossing calculation.
     order_function : function or object
         The defines how the order parameter should be calculated.
-        This is either a function or a object of type `OrderParameter`
-        as defined in `pyretis.core.orderparameter`.
-        It is assumed that the order_function can be called with a
-        System object as a parameter (typically: self.system).
+        This is either a function or a object like `OrderParameter` from
+        `pyretis.core.orderparameter`.
+        It is assumed that the `order_function` can be called with a
+        `System` object as a parameter (typically: `self.system`).
     leftside_prev : list of booleans
         These are used to store the previous positions with respect
         to the interfaces.
@@ -140,13 +140,13 @@ class SimulationMDFlux(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating
-        integrator : object of type Integrator.
+        integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats.
             These defines the interfaces for which we will check the
             crossing(s).
-        order_function : function or object of type (derived) OrderParameter
+        order_function : function or object like `OrderParameter`
             This function is used to calculate the order parameter. It is
             assumed to be called with ``order_function(system)`` and to return
             at least two values where the first one should be the
@@ -157,10 +157,6 @@ class SimulationMDFlux(Simulation):
         endcycle : int, optional.
             This number represents the cycle number where the simulation
             should end.
-
-        Returns
-        -------
-        N/A
         """
         super(SimulationMDFlux, self).__init__(endcycle=endcycle,
                                                startcycle=startcycle)

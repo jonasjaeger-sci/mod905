@@ -159,7 +159,7 @@ class WriteGromacs(FileWriter):
     Attributes
     ----------
     Same as for FileWriter and in addition the following:
-    box : object of type box as defined in box.py
+    box : object like `Box` from `pyretis.core.box`
         The simulation box, used for box-lengths.
     convert : dict of floats
         Defines the conversion of positions from internal units to nm

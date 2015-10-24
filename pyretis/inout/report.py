@@ -553,8 +553,9 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects of type PathEnsemble
+    path_ensembles : list of objects like `PathEnsemble`
         These are the path ensembles we have analysed.
+        The `PathEnsemble` is defined in `pyretis.core.path`.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     fmt : string, optional
@@ -598,8 +599,9 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects of type PathEnsemble
+    path_ensembles : list of objects like `PathEnsemble`
         These are the path ensembles we have analysed.
+        The `PathEnsemble` is defined in `pyretis.core.path`.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -642,8 +644,9 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects of type PathEnsemble
+    path_ensembles : list of objects like `PathEnsemble`
         These are the path ensembles we have analysed.
+        The `PathEnsemble` is defined in `pyretis.core.path`.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -688,8 +691,9 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects of type PathEnsemble
+    path_ensembles : list of objects like `PathEnsemble`
         These are the path ensembles we have analysed.
+        The `PathEnsemble` is defined in `pyretis.core.path`.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional

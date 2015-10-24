@@ -27,7 +27,7 @@ class RandomGenerator(object):
 
     Attributes
     ----------
-    rgen : object of type `RandomState`
+    rgen : object like `RandomState`
         This is a container for the Mersenne Twiser pseudo-random number
         generator as implemented in numpy.
 
@@ -157,7 +157,7 @@ class RandomGenerator(object):
 
         Parameters
         ----------
-        particles : object of type particlelist
+        particles : object like `Particles` from `pyretis.core.particles`
             These are the particles to set the velocity of.
         temperature : float
             The desired temperature. Typically, system.temperature['set']

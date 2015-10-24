@@ -263,7 +263,7 @@ class Langevin(Integrator):
 
     Attributes
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is the class that handles generation of random numbers
     gamma : float
         The friction parameter
@@ -340,11 +340,12 @@ class Langevin(Integrator):
             The time step.
         gamma : float
             The gamma parameter for the Langevin integrator
-        rgen : object of type RandomGenerator, optional
+        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
             This is the class that will handle random number generation
-            for us. If not given, a RandomGenerator will be created.
+            for us. If not given, a `RandomGenerator` will be created.
         seed : integer, optional.
-            A seed which can be used if RandomGenerator is to be created here.
+            A seed which can be used if a `RandomGenerator` is to be created
+            here.
         desc : string
             Description of the integrator.
         param_high : dict

@@ -21,7 +21,7 @@ def accept_reject_displace(rgen, system, trial):
 
     Parameters
     ----------
-    rgen : object
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         The random number generator.
     system : object like `System` from `pyretis.core.system`
         The system object we are investigating.
@@ -56,7 +56,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         The random number generator.
     system : object like `System` from `pyretis.core.system`
         The system object we are investigating. This is used
@@ -84,7 +84,7 @@ def metropolis_accept_reject(rgen, system, deltae):
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         The random number generator.
     system : object like `System` from `pyretis.core.system`
         The system object we are investigating. This is used
@@ -123,7 +123,7 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
 
     Parameters
     ----------
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         The random number generator.
     system : object like `System` from `pyretis.core.system`
         The system object to operate on

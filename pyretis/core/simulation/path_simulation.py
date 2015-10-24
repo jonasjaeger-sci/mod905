@@ -30,7 +30,7 @@ class SimulationTIS(Simulation):
     ----------
     system : object like `System` from `pyretis.core.system`
         This is the system the simulation will act on.
-    integrator : object of type Integrator.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -44,11 +44,11 @@ class SimulationTIS(Simulation):
     tis_settings : dict
         This dict contain specific settings for the TIS simulation (shooting
         moves etc.).
-    rgen : object of type RandomGenerator
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is a random generator used for the generation of paths.
-    path : object of type Path
+    path : object like `Path` from `pyretis.core.path`
         This is the current accepted path
-    path_ensemble : object of type PathEnsemble
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is used for storing results for the simulation.
     """
 
@@ -61,7 +61,7 @@ class SimulationTIS(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating
-        integrator : object of type Integrator.
+        integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
         settings : dict

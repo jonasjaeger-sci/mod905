@@ -172,7 +172,7 @@ def _generate_inverse(conversions):
     Parameters
     ----------
     conversions : dictionary
-        The with unit conversions, assumed to be of type convert[quantity].
+        The unit conversions, assumed to be of type `convert[quantity]`.
     """
     newconvert = {}
     for unit in conversions:
@@ -194,7 +194,7 @@ def _convert_from_to(conversions, unit_from, unit_to):
     Parameters
     ----------
     conversions : dictionary
-        The unit conversions, assumed to be of type convert[quantity].
+        The unit conversions, assumed to be of type `convert[quantity]`.
     unit_from : string
         Starting unit.
     unit_to : string
