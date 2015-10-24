@@ -29,19 +29,20 @@ Unit conversions
 The keys for `CONVERT` defines how a unit conversion should be done. The
 format is CONVERT['quantity']['from', 'to'] where 'quantity' is one of the
 defined quantities
-(:ref:`length <units-length>`,
-:ref:`mass <units-mass>`,
-:ref:`energy <units-energy>`,
-:ref:`time <units-time>`,
-:ref:`velocity <units-velocity>`, and
-:ref:`charge <units-charge>`)
+(
+:ref:`length <units-length>`
+, :ref:`mass <units-mass>`
+, :ref:`energy <units-energy>`
+, :ref:`time <units-time>`
+, :ref:`velocity <units-velocity>`
+and :ref:`charge <units-charge>`)
 and 'from' and 'to' defines the unit conversion.
 The known units are given below.
 
 Defined units
 -------------
 
-.. _units-length
+.. _units-length:
 
 Length
 ~~~~~~
@@ -51,7 +52,7 @@ Length
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
 
-.. _units-mass
+.. _units-mass:
 
 Mass
 ~~~~
@@ -64,7 +65,7 @@ Mass
    by Rowley et al. [ROWLEY]_).
 
 
-.. _units-energy
+.. _units-energy:
 
 Energy
 ~~~~~~
@@ -79,7 +80,7 @@ Energy
    by Rowley et al. [ROWLEY]_).
 
 
-.. _units-time
+.. _units-time:
 
 Time
 ~~~~
@@ -90,7 +91,7 @@ Time
    by Rowley et al. [ROWLEY]_).
 
 
-.. _units-velocity
+.. _units-velocity:
 
 Velocity
 ~~~~~~~~
@@ -100,7 +101,7 @@ Velocity
 - `lj`: Lennard-Jones units (based on the Lennard-Jones parameters
    by Rowley et al. [ROWLEY]_).
 
-.. _units-charge
+.. _units-charge:
 
 Charge
 ~~~~~~
