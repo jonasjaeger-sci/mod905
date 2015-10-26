@@ -59,10 +59,15 @@ class Box(object):
                 size = [[-float('inf'), float('inf')]]
                 periodic = [False]
             else:
+                # this might seem strange, but it's probably something
+                # that is done if we just need a dummy box.
                 size = [[-float('inf'), float('inf')] for i in periodic]
         self.size = size
         for i, dim in enumerate(size):
-            ldim = len(dim)
+            try:
+                ldim = len(dim)
+            except TypeError:
+                ldim = 1
             if ldim == 1:
                 self.low.append(0.0)
                 self.high.append(dim)
