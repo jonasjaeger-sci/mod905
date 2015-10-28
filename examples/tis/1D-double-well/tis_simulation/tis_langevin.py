@@ -48,7 +48,7 @@ simulation_settings = {'type': 'TIS',
                        'endcycle': 100000,
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6,
-                                      -0.5, -0.4, -0.3],
+                                      -0.5, -0.4, -0.3, 1.0],
                        'reactant': -0.9,
                        'product': 1.0,
                        'periodic_boundary': [False],
@@ -72,10 +72,10 @@ TEMPLATE_A = 'template_analysis.txt'
 
 print('Simulation type: {}'.format(simulation_settings['type']))
 print('Setting up TIS simulations:')
-stateA = simulation_settings['reactant']
-stateB = simulation_settings['product']
+stateA = simulation_settings['interfaces'][0]
+stateB = simulation_settings['interfaces'][-1]
 detect = []
-for i, middle in enumerate(simulation_settings['interfaces']):
+for i, middle in enumerate(simulation_settings['interfaces'][:-1]):
     ensemble = '{:03d}'.format(i+1)
     strensemble = '\nEnsemble: {}'.format(ensemble)
     print(strensemble)
