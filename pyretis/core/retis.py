@@ -18,12 +18,14 @@ References
            http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
 from __future__ import print_function
+from pyretis.core.tis import make_tis_step_ensemble
 
 
 __all__ = ['make_retis_step']
 
 
-def make_retis_step(ensembles, rgen, settings, cycle):
+def make_retis_step(ensembles, rgen, system, order_function, integrator,
+                    settings, cycle):
     """Determine and execute the approprate RETIS move.
 
     Here we will determine what kind of RETIS moves we should do.
@@ -46,6 +48,14 @@ def make_retis_step(ensembles, rgen, settings, cycle):
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
+    system : object like `System` from `pyretis.core.system`
+        System is used here since we need access to the temperature
+        and to the particle list
+    order_function : function
+        This function takes the system as it's argument and returns a float
+        which is equal to the order parameter.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
+        A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
@@ -54,16 +64,18 @@ def make_retis_step(ensembles, rgen, settings, cycle):
     Returns
     -------
     """
-    if rgen.rand() < settings['swapfreq']:
+    if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
         print('Will execute RETIS moves')
-        retis_moves(ensembles, rgen, settings, cycle)
+        retis_moves(ensembles, rgen, settings['retis'], cycle)
     else:
         print('Will execute TIS moves')
-        retis_tis_moves(ensembles, rgen, settings, cycle)
+        retis_tis_moves(ensembles, rgen, system, order_function,
+                        integrator, settings, cycle)
 
 
-def retis_tis_moves(ensembles, rgen, settings, cycle):
+def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
+                    settings, cycle):
     """Method to execute TIS steps in the RETIS method.
 
     This method will execute the TIS steps in the RETIS method. These
@@ -92,6 +104,14 @@ def retis_tis_moves(ensembles, rgen, settings, cycle):
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
+    system : object like `System` from `pyretis.core.system`
+        System is used here since we need access to the temperature
+        and to the particle list
+    order_function : function
+        This function takes the system as it's argument and returns a float
+        which is equal to the order parameter.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
+        A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
@@ -116,14 +136,18 @@ def retis_tis_moves(ensembles, rgen, settings, cycle):
         except TypeError:  # idx == None may happen if something is very wrong
             msg = 'Error in relative shoot frequencies! Aborting!'
             raise ValueError(msg)
-        print('Do TIS for', path_ensemble.ensemble)
+        make_tis_step_ensemble(path_ensemble, rgen, system,
+                               order_function, integrator,
+                               settings['tis'], cycle)
         if settings.get('nullmoves', 'False'):
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)
     else:  # just do TIS for them all
         for path_ensemble in ensembles:
-            print('Do TIS for', path_ensemble.ensemble)
+            make_tis_step_ensemble(path_ensemble, rgen, system,
+                                   order_function, integrator,
+                                   settings['tis'], cycle)
 
 
 def retis_moves(ensembles, rgen, settings, cycle):
@@ -209,7 +233,7 @@ def retis_swap(ensembles, idx, cycle):
     print('Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
                                           ensembles[idx+1].ensemble))
     if idx == 0:
-        pass
+        raise NotImplementedError
     else:
         ensemble1 = ensembles[idx]
         ensemble2 = ensembles[idx + 1]

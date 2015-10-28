@@ -47,6 +47,8 @@ def make_tis_step_ensemble(path_ensemble, rgen, system, order_function,
     order_function : function
         This function takes the system as it's argument and returns a float
         which is equal to the order parameter.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
+        A integrator to use for propagating a path.
     tis_settings : dict
         This dictionary contain the tis-settings
     cycle : int
