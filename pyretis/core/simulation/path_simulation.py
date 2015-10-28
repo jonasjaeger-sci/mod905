@@ -13,7 +13,8 @@ import numpy as np
 from pyretis.core.simulation import Simulation
 from pyretis.core.path import PathEnsemble
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.tis import generate_initial_path_kick, make_tis_step
+from pyretis.core.tis import (generate_initial_path_kick,
+                              make_tis_step_ensemble)
 
 
 __all__ = ['SimulationTIS']
@@ -46,8 +47,6 @@ class SimulationTIS(Simulation):
         moves etc.).
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is a random generator used for the generation of paths.
-    path : object like `Path` from `pyretis.core.path`
-        This is the current accepted path
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is used for storing results for the simulation.
     """
@@ -89,7 +88,6 @@ class SimulationTIS(Simulation):
             self.tis_settings['aimless'] = False
         # create a random generator for TIS moved etc.:
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
-        self.path = None  # current path
         self.path_ensemble = PathEnsemble(settings.get('ensemble', '000'),
                                           self.interfaces)
 
@@ -132,7 +130,6 @@ class SimulationTIS(Simulation):
             accept = True
             trial = None
             status = 'ACC'
-            self.path = initial_path
             self.path_ensemble.add_path_data(initial_path, status,
                                              cycle=self.cycle['step'])
             self.first_step = False
@@ -142,21 +139,17 @@ class SimulationTIS(Simulation):
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
-            accept, trial, status = make_tis_step(self.rgen,
-                                                  self.system,
-                                                  self.path,
-                                                  self.orderparameter,
-                                                  self.interfaces,
-                                                  self.integrator,
-                                                  self.tis_settings)
-            self.path_ensemble.add_path_data(trial, status,
-                                             cycle=self.cycle['step'])
+            accept, trial, status = make_tis_step_ensemble(self.path_ensemble,
+                                                           self.rgen,
+                                                           self.system,
+                                                           self.orderparameter,
+                                                           self.integrator,
+                                                           self.tis_settings,
+                                                           self.cycle['step'])
             results['accept'] = accept
             results['trialpath'] = trial
             results['status'] = status
-            if accept:
-                self.path = trial
-        results['path'] = self.path
+        results['path'] = self.path_ensemble.last_path
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
         self.output(results)
