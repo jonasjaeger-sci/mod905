@@ -260,7 +260,7 @@ class Path(object):
         """Iterate over the phase-space points.
 
         Yields
-        -------
+        ------
         out : tuple
             The phase-space points will be yielded.
         """
