@@ -138,7 +138,7 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
         make_tis_step_ensemble(path_ensemble, rgen, system,
                                order_function, integrator,
                                settings['tis'], cycle)
-        if settings.get('nullmoves', 'False'):
+        if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)

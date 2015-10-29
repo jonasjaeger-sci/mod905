@@ -34,7 +34,8 @@ def make_tis_step_ensemble(path_ensemble, rgen, system, order_function,
 
     This method will run `make_tis_step` for the given path_ensemble. If will
     handle adding of the path. This method is intended for convenience when
-    working with path ensembles.
+    working with path ensembles. If we are using the path ensemble [0^-] then
+    the start condition should be 'R' for right.
 
     Parameters
     ----------
@@ -64,6 +65,10 @@ def make_tis_step_ensemble(path_ensemble, rgen, system, order_function,
     out[2] : string
         The status of the path
     """
+    if path_ensemble.ensemble == '[0^-]':
+        tis_settings['start_cond'] = 'R'
+    else:
+        tis_settings['start_cond'] = 'L'
     accept, trial, status = make_tis_step(rgen, system,
                                           path_ensemble.last_path,
                                           order_function,
