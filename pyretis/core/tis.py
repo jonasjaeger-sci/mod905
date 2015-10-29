@@ -33,7 +33,8 @@ def make_tis_step_ensemble(path_ensemble, rgen, system, order_function,
     """Function to preform TIS step for a path ensemble.
 
     This method will run `make_tis_step` for the given path_ensemble. If will
-    handle adding of the path if that is needed.
+    handle adding of the path. This method is intended for convenience when
+    working with path ensembles.
 
     Parameters
     ----------

@@ -69,7 +69,7 @@ def make_retis_step(ensembles, rgen, system, order_function, integrator,
         # Do RETIS moves
         print('Will execute RETIS moves')
         retis_moves(ensembles, rgen, system, order_function, integrator,
-                    settings['retis'], cycle)
+                    settings, cycle)
     else:
         print('Will execute TIS moves')
         retis_tis_moves(ensembles, rgen, system, order_function,
@@ -119,7 +119,7 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
     cycle : integer
         The current cycle number
     """
-    relative = settings.get('relative_shoots', None)
+    relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
         # will to relative shootings
         freq = rgen.rand()
@@ -154,16 +154,17 @@ def retis_moves(ensembles, rgen, system, integrator, order_function,
     """Perform RETIS moves on the given ensembles.
 
     This method will perform RETIS moves on the given ensembles.
-    First we have to strategies based on `settings['swapsimul']`:
+    First we have to strategies based on `settings['retis']['swapsimul']`:
 
-    1) If `settings['swapsimul']` is True we will perform several swaps,
-       either ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
+    1) If `settings['retis']['swapsimul']` is True we will perform several
+       swaps, either ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
        ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``. Which one of these two swap
        options we use is determined randomly and they have equal probability.
-    2) If `settings['swapsimul']` is False we will just perform one swap for
-       randomly chosen ensembles, i.e. we pick a random ensemble and try to
-       swap with the ensemble to the right. Here we may also perform null
-       moves if the `settings['nullmove']` specifies so.
+
+    2) If `settings['retis']['swapsimul']` is False we will just perform one
+       swap for randomly chosen ensembles, i.e. we pick a random ensemble
+       and try to swap with the ensemble to the right. Here we may also
+       perform null moves if the `settings['retis']['nullmove']` specifies so.
 
     Parameters
     ----------
@@ -185,20 +186,19 @@ def retis_moves(ensembles, rgen, system, integrator, order_function,
     cycle : integer
         The current cycle number
     """
-    if settings['swapsimul']:
+    if settings['retis']['swapsimul']:
+        # here we have to schemes:
+        # scheme == 0: [0^-] <-> [0^+], [1^+] <-> [2^+], ...
+        # scheme == 1: [0^+] <-> [1^+], [2^+] <-> [3^+], ...
         if len(ensembles) < 3:
-            # only two ensembles, we don't have choice and will do a
-            # [0^-] <-> [0^+] swap
+            # Low number of ensembles, can only do the [0^-] <-> [0^+] swap
             scheme = 0
         else:
             scheme = 0 if rgen.rand() < 0.5 else 1
-            # scheme == 0 is the swaps: [0^-] <-> [0^+], [1^+] <-> [2^+], ...
-            # scheme == 1 is the swaps: [0^+] <-> [1^+], [2^+] <-> [3^+], ...
         for idx in range(scheme, len(ensembles) - 1, 2):
             retis_swap(ensembles, idx, system, order_function, integrator,
                        settings, cycle)
-
-        if settings['nullmoves']:
+        if settings['retis']['nullmoves']:
             if len(ensembles) % 2 != scheme:  # missed last
                 # this is perhaps strange but it's equal to:
                 # (scheme == 0 and len(ensembles) % 2 != 0) or
@@ -206,11 +206,11 @@ def retis_moves(ensembles, rgen, system, integrator, order_function,
                 null_move(ensembles[-1], cycle)
             if scheme == 1:  # we did not include [0^-]
                 null_move(ensembles[0], cycle)
-    else:
+    else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
         retis_swap(ensembles, idx, system, order_function, integrator,
                    settings, cycle)
-        if settings['nullmoves']:
+        if settings['retis']['nullmoves']:
             for idxo, path_ensemble in enumerate(ensembles):
                 if idxo != idx and idxo != idx + 1:
                     null_move(path_ensemble, cycle)
