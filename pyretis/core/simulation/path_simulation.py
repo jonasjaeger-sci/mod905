@@ -149,7 +149,6 @@ class SimulationTIS(Simulation):
             results['accept'] = accept
             results['trialpath'] = trial
             results['status'] = status
-        results['path'] = self.path_ensemble.last_path
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
         self.output(results)

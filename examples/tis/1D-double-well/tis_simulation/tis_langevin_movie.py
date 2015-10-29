@@ -226,7 +226,7 @@ def update(frame, simulation):
         status = result['status']
         if trial is None:
             initial = True
-            path = result['path']
+            path = result['pathensemble'].last_path
         else:
             initial = False
             path = trial

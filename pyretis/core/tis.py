@@ -25,7 +25,7 @@ from pyretis.core.path import Path, paste_paths, reverse_path
 from pyretis.core.montecarlo import metropolis_accept_reject
 from pyretis.core.particlefunctions import calculate_kinetic_energy
 
-__all__ = ['make_tis_step', 'generate_initial_path_kick']
+__all__ = ['make_tis_step', 'generate_initial_path_kick', 'propagate']
 
 
 def make_tis_step_ensemble(path_ensemble, rgen, system, order_function,
@@ -200,8 +200,9 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     """
     accept, trial_path = False, Path()  # return values
     # trial_path is just an empty path for now
-    # select the shooting point from path at random.
-    # (Do not include end-points)
+    # Select the shooting point from path at random.
+    # We do not include the end point as these are out of bounds - i.e. they
+    # have crossed the interface. See also the documentation for RETIS.
     idx = rgen.random_integers(1, len(path.path) - 2)
     pos, vel, orderp = path.path[idx][0:3]  # extract phase point
     system.particles.vel = np.copy(vel)
@@ -242,11 +243,11 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back, success_back, _ = _propagate(system, integrator,
-                                            order_function,
-                                            interfaces,
-                                            maxlen=maxlenb,
-                                            reverse=True)
+    path_back, success_back, _ = propagate(system, integrator,
+                                           order_function,
+                                           interfaces,
+                                           maxlen=maxlenb,
+                                           reverse=True)
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
     if not success_back:
@@ -265,12 +266,12 @@ def _shoot(rgen, system, path, order_function, interfaces, integrator,
         return accept, trial_path, trial_path.status
     # everything seems fine, propagate forward
     maxlenf = maxlen - len(path_back.path) + 1
-    path_forw, success_forw, _ = _propagate(system,
-                                            integrator,
-                                            order_function,
-                                            interfaces,
-                                            maxlen=maxlenf,
-                                            reverse=False)
+    path_forw, success_forw, _ = propagate(system,
+                                           integrator,
+                                           order_function,
+                                           interfaces,
+                                           maxlen=maxlenf,
+                                           reverse=False)
     path_forw.time_origin = time_shoot
     # now, the forward could have failed by exceeding maxlenf
     # however, it could also fail when we paste together so that
@@ -335,19 +336,19 @@ def generate_initial_path_kick(system, interfaces, integrator, rgen,
     # Loop is done, we have two points (previous and the
     # current system.particles)
     # we can propagate current phase point forward:
-    path_forw, success, msg = _propagate(system, integrator, order_function,
-                                         interfaces,
-                                         maxlen=tis_settings['maxlength'])
+    path_forw, success, msg = propagate(system, integrator, order_function,
+                                        interfaces,
+                                        maxlen=tis_settings['maxlength'])
     if not success:
         raise ValueError('Forward path not successfull.', msg)
     # and previous pase point backward.
     # First we set system to be at this point:
     system.particles.set_phase_point(previous)
     # then propagate :-)
-    path_back, success, msg = _propagate(system, integrator, order_function,
-                                         interfaces,
-                                         maxlen=tis_settings['maxlength'],
-                                         reverse=True)
+    path_back, success, msg = propagate(system, integrator, order_function,
+                                        interfaces,
+                                        maxlen=tis_settings['maxlength'],
+                                        reverse=True)
     if not success:
         raise ValueError('Backward path not successfull.', msg)
     # Merge backward and forward, here we do not set maxlen since
@@ -488,8 +489,8 @@ def _kick_timeslice(rgen, system, sigma_v=None, aimless=True, momentum=False):
     return dek, kin_new
 
 
-def _propagate(system, integrator, order_function, interfaces,
-               maxlen=None, reverse=False):
+def propagate(system, integrator, order_function, interfaces,
+              maxlen=None, reverse=False, path=None):
     """
     Propagate a system in time.
 
@@ -514,6 +515,10 @@ def _propagate(system, integrator, order_function, interfaces,
         The maximum length of the path
     reverse : boolean
         If True, the system will be propagated backwards in time
+    path : object like `Path` from `pyretis.core.path`.
+        If `path` is given, we assume that we want to append the
+        propagated trajectory to an already existing path and we do not
+        generate a completely new path.
 
     Returns
     -------
@@ -528,24 +533,27 @@ def _propagate(system, integrator, order_function, interfaces,
     # first we store the initial pos, vel and forces for the system:
     initial_system = system.particles.get_phase_point()
     left, _, right = interfaces
-    new_path = Path(maxlen=maxlen)
-    status = 'Empty path'
+    if path is None:
+        path = Path(maxlen=maxlen)
+        status = 'Empty path'
+    else:
+        status = 'Appending to old path'
     while True:
         orderp = order_function(system)
-        add = new_path.append(system.particles.pos, system.particles.vel,
-                              orderp, system.v_pot)
+        add = path.append(system.particles.pos, system.particles.vel,
+                          orderp, system.v_pot)
         if not add:
-            if len(new_path.path) >= new_path.maxlen:
+            if len(path.path) >= path.maxlen:
                 status = 'Max. path length exceeded'
             else:
                 status = 'Could not add for unknown reason'
             success = False
             break
-        if new_path.ordermin[0] < left:
+        if path.ordermin[0] < left:
             status = 'Crossed left interface!'
             success = True
             break
-        elif new_path.ordermax[0] > right:
+        elif path.ordermax[0] > right:
             status = 'Crossed right interface!'
             success = True
             break
@@ -559,7 +567,7 @@ def _propagate(system, integrator, order_function, interfaces,
             integrator(system)
     # reset the system to initial state
     system.particles.set_phase_point(initial_system)
-    return new_path, success, status
+    return path, success, status
 
 
 def _fix_path_by_tis(system, interfaces, integrator, rgen, order_function,
