@@ -15,12 +15,16 @@ Important classes and functions
   direction and the other is in the forward time direction.
 
 - reverse_path: Method for reversing a path.
+
+- create_path_ensembles: Method for creating a set of `PathEnsemble` objects
+  given locations of interfaces defining the path ensembles.
 """
 import numpy as np
 import warnings
 import itertools
 
-__all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path']
+__all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path',
+           'create_path_ensembles']
 
 # the following defines a human-readable form of the possible path status:
 _STATUS = {'ACC': 'The path has been accepted',
@@ -591,8 +595,9 @@ class PathEnsemble(object):
     Attributes
     ----------
     ensemble : str
-        This is a string representation of the path ensemble. Typically
-        something like '0-', '0+', '1+', '2+', ...
+        This is a string representation of the path ensemble. This is used to
+        identify the ensemble in retis simulations and the string should be
+        one of ``[0^-]``, ``[0^+]``, ``[1^+]``, ...
     interfaces : list of floats
         Interfaces, specified with the values for the
         order parameters: `[left, middle, right]`.
@@ -743,3 +748,53 @@ class PathEnsemble(object):
         msg += ['\tRatio accepted/total paths: {}'.format(float(self.nacc) /
                                                           float(self.npath))]
         return '\n'.join(msg)
+
+
+def create_path_ensembles(interfaces, include_zero=False):
+    """Create a set of `PathEnsemble` objects give position of interfaces.
+
+    This method will create and return a set of objects representing
+    path ensembles for a given set of interfaces. This is usefull when
+    setting up for instance RETIS simulations. Here we assume that
+    the given interfaces define the path ensembles as follows:
+    ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``,
+    where ``|`` is the specified interface locations in ``interfaces``.
+    We assume that to the left of ``interfaces[0]`` we have the reactant
+    state and that to the right of ``interfaces[-1]`` we have the product
+    state. Given ``n`` interfaces we generate ``n`` or ``n-1`` path ensembles,
+    depending on if we want to include [0^-] or not.
+
+    Parameters
+    ----------
+    interfaces : list of floats
+        `interfaces[i]` separates the [(i-1)^+] and [i^+] interfaces.
+    include_zero : boolean
+        If `include_zero` is True, we include path ensemble [0^-].
+
+    Returns
+    -------
+    ensembles : list of objects like `PathEnsemble`.
+        The generated (empty) path ensemble objects.
+    detect : list of floats
+        These are interfaces that can be used for an analysis,
+        i.e. for detection and matching of probabilities.
+    """
+    detect = []
+    ensembles = []
+    reactant = interfaces[0]
+    product = interfaces[-1]
+    if include_zero:
+        ensemble_name = '[0^-]'
+        interface = [-float('inf'), reactant, reactant]
+        path_ensemble = PathEnsemble(ensemble_name, interface)
+        ensembles.append(path_ensemble)
+    for i, middle in enumerate(interfaces[:-1]):
+        interface = [reactant, middle, product]
+        try:
+            detect.append(interfaces[i+1])
+        except IndexError:
+            detect.append(product)
+        ensemble_name = '[{}^+]'.format(i)
+        path_ensemble = PathEnsemble(ensemble_name, interface)
+        ensembles.append(path_ensemble)
+    return ensembles, detect
