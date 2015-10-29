@@ -115,7 +115,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     if rgen.rand() < tis_settings['freq']:
         # print('Reversing path')
         accept, new_path, status = _time_reversal(path, interfaces,
-                                                  tis_settings)
+                                                  tis_settings['start_cond'])
     else:
         # print('Shooting')
         accept, new_path, status = _shoot(rgen, system, path, order_function,
@@ -123,7 +123,7 @@ def make_tis_step(rgen, system, path, order_function, interfaces, integrator,
     return accept, new_path, status
 
 
-def _time_reversal(path, interfaces, tis_settings):
+def _time_reversal(path, interfaces, start_condition):
     """
     Method to perform a time-reversal move.
 
@@ -133,9 +133,8 @@ def _time_reversal(path, interfaces, tis_settings):
         This is the input path wich will be used for generating a new path.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
-    tis_settings : dict
-        This contains the settings for TIS. Used here are:
-            start_cond : string, starting condition, 'L'eft or 'R'ight
+    start_condition : string
+        The starting condition, 'L'eft or 'R'ight.
 
     Returns
     -------
@@ -152,7 +151,7 @@ def _time_reversal(path, interfaces, tis_settings):
     start, _, _, _ = new_path.check_interfaces(interfaces)
     # explicitly set how this was generated
     new_path.generated = ('tr', 0, 0, 0)
-    if start == tis_settings['start_cond']:
+    if start == start_condition:
         accept = True
         status = 'ACC'
     else:
