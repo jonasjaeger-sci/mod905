@@ -752,9 +752,9 @@ class PathEnsemble(object):
             'R' for right or 'L' for left start condition.
         """
         if self.ensemble == '[0^-]':
-            return 'L'
-        else:
             return 'R'
+        else:
+            return 'L'
 
     def __str__(self):
         """Return a string with some info about this object."""

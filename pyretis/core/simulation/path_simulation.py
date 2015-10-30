@@ -88,7 +88,7 @@ class SimulationTIS(Simulation):
             self.tis_settings['aimless'] = False
         # create a random generator for TIS moved etc.:
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
-        self.path_ensemble = PathEnsemble(settings.get('ensemble', '000'),
+        self.path_ensemble = PathEnsemble(settings.get('ensemble', '[0^+]'),
                                           self.interfaces)
 
     def _initialize_path(self):
