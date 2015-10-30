@@ -15,11 +15,11 @@ natural constant and its units, for instance `CONSTANTS['kB']['J/K']` is
 the Boltzmann constants in units of Joule per Kelvin. The currently defined
 natural constants are
 
-- ``kB``: The Boltzmann constant [KB]_.
+- ``kB`` : The Boltzmann constant [KB]_.
 
-- ``NA``: The Avogadro constant [NA]_.
+- ``NA`` : The Avogadro constant [NA]_.
 
-- ``e``: The elementary charge [E]_.
+- ``e`` : The elementary charge [E]_.
 
 
 .. _unit-conversions:
@@ -46,9 +46,9 @@ Defined units
 Length
 ~~~~~~
 
-- ``m``, ``nm``, ``Å``: Meter, nano-meter and Ångstrøm.
+- ``m``, ``nm``, ``Å`` : Meter, nano-meter and Ångstrøm.
 
-- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
 
 
@@ -57,11 +57,11 @@ Length
 Mass
 ~~~~
 
-- ``kg``: Kilograms.
+- ``kg`` : Kilograms.
 
-- ``g/mol``: Grams per mole.
+- ``g/mol`` : Grams per mole.
 
-- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
 
 
@@ -70,15 +70,15 @@ Mass
 Energy
 ~~~~~~
 
-- ``kcal``: Kilocalories. This is the
+- ``kcal`` : Kilocalories. This is the
   `thermochemical calorie <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>`_
   equal to 4184 Joule.
 
-- ``J``: Joule.
+- ``J`` : Joule.
 
-- ``kcal/mol``: Kilocalories per mole.
+- ``kcal/mol`` : Kilocalories per mole.
 
-- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
 
 
@@ -87,9 +87,9 @@ Energy
 Time
 ~~~~
 
-- ``s``, ``ps``, ``fs``: Seconds, pico-seconds and femto-seconds.
+- ``s``, ``ps``, ``fs`` : Seconds, pico-seconds and femto-seconds.
 
-- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
 
 
@@ -98,9 +98,9 @@ Time
 Velocity
 ~~~~~~~~
 
-- ``nm/ps``: Nano-meter per pico-second.
+- ``nm/ps`` : Nano-meter per pico-second.
 
-- ``lj``: Lennard-Jones units (based on the Lennard-Jones parameters
+- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
 
 
@@ -109,9 +109,9 @@ Velocity
 Charge
 ~~~~~~
 
-- ``e``: Charge in units of elementary charge.
+- ``e`` : Charge in units of elementary charge.
 
-- ``C``: Coulomb.
+- ``C`` : Coulomb.
 
 
 .. _unit-references:
