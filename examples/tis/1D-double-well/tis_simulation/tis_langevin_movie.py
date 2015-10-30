@@ -231,8 +231,12 @@ def update(frame, simulation):
             initial = False
             path = trial
 
-        orderp = np.array([p[2][0] for p in path.path[::6]])
-        ordervel = np.array([p[2][1] for p in path.path[::6]])
+        orderp = [p[2][0] for p in path.path[::6]]
+        orderp.append(path.path[-1][2][0])  # force adding of the last point
+        orderp = np.array(orderp)
+        ordervel = [p[2][1] for p in path.path[::6]]
+        ordervel.append(path.path[-1][2][1])  # force adding of the last point
+        ordervel = np.array(ordervel)
 
         new_line = last_paths.popleft()
         new_line.set_data(orderp, ordervel)
