@@ -114,7 +114,7 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
     initial_path = None
     status = ''
     if tis_settings['initial_path'] not in ['kick']:
-        raise ValueError('Unknown initiation method: {}'.format(method))
+        raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
         initial_path = generate_initial_path_kick(system,
                                                   path_ensemble.interfaces,

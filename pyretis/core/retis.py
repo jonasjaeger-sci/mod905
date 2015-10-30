@@ -25,7 +25,7 @@ import numpy as np
 __all__ = ['make_retis_step']
 
 
-def make_retis_step(ensembles, rgen, system, order_function, integrator,
+def make_retis_step(ensembles, system, order_function, integrator, rgen,
                     settings, cycle):
     """Determine and execute the approprate RETIS move.
 
@@ -46,9 +46,6 @@ def make_retis_step(ensembles, rgen, system, order_function, integrator,
     ----------
     ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        This is a random generator. Here we assume that we can call
-        `rgen.rand()` to draw random uniform numbers.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list
@@ -57,6 +54,9 @@ def make_retis_step(ensembles, rgen, system, order_function, integrator,
         which is equal to the order parameter.
     integrator : object like `Integrator` from `pyretis.core.integrators`
         A integrator to use for propagating a path.
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        This is a random generator. Here we assume that we can call
+        `rgen.rand()` to draw random uniform numbers.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
@@ -68,15 +68,15 @@ def make_retis_step(ensembles, rgen, system, order_function, integrator,
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
         print('Will execute RETIS moves')
-        retis_moves(ensembles, rgen, system, order_function, integrator,
-                    settings, cycle)
+        return retis_moves(ensembles, system, order_function, integrator,
+                           rgen, settings, cycle)
     else:
         print('Will execute TIS moves')
-        retis_tis_moves(ensembles, rgen, system, order_function,
-                        integrator, settings, cycle)
+        return retis_tis_moves(ensembles, system, order_function, integrator,
+                               rgen, settings, cycle)
 
 
-def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
+def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
                     settings, cycle):
     """Method to execute TIS steps in the RETIS method.
 
@@ -103,9 +103,6 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
     ----------
     ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        This is a random generator. Here we assume that we can call
-        `rgen.rand()` to draw random uniform numbers.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list
@@ -114,13 +111,23 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
         which is equal to the order parameter.
     integrator : object like `Integrator` from `pyretis.core.integrators`
         A integrator to use for propagating a path.
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        This is a random generator. Here we assume that we can call
+        `rgen.rand()` to draw random uniform numbers.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
         The current cycle number
+
+    Returns
+    -------
+    output : list of lists
+        `output[i]` contains the result for ensemble `i`. output[i][0]
+        gives information on what kind of move was tried.
     """
     relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
+        output = [None for path_ensemble in ensembles]
         # will to relative shootings
         freq = rgen.rand()
         cumulative = 0.0
@@ -135,19 +142,31 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
         except TypeError:  # idx == None may happen if something is very wrong
             msg = 'Error in relative shoot frequencies! Aborting!'
             raise ValueError(msg)
-        make_tis_step_ensemble(path_ensemble, system, order_function,
-                               integrator, rgen, settings['tis'], cycle)
+        accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
+                                                       order_function,
+                                                       integrator, rgen,
+                                                       settings['tis'], cycle)
+        output[idx] = ['tis', accept, trial, status]
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)
+                    output[idx] = ['nullmove']
     else:  # just do TIS for them all
+        output = []
         for path_ensemble in ensembles:
-            make_tis_step_ensemble(path_ensemble, system, order_function,
-                                   integrator, rgen, settings['tis'], cycle)
+            accept, trial, status = make_tis_step_ensemble(path_ensemble,
+                                                           system,
+                                                           order_function,
+                                                           integrator,
+                                                           rgen,
+                                                           settings['tis'],
+                                                           cycle)
+            output.append(['tis', accept, trial, status])
+    return output
 
 
-def retis_moves(ensembles, rgen, system, integrator, order_function,
+def retis_moves(ensembles, system, order_function, integrator, rgen,
                 settings, cycle):
     """Perform RETIS moves on the given ensembles.
 
@@ -168,22 +187,23 @@ def retis_moves(ensembles, rgen, system, integrator, order_function,
     ----------
     ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        This is a random generator. Here we assume that we can call
-        `rgen.rand()` to draw random uniform numbers.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `pyretis.core.integrators`
-        A integrator to use for propagating a path.
     order_function : function
         This function takes the system as it's argument and returns a float
         which is equal to the order parameter.
+    integrator : object like `Integrator` from `pyretis.core.integrators`
+        A integrator to use for propagating a path.
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        This is a random generator. Here we assume that we can call
+        `rgen.rand()` to draw random uniform numbers.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
         The current cycle number
     """
+    output = [None for path_ensemble in ensembles]
     if settings['retis']['swapsimul']:
         # here we have to schemes:
         # scheme == 0: [0^-] <-> [0^+], [1^+] <-> [2^+], ...
@@ -194,24 +214,32 @@ def retis_moves(ensembles, rgen, system, integrator, order_function,
         else:
             scheme = 0 if rgen.rand() < 0.5 else 1
         for idx in range(scheme, len(ensembles) - 1, 2):
-            retis_swap(ensembles, idx, system, order_function, integrator,
-                       settings, cycle)
+            status = retis_swap(ensembles, idx, system, order_function,
+                                integrator, settings, cycle)
+            output[idx] = ['swap', status]
+            output[idx+1] = ['swap', status]
         if settings['retis']['nullmoves']:
             if len(ensembles) % 2 != scheme:  # missed last
                 # this is perhaps strange but it's equal to:
                 # (scheme == 0 and len(ensembles) % 2 != 0) or
                 # (scheme == 1 and len(ensembles) % 2 == 0)
                 null_move(ensembles[-1], cycle)
+                output[-1] = ['nullmove']
             if scheme == 1:  # we did not include [0^-]
                 null_move(ensembles[0], cycle)
+                output[0] = ['nullmove']
     else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
-        retis_swap(ensembles, idx, system, order_function, integrator,
-                   settings, cycle)
+        status = retis_swap(ensembles, idx, system, order_function, integrator,
+                            settings, cycle)
+        output[idx] = ['swap', status]
+        output[idx+1] = ['swap', status]
         if settings['retis']['nullmoves']:
             for idxo, path_ensemble in enumerate(ensembles):
                 if idxo != idx and idxo != idx + 1:
                     null_move(path_ensemble, cycle)
+                    output[idxo] = ['nullmove']
+    return output
 
 
 def retis_swap(ensembles, idx, system, order_function, integrator,
@@ -251,9 +279,10 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     """
     print('Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
                                           ensembles[idx+1].ensemble))
+    status = None
     if idx == 0:
-        retis_swap_zero(ensembles, system, order_function, integrator,
-                        settings, cycle)
+        return retis_swap_zero(ensembles, system, order_function, integrator,
+                               settings, cycle)
     else:
         ensemble1 = ensembles[idx]
         ensemble2 = ensembles[idx + 1]
@@ -263,14 +292,17 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         cross = path1.check_interfaces(ensemble2.interfaces)[-1]
         # Do the swap
         path1, path2 = path2, path1
-        path1.set_move('s+')  # came from right
-        path2.set_move('s-')  # came from left
         if cross[1]:  # accept the swap
             status = 'ACC'
+            print('Accepting the swap')
+            path1.set_move('s+')  # came from right
+            path2.set_move('s-')  # came from left
         else:  # reject:
             status = 'NCR'
+            print('Rejecting the swap')
         ensemble1.add_path_data(path1, status, cycle=cycle)
         ensemble2.add_path_data(path2, status, cycle=cycle)
+        return status
 
 
 def retis_swap_zero(ensembles, system, order_function, integrator,
@@ -325,50 +357,55 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     ensemble1 = ensembles[1]
     # 1) Generate path for [0^-] from [0^+]:
     # Set the system at the initial point of path in [0^+]:
-    pos, vel = ensemble1.last_path[0][0:2]
+    pos, vel = ensemble1.last_path.path[0][0:2]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
-    maxlenb = settings['maxlength'] - 1
+    maxlenb = settings['tis']['maxlength'] - 1
     path0 = propagate(system, ensemble0.interfaces, order_function,
                       integrator, maxlen=maxlenb, reverse=True)[0]
     # Reverse this path:
     path0 = reverse_path(path0)
     # and add second point from [0^+] at the end:
-    path0.append(*ensemble1.last_path[1])
+    path0.append(*ensemble1.last_path.path[1])
     # 2) Generate path for [0^+] from [0^-]:
+    # We begin by creating a path and the second last point from the [0^-]
+    # path to it.
+    patht = Path(maxlen=settings['tis']['maxlength'])
+    patht.append(*ensemble0.last_path.path[-2])
     # We start the generation from the last point
-    pos, vel = ensemble0.last_path[-1][0:2]
+    pos, vel = ensemble0.last_path.path[-1][0:2]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
-    # Propagate forward in time, here we begin by creating a path and
-    # adding the second last point from the [0^-] path to it. This is to
-    # avoid adding it later since we know that this will be the first point
-    # in the trajectory.
-    path1 = Path(maxlen=settings['maxlength'])
-    path1.append(*ensemble0.last_path[-2])
     # propagate forward, note that the maxlen is there set to
     # settings['maxlength'] but since we already have one point
     # in the path, propagate will at most do ``settings[maxlength'] - 1``
-    # steps.
-    propagate(system, ensemble1.interfaces, order_function, integrator,
-              maxlen=settings['maxlength'], reverse=False, path=path1)
+    # steps
+    path1 = propagate(system, ensemble1.interfaces, order_function,
+                      integrator, maxlen=settings['tis']['maxlength']-1,
+                      reverse=False)[0]
+    path1 = patht + path1
     # update status, etc
     path1.set_move('s-')
-    if len(path1.path) == settings['maxlength']:
+    if len(path1.path) == settings['tis']['maxlength']:
         path1.status = 'FTX'
+        print('Rejecting path in [0^+], FTX')
     else:
         path1.status = 'ACC'
+        print('Accepting path in [0^+]')
     ensemble1.add_path_data(path1, path1.status, cycle=cycle)
 
     path0.set_move('s+')
-    if len(path0.path) == settings['maxlength']:
+    if len(path0.path) == settings['tis']['maxlength']:
         path0.status = 'BTX'
+        print('Rejecting path in [0^-], BTX')
     else:
         path0.status = 'ACC'
+        print('Accepting path in [0^-]')
     ensemble0.add_path_data(path0, path0.status, cycle=cycle)
+    return path0.status, path1.status
 
 
 def null_move(path_ensemble, cycle):
@@ -387,7 +424,7 @@ def null_move(path_ensemble, cycle):
     -------
     N/A but update the given `path_ensemble` with a new accepted path.
     """
-    print('Null move for {}'.format(path_ensemble.ensembles))
+    print('Null move for {}'.format(path_ensemble.ensemble))
     path = path_ensemble.last_path
     path.set_move('00')
-    path_ensemble.add_path(path, 'ACC', cycle=cycle)
+    path_ensemble.add_path_data(path, 'ACC', cycle=cycle)
