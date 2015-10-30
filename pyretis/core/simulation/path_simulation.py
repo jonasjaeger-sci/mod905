@@ -102,9 +102,9 @@ class SimulationTIS(Simulation):
         if self.tis_settings['initial_path'] == 'kick':
             path = generate_initial_path_kick(self.system,
                                               self.interfaces,
+                                              self.orderparameter,
                                               self.integrator,
                                               self.rgen,
-                                              self.orderparameter,
                                               self.tis_settings)
         else:
             raise ValueError('Unknown initialization method requested!')
