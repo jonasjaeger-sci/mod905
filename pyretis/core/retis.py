@@ -135,18 +135,16 @@ def retis_tis_moves(ensembles, rgen, system, order_function, integrator,
         except TypeError:  # idx == None may happen if something is very wrong
             msg = 'Error in relative shoot frequencies! Aborting!'
             raise ValueError(msg)
-        make_tis_step_ensemble(path_ensemble, rgen, system,
-                               order_function, integrator,
-                               settings['tis'], cycle)
+        make_tis_step_ensemble(path_ensemble, system, order_function,
+                               integrator, rgen, settings['tis'], cycle)
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)
     else:  # just do TIS for them all
         for path_ensemble in ensembles:
-            make_tis_step_ensemble(path_ensemble, rgen, system,
-                                   order_function, integrator,
-                                   settings['tis'], cycle)
+            make_tis_step_ensemble(path_ensemble, system, order_function,
+                                   integrator, rgen, settings['tis'], cycle)
 
 
 def retis_moves(ensembles, rgen, system, integrator, order_function,
@@ -333,11 +331,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlenb = settings['maxlength'] - 1
-    path0 = propagate(system, integrator,
-                      order_function,
-                      ensemble0.interfaces,
-                      maxlen=maxlenb,
-                      reverse=True)[0]
+    path0 = propagate(system, ensemble0.interfaces, order_function,
+                      integrator, maxlen=maxlenb, reverse=True)[0]
     # Reverse this path:
     path0 = reverse_path(path0)
     # and add second point from [0^+] at the end:
@@ -358,12 +353,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # settings['maxlength'] but since we already have one point
     # in the path, propagate will at most do ``settings[maxlength'] - 1``
     # steps.
-    propagate(system, integrator,
-              order_function,
-              ensemble1.interfaces,
-              maxlen=settings['maxlength'],
-              reverse=False,
-              path=path1)
+    propagate(system, ensemble1.interfaces, order_function, integrator,
+              maxlen=settings['maxlength'], reverse=False, path=path1)
     # update status, etc
     path1.set_move('s-')
     if len(path1.path) == settings['maxlength']:

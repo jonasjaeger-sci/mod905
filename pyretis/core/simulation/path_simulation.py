@@ -140,10 +140,10 @@ class SimulationTIS(Simulation):
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
             accept, trial, status = make_tis_step_ensemble(self.path_ensemble,
-                                                           self.rgen,
                                                            self.system,
                                                            self.orderparameter,
                                                            self.integrator,
+                                                           self.rgen,
                                                            self.tis_settings,
                                                            self.cycle['step'])
             results['accept'] = accept

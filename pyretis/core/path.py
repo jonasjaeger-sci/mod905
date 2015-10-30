@@ -740,6 +740,22 @@ class PathEnsemble(object):
         for path in self.paths:
             yield path
 
+    def get_start_condition(self):
+        """Return the appropriate start condition for an ensemble.
+
+        This is useful for RETIS simulations where we for one ensemble
+        need to start to the left.
+
+        Returns
+        -------
+        out : string
+            'R' for right or 'L' for left start condition.
+        """
+        if self.ensemble == '[0^-]':
+            return 'L'
+        else:
+            return 'R'
+
     def __str__(self):
         """Return a string with some info about this object."""
         msg = ['Path ensemble: {}'.format(self.ensemble)]
