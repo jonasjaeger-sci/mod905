@@ -79,7 +79,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
     return accept, trial, status
 
 
-def initiate_path_ensemble(path_ensemble, method, system, order_function,
+def initiate_path_ensemble(path_ensemble, system, order_function,
                            integrator, rgen, tis_settings, cycle=0):
     """This method will run the initiate for a given ensemble.
 
@@ -90,8 +90,6 @@ def initiate_path_ensemble(path_ensemble, method, system, order_function,
     ----------
     path_ensemble : object like `pyretis.core.path.PathEnsemble`
         The path ensemble to create an initial path for.
-    method : string
-        The method to use of initiating the path ensemble
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list.
@@ -105,7 +103,9 @@ def initiate_path_ensemble(path_ensemble, method, system, order_function,
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the setting
         for the starting condition (`'start_cond'`) according to the given
-        path ensemble. The other `tis_settings` are just passed on.
+        path ensemble. We are also using the keyword `initial_path` to
+        determine how the initial path should be initiated.
+        The other `tis_settings` are just passed on.
     cycle : integer, optional
         The cycle number we are initiating at, typically this will be 0 which
         is the default value.
@@ -113,9 +113,9 @@ def initiate_path_ensemble(path_ensemble, method, system, order_function,
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
     initial_path = None
     status = ''
-    if method not in ['kick']:
+    if tis_settings['initial_path'] not in ['kick']:
         raise ValueError('Unknown initiation method: {}'.format(method))
-    if method == 'kick':
+    if tis_settings['initial_path'] == 'kick':
         initial_path = generate_initial_path_kick(system,
                                                   path_ensemble.interfaces,
                                                   order_function,
