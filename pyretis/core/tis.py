@@ -562,6 +562,15 @@ def propagate(system, interfaces, order_function, integrator,
 
     During the propagation, the system will be modified. However, at the end,
     the positions, velocities and forces will be reset to the initial state.
+    We are here are generating a path and we assume that we are starting with
+    a empty path or we are appending to a existing path. Here, we will stop
+    the propagation if any of the following happens:
+
+    - We have exceeded the maximum length given in `maxlen`.
+
+    - The point we propagated to crossed the left interface
+
+    - The point we propagated to crossed the right interface
 
     Parameters
     ----------
@@ -615,11 +624,13 @@ def propagate(system, interfaces, order_function, integrator,
                 status = 'Could not add for unknown reason'
             success = False
             break
-        if path.ordermin[0] < left:
+        #if path.ordermin[0] < left:
+        if orderp[0] < left:
             status = 'Crossed left interface!'
             success = True
             break
-        elif path.ordermax[0] > right:
+        #elif path.ordermax[0] > right:
+        elif orderp[0] > right:
             status = 'Crossed right interface!'
             success = True
             break
