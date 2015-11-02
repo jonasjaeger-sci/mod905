@@ -232,11 +232,11 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
         idx = rgen.random_integers(0, len(ensembles) - 2)
         status = retis_swap(ensembles, idx, system, order_function, integrator,
                             settings, cycle)
-        output[idx] = ['swap', status]
-        output[idx+1] = ['swap', status]
         if settings['retis']['nullmoves']:
             for idxo, path_ensemble in enumerate(ensembles):
-                if idxo != idx and idxo != idx + 1:
+                if idxo == idx or idxo == idx + 1:
+                    output[idxo] = ['swap', status]
+                else:
                     null_move(path_ensemble, cycle)
                     output[idxo] = ['nullmove']
     return output
@@ -288,7 +288,7 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         ensemble2 = ensembles[idx + 1]
         path1 = ensemble1.last_path
         path2 = ensemble2.last_path
-        # Check if path1 crosses correctly for ensemble 2:
+        # Check if path1 can be accepted in ensemble 2:
         cross = path1.check_interfaces(ensemble2.interfaces)[-1]
         # Do the swap
         path1, path2 = path2, path1
@@ -362,16 +362,16 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
-    maxlenb = settings['tis']['maxlength'] - 1
+    maxlen = settings['tis']['maxlength']
     path0 = propagate(system, ensemble0.interfaces, order_function,
-                      integrator, maxlen=maxlenb, reverse=True)[0]
+                      integrator, maxlen=maxlen-1, reverse=True)[0]
     # Reverse this path:
     path0 = reverse_path(path0)
     # and add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.path[1])
     # 2) Generate path for [0^+] from [0^-]:
     # We begin by creating a path with just the SECOND LAST point from [0^-]
-    path1 = Path(maxlen=settings['tis']['maxlength'])
+    path1 = Path(maxlen=maxlen)
     path1.append(*ensemble0.last_path.path[-2])
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.path[-1][0:2]
@@ -380,37 +380,25 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # propagate forward, note that the maxlen is there set to
     # maxlength - 1 since we already have one point in the path
-    patht = propagate(system, ensemble1.interfaces, order_function,
-                      integrator, maxlen=settings['tis']['maxlength']-1,
-                      reverse=False)[0]
-    for phasepoint in patht:
-        path1.append(*phasepoint)
+    propagate(system, ensemble1.interfaces, order_function,
+              integrator, maxlen=maxlen-1, reverse=False, path=path1)
     # update status, etc
-    status = None
-    path1.set_move('s-')
-    if len(path1.path) == settings['tis']['maxlength']:
-        path1.status = 'FTX'
-        status = 'FTX'
-        print('Rejecting path in [0^+], FTX')
-    else:
-        path1.status = 'ACC'
-        print('Accepting path in [0^+]')
-
+    status = 'ACC'  # we are optimistic and hope that this is the default
     path0.set_move('s+')
-    if len(path0.path) == settings['tis']['maxlength']:
-        path0.status = 'BTX'
+    path1.set_move('s-')
+    path0.status = 'BTX' if len(path0.path) == maxlen else 'ACC'
+    path1.status = 'FTX' if len(path1.path) == maxlen else 'ACC'
+    if path0.status == 'BTX':
+        path1.status = 'BTX'
         status = 'BTX'
         print('Rejecting path in [0^-], BTX')
-    else:
-        path0.status = 'ACC'
-        print('Accepting path in [0^-]')
-    if status is None:  # both were accepted
-        ensemble0.add_path_data(path0, path0.status, cycle=cycle)
-        ensemble1.add_path_data(path1, path1.status, cycle=cycle)
-    else:  # use the same status BTX or FTX for both and do not accept
-        ensemble0.add_path_data(path0, status, cycle=cycle)
-        ensemble1.add_path_data(path1, status, cycle=cycle)
-    return path0.status, path1.status
+    if path1.status == 'FTX':
+        path0.status = 'FTX'
+        status = 'FTX'
+        print('Rejecting path in [0^+], FTX')
+    ensemble0.add_path_data(path0, status, cycle=cycle)
+    ensemble1.add_path_data(path1, status, cycle=cycle)
+    return status
 
 
 def null_move(path_ensemble, cycle):

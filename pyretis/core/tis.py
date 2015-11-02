@@ -624,22 +624,18 @@ def propagate(system, interfaces, order_function, integrator,
                 status = 'Could not add for unknown reason'
             success = False
             break
-        #if path.ordermin[0] < left:
         if orderp[0] < left:
             status = 'Crossed left interface!'
             success = True
             break
-        #elif path.ordermax[0] > right:
         elif orderp[0] > right:
             status = 'Crossed right interface!'
             success = True
             break
         if reverse:
             system.particles.vel = -1.0 * system.particles.vel
-            # np.negative()
             integrator(system)
             system.particles.vel = -1.0 * system.particles.vel
-            # np.negative()
         else:
             integrator(system)
     # reset the system to initial state
