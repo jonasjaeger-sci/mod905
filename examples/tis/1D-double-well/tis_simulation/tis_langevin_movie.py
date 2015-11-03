@@ -110,7 +110,7 @@ last_paths = collections.deque()
 last_start_points = collections.deque()
 last_end_points = collections.deque()
 for _ in range(N):
-    linepath, = ax.plot(None, None, lw=3.5, ls='-', color='blue',
+    linepath, = ax.plot([], [], lw=3.5, ls='-', color='blue',
                         alpha=0.0)
     scatter_start = ax.scatter([], [], alpha=0.5, color='blue',
                                marker='o', s=100, label='Path start')
@@ -137,16 +137,17 @@ MYORDER = ['ACC', 'NCR', 'BWI', 'FTL', 'BTL', 'MCR',
 for key in status_color:
     assert key in MYORDER, 'Missing {} in MYORDER'.format(key)
 # make legend:
-patch_leg = []
+patches = []
+labels = []
 for key in MYORDER:
-    leg = mpatches.Patch(color=status_color[key], label=key)
-    patch_leg.append(leg)
-legend1 = plt.legend(handles=patch_leg, ncol=3,
-                     bbox_to_anchor=(1.0, 1.1))
+    leg = mpatches.Patch(color=status_color[key])
+    patches.append(leg)
+    labels.append(key)
+legend1 = plt.legend(patches, labels, ncol=3, bbox_to_anchor=(1.0, 1.1))
 ax.add_artist(legend1)
-legend2 = plt.legend(handles=[scatter_start, scatter_end],
+legend2 = plt.legend((scatter_start, scatter_end), ('Start', 'End'),
                      scatterpoints=1, ncol=2, frameon=False,
-                     framealpha=0.0, columnspacing=1,
+                     columnspacing=1,
                      handletextpad=0, prop={'size': 12},
                      bbox_to_anchor=(0.275, 1.1))
 
@@ -162,7 +163,7 @@ def init():
     """
     patches = []
     for line in last_paths:
-        line.set_data(None, None)
+        line.set_data([], [])
         patches.append(line)
     for point in last_start_points:
         point.set_offsets([])

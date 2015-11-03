@@ -111,7 +111,7 @@ plt.quiverkey(vel_arrow, 9, -3.5, 9, 'Velocities', coordinates='data',
               color=_COLOR_SCHEME['colorblind_10'][1],
               fontproperties={'size': 'large'})
 # also add a line representing the bond
-linebond, = ax.plot(None, None, lw=3, ls='-', color=PCOLOR['B'], alpha=0.8)
+linebond, = ax.plot([], [], lw=3, ls='-', color=PCOLOR['B'], alpha=0.8)
 # draw lines representing the box boundaries:
 ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
 ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
@@ -124,11 +124,11 @@ ax2.set_ylim(-0.55, 0.55)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.90, '', transform=ax2.transAxes)
-linepot, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
+linepot, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
                     alpha=0.8, label='Potential')
-linekin, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
+linekin, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
                     alpha=0.8, label='Kinetic')
-linetot, = ax2.plot(None, None, lw=4, ls='-', color=_COLORS['almost_black'],
+linetot, = ax2.plot([], [], lw=4, ls='-', color=_COLORS['almost_black'],
                     alpha=0.8, label='Total')
 ax2.legend(loc='lower left', ncol=3, frameon=False,
            columnspacing=1, labelspacing=1)
@@ -181,7 +181,7 @@ def init():
     for ci in circles:
         ci.set_visible(False)
         patches.append(ci)
-    linebond.set_data(None, None)
+    linebond.set_data([], [])
     patches.append(linebond)
     force_arrow.set_visible(False)
     patches.append(force_arrow)

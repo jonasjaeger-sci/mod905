@@ -130,11 +130,11 @@ ax2.set_ylim(-0.6, 0.6)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
-linepot, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
+linepot, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
                     alpha=0.8, label='Potential')
-linekin, = ax2.plot(None, None, lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
+linekin, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
                     alpha=0.8, label='Kinetic')
-linetot, = ax2.plot(None, None, lw=4, ls='-', color=_COLORS['almost_black'],
+linetot, = ax2.plot([], [], lw=4, ls='-', color=_COLORS['almost_black'],
                     alpha=0.8, label='Total')
 ax2.legend(loc='lower left', ncol=2, frameon=False)
 plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.15)
