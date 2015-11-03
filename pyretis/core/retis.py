@@ -76,6 +76,40 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
                                rgen, settings, cycle)
 
 
+def _relative_shoots_select(ensembles, rgen, relative):
+    """Method to randomly select the ensemble for 'relative' shooting moves.
+
+    Here we select the ensemble to do the shooting in based on relative
+    probabilities. We draw a random number in [0, 1] which is used to select
+    the ensemble
+
+    Parameters
+    ----------
+    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+        This is a list of the ensembles we are using in the RETIS method
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        This is a random generator. Here we assume that we can call
+        `rgen.rand()` to draw random uniform numbers.
+    relative : list of floats
+        These are the relative probabilities for the ensembles. We assume
+        here that these numbers are normalized.
+    """
+    freq = rgen.rand()
+    cumulative = 0.0
+    idx = None
+    for idx, path_freq in enumerate(relative):
+        cumulative += path_freq
+        if freq < cumulative:
+            break
+    # just a sanity check, we should crash if idx is None
+    try:
+        path_ensemble = ensembles[idx]
+    except TypeError:
+        msg = 'Error in relative shoot frequencies! Aborting!'
+        raise ValueError(msg)
+    return idx, path_ensemble
+
+
 def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
                     settings, cycle):
     """Method to execute TIS steps in the RETIS method.
@@ -128,25 +162,15 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
     relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
         output = [None for path_ensemble in ensembles]
-        # will to relative shootings
-        freq = rgen.rand()
-        cumulative = 0.0
-        idx = None
-        for idx, path_freq in enumerate(relative):
-            cumulative += path_freq
-            if freq < cumulative:
-                break
-        # do TIS for the given ensemble
-        try:
-            path_ensemble = ensembles[idx]
-        except TypeError:  # idx == None may happen if something is very wrong
-            msg = 'Error in relative shoot frequencies! Aborting!'
-            raise ValueError(msg)
+        idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
+                                                     relative)
+        # just to TIS for the ensemble we picked:
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
                                                        order_function,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
         output[idx] = ['tis', accept, trial, status]
+        # and do null moves for the others if requested:
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
