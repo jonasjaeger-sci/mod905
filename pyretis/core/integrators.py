@@ -105,9 +105,11 @@ class Integrator(object):
 
         Returns
         -------
-        N/A, but will update the particles
+        out : None
+            Does not return anything, in derived classes it will typically
+            update the given `System`.
         """
-        return None
+        raise NotImplementedError
 
     def invert_dt(self):
         """
@@ -134,7 +136,8 @@ class Integrator(object):
 
         Returns
         -------
-        N/A, but will update the particles.
+        out : None
+            Does not return anything, but will update the particles.
         """
         return self.integration_step(system)
 
@@ -195,6 +198,12 @@ class Verlet(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
         """
         particles = system.particles
         acc = particles.force * particles.imass
@@ -245,6 +254,12 @@ class VelocityVerlet(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
         """
         particles = system.particles
         imass = particles.imass
@@ -375,6 +390,11 @@ class Langevin(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but updates `self.param`.
         """
         beta = system.temperature['beta']
         imasses = system.particles.imass
@@ -423,6 +443,12 @@ class Langevin(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
         """
         if self.init_params:
             self._init_parameters(system)
@@ -441,6 +467,12 @@ class Langevin(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
         """
         system.force()  # update forces
         particles = system.particles
@@ -460,6 +492,12 @@ class Langevin(Integrator):
         system : object like `System` from `pyretis.core.system`
             The system to integrate/act on. Assumed to have a particle list
             in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
         """
         particles = system.particles
         ndim = system.get_dim()

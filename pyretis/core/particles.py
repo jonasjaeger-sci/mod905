@@ -135,7 +135,9 @@ class Particles(object):
 
         Returns
         -------
-        N/A but updates `self.pos`, `self.vel` and `self.force` (if given).
+        out : None
+            Returns `None` and updates `self.pos`, `self.vel`
+            and `self.force` (if given).
         """
         self.pos = np.copy(phasepoint['pos'])
         self.vel = np.copy(phasepoint['vel'])
@@ -167,7 +169,9 @@ class Particles(object):
 
         Returns
         -------
-        N/A, but increments `self.npart` and updates `self.particles`.
+        out : None
+            Returns `None`, increments `self.npart` and updates
+            `self.particles`.
         """
         if self.npart == 0:
             self.name = [name]

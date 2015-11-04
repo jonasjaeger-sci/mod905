@@ -59,10 +59,6 @@ class System(object):
         units : string
             The system of units to use in the simulation box.
 
-        Returns
-        -------
-        N/A, but sets derived variables:
-
         Note
         ----
         `self.temperature` is defined as a dictionary. This is just
@@ -196,7 +192,8 @@ class System(object):
 
         Returns
         -------
-        N/A, updates `self.particles`
+        out : None
+            Does not return anything, but updates `system.particles`.
         """
         dim = self.get_dim()
         if vel is None:
@@ -391,7 +388,8 @@ class System(object):
 
         Returns
         -------
-        N/A but updates `system.particles.vel`
+        out : None
+            Does not return anything, but updates `system.particles.vel`.
         """
         if rgen is None:
             rgen = RandomGenerator(seed=seed)

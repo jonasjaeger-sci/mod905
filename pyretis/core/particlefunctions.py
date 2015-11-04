@@ -230,7 +230,9 @@ def reset_momentum(particles, selection=None, dim=None):
 
     Returns
     -------
-    N/A, but modifies the velocities of the selected particles.
+    out : None
+        Returns `None` and modifies velocities of the selected particles.
+
     """
     if selection is None:
         vel, mass = particles.vel, particles.mass

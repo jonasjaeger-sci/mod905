@@ -173,7 +173,8 @@ class RandomGenerator(object):
 
         Returns
         -------
-        N/A, but modifies the velocities of the selected particles
+        out : None
+            Returns `None` but modifies velocities of the selected particles.
         """
         if selection is None:
             vel, imass = particles.vel, particles.imass

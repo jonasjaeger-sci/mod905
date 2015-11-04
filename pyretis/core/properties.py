@@ -17,7 +17,7 @@ class Property(object):
     ----------
     desc : string
         Description of the property.
-    n : integer
+    nval : integer
         Number values stored.
     mean : float
         The current mean.
@@ -51,13 +51,9 @@ class Property(object):
         ----------
         desc : string, optional
             Text description of the object
-
-        Returns
-        -------
-        N/A
         """
         self.desc = desc
-        self.n = 0
+        self.nval = 0
         self.mean = 0.0
         self.delta2 = 0.0
         self.variance = 0.0
@@ -74,9 +70,10 @@ class Property(object):
 
         Returns
         -------
-        None, but updates the mean and variance
+        out : None
+            Returns `None` but updates the mean and variance.
         """
-        self.n += 1
+        self.nval += 1
         self.val.append(val)
         self.update_mean_and_variance()
 
@@ -89,7 +86,8 @@ class Property(object):
 
         Returns
         -------
-        N/A, however, the mean and variance is updated.
+        out : None
+            Returns `None` but updates the mean and variance.
 
         Note
         ----
@@ -98,12 +96,12 @@ class Property(object):
         """
         val = self.val[-1]  # most recent value
         delta = val - self.mean
-        self.mean += delta/float(self.n)
+        self.mean += delta/float(self.nval)
         self.delta2 += delta * (val - self.mean)
-        if self.n < 2:
+        if self.nval < 2:
             self.variance = float('inf')
         else:
-            self.variance = self.delta2/float(self.n - 1)
+            self.variance = self.delta2/float(self.nval - 1)
 
     def dump_to_file(self, filename):
         """
@@ -123,5 +121,5 @@ class Property(object):
         np.savetxt(filename, self.val)
 
     def __str__(self):
-        """Simply return the string description of the property."""
+        """Return string description of the property."""
         return self.desc

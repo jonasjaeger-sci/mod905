@@ -472,7 +472,8 @@ class StringFunctionParser(object):
 
         Returns
         -------
-        N/A but updates `self.exprstack`.
+        out : None
+            Returns `None`, but updates `self.exprstack`.
 
         Note
         ----
@@ -493,11 +494,12 @@ class StringFunctionParser(object):
         Parameters
         ----------
         toks: list of strings
-            Tokens, toks[0] is to be added.
+            The tokens, `toks[0]` is to be added.
 
         Returns
         -------
-        N/A but updates `self.exprstack`.
+        out : None
+            Returns `None`, but updates `self.exprstack`.
 
         Note
         ----
