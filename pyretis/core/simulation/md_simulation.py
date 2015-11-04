@@ -150,13 +150,6 @@ class SimulationNVE(Simulation):
         endcycle : int, optional.
             This number represents the cycle number where the simulation
             should end.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        N/A
         """
         super(SimulationNVE, self).__init__(endcycle=endcycle,
                                             startcycle=startcycle)

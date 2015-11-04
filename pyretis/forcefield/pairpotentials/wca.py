@@ -61,10 +61,6 @@ class DoubleWellWCA(PotentialFunction):
             Setting for the dimensionality of the potential
         desc : string, optional.
             Description of the force field.
-
-        Returns
-        -------
-        N/A
         """
         super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
         self.params = {'types': None, 'rzero': None, 'width': None,

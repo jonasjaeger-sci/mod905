@@ -82,8 +82,7 @@ class ForceField(object):
     """
 
     def __init__(self, desc='No description', potential=None, params=None):
-        """
-        Initiate the force field object.
+        """Initiate the force field object.
 
         Parameters
         ----------
@@ -94,9 +93,6 @@ class ForceField(object):
         params : list, optional
             Parameters for the potential(s).
 
-        Returns
-        -------
-        N/A
         """
         self.desc = desc
         self.potential = []
@@ -123,7 +119,8 @@ class ForceField(object):
 
         Returns
         -------
-        N/A but it will update self.potential and self.params
+        out : None
+            Returns `None` and updates `self.potential` and `self.params`.
         """
         try:
             arg_force = inspect.getargspec(potential.force)
@@ -156,7 +153,8 @@ class ForceField(object):
 
         Returns
         -------
-        N/A but it will update `self.potential` and `self.params`.
+        out : None
+            Returns `None` and updatex `self.potential` and `self.params`.
         """
         if potential in self.potential:
             idx = self.potential.index(potential)
@@ -183,8 +181,9 @@ class ForceField(object):
 
         Returns
         -------
-        N/A, but will update parameters of the selected potential
-        and modified the corresponding `self.params`.
+        out : None
+            Returns `None` but will update parameters of the selected potential
+            and modify the corresponding `self.params`.
         """
         if potential in self.potential:
             potential.update_parameters(params)
@@ -303,13 +302,14 @@ class ForceField(object):
         """
         A string representation of the force field.
 
-        It returns the string descriptions of the potential functions.
+        The string representation is built using the string descriptions of
+        the potential functions.
 
         Returns
         -------
         out : string
-        Description of force field and the potential functions included
-        in the force field.
+            Description of force field and the potential functions included
+            in the force field.
         """
         pots = []
         for i, pot in enumerate(self.potential):

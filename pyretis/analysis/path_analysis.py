@@ -300,7 +300,8 @@ def _update_shoot_stats(shoot_stats, path):
 
     Returns
     -------
-    N/A but it will update `shoot_stats` for shooting moves.
+    out : None
+        Returns `None` but will update `shoot_stats` for shooting moves.
     """
     move = path['generated'][0]
     if move == 'sh':

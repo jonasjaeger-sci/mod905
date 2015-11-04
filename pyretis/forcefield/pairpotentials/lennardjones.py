@@ -473,7 +473,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Returns
         -------
-        N/A, but sets `self.matrix_np`.
+        out : None
+            Returns `None` but updates `self.matrix_np` if required.
         """
         npart = particles.npart
         update = False

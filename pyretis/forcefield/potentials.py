@@ -115,7 +115,8 @@ class DoubleWell(PotentialFunction):
 
         Returns
         -------
-        N/A but updates self.params
+        out : None
+            Returns `None` and updates `self.params`.
         """
         self.params = {'a': {'value': self.a,
                              'desc': 'Parameter for double well'},
@@ -158,10 +159,6 @@ class RectangularWell(PotentialFunction):
             Description of the force field.
         params : dict
             The parameters for this potential (left, right, largenumber).
-
-        Returns
-        -------
-        N/A
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
         # largenumber = float('inf') # possible to use this, NOTE FOR LATER
@@ -171,20 +168,19 @@ class RectangularWell(PotentialFunction):
         self.parameters_to_dict()
 
     def check_parameters(self):
-        """
-        Check the consistency of the parameters.
+        """Check the consistency of the parameters.
 
         Returns
         -------
-        N/A, but might raise a warning.
+        out : None
+            Returns `None` but might raise a warning.
         """
         if self.left >= self.right:
             msg = 'Setting left >= right in RectangularWell potential!'
             warnings.warn(msg)
 
     def potential(self, pos):
-        """
-        Evaluate the potential.
+        """Evaluate the potential.
 
         Parameters
         ----------
@@ -201,12 +197,12 @@ class RectangularWell(PotentialFunction):
         return v_pot.sum()
 
     def parameters_to_dict(self):
-        """
-        Generate a dictionary with the parameters of the potential.
+        """Generate a dictionary with the parameters of the potential.
 
         Returns
         -------
-        N/A but updates self.params
+        out : None
+            Returns `None` but updates `self.params`.
         """
         self.params = {'left': {'value': self.left,
                                 'desc': 'Left boundary'},

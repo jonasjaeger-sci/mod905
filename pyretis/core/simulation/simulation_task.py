@@ -176,7 +176,8 @@ class SimulationTask(object):
 
         Returns
         -------
-        out : the result of running self.function
+        out : unknown type
+            The result of running `self.function`.
         """
         args = self.args
         kwargs = self.kwargs
@@ -208,7 +209,8 @@ class SimulationTask(object):
 
         Returns
         -------
-        N/A but modifies self.when.
+        out : None
+            Returns `None` but modifies `self.when`.
         """
         if self.when is None:
             self.when = when
@@ -236,7 +238,8 @@ class SimulationTask(object):
 
         Returns
         -------
-        out : the result of self.execute(step)
+        out : unknown type
+            The result of `self.execute(step)`.
         """
         return self.execute(step)
 
@@ -321,7 +324,8 @@ class OutputTask(object):
 
         Returns
         -------
-        N/A
+        out : None
+            Returns `None` but will call the appropriate output tasks.
         """
         if _execute_now(step, self.when):
             if self.target == 'screen':

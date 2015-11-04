@@ -118,7 +118,8 @@ def _mpl_read_style_file(filename):
 
     Returns
     -------
-    N/A but it modifies matplotlib.rcParams.
+    out : None
+        Returns `None` but modifies `matplotlib.rcParams`.
     """
     with open(filename, 'r') as fileh:
         for lines in fileh:

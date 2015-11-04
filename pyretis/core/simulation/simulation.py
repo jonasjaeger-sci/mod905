@@ -54,8 +54,7 @@ class Simulation(object):
     """
 
     def __init__(self, endcycle=0, startcycle=0):
-        """
-        Initialization of the simulation.
+        """Initialization of the simulation.
 
         Parameters
         ----------
@@ -67,10 +66,6 @@ class Simulation(object):
             should end. It some simulations (e.g. MD) this would be the number
             of steps to perform, in other simulations this could be the
             minimum or maximum number of cycles to perform
-
-        Returns
-        -------
-        N/A, but initiates self.tasks and set self.cycle.
         """
         self.cycle = {'step': startcycle, 'end': endcycle,
                       'start': startcycle, 'stepno': 0}
@@ -90,7 +85,8 @@ class Simulation(object):
 
         Returns
         -------
-        N/A, modifies self.cycle
+        out : None
+            Returns `None` but modifies `self.cycle`.
         """
         self.cycle['start'] = self.cycle['end']
         self.cycle['end'] += steps
@@ -215,7 +211,8 @@ class Simulation(object):
 
         Returns
         -------
-        N/A
+        out : None
+            Returns `None` but it will execute the output tasks.
         """
         for task in self.output_task:
             result = None

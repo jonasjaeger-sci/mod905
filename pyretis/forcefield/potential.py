@@ -35,10 +35,6 @@ class PotentialFunction(object):
             Represents the dimensionality.
         desc : string, optional.
             Description of the force field.
-
-        Returns
-        -------
-        N/A
         """
         self.dim = dim
         self.desc = desc
@@ -120,7 +116,8 @@ class PotentialFunction(object):
 
         Returns
         -------
-        N/A, but it modifies `self.params`.
+        out : None
+            Returns `None` and modifies `self.params`.
         """
         self.params = {}
 

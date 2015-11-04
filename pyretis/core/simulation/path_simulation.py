@@ -127,10 +127,6 @@ class SimulationTIS(Simulation):
             in time.
         settings : dict
             This dict contains the settings for the TIS simulation.
-
-        Returns
-        -------
-        N/A
         """
         super(SimulationTIS, self).__init__(endcycle=endcycle,
                                             startcycle=startcycle)
