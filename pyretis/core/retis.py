@@ -3,12 +3,23 @@
 
 This module defines methods that are needed to perform Replica Exchange
 Transition Interface Sampling (RETIS). The algorithms implemented here and
-the description of RETIS can be found in van Erp [RETIS]_.
+the description of RETIS was first described by van Erp [RETIS]_.
 
-Important classes and functions
--------------------------------
+Important methods
+-----------------
 
-- make_retis_step : A function to determine and execute the RETIS move.
+- make_retis_step : Method to select and execute the RETIS move.
+
+- retis_tis_moves : Method to execute the TIS steps in the RETIS algorithm.
+
+- retis_moves : Method to perform RETIS swapping moves - it selects what
+  scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
+  ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
+
+- retis_swap : The method that actually swaps two path ensembles.
+
+- retis_swap_zero : The method that performs the swapping for the
+  ``[0^-] <-> [0^+]`` swap.
 
 References
 ----------
@@ -64,6 +75,9 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
 
     Returns
     -------
+    out : list of lists
+        `out[i]` contains the result after performing the move for path
+        ensemble no. `i`.
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
@@ -93,6 +107,13 @@ def _relative_shoots_select(ensembles, rgen, relative):
     relative : list of floats
         These are the relative probabilities for the ensembles. We assume
         here that these numbers are normalized.
+
+    Returns
+    -------
+    out[0] : integer
+        The index of the path ensemble to shoot in.
+    out[1] : object like `PathEnsemble` from `pyretis.core.path`.
+        The selected path ensemble for shooting.
     """
     freq = rgen.rand()
     cumulative = 0.0
@@ -226,6 +247,12 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
         This dict contains the settings for the RETIS method.
     cycle : integer
         The current cycle number
+
+    Returns
+    -------
+    out : list of lists
+        `out[i]` contains the results of the swapping/nullmove for path
+        ensemble no. `i`.
     """
     output = [None for path_ensemble in ensembles]
     if settings['retis']['swapsimul']:
@@ -300,6 +327,11 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         This dict contains the settings for the RETIS method.
     cycle : integer
         Current cycle number
+
+    Returns
+    -------
+    out : string
+        The result of the swapping move.
     """
     print('Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
                                           ensembles[idx+1].ensemble))
@@ -376,6 +408,11 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
         This dict contains the settings for the RETIS method.
     cycle : integer
         The current cycle number
+
+    Returns
+    -------
+    out : string
+        The result of the swapping move.
     """
     ensemble0 = ensembles[0]
     ensemble1 = ensembles[1]
@@ -439,9 +476,12 @@ def null_move(path_ensemble, cycle):
 
     Returns
     -------
-    N/A but update the given `path_ensemble` with a new accepted path.
+    out : string
+        The status, which here will be 'ACC' since we just accept the last
+        accepted path.
     """
     print('Null move for {}'.format(path_ensemble.ensemble))
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)
+    return 'ACC'
