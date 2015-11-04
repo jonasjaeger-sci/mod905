@@ -15,7 +15,7 @@ Important classes and functions
 from __future__ import absolute_import
 import numpy as np
 from pyretis.core.montecarlo import max_displace_step
-from pyretis.core.simulation import Simulation
+from pyretis.core.simulation.simulation import Simulation
 
 
 __all__ = ['UmbrellaWindowSimulation']

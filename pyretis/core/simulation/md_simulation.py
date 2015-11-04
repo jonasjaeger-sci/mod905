@@ -15,13 +15,102 @@ Important classes and functions
 
 """
 from __future__ import absolute_import
-from pyretis.core.simulation import Simulation
+from pyretis.core.simulation.simulation import Simulation
+from pyretis.core.simulation.common import check_settings
+from pyretis.core.integrators import create_integrator
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
 import warnings
 
 
 __all__ = ['SimulationNVE', 'SimulationMDFlux']
+
+
+_KNOWN_SIM = {'nve': {'required': [], 'output': []},
+              'mdflux': {'required': [], 'output': []}}
+
+_KNOWN_SIM['nve']['required'] = ['endcycle', 'integrator']
+_KNOWN_SIM['mdflux']['required'] = ['endcycle', 'integrator', 'interfaces',
+                                    'orderparameter']
+_KNOWN_SIM['nve']['output'] = [{'type': 'thermo', 'target': 'file',
+                                'when': {'every': 10},
+                                'filename': 'energy.dat'},
+                               {'type': 'traj', 'target': 'file',
+                                'when': {'every': 10},
+                                'filename': 'traj.gro', 'format': 'gro',
+                                'header': 'NVE simulation. Step: {}'},
+                               {'type': 'thermo', 'target': 'screen',
+                                'when': {'every': 10}}]
+_KNOWN_SIM['mdflux']['output'] = [{'type': 'orderp', 'target': 'file',
+                                   'when': {'every': 10},
+                                   'filename': 'order.dat'},
+                                  {'type': 'thermo', 'target': 'file',
+                                   'when': {'every': 100},
+                                   'filename': 'energy.dat'},
+                                  {'type': 'cross', 'target': 'file',
+                                   'when': {'every': 1},
+                                   'filename': 'cross.dat'},
+                                  {'type': 'traj', 'target': 'file',
+                                   'format': 'gro', 'when': {'every': 10},
+                                   'filename': 'traj.gro',
+                                   'header': 'MDFLUX simulation. Step: {}'},
+                                  {'type': 'thermo', 'target': 'screen',
+                                   'when': {'every': 10}}]
+
+
+def create_md_simulation(settings, system, sim_type):
+    """Create a MD simulation from the given settings.
+
+    This is a helper function that will do some checks and set up one of the
+    MD simulations defined in this module based on the given settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    system : object like `System` from `pyretis.core.system`
+        This is the system for which the simulation will run.
+    sim_type : string
+        This defines the simulation type we are to set up. Note that
+        simulation type is also given in `settings['type']`. It is also
+        given here since we typically call this function after checking the
+        type.
+
+    Returns
+    -------
+    out[0] : object like `Simulation` from `pyretis.core.simulation`.
+        This object will correspond to the selected simulation type.
+    out[1] : list of dicts
+        The default outputs for the given simulation.
+
+    Note
+    ----
+    We are duplicating code here - the checking of required settings is
+    identical to the checking in other simulation creaters, for instance
+    the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
+    This is just in case someone wants to add some magic that amends missing
+    settings.
+    """
+    simulation = None
+    required = check_settings(settings, _KNOWN_SIM[sim_type]['required'])[0]
+    if not required:
+        raise ValueError('Please update settings!')
+    if sim_type == 'nve':
+        intg = create_integrator(settings.get('integrator'), sim_type)
+        simulation = SimulationNVE(system, intg,
+                                   endcycle=settings['endcycle'],
+                                   startcycle=settings.get('startcycle', 0))
+    elif sim_type == 'mdflux':
+        intg = create_integrator(settings.get('integrator'), sim_type)
+        simulation = SimulationMDFlux(system, intg,
+                                      settings['interfaces'],
+                                      settings['orderparameter'],
+                                      endcycle=settings['endcycle'],
+                                      startcycle=settings.get('startcycle', 0))
+    else:
+        msg = 'Unknown MD simulation: {}'.format(sim_type)
+        raise ValueError(msg)
+    return simulation, _KNOWN_SIM[sim_type]['output']
 
 
 class SimulationNVE(Simulation):

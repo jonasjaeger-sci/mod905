@@ -10,14 +10,76 @@ Important classes and functions
 """
 from __future__ import absolute_import
 import numpy as np
-from pyretis.core.simulation import Simulation
+from pyretis.core.simulation.simulation import Simulation
+from pyretis.core.simulation.common import check_settings
 from pyretis.core.path import PathEnsemble
+from pyretis.core.integrators import create_integrator
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.tis import (generate_initial_path_kick,
                               make_tis_step_ensemble)
 
 
 __all__ = ['SimulationTIS']
+
+# define settings for known simulations:
+_KNOWN_SIM = {'tis': {'required': [], 'output': []}}
+
+_KNOWN_SIM['tis']['required'] = ['endcycle', 'tis', 'integrator',
+                                 'interfaces']
+_KNOWN_SIM['tis']['output'] = [{'type': 'pathensemble', 'target': 'file',
+                                'when': {'every': 10},
+                                'filename': 'pathensemble.dat'},
+                               {'type': 'trialpath', 'target': 'file',
+                                'when': {'every': 10},
+                                'filename': 'paths.dat'}]
+
+
+def create_path_simulation(settings, system, sim_type):
+    """Create a path simulation from the given settings.
+
+    This is a helper function that will do some checks and set up one of the
+    path simulations defined in this module based on the given settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    system : object like `System` from `pyretis.core.system`
+        This is the system for which the simulation will run.
+    sim_type : string
+        This defines the simulation type we are to set up. Note that
+        simulation type is also given in `settings['type']`. It is also
+        given here since we typically call this function after checking the
+        type.
+
+    Returns
+    -------
+    out[0] : object like `Simulation` from `pyretis.core.simulation`.
+        This object will correspond to the selected simulation type.
+    out[1] : list of dicts
+        The default outputs for the given simulation.
+
+    Note
+    ----
+    We are duplicating code here - the checking of required settings is
+    identical to the checking in other simulation creaters, for instance
+    the `create_md_simulation` in `pyretis.core.simulation.md_simulation`.
+    This is just in case someone wants to add some magic that amends missing
+    settings.
+    """
+    simulation = None
+    required = check_settings(settings, _KNOWN_SIM[sim_type]['required'])[0]
+    if not required:
+        raise ValueError('Please update settings!')
+    if sim_type == 'tis':
+        intg = create_integrator(settings['integrator'], sim_type)
+        simulation = SimulationTIS(system, intg, settings,
+                                   endcycle=settings['endcycle'],
+                                   startcycle=settings.get('startcycle', 0))
+    else:
+        msg = 'Unknown path simulation: {}'.format(sim_type)
+        raise ValueError(msg)
+    return simulation, _KNOWN_SIM[sim_type]['output']
 
 
 class SimulationTIS(Simulation):

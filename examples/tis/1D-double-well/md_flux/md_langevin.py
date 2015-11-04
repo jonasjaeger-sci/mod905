@@ -17,7 +17,7 @@ from pyretis.inout import generate_report_md
 
 
 print('MD flux simulation!')
-simulation_settings = {'type': 'MD-flux',
+simulation_settings = {'type': 'MDFlux',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 10,
                                       'high-friction': False},
