@@ -34,9 +34,48 @@ from pyretis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                   _FLUXFILES, _ORDERFILES, _PATHFILES)
 
 
-__all__ = ['TxtTable', 'FileWriter', 'txt_save_columns',
-           'txt_energy_output', 'txt_flux_output', 'txt_orderp_output',
-           'txt_path_output']
+__all__ = ['get_predefined_table', 'TxtTable', 'FileWriter',
+           'txt_save_columns', 'txt_energy_output', 'txt_flux_output',
+           'txt_orderp_output', 'txt_path_output']
+
+# define some table which may be usefull. These tables
+# can be selected using the get_predefined_tables method defined below
+_DEFINED_TABLES = {'energies': {'title': 'Energy output',
+                                'var': ['stepno', 'temp', 'vpot',
+                                        'ekin', 'etot', 'press'],
+                                'headers': ['Step', 'Temp', 'Pot',
+                                            'Kin', 'Tot', 'Press'],
+                                'width': (10, 12), 'spacing': 2,
+                                'row_fmt': ['{:> 10d}'] + 5 * ['{:> 12.6g}']}}
+
+
+def get_predefined_table(table):
+    """
+    This method will just set up and return some predefined tables which
+    are used often. It simply initiate TxtTable with some predefined
+    settings.
+
+    Parameters
+    ----------
+    table : string
+        This should match one of the defined tables in _DEFINED_TABLES
+
+    Returns
+    -------
+    out : object of type `TxtTable` from `pyretis.inout.txtinout`
+        This is the text table that can be used for output.
+    """
+    settings = _DEFINED_TABLES.get(table.lower(), None)
+    if settings is None:
+        return None
+    else:
+        tab = TxtTable(settings['var'], width=settings['width'],
+                       headers=settings['headers'],
+                       spacing=settings['spacing'])
+        if 'row_fmt' in settings:  # override the row-format:
+            tab.row_fmt = (' ') * settings['spacing']
+            tab.row_fmt = tab.row_fmt.join(settings['row_fmt'])
+        return tab
 
 
 def txt_save_columns(outputfile, header, variables):

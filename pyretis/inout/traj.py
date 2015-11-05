@@ -22,6 +22,36 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 __all__ = ['WriteXYZ', 'WriteGromacs']
 
 
+def create_traj_writer(filename, filefmt, oldfile, system):
+    """
+    This is a method which will set up a trajectory writer object from
+    the settings in a given dictionary.
+
+    Parameters
+    ----------
+    filename : string
+        Name of file to create
+    filefmt : string
+        Format of file, 'xyz' for xyz, 'gro' for gromacs.
+    oldfile : string
+        How to deal with backups of old files with the same name.
+    system : object like `System` from `pyretis.core.system`
+        This object is included since information about the units (and
+        possibly the box) is needed.
+    """
+    if filefmt == 'xyz':
+        trajwriter = WriteXYZ(filename,
+                              system,
+                              oldfile=oldfile)
+    elif filefmt == 'gro':
+        trajwriter = WriteGromacs(filename,
+                                  system,
+                                  oldfile=oldfile)
+    else:
+        trajwriter = None
+    return trajwriter
+
+
 def _adjust_coordinate(coord):
     """
     Method to adjust the dimensionality of coordinates.
