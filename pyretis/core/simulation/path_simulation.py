@@ -144,10 +144,16 @@ class SimulationTIS(Simulation):
             self.tis_settings['sigma_v'] = (self.tis_settings['sigma_v'] *
                                             np.sqrt(system.particles.imass))
             self.tis_settings['aimless'] = False
-        # create a random generator for TIS moved etc.:
+        # create a random generator for TIS moves etc.:
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
-        self.path_ensemble = PathEnsemble(settings.get('ensemble', '[0^+]'),
-                                          self.interfaces)
+        try:
+            self.path_ensemble = settings['path-ensemble']
+        except KeyError:
+            # just create an empty path ensemble:
+            ensemble = settings.get('ensemble', '[0^+]')
+            detect = settings.get('detect', None)
+            self.path_ensemble = PathEnsemble(ensemble, self.interfaces,
+                                              detect=detect)
 
     def _initialize_path(self):
         """

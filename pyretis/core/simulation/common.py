@@ -151,7 +151,7 @@ def _task_dict_eq(task1, task2):
       of the same 'type'.
 
     - If the 'target' equals 'file' then the two tasks are equal if they write
-      to the same 'filename' or if they are of the same 'type'. In we find 
+      to the same 'filename' or if they are of the same 'type'. In we find
       that the two tasks have different 'type' but are using the same
       'filename', then this is probably an error and we raise an `ValueError`.
 
