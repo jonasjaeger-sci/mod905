@@ -28,8 +28,7 @@ Modules
 - simulation.py: Defines the Simulation object which is the base object for
   simulations.
 
-- simulation_task.py: Defines objects for handling of simulation tasks and
-  output tasks.
+- simulation_task.py: Defines objects for handling of simulation tasks.
 
 Important classes and functions
 -------------------------------
@@ -37,8 +36,6 @@ Important classes and functions
 - Simulation: The base class for simulations.
 
 - SimulationTask: A class for creating tasks for simulations.
-
-- OutputTask: A class for handling output tasks for simulations.
 
 - create_simulation: A function to create a simulation object from
   a dictionary of given settings.
@@ -48,14 +45,13 @@ from .simulation import Simulation
 from .mc_simulation import UmbrellaWindowSimulation
 from .md_simulation import create_md_simulation
 from .path_simulation import create_path_simulation
-from .simulation_task import OutputTask, SimulationTask
-from .common import get_output_tasks
+from .simulation_task import SimulationTask
 # other imports
 import warnings
 
-
-_KNOWN_SIMULATIONS = {'nve': 'md', 'mdflux': 'md',
-                      'tis': 'path'}
+# define known simulations and give them a 'family'
+# the family is used to set up the simulations
+_KNOWN_SIMULATIONS = {'nve': 'md', 'mdflux': 'md', 'tis': 'path'}
 
 
 def create_simulation(settings, system):
@@ -79,22 +75,16 @@ def create_simulation(settings, system):
     sim_type = settings['type'].lower()
     family = None
     simulation = None
-    out_default = []
     try:
         family = _KNOWN_SIMULATIONS[sim_type]
     except KeyError:
         msg = 'Unknown simulation type {} requested'.format(sim_type)
         raise ValueError(msg)
     if family == 'md':
-        simulation, out_default = create_md_simulation(settings, system,
-                                                       sim_type)
+        simulation = create_md_simulation(settings, system, sim_type)
     elif family == 'path':
-        simulation, out_default = create_path_simulation(settings, system,
-                                                         sim_type)
+        simulation = create_path_simulation(settings, system, sim_type)
     else:
         msg = 'Unknown simulation type {}'.format(sim_type)
         raise ValueError(msg)
-    if simulation is not None:
-        for task in get_output_tasks(system, settings, out_default):
-            simulation.add_output_task(task)
     return simulation

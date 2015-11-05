@@ -44,9 +44,8 @@ class Simulation(object):
             - `first` which is a boolean which determines if the task should
               be executed on the initial step, i.e. before the full
               simulation starts
-            - `result` which is used to label the result.
-    output_task : list
-        This is a list of output tasks the simulation will perform.
+            - `result` which is used to label the result. This is used for
+              output.
     first_step : boolean
         True if the first step has not been executed yet.
     system : object like `System` from `pyretis.core.system`
@@ -70,7 +69,6 @@ class Simulation(object):
         self.cycle = {'step': startcycle, 'end': endcycle,
                       'start': startcycle, 'stepno': 0}
         self.task = []
-        self.output_task = []
         self.first_step = True
         self.system = None
 
@@ -129,7 +127,6 @@ class Simulation(object):
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
         results = self.execute_tasks()
-        self.output(results)
         if self.first_step:
             self.first_step = False
         return results
@@ -198,52 +195,8 @@ class Simulation(object):
             warnings.warn(msg.format(task))
             return False
 
-    def output(self, results):
-        """
-        Handle all the outputs that should be done.
-
-        The outputs are defined as tasks in `self.output_task`.
-
-        Parameters
-        ----------
-        results : dict
-            These are the results from the current simulation step.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but it will execute the output tasks.
-        """
-        for task in self.output_task:
-            result = None
-            if task.get_output() == 'traj':
-                result = self.system
-            else:
-                try:
-                    result = results[task.get_output()]
-                except KeyError:  # result was not calculated at this step
-                    result = None
-            if result is not None:
-                task.output(self.cycle, result)
-
-    def add_output_task(self, newtask):
-        """
-        Add an output task to the simulation.
-
-        Here, we will check if a identical task already exists. If it can find
-        a identical task, we will just update that one. Two tasks are
-        'identical' if they are of the same type and outputs to the same file.
-
-        Parameters
-        ----------
-        newtask : object like `OutputTask` from `.simulation_task`
-            This is the object representation of OutputTask.
-        """
-        self.output_task.append(newtask)
-
     def run(self):
-        """
-        Run a simulation.
+        """Run a simulation.
 
         The intended usage is for simulations where all tasks have
         been defined in `self.tasks`.
@@ -268,10 +221,4 @@ class Simulation(object):
         ntask = len(self.task)
         mtask = 'task' if ntask == 1 else 'tasks'
         msg = ['General simulation with {} {}.'.format(ntask, mtask)]
-        otask = len(self.output_task)
-        if otask == 0:
-            msg += ['No output tasks are defined.']
-        else:
-            mtask = 'task' if otask == 1 else 'tasks'
-            msg += ['{} output {} are defined.'.format(otask, mtask)]
         return '\n'.join(msg)

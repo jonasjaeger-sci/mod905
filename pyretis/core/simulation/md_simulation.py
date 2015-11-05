@@ -25,37 +25,9 @@ import warnings
 
 __all__ = ['SimulationNVE', 'SimulationMDFlux']
 
-
-_KNOWN_SIM = {'nve': {'required': [], 'output': []},
-              'mdflux': {'required': [], 'output': []}}
-
-_KNOWN_SIM['nve']['required'] = ['endcycle', 'integrator']
-_KNOWN_SIM['mdflux']['required'] = ['endcycle', 'integrator', 'interfaces',
-                                    'orderparameter']
-_KNOWN_SIM['nve']['output'] = [{'type': 'thermo', 'target': 'file',
-                                'when': {'every': 10},
-                                'filename': 'energy.dat'},
-                               {'type': 'traj', 'target': 'file',
-                                'when': {'every': 10},
-                                'filename': 'traj.gro', 'format': 'gro',
-                                'header': 'NVE simulation. Step: {}'},
-                               {'type': 'thermo', 'target': 'screen',
-                                'when': {'every': 10}}]
-_KNOWN_SIM['mdflux']['output'] = [{'type': 'orderp', 'target': 'file',
-                                   'when': {'every': 10},
-                                   'filename': 'order.dat'},
-                                  {'type': 'thermo', 'target': 'file',
-                                   'when': {'every': 100},
-                                   'filename': 'energy.dat'},
-                                  {'type': 'cross', 'target': 'file',
-                                   'when': {'every': 1},
-                                   'filename': 'cross.dat'},
-                                  {'type': 'traj', 'target': 'file',
-                                   'format': 'gro', 'when': {'every': 10},
-                                   'filename': 'traj.gro',
-                                   'header': 'MDFLUX simulation. Step: {}'},
-                                  {'type': 'thermo', 'target': 'screen',
-                                   'when': {'every': 10}}]
+_REQUIRED = {'nve': ['endcycle', 'integrator'],
+             'mdflux': ['endcycle', 'integrator', 'interfaces',
+                        'orderparameter']}
 
 
 def create_md_simulation(settings, system, sim_type):
@@ -80,8 +52,6 @@ def create_md_simulation(settings, system, sim_type):
     -------
     out[0] : object like `Simulation` from `pyretis.core.simulation`.
         This object will correspond to the selected simulation type.
-    out[1] : list of dicts
-        The default outputs for the given simulation.
 
     Note
     ----
@@ -92,7 +62,7 @@ def create_md_simulation(settings, system, sim_type):
     settings.
     """
     simulation = None
-    required = check_settings(settings, _KNOWN_SIM[sim_type]['required'])[0]
+    required = check_settings(settings, _REQUIRED[sim_type])[0]
     if not required:
         raise ValueError('Please update settings!')
     if sim_type == 'nve':
@@ -110,7 +80,7 @@ def create_md_simulation(settings, system, sim_type):
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
         raise ValueError(msg)
-    return simulation, _KNOWN_SIM[sim_type]['output']
+    return simulation
 
 
 class SimulationNVE(Simulation):
@@ -260,9 +230,7 @@ class SimulationMDFlux(Simulation):
         Run a simulation step.
 
         Rather than using the tasks for the more general simulation, we here
-        just executing what we need. The output tasks are handled by the
-        routines for the base Simulation object (that is the function
-        ``self.output(results)``).
+        just executing what we need.
 
         Returns
         -------
@@ -287,8 +255,6 @@ class SimulationMDFlux(Simulation):
                                              self.leftside_prev)
             self.leftside_prev = leftside
             results['cross'] = cross
-        # just output:
-        self.output(results)
         if self.first_step:
             self.first_step = False
         return results

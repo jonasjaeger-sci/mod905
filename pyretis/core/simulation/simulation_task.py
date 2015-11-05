@@ -66,7 +66,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
     return True
 
 
-def _execute_now(step, when):
+def execute_now(step, when):
     """
     Determine if a task should be executed or not at this `step`.
 
@@ -98,8 +98,7 @@ def _execute_now(step, when):
 
 
 class SimulationTask(object):
-    """
-    Class SimulationTask(object) - Representation of simulation tasks.
+    """Class SimulationTask(object) - Representation of simulation tasks.
 
     This class defines a task object. A task is executed at specific points,
     at regular intervals etc. in a simulation. A task will typically provide
@@ -181,7 +180,7 @@ class SimulationTask(object):
         """
         args = self.args
         kwargs = self.kwargs
-        if _execute_now(step, self.when):
+        if execute_now(step, self.when):
             if args is None:
                 if kwargs is None:
                     return self.function()
@@ -242,108 +241,3 @@ class SimulationTask(object):
             The result of `self.execute(step)`.
         """
         return self.execute(step)
-
-
-class OutputTask(object):
-    """
-    Class OutputTask(object) - Representation for simulation output tasks.
-
-    This class will handle output tasks for a simulation.
-
-    Attributes
-    ----------
-    first : boolean
-        True if we have not written anything yet, this is just convenient
-        for writing to the screen, as this allows us to write a header if we
-        want to.
-    output_type : string
-        Identify the output type. This is redundant as the information
-        can in principle be deduced from the `writer`. However
-        it's very convenient to have a simple string representation as
-        well.
-    target : string
-        This determines what kind out output target we have in mind,
-        'file' and 'screen' are handled slightly differently.
-    when : dict
-        Determines if the task should be executed.
-    writer : object
-        This object will handle the actual writing of the result.
-    header : string
-        Some object will have a header written each time the we use the
-        write routine. This is for instance used in the trajectory writer to
-        display the current step for a written frame.
-    """
-
-    def __init__(self, writer, output_type, target, when=None,
-                 header=None):
-        """
-        Initiate the OutputTask object.
-
-        Parameters
-        ----------
-        writer : object
-            This object will handle the actual writing of the result.
-        output_type : string
-            Identify the output type. This is redundant as the information
-            can in principle be deduced from the `writer`. However
-            it's very convenient to have a simple string representation as
-            well.
-        target : string
-            This determines what kind out output target we have in mind,
-            'file' and 'screen' are handled slightly differently.
-        when : dict
-            Determines if the task should be executed.
-        header : string
-            Some object will have a header written each time the we use the
-            write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame.
-        """
-        self.writer = writer
-        self.output_type = output_type
-        assert target in ['screen', 'file'], 'Unknown target!'
-        self.target = target
-        self.when = when
-        self.first = True
-        self.header = header
-
-    def get_output(self):
-        """Simple function to return the output type."""
-        return self.output_type
-
-    def output(self, step, result):
-        """
-        Output the task.
-
-        Parameters
-        ----------
-        step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at
-            start and 'stepno' the number of cycles we have performed so far.
-        result : unknown type
-            The result to output.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but will call the appropriate output tasks.
-        """
-        if _execute_now(step, self.when):
-            if self.target == 'screen':
-                result['stepno'] = step['step']
-                out = self.writer.get_row(result)
-                if self.first:
-                    out = '\n'.join([self.writer.get_header()] + [out])
-                print(out)
-            else:
-                if self.output_type == 'traj':
-                    try:
-                        header = self.header.format(step['step'])
-                    except AttributeError:
-                        header = None
-                    self.writer.write(result, header=header)
-                elif self.output_type == 'cross':
-                    self.writer.write(result)
-                else:
-                    self.writer.write(step['step'], result)
-            if self.first:
-                self.first = False

@@ -22,16 +22,7 @@ from pyretis.core.tis import (generate_initial_path_kick,
 __all__ = ['SimulationTIS']
 
 # define settings for known simulations:
-_KNOWN_SIM = {'tis': {'required': [], 'output': []}}
-
-_KNOWN_SIM['tis']['required'] = ['endcycle', 'tis', 'integrator',
-                                 'interfaces']
-_KNOWN_SIM['tis']['output'] = [{'type': 'pathensemble', 'target': 'file',
-                                'when': {'every': 10},
-                                'filename': 'pathensemble.dat'},
-                               {'type': 'trialpath', 'target': 'file',
-                                'when': {'every': 10},
-                                'filename': 'paths.dat'}]
+_REQUIRED = {'tis': ['endcycle', 'tis', 'integrator', 'interfaces']}
 
 
 def create_path_simulation(settings, system, sim_type):
@@ -56,8 +47,6 @@ def create_path_simulation(settings, system, sim_type):
     -------
     out[0] : object like `Simulation` from `pyretis.core.simulation`.
         This object will correspond to the selected simulation type.
-    out[1] : list of dicts
-        The default outputs for the given simulation.
 
     Note
     ----
@@ -68,7 +57,7 @@ def create_path_simulation(settings, system, sim_type):
     settings.
     """
     simulation = None
-    required = check_settings(settings, _KNOWN_SIM[sim_type]['required'])[0]
+    required = check_settings(settings, _REQUIRED[sim_type])[0]
     if not required:
         raise ValueError('Please update settings!')
     if sim_type == 'tis':
@@ -79,7 +68,7 @@ def create_path_simulation(settings, system, sim_type):
     else:
         msg = 'Unknown path simulation: {}'.format(sim_type)
         raise ValueError(msg)
-    return simulation, _KNOWN_SIM[sim_type]['output']
+    return simulation
 
 
 class SimulationTIS(Simulation):
@@ -215,7 +204,7 @@ class SimulationTIS(Simulation):
             results['status'] = status
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
-        self.output(results)
+        #self.output(results)
         return results
 
     def __str__(self):
