@@ -774,6 +774,8 @@ class PathEnsemble(object):
         """Return a string with some info about this object."""
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tInterfaces: {}'.format(self.interfaces)]
+        if self.detect is not None:
+            msg += ['\tDetect: {}'.format(self.detect)]
         if self.nstats['npath'] > 0:
             npath = self.nstats['npath']
             nacc = self.nstats.get('ACC', 0)
@@ -820,7 +822,8 @@ def create_path_ensembles(interfaces, include_zero=False):
     if include_zero:
         ensemble_name = '[0^-]'
         interface = [-float('inf'), reactant, reactant]
-        path_ensemble = PathEnsemble(ensemble_name, interface)
+        path_ensemble = PathEnsemble(ensemble_name, interface,
+                                     detect=None)
         ensembles.append(path_ensemble)
     for i, middle in enumerate(interfaces[:-1]):
         interface = [reactant, middle, product]
@@ -829,6 +832,7 @@ def create_path_ensembles(interfaces, include_zero=False):
         except IndexError:
             detect.append(product)
         ensemble_name = '[{}^+]'.format(i)
-        path_ensemble = PathEnsemble(ensemble_name, interface)
+        path_ensemble = PathEnsemble(ensemble_name, interface,
+                                     detect=detect[-1])
         ensembles.append(path_ensemble)
     return ensembles, detect
