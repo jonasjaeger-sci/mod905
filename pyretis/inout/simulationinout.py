@@ -13,7 +13,7 @@ from pyretis.inout.txtinout import get_predefined_table
 import warnings
 
 
-__all__ = ['OutputTask', 'create_output_task']
+__all__ = ['OutputTask', 'create_output']
 
 
 class OutputTask(object):
@@ -173,7 +173,7 @@ def _task_dict_eq(task1, task2):
         raise ValueError('\n'.join(msg))
 
 
-def create_output_tasks(system, settings):
+def create_output(system, settings):
     """Generate output tasks from settings and defaults.
 
     This method will return actual objects that can be added to the

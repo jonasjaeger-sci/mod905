@@ -62,6 +62,8 @@ Important classes and functions
 - create_traj_writer: A function to create a trajectory writer from given
   settings.
 
+- create_output_task: A function to create output tasks for a simulation.
+
 - get_predefined_table: A function to get an object which can be used to
   pretty-print tables to the screen/file during a simulation.
 
@@ -76,4 +78,4 @@ from .txtinout import TxtTable, FileWriter, get_predefined_table
 from .traj import create_traj_writer
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
 from .report import generate_report_md, generate_report_tis
-from .simulationinout import create_output_task
+from .simulationinout import create_output
