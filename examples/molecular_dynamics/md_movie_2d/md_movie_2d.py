@@ -13,6 +13,7 @@ from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.tools import lattice_simple_cubic
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.inout import create_output
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -69,7 +70,8 @@ ljsystem.forcefield = forcefield
 
 # create simulation :-)
 simulation_nve = create_simulation(settings, ljsystem)
-
+# create some outputs:
+output_tasks = [task for task in create_output(ljsystem, settings)]
 # We will in this example animate on the flym then we will have to do some
 # extra set up. The actual simulation is carried out by calling
 # `simulation_nve.step()` in the `update` function which is executed by
@@ -184,7 +186,7 @@ def get_velocity_force_arrows(forces, vels):
     return FU, FV, VU, VV
 
 
-def update(frame, system):
+def update(frame, simulation_nve, output_tasks):
     """
     This function will be running the simulation and updating the plots.
     It is called one time per step, and we choose to update the simulation
@@ -202,7 +204,8 @@ def update(frame, system):
     out : list
         list of the patches to be drawn
     """
-    pos = box.pbc_wrap(system.particles.pos)
+    particles = simulation_nve.system.particles
+    pos = simulation_nve.system.box.pbc_wrap(particles.pos)
     patches = []
     # update positions of the circles according to the particles:
     for ci, pi in zip(circles, pos):
@@ -210,8 +213,8 @@ def update(frame, system):
         ci.set_visible(True)
         patches.append(ci)
     # update the force and velocity vectors:
-    FU, FV, VU, VV = get_velocity_force_arrows(system.particles.force,
-                                               system.particles.vel)
+    FU, FV, VU, VV = get_velocity_force_arrows(particles.force,
+                                               particles.vel)
     force_arrow.set_offsets(pos * SIGMA)
     force_arrow.set_UVC(FU, FV)
     force_arrow.set_visible(True)
@@ -223,6 +226,8 @@ def update(frame, system):
 
     if not simulation_nve.is_finished():
         result = simulation_nve.step()
+        for task in output_tasks:
+            task.output(result)
         # here we calculate some energies and updates the energy plots:
         step.append(result['cycle']['step'])
         time.append(step[-1] * timeunit)
@@ -271,8 +276,9 @@ def init():
 
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
-                               fargs=[ljsystem], repeat=False, interval=2,
-                               blit=True, init_func=init)
+                               fargs=[simulation_nve, output_tasks],
+                               repeat=False, interval=2, blit=True,
+                               init_func=init)
 # for making a movie:
 # anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()
