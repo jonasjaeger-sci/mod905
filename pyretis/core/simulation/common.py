@@ -151,9 +151,9 @@ def _task_dict_eq(task1, task2):
       of the same 'type'.
 
     - If the 'target' equals 'file' then the two tasks are equal if they write
-      to the same 'filename' and are of the same 'type'. In we find that the
-      two tasks have different 'type' but are using the same 'filename', then
-      this is probably an error and we raise an `ValueError`.
+      to the same 'filename' or if they are of the same 'type'. In we find 
+      that the two tasks have different 'type' but are using the same
+      'filename', then this is probably an error and we raise an `ValueError`.
 
     Parameters
     ----------
@@ -192,7 +192,7 @@ def _task_dict_eq(task1, task2):
             msg.append('Task1: {}'.format(task1))
             msg.append('Task2: {}'.format(task2))
             raise ValueError('\n'.join(msg))
-        return same_type and same_file
+        return same_type
     else:
         msg = ['Did not understand output target:']
         msg.append('Task1: {}'.format(task1))
