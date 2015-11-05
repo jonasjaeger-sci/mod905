@@ -9,7 +9,8 @@ from pyretis.core import Box, System
 from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
-from pyretis.inout import (get_predefined_table, FileWriter)
+from pyretis.inout import (get_predefined_table, FileWriter,
+                           create_output)
 from pyretis.tools import latticefcc
 import numpy as np
 # for plotting:
@@ -25,9 +26,10 @@ settings = {'type': 'NVE',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 100,
             'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
-                        'format': 'gro'}],
+                        'format': 'gro', 'filename': 'traj.gro'}],
             'generate-vel': {'seed': 0, 'momentum': True,
                              'distribution': 'maxwell'}}
+
 
 # set up a lattice and create a box
 lattice, size = latticefcc(density=0.9, nrx=3, nry=3, nrz=3)
@@ -52,17 +54,20 @@ table = get_predefined_table('energies')
 thermo_file = FileWriter('thermo.txt', 'table',
                          header={'text': table.get_header()})
 store_results = []
+# also create some other outputs:
+output_tasks = [task for task in create_output(ljsystem, settings)]
 # run the simulation :-)
+
 for result in simulation_nve.run():
     step = result['cycle']['stepno']
     result['thermo']['stepno'] = step
     thermo_file.write_line(table(result['thermo']))
     store_results.append(result['thermo'])
-
+    for task in output_tasks:
+        task.output(result)
 # the rest is now just plotting:
 # as an example, do some plotting:
 mpl_set_style()  # load pyretis style
-
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]
 kin_e = [res['ekin'] for res in store_results]

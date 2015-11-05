@@ -4,6 +4,7 @@
 This module defines functions and classes for handling the output from
 simulations.
 """
+from __future__ import print_function
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
                                      PathFile, PathEnsembleFile)
@@ -14,6 +15,38 @@ import warnings
 
 
 __all__ = ['OutputTask', 'create_output']
+
+_DEFAULT_OUTPUT = {}
+_DEFAULT_OUTPUT['nve'] = [{'type': 'thermo', 'target': 'file',
+                           'when': {'every': 10},
+                           'filename': 'energy.dat'},
+                          {'type': 'traj', 'target': 'file',
+                           'when': {'every': 10},
+                           'filename': 'traj.gro', 'format': 'gro',
+                           'header': 'NVE simulation. Step: {}'},
+                          {'type': 'thermo', 'target': 'screen',
+                           'when': {'every': 10}}]
+_DEFAULT_OUTPUT['mdflux'] = [{'type': 'orderp', 'target': 'file',
+                              'when': {'every': 10},
+                              'filename': 'order.dat'},
+                             {'type': 'thermo', 'target': 'file',
+                              'when': {'every': 100},
+                              'filename': 'energy.dat'},
+                             {'type': 'cross', 'target': 'file',
+                              'when': {'every': 1},
+                              'filename': 'cross.dat'},
+                             {'type': 'traj', 'target': 'file',
+                              'format': 'gro', 'when': {'every': 10},
+                              'filename': 'traj.gro',
+                              'header': 'MDFLUX simulation. Step: {}'},
+                             {'type': 'thermo', 'target': 'screen',
+                              'when': {'every': 10}}]
+_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble', 'target': 'file',
+                           'when': {'every': 10},
+                           'filename': 'pathensemble.dat'},
+                          {'type': 'trialpath', 'target': 'file',
+                           'when': {'every': 10},
+                           'filename': 'paths.dat'}]
 
 
 class OutputTask(object):
@@ -94,7 +127,12 @@ class OutputTask(object):
                 return False
         # Handle the output:
         if self.target == 'screen':
-            pass
+            result['stepno'] = step['step']
+            out = self.writer.get_row(result)
+            if step['stepno'] == 0:  # add header
+                out = '\n'.join([self.writer.get_header()] + [out])
+            print(out)
+
         else:
             if self.output_type == 'traj':
                 try:
@@ -187,15 +225,14 @@ def create_output(system, settings):
         The system we are investigating in the simulation.
     settings : dict
         These are the settings for the simulation.
-    default_output : list of dicts
-        These defines the default outputs for a given simulation.
 
     Yields
     ------
     out : object like `OuputTask`
     """
+    defaults = _DEFAULT_OUTPUT.get(settings['type'], [])
     for out_task in _get_output_tasks(settings.get('output', []),
-                                      default_output=[]):
+                                      default_output=defaults):
         task = create_output_task(out_task, system, settings)
         if task is not None:
             yield task

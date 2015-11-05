@@ -87,4 +87,5 @@ def create_simulation(settings, system):
     else:
         msg = 'Unknown simulation type {}'.format(sim_type)
         raise ValueError(msg)
+    settings['type'] = sim_type  # just update for consistency.
     return simulation
