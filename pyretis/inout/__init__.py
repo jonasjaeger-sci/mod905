@@ -94,13 +94,12 @@ def create_traj_writer(filename, filefmt, oldfile, system):
     """
     if filefmt == 'xyz':
         trajwriter = WriteXYZ(filename,
-                              oldfile=oldfile,
-                              units=system.units)
+                              system,
+                              oldfile=oldfile)
     elif filefmt == 'gro':
         trajwriter = WriteGromacs(filename,
-                                  system.box,
-                                  oldfile=oldfile,
-                                  units=system.units)
+                                  system,
+                                  oldfile=oldfile)
     else:
         trajwriter = None
     return trajwriter

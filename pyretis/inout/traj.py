@@ -71,13 +71,14 @@ class WriteXYZ(FileWriter):
         These are the atomnames used for the output.
     """
 
-    def __init__(self, filename, oldfile='backup', units='lj'):
+    def __init__(self, filename, system, oldfile='backup'):
         """Initialization of the XYZ writer."""
-        self.convert = {'pos': CONVERT['length'][units, 'Å']}
-        self.atomnames = []
-        self.frame = 0  # number of frames written
         super(WriteXYZ, self).__init__(filename, 'xyz', mode='w',
                                        oldfile=oldfile)
+        self.atomnames = []
+        self.frame = 0  # number of frames written
+        self.system = system
+        self.convert = {'pos': CONVERT['length'][system.units, 'Å']}
 
     def write_frame(self, pos, names=None, header=None):
         """
@@ -114,7 +115,7 @@ class WriteXYZ(FileWriter):
         self.frame += 1
         return status
 
-    def write(self, system, header=None):
+    def write(self, system=None, header=None):
         """
         Write a configuration in xyz-format.
 
@@ -129,25 +130,10 @@ class WriteXYZ(FileWriter):
         header : string, optional
             Header to use for writing the xyz-frame.
         """
+        if system is None:
+            system = self.system
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
-
-    def __call__(self, system, header=None):
-        """
-        Write the configuration in xyz-format.
-
-        This is a method for writing a configuration in
-        xyz-format. This method will just call write and is
-        included here for convenience.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            The system object with the positions to write
-        header : string, optional
-            Header to use for writing the xyz-frame.
-        """
-        return self.write(system, header=header)
 
 
 class WriteGromacs(FileWriter):
@@ -166,15 +152,16 @@ class WriteGromacs(FileWriter):
         and nm/ps.
     """
 
-    def __init__(self, filename, box, oldfile='backup', units='lj'):
+    def __init__(self, filename, system, oldfile='backup'):
         """Initiate the gromacs writer."""
-        self.atomnames = []
-        self.box = box
-        self.frame = 0  # number of frames written
-        self.convert = {'pos': CONVERT['length'][units, 'nm'],
-                        'vel': CONVERT['velocity'][units, 'nm/ps']}
         super(WriteGromacs, self).__init__(filename, 'gromacs', mode='w',
                                            oldfile=oldfile)
+        self.atomnames = []
+        self.box = system.box
+        self.system = system
+        self.frame = 0  # number of frames written
+        self.convert = {'pos': CONVERT['length'][system.units, 'nm'],
+                        'vel': CONVERT['velocity'][system.units, 'nm/ps']}
 
     def write_frame(self, pos, vel=None, residuenum=None, residuename=None,
                     atomname=None, atomnum=None, header=None):
@@ -247,7 +234,7 @@ class WriteGromacs(FileWriter):
         self.frame += 1
         return status
 
-    def write(self, system, header=None, write_vel=False):
+    def write(self, system=None, header=None, write_vel=False):
         """
         Write a configuration in gromacs format.
 
@@ -264,6 +251,8 @@ class WriteGromacs(FileWriter):
         write_vel : boolean, optional
             If true, velocities will be written
         """
+        if system is None:
+            system = self.system
         if not write_vel:
             return self.write_frame(system.particles.pos,
                                     atomname=system.particles.name,
@@ -273,25 +262,6 @@ class WriteGromacs(FileWriter):
                                     vel=system.particles.vel,
                                     atomname=system.particles.name,
                                     header=header)
-
-    def __call__(self, system, header=None, write_vel=False):
-        """
-        Write a gromacs configuration.
-
-        This is a method for writing a configuration in gro-format.
-        This method will just call write and is
-        included here for convenience.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            The system object with the positions to write
-        header : string, optional
-            Header to use for writing the xyz-frame.
-        write_vel : boolean, optional
-            If true, velocities will be written
-        """
-        return self.write(system, header=header, write_vel=write_vel)
 
     def _box_lengths(self):
         """Obtain the box lengths from the box object."""
