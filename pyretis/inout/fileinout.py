@@ -739,8 +739,8 @@ class PathEnsembleFile(FileWriter):
                                            path_ensemble.interfaces)
         towrite = _path_to_line_data(path_dict,
                                      cycle,
-                                     path_ensemble.nacc,
-                                     path_ensemble.nshoot)
+                                     path_ensemble.nstats['ACC'],
+                                     path_ensemble.nstats['nshoot'])
         return self.write_line(towrite)
 
     def __str__(self):

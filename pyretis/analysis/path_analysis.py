@@ -393,7 +393,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     _shoot_analysis
     """
     result = {}
-    if path_ensemble.npath != len(path_ensemble.paths):
+    if path_ensemble.nstats['npath'] != len(path_ensemble.paths):
         msg = ('The number of paths stored in path ensemble does not',
                'correspond to the number of paths seen by the path',
                ' ensemble! Consider re-running the analysis using',
@@ -430,10 +430,10 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     result['shoots'] = [hist3, scale]
     # finally add some simple efficiency metrics:
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
-                            path_ensemble.npath * hist2[2][0]]
+                            path_ensemble.nstats['npath'] * hist2[2][0]]
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
-    result['tis-cycles'] = path_ensemble.npath
+    result['tis-cycles'] = path_ensemble.nstats['npath']
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
