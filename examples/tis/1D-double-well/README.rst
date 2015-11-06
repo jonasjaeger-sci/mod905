@@ -1,7 +1,9 @@
 1D Langevin TIS example
 =======================
 
-In this example, we aim to reproduce the TIS results presented by van Erp  [vanerp2012]_. The system we investigate is a one-dimensional particle moving in a double well potential under Langevin dynamics. 
+In this example, we aim to reproduce the TIS results reported
+by van Erp  [vanerp2012]_. The system we investigate is a one-dimensional
+particle moving in a double well potential under Langevin dynamics.
 
 The double well potential, :math:`V` is defined by
 
