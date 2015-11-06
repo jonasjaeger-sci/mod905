@@ -6,6 +6,7 @@ the initial flux for a TIS rate calculation.
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
+import pprint
 # pyretis imports:
 from pyretis.core import Box, System
 from pyretis.core.simulation import create_simulation
@@ -14,20 +15,27 @@ from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
 from pyretis.analysis import analyse_flux
 from pyretis.inout import generate_report_md
+from pyretis.inout import create_output, store_settings_as_py
 
 
 print('MD flux simulation!')
-simulation_settings = {'type': 'MDFlux',
+simulation_settings = {'type': 'mdflux',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
-                                      'gamma': 0.3, 'seed': 10,
+                                      'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
-                       'endcycle': 500000,
-                       'temperature': 0.2,
-                       'interfaces': [-1.0, 0.0, 1.0],
+                       'endcycle': 10000000,
+                       'temperature': 0.07,
+                       'interfaces': [-0.9, -0.8, -0.7, -0.6, -0.5,
+                                      -0.4, -0.3, 1.0],
                        'periodic_boundary': [False],
                        'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
-                                        'distribution': 'maxwell'}}
+                                        'distribution': 'maxwell'},
+                       'output': [{'type': 'traj', 'target': 'file',
+                                   'format': 'gro',
+                                   'when': {'every': 100},
+                                   'filename': 'traj.gro',
+                                   'header': 'MD FLUX simulation. Step: {}'}]}
 
 # set up simulation
 box = Box(periodic=simulation_settings['periodic_boundary'])
@@ -53,25 +61,35 @@ print('\nCreated:', system.forcefield)
 orderparameter = OrderParameterPosition('position', 0, dim='x', periodic=False)
 print('\nCreated:', orderparameter)
 # add more info to the settings:
-simulation_settings['system'] = system
-simulation_settings['orderparameter'] = orderparameter
 simulation_settings['beta'] = system.temperature['beta']
 simulation_settings['npart'] = system.particles.npart
+simulation_settings['dim'] = system.get_dim()
+
+simulation_settings['system'] = system
+simulation_settings['orderparameter'] = orderparameter
 
 # create the simulation:
 simulation_md = create_simulation(simulation_settings, system)
+output = [task for task in create_output(system, simulation_settings)]
 print('\nCreated:', simulation_md)
 # Variable for storing calculated crossing output:
-cross = []
+
+settings_file = 'settings.py'
+print('Storing the simulation settings in: {}'.format(settings_file))
+store_settings_as_py(simulation_settings, settings_file, 'settings')
+
 print('\nStarting simulation!')
-print(('=')*80)
-# run simulation :-)
+print(('=')*20)
+
+cross = []
 for i, result in enumerate(simulation_md.run()):
     try:
         for cri in result['cross']:
             cross.append((cri[0], cri[1] + 1, -1 if cri[2] == '-' else 1))
     except KeyError:  # cross was not obtained at this step
         pass
+    for task in output:
+        task.output(result)
 
 analysis_settings = {'skipcross': 1000,
                      'maxblock': 1000,
