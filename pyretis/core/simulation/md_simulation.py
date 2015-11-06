@@ -50,7 +50,7 @@ def create_md_simulation(settings, system, sim_type):
 
     Returns
     -------
-    out[0] : object like `Simulation` from `pyretis.core.simulation`.
+    out : object like `Simulation` from `pyretis.core.simulation`.
         This object will correspond to the selected simulation type.
 
     Note
