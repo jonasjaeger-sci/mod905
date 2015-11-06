@@ -19,7 +19,7 @@ from pyretis.core.tis import (generate_initial_path_kick,
                               make_tis_step_ensemble)
 
 
-__all__ = ['SimulationTIS']
+__all__ = ['SimulationTIS', 'create_path_simulation']
 
 # define settings for known simulations:
 _REQUIRED = {'tis': ['endcycle', 'tis', 'integrator', 'interfaces']}
