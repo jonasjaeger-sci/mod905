@@ -23,7 +23,7 @@ from pyretis.core.path import check_crossing
 import warnings
 
 
-__all__ = ['SimulationNVE', 'SimulationMDFlux']
+__all__ = ['SimulationNVE', 'SimulationMDFlux', 'create_md_simulation']
 
 _REQUIRED = {'nve': ['endcycle', 'integrator'],
              'mdflux': ['endcycle', 'integrator', 'interfaces',
