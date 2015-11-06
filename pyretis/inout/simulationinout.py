@@ -12,9 +12,11 @@ from pyretis.inout.traj import create_traj_writer
 from pyretis.inout.txtinout import get_predefined_table
 # other imports
 import warnings
+import pprint
 
 
-__all__ = ['OutputTask', 'create_output']
+__all__ = ['OutputTask', 'create_output', 'store_settings_as_py']
+
 
 _DEFAULT_OUTPUT = {}
 _DEFAULT_OUTPUT['nve'] = [{'type': 'thermo', 'target': 'file',
@@ -386,3 +388,36 @@ def create_output_task(task, system, settings):
                           header=task.get('header', None))
     else:
         return None
+
+
+def store_settings_as_py(settings, outfile, variable='settings'):
+    """Write simulation settings to a .py file.
+
+    This will just write a dictionary to a file in a way such that
+    it can be imported into another file.
+
+    Parameters
+    ----------
+    settings : dict
+        The dictionary to write
+    outfile : string
+        The file to create
+    variable : string, optional
+        This is the variable which we write, i.e. `variable = settings`.
+    """
+    first = '{} = {{}}'.format(variable)
+    other = (' ' * (len(first) - 2)) + '{}'
+    output = []
+    with open(outfile, 'w') as fileh:
+        pretty = pprint.pformat(settings, width=-1)
+        linenr = -1
+        for line in pretty.split('\n'):
+            if line.find(' <') != -1 or line.find('>,') != -1:
+                pass
+            else:
+                linenr += 1
+                if linenr == 0:
+                    output.append(first.format(line))
+                elif linenr >= 1:
+                    output.append(other.format(line))
+        fileh.write('\n'.join(output))

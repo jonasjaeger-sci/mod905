@@ -78,4 +78,4 @@ from .txtinout import TxtTable, FileWriter, get_predefined_table
 from .traj import create_traj_writer
 from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
 from .report import generate_report_md, generate_report_tis
-from .simulationinout import create_output
+from .simulationinout import create_output, store_settings_as_py
