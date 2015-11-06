@@ -14,16 +14,80 @@ Important classes and functions
 """
 from __future__ import absolute_import
 import numpy as np
+import warnings
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
+from pyretis.core.simulation.common import check_settings
+from pyretis.core.random_gen import RandomGenerator
+
+__all__ = ['UmbrellaWindowSimulation', 'create_mc_simulation']
 
 
-__all__ = ['UmbrellaWindowSimulation']
+_REQUIRED = {'umbrellawindow': ['umbrella', 'over', 'rgen', 'seed',
+                                'maxdx', 'mincycle']}
+
+
+def create_mc_simulation(settings, system, sim_type):
+    """Create a MC simulation from the given settings.
+
+    This is a helper function that will do some checks and set up one
+    of the MC simultions defined in this module based on the given settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    system : object like `System` from `pyretis.core.system`
+        This is the system for which the simulation will run.
+    sim_type : string
+        This defines the simulation type we are to set up. Note that
+        simulation type is also given in `settings['type']`. It is also
+        given here since we typically call this function after checking the
+        type.
+
+    Returns
+    -------
+    out : object like `Simulation` from `pyretis.core.simulation`.
+        This object will correspond to the selected simulation type.
+
+    Note
+    ----
+    We are duplicating code here - the checking of required settings is
+    identical to the checking in other simulation creaters, for instance
+    the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
+    This is just in case someone wants to add some magic that amends missing
+    settings.
+    """
+    simulation = None
+    required, not_found = check_settings(settings, _REQUIRED[sim_type])
+    if sim_type == 'umbrellawindow':
+        if 'seed' in not_found or 'rgen' in not_found:
+            # one or both of these keywords were present
+            # things are ok if there is no other missing
+            not_found = set(not_found) - set(['seed', 'rgen'])
+            required = len(not_found) == 0
+    if not required:
+        warnings.warn('Settings not found: {}'.format(not_found))
+        raise ValueError('Please update settings')
+    if sim_type == 'umbrellawindow':
+        try:
+            rgen = settings['rgen']
+        except KeyError:
+            rgen = RandomGenerator(seed=settings.get('seed', 0))
+        simulation = UmbrellaWindowSimulation(system,
+                                              settings['umbrella'],
+                                              settings['over'],
+                                              rgen,
+                                              settings['maxdx'],
+                                              mincycle=settings['mincycle'])
+    else:
+        msg = 'Unknown MC simulation: {}'.format(sim_type)
+        raise ValueError(msg)
+    return simulation
 
 
 def mc_task(rgen, system, maxdx):
-    """
-    Function to perform Monte Carlo moves.
+    """Function to perform Monte Carlo moves.
 
     Will update positions and potential energy as needed.
 

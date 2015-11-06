@@ -3,17 +3,16 @@
 Example of running a simulation
 """
 from __future__ import print_function
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+import matplotlib.gridspec as gridspec
+import numpy as np
 from pyretis.core import System, RandomGenerator
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from pyretis.core.montecarlo import max_displace_step
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis.histogram import histogram, match_all_histograms
-import numpy as np
-import matplotlib
-from matplotlib import pyplot as plt
-import matplotlib.gridspec as gridspec
-matplotlib.use('Agg')
 
 
 # Define system with a temperature in K

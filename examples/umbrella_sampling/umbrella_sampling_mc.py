@@ -9,7 +9,7 @@ landscape by performing umbrella simulations.
 """
 from __future__ import print_function
 from pyretis.core import System, RandomGenerator
-from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis import histogram, match_all_histograms
@@ -39,27 +39,28 @@ umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:
-RGEN = RandomGenerator(seed=RANDSEED)
-# and define some common variables for the simulations
-MINCYCLES = 1e4
-MAXDX = 0.1  # maximum allowed displacement in the MC step(s).
+settings = {'type': 'umbrellawindow'}
+settings['rgen'] = RandomGenerator(seed=RANDSEED)
+settings['mincycle'] = 10000
+settings['maxdx'] = 0.1
 
 trajectory, energy = [], []  # to store all trajectories & energies
 # we run all the umbrella simulations by looping over
 # the different umbrellas we defined:
 print('Starting simulations:')
+msg = '\nRunning umbrella no: {} of {}. Location: {}'
 for i, umbrella in enumerate(umbrellas):
-    print('Running umbrealla no: {} of {}. Location: {}'.format(i + 1, n_umb,
-                                                                umbrella))
+    print(msg.format(i + 1, n_umb, umbrella))
     # Move rectangular potential to correct place:
     params = {'left': umbrella[0], 'right': umbrella[1]}
     mysystem.forcefield.update_potential_parameters(potential_rw, params)
     mysystem.potential()  # recalculate potential energy
-    over = umbrellas[min(i + 1, n_umb - 1)][0]  # position we must cross
+    settings['umbrella'] = umbrella
+    #calculate position we must cross for this window:
+    settings['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
     # Create the umbrella simulation :-)
-    simulation = UmbrellaWindowSimulation(mysystem, umbrella, over,
-                                          RGEN, MAXDX,
-                                          mincycle=MINCYCLES)
+    simulation = create_simulation(settings, mysystem)
+    print(simulation)
     # Also create empy list for storing some data:
     traj, ener = [], []
     for result in simulation.run():

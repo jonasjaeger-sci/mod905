@@ -42,7 +42,7 @@ Important classes and functions
 """
 # local pyretis imports
 from .simulation import Simulation
-from .mc_simulation import UmbrellaWindowSimulation
+from .mc_simulation import create_mc_simulation
 from .md_simulation import create_md_simulation
 from .path_simulation import create_path_simulation
 from .simulation_task import SimulationTask
@@ -51,14 +51,23 @@ import warnings
 
 # define known simulations and give them a 'family'
 # the family is used to set up the simulations
-_KNOWN_SIMULATIONS = {'nve': 'md', 'mdflux': 'md', 'tis': 'path'}
+_KNOWN_SIMULATIONS = {'nve': 'md',
+                      'mdflux': 'md',
+                      'umbrella': 'mc',
+                      'umbrellawindow': 'mc',
+                      'tis': 'path',
+                      'retis': 'path'}
 
 
 def create_simulation(settings, system):
-    """
+    """Method to create simulations from settings and system.
+
     This method will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
-    tasks
+    task. It will here check what kind of simulation we are to perform and
+    then call the appropriate function for setting that type of simulation up.
+    The rationale here is that different families of functions may handle the
+    settings and especially "missing" settings differently.
 
     Parameters
     ----------
@@ -82,6 +91,8 @@ def create_simulation(settings, system):
         raise ValueError(msg)
     if family == 'md':
         simulation = create_md_simulation(settings, system, sim_type)
+    elif family == 'mc':
+        simulation = create_mc_simulation(settings, system, sim_type)
     elif family == 'path':
         simulation = create_path_simulation(settings, system, sim_type)
     else:
