@@ -10,6 +10,16 @@ can be combined into reports, which can be templated.
 Package structure
 =================
 
+Sub-packages
+------------
+
+- fileinout: handles the input and output of files used as input for the
+  analysis. It also defines formats for trajectories.
+
+- plotting: handles plotting. It defines simple things like colors etc. 
+  for plotting. It also defines functions which can be used for specific
+  plotting by the analysis and report tools.
+
 Modules
 -------
 
@@ -23,15 +33,6 @@ Modules
 - __init__.py: Imports from the other modules and define some convenience
   functions for creating trajectory writers and text tables.
 
-- fileinout.py: Module for handling writing and reading of crossing,
-  energy, order parameter and path ensemble data.
-
-- mpl_plotting.py: Module which defines plotting using matplotlib.
-
-- plotting.py: This file defines some colors etc. for plotting. It
-  also defines a function which can be used to load different plotting
-  objects.
-
 - report.py: Module for creating reports based on analysis. This module
   is responsible for creating the final output from the analysis of (RE)TIS
   simulations
@@ -39,18 +40,12 @@ Modules
 - simulationinout.py: Module for handling input and output from simulation
   results.
 
-- traj.py: Module for handling writing and reading of trajectories.
-
 - txtinout.py: Defines objects and some methods for text-based output.
   It defines the TxtTable object (table-like-format) intended to be
   written to the screen during a simulation or to a file.
-  Futher it defines the more general FileWriter object, which is used by
-  other file writers (as in traj.py and fileinout.py).
 
 Important classes and functions
 -------------------------------
-
-- WriteGromacs & WriteXYZ: Classes for writing coordinates.
 
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
@@ -67,15 +62,15 @@ Important classes and functions
 - get_predefined_table: A function to get an object which can be used to
   pretty-print tables to the screen/file during a simulation.
 
+- TxtTable: A function to write text tables.
+
 Folders
 -------
 
-- styles: This folder contains style files for matplotlib.
-
 - templates: This folder contains templates for the report.
 """
-from .txtinout import TxtTable, FileWriter, get_predefined_table
-from .traj import create_traj_writer
-from .fileinout import CrossFile, EnergyFile, OrderFile, PathEnsembleFile
+from .txtinout import TxtTable, get_predefined_table
+from .fileinout import (FileWriter, CrossFile, EnergyFile, OrderFile,
+                        PathEnsembleFile, create_traj_writer)
 from .report import generate_report_md, generate_report_tis
 from .simulationinout import create_output, store_settings_as_py

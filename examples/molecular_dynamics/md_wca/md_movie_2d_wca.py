@@ -11,6 +11,7 @@ from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
 from pyretis.tools import lattice_simple_cubic
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.inout import create_output
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -65,6 +66,8 @@ if 'generate-vel' in settings:
 ljsystem.forcefield = forcefield
 # create the simulation :-)
 simulationNVE = create_simulation(settings, ljsystem)
+# create outputs for this simulation:
+output_tasks = [task for task in create_output(ljsystem, settings)]
 # some additional set-up for the animation
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][settings['units'], 'fs'])
@@ -287,7 +290,7 @@ def spring_bond(delta, dr, part1, part2):
     return xpos, ypos
 
 
-def update(frame, system):
+def update(frame, system, output_tasks):
     """
     This function will be running the simulation and updating the plots.
     It is called one time per step, and we choose to update the simulation
@@ -299,6 +302,8 @@ def update(frame, system):
         The current frame number, supplied by animation.FuncAnimation
     system : object
         The system object we are simulating
+    output_tasks : list of objects like `OutputTask`
+        This list defines the outputs to do for this imulation.
 
     Returns
     -------
@@ -326,6 +331,8 @@ def update(frame, system):
 
     if not simulationNVE.is_finished():
         result = simulationNVE.step()
+        for task in output_tasks:
+            task.output(result)
         # reaction coordinate:
         delta = box.pbc_dist_coordinate(system.particles.pos[BIDX[1]] -
                                         system.particles.pos[BIDX[0]])
@@ -365,8 +372,8 @@ def update(frame, system):
 
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
-                               fargs=[ljsystem], repeat=False, interval=2,
-                               blit=True, init_func=init)
+                               fargs=[ljsystem, output_tasks], repeat=False,
+                               interval=2, blit=True, init_func=init)
 # for making a movie:
 # anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()

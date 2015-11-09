@@ -16,7 +16,7 @@ import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from pyretis.inout.mpl_plotting import mpl_set_style
+from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
@@ -52,16 +52,17 @@ simulation_nve = create_simulation(settings, ljsystem)
 # set up extra output:
 table = get_predefined_table('energies')
 thermo_file = FileWriter('thermo.txt', 'table',
-                         header={'text': table.get_header()})
+                         header={'text': table.header})
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(ljsystem, settings)]
 # run the simulation :-)
 
 for result in simulation_nve.run():
-    step = result['cycle']['stepno']
-    result['thermo']['stepno'] = step
-    thermo_file.write_line(table(result['thermo']))
+    stepno = result['cycle']['stepno']
+    table_row = table.write(stepno, result['thermo'])
+    thermo_file.write_line(table_row)
+    result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
     for task in output_tasks:
         task.output(result)

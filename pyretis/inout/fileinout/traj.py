@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-Methods and objects that handle the output/input of trajectory data.
+"""Module for handling the output/input of trajectory data.
 
-Objects defined here:
+This module defines some classes for writing out trajectory data.
+Here we define a class for a simple xyz-format and a class for writing
+in a gromacs format.
+
+Important classes
+-----------------
 
 - WriteXYZ: Writing of coordinates to a file in a xyz format.
 
@@ -10,7 +14,7 @@ Objects defined here:
 """
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
-from pyretis.inout.txtinout import FileWriter
+from pyretis.inout.fileinout.fileinout import FileWriter
 
 # define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'

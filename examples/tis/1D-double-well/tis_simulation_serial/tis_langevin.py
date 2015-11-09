@@ -12,7 +12,7 @@ from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
-
+from pyretis.inout import create_output
 
 simulation_settings = {'type': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
@@ -87,6 +87,7 @@ for i, path_ensemble in enumerate(ensembles):
         except AttributeError:
             settings[key] = simulation_settings[key]
     settings['path-ensemble'] = path_ensemble
+    settings['ensemble'] = path_ensemble.ensemble
     settings['interfaces'] = path_ensemble.interfaces
     settings['output'] = [{'type': 'pathensemble',
                            'target': 'file',
@@ -99,7 +100,11 @@ for i, path_ensemble in enumerate(ensembles):
     simulation_tis = set_up_tis_simulation(settings)
     print('Created:', simulation_tis)
     print('Starting', path_ensemble.ensemble)
+    output = [task for task in create_output(simulation_tis.system, settings)]
+
     for result in simulation_tis.run():
         cycle = result['cycle']['step']
+        for task in output:
+            task.output(result)
     print('Done with', path_ensemble.ensemble)
 

@@ -4,38 +4,25 @@ This file contains methods and objects that handle output/input to files.
 
 Objects defined here:
 
-- CrossFile: Writing/reading of crossing data (i.e. data which can be used
-  for calculation of the initial flux).
-
-- EnergyFile: Writing/reading of energy data to a file.
-
-- OrderFile: Writing/reading of order parameter data
-
 - PathEnsembleFile: Writing/reading of path ensemble data to a file.
+
+- PathFile: Writing/reading of path data
 """
-import numpy as np
 import warnings
 try:  # this will fail in python3
     from itertools import izip_longest as zip_longest
 except ImportError:  # for python3
     from itertools import zip_longest as zip_longest
-# local imports
-from pyretis.inout.txtinout import FileWriter
-from pyretis.inout.txtinout import read_some_lines, create_and_format_row
+# pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
+from pyretis.inout.txtinout import create_and_format_row
+from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileinout.orderfile import ORDER_FMT
 
 
-__all__ = ['CrossFile', 'EnergyFile', 'OrderFile', 'PathEnsembleFile']
+__all__ = ['PathFile', 'PathEnsembleFile']
 
 
-# format for crossing files:
-CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
-# format for the energy files, here also as a tuple since this makes
-# convenient for outputting in a specific order:
-ENERGY_FMT = ['{:>10d}'] + 6*['{:>12.6f}']
-# format for order files, here as a tuple since we don't know how many
-# parameters we will write:
-ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 # define a format used for the path files. Here it's not really needed,
 # we are going to assume that these files will be comma separated anyway.
 # It is included to be compatible with the previous fortran version.
@@ -46,317 +33,8 @@ PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
 POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
 
 
-class CrossFile(FileWriter):
-    """
-    CrossFile(FileWriter).
-
-    This class handles writing/reading of crossing data.
-
-    Attributes
-    ----------
-    Same as for the FileWriter object.
-    """
-
-    def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the CrossFile object.
-
-        Parameters
-        ----------
-        filename : string
-            Name of file to read/write.
-        mode : string
-            Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
-        """
-        header = {'text': ['Step', 'Int', 'Dir'],
-                  'width': [10, 4, 3]}
-        super(CrossFile, self).__init__(filename, 'crossingfile',
-                                        mode=mode, oldfile=oldfile,
-                                        header=header)
-
-    @staticmethod
-    def line_parser(line):
-        """
-        Define a simple parser for reading the file.
-
-        It is used in the self.load() to parse the input file.
-
-        Parameters
-        ----------
-        line : string
-            A line to parse.
-
-        Returns
-        -------
-        out : tuple of ints
-            out is (step number, interface number and direction).
-        """
-        linessplit = line.strip().split()
-        try:
-            step, inter = int(linessplit[0]), int(linessplit[1])
-            direction = -1 if linessplit[2] == '-' else 1
-            return (step, inter, direction)
-        except IndexError:
-            return None
-
-    def load(self):
-        """
-        Load entire blocks from the cross file into memory.
-
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis.
-
-        Returns
-        -------
-        data : list of tuples of int
-            This is the data contained in the file. The columns are the
-            step number, interface number and direction.
-        """
-        for blocks in read_some_lines(self.filename,
-                                      line_parser=self.line_parser):
-            data_dict = {'comment': blocks['comment'],
-                         'data': blocks['data']}
-            yield data_dict
-
-    def write(self, cross):
-        """
-        Write the cross data to a file.
-
-        It will just write a space separated file without fancy formatting.
-
-        Parameters
-        ----------
-        cross : list of tuples
-            The tuples are crossing with interfaces (if any). The typles
-            contain (timestep, interface, direction), where the direction
-            is '-' or '+'.
-
-        See Also
-        --------
-        `check_crossing` in `pyretis.core.path` for definition of the tuples
-        in `cross`.
-
-        Note
-        ----
-        We add 1 to the interface number here. This is for compatibility with
-        the old fortran code where the interfaces are numbered 1,2,... rather
-        than 0,1,... .
-        """
-        retval = []
-        for cro in cross:
-            towrite = CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
-            retval.append(self.write_line(towrite))
-        return retval
-
-    def __str__(self):
-        """Return a string with some info about this object."""
-        msg = 'Crossing file: {} (mode: {})'.format(self.filename,
-                                                    self.mode)
-        return msg
-
-
-class EnergyFile(FileWriter):
-    """
-    EnergyFile(FileWriter).
-
-    This class handles writing/reading of energy data.
-
-    Attributes
-    ----------
-    Same as for the FileWriter object.
-    """
-
-    def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the EnergyFile object.
-
-        Parameters
-        ----------
-        filename : string
-            Name of file to read/write.
-        mode : string
-            Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
-        """
-        header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
-                           'Hamiltonian', 'Temperature', 'External'],
-                  'width': [10, 12]}
-        super(EnergyFile, self).__init__(filename, 'energyfile',
-                                         mode=mode,
-                                         oldfile=oldfile,
-                                         header=header)
-
-    def load(self):
-        """
-        Load entire energy blocks into memory.
-
-        (Quote of the day: 'memory is cheap, function calls are expensive'.)
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis.
-
-        Yields
-        ------
-        data_dict : dict
-            This is the energy data read from the file, stored in
-            a dict. This is for convenience, so that each energy term
-            can be accessed by data[key].
-
-        See Also
-        --------
-        read_some_lines
-        """
-        for blocks in read_some_lines(self.filename):
-            data = np.array(blocks['data'])
-            data_dict = {'comment': blocks['comment'],
-                         'data': {'time': data[:, 0],
-                                  'vpot': data[:, 1],
-                                  'ekin': data[:, 2],
-                                  'etot': data[:, 3],
-                                  'ham': data[:, 4],
-                                  'temp': data[:, 5],
-                                  'ext': data[:, 6]}}
-            yield data_dict
-
-    def write(self, step, energy):
-        """
-        Write the energy data to the file.
-
-        Parameters
-        ----------
-        step : int
-            This is the current step number.
-        energy : dict
-            This is the energy data stored as a dictionary.
-
-        Returns
-        -------
-        out : boolean
-            True if line could be written, False otherwise.
-        """
-        towrite = [ENERGY_FMT[0].format(step)]
-        for i, key in enumerate(['vpot', 'ekin', 'etot', 'ham',
-                                 'temp', 'ext']):
-            value = energy.get(key, 0.0)
-            towrite.append(ENERGY_FMT[i + 1].format(value))
-        towrite = ' '.join(towrite)
-        return self.write_line(towrite)
-
-    def __str__(self):
-        """Return a string with some info about the energy file."""
-        msg = 'Energy file: {} (mode: {})'.format(self.filename, self.mode)
-        return msg
-
-
-class OrderFile(FileWriter):
-    """
-    OrderFile(FileWriter).
-
-    This class handles writing/reading of order parameter data.
-
-    Attributes
-    ----------
-    Same as for the FileWriter object.
-    """
-
-    def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the OrderFile object.
-
-        Parameters
-        ----------
-        filename : string
-            Name of file to read/write.
-        mode : string
-            Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
-        """
-        header = {'text': ['Time', 'Orderp', 'Orderv'],
-                  'width': [10, 12]}
-        super(OrderFile, self).__init__(filename, 'orderparameter',
-                                        mode=mode, oldfile=oldfile,
-                                        header=header)
-
-    def load(self):
-        """
-        Load the entire order parameter blocks into memory.
-
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis. In case blocks are found in
-        the file, they will be yielded, this is just to reduce the memory
-        usage.
-        The format is `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
-        where the actual meaning of `orderp1` `orderp2` and the following
-        order parameters are left to be defined by the user.
-
-        Yields
-        ------
-        data_dict : dict
-            Data read from the order parameter file.
-
-        See Also
-        --------
-        read_some_lines
-        """
-        for blocks in read_some_lines(self.filename):
-            data = np.array(blocks['data'])
-            _, col = data.shape
-            data_dict = {'comment': blocks['comment']}
-            data_dict['data'] = []
-            for i in range(col):
-                data_dict['data'].append(data[:, i])
-            yield data_dict
-
-    def write(self, step, orderdata):
-        """
-        Write the order parameter data to the file.
-
-        Parameters
-        ----------
-        step : int
-            This is the current step number.
-        orderdata : list of floats
-            This is the raw order parameter data.
-
-        Returns
-        -------
-        out : boolean
-            True if line could be written, False otherwise.
-        """
-        towrite = [ORDER_FMT[0].format(step)]
-        for orderp in orderdata:
-            towrite.append(ORDER_FMT[1].format(orderp))
-        towrite = ' '.join(towrite)
-        return self.write_line(towrite)
-
-    def __str__(self):
-        """Return a string with some info about the order parameter file."""
-        msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
-                                                           self.mode)
-        return msg
-
-
 class PathFile(FileWriter):
-    """
-    PathFile(FileWriter).
+    """PathFile(FileWriter) - A writer for paths.
 
     This class handles writing/reading of path data.
 
@@ -448,15 +126,14 @@ class PathFile(FileWriter):
             yield data_dict
 
     def write(self, step, path):
-        """
-        Write a path to the file.
+        """Write a path to the file.
 
         Parameters
         ----------
         step : int
             This is the current step number.
-        orderdata : list of floats
-            This is the raw order parameter data.
+        path : object like `Path` from `pyretis.core.path`
+            The path to write to the file.
 
         Returns
         -------
@@ -482,14 +159,12 @@ class PathFile(FileWriter):
 
     def __str__(self):
         """Return a string with some info about the path file."""
-        msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
-                                                           self.mode)
+        msg = 'Path file: {} (mode: {})'.format(self.filename, self.mode)
         return msg
 
 
 def _line_to_path_object(line):
-    """
-    Convert a text line to a Path object.
+    """Convert a text line to a Path object.
 
     Parameters
     ----------
@@ -521,10 +196,11 @@ def _line_to_path_object(line):
 
 
 def _line_to_path_data(line):
-    """
-    Convert a text line to simplified representation of a path.
+    """Convert a text line to simplified representation of a path.
 
-    This is used to parse a file with path data.
+    This is used to parse a file with path data. It will not create real
+    `pyretis.core.path.Path` objects but only a dict with information about
+    this path. This dict can be used to build up a path ensemble.
 
     Parameters
     ----------
@@ -559,8 +235,7 @@ def _line_to_path_data(line):
 
 
 def _path_to_line_data(path, cycle, acc, shoot):
-    """
-    Convert path data from a PathEnsemble object to a string.
+    """Convert path data from a PathEnsemble object to a string.
 
     The string representation is useful from storing path data. This function
     is the "inverse" of the ``_line_to_path_data`` function.
@@ -606,8 +281,7 @@ def _path_to_line_data(path, cycle, acc, shoot):
 
 
 class PathEnsembleFile(FileWriter):
-    """
-    PathEnsembleFile(FileWriter).
+    """PathEnsembleFile(FileWriter).
 
     This class handles writing/reading of path ensemble data to a file.
     It also supports some attributes and functions found in the

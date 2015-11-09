@@ -181,7 +181,7 @@ class SimulationTIS(Simulation):
         if self.first_step:
             initial_path = self._initialize_path()
             accept = True
-            trial = None
+            trial = initial_path
             status = 'ACC'
             self.path_ensemble.add_path_data(initial_path, status,
                                              cycle=self.cycle['step'])

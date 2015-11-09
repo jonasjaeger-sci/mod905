@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for generating plots using matplotlib.
+"""Methods for generating plots using matplotlib.
 
-It also defines some standard plots that are done in the analysis.
+This module defines a class for using matplotlib and it also defines
+some standard plots that are used in the analysis.
+
+Important classes and functions
+-------------------------------
+
+- MplPlotter: A class for plotting with matplotlib.
+
+- mpl_set_style: A method for setting the style for the plots, typically
+  used here to load the _pyretis style_.
 """
 import numpy as np
 import os
@@ -21,7 +29,6 @@ else:
         HAS_STYLE = True
     except ImportError:
         HAS_STYLE = False
-
 # pylint: disable=E0611
 from scipy.stats import gamma
 # pylint: enable=E0611

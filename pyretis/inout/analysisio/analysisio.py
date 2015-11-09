@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-Methods that will output results from the different analysis methods.
+"""Methods that will output results from the different analysis methods.
+
+The methods defined here will also run the analysis and output according
+to given settings.
 
 Important classes and functions
 -------------------------------
 
-- `run_md_flux_analysis`: Method to run the MD flux analysis on a set
+- run_md_flux_analysis: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
 
 """
@@ -14,15 +16,18 @@ import warnings
 from pyretis.analysis import analyse_flux, analyse_energies, analyse_orderp
 from pyretis.inout.fileinout import CrossFile, EnergyFile, OrderFile
 from pyretis.inout.plotting import create_plotter
-from pyretis.inout.txtinout import (txt_energy_output, txt_flux_output,
-                                    txt_orderp_output)
+from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
+                                                  txt_flux_output,
+                                                  txt_orderp_output)
 from pyretis.inout.report import generate_report_md
 from pyretis.inout.common import _REPORTFILES
 
 
+__all__ = ['run_md_flux_analysis']
+
+
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
-    """
-    Analyse the output from a MD-flux simulation.
+    """Analyse the output from a MD-flux simulation.
 
     This method will will determine if the data should be read from files or
     if it's passed as other structures directly from the simulation.

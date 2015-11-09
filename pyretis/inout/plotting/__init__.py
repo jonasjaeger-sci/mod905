@@ -1,20 +1,31 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods for creating plots.
+"""This file contains methods for setting up plotters.
 
-Specifically it defines colors, colorschemes, the reading of styles
-and some common plotting functions.
+Specifically it defines colors, colorschemes and a method
+for selecting a plotter.
+Here we also hard-code some color schemes which may be usefull for
+the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
+from the seaborn project [deep]_ and the husl color scheme [husl]_.
+
+Important functions
+-------------------
+
+- create_plotter: Method to create a plotter.
+
+Folders
+-------
+
+- styles: This folder contains style files for matplotlib.
 
 References
 ----------
-.. [1] The colorblind_10 color scheme,
-       https://jiffyclub.github.io/palettable/tableau/
-.. [2] The deep color scheme, from the seaborn project
-       http://stanford.edu/~mwaskom/software/seaborn/index.html
-.. [3] The husl color scheme,
-       http://www.husl-colors.org/
+.. [cb10] The colorblind_10 color scheme,
+          https://jiffyclub.github.io/palettable/tableau/
+.. [deep] The deep color scheme, from the seaborn project
+          http://stanford.edu/~mwaskom/software/seaborn/index.html
+.. [husl] The husl color scheme, http://www.husl-colors.org/
 """
-from pyretis.inout.mpl_plotting import MplPlotter
+from .mpl_plotting import MplPlotter, mpl_set_style
 
 
 __all__ = ['create_plotter']
@@ -63,4 +74,5 @@ def create_plotter(plotter, out_fmt, style):
     if plotter.lower() in ['mpl', 'matplotlib']:
         return MplPlotter(out_fmt, style)
     else:
-        raise ValueError
+        msg = 'Unknown plotter: {}'.format(plotter)
+        raise ValueError(msg)

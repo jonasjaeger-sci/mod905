@@ -7,8 +7,8 @@ simulations.
 from __future__ import print_function
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
-                                     PathFile, PathEnsembleFile)
-from pyretis.inout.traj import create_traj_writer
+                                     PathFile, PathEnsembleFile,
+                                     create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
 # other imports
 import warnings
@@ -48,7 +48,9 @@ _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble', 'target': 'file',
                            'filename': 'pathensemble.dat'},
                           {'type': 'trialpath', 'target': 'file',
                            'when': {'every': 10},
-                           'filename': 'paths.dat'}]
+                           'filename': 'paths.dat'},
+                          {'type': 'path-stats', 'target': 'screen',
+                           'when': {'every': 10}}]
 
 
 class OutputTask(object):
@@ -129,10 +131,12 @@ class OutputTask(object):
                 return False
         # Handle the output:
         if self.target == 'screen':
-            result['stepno'] = step['step']
-            out = self.writer.get_row(result)
-            if step['stepno'] == 0:  # add header
-                out = '\n'.join([self.writer.get_header()] + [out])
+            out = self.writer.write(step['step'], result,
+                                    first_step=(step['stepno'] == 0))
+            #result['stepno'] = step['step']
+            #out = self.writer.get_row(result)
+            #if step['stepno'] == 0:  # add header
+            #    out = '\n'.join([self.writer.get_header()] + [out])
             print(out)
 
         else:
@@ -151,6 +155,14 @@ class OutputTask(object):
         """Method to explicitly close a file if needed"""
         if self.target == 'file':
             self.writer.close()
+
+    def __str__(self):
+        """Ouput some info about this output task"""
+        msg = ['Output task: {}'.format(self.output_type)]
+        msg += ['* Target: {}'.format(self.target)]
+        msg += ['* Writer: {}'.format(self.writer)]
+        msg += ['* When: {}'.format(self.when)]
+        return '\n'.join(msg)
 
 
 def _task_dict_eq(task1, task2):
@@ -373,17 +385,24 @@ def create_output_task(task, system, settings):
         This is the output task that can be added to a simulation.
     """
     writer = None
+    task_type = None
     if task['target'] == 'file':
         writer = _create_file_writer(task, system, settings)
     elif task['target'] == 'screen':
         if task['type'] == 'thermo':
             writer = get_predefined_table('energies')
+        if task['type'] == 'path-stats':
+            task_type = 'pathensemble'
+            writer = get_predefined_table('path-stats')
     else:
         msg = ['Unknown task target: {}'.format(task['target'])]
         msg += ['Ignoring task: {}'.format(task)]
         warnings.warn('\n'.join(msg))
     if writer is not None:
-        return OutputTask(writer, task['type'], task['target'],
+        task_type = task['type'] if task_type is None else task_type
+        return OutputTask(writer,
+                          task_type,
+                          task['target'],
                           when=task.get('when', None),
                           header=task.get('header', None))
     else:
