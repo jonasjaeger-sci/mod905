@@ -30,3 +30,8 @@ examples/molecular_dynamics/md_movie_2d/energy.dat*
 examples/molecular_dynamics/md_movie_2d/traj.gro*
 # umbrella sampling, temp files for movie
 examples/umbrella_sampling/fancy_movie/*.png
+# tis, md-flux:
+examples/tis/1D-double-well/md_flux/cross.dat
+examples/tis/1D-double-well/md_flux/energy.dat
+examples/tis/1D-double-well/md_flux/order.dat
+examples/tis/1D-double-well/md_flux/traj.gro
