@@ -25,7 +25,7 @@ class EnergyFile(FileWriter):
     """
     EnergyFile(FileWriter).
 
-    This class handles writing/reading of energy data. The data is writtein in
+    This class handles writing/reading of energy data. The data is written in
     7 columns:
 
     1) Time, i.e. the step number.
@@ -46,12 +46,11 @@ class EnergyFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the FileWriter object.
+    Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the EnergyFile object.
+        """Initialize the `EnergyFile` class.
 
         Parameters
         ----------
@@ -59,12 +58,12 @@ class EnergyFile(FileWriter):
             Name of file to read/write.
         mode : string
             Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
+            (if mode is equal to `'w'`) or read from the file (mode equal
+            to `'r'`). The default is mode equal to `'w'`.
         oldfile : string
             Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
+            in `filename`. Note that this is only useful when the mode is
+            set to `'w'`.
         """
         header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
                            'Hamiltonian', 'Temperature', 'External'],
@@ -75,8 +74,7 @@ class EnergyFile(FileWriter):
                                          header=header)
 
     def load(self):
-        """
-        Load entire energy blocks into memory.
+        """Load entire energy blocks into memory.
 
         (Quote of the day: 'memory is cheap, function calls are expensive'.)
         In the future, a more intelligent way of handling files like this
@@ -92,7 +90,7 @@ class EnergyFile(FileWriter):
 
         See Also
         --------
-        read_some_lines
+        `read_some_lines` in `pyretis.inout.fileinout.fileinout`.
         """
         for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])
@@ -107,8 +105,7 @@ class EnergyFile(FileWriter):
             yield data_dict
 
     def write(self, step, energy):
-        """
-        Write the energy data to the file.
+        """Write the energy data to the file.
 
         Parameters
         ----------

@@ -100,8 +100,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
 
 
 class FileWriter(object):
-    """
-    FileWriter(object).
+    """FileWriter(object) - A generic file writer class.
 
     This class defines a simple object to output to a file.
     Actual formatting are handled by derived objects such as the trajectory
@@ -132,19 +131,18 @@ class FileWriter(object):
 
     def __init__(self, filename, filetype, mode='w', oldfile='backup',
                  count=0, header=None):
-        """
-        Initiate the file writer object.
+        """Initiate the file writer object.
 
         Paramters
         ---------
         filename : string
             Name of the file to write.
         filetype : string
-            Identifies the filetype to write (i.e. the format).
+            Identifies the file type to write (i.e. the format).
         mode : string, optional
             This determines if we write (= 'w') or read (='r') the file.
         oldfile : string, optional
-            Behavior if the `filename` is an existing file.
+            Behavior if `filename` is an existing file.
         frame : int
             Counts the number of frames written
         header : dict, optional
@@ -171,9 +169,8 @@ class FileWriter(object):
             if oldfile != 'append' and self.header is not None:
                 self.write_line(self.header)
 
-    def fileopen(self, oldfile='bakcup'):
-        """
-        Open a file and make it ready for reading/writing.
+    def fileopen(self, oldfile='backup'):
+        """Open a file and make it ready for reading/writing.
 
         Method to open a file, to make it ready for reading/writing.
         This function is separated from the __init__ in case some derived
@@ -184,11 +181,11 @@ class FileWriter(object):
         ----------
         oldfile : string, optional
             Behavior if the `filename` is an existing file, i.e. it is only
-            usfull when self.mode = 'w'
+            useful when self.mode = 'w'
 
         Returns
         -------
-        None, but self.fileh is set to the open file.
+        None, but `self.fileh` is set to the open file.
         """
         if self.mode == 'r':  # Read data
             try:
@@ -242,13 +239,12 @@ class FileWriter(object):
             return None
 
     def write_string(self, towrite):
-        """
-        Method to write a string to the file.
+        """Method to write a string to the file.
 
         Parameters
         ----------
         towrite : string
-            This is the string to output to the file
+            The string to output to the file.
         """
         if towrite is None:
             return False
@@ -269,8 +265,7 @@ class FileWriter(object):
             return False
 
     def write_line(self, towrite):
-        """
-        Write a line with a newline at the end.
+        """Write a line with a newline at the end.
 
         This method will call `write_string` adding a new-line to the given
         string.
@@ -278,13 +273,12 @@ class FileWriter(object):
         Parameters
         ----------
         towrite : string
-            This is the string to output to the file
+            The string to output to the file
         """
         return self.write_string('{}\n'.format(towrite))
 
     def __del__(self):
-        """
-        Close a file in case the program crashes.
+        """Close a file in case the object is deleted.
 
         This method in just to close the file in case the program
         crashes. It is used here as it's not so nice to add a

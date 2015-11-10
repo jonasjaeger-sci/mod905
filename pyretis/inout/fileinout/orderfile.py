@@ -27,36 +27,38 @@ ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 
 
 class OrderFile(FileWriter):
-    """
-    OrderFile(FileWriter).
+    """OrderFile(FileWriter) - A class for order parameter files.
 
     This class handles writing/reading of order parameter data.
-    The format for the order file is:
+    The format for the order file is column-based and the columns are:
 
-    1) Time
+    1) Time.
 
-    2) Main order parameter
+    2) Main order parameter.
 
-    3) Velocity for main order parameter
+    3) Velocity for main order parameter.
 
-    4) Order parameter ``A``
+    4) Order parameter ``A``.
 
-    5) Velocity for order parameter ``A``
+    5) Velocity for order parameter ``A``.
 
-    6) Order parameter ``B``
+    6) Order parameter ``B``.
 
-    and so on. That is, columns 2, 4, 6, etc are order parameters, while
-    columns 3, 5, 7, etc are the corresponding velocities. The first column
-    is the time.
+    7) Velocity for order parameter ``B``
+
+    8) ...
+
+    And so on, that is, columns 2, 4, 6, ... are order parameters, while
+    columns 3, 5, 7, ... are the corresponding velocities. The first column
+    is always just the time (or step/cycle number).
 
     Attributes
     ----------
-    Same as for the FileWriter object.
+    Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the OrderFile object.
+        """Initialize the `OrderFile` class.
 
         Parameters
         ----------
@@ -64,12 +66,12 @@ class OrderFile(FileWriter):
             Name of file to read/write.
         mode : string
             Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
+            (if mode is equal to `'w'`) or read from the file (mode equal
+            to `'r'`). The default is mode equal to `'w'`.
         oldfile : string
             Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
+            in `filename`. Note that this is only useful when the mode is
+            set to `'w'`.
         """
         header = {'text': ['Time', 'Orderp', 'Orderv'],
                   'width': [10, 12]}
@@ -78,8 +80,7 @@ class OrderFile(FileWriter):
                                         header=header)
 
     def load(self):
-        """
-        Load the entire order parameter blocks into memory.
+        """Load entire order parameter blocks into memory.
 
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
@@ -93,11 +94,11 @@ class OrderFile(FileWriter):
         Yields
         ------
         data_dict : dict
-            Data read from the order parameter file.
+            The data read from the order parameter file.
 
         See Also
         --------
-        read_some_lines
+        `read_some_lines` in `pyretis.inout.fileinout.fileinout`.
         """
         for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])
@@ -109,8 +110,7 @@ class OrderFile(FileWriter):
             yield data_dict
 
     def write(self, step, orderdata):
-        """
-        Write the order parameter data to the file.
+        """Write the order parameter data to the file.
 
         Parameters
         ----------

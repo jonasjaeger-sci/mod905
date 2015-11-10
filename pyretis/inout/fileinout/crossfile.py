@@ -9,8 +9,7 @@ to obtain a crossing rate when combined with the crossing probability.
 Important classes
 -----------------
 
-- CrossFile: Writing/reading of crossing data (i.e. data which can be used
-  for calculation of the initial flux).
+- CrossFile: Writing/reading of crossing data.
 """
 # pyretis imports
 from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
@@ -24,7 +23,7 @@ CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
 
 class CrossFile(FileWriter):
-    """CrossFile(FileWriter).
+    """CrossFile(FileWriter) - A class for crossing data.
 
     This class handles writing/reading of crossing data. The format for the
     crossing file is in three columns:
@@ -40,11 +39,11 @@ class CrossFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the FileWriter object.
+    Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
-        """Initialize the CrossFile object.
+        """Initialize the `CrossFile` class.
 
         Parameters
         ----------
@@ -52,12 +51,12 @@ class CrossFile(FileWriter):
             Name of file to read/write.
         mode : string
             Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
+            (if mode is equal to `'w'`) or read from the file (mode equal
+            to `'r'`). The default is mode equal to `'w'`.
         oldfile : string
             Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
-            set to 'w'.
+            in `filename`. Note that this is only useful when the mode is
+            set to `'w'`.
         """
         header = {'text': ['Step', 'Int', 'Dir'],
                   'width': [10, 4, 3]}
@@ -67,10 +66,9 @@ class CrossFile(FileWriter):
 
     @staticmethod
     def line_parser(line):
-        """
-        Define a simple parser for reading the file.
+        """Define a simple parser for reading the file.
 
-        It is used in the self.load() to parse the input file.
+        It is used in the `self.load()` to parse the input file.
 
         Parameters
         ----------
@@ -91,8 +89,7 @@ class CrossFile(FileWriter):
             return None
 
     def load(self):
-        """
-        Load entire blocks from the cross file into memory.
+        """Load entire blocks from the cross file into memory.
 
         In the future, a more intelligent way of handling files like this
         may be in order, but for now the entire file is read as it's very
@@ -111,16 +108,15 @@ class CrossFile(FileWriter):
             yield data_dict
 
     def write(self, cross):
-        """
-        Write the cross data to a file.
+        """Write the cross data to a file.
 
         It will just write a space separated file without fancy formatting.
 
         Parameters
         ----------
         cross : list of tuples
-            The tuples are crossing with interfaces (if any). The typles
-            contain (timestep, interface, direction), where the direction
+            The tuples are crossing with interfaces (if any) on the form
+            `(timestep, interface, direction)` where the direction
             is '-' or '+'.
 
         See Also
@@ -131,8 +127,8 @@ class CrossFile(FileWriter):
         Note
         ----
         We add 1 to the interface number here. This is for compatibility with
-        the old fortran code where the interfaces are numbered 1,2,... rather
-        than 0,1,... .
+        the old Fortran code where the interfaces are numbered 1, 2, ...
+        rather than 0, 1, ... .
         """
         retval = []
         for cro in cross:

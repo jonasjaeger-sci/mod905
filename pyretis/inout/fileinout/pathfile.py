@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods and objects that handle output/input to files.
+"""Methods and classes for input/output of path data.
 
-Objects defined here:
+This module defines classes for writing and storein path data and
+path ensemble data.
 
-- PathEnsembleFile: Writing/reading of path ensemble data to a file.
+Important classes
+-----------------
+
+- PathEnsembleFile: Writing/reading of path ensemble data.
 
 - PathFile: Writing/reading of path data
 """
@@ -40,12 +43,20 @@ class PathFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the FileWriter object.
+    Same as for the FileWriter object. In addition
+    block_label : string
+        This label is used to identify new blocks of data
+    block_head : string
+        This is a header written for each new block. It can be used to
+        identify different blocks.
+    header_order : string
+        Header used for the order parameter.
+    header_energy
+        Header used for the energy data.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
-        """
-        Initialize the PathFile object.
+        """Initialize the PathFile object.
 
         Parameters
         ----------
@@ -85,10 +96,9 @@ class PathFile(FileWriter):
 
     @staticmethod
     def line_parser(line):
-        """
-        Define a simple parser for reading the path file.
+        """Define a simple parser for reading the path file.
 
-        It is used in the self.load() to parse the input file.
+        It is used in `self.load()` to parse the input file.
 
         Parameters
         ----------
@@ -97,14 +107,13 @@ class PathFile(FileWriter):
 
         Returns
         -------
-        out : tuple of ints
-            out is (step number, interface number and direction).
+        out : list of strings
+            Here it will just strip and split the given line.
         """
         return line.strip().split()
 
     def load(self):
-        """
-        Load a path file into the memory.
+        """Load a path file into the memory.
 
         The paths are assumed to be organized into blocks defined
         by `self.block_label`. This method will yield blocks successively.
@@ -179,8 +188,9 @@ def _line_to_path_object(line):
     Note
     ----
     TODO: This function is considered for deletion - is it going to be
-    useful or are we always going to create path data from a file. It might
-    be useful in the future for restart files.
+    useful or are we always going to create path data (rather than Path
+    objects) when we read files? It might be useful in the future for restart
+    files.
     """
     path = Path()
     data = line.split()
@@ -310,8 +320,7 @@ class PathEnsembleFile(FileWriter):
 
     def __init__(self, filename, ensemble, interfaces, mode='w',
                  oldfile='backup'):
-        """
-        Initialize the PathEnsembleFile object.
+        """Initialize the PathEnsembleFile object.
 
         Parameters
         ----------
@@ -345,8 +354,7 @@ class PathEnsembleFile(FileWriter):
         self.interfaces = interfaces
 
     def to_path_ensemble(self):
-        """
-        Read a file and return a path ensemble object.
+        """Read a file and return a path ensemble object.
 
         This will read an entire file and return a path ensemble object.
         Note that this might not be the fastest way of using the path ensemble
@@ -364,8 +372,7 @@ class PathEnsembleFile(FileWriter):
         return path_ensemble
 
     def get_paths(self):
-        """
-        Yield the different paths stored in the file.
+        """Yield the different paths stored in the file.
 
         The lines are read on-the-fly, converted and yielded one-by-one.
         Note that the file will be opened here, i.e. it will assumed that
@@ -391,8 +398,7 @@ class PathEnsembleFile(FileWriter):
             raise
 
     def write(self, cycle, path_ensemble, path=None):
-        """
-        Write a given path from a path ensemble to the file.
+        """Write a given path from a path ensemble to the file.
 
         If the path is not explicitly given, the latest path from the path
         ensemble will be written.

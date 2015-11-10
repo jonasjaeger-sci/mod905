@@ -133,10 +133,6 @@ class OutputTask(object):
         if self.target == 'screen':
             out = self.writer.write(step['step'], result,
                                     first_step=(step['stepno'] == 0))
-            #result['stepno'] = step['step']
-            #out = self.writer.get_row(result)
-            #if step['stepno'] == 0:  # add header
-            #    out = '\n'.join([self.writer.get_header()] + [out])
             print(out)
 
         else:
