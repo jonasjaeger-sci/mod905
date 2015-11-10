@@ -53,7 +53,7 @@ _REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
 
 
 def create_backup(outputfile):
-    """ Check if a file exist and create backup if requested.
+    """Check if a file exist and create backup if requested.
 
     This method will check if the given filename exist and if it
     does, it will move that file to a new filename such that the given
