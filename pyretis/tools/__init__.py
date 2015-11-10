@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """pyretis tools
 
-This package defines some simple tools which may be usefull for
+This package defines some simple tools which may be useful for
 creating simulations.
 
 Package structure

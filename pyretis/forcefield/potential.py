@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-Define the class for a generic potential function.
+"""Define the class for a generic potential function.
 
-This class is subclassed in all potential functions.
+This class is sub-classed in all potential functions.
 """
 import warnings
 
 
 class PotentialFunction(object):
-    """
-    PotentialFunction(object).
+    """PotentialFunction(object).
 
     Generic class for potential functions.
 
@@ -26,8 +24,7 @@ class PotentialFunction(object):
     """
 
     def __init__(self, dim=1, desc=''):
-        """
-        Initiate the potential.
+        """Initiate the potential.
 
         Parameters
         ----------
@@ -41,8 +38,7 @@ class PotentialFunction(object):
         self.params = {}
 
     def check_parameters(self):
-        """
-        Check on the consistency of the parameters.
+        """Check on the consistency of the parameters.
 
         This can be implemented for the different potential functions.
 
@@ -57,8 +53,7 @@ class PotentialFunction(object):
         return True
 
     def update_parameters(self, params):
-        """
-        Update the parameters for the potential.
+        """Update the parameters for the potential.
 
         In this generic function, it will just try to set attributes
         for the object.
@@ -94,8 +89,7 @@ class PotentialFunction(object):
         return self.check_parameters()
 
     def get_parameters(self):
-        """
-        Return information about the parameters for the potential.
+        """Return information about the parameters for the potential.
 
         Returns
         -------
@@ -111,8 +105,7 @@ class PotentialFunction(object):
         return 'Parameters:\n'+'\n'.join(allinfo)
 
     def parameters_to_dict(self):
-        """
-        Generate a dictionary containing the parameters for the potential.
+        """Generate a dictionary containing the parameters for the potential.
 
         Returns
         -------

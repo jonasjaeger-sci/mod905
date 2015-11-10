@@ -8,8 +8,7 @@ __all__ = ['Particles']
 
 
 class Particles(object):
-    """
-    Particles(object).
+    """Particles(object).
 
     This is a simple particle list. It stores the positions,
     velocities, forces, masses (and inverse masses) and type information
@@ -44,8 +43,7 @@ class Particles(object):
     """
 
     def __init__(self, dim=1):
-        """
-        Initialize the Particle list.
+        """Initialize the Particle list.
 
         Here we dictate that the particle list is created with zero particles.
         """
@@ -61,10 +59,9 @@ class Particles(object):
         self.dim = dim
 
     def empty_list(self):
-        """
-        Reset the particle list.
+        """Reset the particle list.
 
-        It will delete all particles in the list and set other variables to
+        This will delete all particles in the list and set other variables to
         `None`.
 
         Note
@@ -110,8 +107,7 @@ class Particles(object):
 #        return dims[0]
 
     def get_phase_point(self):
-        """
-        Return a copy of the current phase point.
+        """Return a copy of the current phase point.
 
         The phase point includes `self.pos` and `self.vel`. In addition it
         returns the accompanying forces from `self.force`.
@@ -127,8 +123,7 @@ class Particles(object):
         return retval
 
     def set_phase_point(self, phasepoint):
-        """
-        Set the position, velocities (and forces) for the particles.
+        """Set the position, velocities (and forces) for the particles.
 
         The function is included here for convenience - it can be used together
         with `self.get_phase_point()` for easy change of the particle state.
@@ -149,8 +144,7 @@ class Particles(object):
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):
-        """
-        Add a particle to the system.
+        """Add a particle to the system.
 
         Parameters
         ----------
@@ -192,14 +186,13 @@ class Particles(object):
         self.npart += 1
 
     def get_selection(self, properties, selection=None):
-        """
-        Return selected properties for a selection of particles.
+        """Return selected properties for a selection of particles.
 
         Parameters
         ----------
         properties : list of strings
             The strings represent the properties to return.
-        selection : optional, list with indices to return
+        selection : optional, list with indexes to return
             If selection is not given, data for all particles
             are returned.
 
@@ -227,8 +220,7 @@ class Particles(object):
         return sel_prop
 
     def __iter__(self):
-        """
-        Iterate over the particles.
+        """Iterate over the particles.
 
         This function will yield the properties of the different particles.
 
@@ -243,8 +235,7 @@ class Particles(object):
             yield part
 
     def pairs(self):
-        """
-        Iterate over all pairs of particles.
+        """Iterate over all pairs of particles.
 
         For more sophisticated particle lists this can/should be an
         implementation of a 'smart' neighbor list.

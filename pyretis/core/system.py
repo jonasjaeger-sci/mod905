@@ -18,8 +18,7 @@ __all__ = ['System']
 
 
 class System(object):
-    """
-    This class defines a generic system for simulation.
+    """This class defines a generic system for simulation.
 
     Attributes
     ----------
@@ -27,15 +26,15 @@ class System(object):
         Defines the simulation box.
     temperature : dict
         the float temperature['set'] defines the set temperature of the
-        simulation (if applicable)  and the derived float 1.0/(kB*T)
+        simulation (if applicable)  and the derived float ``1.0/(k_B*T)``
         which is stored in temperature['beta'].
         temperature['dof'] contains information about the degrees of
         freedom which is used when calculating the instantaneous temperature
         of the system.
     v_pot : float
         the potential energy of the system
-    particles : oject like `pyretis.core.particles.Particles`
-        Defines the particleslist which represents the particles and the
+    particles : object like `pyretis.core.particles.Particles`
+        Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
     forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
@@ -46,8 +45,7 @@ class System(object):
     """
 
     def __init__(self, units='eV/K', box=None, temperature=None):
-        """
-        Initialization of the system.
+        """Initialization of the system.
 
         Parameters
         ----------
@@ -71,14 +69,13 @@ class System(object):
         self.temperature['beta'] = self.calculate_beta()
         self.box = box
         self._adjust_dof_according_to_box()
-        # intialize other variables:
+        # initialize other variables:
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
 
     def adjust_dof(self, dof):
-        """
-        Adjust the degrees of freedom we are going to neglect for the system.
+        """Adjust the (number of) degrees of freedom to neglect in the system.
 
         Parameters
         ----------
@@ -92,8 +89,7 @@ class System(object):
             self.temperature['dof'] += np.array(dof)
 
     def _adjust_dof_according_to_box(self):
-        """
-        Adjust the dof's according to the box connected to the system.
+        """Adjust the dof's according to the box connected to the system.
 
         For each 'True' in the periodic settings of the box, we subtract
         one degree of freedom for that dimension.
@@ -113,8 +109,7 @@ class System(object):
             return False
 
     def get_boltzmann(self):
-        """
-        Return the Boltzmann constant in correct units for the system.
+        """Return the Boltzmann constant in correct units for the system.
 
         Returns
         -------
@@ -124,8 +119,7 @@ class System(object):
         return CONSTANTS['kB'][self.units]
 
     def get_dim(self):
-        """
-        Return the dimensionality of the system.
+        """Return the dimensionality of the system.
 
         The value is obtained from the box. In other words,
         it is the box object that defines the dimensionality of
@@ -143,8 +137,7 @@ class System(object):
             return 1
 
     def calculate_beta(self, temperature=None):
-        r"""
-        Return the so-called beta factor for the system.
+        r"""Return the so-called beta factor for the system.
 
         Beta is defined as :math:`\beta = 1/(k_\text{B} \times T`
         where :math:`k_\text{B}` is the Boltzmann constant and the
@@ -172,8 +165,7 @@ class System(object):
 
     def add_particle(self, pos, vel=None, force=None,
                      mass=1.0, name='?', ptype='?'):
-        """
-        Add a particle to the system.
+        """Add a particle to the system.
 
         Parameters
         ----------
@@ -204,8 +196,7 @@ class System(object):
                                     name=name, ptype=ptype)
 
     def force(self):
-        """
-        Update the forces by calling `self._evaluate_potential_force`.
+        """Update the forces by calling `self._evaluate_potential_force`.
 
         Returns
         -------
@@ -221,8 +212,7 @@ class System(object):
         return self.particles.force, virial
 
     def potential(self):
-        """
-        Update `self.v_pot` by calling `self._evaluate_potential_force()`.
+        """Update `self.v_pot` by calling `self._evaluate_potential_force()`.
 
         Returns
         -------
@@ -233,8 +223,7 @@ class System(object):
         return self.v_pot
 
     def potential_and_force(self):
-        """
-        Update the potential energy and forces.
+        """Update the potential energy and forces.
 
         The potential in `self.v_pot` and the forces in
         `self.particles.force` are here updated by calling
@@ -257,15 +246,14 @@ class System(object):
         return v_pot, force, virial
 
     def evaluate_force(self, **kwargs):
-        """
-        Evaluate the forces on the particles.
+        """Evaluate the forces on the particles.
 
         Parameters
         ----------
-        kwargs : dictionary with settings that can be used to override
-            the information in self.particles. This is useful if one
-            wants to evaluate the forces for a different configuration
-            of the particles.
+        kwargs : dictionary
+            Settings that can be used to override the information in
+            `self.particles`. This is useful if one wants to evaluate
+            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -282,15 +270,14 @@ class System(object):
         return self._evaluate_potential_force(what='force', **kwargs)
 
     def evaluate_potential(self, **kwargs):
-        """
-        Evaluate the potential energy.
+        """Evaluate the potential energy.
 
         Parameters
         ----------
-        kwargs : dictionary with settings that can be used to override
-            the information in self.particles. This is useful if one
-            wants to evaluate the potential for a different configuration
-            of the particles.
+        kwargs : dictionary
+            Settings that can be used to override the information in
+            `self.particles`. This is useful if one wants to evaluate
+            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -299,22 +286,21 @@ class System(object):
 
         Note
         ----
-        This method will not update self.v_pot but it will just return it's
+        This method will not update `self.v_pot` but it will just return it's
         value for the (possibly given) configuration.
         The method `self.potential` can be used to update `self.v_pot`.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
 
     def evaluate_potential_and_force(self, **kwargs):
-        """
-        Evaluate the potential and/or the force.
+        """Evaluate the potential and/or the force.
 
         Parameters
         ----------
-        kwargs : dictionary with settings that can be used to override
-            the information in self.particles. This is useful if one
-            wants to evaluate the potential for a different configuration
-            of the particles.
+        kwargs : dictionary
+            Settings that can be used to override the information in
+            `self.particles`. This is useful if one wants to evaluate
+            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -333,8 +319,7 @@ class System(object):
         return self._evaluate_potential_force(what='both', **kwargs)
 
     def _evaluate_potential_force(self, what='both', **kwargs):
-        """
-        Evaluate the potential or force or both.
+        """Evaluate the potential or force or both.
 
         Parameters
         ----------
@@ -354,7 +339,7 @@ class System(object):
         args['particles'] = kwargs.get('particles', self.particles)
         args['box'] = kwargs.get('box', self.box)
         # Here we allow for **args when calling the force field. This is
-        # simply because we do not know beforhand what parameters we should
+        # simply because we do not know what parameters we should
         # pass into the force field.
         if what == 'potential':
             return self.forcefield.evaluate_potential(**args)
@@ -365,8 +350,7 @@ class System(object):
 
     def generate_velocities(self, rgen=None, seed=0, momentum=True,
                             temperature=None, distribution='maxwell'):
-        """
-        Set the velocities of the particles according to a given temperature.
+        """Set velocities for the particles according to a given temperature.
 
         The temperature can be specified, or it can be taken from
         `self.temperature['set']`.
@@ -404,8 +388,7 @@ class System(object):
             warnings.warn(msg)
 
     def calculate_temperature(self):
-        """
-        Calculate the temperature of the current configuration of the system.
+        """Calculate the temperature of the the system.
 
         It is included here for convenience since the dof's
         are easily accessible and it's a very common calculation to perform,

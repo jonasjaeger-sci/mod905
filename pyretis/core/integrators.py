@@ -14,8 +14,7 @@ __all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']
 
 
 def create_integrator(settings, simulation_type):
-    """
-    Create an integrator according to the given integrator settings.
+    """Create an integrator according to the given integrator settings.
 
     This function is included as a convenient way of setting up and selecting
     a integrator. It will return the selected integrator.
@@ -63,8 +62,7 @@ def create_integrator(settings, simulation_type):
 
 
 class Integrator(object):
-    """
-    Integrator(object).
+    """Integrator(object).
 
     This class defines an integrator. The integrator is assumed to
     act on a system as will typically need to execute the command
@@ -73,7 +71,7 @@ class Integrator(object):
     Attributes
     ----------
     delta_t : float
-        Time timesptep.
+        Time step for the integration.
     desc : string
         Description of the integrator.
     dynamics : str
@@ -82,21 +80,19 @@ class Integrator(object):
     """
 
     def __init__(self, delta_t, desc='Generic integrator', dynamics=''):
-        """
-        Initialization of the integrator.
+        """Initialization of the integrator.
 
         Parameters
         ----------
         delta_t : float
-            The timestep for the integrator.
+            The time step for the integrator.
         """
         self.delta_t = delta_t
         self.desc = desc
         self.dynamics = dynamics
 
     def integration_step(self, system):
-        """
-        Perform one time step of the integration.
+        """Perform one time step of the integration.
 
         Parameters
         ----------
@@ -112,8 +108,7 @@ class Integrator(object):
         raise NotImplementedError
 
     def invert_dt(self):
-        """
-        Invert the time step for the integration.
+        """Invert the time step for the integration.
 
         Returns
         -------
@@ -124,8 +119,7 @@ class Integrator(object):
         return self.delta_t > 0.0
 
     def __call__(self, system):
-        """
-        To allow calling `Integrator(system)`.
+        """To allow calling `Integrator(system)`.
 
         Here, we are just calling `self.integration_step(system)`.
 
@@ -147,8 +141,7 @@ class Integrator(object):
 
 
 class Verlet(Integrator):
-    """
-    Verlet(Integrator).
+    """Verlet(Integrator).
 
     This class defines the Verlet integrator.
 
@@ -163,8 +156,7 @@ class Verlet(Integrator):
     """
 
     def __init__(self, delta_t, desc='The verlet integrator'):
-        """
-        Initiate the Velocity Verlet integrator.
+        """Initiate the Verlet integrator.
 
         Parameters
         ----------
@@ -179,8 +171,7 @@ class Verlet(Integrator):
         self.previous_pos = None
 
     def set_initial_positions(self, particles):
-        """
-        Initiate the positions for the Verlet integration.
+        """Initiate the positions for the Verlet integration.
 
         Parameters
         ----------
@@ -190,8 +181,7 @@ class Verlet(Integrator):
         self.previous_pos = particles.pos - particles.vel * self.delta_t
 
     def integration_step(self, system):
-        """
-        Perform one Verlet integration step.
+        """Perform one Verlet integration step.
 
         Parameters
         ----------
@@ -215,15 +205,14 @@ class Verlet(Integrator):
 
 
 class VelocityVerlet(Integrator):
-    """
-    VelocityVerlet(Integrator).
+    """VelocityVerlet(Integrator).
 
-    This class defines the velocity verlet integrator.
+    This class defines the Velocity Verlet integrator.
 
     Attributes
     ----------
     delta_t : float
-        Time timestep.
+        The time step.
     half_delta_t : float
         Half of timestep
     desc : string
@@ -231,8 +220,7 @@ class VelocityVerlet(Integrator):
     """
 
     def __init__(self, delta_t, desc='The velocity verlet integrator'):
-        """
-        Initiate the Velocity Verlet integrator.
+        """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
@@ -246,8 +234,7 @@ class VelocityVerlet(Integrator):
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
-        """
-        Verlocity verlet integration, one time step.
+        """Verlocity Verlet integration, one time step.
 
         Parameters
         ----------
@@ -271,8 +258,7 @@ class VelocityVerlet(Integrator):
 
 
 class Langevin(Integrator):
-    """
-    Langevin(Integrator).
+    """Langevin(Integrator).
 
     This class defines a Langevin integrator.
 
@@ -282,9 +268,9 @@ class Langevin(Integrator):
         This is the class that handles generation of random numbers
     gamma : float
         The friction parameter
-    high_friction : boolan
+    high_friction : boolean
         Determines if we are in the high_friction limit and should
-        do the overdamped version
+        do the over damped version
     init_params : boolean
         If true, we will initiate parameters for the Langevin integrator when
         integrate_step is invoked.
@@ -310,7 +296,7 @@ class Langevin(Integrator):
         - `c0` : float
             Corresponds to ``c0`` in the equation above.
         - `a1` : float
-            Correcponds to ``c1*dt`` in the equation above.
+            Corresponds to ``c1*dt`` in the equation above.
         - 'a2' : numpy.array
             Corresponds to ``c2*dt*dt/mass`` in the equation above.
             Here we divide by the masses in order to use the forces rather
@@ -324,23 +310,22 @@ class Langevin(Integrator):
             Corresponds to ``c2*dt/mass`` in the equation above.
             Here we also divide by the masses, resulting in a numpy.array
         - `mean` : numpy.array (2,)
-            The means for the bivariate gaussian distribution
+            The means for the bivariate Gaussian distribution
         - `cov` : numpy.array (2,2)
-            This array contains the covariance for the bivariate gaussian
+            This array contains the covariance for the bivariate Gaussian
             distribution. `param_iner['mean']` and `param_iner['cov']` are
             used as parameters when drawing ``dr`` and ``dv`` from the
             bivariate distribution.
 
     Note
     ----
-    Currently, we are using a multinormal distribution from numpy.
+    Currently, we are using a multi-normal distribution from numpy.
     Consider replacing this one as it seems somewhat slow.
     """
 
     def __init__(self, delta_t, gamma, rgen=None, seed=0, high_friction=False,
                  desc='Langevin integrator'):
-        """
-        Initiate the Langevin integrator.
+        """Initiate the Langevin integrator.
 
         Actually, it is very convenient to set some variables for the
         different particles. However, to have a uniform initialization
@@ -382,8 +367,7 @@ class Langevin(Integrator):
         self.init_params = True
 
     def _init_parameters(self, system):
-        """
-        Extra initialization of the Langevin integrator.
+        """Extra initialization of the Langevin integrator.
 
         Parameters
         ----------
@@ -435,8 +419,7 @@ class Langevin(Integrator):
                 # NOTE: Can be simplified - mean is always just zero...
 
     def integration_step(self, system):
-        """
-        Langevin integration, one time step.
+        """Langevin integration, one time step.
 
         Parameters
         ----------
@@ -459,8 +442,7 @@ class Langevin(Integrator):
             return self.integration_step_inertia(system)
 
     def integration_step_overdamped(self, system):
-        """
-        Overdamped Langevin integration, one time step.
+        """Over damped Langevin integration, one time step.
 
         Parameters
         ----------
@@ -484,8 +466,7 @@ class Langevin(Integrator):
         return None
 
     def integration_step_inertia(self, system):
-        """
-        Langevin integration, one time step.
+        """Langevin integration, one time step.
 
         Parameters
         ----------

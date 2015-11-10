@@ -8,8 +8,7 @@ __all__ = ['histogram', 'match_all_histograms', 'histogram_and_avg']
 
 def histogram(data, bins=10, limits=(-1, 1), density=False,
               weights=None):
-    """
-    Create a histogram of the given `data`.
+    """Create a histogram of the given data.
 
     Parameters
     ----------
@@ -38,11 +37,11 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
 
 
 def histogram_and_avg(data, bins, density=True):
-    """
-    Create histogram an return bin, midpoints and simples statistics.
+    """Create histogram an return bins, midpoints and simple statistics.
 
     The simple statistics includes the mean value and the standard deviation.
-    The return structure is useful for plotting routines.
+    The return structure is useful for plotting routines. The midpoints
+    returned are the midpoints of the bins.
 
     Parameters
     ----------
@@ -74,8 +73,7 @@ def histogram_and_avg(data, bins, density=True):
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):
-    """
-    Function to match two histograms.
+    """Function to match two histograms.
 
     The matching is done so that the integral of the overlapping regions of
     the two histograms are equal.
@@ -113,8 +111,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
 
 
 def match_all_histograms(histograms, umbrellas):
-    """
-    Function to mach several histograms from an umbrella sampling.
+    """Function to match several histograms from an umbrella sampling.
 
     Parameters
     ----------

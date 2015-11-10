@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Definitions of generic simulation objects.
 
-This module defines the genering simulation object. This is the base
+This module defines the generic simulation object. This is the base
 class for all other simulations.
 
 Important classes and functions
@@ -18,8 +18,7 @@ __all__ = ['Simulation']
 
 
 class Simulation(object):
-    """
-    This class defines a generic simulation.
+    """This class defines a generic simulation.
 
     Attributes
     ----------
@@ -28,12 +27,12 @@ class Simulation(object):
         are 'end' which represents the cycle number where the simulation
         should end, 'step' which is the current cycle number, 'start' which
         is the cycle number we started at, 'stepno' which is the number
-        cycles we have perfomred to arrive at cycle no 'step'. 'stepno' might
+        cycles we have performed to arrive at cycle no 'step'. 'stepno' might
         be different from 'step' since 'start' might be != 0.
     task : dict
         Each dich contain the tasks to be done. A task is represented by a
         object of type `SimulationTask` from `.simulation_task` with some
-        additional settings on how to store the output and when to exectute
+        additional settings on how to store the output and when to execute
         the task. Note that the actual execution of the task in controlled in
         the object. The keywords are:
 
@@ -58,7 +57,7 @@ class Simulation(object):
         Parameters
         ----------
         startcycle : int, optional.
-            The cycle we start the simulation on, can be usefull if
+            The cycle we start the simulation on, can be useful if
             restarting.
         endcycle : int, optional.
             This number represents the cycle number where the simulation
@@ -73,8 +72,7 @@ class Simulation(object):
         self.system = None
 
     def extend_cycles(self, steps):
-        """
-        To extend a simulation with the given number of steps.
+        """Extend a simulation with the given number of steps.
 
         Parameters
         ----------
@@ -90,8 +88,7 @@ class Simulation(object):
         self.cycle['end'] += steps
 
     def is_finished(self):
-        """
-        Determine if the simulation is finished.
+        """Determine if the simulation is finished.
 
         In this object, the simulation is done if the current step number
         is larger than the end cycle. Note that the number of steps
@@ -104,8 +101,7 @@ class Simulation(object):
         return self.cycle['step'] >= self.cycle['end']
 
     def step(self):
-        """
-        Execute a simulation step.
+        """Execute a simulation step.
 
         Here, the tasks in `self.task` will be executed sequentially.
 
@@ -132,12 +128,11 @@ class Simulation(object):
         return results
 
     def execute_tasks(self):
-        """
-        Execute all the tasks in sequential order.
+        """Execute all the tasks in sequential order.
 
         Returns
         -------
-        resuts : dict
+        results : dict
             The results from the different tasks (if any).
         first : boolean
             This is just to do the initial tasks, i.e. tasks that should
@@ -150,8 +145,7 @@ class Simulation(object):
         return results
 
     def add_task(self, task, position=None):
-        """
-        Adding a new simulation task.
+        """Add a new simulation task.
 
         A task can still be added manually by simply appending to `self.task`.
         This method will however do some checks so that the task added can
@@ -171,7 +165,7 @@ class Simulation(object):
         ----
         SimulationTask will do some tests on the consistency of the keys
         'func', 'args' and 'kwargs'. If this is not consistent, it will
-        throw am AssertionError.
+        throw an AssertionError.
 
         See Also
         --------

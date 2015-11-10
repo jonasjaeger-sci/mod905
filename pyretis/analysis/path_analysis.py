@@ -16,15 +16,14 @@ __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
 
 
 def _get_successfull(path_ensemble, idetect):
-    """
-    Build the data of accepted (successful) paths.
+    """Build the data of accepted (successful) paths.
 
-    In the PathEmsemble object all paths are stored, both accepted
-    and rejected and the PathEnsemble.get_accepted() is used here to
+    In the `PathEmsemble` object all paths are stored, both accepted and
+    rejected and the `PathEnsemble.get_accepted()` is used here to
     iterate over accepted paths. Successful paths are defined as paths
     which are able to reach the interface specified with `idetect`. For
-    each accepted path, this function will give a value of 1 if the path
-    was successful and 0 otherwise.
+    each accepted path, this function will give a value of `1` if the path
+    was successful and `0` otherwise.
 
     Parameters
     ----------
@@ -48,8 +47,7 @@ def _get_successfull(path_ensemble, idetect):
 
 
 def _running_pcross(path_ensemble, idetect, data=None):
-    """
-    Create a running average of the crossing probability.
+    """Create a running average of the crossing probability.
 
     The running average is created as a function of the cycle number.
     Note that the accepted paths are used to create an array which is
@@ -60,7 +58,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyse.
+        This is the path ensemble we will analyze.
     idetect : float
         This is the interface used for detecting if a path is successful
         or not.
@@ -78,7 +76,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
     See Also
     --------
-    _get_successfull
+    `_get_successfull`
     """
     if data is None:
         data = _get_successfull(path_ensemble, idetect)
@@ -86,9 +84,12 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
 
 def _pcross_lambda(path_ensemble, ngrid=1000):
-    """
-    Calculate crossing probability for an ensemble as function of
-    the order parameter.
+    """Calculate crossing probability for an ensemble.
+
+    The crossing probability is here obtained as a unction of the order
+    parameter. The actual calculation is performed by
+    `_pcross_lambda_cumulative` and this method is just a wrapper to be
+    able to use an object like `pyretis.core.path.PathEnsemble` as input.
 
     Parameters
     ----------
@@ -133,8 +134,7 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
 def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
                               weights=None):
-    """
-    Calculate crossing probability as a function of the order parameter.
+    """Calculate crossing probability as a function of the order parameter.
 
     It will do the actual calculation of the crossing probability as
     a function of order parameter. It is split off from `pcross_lambda`
@@ -182,13 +182,12 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
 
 
 def _get_path_distribution(path_ensemble, bins=1000):
-    """
-    Calculate the distribution of path lengths.
+    """Calculate the distribution of path lengths.
 
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyse.
+        This is the path ensemble we will analyze.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -222,8 +221,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
 
 def _get_path_length(path):
-    """
-    Return the path length for different moves.
+    """Return the path length for different moves.
 
     Different moves may have a different way of obtaining the path length.
     (Example time-reversal vs. shooting move).
@@ -232,7 +230,7 @@ def _get_path_length(path):
     ----------
     path : dict
         This is the dict containing the information about the path, typically
-        obtained by a ``for path in path_ensemble.get_paths():``.
+        obtained by a `for path in path_ensemble.get_paths():`.
 
     Returns
     -------
@@ -251,13 +249,12 @@ def _get_path_length(path):
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
-    """
-    Analyse the shooting performed in the path ensemble.
+    """Analyze the shooting performed in the path ensemble.
 
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyse.
+        This is the path ensemble we will analyze.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -285,8 +282,7 @@ def _shoot_analysis(path_ensemble, bins=1000):
 
 
 def _update_shoot_stats(shoot_stats, path):
-    """
-    Update the shooting statistics with the status of the given `path`.
+    """Update the shooting statistics with the status of the given path.
 
     Parameters
     ----------
@@ -316,8 +312,7 @@ def _update_shoot_stats(shoot_stats, path):
 
 
 def _create_shoot_histograms(shoot_stats, bins):
-    """
-    Create histograms and scale for the shoot analysis.
+    """Create histograms and scale for the shoot analysis.
 
     Parameters
     ----------
@@ -343,7 +338,7 @@ def _create_shoot_histograms(shoot_stats, bins):
 
     See Also
     --------
-    histogram in `pyretis.analysis.histogram`.
+    `histogram` in `pyretis.analysis.histogram`.
     """
     histograms = {}
     scale = {}
@@ -359,10 +354,9 @@ def _create_shoot_histograms(shoot_stats, bins):
 
 
 def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
-    """
-    Analyse a path ensemble object.
+    """Analyze a path ensemble object.
 
-    This method will make use of the different analysis functions and analyse
+    This method will make use of the different analysis functions and analyze
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
     is an object like `pyretis.core.path.PathEnsemble` and that this path
@@ -387,10 +381,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
 
     See Also
     --------
-    _pcross_lambda
-    _running_pcross
-    _get_path_distribution
-    _shoot_analysis
+    `_pcross_lambda`, `_running_pcross`, `_get_path_distribution` and
+    `_shoot_analysis`.
     """
     result = {}
     if path_ensemble.nstats['npath'] != len(path_ensemble.paths):
@@ -439,14 +431,14 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
 
 
 def analyse_path_ensemble(path_ensemble, settings, idetect=None):
-    """
-    Analyse a path ensemble.
+    """Analyze a path ensemble.
 
-    This method will make use of the different analysis functions and analyse
+    This method will make use of the different analysis functions and analyze
     a path ensemble. It will also output the results using the specified
     output object. This function is more general than the
     `analyse_path_ensemble_object` function in that it should work on both
-    `PathEnsemble` and `PathEnsembleFile` objects.
+    `PathEnsemble` and `PathEnsembleFile` objects. The running average is
+    updated on-the-fly, see Wikipedia for details [wikimov]_.
 
     Parameters
     ----------
@@ -468,14 +460,13 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
 
     See Also
     --------
-    _update_shoot_stats
-    _pcross_lambda_cumulative
-    _create_shoot_histograms
+    `_update_shoot_stats`, `pcross_lambda_cumulative` and
+    `_create_shoot_histograms`
 
     References
     ----------
-    .. [1] Wikipedia, "Moving Average",
-           http://en.wikipedia.org/wiki/Moving_average
+    .. [wikimov] Wikipedia, "Moving Average",
+       http://en.wikipedia.org/wiki/Moving_average
     """
     result = {'prun': [], 'cycle': []}
     if idetect is None:

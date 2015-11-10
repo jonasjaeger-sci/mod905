@@ -17,7 +17,7 @@ Modules
   used to represent a generic force field.
 
 - potential.py: Defines the generic potential function object
-  (`PotentialFunction`) which is subclassed in other potential functions.
+  (`PotentialFunction`) which is sub-classed in other potential functions.
 
 - potentials.py: This module defines some simple potential functions.
 

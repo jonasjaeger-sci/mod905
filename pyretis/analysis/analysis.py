@@ -9,8 +9,7 @@ __all__ = ['running_average', 'block_error',
 
 
 def running_average(data):
-    """
-    Function to create a running average of the given data.
+    """Function to create a running average of the given data.
 
     The running average will be calculated over the rows.
 
@@ -29,8 +28,7 @@ def running_average(data):
 
 
 def _chunks(itera, size):
-    """
-    Yield successive size-sized chunks from `itera`.
+    """Yield successive same-sized chunks from `itera`.
 
     Parameters
     ----------
@@ -39,28 +37,29 @@ def _chunks(itera, size):
     size : int
         The size of the chunks.
 
-    Returns
-    -------
-    This is an iterator and will yield the chunks.
+    Yields
+    ------
+    out : object like `itera`
+        The successive same-sized chunks from `itera`-
 
     Notes
     -----
-    We are here using range rather than xrange. This is just to ease
+    We are here using `range` rather than `xrange`. This is just to ease
     the transition from python2 to python3. Note that this will probably
-    lead to some inefficiencies for python2 execution.
+    lead to some inefficiencies for python2 execution. The code is based
+    on one question at Stackoverflow [chunks]_.
 
     References
     ----------
-    .. [1] Stackoverflow, "How do you split ...",
-           http://stackoverflow.com/a/312464
+    .. [chunks] Stackoverflow, "How do you split ...",
+       http://stackoverflow.com/a/312464
     """
     for i in range(0, len(itera), size):
         yield itera[i:i+size]
 
 
 def block_error(data, maxblock=None, blockskip=1):
-    """
-    Perform block error analysis.
+    """Perform block error analysis.
 
     This method will estimate the standard deviation in the input
     data by performing a block analysis. The number of blocks
@@ -130,8 +129,7 @@ def block_error(data, maxblock=None, blockskip=1):
 
 
 def block_error_corr(data, maxblock=5000, blockskip=1):
-    """
-    Run block error analysis, obtain relative errors and correlation length.
+    """Run block error analysis, obtain relative errors & correlation length.
 
     Parameters
     ----------
@@ -179,8 +177,7 @@ def block_error_corr(data, maxblock=5000, blockskip=1):
 
 
 def safe_divide(numerator, denominator, val_if_zero=np.nan):
-    """
-    Function to divide two numbers safely.
+    """Function to divide two numbers safely.
 
     If a zero division exception is raised this function will handle it.
 
@@ -201,8 +198,7 @@ def safe_divide(numerator, denominator, val_if_zero=np.nan):
 
 
 def mean_square_displacement(data, ndt=None):
-    """
-    Calculate the mean square displacement for the given data.
+    """Calculate the mean square displacement for the given data.
 
     Parameters
     ----------
@@ -230,8 +226,7 @@ def mean_square_displacement(data, ndt=None):
 
 
 def analyse_data(data, settings):
-    """
-    Analyse the given data and run some common analysis procedures.
+    """Analyze the given data and run some common analysis procedures.
 
     Specifically it will:
     1) Calculate a running average.

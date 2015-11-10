@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This package defines analysis tools for the pyretis program.
+"""This package defines analysis tools for the pyretis program.
 
 The analysis tools are intended to be used for analysis of the
 simulation output from the pyretis program. The typically use of this
@@ -19,7 +18,7 @@ Modules
 
 - analysis.py: Defines methods for numerical analysis.
 
-- energy_analysis.py: Defines methods useful for analysing the energy output.
+- energy_analysis.py: Defines methods useful for analyzing the energy output.
 
 - histogram.py: Defines methods useful for generating histograms.
 
@@ -30,22 +29,22 @@ Modules
 Important classes and functions
 -------------------------------
 
-- analyse_energies: Analyse energy data from a simulation.
+- analyse_energies: Analyze energy data from a simulation.
   It will calculate a running average, a distribution and do a block
   error analysis.
 
-- analyse_flux: Analyse flux data from a MD flux simulation.
+- analyse_flux: Analyze flux data from a MD flux simulation.
   It will calculate a running average, a distribution and do a block
   error analysis.
 
-- analyse_orderp: Analyse order parameter data.
+- analyse_orderp: Analyze order parameter data.
   It will calculate a running average, a distribution and do a block
   error analysis. In addition if will analyse the mean square displacement
   if requested.
 
-- analyse_path_ensemble: Analyse the results from a single path ensemble.
+- analyse_path_ensemble: Analyze the results from a single path ensemble.
   It will calculate a running average of the probabilities, a crossing
-  probability, perform an block error analysis, analyse lengths of paths,
+  probability, perform an block error analysis, analyze lengths of paths,
   type of Monte Carlo moves and calculate an efficiency.
 
 - match_probabilities: Method to match probabilities from several
@@ -67,9 +66,10 @@ from .path_analysis import analyse_path_ensemble, match_probabilities
 
 def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
                     simulation_settings):
-    """
-    This method will analyse the output from a MD-flux simulation and return
-    the results as a convenient structure for plotting or reporting.
+    """This method will analyze the output from a MD-flux simulation.
+
+    The obtained results will be returned as a convenient structure for
+    plotting or reporting.
 
     Parameters
     ----------

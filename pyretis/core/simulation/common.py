@@ -21,7 +21,7 @@ def check_settings(settings, required):
     `settings`. If one or more keys from the given `required` list of
     strings are not found, this function will return False. Otherwise
     if will return True. Typically, and exception should be raised if False
-    is returned, this is handled outide the function in case someone wants to
+    is returned, this is handled outside the function in case someone wants to
     add some magic handling of missing settings.
 
     Parameters

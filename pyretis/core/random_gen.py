@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This module handles random number generation.
+"""This module handles random number generation.
 
 It derives most of the random number procedures from `RandomState` in
 `numpy.random`.
@@ -15,12 +14,11 @@ __all__ = ['RandomGenerator']
 
 
 class RandomGenerator(object):
-    """
-    RandomGenerator(object).
+    """RandomGenerator(object).
 
     This class that defines a random number generator.
     It will use `numpy.random.RandomState` for the actual generation, and we
-    refer to the numpy documentation [1]_.
+    refer to the numpy documentation [npr]_.
     Here we could inherit from RandomState but here we do not wish (?) to
     inherit from an old-style class. Here, this results in some unfortunate(?)
     small functions here that will actually just call `RandomState`.
@@ -34,12 +32,11 @@ class RandomGenerator(object):
     References
     ----------
 
-    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
+    .. [npr] http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
     """
 
     def __init__(self, seed=None):
-        """
-        Initiate the random number generator.
+        """Initiate the random number generator.
 
         If a seed is given, the random number generator will be seeded.
 
@@ -51,8 +48,7 @@ class RandomGenerator(object):
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
-        """
-        Call `self.rgen.rand()`, see the description of this method.
+        """Call `self.rgen.rand()`, see the description of this method.
 
         Parameters
         ----------
@@ -62,13 +58,12 @@ class RandomGenerator(object):
         Returns
         -------
         out : float
-            Pseudorandom number in [0, 1)
+            Pseudo random number in [0, 1)
         """
         return self.rgen.rand(shape)
 
     def random_integers(self, low, high):
-        """
-        Draw random integers using `self.rgen.random_integers(low, high)`.
+        """Draw random integers using `self.rgen.random_integers(low, high)`.
 
         Parameters
         ----------
@@ -80,13 +75,12 @@ class RandomGenerator(object):
         Returns
         -------
         out : int
-            This is a psudorandom integer in [low, high]
+            This is a pseudo random integer in [low, high]
         """
         return self.rgen.random_integers(low, high)
 
     def normal(self, loc=0.0, scale=1.0, size=None):
-        """
-        Run `self.rgen.normal` and return values from a normal distribution.
+        """Run `self.rgen.normal` & return values from a normal distribution.
 
         Parameters
         ----------
@@ -106,13 +100,12 @@ class RandomGenerator(object):
         return self.rgen.normal(loc=loc, scale=scale, size=size)
 
     def multivariate_normal(self, mean, cov, cho=None, size=1):
-        """
-        Draw numbers from a multivariate distribution.
+        """Draw numbers from a multi-variate distribution.
 
         This is an attempt on speeding up the call of
-        RandomState.multivariate_normal if we need to call it over and
+        `RandomState.multivariate_normal` if we need to call it over and
         over again. Such repeated calling will do a svd repeatedly, which
-        is wastefull. In this function, this transform can be supplied and it
+        is wasteful. In this function, this transform can be supplied and it
         is only estimated if it's not explicitly given.
 
         Parameters
@@ -145,14 +138,18 @@ class RandomGenerator(object):
 
     def generate_maxwellian_velocities(self, particles, temperature, dof,
                                        selection=None, momentum=True):
-        """
-        Generate velocities from a Maxwell distribution for a group of
-        particles with a given temperature.
+        """Generate velocities from a Maxwell distribution.
+
+        The velocities are drawn to match a given temperature and the method
+        can be applied to a sub-set of the particles.
 
         The generation is done in three steps:
+
         1) We generate velocities from a standard normal distribution
-        2) We scale the velocity of particle i with 1.0/sqrt(mass_i) and
-        reset the momentum
+
+        2) We scale the velocity of particle `i` with ``1.0/sqrt(mass_i)`` and
+           reset the momentum
+
         3) We scale the velocities to the set temperature
 
         Parameters
@@ -166,7 +163,7 @@ class RandomGenerator(object):
             dof is the degrees of freedom to subtract. It's shape should
             be equal to the number of dimensions.
         selection : list of ints, optional
-            A list with indices of the particles to consider.
+            A list with indexes of the particles to consider.
             Can be used to only apply it to a selection of particles
         momentum : boolean
             If true, we will reset the momentum.
@@ -193,8 +190,7 @@ class RandomGenerator(object):
         particles.vel[selection] *= scale_factor
 
     def draw_maxwellian_velocities(self, system, sigma_v=None):
-        """
-        Simple function to draw numbers from a gaussian distribution.
+        """Simple function to draw numbers from a Gaussian distribution.
 
         Parameters
         ----------

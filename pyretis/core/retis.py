@@ -38,7 +38,7 @@ __all__ = ['make_retis_step']
 
 def make_retis_step(ensembles, system, order_function, integrator, rgen,
                     settings, cycle):
-    """Determine and execute the approprate RETIS move.
+    """Determine and execute the appropriate RETIS move.
 
     Here we will determine what kind of RETIS moves we should do.
     We have two options:
@@ -49,7 +49,7 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
        values of relative shoot frequencies. This is done by calling
        `make_retis_tis_steps`.
 
-    This method will just determine and execute the approriate move (1 or 2)
+    This method will just determine and execute the appropriate move (1 or 2)
     based on the given swapping frequencies in the `settings` and drawing a
     random number from the random number generator `rgen`.
 

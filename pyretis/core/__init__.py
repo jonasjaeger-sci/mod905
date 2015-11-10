@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This package defines the core pyretis tools.
+"""This package defines the core pyretis tools.
 
 The core tools are intended to set up simulations and run
 them. This module is not intended to handle output or analysis.
@@ -38,7 +37,7 @@ Modules
 
 - simulation.py: This module defines the Simulation object which is used for
   setting up generic simulations. It also defines objects for more
-  specialized simulations for instance the SimulationNVE for running NVE
+  specialized simulations for instance the `SimulationNVE` for running NVE
   molecular dynamics simulations.
 
 - system.py: This module define a system object which connects different
@@ -64,7 +63,7 @@ Important classes and functions
 - Particles: A class defining a list of  particles. This will contain the
   positions, velocities and forces for the particles.
 
-- Path: A class representing a path. The path contains shapshots with some
+- Path: A class representing a path. The path contains snapshots with some
   additional information (energies and order parameters).
 
 - PathEnsemble: A class representing a collection of paths. The path ensemble

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-This package defines different simulations for use with pyretis.
+"""This package defines different simulations for use with pyretis.
 
 The different simulations are defined as objects which inherits from
 the base Simulation object defined in `simulation.py`. The simulation
 object defines as simulation as a series of tasks to be executed,
 typically at each step of the simulation. Output is handled with a
-different set out 'ouput' tasks which make use of the results obtained
+different set out 'output' tasks which make use of the results obtained
 in the simulation steps.
 
 Package structure
@@ -21,7 +20,7 @@ Modules
 - md_simulation.py: Defines simulation objects for molecular dynamics
   simulations.
 
-- mc_simulation.py: Define simulation objects for monte carlo simulations.
+- mc_simulation.py: Define simulation objects for Monte Carlo simulations.
 
 - path_simulation.py: Defines simulation objects for path simulations.
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Definitions of simulation objects for molecular dynamcis simulations.
+"""Definitions of simulation objects for molecular dynamics simulations.
 
 This module contains definitions of classes for performing molecular dynamics
 simulations.
@@ -56,7 +56,7 @@ def create_md_simulation(settings, system, sim_type):
     Note
     ----
     We are duplicating code here - the checking of required settings is
-    identical to the checking in other simulation creaters, for instance
+    identical to the checking in other simulation creators, for instance
     the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
     This is just in case someone wants to add some magic that amends missing
     settings.
@@ -84,8 +84,7 @@ def create_md_simulation(settings, system, sim_type):
 
 
 class SimulationNVE(Simulation):
-    """
-    SimulationNVE(Simulation).
+    """SimulationNVE(Simulation).
 
     This class is used to define a NVE simulation with some additional
     additional tasks/calculations.
@@ -101,8 +100,7 @@ class SimulationNVE(Simulation):
     """
 
     def __init__(self, system, integrator, endcycle=0, startcycle=0):
-        """
-        Initialization of a NVE simulation.
+        """Initialization of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
         simulation, such as the integration and thermodynamics calculation(s).
@@ -156,8 +154,7 @@ class SimulationNVE(Simulation):
 
 
 class SimulationMDFlux(Simulation):
-    """
-    SimulationMDFlux(Simulation).
+    """SimulationMDFlux(Simulation).
 
     This class is used to define a MD simulation where the goal is
     to calculate crossings in order to obtain the initial flux for a TIS
@@ -185,8 +182,7 @@ class SimulationMDFlux(Simulation):
 
     def __init__(self, system, integrator, interfaces, order_function,
                  endcycle=0, startcycle=0):
-        """
-        Initialization of the MD-Flux simulation.
+        """Initialization of the MD-Flux simulation.
 
         Parameters
         ----------
@@ -226,8 +222,7 @@ class SimulationMDFlux(Simulation):
         self.leftside_prev = leftside
 
     def step(self):
-        """
-        Run a simulation step.
+        """Run a simulation step.
 
         Rather than using the tasks for the more general simulation, we here
         just executing what we need.

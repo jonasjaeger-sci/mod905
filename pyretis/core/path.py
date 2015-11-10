@@ -148,7 +148,7 @@ def check_crossing(cycle, system, order_function, interfaces,
     """Check if we have crossed an interface during the last step.
 
     This method is useful for checking if an interface was crossed from
-    the previous step till the curent one. This is for instance used in the
+    the previous step till the current one. This is for instance used in the
     MD simulations for the initial flux.
     If will use a variable to store the previous positions with respect to
     the interfaces and check if interfaces were crossed here.
@@ -369,7 +369,7 @@ class Path(object):
             right (R) interface.
         out[1] : str, 'L' or 'R' or None
             Ending condition: did the trajectory end at the left ('L') or
-            righ ('R') interface or None of them.
+            right ('R') interface or None of them.
         out[2] str, 'M' or '*'
             'M' if middle interface is crossed, '*' otherwise.
         out[3] : list of boolean
@@ -416,8 +416,7 @@ class Path(object):
         return end
 
     def get_start_point(self, left, right):
-        """
-        Return the start point of the path as a string.
+        """Return the start point of the path as a string.
 
         The start point is either to the left of the `left` interface or to
         the right of the `right` interface.
@@ -445,8 +444,7 @@ class Path(object):
         return start
 
     def get_path_data(self, status, interfaces):
-        """
-        Return information about the Path.
+        """Return information about the Path.
 
         This information can (and is typically) stored in a `PathEnsemble`.
 
@@ -495,8 +493,7 @@ class Path(object):
                               self.generated[3])
 
     def success(self, idetect):
-        """
-        Check if the path is successful.
+        """Check if the path is successful.
 
         The check is based on the maximum order parameter and the value of
         `idetect`. It is successful if the maximum order parameter is greater
@@ -505,13 +502,12 @@ class Path(object):
         Parameters
         ----------
         idetect : float
-            The value for which the path is successfull
+            The value for which the path is successful
         """
         return self.ordermax[0] > idetect
 
     def __add__(self, other):
-        """
-        Define how we add two paths, i.e.: ``new_path = self + other``.
+        """Define how we add two paths, i.e.: ``new_path = self + other``.
 
         Parameters
         ----------
@@ -542,10 +538,9 @@ class Path(object):
         return new_path
 
     def __iadd__(self, other):
-        """
-        Add path data to a path from another path, i.e.: ``self += other``.
+        """Add path data to a path from another path, i.e. ``self += other``.
 
-        This will simply append the phasepoints from `other`.
+        This will simply append the phase points from `other`.
 
         Parameters
         ----------
@@ -621,8 +616,7 @@ class PathEnsemble(object):
     """
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000000):
-        """
-        Initialize the PathEnsemble object.
+        """Initialize the PathEnsemble object.
 
         Parameters
         ----------
@@ -641,8 +635,7 @@ class PathEnsemble(object):
         self.maxpath = maxpath
 
     def reset_data(self):
-        """
-        Erase the stored data in the path ensemble.
+        """Erase the stored data in the path ensemble.
 
         It can be used in combination with flushing the data to a
         file in order to periodically write and empty the amount of data
@@ -701,7 +694,7 @@ class PathEnsemble(object):
         # update some statistics:
         try:
             self.nstats[status] += 1
-        except KeyError:  # this is the first occurence of the status:
+        except KeyError:  # this is the first occurrence of the status:
             self.nstats[status] = 1
         self.nstats['npath'] += 1
 
@@ -790,7 +783,7 @@ def create_path_ensembles(interfaces, include_zero=False):
     """Create a set of `PathEnsemble` objects give position of interfaces.
 
     This method will create and return a set of objects representing
-    path ensembles for a given set of interfaces. This is usefull when
+    path ensembles for a given set of interfaces. This is useful when
     setting up for instance RETIS simulations. Here we assume that
     the given interfaces define the path ensembles as follows:
     ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``,

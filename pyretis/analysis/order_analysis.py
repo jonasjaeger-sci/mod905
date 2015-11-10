@@ -8,10 +8,9 @@ __all__ = ['analyse_orderp']
 
 
 def analyse_orderp(orderdata, settings):
-    """
-    Run the analysis on several order parameters.
+    """Run the analysis on several order parameters.
 
-    The results are collected into a strucutre which is convenient for
+    The results are collected into a structure which is convenient for
     plotting.
 
     Parameters
@@ -30,7 +29,7 @@ def analyse_orderp(orderdata, settings):
 
     See Also
     --------
-    analyse_data in .analysis.py
+    `analyse_data` in `pyretis.analysis.analysis.py`
 
     Note
     ----

@@ -24,8 +24,7 @@ __all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
 
 
 class OrderParameter(object):
-    """
-    OrderParameter(object).
+    """OrderParameter(object).
 
     This class represents an order parameter. The order parameter
     is assumed to be a function that can uniquely be determined by
@@ -48,8 +47,7 @@ class OrderParameter(object):
     """
 
     def __init__(self, name, desc='General order parameter'):
-        """
-        Initialize the OrderParameter object.
+        """Initialize the OrderParameter object.
 
         Parameters
         ----------
@@ -63,8 +61,7 @@ class OrderParameter(object):
         self.extra = []
 
     def calculate(self, system):
-        """
-        Calculate the order parameter and return it.
+        """Calculate the order parameter and return it.
 
         Parameters
         ----------
@@ -82,8 +79,7 @@ class OrderParameter(object):
         pass
 
     def calculate_velocity(self, system):
-        """
-        Calculate the time derivative of the order parameter and return it.
+        """Calculate the time derivative of the order parameter and return it.
 
         Parameters
         ----------
@@ -101,8 +97,7 @@ class OrderParameter(object):
         pass
 
     def __call__(self, system):
-        """
-        Method to conveniently call `calculate` and `calculate_velocity`.
+        """Method to conveniently call `calculate` and `calculate_velocity`.
 
         It will also call the additional order parameters defined in
         `self.extra`, if any.
@@ -136,8 +131,7 @@ class OrderParameter(object):
             return ret_val
 
     def add_orderparameter(self, func):
-        """
-        Add an extra order parameter to calculate.
+        """Add an extra order parameter to calculate.
 
         The given function should accept a `pyretis.core.system.System` object
         as parameter.
@@ -163,8 +157,7 @@ class OrderParameter(object):
 
 
 class OrderParameterPosition(OrderParameter):
-    """
-    OrderParameterPosition(OrderParameter).
+    """OrderParameterPosition(OrderParameter).
 
     This class defines a very simple order parameter which is just
     the position of a given particle.
@@ -185,8 +178,7 @@ class OrderParameterPosition(OrderParameter):
     """
 
     def __init__(self, name, index, dim='x', periodic=False):
-        """
-        Initialize the OrderParameterPosition object.
+        """Initialize `OrderParameterPosition`.
 
         Parameters
         ----------
@@ -213,8 +205,7 @@ class OrderParameterPosition(OrderParameter):
             raise
 
     def calculate(self, system):
-        """
-        Calculate the order parameter.
+        """Calculate the order parameter.
 
         Here, the order parameter is just the coordinate of one of the
         particles.
@@ -242,8 +233,7 @@ class OrderParameterPosition(OrderParameter):
             return pos[self.dim]
 
     def calculate_velocity(self, system):
-        """
-        Calculate the time derivative of the order parameter.
+        """Calculate the time derivative of the order parameter.
 
         For this order parameter we just return the velocity.
 
@@ -265,8 +255,7 @@ class OrderParameterPosition(OrderParameter):
 
 
 class OrderParameterParse(OrderParameter):
-    """
-    OrderParameterParse(OrderParameter).
+    """OrderParameterParse(OrderParameter).
 
     This class defines a simple order parameter that is
     parsed from a text string given by the user. The reason
@@ -286,8 +275,7 @@ class OrderParameterParse(OrderParameter):
     """
 
     def __init__(self, name, orderstr, ordervelstr):
-        """
-        Initialize the OrderParameterParse object.
+        """Initialize `OrderParameterParse`.
 
         Parameters
         ----------
@@ -305,8 +293,7 @@ class OrderParameterParse(OrderParameter):
         self.ordervelparser = StringFunctionParser(string_function=ordervelstr)
 
     def calculate(self, system):
-        """
-        Calculate the order parameter.
+        """Calculate the order parameter.
 
         Parameters
         ----------
@@ -324,8 +311,7 @@ class OrderParameterParse(OrderParameter):
         return self.orderparser.evaluate(system=system)
 
     def calculate_velocity(self, system):
-        """
-        Calculate the time derivative of the order parameter.
+        """Calculate the time derivative of the order parameter.
 
         Parameters
         ----------
@@ -340,8 +326,7 @@ class OrderParameterParse(OrderParameter):
         return self.ordervelparser.evaluate(system=system)
 
     def add_orderparameter(self, strfunc):
-        """
-        Add an extra order parameter to calculate.
+        """Add an extra order parameter to calculate.
 
         Here, we assume that the function is given as a string, which we
         will parse.
@@ -362,7 +347,8 @@ class OrderParameterParse(OrderParameter):
 
 
 class StringFunctionParser(object):
-    """
+    """Class StringFunctionParser(object)
+
     This class defines a simple parser for user-defined order parameters.
 
     It is based on fourFn.py, see:
@@ -381,15 +367,14 @@ class StringFunctionParser(object):
         This set defines the different functions that will make use of
         the system object.
     system : object like `System` from `pyretis.core.system`
-        This object is used to access system properties, e.g. partilces
+        This object is used to access system properties, e.g. particles
         and the box.
     string_function : string
         String representation of the function that we wish to evaluate.
     """
 
     def __init__(self, string_function=None):
-        """
-        Initiate the StringFunctionParser.
+        """Initiate `StringFunctionParser`.
 
         Parameters
         ----------
@@ -423,8 +408,7 @@ class StringFunctionParser(object):
             self.string_function = None
 
     def system_function(self, function, args):
-        """
-        Handle calls that need to invoke 'system' functions.
+        """Handle calls that need to invoke 'system' functions.
 
         Parameters
         ----------
@@ -462,8 +446,7 @@ class StringFunctionParser(object):
         return retval
 
     def push_first(self, toks):
-        """
-        Append parsed string elements to the stack.
+        """Append parsed string elements to the stack.
 
         Parameters
         ----------
@@ -485,8 +468,7 @@ class StringFunctionParser(object):
         self.exprstack.append(toks[0])
 
     def push_uminus(self, toks):
-        """
-        Push to the expression stack.
+        """Push to the expression stack.
 
         `push_uminus` is similar to `push_first`, however `push_uminus` is
         needed for handling expressions like `-x`.
@@ -512,8 +494,7 @@ class StringFunctionParser(object):
             self.exprstack.append('unary -')
 
     def evaluate_stack(self, stack):
-        """
-        Evaluate the expression stack recursively.
+        """Evaluate the expression stack recursively.
 
         Here, we also might pass the system in case we need to
         use it for accessing positions, velocities etc.
@@ -556,8 +537,7 @@ class StringFunctionParser(object):
         self.string_function = string_function
 
     def evaluate(self, system=None):
-        """
-        Evaluate the expression, assuming that is has been parsed.
+        """Evaluate the expression, assuming that is has been parsed.
 
         Parameters
         ----------
@@ -565,7 +545,7 @@ class StringFunctionParser(object):
             The system object is used to access particles and
             also the box. Here we set `self.system` to point to this
             object as it is a convenient way of accessing the required
-            paramters.
+            parameters.
         """
         if self.string_function is None or len(self.exprstack) < 1:
             return None

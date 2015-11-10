@@ -49,15 +49,14 @@ __all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
 
 
 def calculate_linear_momentum(particles, selection=None):
-    """
-    Calculate the linear momentum for a collection of particles.
+    """Calculate the linear momentum for a collection of particles.
 
     Parameters
     ----------
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
 
     Returns
     -------
@@ -72,8 +71,7 @@ def calculate_linear_momentum(particles, selection=None):
 
 
 def calculate_kinetic_energy_tensor(particles, selection=None):
-    """
-    Return the kinetic energy tensor for a selection of particles.
+    """Return the kinetic energy tensor for a selection of particles.
 
     The tensor is formed as the outer product of the velocities.
 
@@ -82,12 +80,12 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
 
     Returns
     -------
     out : numpy.array
-        A numpy array with dimesionality equal to (dim, dim) where dim
+        A numpy array with dimensionality equal to (dim, dim) where dim
         is the number of dimensions used in the velocities. This tensor
         should be symmetric and it's trace should be identical to the
         output from the `dim` times the averaged output of the
@@ -106,15 +104,14 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
 
 
 def atomic_kinetic_energy_tensor(particles, selection=None):
-    """
-    Return the kinetic energy tensor for each atom in a selection of particles.
+    """Return kinetic energy tensors for a particle selection.
 
     Parameters
     ----------
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
 
     Returns
     -------
@@ -139,15 +136,14 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
 
 
 def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
-    """
-    Return the kinetic energy of a collection of particles.
+    """Return the kinetic energy of a collection of particles.
 
     Parameters
     ----------
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
     kin_tensor : numpy.array
         If kinetic_tensor is not given, the kinetic energy tensor will be
         calculated.
@@ -167,8 +163,7 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
 
 def calculate_kinetic_temperature(particles, dof=None, selection=None,
                                   kin_tensor=None):
-    """
-    Return the kinetic temperature of a collection of particles.
+    """Return the kinetic temperature of a collection of particles.
 
     Parameters
     ----------
@@ -178,7 +173,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
         dof is the degrees of freedom to subtract. It's shape should
         be equal to the number of dimensions.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
     kin_tensor : numpy.array optional
         The kinetic energy tensor. If the kinetic energy tensor is not
         given, it will be recalculated here.
@@ -214,15 +209,14 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
 
 
 def reset_momentum(particles, selection=None, dim=None):
-    """
-    Set the linear momentum of a selection of particles to zero.
+    """Set the linear momentum of a selection of particles to zero.
 
     Parameters
     ----------
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
     selection : list of integers, optional
-        A list with indices of particles to use in calculation.
+        A list with indexes of particles to use in calculation.
     dim : list
         If dim is None, ``reset_momentum`` will be applied to
         all dimensions. Otherwise it will only be applied to the
@@ -248,8 +242,7 @@ def reset_momentum(particles, selection=None, dim=None):
 
 def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
                                  dof=None):
-    """
-    Evaluate the scalar pressure.
+    """Evaluate the scalar pressure.
 
     The scalar pressure is here calculated  using the temperature
     and the degrees of freedom.
@@ -296,8 +289,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
 
 def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
                               kin_tensor=None):
-    """
-    Evaluate the scalar pressure using the pressure tensor.
+    """Evaluate the scalar pressure using the pressure tensor.
 
     Parameters
     ----------
@@ -358,8 +350,7 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
 
 
 def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
-    """
-    Calculate and return several thermodynamic properties.
+    """Calculate and return several thermodynamic properties.
 
     The calculated properties are the potential, kinetic and total
     energies per particle, the temperature, the pressure and the

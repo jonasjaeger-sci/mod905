@@ -12,8 +12,7 @@ __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
 
 class PairLennardJonesCut(PotentialFunction):
-    """
-    A Lennard-Jones 6-12 potential.
+    """A Lennard-Jones 6-12 potential.
 
     The potential employs a simple cut-off and can be shifted.
     This implementation is in pure python (yes we are double looping) and
@@ -55,8 +54,7 @@ class PairLennardJonesCut(PotentialFunction):
 
     def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
                  desc='Lennard-Jones pair potential with simple cut-off'):
-        """
-        Initiate the Lennard-Jones potential.
+        """Initiate the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -83,8 +81,7 @@ class PairLennardJonesCut(PotentialFunction):
         self.offset = {}
 
     def add_parameters(self, parameters, mix=True):
-        """
-        Add new potential parameters for atoms or pairs.
+        """Add new potential parameters for atoms or pairs.
 
         Parameters
         ----------
@@ -151,8 +148,7 @@ class PairLennardJonesCut(PotentialFunction):
         return update_lj
 
     def update_parameters(self, parameters, mix=False):
-        """
-        Update the parameters for the potential.
+        """Update the parameters for the potential.
 
         Here, the values for 'epsilon', 'sigma' 'rcut', 'mixing', 'factor'
         are updated.
@@ -202,8 +198,7 @@ class PairLennardJonesCut(PotentialFunction):
         return update_lj
 
     def _generate_mixing_parameters(self):
-        """
-        Generate parameters for pairs, based on the parameters for atoms.
+        """Generate parameters for pairs, based on the parameters for atoms.
 
         In order to generate the parameters, we will here make use of the
         defined mixing rule.
@@ -251,8 +246,7 @@ class PairLennardJonesCut(PotentialFunction):
             self.offset[pair] = vcut
 
     def str_parameters(self):
-        """
-        Generate a string with the potential parameters.
+        """Generate a string with the potential parameters.
 
         It will generate a string with both pair and atom parameters.
 
@@ -287,8 +281,7 @@ class PairLennardJonesCut(PotentialFunction):
         return '\n'.join(strparam)
 
     def potential(self, particles, box):
-        """
-        Calculate the potential energy for the Lennard-Jones interaction.
+        """Calculate the potential energy for the Lennard-Jones interaction.
 
         Parameters
         ----------
@@ -316,8 +309,7 @@ class PairLennardJonesCut(PotentialFunction):
         return v_pot
 
     def force(self, particles, box):
-        """
-        Calculate the force for the Lennard-Jones interaction.
+        """Calculate the force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force
         is evaluated.
@@ -353,8 +345,7 @@ class PairLennardJonesCut(PotentialFunction):
         return forces, virial
 
     def potential_and_force(self, particles, box):
-        """
-        Calculate potential and force for the Lennard-Jones interaction.
+        """Calculate potential and force for the Lennard-Jones interaction.
 
         Since the force is evaluated, the virial is also calculated.
 
@@ -409,12 +400,11 @@ class PairLennardJonesCut(PotentialFunction):
 
 
 class PairLennardJonesCutnp(PairLennardJonesCut):
-    """
-    A Lennard-Jones 6-12 potential with a simple cut-off.
+    """class PairLennardJonesCutnp(PairLennardJonesCut)
 
-    The potential can be shifted. `PairLennardJonesCutnp` uses
-    numpy for calculations, i.e. most operations are recast as
-    vector operations.
+    A Lennard-Jones 6-12 potential with a simple cut-off which can be shifted.
+    `PairLennardJonesCutnp` uses numpy for calculations, i.e. most operations
+    are recast as numpy.array operations.
 
     Attributes
     ----------
@@ -425,8 +415,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
     def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
                  desc='Lennard-Jones pair potential with simple cut-off'):
-        """
-        Initiate the Lennard-Jones potential.
+        """Initiate the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -453,15 +442,14 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             self.matrix_np[key] = []
 
     def _generate_tables_for_numpy(self, particles):
-        """
-        Generate tables for interactions for use with numpy.
+        """Generate tables for interactions for use with numpy.
 
         This is a helper function since we are using numpy. It will create
-        matrices for the Lennard-Jones parameters (lj1, lj2, lj3, lj4) the
-        cut-offs and the offset.
-        This makes it possible to do slices when calculating the energy. That
-        is, instead of looping over particles explicitly in python, we can
-        calculate interaction energies using numpy array.
+        matrices for the Lennard-Jones parameters (`lj1`, `lj2`, `lj3`, `lj4`)
+        the cut-offs and the offset. This makes it possible to do slices when
+        calculating the energy. That is, instead of looping over particles
+        explicitly in python, we can calculate interaction energies using
+        numpy array operations.
         Of course, this is not viable for a very large system, then one would
         do something else like C or Fortran or a more clever division of the
         work.
@@ -502,8 +490,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                 self.matrix_np['offset'].append(np.array(offset))
 
     def potential(self, particles, box):
-        """
-        Calculate the potential energy for the Lennard-Jones interaction.
+        """Calculate the potential energy for the Lennard-Jones interaction.
 
         Parameters
         ----------
@@ -535,8 +522,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         return pot
 
     def force(self, particles, box):
-        """
-        Calculate the force for the Lennard-Jones interaction.
+        """Calculate the force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force
         is evaluated.
@@ -581,11 +567,9 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         return forces, virial
 
     def potential_and_force(self, particles, box):
-        """
-        Calculate the potential and force for the Lennard-Jones interaction.
+        """Calculate the potential & force for the Lennard-Jones interaction.
 
-        We also calculate the virial here, since the force
-        is evaluated.
+        We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------
@@ -639,8 +623,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         return pot, forces, virial
 
     def add_parameters(self, parameters, mix=True):
-        """
-        Add parameters to the potential.
+        """Add parameters to the potential.
 
         Here, we run the `add_parameters` of the super class.
         This is done just in case the adding of parameters should trigger
@@ -652,8 +635,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             self._reset_matrix_np()
 
     def update_parameters(self, parameters, mix=False):
-        """
-        Update parameters for the potential.
+        """Update parameters for the potential.
 
         This function will just run the `update_parameters` of the
         super class. This is done just in case the updating of

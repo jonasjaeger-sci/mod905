@@ -10,8 +10,7 @@ __all__ = ['analyse_flux']
 
 
 def analyse_flux(fluxdata, settings, simulation_settings):
-    """
-    Run the analysis on the given flux data.
+    """Run the analysis on the given flux data.
 
     This will run the flux analysis and collect the results into a structure
     which is convenient for plotting and reporting the results.
@@ -87,8 +86,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
 
 
 def _effective_crossings(fluxdata, nint, end_step):
-    """
-    Analyse `fluxdata` and obtain effective crossings.
+    """Analyse flux data and obtain effective crossings.
 
     Parameters
     ----------
@@ -114,11 +112,11 @@ def _effective_crossings(fluxdata, nint, end_step):
 
     Note
     ----
-    We do here intf - 1. This is just to be compatible with the old fortran
+    We do here `intf - 1`. This is just to be compatible with the old Fortran
     code where the interfaces are numberes 1, 2, 3 rather than 0, 1, 2.
-    If this is to be changed in the future the '-1' can just be removed.
+    If this is to be changed in the future the `-1` can just be removed.
     """
-    # first line is used to determine if we start in B or A
+    # First line is used to determine if we start in B or A
     overallstate_a = not (fluxdata[0][1] == 2 and fluxdata[0][2] < 0)
     firstcross = [False] * nint
     ncross = [0] * nint
@@ -157,21 +155,20 @@ def _effective_crossings(fluxdata, nint, end_step):
             elif intf - 1 == 2:  # moving out of B
                 end['B'] = time
                 time_in_state['B'] += (end['B'] - start['B'])
-    # now, just add up the remaining:
+    # Now, just add up the remaining:
     state = 'OA' if overallstate_a else 'OB'
     time_in_state[state] += (end_step - start[state])
     if intf - 1 == 0 and sign < 0:
-        # note that the sign < 0 works for sign=None
+        # Note that the sign < 0 works for sign=None
         time_in_state['A'] += (end_step - start['A'])
     elif intf - 1 == 2 and sign > 0:
-        # note that the sign > 0 works for sign=None
+        # Note that the sign > 0 works for sign=None
         time_in_state['B'] += (end_step - start['B'])
     return eff_cross, ncross, neffcross, time_in_state
 
 
 def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
-    """
-    Calculate the flux in different time windows.
+    """Calculate the flux in different time windows.
 
     Parameters
     ----------

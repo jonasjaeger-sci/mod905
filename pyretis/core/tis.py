@@ -137,7 +137,7 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
     Parameters
     ----------
     path : object like `Path` from `pyretis.core.path`
-        This is the input path wich will be used for generating a
+        This is the input path which will be used for generating a
         new path.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
@@ -185,7 +185,7 @@ def _time_reversal(path, interfaces, start_condition):
     Parameters
     ----------
     path : object like `Path` from `pyretis.core.path`
-        This is the input path wich will be used for generating a new path.
+        This is the input path which will be used for generating a new path.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
     start_condition : string
@@ -226,7 +226,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     Parameters
     ----------
     path : object like `Path` from `pyretis.core.path`
-        This is the input path wich will be used for generating a new path.
+        This is the input path which will be used for generating a new path.
     system : object like `System` from `pyretis.core.system`
         System is used here since we need access to the temperature
         and to the particle list.
@@ -275,9 +275,9 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # kick the timeslice:
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
                           momentum=False)[0]
-    # update the order paramater since it could depend on velocity
+    # update the order parameter since it could depend on velocity
     orderp = order_function(system)
-    # We now check if the kick was ok or not:
+    # We now check if the kick was OK or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
@@ -293,7 +293,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
             trial_path.append(pos, vel, orderp, system.v_pot)
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
-    # ok: kick was either aimless or it was accepted by Metropolis
+    # OK: kick was either aimless or it was accepted by Metropolis
     # we should now generate trajectories, but first check how long
     # it should be:
     if tis_settings['allowmaxlength']:
@@ -319,7 +319,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         if len(path_back.path) == tis_settings['maxlength'] - 1:
             trial_path.status = 'BTX'  # exceeds maximum memory length
         return accept, trial_path, trial_path.status
-    # backward seems ok so far, check if the ending point is correct:
+    # backward seems OK so far, check if the ending point is correct:
     if path_back.get_end_point(left, right) != tis_settings['start_cond']:
         # backward trajectory end at wrong interface
         accept, trial_path.status = False, 'BWI'
@@ -406,8 +406,8 @@ def generate_initial_path_kick(system, interfaces, order_function,
                                         integrator,
                                         maxlen=tis_settings['maxlength'])
     if not success:
-        raise ValueError('Forward path not successfull.', msg)
-    # and previous pase point backward.
+        raise ValueError('Forward path not successful.', msg)
+    # and previous phase point backward.
     # First we set system to be at this point:
     system.particles.set_phase_point(previous)
     # then propagate :-)
@@ -416,7 +416,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
                                         maxlen=tis_settings['maxlength'],
                                         reverse=True)
     if not success:
-        raise ValueError('Backward path not successfull.', msg)
+        raise ValueError('Backward path not successful.', msg)
     # Merge backward and forward, here we do not set maxlen since
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
@@ -427,7 +427,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # 0) We can start at the starting condition, pass the middle
     # and continue all the way to the end - perfect!
     # 1) we can start at the starting condition, pass the middle
-    # and return to starting condition - this is perfecly fine
+    # and return to starting condition - this is perfectly fine
     # 2) We can start at the wrong interface, pass the middle and
     # end at the same (wrong) interface - we now need to do some shooting moves
     # 3) We can start at wrong interface and end and the starting condition
@@ -472,11 +472,11 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     Returns
     -------
     out[0] : dict
-        This dict contains the pase-point just before the interface.
+        This dict contains the phase-point just before the interface.
         It is obtained by calling the `get_phase_point()` of the particles
         object.
     out[1] : dict.
-        This dict contains the pase-point just after the interface.
+        This dict contains the phase-point just after the interface.
         It is obtained by calling the `get_phase_point()` of the particles
         object.
 
@@ -538,7 +538,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
     kin_new : float
         The new kinetic energy
     """
-    # NOTE: kin_old might be set/optained differently according to
+    # NOTE: kin_old might be set/obtained differently according to
     # the dynamics. E.g. In NVE it is just E-Epot.
     particles = system.particles
     kin_old = calculate_kinetic_energy(particles)
@@ -647,7 +647,7 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
                      integrator, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
-    The fix is performed by makeing TIS moves and this method is intended
+    The fix is performed by making TIS moves and this method is intended
     to be used in a initialization.
 
     Parameters

@@ -9,8 +9,7 @@ __all__ = ['ForceField']
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
-    """
-    Define the so-called mixing rules.
+    """Define the so-called mixing rules.
 
     These mixing rules are used for some force fields when generating cross
     interactions.
@@ -29,9 +28,9 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
     Returns
     -------
     out[0] : float
-        The mixed epsilon_ij parameter.
+        The mixed ``epsilon_ij`` parameter.
     out[1] : float
-        The mixed sigma_ij parameter.
+        The mixed ``sigma_ij`` parameter.
     """
     if mixing == 'geometric':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
@@ -59,8 +58,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
 
 class ForceField(object):
-    """
-    ForceField(object).
+    """ForceField(object).
 
     This class described a generic Force Field.
     A force field is assumed to consist of a number of potential
@@ -107,8 +105,7 @@ class ForceField(object):
                     self.add_potential(pot, parameters=param)
 
     def add_potential(self, potential, parameters=None):
-        """
-        Add a potential with parameters to the force field.
+        """Add a potential with parameters to the force field.
 
         Parameters
         ----------
@@ -143,8 +140,7 @@ class ForceField(object):
         self.params.append(potential.params)
 
     def remove_potential(self, potential):
-        """
-        Remove a selected potential from the force field.
+        """Remove a selected potential from the force field.
 
         Parameters
         ----------
@@ -169,8 +165,7 @@ class ForceField(object):
             return None
 
     def update_potential_parameters(self, potential, params):
-        """
-        Update the potential parameters of the given potential function.
+        """Update the potential parameters of the given potential function.
 
         Parameters
         ----------
@@ -192,8 +187,7 @@ class ForceField(object):
             warnings.warn('Unknow potential')
 
     def evaluate_force(self, **kwargs):
-        """
-        Evaluate the force on the particles.
+        """Evaluate the force on the particles.
 
         Parameters
         ----------
@@ -226,8 +220,7 @@ class ForceField(object):
         return force, virial
 
     def evaluate_potential(self, **kwargs):
-        """
-        Evaluate the potential energy.
+        """Evaluate the potential energy.
 
         Parameters
         ----------
@@ -257,8 +250,7 @@ class ForceField(object):
         return v_pot
 
     def evaluate_potential_and_force(self, **kwargs):
-        """
-        Evaluate the potential energy and the force.
+        """Evaluate the potential energy and the force.
 
         Parameters
         ----------
@@ -281,7 +273,7 @@ class ForceField(object):
         it needs. This means that this function will be passed too many
         parameters. One solution might be to just pass the system to the
         potential, with additional optional arguments on what to
-        override (override is here usefull when calculating the energies
+        override (override is here useful when calculating the energies
         in Monte Carlo moves - i.e. to use the trial positions).
         """
         v_pot = None
@@ -301,8 +293,7 @@ class ForceField(object):
         return v_pot, force, virial
 
     def __str__(self):
-        """
-        A string representation of the force field.
+        """A string representation of the force field.
 
         The string representation is built using the string descriptions of
         the potential functions.

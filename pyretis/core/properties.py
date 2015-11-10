@@ -6,8 +6,7 @@ __all__ = ['Property']
 
 
 class Property(object):
-    """
-    Property(object).
+    """Property(object).
 
     A generic object to store values obtained during a simulation.
     It will maintain the mean and variance as values are added using
@@ -44,8 +43,7 @@ class Property(object):
     """
 
     def __init__(self, desc=''):
-        """
-        Initialize the property.
+        """Initialize the property.
 
         Parameters
         ----------
@@ -60,8 +58,7 @@ class Property(object):
         self.val = []
 
     def add(self, val):
-        """
-        Add a value to the property and updated the mean and variance.
+        """Add a value to the property & update the mean and variance.
 
         Parameters
         ----------
@@ -78,8 +75,7 @@ class Property(object):
         self.update_mean_and_variance()
 
     def update_mean_and_variance(self):
-        """
-        Calculate the mean and variance on the fly.
+        """Calculate the mean and variance on the fly.
 
         Source:
         http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
@@ -104,8 +100,7 @@ class Property(object):
             self.variance = self.delta2/float(self.nval - 1)
 
     def dump_to_file(self, filename):
-        """
-        Dump the contents in `self.val` to a file.
+        """Dump the contents in `self.val` to a file.
 
         Parameters
         ----------

@@ -11,8 +11,7 @@ __all__ = ['Box']
 
 
 class Box(object):
-    """
-    Box(object).
+    """Box(object).
 
     This class defines a simple simulation box. The box will handle
     periodic boundaries if needed. A non-periodic dummy-box can be created
@@ -36,8 +35,7 @@ class Box(object):
     """
 
     def __init__(self, size=None, periodic=None):
-        """
-        Initialize the box.
+        """Initialize the box.
 
         Parameters
         ----------
@@ -95,8 +93,7 @@ class Box(object):
         self.dim = len(self.length)
 
     def calculate_volume(self):
-        """
-        Calculate the volume of the box.
+        """Calculate the volume of the box.
 
         Returns
         -------
@@ -106,9 +103,11 @@ class Box(object):
         return np.product(self.length)
 
     def pbc_coordinate_dim(self, pos, dim):
-        """
-        Apply periodic boundaries to the selected dimension only. This can be
-        useful for instance in connection with order parameters.
+        """Apply periodic boundaries to a selected dimension only.
+
+        For the given positions, this method will apply periodic boundary
+        conditions to one dimension only. This can be useful for instance
+        in connection with order parameters.
 
         Parameters
         ----------
@@ -178,8 +177,7 @@ class Box(object):
     #    return dpos
 
     def pbc_wrap(self, pos):
-        """
-        Apply periodic boundaries to the given position.
+        """Apply periodic boundaries to the given position.
 
         Parameters
         ----------
@@ -189,7 +187,7 @@ class Box(object):
         Returns
         -------
         out : numpy.array, same shape as parameter `pos`
-            The pbc-wrapped positions.
+            The periodic-boundary wrapped positions.
         """
         pbcpos = np.zeros(pos.shape)
         for i, periodic in enumerate(self.periodic):
@@ -206,8 +204,7 @@ class Box(object):
         return pbcpos
 
     def pbc_dist_matrix(self, distance):
-        """
-        Apply periodic boundaries to a distance matrix/vector.
+        """Apply periodic boundaries to a distance matrix/vector.
 
         Parameters
         ----------
@@ -230,20 +227,21 @@ class Box(object):
         return pbcdist
 
     def pbc_dist_coordinate(self, distance):
-        """
-        Apply periodic boundaries to a distance.
-        The distance can be a vector, but not a matrix of several
-        distance vectors.
+        """Apply periodic boundaries to a distance.
+
+        This will apply periodic boundaries to a distance. Note that the
+        distance can be a vector, but not a matrix of several distance
+        vectors.
 
         Parameters
         ----------
-        distance : numpy.array with shape (self.dim,)
+        distance : numpy.array with shape `(self.dim,)`.
             A distance vector.
 
         Returns
         -------
         out : numpy.array, same shape as parameter `distance`
-            The pbc-wrapped distance vector.
+            The periodic-boundary wrapped distance vector.
         """
         pbcdist = np.zeros(distance.shape)
         for i, (periodic, length) in enumerate(zip(self.periodic,
@@ -255,8 +253,7 @@ class Box(object):
         return pbcdist
 
     def __str__(self):
-        """
-        Return a string describing the box.
+        """Return a string describing the box.
 
         Returns
         -------

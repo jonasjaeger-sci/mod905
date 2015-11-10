@@ -39,7 +39,7 @@ def accept_reject_displace(rgen, system, trial):
     out[3] : float
         The potential energy of the trial positions.
     out[4] : boolean
-        True if move is acceped, False otherwise.
+        True if move is accepted, False otherwise.
     """
     v_trial = system.evaluate_potential(pos=trial)
     deltae = v_trial - system.v_pot
@@ -50,9 +50,7 @@ def accept_reject_displace(rgen, system, trial):
 
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):
-    """
-    Accept or reject a change in momenta based on the given change
-    in kinetic energy.
+    """Accept or reject a momenta change based on a change in kinetic energy.
 
     Parameters
     ----------
@@ -76,9 +74,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
 
 def metropolis_accept_reject(rgen, system, deltae):
-    """
-    Accept or reject a change of energy according
-    to the metropolis rule.
+    """Accept or reject a change of energy according to the metropolis rule.
 
     FIXME: Check if metropolis really is a good name here.
 
@@ -99,7 +95,7 @@ def metropolis_accept_reject(rgen, system, deltae):
 
     Notes
     -----
-    A overflow is possible when using np.exp() here.
+    A overflow is possible when using `numpy.exp()` here.
     This can for instance happen in a umbrella simulation
     where the bias potential is infinite or very large.
     Right now, this is just ignored.
@@ -112,8 +108,7 @@ def metropolis_accept_reject(rgen, system, deltae):
 
 
 def max_displace_step(rgen, system, maxdx=0.1, idx=None):
-    """
-    Monte Carlo routine for diplacing particles.
+    """Monte Carlo routine for displacing particles.
 
     It selects and displaces one particle randomly.
     If the move is accepted, the new positions and energy are

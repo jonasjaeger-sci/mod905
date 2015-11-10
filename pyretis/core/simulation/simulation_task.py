@@ -6,8 +6,7 @@ import warnings
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
-    """
-    Check consistency for function and the given (keyword) arguments.
+    """Check consistency for function and the given (keyword) arguments.
 
     Here we assume that the arguments are given in a list and that
     the keyword arguments are given as a dict. The function
@@ -47,7 +46,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         msg = 'Wrong number of arguments given'
         warnings.warn(msg)
         return False
-    # Check kwargs but nly check in case some kwargs are given here.
+    # Check kwargs but only check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
     # and that the default kwargs will be used.
     if given_kwargs is not None:
@@ -67,8 +66,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
 
 
 def execute_now(step, when):
-    """
-    Determine if a task should be executed or not at this `step`.
+    """Determine if a task should be executed or not at this `step`.
 
     Parameters
     ----------
@@ -124,8 +122,7 @@ class SimulationTask(object):
 
     def __init__(self, function, args=None, kwargs=None, when=None,
                  result=None, first=False):
-        """
-        Initialize the task.
+        """Initialize the task.
 
         Parameters
         ----------
@@ -158,8 +155,7 @@ class SimulationTask(object):
         self.first = first
 
     def execute(self, step):
-        """
-        Execute the task.
+        """Execute the task.
 
         Parameters
         ----------
@@ -195,8 +191,7 @@ class SimulationTask(object):
             return None
 
     def update_when(self, when):
-        """
-        Update when to new value(s).
+        """Update when to new value(s).
 
         It will only update `self.when` for the keys given in the
         input `when`.
@@ -226,8 +221,7 @@ class SimulationTask(object):
         return self.first
 
     def __call__(self, step):
-        """
-        Execute the task.
+        """Execute the task.
 
         Parameters
         ----------

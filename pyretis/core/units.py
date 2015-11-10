@@ -46,7 +46,7 @@ Defined units
 Length
 ~~~~~~
 
-- ``m``, ``nm``, ``Å`` : Meter, nano-meter and Ångstrøm.
+- ``m``, ``nm``, ``Å`` : Meter, nano-meter and Ångström.
 
 - ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
@@ -70,13 +70,13 @@ Mass
 Energy
 ~~~~~~
 
-- ``kcal`` : Kilocalories. This is the
-  `thermochemical calorie <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>`_
+- ``kcal`` : Kilo-calories. This is the
+  `thermo-chemical calorie <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>`_
   equal to 4184 Joule.
 
 - ``J`` : Joule.
 
-- ``kcal/mol`` : Kilocalories per mole.
+- ``kcal/mol`` : Kilo-calories per mole.
 
 - ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
   by Rowley et al. [ROWLEY]_).
@@ -163,8 +163,7 @@ CONVERT['charge']['e', 'C'] = CONSTANTS['e']
 
 
 def _generate_inverse(conversions):
-    """
-    Generate all simple inverse conversions.
+    """Generate all simple inverse conversions.
 
     A simple inverse conversion is something we can obtain by doing
     a ``1 / unit`` type of conversion.
@@ -185,8 +184,7 @@ def _generate_inverse(conversions):
 
 
 def _convert_from_to(conversions, unit_from, unit_to):
-    """
-    Generate unit conversion between the provided units.
+    """Generate unit conversion between the provided units.
 
     The unit conversion can be obtained given that a "path" between these
     units exist. This path is obtained by a BFS.

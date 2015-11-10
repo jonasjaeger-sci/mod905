@@ -200,7 +200,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
     When plotting 'large' datasets, matplotlib might give an
     'OverflowError: Allocated too many blocks' error.
     Here we avoid this error by plotting the data in chunks. We could
-    also downsample the data, but this is perhaps something best left
+    also down sample the data, but this is perhaps something best left
     to the user.
 
     Parameters
@@ -210,7 +210,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
     series : dict
         Represents the data to be plotted.
     chunksize : int
-        This is the maximim size we will try to plot in one go.
+        This is the maximum size we will try to plot in one go.
     """
     color = None
     line = None
@@ -250,8 +250,8 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
     Returns
     -------
-        handle : object of type matplotlib.lines.Line2D
-            A handle forthe plotted line.
+    handle : object like `matplotlib.lines.Line2D`.
+        A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
     kwargs = {'linestyle': series.get('ls', '-'),
@@ -358,7 +358,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     each chunk, if plotted with `mpl_linecollection_gradient`, would have
     approximately the same color anyway.
 
-    Paremters
+    Parameters
     ---------
     axs : Axes object from matplotlib
         Where to do the plotting.
@@ -657,7 +657,7 @@ def mpl_plot_orderp(results, orderdata, out_fmt):
     I.e. other order parameters or velocities are not written here. This
     will be changed when the structure of the output order parameter file
     has been fixed. Also note that, if present, the first order parameter
-    will be plotted agains the second one - i.e. the second one will be
+    will be plotted against the second one - i.e. the second one will be
     assumed to represent the velocity here.
     """
     outfiles = {}
@@ -717,7 +717,7 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
     out_fmt : string
         This is the desired output format for the plots.
     sim_settings : dict, optional
-        This is the simulation settings which are usefull for creating
+        This is the simulation settings which are useful for creating
         theoretical plots of distributions. It is assumed to contain
         the number of particles, the dimensionality
 

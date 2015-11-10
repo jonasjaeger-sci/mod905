@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Some convenient methods for generating initial structures.
 
-This module is defining some tools which may be usefull for generating
+This module is defining some tools which may be useful for generating
 initial structures: ``latticefcc`` will return a fcc lattice and
 ``lattice_simple_cubic`` will return a simple cubic lattice.
 """
@@ -13,15 +13,14 @@ __all__ = ['latticefcc', 'lattice_simple_cubic']
 
 
 def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
-    """
-    Generate points on a simple fcc lattice.
+    """Generate points on a simple fcc lattice.
 
     Parameters
     ----------
     lcon : float
         The lattice constant.
     density : float, optional
-        A desired density. If this is given, lcon is calculated.
+        A desired density. If this is given, `lcon` is calculated.
     nrx : int
         Number of repetitions of the lattice in the x-direction.
     nry : int
@@ -57,13 +56,12 @@ def latticefcc(lcon=None, density=None, nrx=1, nry=1, nrz=1):
 
 
 def lattice_simple_cubic(box, spacing=1.0):
-    """
-    Create a simple cubic lattice with the given spacing.
+    """Create a simple cubic lattice with the given spacing.
 
     Parameters
     ----------
     box : list of lists/tuples
-        box[i] = [low, high] gives the box bounds in dimension i
+        `box[i] = [low, high]` gives the box bounds in dimension `i`
     spacing : float
         the lattice spacing
 

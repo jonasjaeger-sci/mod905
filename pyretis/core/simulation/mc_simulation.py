@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Definition of simulation objects for Monte Carlo simulations
 
-This module defines some classes and feunctions for performing
+This module defines some classes and functions for performing
 Monte Carlo simulations.
 
 Important classes and functions
@@ -31,7 +31,7 @@ def create_mc_simulation(settings, system, sim_type):
     """Create a MC simulation from the given settings.
 
     This is a helper function that will do some checks and set up one
-    of the MC simultions defined in this module based on the given settings.
+    of the MC simulations defined in this module based on the given settings.
 
     Parameters
     ----------
@@ -53,7 +53,7 @@ def create_mc_simulation(settings, system, sim_type):
     Note
     ----
     We are duplicating code here - the checking of required settings is
-    identical to the checking in other simulation creaters, for instance
+    identical to the checking in other simulation creators, for instance
     the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
     This is just in case someone wants to add some magic that amends missing
     settings.
@@ -63,7 +63,7 @@ def create_mc_simulation(settings, system, sim_type):
     if sim_type == 'umbrellawindow':
         if 'seed' in not_found or 'rgen' in not_found:
             # one or both of these keywords were present
-            # things are ok if there is no other missing
+            # things are OK if there is no other missing
             not_found = set(not_found) - set(['seed', 'rgen'])
             required = len(not_found) == 0
     if not required:
@@ -109,8 +109,7 @@ def mc_task(rgen, system, maxdx):
 
 
 class UmbrellaWindowSimulation(Simulation):
-    """
-    This class defines a Umbrella simulation.
+    """This class defines a Umbrella simulation.
 
     The Umbrella simulation is a special case of
     the simulation class with settings to simplify the
@@ -136,8 +135,7 @@ class UmbrellaWindowSimulation(Simulation):
 
     def __init__(self, system, umbrella, overlap, rgen, maxdx,
                  mincycle=0, startcycle=0):
-        """
-        Initialization of a umbrella simulation.
+        """Initialization of a umbrella simulation.
 
         Parameters
         ----------
@@ -171,8 +169,7 @@ class UmbrellaWindowSimulation(Simulation):
         self.first_step = False
 
     def is_finished(self):
-        """
-        Check if simulation is done.
+        """Check if simulation is done.
 
         In the umbrella simulation, the simulation is finished when we
         cycle is larger than maxcycle and all particles have

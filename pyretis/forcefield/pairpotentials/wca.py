@@ -11,23 +11,20 @@ __all__ = ['PairWCAnp', 'DoubleWellWCA']
 
 
 class PairWCAnp(PairLennardJonesCutnp):
-    """
-    A simple WCA potential, based on the PairLennardJonesCutnp class.
+    """A simple WCA potential, based on the PairLennardJonesCutnp class.
 
     It is equal to the LJ potential with a shift of the energy and
     a cut-off set at sigma*2.**(1./6.)
     """
 
-    def __init__(self, dim=3, mixing='geometric',
-                 desc='WCA potential'):
+    def __init__(self, dim=3, mixing='geometric', desc='WCA potential'):
         """Initiate the potential by inheriting from Lennard-Jones."""
         super(PairWCAnp, self).__init__(dim=dim, desc=desc, shift=True,
                                         factor=2.**(1./6.))
 
 
 class DoubleWellWCA(PotentialFunction):
-    """
-    DoubleWellWCA(PotentialFunction).
+    """DoubleWellWCA(PotentialFunction).
 
     This class defines a n-dimensional Double Well potential.
 
@@ -52,8 +49,7 @@ class DoubleWellWCA(PotentialFunction):
     """
 
     def __init__(self, dim=3, desc='A WCA double well potential'):
-        """
-        Initiate the Double Well potential.
+        """Initiate the Double Well potential.
 
         Parameters
         ----------
@@ -74,8 +70,7 @@ class DoubleWellWCA(PotentialFunction):
         self.height4 = 0.0
 
     def add_parameters(self, parameters):
-        """
-        Add new potential parameters to the potential.
+        """Add new potential parameters to the potential.
 
         Parameters
         ----------
@@ -101,8 +96,7 @@ class DoubleWellWCA(PotentialFunction):
         self.height4 = 4.0 * self.height
 
     def update_parameters(self, parameters):
-        """
-        Update the potential parameters.
+        """Update the potential parameters.
 
         For `DoubleWellWCA` this is identical to `self.add_parameters`, so
         we will just call that one.
@@ -110,8 +104,7 @@ class DoubleWellWCA(PotentialFunction):
         self.add_parameters(parameters)
 
     def _activate(self, itype, jtype):
-        """
-        Determine if we should calculate a interaction or not.
+        """Determine if we should calculate a interaction or not.
 
         Parameters
         ----------
@@ -127,8 +120,7 @@ class DoubleWellWCA(PotentialFunction):
             return pair1 in self.types or pair2 in self.types
 
     def min_max(self):
-        """
-        Return the minima and the maximum of the `DoubleWellWCA` potential.
+        """Return the minima & maximum of the `DoubleWellWCA` potential.
 
         The minima are located at `rzero` and ``rzero+2*width`` and the
         maximum at ``rzero+width``.
@@ -145,8 +137,7 @@ class DoubleWellWCA(PotentialFunction):
         return self.rzero, self.rzero+2.0*self.width, self.rzero+self.width
 
     def potential(self, particles, box):
-        """
-        Calculate the potential energy for the `DoubleWellWCA` potential.
+        """Calculate the potential energy for the `DoubleWellWCA` potential.
 
         Parameters
         ----------
@@ -171,11 +162,9 @@ class DoubleWellWCA(PotentialFunction):
         return v_pot
 
     def force(self, particles, box):
-        """
-        Calculate the force for the `DoubleWellWCA` potential.
+        """Calculate the force for the `DoubleWellWCA` potential.
 
-        We also calculate the virial here, since the force
-        is evaluated.
+        We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------
@@ -207,11 +196,9 @@ class DoubleWellWCA(PotentialFunction):
         return forces, virial
 
     def potential_and_force(self, particles, box):
-        """
-        Calculate the force and potential for the `DoubleWellWCA` potential.
+        """Calculate the force & potential for the `DoubleWellWCA` potential.
 
-        We also calculate the virial here, since the force
-        is evaluated.
+        We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------

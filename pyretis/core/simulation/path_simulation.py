@@ -51,7 +51,7 @@ def create_path_simulation(settings, system, sim_type):
     Note
     ----
     We are duplicating code here - the checking of required settings is
-    identical to the checking in other simulation creaters, for instance
+    identical to the checking in other simulation creators, for instance
     the `create_md_simulation` in `pyretis.core.simulation.md_simulation`.
     This is just in case someone wants to add some magic that amends missing
     settings.
@@ -72,8 +72,7 @@ def create_path_simulation(settings, system, sim_type):
 
 
 class SimulationTIS(Simulation):
-    """
-    SimulationTIS(Simulation).
+    """SimulationTIS(Simulation).
 
     This class is used to define a TIS simulation where the goal is
     to calculate crossing probabilities.
@@ -104,8 +103,7 @@ class SimulationTIS(Simulation):
 
     def __init__(self, system, integrator, settings,
                  endcycle=0, startcycle=0):
-        """
-        Initialization of the TIS simulation.
+        """Initialization of the TIS simulation.
 
         Parameters
         ----------
@@ -145,8 +143,7 @@ class SimulationTIS(Simulation):
                                               detect=detect)
 
     def _initialize_path(self):
-        """
-        Initialize the TIS simulation.
+        """Initialize the path for the TIS simulation.
 
         It will select the initialization method based on the setting given
         in `self.tis_settings['initial_path']`.
@@ -164,8 +161,7 @@ class SimulationTIS(Simulation):
         return path
 
     def step(self):
-        """
-        Perform a simulation step.
+        """Perform a simulation step.
 
         Rather than using the tasks for the more general simulation, we here
         just execute what we need. Since we are integrating and checking the

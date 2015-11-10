@@ -13,7 +13,7 @@ pyretis Structure
 Modules
 -------
 
-- __init__.py: This is the main pyretis module. It will import usefull
+- __init__.py: This is the main pyretis module. It will import useful
   subpackages and define the version number.
 
 Subpackages
@@ -25,7 +25,7 @@ Subpackages
 
 - forcefield: This package define forcefields and how they are calculated.
 
-- tools: This package defines some methods which can be usefull for
+- tools: This package defines some methods which can be useful for
   setting up simple systems, for example methods for generating lattices.
 
 - inout: This package defines the io for the pyretis program. This includes
