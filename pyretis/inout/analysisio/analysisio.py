@@ -76,7 +76,7 @@ def run_md_flux_files(analysis_settings, simulation_settings,
     simulation. This method will output a series of plots and generate a
     report based on the analysis. The function calls for performing the
     actual analysis are here wrapped with run_analysis_file, this is just
-    to ensure that we are only analysing one block and ignoring the rest
+    to ensure that we are only analyzing one block and ignoring the rest
     of the possible blocks in the file.
 
     Parameters
@@ -137,7 +137,7 @@ def run_analysis_file(analysis_func, fileobject):
     -------
     out : function
         The decorated variant of analysis_func. This function can now be used
-        to analyse a file.
+        to analyze a file.
     """
     def wrapper(analysis_settings, simulation_settings, plotter):
         """
@@ -223,7 +223,7 @@ def set_up_output(func):
 def run_flux_analysis(analysis_settings, simulation_settings,
                       crossdata, plotter=None, txt=None):
     """
-    Run the md flux analysis and output some figures.
+    Run the MD flux analysis and output some figures.
 
     Parameters
     ----------
@@ -234,7 +234,7 @@ def run_flux_analysis(analysis_settings, simulation_settings,
         This dict contains information on how the simulation
         was performed.
     crossdata : list
-        The crossing data to analyse.
+        The crossing data to analyze.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
         to define the function plot_flux(...).
@@ -285,7 +285,7 @@ def run_order_analysis(analysis_settings, simulation_settings,
         This dict contains information on how the simulation
         was performed.
     orderdata : numpy.array
-        The order parameter data to analyse.
+        The order parameter data to analyze.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
         to define the function plot_orderp(...).
@@ -333,7 +333,7 @@ def run_energy_analysis(analysis_settings, simulation_settings,
         This dict contains information on how the simulation
         was performed.
     energydata : dict of numpy.arrays
-        The energy data to analyse.
+        The energy data to analyze.
     plotter : object as defined in plotting.py
         This is the object that handles the plotting. It is here assumed
         to define the function plot_energy(...).

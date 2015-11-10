@@ -35,7 +35,7 @@ _EXT = {'rst': 'rst',
 
 def _rst_to_html(rst):
     """
-    Convert a reStrcuturedText string to simple html.
+    Convert a reStrcuturedText string to simple HTML.
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def _rst_to_html(rst):
     Returns
     -------
     out : string
-        A html document corresponding to the input reStructuredText.
+        A HTML document corresponding to the input reStructuredText.
     """
     htmlwriter = HTMLWriter()
     htmlwriter.translator_class = HTMLTranslator
@@ -552,9 +552,8 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`
-        These are the path ensembles we have analysed.
-        The `PathEnsemble` is defined in `pyretis.core.path`.
+    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+        These are the path ensembles we have analyzed.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     fmt : string, optional
@@ -598,9 +597,8 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`
-        These are the path ensembles we have analysed.
-        The `PathEnsemble` is defined in `pyretis.core.path`.
+    path_ensembles : list of objects like `pyretis.core.pathP.athEnsemble`.
+        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -643,9 +641,8 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`
-        These are the path ensembles we have analysed.
-        The `PathEnsemble` is defined in `pyretis.core.path`.
+    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -690,9 +687,8 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`
-        These are the path ensembles we have analysed.
-        The `PathEnsemble` is defined in `pyretis.core.path`.
+    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional

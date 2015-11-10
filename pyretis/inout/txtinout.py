@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Methods and objects for simple text based output and input.
+"""Methods and objects for text based output and input.
 
 This file contians some methods and objects that handle output and input
 of 'table-based' output. Typically the data created here will be written
-to the screen during the simulation or as a simple coulmn output.
+to the screen during the simulation or as a simple column output.
 
 Important classes and functions
 -------------------------------
@@ -27,8 +27,8 @@ from pyretis.inout.common import create_backup
 
 __all__ = ['get_predefined_table', 'TxtTable', 'txt_save_columns']
 
-# define some table which may be usefull. These tables
-# can be selected using the get_predefined_tables method defined below
+# Define some table which may be useful. These tables
+# can be selected using the `get_predefined_tables` method defined below.
 _DEFINED_TABLES = {}
 _DEFINED_TABLES['energies'] = {'title': 'Energy output',
                                'var': ['step', 'temp', 'vpot',
@@ -49,19 +49,21 @@ _DEFINED_TABLES['path-stats'] = {'title': 'Path ensemble statistics',
 
 
 def get_predefined_table(table):
-    """
-    This method will just set up and return some predefined tables which
-    are used often. It simply initiate TxtTable with some predefined
-    settings.
+    """Create predefined `TxtTable` objects.
+
+    This method will set up and return an object like `TxtTable` for some
+    predefined tables. The predefined tables are assumed to be defined in
+    a dictionary `_DEFINED_TABLES`. Here, objects like `TxtTable` will be
+    initiated based on the given settings in `_DEFINED_TABLES`.
 
     Parameters
     ----------
     table : string
-        This should match one of the defined tables in _DEFINED_TABLES
+        This should match one of the defined tables in `_DEFINED_TABLES`.
 
     Returns
     -------
-    out : object of type `TxtTable` from `pyretis.inout.txtinout`
+    out : object like `TxtTable` from `pyretis.inout.txtinout`
         This is the text table that can be used for output.
     """
     settings = _DEFINED_TABLES.get(table.lower(), None)
@@ -84,11 +86,11 @@ def get_predefined_table(table):
 
 
 def txt_save_columns(outputfile, header, variables):
-    """
-    Save the different variables to a text file using numpy's savetxt.
+    """Save variables to a text file using `numpy.savetxt`.
 
-    Note that the variables are assumed to be numpy.arrays of
-    equal shape. Note that the outputfile may also be a zipped gz file.
+    Note that the variables are assumed to be numpy.arrays of equal shape
+    and that the output file may also be a gzipped file (this is selected
+    by letting the output file name end with '.gz').
 
     Parameters
     ----------
@@ -125,7 +127,7 @@ def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
         The data to format.
     width : int or iterable
         This is the width of the cells in the table. If it's given as an
-        iterable it will be applied to headers untill it's exhausted. In that
+        iterable it will be applied to headers until it's exhausted. In that
         case the last entry will be repeated and used for the remaining items.
     header : boolean, optional
         To tell if we are formatting for a header or not.
@@ -144,10 +146,10 @@ def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
 
     Note
     ----
-    If the field-width is too large, the value will be truncated here!
+    If the field-width is too large, values will be truncated!
     """
     row_str = []
-    # first check if width is iterable:
+    # first check if `width` is iterable:
     try:
         for _ in width:
             break
@@ -185,7 +187,7 @@ class TxtTable(object):
     """TxtTable(object) - Represent a table of text.
 
     This object will return a table of text with a header and
-    with formatted rows. The typical use is when we want to ouput results
+    with formatted rows. The typical use is when we want to output results
     in a table given a dictionary which contains the result. The `TxtTable`
     can then be used to only pick out a subset of the items we want to output.
 
@@ -209,10 +211,7 @@ class TxtTable(object):
     """
 
     def __init__(self, variables, width=12, headers=None, spacing=1):
-        """
-        Initialize the table.
-
-        Here we can specify default formats for floats and for integers.
+        """Initialize the table.
 
         Parameters
         ----------
@@ -242,7 +241,7 @@ class TxtTable(object):
     def header(self, header_list=None):
         """Handle the setting of the header.
 
-        Here, we just call `self.make_header` to handle this.
+        Here, we call `self.make_header` to handle this.
 
         Parameters
         ----------
@@ -254,8 +253,7 @@ class TxtTable(object):
         self._header = header
 
     def make_header(self, headers=None):
-        """
-        Return the header. It will be created if needed.
+        """Create and return the header.
 
         Parameters
         ----------
@@ -268,7 +266,7 @@ class TxtTable(object):
         out[0] : list of strings
             The created headers.
         out[1] : string
-            The header as a string.
+            The header as a formatted string. Can directly be used for writing.
         """
         if headers is None:
             new_headers = [var for var in self.variables]
@@ -281,14 +279,15 @@ class TxtTable(object):
     def format_row(self, row_dict, header=False):
         """Return a formatted string representation of a row.
 
-        This method will 'write' a row given a row dict.
+        This method will format a 'row'. The row is given as a dictionary and
+        we pick out values based on the variables defined in `self.variables`.
 
         Parameters
         ----------
         row_dict : dict
-            This is the row values (columns) to write. Variables will
-            be selected according to self.variables. This is just so that
-            we can enforce a ordering.
+            This is the row values (columns) to write. Variables will be
+            selected according to `self.variables`. This is just to enforce
+            a specific ordering.
         header : boolean, optional
             If this is true, we are creating the header.
         """
@@ -350,10 +349,10 @@ class TxtTable(object):
 class PathTable(TxtTable):
     """PathTable(object) - Special table for path ensembles.
 
-    This object will return a table of text with a header and
-    with formatted rows for a path ensemble. The table rows will contain
-    data from the PathEnsemble.nstats variable. This table is just meant as
-    output to the screen during a path ensemble simulation.
+    This object will return a table of text with a header and with formatted
+    rows for a path ensemble. The table rows will contain data from the
+    `PathEnsemble.nstats` variable. This table is just meant as output to the
+    screen during a path ensemble simulation.
 
     Attributes
     ----------
@@ -378,7 +377,7 @@ class PathTable(TxtTable):
         step : int
             This is the current step number or a cycle number in a simulation.
         path_ensemble : object like `pyretis.core.path.PathEnsemble`
-            We write out PathEnsemble data here.
+            This is the path ensemble to output for.
         first_step : boolean
             If first step is True, we will also write the header for the
             table.

@@ -97,7 +97,7 @@ class WriteXYZ(FileWriter):
 
     Attributes
     ----------
-    Same as for FileWriter and in addition:
+    Same as for `FileWriter` and in addition:
     convert : dict of floats
         Defines the conversion of positions from internal units to Å.
     atomnames : list

@@ -52,7 +52,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     will stop here.
 
     This function will read data in blocks and yield a block when a new block
-    is found. A special string (`block_label`) is assumed to idenity the
+    is found. A special string (`block_label`) is assumed to identify the
     start of blocks.
 
     Parameter
@@ -112,14 +112,14 @@ class FileWriter(object):
     filename : string
         Name of file to write.
     filetype : string
-        Identifies the filetype to write - the "format".
+        Identifies the file type to write - the "format".
     mode : string
         Mode can be used to select if we should write to the file
         (if mode is equal to 'w') or read from the file (mode equal to 'r').
         The default is mode equal to 'w'.
     oldfile : string
         Defines how we handle existing files with the same
-        name as given in `filename`. Note that this is only usefull when the
+        name as given in `filename`. Note that this is only useful when the
         mode is set to 'w'.
     count : int
         This is just a counter of how many times write has been called.
@@ -173,7 +173,7 @@ class FileWriter(object):
         """Open a file and make it ready for reading/writing.
 
         Method to open a file, to make it ready for reading/writing.
-        This function is separated from the __init__ in case some derived
+        This function is separated from `self.__init__` in case some derived
         classes will open the file at a later stage. Default is to run
         open if the mode it set to 'w'.
 

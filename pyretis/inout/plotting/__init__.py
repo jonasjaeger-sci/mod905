@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains methods for setting up plotters.
 
-Specifically it defines colors, colorschemes and a method
+Specifically it defines colors, color schemes and a method
 for selecting a plotter.
-Here we also hard-code some color schemes which may be usefull for
+Here we also hard-code some color schemes which may be useful for
 the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
 from the seaborn project [deep]_ and the husl color scheme [husl]_.
 
@@ -57,8 +57,7 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
 
 
 def create_plotter(plotter, out_fmt, style):
-    """
-    Method to create a plotter.
+    """Method to create a plotter.
 
     Parameters
     ----------
@@ -69,7 +68,7 @@ def create_plotter(plotter, out_fmt, style):
         'png', 'eps', 'svg', 'pdf' and so on.
     style : string
         This string defines a style for the plotter. It can be
-        a filepath or a string which have a meaning to the plotter.
+        a path to a file or a string which have a meaning to the plotter.
         How the style should be handled is defined in the plotter.
     """
     if plotter.lower() in ['mpl', 'matplotlib']:

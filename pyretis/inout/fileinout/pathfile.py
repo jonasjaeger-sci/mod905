@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """Methods and classes for input/output of path data.
 
-This module defines classes for writing and storein path data and
-path ensemble data.
+This module defines classes for writing path data and path ensemble data.
 
 Important classes
 -----------------
@@ -26,13 +25,13 @@ from pyretis.inout.fileinout.orderfile import ORDER_FMT
 __all__ = ['PathFile', 'PathEnsembleFile']
 
 
-# define a format used for the path files. Here it's not really needed,
+# Define a format used for the path files. Here it's not really needed,
 # we are going to assume that these files will be comma separated anyway.
 # It is included to be compatible with the previous fortran version.
 PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
             '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
             '{13:>16.9e} {14:>7d} {15:7d}')
-# define a format for position and velocities in the path file:
+# Define a format for position and velocities in the path file:
 POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
 
 
@@ -43,7 +42,7 @@ class PathFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the FileWriter object. In addition
+    Same as for the `FileWriter` object. In addition
     block_label : string
         This label is used to identify new blocks of data
     block_head : string
@@ -56,7 +55,7 @@ class PathFile(FileWriter):
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
-        """Initialize the PathFile object.
+        """Initialize the `PathFile` object.
 
         Parameters
         ----------
@@ -68,7 +67,7 @@ class PathFile(FileWriter):
             to 'r'). The default is mode equal to 'w'.
         oldfile : string
             Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
+            in `filename`. Note that this is only useful when the mode is
             set to 'w'.
         """
         super(PathFile, self).__init__(filename, 'pathfile',
@@ -173,7 +172,7 @@ class PathFile(FileWriter):
 
 
 def _line_to_path_object(line):
-    """Convert a text line to a Path object.
+    """Convert a text line to a `Path` object.
 
     Parameters
     ----------
@@ -245,16 +244,16 @@ def _line_to_path_data(line):
 
 
 def _path_to_line_data(path, cycle, acc, shoot):
-    """Convert path data from a PathEnsemble object to a string.
+    """Convert path data from a `PathEnsemble` object to a string.
 
     The string representation is useful from storing path data. This function
-    is the "inverse" of the ``_line_to_path_data`` function.
+    is the "inverse" of the `_line_to_path_data` function.
 
     Parameters
     ----------
     path : dict
         This is the simplified path description as contained in the
-        PathEnsemble.path list.
+        `PathEnsemble.path` list.
     cycle : integer
         This is the current cycle number.
     acc : integer
@@ -296,31 +295,31 @@ class PathEnsembleFile(FileWriter):
     This class handles writing/reading of path ensemble data to a file.
     It also supports some attributes and functions found in the
     `pyretis.core.path.PathEnsemble` object. This makes it possible to run
-    the analysis tool directly using the PathEnsembleFile object rather than
+    the analysis tool directly using the `PathEnsembleFile` object rather than
     first converting to a `pyretis.core.path.PathEnsemble` and then running
-    the analysis. The common methods are ``get_paths`` and ``__str__``.
+    the analysis. The common methods are `get_paths` and `__str__`.
     The common properties are `ensemble` and `interfaces`
     In the future, this should be made smarter, for instance could path data
     be read in portions, or the full path file could be read if it's small
-    enough to fit in the memory. A line-by-line analysis as it is righ now
-    might not be the most efficient way...
+    enough to fit in the memory. A line-by-line analysis as it is right now
+    might not be the most efficient way.
 
     Attributes
     ----------
-    Same as for the FileWriter object, in addition:
+    Same as for the `FileWriter` object, in addition:
     ensemble : str
         This is a string representation of the path ensemble. Typically
         something like '0-', '0+', '1', '2', ..., '001' and so on.
     interfaces : list of ints
         These are the interfaces specified with the values
         for the order parameters: [left, middle, right]
-        This variable is used when creating a ``PathEnsemble`` object
-        in ``to_path_ensemble``.
+        This variable is used when creating a `PathEnsemble` object
+        in `to_path_ensemble`.
     """
 
     def __init__(self, filename, ensemble, interfaces, mode='w',
                  oldfile='backup'):
-        """Initialize the PathEnsembleFile object.
+        """Initialize the `PathEnsembleFile` object.
 
         Parameters
         ----------
@@ -338,7 +337,7 @@ class PathEnsembleFile(FileWriter):
             to 'r'). The default is mode equal to 'w'.
         oldfile : string
             Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only usefull when the mode is
+            in `filename`. Note that this is only useful when the mode is
             set to 'w'.
         """
         header = {'text': ['Step', 'No. acc', 'No. shoot',
@@ -354,7 +353,7 @@ class PathEnsembleFile(FileWriter):
         self.interfaces = interfaces
 
     def to_path_ensemble(self):
-        """Read a file and return a path ensemble object.
+        """Read a file and return a `PathEnsemble` object.
 
         This will read an entire file and return a path ensemble object.
         Note that this might not be the fastest way of using the path ensemble

@@ -132,7 +132,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     I.e. other order parameters or velocities are not written here. This
     will be changed when the structure of the output order parameter file
     has been fixed. Also note that, if present, the first order parameter
-    will be plotted agains the second one - i.e. the second one will be
+    will be plotted against the second one - i.e. the second one will be
     assumed to represent the velocity here.
     """
     outfiles = {}
@@ -251,7 +251,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     Parameters
     ----------
     path_ensemble : object
-        This is the path ensemble we have analysed.
+        This is the path ensemble we have analyzed.
     results : dict
         This dict contains the result from the analysis.
     idetect : float
@@ -289,7 +289,7 @@ def txt_total_probability(path_ensembles, detect, results, matched,
     Parameters
     ----------
     path_ensembles : list of PathEnsemble objects
-        This is the path ensembles we have analysed.
+        This is the path ensembles we have analyzed.
     results : list of dicts
         This dict contains the results from the analysis.
     detect : list of floats

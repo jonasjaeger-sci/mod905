@@ -46,14 +46,13 @@ _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
 
 
 class MplPlotter(object):
-    """
-    Class MplPlotter(object).
+    """Class MplPlotter(object).
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which conveniently can be called in
-    different analysis output function. The Mplplotter will use matplotlib
-    and can be used to create other plotters based on other tools, for
-    instance gnuplot or Veusz, visvis or your favourite plotting tool.
+    different analysis output function. The `MplPlotter` will use matplotlib
+    and it can be used to create other plotters based on other tools, for
+    instance gnuplot or Veusz, visvis or your favorite plotting tool.
 
     Attributes
     ----------
@@ -64,8 +63,9 @@ class MplPlotter(object):
     """
 
     def __init__(self, out_fmt, style=None):
-        """
-        To initiate the plotting object. Here we only define the style.
+        """Initiate the plotting object.
+
+        Here we only define the style.
 
         Parameters
         ----------
@@ -90,30 +90,29 @@ class MplPlotter(object):
             self.out_fmt = out_fmt
 
     def plot_flux(self, results):
-        """Function to call ``mpl_plot_flux``."""
+        """Function to call `mpl_plot_flux`."""
         return mpl_plot_flux(results, self.out_fmt)
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """Function to call ``mpl_plot_energy``."""
+        """Function to call `mpl_plot_energy`."""
         return mpl_plot_energy(results, energies, self.out_fmt,
                                sim_settings=sim_settings)
 
     def plot_orderp(self, results, orderdata):
-        """Function to just call ``mpl_plot_orderp``."""
+        """Function to just call `mpl_plot_orderp`."""
         return mpl_plot_orderp(results, orderdata, self.out_fmt)
 
     def plot_path(self, path_ensemble, results, idetect):
-        """Function to just ``call mpl_plot_path``."""
+        """Function to just call `mpl_plot_path`."""
         return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
 
     def plot_total_probability(self, path_ensembles, detect, matched):
-        """Function to just call ``mpl_plot_matched``."""
+        """Function to just call `mpl_plot_matched`."""
         return mpl_plot_matched(path_ensembles, detect, matched, self.out_fmt)
 
 
 def _mpl_read_style_file(filename):
-    """
-    Read style files for old versions of matplotlib.
+    """Read style files for old versions of matplotlib.
 
     This function is just intended for old versions of matplotlib
     where we have to read parameters and set them ourselves.
@@ -145,14 +144,13 @@ def _mpl_read_style_file(filename):
 
 
 def mpl_set_style(style='pyretis'):
-    """
-    Set the plotting style for matplotlib.
+    """Set the plotting style for matplotlib.
 
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
-    'grayscale' (i.e. one of the styles in matplotlib.style.available) or
+    'grayscale' (i.e. one of the styles in `matplotlib.style.available`) or
     as a file (full path is needed). The default pyretis style
-    is stored in _MPL_STYLE_FILE and can be selected with 'pyretis'.
+    is stored in `_MPL_STYLE_FILE` and can be selected with 'pyretis'.
     Style equal to None is just the default matplotlib style.
 
     Parameters
@@ -178,8 +176,7 @@ def mpl_set_style(style='pyretis'):
 
 
 def mpl_savefig(canvas, outputfile):
-    """
-    Function to save matplotlib figures.
+    """Function to save matplotlib figures.
 
     It will save figures so that old ones are not overwritten.
 
@@ -187,7 +184,7 @@ def mpl_savefig(canvas, outputfile):
     ----------
     canvas : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
         This is the figure to be written to the file by
-        using canvas.print_figure().
+        using `canvas.print_figure()`.
     outputfile : string
         This is the name of the output file to create.
     """
@@ -198,8 +195,7 @@ def mpl_savefig(canvas, outputfile):
 
 
 def mpl_plot_in_chunks(axs, series, chunksize=20000):
-    """
-    Plot a series in chunks using matplotlib.
+    """Plot a series in chunks using matplotlib.
 
     When plotting 'large' datasets, matplotlib might give an
     'OverflowError: Allocated too many blocks' error.
@@ -236,8 +232,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
 
 
 def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
-    """
-    Do the actual plotting in chunks for x-vs-y data.
+    """Do the actual plotting in chunks for ``x`` vs ``y`` data.
 
     Parameters
     ----------
@@ -271,8 +266,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
 
 def mpl_simple_plot(series, outputfile, fig_settings=None):
-    """
-    Plot simple time series data (i.e. x vs y data).
+    """Plot simple time series data (i.e. ``x`` vs ``y`` data).
 
     Parameters
     ----------
@@ -322,8 +316,11 @@ def mpl_simple_plot(series, outputfile, fig_settings=None):
 
 
 def mpl_linecollection_gradient(axs, series):
-    """
-    Plot a line with a color gradient along the line.
+    """Plot a line with a color gradient along the line.
+
+    The line is split into segments and each segment is colored according to
+    it's "location" along the line. By "location" we here mean the order of
+    the segments.
 
     Parameters
     ----------
@@ -334,7 +331,7 @@ def mpl_linecollection_gradient(axs, series):
 
     Returns
     -------
-    handle : object of type matplotlib.collections.LineCollection
+    handle : object of like `matplotlib.collections.LineCollection`.
         A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
@@ -352,13 +349,14 @@ def mpl_linecollection_gradient(axs, series):
 
 
 def mpl_chunks_gradient(axs, series, chunksize=20000):
-    """
-    Plot a line gradient in chunks.
+    """Plot a line gradient in chunks.
 
-    Here we will plot lines with length equal to chunksize and color
-    that line-chunk with one color. This method will be used when
-    chunksize << length of the data to plot so that
-    each chunksize will have approximately the same color.
+    Here we will plot a line in chunks and color each chunk with one color.
+    This method can be used as an alternative to `mpl_linecollection_gradient`
+    when the number of points to plot is very large. Typically the chunk size
+    here will be small compared to the size of the data to be plotted, so that
+    each chunk, if plotted with `mpl_linecollection_gradient`, would have
+    approximately the same color anyway.
 
     Paremters
     ---------
@@ -400,8 +398,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
 
 def mpl_line_gradient(series, outputfile, fig_settings):
-    """
-    Plot time series and color the line with a color gradient.
+    """Plot time series and color the line with a color gradient.
 
     This method will plot time series data and color the lines with
     a gradient according to 'time'
@@ -453,10 +450,9 @@ def mpl_line_gradient(series, outputfile, fig_settings):
 
 def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
                    title=None):
-    """
-    Plot series with error values.
+    """Plot series with error values.
 
-    The error values will be displayed as a filled region.
+    This will plot a series with error values displayed as a filled region.
 
     Parameters
     ----------
@@ -501,10 +497,9 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
 
 
 def mpl_block_error(error, title, outputfile):
-    """
-    Plot results from a block error analysis.
+    """Plot results from a block error analysis.
 
-    This will plot the output from a error analysis; the error
+    This will plot the output from a error analysis, i.e. the error
     as a function of the block length.
 
     Parameters
@@ -533,8 +528,7 @@ def mpl_block_error(error, title, outputfile):
 
 def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
                           outputfile_scale):
-    """
-    Plot the histograms from the shoots analysis.
+    """Plot the histograms from the shoots analysis.
 
     Parameters
     ----------
@@ -573,13 +567,12 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
 
 
 def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
-    """
-    Plot all figures from the path analysis.
+    """Plot all figures from the path analysis.
 
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we have analysed.
+        This is the path ensemble we have analyzed.
     results : dict
         This dict contains the result from the analysis.
     idetect : float
@@ -597,7 +590,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
     outfiles = {}
     for key in _PATHFILES:
         outfiles[key] = _PATHFILES[key].format(ens, out_fmt)
-    # first plot pcross vs lambda with the idetect surface
+    # First plot `pcross` vs `lambda` with the `idetect` surface:
     series = [{'type': 'xy', 'x': results['pcross'][0],
                'y': results['pcross'][1]}]
     series.append({'type': 'vline', 'x': idetect, 'ls': '--',
@@ -607,7 +600,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                     fig_settings={'xlabel': r'Order parameter ($\lambda$)',
                                   'ylabel': 'Probability',
                                   'title': 'Ensemble: {0}'.format(ens)})
-    # next plot running pcross:
+    # Next plot running ` pcross`:
     series = [{'type': 'xy', 'x': results['cycle'],
                'y': results['prun']}]
     series.append({'type': 'hline', 'y': results['prun'][-1],
@@ -617,10 +610,10 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                     fig_settings={'xlabel': 'Cycle number',
                                   'ylabel': 'Probability (running avg.)',
                                   'title': 'Ensemble: {0}'.format(ens)})
-    # plot results of block-error analysis:
+    # Plot results of block-error analysis:
     mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
                     outfiles['perror'])
-    # plot length-histogram:
+    # Plot length-histogram:
     hist1 = results['pathlength'][0]
     hist2 = results['pathlength'][1]
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
@@ -641,8 +634,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
 
 
 def mpl_plot_orderp(results, orderdata, out_fmt):
-    """
-    Plot the output from the order parameter analysis using matplotlib.
+    """Plot the output from the order parameter analysis using matplotlib.
 
     Parameters
     ----------
@@ -712,8 +704,7 @@ def mpl_plot_orderp(results, orderdata, out_fmt):
 
 
 def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
-    """
-    Plot the output from the energy analysis using matplotlib.
+    """Plot the output from the energy analysis using matplotlib.
 
     Parameters
     ----------
@@ -807,8 +798,7 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
 
 
 def mpl_plot_flux(results, out_fmt):
-    """
-    Plot the output from the flux analysis using matplotlib.
+    """Plot the output from the flux analysis using matplotlib.
 
     Parameters
     ----------
@@ -847,8 +837,7 @@ def mpl_plot_flux(results, out_fmt):
 
 
 def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
-    """
-    Plot matched probabilities using matplotlib.
+    """Plot matched probabilities using matplotlib.
 
     This method will plot the overall matched probabilities for the
     different ensembles and a plot with just the over-all matched
@@ -856,8 +845,8 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
 
     Parameters
     ----------
-    path_ensembles : list of PathEnsemble objects
-        This is the path ensembles we have analysed.
+    path_ensembles : list of objects like `PathEnsemble`.
+        This is the path ensembles we have analyzed.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
@@ -877,7 +866,7 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
     for key in _PATH_MATCH:
         outfiles[key] = _PATH_MATCH[key].format(out_fmt)
 
-    # first plot the matched probabilities for each ensemble:
+    # First plot the matched probabilities for each ensemble:
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
@@ -892,7 +881,7 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
                                   'ylabel': 'Probability',
                                   'title': 'Matched probabilities',
                                   'yscale': 'log'})
-    # also make a plot with the overall matched probability:
+    # Also make a plot with the overall matched probability:
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,

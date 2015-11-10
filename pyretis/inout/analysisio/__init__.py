@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods input/ouput for the analysis.
+"""This file contains methods input/output for the analysis.
 
 The methods defined here will typically run the analysis on the
 given input and write outputs, typically this will be plots and simple

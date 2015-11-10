@@ -2,7 +2,7 @@
 """This sub-package handle the input and output of pyretis files.
 
 These files will store results/outputs from the simulation and
-can be used to analyse a simulation.
+can be used to analyze a simulation.
 
 Package structure
 =================

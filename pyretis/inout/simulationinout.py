@@ -72,7 +72,7 @@ class OutputTask(object):
     writer : object like `FileWriter` from `pyretis.inout.txtinout`
         This object will handle the actual writing of the result.
     header : string
-        Some objects will have a specifid header written each time we use
+        Some objects will have a specific header written each time we use
         the write routine. This is for instance used in the trajectory writer
         to display the current step for a written frame.
     """
@@ -86,7 +86,7 @@ class OutputTask(object):
             This object will handle the actual writing of the result.
         output_type : string
             This string defines the output type. It is used to get the
-            ouput from the simulation.
+            output from the simulation.
         target : string
             This determines what kind out output target we have in mind,
             'file' and 'screen' are handled slightly differently.
@@ -313,8 +313,7 @@ def _create_file_writer(task, system, settings):
         trajectory writer.
     settings : dict
         These are the settings used for setting up the simulation.
-        Some of these settings might be usefull for creating the
-        output tasks.
+        Some of these settings might be useful for creating the output tasks.
 
     Returns
     -------
@@ -360,7 +359,7 @@ def create_output_task(task, system, settings):
     """Create object for a output task.
 
     This method will create an object for a given output task.
-    It will make use of some of the pre-defined output possibilities
+    It will make use of some of the predefined output possibilities
     defined in `pyretis.inout`
 
     Parameters
@@ -372,8 +371,7 @@ def create_output_task(task, system, settings):
         trajectory writer.
     settings : dict
         These are the settings used for setting up the simulation.
-        Some of these settings might be usefull for creating the
-        output tasks.
+        Some of these settings might be useful for creating the output tasks.
 
     Returns
     -------
