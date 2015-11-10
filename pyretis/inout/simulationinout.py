@@ -413,7 +413,9 @@ def store_settings_as_py(settings, outfile, variable='settings'):
     """Write simulation settings to a .py file.
 
     This will just write a dictionary to a file in a way such that
-    it can be imported into another file.
+    it can be imported into another file. I.e. one can do
+    `from 'outfile' import 'variable' as settings` to import the
+    given `variable` from the given `outfile` created by this method.
 
     Parameters
     ----------
@@ -423,6 +425,10 @@ def store_settings_as_py(settings, outfile, variable='settings'):
         The file to create
     variable : string, optional
         This is the variable which we write, i.e. `variable = settings`.
+
+    Note
+    ----
+    We do not store objects which may exist in the settings dictionary.
     """
     first = '{} = {{}}'.format(variable)
     other = (' ' * (len(first) - 2)) + '{}'

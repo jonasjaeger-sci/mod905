@@ -2,7 +2,7 @@
 """Methods and objects for simple text based output and input.
 
 This file contians some methods and objects that handle output and input
-of "table-based" output. Typically the data created here will be written
+of 'table-based' output. Typically the data created here will be written
 to the screen during the simulation or as a simple coulmn output.
 
 Important classes and functions

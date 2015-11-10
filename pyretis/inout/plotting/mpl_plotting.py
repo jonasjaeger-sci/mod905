@@ -10,7 +10,7 @@ Important classes and functions
 - MplPlotter: A class for plotting with matplotlib.
 
 - mpl_set_style: A method for setting the style for the plots, typically
-  used here to load the _pyretis style_.
+  used here to load the *pyretis style*.
 """
 import numpy as np
 import os

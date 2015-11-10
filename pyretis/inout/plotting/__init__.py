@@ -19,6 +19,7 @@ Folders
 
 References
 ----------
+
 .. [cb10] The colorblind_10 color scheme,
           https://jiffyclub.github.io/palettable/tableau/
 .. [deep] The deep color scheme, from the seaborn project

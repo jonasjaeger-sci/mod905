@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-This library handles the input and output for pyretis.
+"""The sub-package handles input and output for pyretis.
 
 This package is intended for creating various forms of output
 from the pyretis program. It include writers for simple text based
 output and plotters for creating figures. Figures and the text results
-can be combined into reports, which can be templated.
+can be combined into reports, which can be templated and are handled by
+the report module.
 
 Package structure
 =================
@@ -13,36 +13,31 @@ Package structure
 Sub-packages
 ------------
 
-- fileinout: handles the input and output of files used as input for the
-  analysis. It also defines formats for trajectories.
+- fileinout: Handles files with output from pyretis which can be used in
+  the  analysis. It also defines formats for trajectories.
 
-- plotting: handles plotting. It defines simple things like colors etc. 
+- plotting: Handles plotting. It defines simple things like colors etc. 
   for plotting. It also defines functions which can be used for specific
   plotting by the analysis and report tools.
+
+- analysisio: Handles the input and output needed for analysis.
 
 Modules
 -------
 
-- analysisio.py: This is a module to output the analysis of (RE)TIS
-  simulation.
+- common.py: Common functions and variables for the input/output. These
+  functions are mainly intended for internal use and are not imported here.
 
-- common.py: This module contains some common functions. These functions
-  are mainly intended for internal use and are not currently imported
-  here.
-
-- __init__.py: Imports from the other modules and define some convenience
-  functions for creating trajectory writers and text tables.
+- __init__.py: Imports from the other modules.
 
 - report.py: Module for creating reports based on analysis. This module
-  is responsible for creating the final output from the analysis of (RE)TIS
+  is responsible for creating the final output from an analysis of (RE)TIS
   simulations
 
-- simulationinout.py: Module for handling input and output from simulation
-  results.
+- simulationinout.py: Module for handling input and output from simulations.
 
-- txtinout.py: Defines objects and some methods for text-based output.
-  It defines the TxtTable object (table-like-format) intended to be
-  written to the screen during a simulation or to a file.
+- txtinout.py: Defines objects and some methods for text-based output. This
+  is typically text written to the screen during a simulation.
 
 Important classes and functions
 -------------------------------
@@ -50,7 +45,7 @@ Important classes and functions
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
 
-- PathEnembleFile: A writer of path ensemble data.
+- PathFile, PathEnembleFile: Classes for writing path and path ensemble data.
 
 - generate_report: A function to generate reports from analysis output(s).
 
@@ -62,7 +57,11 @@ Important classes and functions
 - get_predefined_table: A function to get an object which can be used to
   pretty-print tables to the screen/file during a simulation.
 
-- TxtTable: A function to write text tables.
+- TxtTable: A function to write create text based tables. It is used by
+  `get_predefined_table`.
+
+- store_settings_as_py: Store simulation settings as a dictionary in a
+  python file which can be imported into other python scripts.
 
 Folders
 -------

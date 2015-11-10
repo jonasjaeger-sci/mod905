@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains methods that will generate reports.
+"""Methods for generating reports.
 
 The reports are useful for displaying results from the analysis.
 """

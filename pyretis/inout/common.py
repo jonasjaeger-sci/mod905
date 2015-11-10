@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""This file contains common methods and functions for the input/output."""
+"""This file contains common methods and functions for the input/output.
+
+Important functions
+-------------------
+
+create_backup: A method to handle the creation of backups of old files.
+"""
 from __future__ import absolute_import
 import os
 
@@ -47,8 +53,7 @@ _REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
 
 
 def create_backup(outputfile):
-    """
-    Check if a file exist and create backup if requested.
+    """ Check if a file exist and create backup if requested.
 
     This method will check if the given filename exist and if it
     does, it will move that file to a new filename such that the given
@@ -67,7 +72,7 @@ def create_backup(outputfile):
 
     Note
     ----
-    No warning is issued here. This is just in case the msg returned here
+    No warning is issued here. This is just in case the `msg` returned here
     will be part of some more elaborate message.
     """
     filename = '{}'.format(outputfile)
