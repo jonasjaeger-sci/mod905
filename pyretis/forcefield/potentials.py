@@ -9,16 +9,26 @@ __all__ = ['DoubleWell', 'RectangularWell']
 
 
 class DoubleWell(PotentialFunction):
-    """DoubleWell(PotentialFunction).
+    r"""DoubleWell(PotentialFunction).
 
     This class defines a one-dimensional double well potential.
+    The potential energy (:math:`V_\text{pot}`) is given by
+    
+    .. math::
+
+       V_\text{pot} = a x^4 - b (x - c)^2
+
+    where :math:`x` is the position and :math:`a`, :math:`b` and :math:`c` are
+    parameters for the potential. These parameters are stored as attributes of
+    the class. Typically, both :math:`a` and :math:`b` are positive quantities
+    however, we do not explicitly check that here.
 
     Attributes
     ----------
     a : float
-        Parameter for the potential.
+        Parameter for the potential typically greater than zero.
     b : float
-        Parameter for the potential.
+        Parameter for the potential typically greater than zero.
     c : float
         Parameter for the potential.
     params : dict
@@ -120,9 +130,11 @@ class DoubleWell(PotentialFunction):
 
 
 class RectangularWell(PotentialFunction):
-    """RectangularWell(PotentialFunction).
+    r"""RectangularWell(PotentialFunction).
 
     This class defines a one-dimensional rectangular well potential.
+    The potential energy is zero within the potential well and infinite
+    outside. The well is defined with a left and right boundary.
 
     Attributes
     ----------
