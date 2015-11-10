@@ -12,12 +12,26 @@ __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
 
 class PairLennardJonesCut(PotentialFunction):
-    """A Lennard-Jones 6-12 potential.
+    r"""class PairLennardJonesCut(PotentialFunction).
 
-    The potential employs a simple cut-off and can be shifted.
-    This implementation is in pure python (yes we are double looping) and
-    is slow. It should not be used for production, rather consider the numpy
-    aware `PairLennardJonesCutnp`.
+    This class implements as simple Lennard-Jones 6-12 potential which employs
+    a simple cut-off and can be shifted. The potential energy
+    (:math:`V_\text{pot}`) is defined in the usual way for an interacting pair
+    of particles a distance :math:`r` apart,
+
+    .. math::
+
+       V_\text{pot} = 4 \varepsilon \left( x^{12} - x^{6} \right),
+
+    where :math:`x = \sigma/r` and :math:`\varepsilon` and :math:`\sigma` are
+    the potential parameters. The parameters are stored as attributes of the
+    potential and we store one set for each kind of pair interaction.
+    Parameters can be generated with a specific mixing rule by the force
+    field.
+
+    This implementation is in pure python (yes we are double looping) and it
+    is slow. It should not be used for production, please consider the numpy
+    aware `PairLennardJonesCutnp` which is somewhat better.
 
     Attributes
     ----------
@@ -404,7 +418,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
     A Lennard-Jones 6-12 potential with a simple cut-off which can be shifted.
     `PairLennardJonesCutnp` uses numpy for calculations, i.e. most operations
-    are recast as numpy.array operations.
+    are recast as numpy.array operations. Otherwise it is similar to
+    `PairLennardJonesCut`.
 
     Attributes
     ----------
@@ -628,6 +643,16 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         Here, we run the `add_parameters` of the super class.
         This is done just in case the adding of parameters should trigger
         an update of `self.matrix_np`.
+        
+        Parameters
+        ----------
+        parameters : dict
+            The new parameters, they are assume to be dicts of
+            type {'A': {'epsilon': 1.0, 'sigma': 1.0, 'rcut': 2.5}}
+        mix : boolean
+            If mix is true, the _generate_mixing_parameters will
+            be executed. Default here is True since we probably need to
+            generate parameters after adding new ones.
         """
         res = super(PairLennardJonesCutnp, self).add_parameters(parameters,
                                                                 mix=mix)
@@ -637,9 +662,18 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
     def update_parameters(self, parameters, mix=False):
         """Update parameters for the potential.
 
-        This function will just run the `update_parameters` of the
-        super class. This is done just in case the updating of
-        parameters should trigger an update of `self.matrix_np`.
+        This function will just run the `update_parameters` of the super
+        class. This is done just in case the updating of parameters
+        should trigger an update of `self.matrix_np`.
+        
+        Parameters
+        ----------
+        parameters : dict
+            The parameters to update.
+        mix : boolean
+            If mix is true, the _generate_mixing_parameters will
+            be executed. Default here is False, in case the user want
+            to explicitly set some parameters.
         """
         res = super(PairLennardJonesCutnp, self).update_parameters(parameters,
                                                                    mix=mix)

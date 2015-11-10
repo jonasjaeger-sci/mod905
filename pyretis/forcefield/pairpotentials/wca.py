@@ -11,10 +11,10 @@ __all__ = ['PairWCAnp', 'DoubleWellWCA']
 
 
 class PairWCAnp(PairLennardJonesCutnp):
-    """A simple WCA potential, based on the PairLennardJonesCutnp class.
+    r"""A simple WCA potential, based on the PairLennardJonesCutnp class.
 
     It is equal to the LJ potential with a shift of the energy and
-    a cut-off set at sigma*2.**(1./6.)
+    a cut-off set at :math:`2^{1/6} \sigma`
     """
 
     def __init__(self, dim=3, mixing='geometric', desc='WCA potential'):
@@ -24,25 +24,35 @@ class PairWCAnp(PairLennardJonesCutnp):
 
 
 class DoubleWellWCA(PotentialFunction):
-    """DoubleWellWCA(PotentialFunction).
+    r"""DoubleWellWCA(PotentialFunction).
 
     This class defines a n-dimensional Double Well potential.
+    The potential energy (:math:`V_\text{pot}`) for a pair of particles
+    separated by a distance :math:`r` is given by,
+
+    .. math::
+
+       V_\text{pot} = h (1 - (r - r_0 - w)^2/w^2)^2,
+
+    where :math:`h` gives the 'height' of the potential, :math:`r_0` the
+    minima and :math:`w` the width. These parameters are stored in the
+    attributes `height`, `rzero` and `width` respectively.
 
     Attributes
     ----------
     params : dict
         Containins the parameters. These are:
 
-        * `rzero` : float
+        - `rzero` : float
             Parameter for the potential, defines the two minima.
             One is located at ``rzero``, the other at ``rzero+2*width``.
-        * `width` : float
+        - `width` : float
             Parameter for the potential, describes the "width" of
             the potential.
-        * `height` : float
+        - `height` : float
             Parameter for the potential, describes the "height" of
             the potential.
-        * `types` : set
+        - `types` : set
             Types defines what kind of particle pairs to consider
             for this interaction. If types is not set (i.e. set to None),
             it will be assumed to apply to ALL partilces.
@@ -100,6 +110,13 @@ class DoubleWellWCA(PotentialFunction):
 
         For `DoubleWellWCA` this is identical to `self.add_parameters`, so
         we will just call that one.
+        
+        Parameters
+        ----------
+        parameters : dict
+            The parameters to update, they are assume to be dicts on the form
+            {'types': set(('A','A')), 'rzero': 1.0, 'width': 0.25,
+            'height': 6.0}
         """
         self.add_parameters(parameters)
 
