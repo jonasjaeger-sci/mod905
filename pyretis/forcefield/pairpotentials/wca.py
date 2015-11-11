@@ -110,7 +110,7 @@ class DoubleWellWCA(PotentialFunction):
 
         For `DoubleWellWCA` this is identical to `self.add_parameters`, so
         we will just call that one.
-        
+
         Parameters
         ----------
         parameters : dict

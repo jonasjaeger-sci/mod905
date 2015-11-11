@@ -13,7 +13,7 @@ class DoubleWell(PotentialFunction):
 
     This class defines a one-dimensional double well potential.
     The potential energy (:math:`V_\text{pot}`) is given by
-    
+
     .. math::
 
        V_\text{pot} = a x^4 - b (x - c)^2
@@ -56,7 +56,7 @@ class DoubleWell(PotentialFunction):
         self.parameters_to_dict()
 
     def potential(self, pos):
-        """Evaluate the potential for the one-dimensional double well potential.
+        """Evaluate the potential for the one-dimensional double well.
 
         Parameters
         ----------

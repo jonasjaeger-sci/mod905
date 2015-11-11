@@ -643,7 +643,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         Here, we run the `add_parameters` of the super class.
         This is done just in case the adding of parameters should trigger
         an update of `self.matrix_np`.
-        
+
         Parameters
         ----------
         parameters : dict
@@ -665,7 +665,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         This function will just run the `update_parameters` of the super
         class. This is done just in case the updating of parameters
         should trigger an update of `self.matrix_np`.
-        
+
         Parameters
         ----------
         parameters : dict
