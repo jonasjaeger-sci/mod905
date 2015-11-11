@@ -4,12 +4,10 @@
 The methods defined here will also run the analysis and output according
 to given settings.
 
-Important classes and functions
--------------------------------
+Important functions defined here:
 
 - run_md_flux_analysis: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
-
 """
 from __future__ import absolute_import
 import warnings
@@ -48,11 +46,8 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     The results from the analysis.
     """
     if 'files' in raw_data:
-        crossfile = raw_data['files']['cross']
-        energyfile = raw_data['files']['energy']
-        orderfile = raw_data['files']['order']
         results = run_md_flux_files(analysis_settings, simulation_settings,
-                                    crossfile, energyfile, orderfile)
+                                    raw_data['files'])
     else:
         results = None
     if results is not None:
@@ -67,10 +62,8 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     return results
 
 
-def run_md_flux_files(analysis_settings, simulation_settings,
-                      crossfile, energyfile, orderfile):
-    """
-    Analyse the output from a MD-flux simulation.
+def run_md_flux_files(analysis_settings, simulation_settings, raw_files):
+    """Analyse the output from a MD-flux simulation from files.
 
     The raw data will be read from output files obtained by the MD-flux
     simulation. This method will output a series of plots and generate a
@@ -87,29 +80,21 @@ def run_md_flux_files(analysis_settings, simulation_settings,
     simulation_settings : dict
         This dict contains information on how the simulation
         was performed.
-    crossfile : string
-        The file with the crossing data
-    energyfile : string
-        The file with the energy data
-    orderfile : string
-        The file with the order parameter data
+    raw_files : dict
+        The different files to open. We assume/hope that it contains
+        the keys `flux`, `order` and `energy` with the file names to open.
     """
     plotter = create_plotter(analysis_settings.get('plotter', 'mpl'),
                              analysis_settings.get('plot-format', 'png'),
                              analysis_settings.get('plot-style', 'pyretis'))
+    txtout = analysis_settings.get('txt-format', None)
     results = {'txtfile': {}}
-    analysis = {'flux': {'func': run_flux_analysis,
-                         'fileobj': CrossFile(crossfile, mode='r')},
-                'order': {'func': run_order_analysis,
-                          'fileobj': OrderFile(orderfile, mode='r')},
-                'energy': {'func': run_energy_analysis,
-                           'fileobj': EnergyFile(energyfile, mode='r')}}
-    for key in analysis:
-        run_func = run_analysis_file(analysis[key]['func'],
-                                     analysis[key]['fileobj'])
-        out, fig, txtfile = run_func(analysis_settings,
-                                     simulation_settings,
-                                     plotter)
+    for key in raw_files:
+        analyse_func = analyse_file(key, raw_files[key])
+        out, fig, txtfile = analyse_func(analysis_settings,
+                                         simulation_settings,
+                                         plotter, txtout)
+
         if txtfile is not None:
             results['txtfile'].update(txtfile)
         results[key] = out
@@ -117,31 +102,84 @@ def run_md_flux_files(analysis_settings, simulation_settings,
     return results
 
 
-def run_analysis_file(analysis_func, fileobject):
-    """
-    Run analysis on the first block in a file.
+def select_analyse_function(what):
+    """A function to select the analyse function to use.
 
-    This is a wrapper for analysing files, it will simply only
-    consider the first block in the file and exit if more are
-    found with a warning.
+    Just for convenience, it will select the function to use for the analysis
+    based on a given string.
 
     Parameters
     ----------
-    analysis_func : function
-        This is the function to use for the analysis.
-    fileobject : object like `FileWriter` from `pyretis.inout.txtinout`
-        This is one of the objects derived from the FileWriter object, this is
-        typically one of CrossFile, EnergyFile, OrderFile.
+    what : string
+        Selects the analysis function.
 
     Returns
     -------
     out : function
-        The decorated variant of analysis_func. This function can now be used
-        to analyze a file.
+        The function to use for the analysis.
     """
-    def wrapper(analysis_settings, simulation_settings, plotter):
-        """
-        Wrap the analysis from files.
+    if what == 'cross':
+        return analyse_and_output_cross
+    elif what == 'order':
+        return analyse_and_output_orderp
+    elif what == 'energy':
+        return analyse_and_output_energy
+    else:
+        return None
+
+
+def get_file_instance(file_name, file_type):
+    """Method to open a file with the correct file parser based on file type.
+
+    This is a convenience function to return an instance of `FileWriter` or
+    derived classes so that we are ready to read data from that file.
+
+    Parameters
+    ----------
+    file_type : string
+        The desired file type
+    file_name : string
+        The file to open
+
+    Returns
+    -------
+    out : object like `FileWriter` from `pyretis.inout.fileinout`
+    """
+    if file_type == 'cross':
+        return CrossFile(file_name, mode='r')
+    elif file_type == 'order':
+        return OrderFile(file_name, mode='r')
+    elif file_type == 'energy':
+        return EnergyFile(file_name, mode='r')
+    else:
+        return None
+
+
+def analyse_file(file_type, file_name):
+    """Run analysis on the given file.
+
+    This function is included for convenience so that we can call a analysis
+    like `analyse_file('cross', 'cross.dat')` i.e. it should automatically
+    open the file and apply the correct analysis according to a given file
+    type. Here we return a function to do the analysis, so we are basically
+    wrapping one of the analysis functions. This is done in case we wish to
+    rerun the analysis but with different settings for instance.
+
+
+    Parameters
+    ----------
+    file_type : string
+        This is the type of file we are to analyse.
+    file_name : string
+        The file name to open.
+
+    Returns
+    -------
+    out : function
+        A function which can be used to do the analysis.
+    """
+    def wrapper(analysis_settings, simulation_settings, plotter, txt):
+        """Wrapper to run analysis on first block in input file only.
 
         Parameters
         ----------
@@ -151,215 +189,189 @@ def run_analysis_file(analysis_func, fileobject):
         simulation_settings : dict
             This dict contains information on how the simulation
             was performed.
-        plotter : object as defined in plotting.py
-            This is the object that handles the plotting. It is here assumed
-            to define the function plot_flux(...).
+        plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+            This is the object that handles the plotting.
         txt : string, optional
             If txt is different from None it is assumed to be the format for
             writing txt files. I.e. the text files will then be written!
         """
-        first_block = True
-        for block in fileobject.load():
-            if not first_block:
+        fileobj = get_file_instance(file_name, file_type)
+        function = select_analyse_function(file_type)
+        first_block = None
+        for block in fileobj.load():
+            if first_block is None:
+                first_block = block
+            else:
                 msg = ['Noticed a second block in the input file "{}"',
                        'This will be ignored by the flux analysis.',
                        'Are you sure you are running the correct analysis',
                        'with correct input?']
-                warnings.warn(' '.join(msg).format(fileobject.filename))
+                warnings.warn(' '.join(msg).format(fileobj.filename))
                 break
-            return analysis_func(analysis_settings, simulation_settings,
-                                 block['data'], plotter=plotter)
+        return function(analysis_settings, simulation_settings,
+                        first_block['data'], plotter, txt)
     return wrapper
 
 
-def set_up_output(func):
-    """
-    Decorator that will automatically create a plotter if needed.
-
-    This is a decorator to automatically create a plotter if it's
-    not given. It will also set up txt writing based on the settings
-    given as input.
+def check_output(function):
+    """A decorator for checking outputs for the analyse functions
 
     Parameters
     ----------
     func : function
-        The function to wrap, typically one of the `run_..._analysis`
-        functions.
+        The function to decorate
+
+    Returns
+    -------
+    out : function
+        The decorated function which will not run if we have not
+        specified any outputs.
     """
-    def wrapper(analysis_settings, simulation_settings, rawdata,
-                plotter=None):
-        """
-        Generate the plotter if it's needed.
+    def wrapper(analysis_settings, simulation_settings,
+                rawdata, plotter, txt):
+        """The actual wrapper. It will check that one of plotter/txt is given.
 
         Parameters
         ----------
         analysis_settings : dict
-            This dict contains settings which dictates how the
-            analysis should be performed.
+            This dict contains settings for the analysis.
         simulation_settings : dict
-            This dict contains information on how the simulation
-            was performed.
-        raw_data : list/dict etc.
-            The raw data to analyse.
-        plotter : object as defined in plotting.py
-            This is the object that handles the plotting. It is here assumed
-            to define the function plot_flux(...).
-        txt : string, optional
+            This dict contains information on how the simulation was performed.
+        rawdata : iterable, or similar
+            This is the raw data which is processed.
+        plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+            This is the object that handles the plotting.
+        txt : string,
             If txt is different from None it is assumed to be the format for
             writing txt files. I.e. the text files will then be written!
+
+        Returns
+        -------
+        out[0] : dict
+            This dict contains the results from the analysis
+        out[1] : list of dicts
+            Dict with the figure files created (if any).
+        out[2] : list of strings
+            List with the text files created (if any).
         """
-        if plotter is None:
-            plot = analysis_settings.get('plotter', 'mpl')
-            fmt = analysis_settings.get('plot-format', 'png')
-            style = analysis_settings.get('plot-style', 'pyretis')
-            plotter = create_plotter(plot, fmt, style)
-        txtout = analysis_settings.get('txt-format', None)
-        return func(analysis_settings, simulation_settings,
-                    rawdata, plotter=plotter, txt=txtout)
+        if plotter is None and txt is None:
+            msg = 'No output selected. Skipping analysis'
+            warnings.warn(msg)
+            return None, None, None
+        return function(analysis_settings, simulation_settings,
+                        rawdata, plotter, txt)
     return wrapper
 
 
-@set_up_output
-def run_flux_analysis(analysis_settings, simulation_settings,
-                      crossdata, plotter=None, txt=None):
-    """
-    Run the MD flux analysis and output some figures.
+@check_output
+def analyse_and_output_cross(analysis_settings, simulation_settings,
+                             rawdata, plotter, txt):
+    """Analyse crossing data and output the results.
 
     Parameters
     ----------
     analysis_settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed.
+        This dict contains settings for the analysis.
     simulation_settings : dict
-        This dict contains information on how the simulation
-        was performed.
-    crossdata : list
-        The crossing data to analyze.
-    plotter : object as defined in plotting.py
-        This is the object that handles the plotting. It is here assumed
-        to define the function plot_flux(...).
-    txt : string, optional
+        This dict contains information on how the simulation was performed.
+    rawdata : iterable, or similar
+        This is the raw data which is processed.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : string,
         If txt is different from None it is assumed to be the format for
         writing txt files. I.e. the text files will then be written!
 
     Returns
     -------
     out[0] : dict
-        This dict contains the results from the flux analysis.
+        This dict contains the results from the analysis
     out[1] : list of dicts
-        This list contains the different filenames for the figures
-        created.
+        Dict with the figure files created (if any).
     out[2] : list of strings
-        This list contains the different filenames for the text files
-        created (if any).
-
-    See Also
-    --------
-    `analyse_flux` in `pyretis.analysis.flux_analysis`
+        List with the text files created (if any).
     """
-    flux_result = analyse_flux(crossdata, analysis_settings,
-                               simulation_settings)
-    figname = plotter.plot_flux(flux_result)
-    # restructure for report:
-    figures = []
-    for run, err in zip(figname['runflux'], figname['block']):
-        figures.append({'runflux': run, 'errflux': err})
-    outtxt = None
+    figures, outtxt = None, None
+    result = analyse_flux(rawdata, analysis_settings, simulation_settings)
+    if plotter is not None:
+        figures = plotter.plot_flux(result)
     if txt is not None:
-        outtxt = txt_flux_output(flux_result, out_fmt=txt)
-    return flux_result, figures, outtxt
+        outtxt = txt_flux_output(result, out_fmt=txt)
+    return result, figures, outtxt
 
 
-@set_up_output
-def run_order_analysis(analysis_settings, simulation_settings,
-                       orderdata, plotter=None, txt=None):
-    """
-    Run the order analysis and plot the results to files.
+@check_output
+def analyse_and_output_orderp(analysis_settings, simulation_settings,
+                              rawdata, plotter, txt):
+    """Analyse and output order parameter data.
 
     Parameters
     ----------
     analysis_settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed.
+        This dict contains settings for the analysis.
     simulation_settings : dict
-        This dict contains information on how the simulation
-        was performed.
-    orderdata : numpy.array
-        The order parameter data to analyze.
-    plotter : object as defined in plotting.py
-        This is the object that handles the plotting. It is here assumed
-        to define the function plot_orderp(...).
-    txt : string, optional
+        This dict contains information on how the simulation was performed.
+    rawdata : iterable, or similar
+        This is the raw data which is processed.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : string,
         If txt is different from None it is assumed to be the format for
         writing txt files. I.e. the text files will then be written!
 
     Returns
     -------
     out[0] : dict
-        This dict contains the results from the flux analysis
+        This dict contains the results from the analysis
     out[1] : list of dicts
-        This list contains the different filenames for the figures
-        created.
+        Dict with the figure files created (if any).
     out[2] : list of strings
-        This list contains the different filenames for the text files
-        created (if any).
-
-    See Also
-    --------
-    `analyse_orderp` in `pyretis.analysis.order_analysis`
+        List with the text files created (if any).
     """
     if 'units' in simulation_settings:
         warnings.warn('Change of units is not implemented yet!')
-    order_result = analyse_orderp(orderdata, analysis_settings)
-    figures = plotter.plot_orderp(order_result, orderdata)
-    outtxt = None
+    figures, outtxt = None, None
+    result = analyse_orderp(rawdata, analysis_settings)
+    if plotter is not None:
+        figures = plotter.plot_orderp(result, rawdata)
     if txt is not None:
-        outtxt = txt_orderp_output(order_result, orderdata, out_fmt=txt)
-    return order_result, figures, outtxt
+        outtxt = txt_orderp_output(result, rawdata, out_fmt=txt)
+    return result, figures, outtxt
 
 
-@set_up_output
-def run_energy_analysis(analysis_settings, simulation_settings,
-                        energydata, plotter=None, txt=None):
-    """
-    Run the energy analysis and output some results to figures.
+@check_output
+def analyse_and_output_energy(analysis_settings, simulation_settings,
+                              rawdata, plotter, txt):
+    """Analyse and output energy data.
 
     Parameters
     ----------
     analysis_settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed.
+        This dict contains settings for the analysis.
     simulation_settings : dict
-        This dict contains information on how the simulation
-        was performed.
-    energydata : dict of numpy.arrays
-        The energy data to analyze.
-    plotter : object as defined in plotting.py
-        This is the object that handles the plotting. It is here assumed
-        to define the function plot_energy(...).
-    txt : string, optional
+        This dict contains information on how the simulation was performed.
+    rawdata : iterable, or similar
+        This is the raw data which is processed.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : string,
         If txt is different from None it is assumed to be the format for
         writing txt files. I.e. the text files will then be written!
 
     Returns
     -------
     out[0] : dict
-        This dict contains the results from the flux analysis.
+        This dict contains the results from the analysis
     out[1] : list of dicts
-        This list contains the different filenames for the figures
-        created.
+        Dict with the figure files created (if any).
     out[2] : list of strings
-        This list contains the different filenames for the text files
-        created (if any).
-
-    See Also
-    --------
-    `analyse_flux` in `pyretis.analysis.flux_analysis`
+        List with the text files created (if any).
     """
-    energy_result = analyse_energies(energydata, analysis_settings)
-    figures = plotter.plot_energy(energy_result, energydata,
-                                  sim_settings=simulation_settings)
-    outtxt = None
+    figures, outtxt = None, None
+    result = analyse_energies(rawdata, analysis_settings)
+    if plotter is not None:
+        figures = plotter.plot_energy(result, rawdata,
+                                      sim_settings=simulation_settings)
     if txt is not None:
-        outtxt = txt_energy_output(energy_result, energydata, out_fmt=txt)
-    return energy_result, figures, outtxt
+        outtxt = txt_energy_output(result, rawdata, out_fmt=txt)
+    return result, figures, outtxt
