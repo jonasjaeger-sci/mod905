@@ -8,8 +8,7 @@ __all__ = ['analyse_energies']
 
 
 def analyse_energies(energies, settings):
-    """
-    Run the energy analysis on several energy types.
+    """Run the energy analysis on several energy types.
 
     The function will run the energy analysis on several energy types and
     collect the energies into a structure which is convenient for plotting
