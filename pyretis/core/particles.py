@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""This file contain a class to represent a collection of particles."""
+"""This file contain a class to represent a collection of particles.
+
+The class for particles is in reality a simplistic particle list which
+stores positions, velocities, masses etc. and is used for representing
+the particles in the simulations.
+"""
 import numpy as np
 import warnings
 

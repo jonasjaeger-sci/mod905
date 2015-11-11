@@ -6,10 +6,15 @@ by the system properties and they will all return at least two
 values - the order parameter and the rate of change in the order parameter
 (i.e. the velocity).
 
-Important classes and functions
--------------------------------
+Important classes defined here:
 
 - OrderParameter: Base class for the order parameters.
+
+- OrderParameterPosition: A class for a simple position dependent order
+  parameter.
+
+- OrderParameterParse: A class for order parameters which can be parsed
+  from a input string.
 """
 from __future__ import division  # for StringFunctionParser
 import numpy as np

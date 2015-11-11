@@ -48,8 +48,8 @@ Modules
 
 - units.py: This module defines conversion between units.
 
-Important classes and functions
--------------------------------
+
+Important classes and functions:
 
 - Box: A class which defines the simulation box. This box will also
   handle the periodic boundaries.
@@ -75,7 +75,8 @@ Important classes and functions
 - OrderParameter: A general class for order parameters. Prototype for all
   other order parameters.
 
-- Simulation: A sub-packages (and a class) defining the simulations.
+- Simulation: A sub-package defining the simulations. There is also a class
+  named `Simulation` which defines a generic simulation.
 """
 from . import simulation
 from .system import System

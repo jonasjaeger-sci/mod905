@@ -3,6 +3,21 @@
 
 These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
+
+Important classes defined here:
+
+* Integrator: The base class for integrators
+
+* Verlet: A Verlet integrator
+
+* VelocityVerlet: A Velocity Verlet integrator
+
+* Langevin: A Langevin integrator
+
+Important functions defined here:
+
+* create_integrator: A function to set up and create an integrator from
+  simulation settings.
 """
 from __future__ import absolute_import
 import numpy as np
@@ -10,7 +25,8 @@ import warnings
 from pyretis.core.random_gen import RandomGenerator
 
 
-__all__ = ['VelocityVerlet', 'Langevin', 'create_integrator']
+__all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
+           'create_integrator']
 
 
 def create_integrator(settings, simulation_type):

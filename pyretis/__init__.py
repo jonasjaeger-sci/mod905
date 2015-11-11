@@ -7,7 +7,7 @@ pyretis
 This is pyretis - a library/simulation package for performing rare event
 simulations with python.
 
-pyretis Structure
+pyretis structure
 =================
 
 Modules

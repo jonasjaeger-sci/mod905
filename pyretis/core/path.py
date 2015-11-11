@@ -4,20 +4,24 @@
 The classes and methods defined in this module are useful for representing
 paths and path ensembles.
 
-Important classes and functions
--------------------------------
+
+Important classes defined here:
 
 - Path: Class for defining paths.
 
 - PathEnsemble: Class for defining path ensembles.
+
+
+Important functions defined here:
+
+- create_path_ensembles: Method for creating a set of `PathEnsemble` objects
+  given locations of interfaces defining the path ensembles.
 
 - paste_paths: Method for joining two paths, one is in a backward time
   direction and the other is in the forward time direction.
 
 - reverse_path: Method for reversing a path.
 
-- create_path_ensembles: Method for creating a set of `PathEnsemble` objects
-  given locations of interfaces defining the path ensembles.
 """
 import numpy as np
 import warnings

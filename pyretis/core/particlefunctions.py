@@ -4,8 +4,7 @@
 These methods are intended for calculating particle properties as the
 kinetic temperature, pressure etc.
 
-Important classes and functions
--------------------------------
+Important functions defined here:
 
 - calculate_linear_momentum: Calculates the linear momentum of a collection
   of particles

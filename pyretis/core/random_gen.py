@@ -2,7 +2,8 @@
 """This module handles random number generation.
 
 It derives most of the random number procedures from `RandomState` in
-`numpy.random`.
+`numpy.random` and defines a class which used `RandomState` to generate
+pseudo-random numbers.
 """
 from __future__ import absolute_import
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,

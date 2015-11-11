@@ -3,6 +3,10 @@
 
 The simulation box handles the periodic boundaries if needed.
 It is typically referenced via the `system`, i.e. as `system.box`.
+
+Important classes defined here:
+
+* Box: Class for a simulation box.
 """
 import numpy as np
 

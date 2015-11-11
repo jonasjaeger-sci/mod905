@@ -5,8 +5,8 @@ This module defines methods that are needed to perform Replica Exchange
 Transition Interface Sampling (RETIS). The algorithms implemented here and
 the description of RETIS was first described by van Erp [RETIS]_.
 
-Important methods
------------------
+
+Important functions defined here:
 
 - make_retis_step : Method to select and execute the RETIS move.
 

@@ -24,8 +24,7 @@ Modules
 - pairpotentials.py: This package defines different pair interactions,
   for instance the Lennard-Jones 6-12 simple cut potential.
 
-Important classes and functions
--------------------------------
+Important classes defined in this module
 
 - ForceField: A class representing a general force field.
 
