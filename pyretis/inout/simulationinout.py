@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module for handling output from simulations
+"""Module for handling output from simulations.
 
 This module defines functions and classes for handling the output from
 simulations.
@@ -148,12 +148,12 @@ class OutputTask(object):
                 return self.writer.write(step['step'], result)
 
     def close(self):
-        """Method to explicitly close a file if needed"""
+        """Method to explicitly close a file if needed."""
         if self.target == 'file':
             self.writer.close()
 
     def __str__(self):
-        """Ouput some info about this output task"""
+        """Ouput some info about this output task."""
         msg = ['Output task: {}'.format(self.output_type)]
         msg += ['* Target: {}'.format(self.target)]
         msg += ['* Writer: {}'.format(self.writer)]
@@ -301,8 +301,7 @@ def _get_output_tasks(output_settings, default_output=None):
 
 
 def _create_file_writer(task, system, settings):
-    """
-    This will create an object for writing to files.
+    """This will create an object for writing to files.
 
     Parameters
     ----------

@@ -352,7 +352,7 @@ class OrderParameterParse(OrderParameter):
 
 
 class StringFunctionParser(object):
-    """Class StringFunctionParser(object)
+    """Class StringFunctionParser(object).
 
     This class defines a simple parser for user-defined order parameters.
 

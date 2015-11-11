@@ -414,7 +414,7 @@ class PairLennardJonesCut(PotentialFunction):
 
 
 class PairLennardJonesCutnp(PairLennardJonesCut):
-    """class PairLennardJonesCutnp(PairLennardJonesCut)
+    """class PairLennardJonesCutnp(PairLennardJonesCut).
 
     A Lennard-Jones 6-12 potential with a simple cut-off which can be shifted.
     `PairLennardJonesCutnp` uses numpy for calculations, i.e. most operations

@@ -214,7 +214,7 @@ def analyse_file(file_type, file_name):
 
 
 def check_output(function):
-    """A decorator for checking outputs for the analyse functions
+    """A decorator for checking outputs for the analyse functions.
 
     Parameters
     ----------

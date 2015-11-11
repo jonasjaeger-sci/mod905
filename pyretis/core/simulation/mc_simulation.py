@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Definition of simulation objects for Monte Carlo simulations
+"""Definition of simulation objects for Monte Carlo simulations.
 
 This module defines some classes and functions for performing
 Monte Carlo simulations.

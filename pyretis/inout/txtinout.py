@@ -234,7 +234,7 @@ class TxtTable(object):
 
     @property
     def header(self):
-        """Define the header as a property"""
+        """Define the header as a property."""
         return self._header
 
     @header.setter
@@ -359,7 +359,7 @@ class PathTable(TxtTable):
     Identical to the `TxtTable` object.
     """
     def __init__(self, variables, width=12, headers=None, spacing=1):
-        """Initiate parent"""
+        """Initiate parent."""
         super(PathTable, self).__init__(variables, width=width,
                                         headers=headers, spacing=spacing)
 
