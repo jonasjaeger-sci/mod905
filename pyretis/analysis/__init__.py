@@ -29,22 +29,22 @@ Modules
 
 Important functions defined in this module
 
-- analyse_energies: Analyze energy data from a simulation.
+- analyse_energies: Analyse energy data from a simulation.
   It will calculate a running average, a distribution and do a block
   error analysis.
 
-- analyse_flux: Analyze flux data from a MD flux simulation.
+- analyse_flux: Analyse flux data from a MD flux simulation.
   It will calculate a running average, a distribution and do a block
   error analysis.
 
-- analyse_orderp: Analyze order parameter data.
+- analyse_orderp: Analyse order parameter data.
   It will calculate a running average, a distribution and do a block
   error analysis. In addition if will analyse the mean square displacement
   if requested.
 
-- analyse_path_ensemble: Analyze the results from a single path ensemble.
+- analyse_path_ensemble: Analyse the results from a single path ensemble.
   It will calculate a running average of the probabilities, a crossing
-  probability, perform an block error analysis, analyze lengths of paths,
+  probability, perform an block error analysis, analyse lengths of paths,
   type of Monte Carlo moves and calculate an efficiency.
 
 - match_probabilities: Method to match probabilities from several
@@ -66,7 +66,7 @@ from .path_analysis import analyse_path_ensemble, match_probabilities
 
 def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
                     simulation_settings):
-    """This method will analyze the output from a MD-flux simulation.
+    """This method will analyse the output from a MD-flux simulation.
 
     The obtained results will be returned as a convenient structure for
     plotting or reporting.

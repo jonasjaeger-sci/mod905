@@ -251,7 +251,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     Parameters
     ----------
     path_ensemble : object
-        This is the path ensemble we have analyzed.
+        This is the path ensemble we have analysed.
     results : dict
         This dict contains the result from the analysis.
     idetect : float
@@ -289,7 +289,7 @@ def txt_total_probability(path_ensembles, detect, results, matched,
     Parameters
     ----------
     path_ensembles : list of PathEnsemble objects
-        This is the path ensembles we have analyzed.
+        This is the path ensembles we have analysed.
     results : list of dicts
         This dict contains the results from the analysis.
     detect : list of floats

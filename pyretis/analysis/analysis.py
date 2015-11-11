@@ -226,12 +226,16 @@ def mean_square_displacement(data, ndt=None):
 
 
 def analyse_data(data, settings):
-    """Analyze the given data and run some common analysis procedures.
+    """Analyse the given data and run some common analysis procedures.
 
     Specifically it will:
+
     1) Calculate a running average.
+
     2) Obtain a histogram.
+
     3) Run a block error analysis.
+
 
     Parameters
     ----------

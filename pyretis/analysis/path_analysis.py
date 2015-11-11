@@ -58,7 +58,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyze.
+        This is the path ensemble we will analyse.
     idetect : float
         This is the interface used for detecting if a path is successful
         or not.
@@ -187,7 +187,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyze.
+        This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -249,12 +249,12 @@ def _get_path_length(path):
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
-    """Analyze the shooting performed in the path ensemble.
+    """Analyse the shooting performed in the path ensemble.
 
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyze.
+        This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the distribution.
 
@@ -354,9 +354,9 @@ def _create_shoot_histograms(shoot_stats, bins):
 
 
 def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
-    """Analyze a path ensemble object.
+    """Analyse a path ensemble object.
 
-    This method will make use of the different analysis functions and analyze
+    This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
     is an object like `pyretis.core.path.PathEnsemble` and that this path
@@ -431,9 +431,9 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
 
 
 def analyse_path_ensemble(path_ensemble, settings, idetect=None):
-    """Analyze a path ensemble.
+    """Analyse a path ensemble.
 
-    This method will make use of the different analysis functions and analyze
+    This method will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This function is more general than the
     `analyse_path_ensemble_object` function in that it should work on both
