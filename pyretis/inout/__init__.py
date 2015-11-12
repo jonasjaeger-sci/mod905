@@ -73,6 +73,6 @@ from .txtinout import TxtTable, get_predefined_table
 from .fileinout import (FileWriter, CrossFile, EnergyFile, OrderFile,
                         PathFile, PathEnsembleFile,
                         create_traj_writer, get_file_object)
-from .report import generate_report_md, generate_report_tis
+from .report import generate_report_mdflux, generate_report_tis
 from .simulationinout import create_output, store_settings_as_py
 from .plotting import create_plotter

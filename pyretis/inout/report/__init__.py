@@ -9,4 +9,5 @@ Important functions
 
 """
 from __future__ import absolute_import
-from pyretis.inout.report.report import generate_report_tis, generate_report_md
+from pyretis.inout.report.report_md import generate_report_mdflux
+from pyretis.inout.report.report_path import generate_report_tis

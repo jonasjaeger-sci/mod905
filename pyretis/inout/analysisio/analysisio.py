@@ -31,7 +31,7 @@ from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
                                                   txt_orderp_output)
-from pyretis.inout.report import generate_report_md
+from pyretis.inout.report import generate_report_mdflux
 from pyretis.inout.common import _REPORTFILES
 
 
@@ -69,7 +69,7 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
         raise NotImplementedError(msg)
     if results is not None:
         for report_type in analysis_settings.get('report', ['rst']):
-            report, ext = generate_report_md(results, output=report_type)
+            report, ext = generate_report_mdflux(results, output=report_type)
             outfile = _REPORTFILES['md-flux'].format(ext)
             with open(outfile, 'wt') as report_fh:
                 try:  # will work in python 3

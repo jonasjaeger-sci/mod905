@@ -4,8 +4,8 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as PROGRAM_NAME
+#from pyretis import __version__ as VERSION
+#from pyretis import __program_name__ as PROGRAM_NAME
 import warnings
 # for converting rst to html and/or latex:
 import docutils.core
@@ -16,7 +16,7 @@ import os
 import jinja2
 
 
-__all__ = ['generate_report_tis', 'generate_report_md']
+__all__ = ['generate_rst_table']
 
 
 # filename for known templates:
@@ -75,7 +75,7 @@ def _remove_extension(filename):
         return filename
 
 
-def _remove_extensions(list_of_files):
+def remove_extensions(list_of_files):
     """
     Remove extensions for a list of files.
 
@@ -113,7 +113,7 @@ def _remove_extensions(list_of_files):
         return newlist
 
 
-def _get_template(output, report_type, template=None):
+def get_template(output, report_type, template=None):
     """
     Return the template to use for a specified output format.
 
@@ -151,7 +151,7 @@ def _get_template(output, report_type, template=None):
     return output, template, path
 
 
-def _generate_report(report, output, template, path):
+def generate_report(report, output, template, path):
     """
     Do the actual generation of a report.
 
@@ -189,174 +189,7 @@ def _generate_report(report, output, template, path):
         return render, _EXT[output]
 
 
-def generate_report_tis_path(path_ensemble, analysis, output='rst',
-                             template=None):
-    """
-    Generate a report for a single TIS simulation.
-
-    Parameters
-    ----------
-    analysis : dict
-        This is the output (and some input) for the analysis. The keys are:
-        'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of corresponding figures (to 'tis')
-        'matched' : results from the matching of probability
-        'matched-fig' : the figure corresponding to 'matched'
-        'detect' : locations of the interfaces used for detection
-    output : string, optional
-        This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
-
-    Returns
-    -------
-    out[0] : string
-        The generated report in the desired format.
-    out[1] : string
-        The file extension (i.e. file type) for the generated report.
-    """
-    # get template and generate:
-    output, template, path = _get_template(output, 'TIS_PATH',
-                                           template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'ensemble': path_ensemble.ensemble,
-              'table_int': None,
-              'table_prob': None,
-              'table_path': None,
-              'table_eff': None}
-    # get the efficiency results:
-    report['table_int'] = _table_interface([path_ensemble],
-                                           [analysis['detect']],
-                                           fmt=output)[1]
-    report['table_prob'] = _table_probability([path_ensemble],
-                                              [analysis], fmt=output)[1]
-    report['table_path'] = _table_path([path_ensemble],
-                                       [analysis], fmt=output)[1]
-    report['table_eff'] = _table_efficiencies([path_ensemble],
-                                              [analysis], fmt=output)[1]
-    if output in ['latex', 'tex']:
-        pass
-        #for fig in ['figures', 'totalfig']:
-        #    report[fig] = _remove_extensions(report[fig])
-    return _generate_report(report, output, template, path)
-
-
-def generate_report_tis(path_ensembles, analysis, output='rst',
-                        template=None):
-    """
-    Generate a report for the over-all results from a TIS simulation.
-
-    Parameters
-    ----------
-    analysis : dict
-        This is the output (and some input) for the analysis. The keys are:
-        'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of corresponding figures (to 'tis')
-        'matched' : results from the matching of probability
-        'matched-fig' : the figure corresponding to 'matched'
-        'detect' : locations of the interfaces used for detection
-    output : string, optional
-        This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
-
-    Returns
-    -------
-    out[0] : string
-        The generated report in the desired format.
-    out[1] : string
-        The file extension (i.e. file type) for the generated report.
-    """
-    # get template and generate:
-    output, template, path = _get_template(output, 'TIS', template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'figures': analysis.get('tis-fig', None),
-              'totalfig': analysis.get('matched-fig', None),
-              'table_int': None, 'table_prob': None,
-              'table_path': None, 'table_eff': None,
-              'pcross': None, 'perr': None, 'pcross_simt': None,
-              'pcross_teff': None, 'pcross_opteff': None}
-    # get the efficiency results:
-    report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
-
-    if analysis['matched']['relerror'] > 0.01:
-        report['perr'] = '{0:16.9f}'.format(analysis['matched']['relerror'] *
-                                            100)
-    else:
-        report['perr'] = '{0:16.9e}'.format(analysis['matched']['relerror'] *
-                                            100)
-    report['pcross_simt'] = '{0:16.9e}'.format(analysis['matched']['simtime'])
-    report['pcross_teff'] = '{0:16.9e}'.format(analysis['matched']['eff'])
-    report['pcross_opteff'] = '{0:16.9e}'.format(analysis['matched']['opteff'])
-
-    _, report['table_int'] = _table_interface(path_ensembles,
-                                              analysis['detect'], fmt=output)
-    _, report['table_prob'] = _table_probability(path_ensembles,
-                                                 analysis['tis'], fmt=output)
-    _, report['table_path'] = _table_path(path_ensembles,
-                                          analysis['tis'], fmt=output)
-    _, report['table_eff'] = _table_efficiencies(path_ensembles,
-                                                 analysis['tis'], fmt=output)
-    if output in ['latex', 'tex']:
-        for fig in ['figures', 'totalfig']:
-            report[fig] = _remove_extensions(report[fig])
-        for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
-                    'pcross_opteff']:
-            report[key] = _latexify_number(report[key])
-    return _generate_report(report, output, template, path)
-
-
-def generate_report_md(analysis, output='rst', template=None):
-    """
-    Generate a report for MD results.
-
-    Parameters
-    ----------
-    analysis : dict
-        This is the output from the analysis.
-    output : string, optional
-        This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
-
-    Returns
-    -------
-    out[0] : string
-        The generated report in the desired format.
-    out[1] : string
-        The file extension (i.e. file type) for the generated report.
-    """
-    output, template, path = _get_template(output, 'MD', template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'flux_figures': analysis.get('cross_figures', None),
-              'energy_figures': analysis.get('energy_figures', None),
-              'order_figures': analysis.get('order_figures', None)}
-    # generate some tables:
-    _, report['table_md_flux'] = _table_md_flux(analysis['cross'], fmt=output)
-    _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['cross'],
-                                                         fmt=output)
-    _, report['table_md_efficiency'] = _table_md_efficiency(analysis['cross'],
-                                                            fmt=output)
-    # check if we need some additional latexification:
-    if output in ['latex', 'tex']:
-        for fig in ['flux_figures', 'energy_figures', 'order_figures']:
-            report[fig] = _remove_extensions(report[fig])
-    return _generate_report(report, output, template, path)
-
-
-def _apply_format(value, fmt):
+def apply_format(value, fmt):
     """
     Apply format string to a given value.
 
@@ -392,343 +225,8 @@ def _apply_format(value, fmt):
         return str_fmt
 
 
-def _table_md_efficiency(results, fmt='rst'):
-    """
-    Generate a table with  MD-flux results for efficiencies and correlations.
-
-    Parameters
-    ----------
-    results : dict
-        These are the results obtained in the ``analyse_flux`` method in
-        the analysis package.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in the desired format which represents
-        the table.
-    """
-    # table for interfaces:
-    table = []
-    for i, _ in enumerate(results['interfaces']):
-        pmd = results['pMD'][i]
-        teff = results['teffMD'][i]
-        corr = results['corrMD'][i]
-        prel = results['1-p'][i]
-        row = ['{:^10d}'.format(i + 1)]
-        row.append(_apply_format(pmd, '{:^10.6f}'))
-        row.append(_apply_format(prel, '{:^10.6f}'))
-        row.append(_apply_format(teff, '{:^10.6f}'))
-        row.append(_apply_format(corr, '{:^10.6f}'))
-        table.append(row)
-
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Efficiency',
-                                          ['Interface',
-                                           r'$p_\text{MD}$',
-                                           r'$\frac{1-p}{p}$',
-                                           'Efficiency time', 'Correlation'],
-                                          fixnum=set([1, 2, 3, 4]))
-    elif fmt in ['txt']:
-        table_str = _generate_rst_table(table, 'Efficiency',
-                                        ['Interface',
-                                         'p_MD',
-                                         '(1-p_MD)/p_MD',
-                                         'Efficiency time', 'Correlation'])
-    else:
-        table_str = _generate_rst_table(table, 'Efficiency',
-                                        ['Interface',
-                                         r':math:`p_\text{MD}`',
-                                         r':math:`\frac{1-p}{p}`',
-                                         'Efficiency time', 'Correlation'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_md_flux_cycles(results, fmt='rst'):
-    """
-    Generate the table for the MD-flux results for cycle numbers.
-
-    The table will display the number of steps in state A, state B,
-    overall state A and B and total number of MD cycles.
-
-    Parameters
-    ----------
-    results : dict
-        These are the results obtained in the ``analyse_flux`` method in
-        the analysis package.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in the desired format which represents
-        the table.
-    """
-    # table for interfaces:
-    table = []
-    table.append(['A', '{:8d}'.format(results['times']['A'])])
-    table.append(['B', '{:8d}'.format(results['times']['B'])])
-    table.append(['overall A', '{:8d}'.format(results['times']['OA'])])
-    table.append(['overall B', '{:8d}'.format(results['times']['OB'])])
-    table.append(['Total cycles', '{:8d}'.format(results['totalcycle'])])
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Cycles spent in state',
-                                          ['State', 'Cycles'],
-                                          fixnum=set([2]))
-    else:
-        table_str = _generate_rst_table(table, 'Cycles spent in state',
-                                        ['State', 'Cycles'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_md_flux(results, fmt='rst'):
-    """
-    Generate the table for the MD-flux results.
-
-    Parameters
-    ----------
-    results : dict
-        These are the results obtained in the ``analyse_flux`` method in
-        the analysis package.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in the desired format which represents
-        the table.
-    """
-    # table for interfaces:
-    table = []
-    for i, idet in enumerate(results['interfaces']):
-        flux = results['runflux'][i][-1]
-        error = results['errflux'][i][2]
-        relerror = results['errflux'][i][4]
-        row = ['{:^4d}'.format(i + 1)]
-        row.append(_apply_format(idet, '{:^8.4f}'))
-        row.append(_apply_format(flux, '{:^10.6f}'))
-        row.append(_apply_format(error, '{:^10.6f}'))
-        row.append(_apply_format(relerror, '{:^10.6f}'))
-        row.append('{:^8d}'.format(results['ncross'][i]))
-        row.append('{:^8d}'.format(results['neffcross'][i]))
-        row.append(_apply_format(results['neffc/nc'][i], '{:^10.6f}'))
-        row.append(_apply_format(results['cross_time'][i], '{:^10.6f}'))
-        table.append(row)
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Flux for interfaces',
-                                          ['Int.', 'Position', 'Flux / units',
-                                           'Error', 'Rel. error', 'Ncross',
-                                           'Neffcross', 'Neffcross/Ncross',
-                                           'Steps per cross'],
-                                          fixnum=set([2, 3, 4, 5, 6, 7, 8]))
-    else:
-        table_str = _generate_rst_table(table, 'Flux for interfaces',
-                                        ['Int.', 'Position', 'Flux / units',
-                                         'Error', 'Rel. error', 'Ncross',
-                                         'Neffcross', 'Neffcross/Ncross',
-                                         'Steps per cross'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_interface(path_ensembles, detect, fmt='rst'):
-    """
-    Generate the table for the interfaces.
-
-    This table will display the location of the different
-    interfaces.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
-        These are the path ensembles we have analyzed.
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in the desired format which represents
-        the table.
-    """
-    table = []
-    for path_e, idet in zip(path_ensembles, detect):
-        row = ['{:^8s}'.format(path_e.ensemble)]
-        row.append(_apply_format(path_e.interfaces[0], '{:^8.4f}'))
-        row.append(_apply_format(path_e.interfaces[1], '{:^8.4f}'))
-        row.append(_apply_format(path_e.interfaces[2], '{:^8.4f}'))
-        row.append(_apply_format(idet, '{:^8.4f}'))
-        table.append(row)
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Interfaces',
-                                          ['Ensemble', 'Left', 'Middle',
-                                           'Right', 'Detect'],
-                                          fixnum=set([1, 2, 3, 4]))
-    else:
-        table_str = _generate_rst_table(table, 'Interfaces',
-                                        ['Ensemble', 'Left', 'Middle',
-                                         'Right', 'Detect'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_probability(path_ensembles, results, fmt='rst'):
-    """
-    Generate the table for the probabilities.
-
-    This table will display the crossing probabilities with
-    uncertainties.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects like `pyretis.core.pathP.athEnsemble`.
-        These are the path ensembles we have analyzed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in reStrucutredText format which represents
-        the table.
-    """
-    table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
-        row.append(_apply_format(result['prun'][-1], '{:^10.6f}'))
-        row.append(_apply_format(result['blockerror'][2], '{:^10.6f}'))
-        row.append(_apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
-        table.append(row)
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, r'Probabilities',
-                                          [r'Ensemble', r'$P_\text{cross}$',
-                                           r'Error', r'Rel. error (\%)'],
-                                          fixnum=set([1, 2, 3]))
-    else:
-        table_str = _generate_rst_table(table, r'Probabilities',
-                                        [r'Ensemble', r'Pcross', r'Error',
-                                         r'Rel. error (%)'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_path(path_ensembles, results, fmt='rst'):
-    """
-    Generate the table for the path lengths.
-
-    This table will display the path lengths and also show the ratio of
-    path lengths for all paths and accepted paths.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
-        These are the path ensembles we have analyzed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in reStrucutredText format which represents
-        the table.
-    """
-    table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
-        hist1 = result['pathlength'][0]
-        hist2 = result['pathlength'][1]
-        row.append(_apply_format(hist1[2][0], '{:^10.6f}'))
-        row.append(_apply_format(hist2[2][0], '{:^10.6f}'))
-        row.append(_apply_format(hist2[2][0] / hist1[2][0], '{:^10.6f}'))
-        table.append(row)
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Path lengths',
-                                          ['Ensemble', 'Accepted', 'All',
-                                           'All/Accepted'],
-                                          fixnum=set([1, 2, 3]))
-    else:
-        table_str = _generate_rst_table(table, 'Path lengths',
-                                        ['Ensemble', 'Accepted', 'All',
-                                         'All/Accepted'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _table_efficiencies(path_ensembles, results, fmt='rst'):
-    """
-    Generate table for efficiencies.
-
-    This table will display results for the efficiencies, acceptance
-    ratios and correlation.
-
-    Parameters
-    ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
-        These are the path ensembles we have analyzed.
-    results : list of dicts
-        The dictionaries are the results obtained from the analysis.
-    fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
-
-    Returns
-    -------
-    out[0] : list of strings
-        These are the rows of the table.
-    out[1] : string
-        This is a string in reStrucutredText format which represents
-        the table.
-    """
-    table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
-        row.append(_apply_format(result['tis-cycles'], '{:^10.0f}'))
-        row.append(_apply_format(result['efficiency'][1], '{:^10.6f}'))
-        row.append(_apply_format(result['efficiency'][0], '{:^10.6f}'))
-        row.append(_apply_format(result['blockerror'][6], '{:^10.6f}'))
-        row.append(_apply_format(result['efficiency'][2], '{:^10.6f}'))
-        table.append(row)
-    if fmt in ['tex', 'latex']:
-        table_str = _generate_latex_table(table, 'Efficiency',
-                                          ['Ensemble', 'TIS cycles',
-                                           'Tot sim.', 'Acceptance ratio',
-                                           'Correlation', 'Efficiency'],
-                                          fixnum=set([1, 2, 3, 4, 5]))
-    else:
-        table_str = _generate_rst_table(table, 'Efficiency',
-                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
-                                         'Acceptance ratio', 'Correlation',
-                                         'Efficiency'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
-
-
-def _generate_rst_table(table, title, headings):
-    """
-    Generate the reStructuredText for a table.
+def generate_rst_table(table, title, headings):
+    """Generate reStructuredText for a table.
 
     Parameters
     ----------
@@ -772,9 +270,8 @@ def _generate_rst_table(table, title, headings):
     return str_table
 
 
-def _generate_latex_table(table, title, headings, fixnum=None):
-    """
-    Generate the latex code for a table.
+def generate_latex_table(table, title, headings, fixnum=None):
+    """Generate latex code for a table.
 
     Parameters
     ----------
@@ -785,7 +282,7 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     headings : list of strings
         These are the headings for each table column.
     fixnum : list/set of integers
-        These integers identifies the columns where ``_latexify_number`` is
+        These integers identifies the columns where `latexify_number` is
         to be applied.
     """
     str_table = [r'\renewcommand{\arraystretch}{1.25}',
@@ -796,7 +293,7 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     str_table.append(' & '.join(headings) + r'\\ \hline')
     for row in table:
         if fixnum:
-            rowl = [_latexify_number(col) if i in fixnum else col for i, col
+            rowl = [latexify_number(col) if i in fixnum else col for i, col
                     in enumerate(row)]
             str_table.append(' & '.join(rowl) + r'\\')
         else:
@@ -808,7 +305,7 @@ def _generate_latex_table(table, title, headings, fixnum=None):
     return str_table
 
 
-def _latexify_number(str_float):
+def latexify_number(str_float):
     r"""
     Change exponential notation into something nicer for latex.
 
