@@ -19,6 +19,8 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
+# pyretis imports
+from pyretis.inout.plotting.plotting import Plotter
 # import styles for newer matplotlibs:
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
@@ -45,8 +47,8 @@ _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                                'pyretis.mplstyle'])
 
 
-class MplPlotter(object):
-    """Class MplPlotter(object).
+class MplPlotter(Plotter):
+    """Class MplPlotter(Plotter).
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which conveniently can be called in
@@ -73,6 +75,7 @@ class MplPlotter(object):
             This selects the style to use, it can be a file path or the
             string with the style name.
         """
+        super(MplPlotter, self).__init__(plotter_type='matplotlib')
         self.style = style
         mpl_set_style(self.style)
         fig = Figure()
