@@ -8,11 +8,25 @@ Important functions defined here:
 
 - run_md_flux_analysis: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
+
+- analyse_file: Method to analyse a file. For example, it can be used
+  as
+
+  >>> from pyretis.inout.analysisio import analyse_file
+  >>> analyse_func = analyse_file('cross', 'cross.dat')
+  >>> out, fig, txt = analyse_func(analysis_settings, simulation_settings)
+
+  It wraps around the different analysis functions which can be called by
+
+  >>> from pyretis.inout.analysisio import analyse_and_output_cross
+  >>> out, fig, txt = analyse_and_output_cross(analysis_settings,
+                                               simulation_settings, rawdata)
 """
 from __future__ import absolute_import
 import warnings
+# pyretis imports
 from pyretis.analysis import analyse_flux, analyse_energies, analyse_orderp
-from pyretis.inout.fileinout import CrossFile, EnergyFile, OrderFile
+from pyretis.inout.fileinout import get_file_object
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
@@ -21,7 +35,7 @@ from pyretis.inout.report import generate_report_md
 from pyretis.inout.common import _REPORTFILES
 
 
-__all__ = ['run_md_flux_analysis']
+__all__ = ['run_md_flux_analysis', 'analyse_file']
 
 
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
@@ -128,33 +142,6 @@ def select_analyse_function(what):
         return None
 
 
-def get_file_instance(file_name, file_type):
-    """Method to open a file with the correct file parser based on file type.
-
-    This is a convenience function to return an instance of `FileWriter` or
-    derived classes so that we are ready to read data from that file.
-
-    Parameters
-    ----------
-    file_type : string
-        The desired file type
-    file_name : string
-        The file to open
-
-    Returns
-    -------
-    out : object like `FileWriter` from `pyretis.inout.fileinout`
-    """
-    if file_type == 'cross':
-        return CrossFile(file_name, mode='r')
-    elif file_type == 'order':
-        return OrderFile(file_name, mode='r')
-    elif file_type == 'energy':
-        return EnergyFile(file_name, mode='r')
-    else:
-        return None
-
-
 def analyse_file(file_type, file_name):
     """Run analysis on the given file.
 
@@ -178,7 +165,8 @@ def analyse_file(file_type, file_name):
     out : function
         A function which can be used to do the analysis.
     """
-    def wrapper(analysis_settings, simulation_settings, plotter, txt):
+    def wrapper(analysis_settings, simulation_settings, plotter=None,
+                txt=None):
         """Wrapper to run analysis on first block in input file only.
 
         Parameters
@@ -195,7 +183,7 @@ def analyse_file(file_type, file_name):
             If txt is different from None it is assumed to be the format for
             writing txt files. I.e. the text files will then be written!
         """
-        fileobj = get_file_instance(file_name, file_type)
+        fileobj = get_file_object(file_type, file_name)
         function = select_analyse_function(file_type)
         first_block = None
         for block in fileobj.load():
@@ -209,12 +197,34 @@ def analyse_file(file_type, file_name):
                 warnings.warn(' '.join(msg).format(fileobj.filename))
                 break
         return function(analysis_settings, simulation_settings,
-                        first_block['data'], plotter, txt)
+                        first_block['data'], plotter=plotter, txt=txt)
     return wrapper
 
 
 def check_output(function):
     """A decorator for checking outputs for the analyse functions.
+
+    Outputs can either be specified explicitly or implicitly by the analysis
+    settings. Here we create a decorator that will set up ouput if nothing
+    is specified. We handle plotters and txt output slightly differently since
+    the plotter needs to have objects created and the txt output is just a
+    string specifying the file extension.
+
+    For plotters:
+
+    - If a plotter is explicitly given with the `plotter` keyword then we
+       use that one.
+
+    - If not explicitly given, we try to create a plotter from given analysis
+      settings. If the analysis settings specify that no plotter should be
+      created we leave `plotter` equal to None.
+
+    For text output:
+
+    - Text output can be specified explicitly by a string. If the text output
+      is not explicitly specified here, we check if it is defined by the
+      analysis settings by looking for the keyword `txt-ouput` if this is given
+      we assume that this specifies the extension we want.
 
     Parameters
     ----------
@@ -228,7 +238,7 @@ def check_output(function):
         specified any outputs.
     """
     def wrapper(analysis_settings, simulation_settings,
-                rawdata, plotter, txt):
+                rawdata, plotter=None, txt=None):
         """The actual wrapper. It will check that one of plotter/txt is given.
 
         Parameters
@@ -254,18 +264,31 @@ def check_output(function):
         out[2] : list of strings
             List with the text files created (if any).
         """
+        if plotter is None:
+            plot_settings = analysis_settings.get('plot', None)
+            if plot_settings is not None:
+                try:
+                    plot = plot_settings.get('plotter', 'mpl')
+                    fmt = plot_settings.get('ouput', 'png')
+                    style = plot_settings.get('style', 'pyretis')
+                    plotter = create_plotter(plot, fmt, style)
+                except AttributeError:
+                    # Probably not a dict
+                    # Assume that this is because the user did not want a plot
+                    pass
+        txt = analysis_settings.get('txt-output', None)
         if plotter is None and txt is None:
-            msg = 'No output selected. Skipping analysis'
+            msg = 'No output selected. Skipping analysis!'
             warnings.warn(msg)
             return None, None, None
         return function(analysis_settings, simulation_settings,
-                        rawdata, plotter, txt)
+                        rawdata, plotter=plotter, txt=txt)
     return wrapper
 
 
 @check_output
 def analyse_and_output_cross(analysis_settings, simulation_settings,
-                             rawdata, plotter, txt):
+                             rawdata, plotter=None, txt=None):
     """Analyse crossing data and output the results.
 
     Parameters
@@ -278,7 +301,7 @@ def analyse_and_output_cross(analysis_settings, simulation_settings,
         This is the raw data which is processed.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string,
+    txt : string
         If txt is different from None it is assumed to be the format for
         writing txt files. I.e. the text files will then be written!
 
@@ -302,7 +325,7 @@ def analyse_and_output_cross(analysis_settings, simulation_settings,
 
 @check_output
 def analyse_and_output_orderp(analysis_settings, simulation_settings,
-                              rawdata, plotter, txt):
+                              rawdata, plotter=None, txt=None):
     """Analyse and output order parameter data.
 
     Parameters
@@ -341,7 +364,7 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings,
 
 @check_output
 def analyse_and_output_energy(analysis_settings, simulation_settings,
-                              rawdata, plotter, txt):
+                              rawdata, plotter=None, txt=None):
     """Analyse and output energy data.
 
     Parameters

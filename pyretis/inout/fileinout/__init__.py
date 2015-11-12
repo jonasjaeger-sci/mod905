@@ -23,11 +23,14 @@ Modules
 - traj.py: Module for handling writing of trajectory data.
 
 
-Important classes and functions
--------------------------------
+Important functions:
 
 - create_traj_writer: A function to create a trajectory writer from given
   settings.
+
+- get_file_object: Opens a file for reading given a file type and file name.
+
+Important classes:
 
 - FileWriter: A generic file writer class.
 
@@ -53,11 +56,12 @@ from .pathfile import PathFile, PathEnsembleFile
 
 
 def get_file_object(file_type, file_name):
-    """Method to open a file with the correct file reader based on file type.
+    """Open a file for reading using a file reader based on file type.
 
     This is a convenience function to return an instance of `FileWriter` or
     derived classes so that we are ready to read data from that file. Usage is
-    indended to be in cases when we just want to open a file easily.
+    indended to be in cases when we just want to open a file easily. The
+    returned object can then be used to read the file using `load()`.
 
     Parameters
     ----------
@@ -79,6 +83,8 @@ def get_file_object(file_type, file_name):
     >>> from pyretis.inout.fileinout import get_file_object
     >>> crossfile = get_file_object('cross', 'cross.dat')
     >>> print(crossfile)
+    >>> for block in crossfile.load():
+    >>>     print(len(block['data']))
     """
     if file_type == 'cross':
         return CrossFile(file_name, mode='r')
