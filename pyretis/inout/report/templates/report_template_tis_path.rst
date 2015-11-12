@@ -2,7 +2,7 @@
 .. _tis-results:
 
 TIS results for ensemble: @{{ ensemble }}@
-==========================================
+===============================
 
 @{{ table_int }}@
 
