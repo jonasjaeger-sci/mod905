@@ -815,27 +815,25 @@ def mpl_plot_flux(results, out_fmt):
     outfiles : dict
         The output files created by this method.
     """
-    outfiles = {}
-    for key in _FLUXFILES:
-        outfiles[key] = []
+    outfiles = []
     # make running average plot and error plot:
     for i in range(len(results['flux'])):
         flux = results['flux'][i]
         runflux = results['runflux'][i]
         errflux = results['errflux'][i]
-        outfile = _FLUXFILES['runflux'].format(i + 1, out_fmt)
-        outfiles['runflux'].append(outfile)
+        outfile_run = _FLUXFILES['runflux'].format(i + 1, out_fmt)
         series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
                    'label': 'Running average'}]
         title = 'Flux for interface no. {}'.format(i + 1)
-        mpl_simple_plot(series, outfile,
+        mpl_simple_plot(series, outfile_run,
                         fig_settings={'xlabel': 'Time',
                                       'ylabel': 'Flux / internal units',
                                       'title': title})
-        outfile = _FLUXFILES['block'].format(i + 1, out_fmt)
-        outfiles['block'].append(outfile)
+        outfile_block = _FLUXFILES['block'].format(i + 1, out_fmt)
+        outfiles.append({'errflux': outfile_block,
+                         'runflux': outfile_run})
         mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
-                        outfile)
+                        outfile_block)
     return outfiles
 
 

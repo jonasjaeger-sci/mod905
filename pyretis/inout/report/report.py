@@ -340,14 +340,14 @@ def generate_report_md(analysis, output='rst', template=None):
     output, template, path = _get_template(output, 'MD', template=template)
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
-              'flux_figures': analysis.get('flux_figures', None),
+              'flux_figures': analysis.get('cross_figures', None),
               'energy_figures': analysis.get('energy_figures', None),
               'order_figures': analysis.get('order_figures', None)}
     # generate some tables:
-    _, report['table_md_flux'] = _table_md_flux(analysis['flux'], fmt=output)
-    _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['flux'],
+    _, report['table_md_flux'] = _table_md_flux(analysis['cross'], fmt=output)
+    _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['cross'],
                                                          fmt=output)
-    _, report['table_md_efficiency'] = _table_md_efficiency(analysis['flux'],
+    _, report['table_md_efficiency'] = _table_md_efficiency(analysis['cross'],
                                                             fmt=output)
     # check if we need some additional latexification:
     if output in ['latex', 'tex']:
