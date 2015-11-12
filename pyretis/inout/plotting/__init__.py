@@ -56,21 +56,36 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                              '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
-def create_plotter(plotter, out_fmt, style):
+def create_plotter(plot_settings):
     """Method to create a plotter.
+
+    The input plot settings is assumed to be a dictionary which we use
+    for creating the plotter. In case the plot settings is not given, we
+    just return None. We are here assuming that they are not given simply
+    because we do not want to create a plotter.
 
     Parameters
     ----------
-    plotter : string
-        This string selects the plotter
-    out_fmt : string
-        This string selects the output format for the plot. Typically,
-        'png', 'eps', 'svg', 'pdf' and so on.
-    style : string
-        This string defines a style for the plotter. It can be
-        a path to a file or a string which have a meaning to the plotter.
-        How the style should be handled is defined in the plotter.
+    settings : dict
+        These are the settings to create the plotter from. Here, we
+        look for the keys `plotter`, `output` and `style` which defines
+        the plotter to use, the output format and the style to use.
+
+    Returns
+    -------
+    out : object like `MplPlotter` from `.mpl_plotting`
+        This is a object which can be used for plotting.
     """
+    if plot_settings is None:
+        return None
+    plotter, out_fmt, style = None, None, None
+    try:
+        plotter = plot_settings.get('plotter', 'mpl')
+        out_fmt = plot_settings.get('output', 'png')
+        style = plot_settings.get('style', 'pyretis')
+    except AttributeError:
+        # Malformed input settings
+        return None
     if plotter.lower() in ['mpl', 'matplotlib']:
         return MplPlotter(out_fmt, style)
     else:

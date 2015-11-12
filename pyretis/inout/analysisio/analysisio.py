@@ -98,9 +98,7 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files):
         The different files to open. We assume/hope that it contains
         the keys `flux`, `order` and `energy` with the file names to open.
     """
-    plotter = create_plotter(analysis_settings.get('plotter', 'mpl'),
-                             analysis_settings.get('plot-format', 'png'),
-                             analysis_settings.get('plot-style', 'pyretis'))
+    plotter = create_plotter(analysis_settings.get('plot', None))
     txtout = analysis_settings.get('txt-format', None)
     results = {'txtfile': {}}
     for key in raw_files:
@@ -265,17 +263,7 @@ def check_output(function):
             List with the text files created (if any).
         """
         if plotter is None:
-            plot_settings = analysis_settings.get('plot', None)
-            if plot_settings is not None:
-                try:
-                    plot = plot_settings.get('plotter', 'mpl')
-                    fmt = plot_settings.get('ouput', 'png')
-                    style = plot_settings.get('style', 'pyretis')
-                    plotter = create_plotter(plot, fmt, style)
-                except AttributeError:
-                    # Probably not a dict
-                    # Assume that this is because the user did not want a plot
-                    pass
+            plotter = create_plotter(analysis_settings.get('plot', None))
         txt = analysis_settings.get('txt-output', None)
         if plotter is None and txt is None:
             msg = 'No output selected. Skipping analysis!'
