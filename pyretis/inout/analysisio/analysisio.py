@@ -59,11 +59,14 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     -------
     The results from the analysis.
     """
+    plotter = create_plotter(analysis_settings.get('plot', None))
+    txtout = analysis_settings.get('txt-format', None)
     if 'files' in raw_data:
         results = run_md_flux_files(analysis_settings, simulation_settings,
-                                    raw_data['files'])
+                                    raw_data['files'], plotter, txtout)
     else:
-        results = None
+        msg = 'Analysis+output have not been implemented for objects yet'
+        raise NotImplementedError(msg)
     if results is not None:
         for report_type in analysis_settings.get('report', ['rst']):
             report, ext = generate_report_md(results, output=report_type)
@@ -76,7 +79,8 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     return results
 
 
-def run_md_flux_files(analysis_settings, simulation_settings, raw_files):
+def run_md_flux_files(analysis_settings, simulation_settings, raw_files,
+                      plotter, txtout):
     """Analyse the output from a MD-flux simulation from files.
 
     The raw data will be read from output files obtained by the MD-flux
@@ -97,15 +101,18 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files):
     raw_files : dict
         The different files to open. We assume/hope that it contains
         the keys `flux`, `order` and `energy` with the file names to open.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : string, optional
+        If txt is different from None it is assumed to be the format for
+        writing txt files. I.e. the text files will then be written!
     """
-    plotter = create_plotter(analysis_settings.get('plot', None))
-    txtout = analysis_settings.get('txt-format', None)
     results = {'txtfile': {}}
     for key in raw_files:
         analyse_func = analyse_file(key, raw_files[key])
         out, fig, txtfile = analyse_func(analysis_settings,
                                          simulation_settings,
-                                         plotter, txtout)
+                                         plotter=plotter, txt=txtout)
 
         if txtfile is not None:
             results['txtfile'].update(txtfile)
