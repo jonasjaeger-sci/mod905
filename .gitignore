@@ -35,3 +35,4 @@ examples/tis/1D-double-well/md_flux/cross.dat
 examples/tis/1D-double-well/md_flux/energy.dat
 examples/tis/1D-double-well/md_flux/order.dat
 examples/tis/1D-double-well/md_flux/traj.gro
+examples/tis/1D-double-well/md_flux/report

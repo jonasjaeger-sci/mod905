@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
-"""
+"""Example on calculating the initial flux from effective crossings.
+
 This is an example on how to perform a simple MD simulation for determining
 the initial flux for a TIS rate calculation.
+
+It will simulate a one particle in a double well potential using the
+Langvin integrator.
 """
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
-import pprint
 # pyretis imports:
+# for setting up the simulation
 from pyretis.core import Box, System
 from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
+# for analysing and output:
 from pyretis.analysis import analyse_flux
-from pyretis.inout import generate_report_md
+from pyretis.inout import generate_report
 from pyretis.inout import create_output, store_settings_as_py
 
 
@@ -70,18 +75,17 @@ simulation_settings['orderparameter'] = orderparameter
 
 # create the simulation:
 simulation_md = create_simulation(simulation_settings, system)
-output = [task for task in create_output(system, simulation_settings)]
 print('\nCreated:', simulation_md)
-# Variable for storing calculated crossing output:
-
+# create outputs for this simulation:
+output = [task for task in create_output(system, simulation_settings)]
+# store the settings we used, in case we need it later (e.g. for analysis).
 settings_file = 'settings.py'
 print('Storing the simulation settings in: {}'.format(settings_file))
 store_settings_as_py(simulation_settings, settings_file, 'settings')
 
+cross = []  # variable for storing the crossing output
 print('\nStarting simulation!')
-print(('=')*20)
-
-cross = []
+print(('=')*79)
 for i, result in enumerate(simulation_md.run()):
     try:
         for cri in result['cross']:
@@ -90,15 +94,14 @@ for i, result in enumerate(simulation_md.run()):
         pass
     for task in output:
         task.output(result)
-
+print(('=')*79)
+print('Simulation finished, will do a simple flux analysis:')
 analysis_settings = {'skipcross': 1000,
                      'maxblock': 1000,
                      'blockskip': 1,
                      'bins': 1000,
                      'ngrid': 1001}
-print(('=')*80)
-print('Simulation finished, will do a simple flux analysis:')
 results = {}
-results['flux'] = analyse_flux(cross, analysis_settings, simulation_settings)
-report_txt = generate_report_md(results, output='txt')[0]
+results['cross'] = analyse_flux(cross, analysis_settings, simulation_settings)
+report_txt = generate_report('mdflux', results, 'txt')
 print(''.join(report_txt))

@@ -11,6 +11,7 @@ Important functions defined here:
 
 - render_report: Render a report using a template and jinja2
 
+- generate_report: Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
 import warnings
@@ -88,7 +89,7 @@ def get_template(output, report_type, template=None):
         rst, html, latex, tex.
     template : string, optional
         The full path to the template to use. If not given/found, the defaults
-        in default_template will be used.
+        in _TEMPLATES will be used.
     report_type : string
         This is the type of report we are doing, e.g. TIS or MD.
 
@@ -173,9 +174,13 @@ def generate_report(report_type, analysis, output, template=None):
         The results from running the analysis.
     output : string
         Output format for the report.
+    template : string, optional
+        The full path to the template to use. If not given/found, the defaults
+        in _TEMPLATES will be used. This is handled by `get_template`.
     """
     report = {'version': VERSION,
-              'program': PROGRAM_NAME}
+              'program': PROGRAM_NAME,
+              'figures': [], 'tables': [], 'numbers': []}
     # Check if the output is a valid format
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
@@ -192,8 +197,8 @@ def generate_report(report_type, analysis, output, template=None):
     report.update(generated)
     # Remove file extensions for figures and latexify numbers:
     if output in ('latex', 'tex'):
-        for fig in report['figures']:
-            report['figures'][fig] = remove_extensions(report['figures'][fig])
+        for key in report['figures']:
+                report['figures'][key] = remove_extensions(report['figures'][key])
         for key in report['numbers']:
             report['numbers'][key] = latexify_number(report['numbers'][key])
     return render_report(report, output, template, path)
