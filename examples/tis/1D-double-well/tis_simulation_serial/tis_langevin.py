@@ -12,13 +12,14 @@ from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
-from pyretis.inout import create_output
+from pyretis.inout import create_output, generate_report
+from pyretis.analysis import analyse_path_ensemble, match_probabilities
 
 simulation_settings = {'type': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 10,
                                       'high-friction': False},
-                       'endcycle': 20000,
+                       'endcycle': 200,
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                       -0.5, -0.4, -0.3, 1.0],
@@ -61,14 +62,15 @@ def set_up_tis_simulation(settings):
     simulation_tis = create_simulation(settings, system)
     return simulation_tis
 
+path_results = []
+tis_results = {'path_ensembles': [], 'detect': [],
+               'tis': []}
 print('Simulation type: {}'.format(simulation_settings['type']))
 print('Setting up TIS simulations:')
 interfaces = simulation_settings['interfaces']
-stateA = interfaces[0]
-stateB = interfaces[-1]
 ensembles, detect = create_path_ensembles(interfaces, include_zero=False)
 
-for i, path_ensemble in enumerate(ensembles):
+for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
     ensemble = '{:03d}'.format(i+1)
     print('\nPath ensemble: {} (no. {})'.format(path_ensemble.ensemble,
                                                 ensemble))
@@ -107,4 +109,26 @@ for i, path_ensemble in enumerate(ensembles):
         for task in output:
             task.output(result)
     print('Done with', path_ensemble.ensemble)
-
+    print('Will do a simple analysis')
+    analysis_settings = {'skipcross': 1000,
+                     'maxblock': 1000,
+                     'blockskip': 1,
+                     'bins': 1000,
+                     'ngrid': 1001}
+    local_results = {'detect': idetect,
+                     'path_ensemble': path_ensemble}
+    analyse = analyse_path_ensemble(path_ensemble,
+                                    analysis_settings,
+                                    idetect=idetect)
+    local_results.update(analyse)
+    path_results.append(analyse)
+    tis_results['path_ensembles'].append(path_ensemble)
+    tis_results['detect'].append(idetect)
+    tis_results['tis'].append(analyse)
+    report_txt = generate_report('tis_path', local_results, 'txt')[0]
+    print(''.join(report_txt))
+    if i >= 2: break
+print('Done with all path simulation, will do overall analysis\n')
+tis_results['matched'] = match_probabilities(path_results, detect)
+report_txt = generate_report('tis', tis_results, 'txt')[0]
+print(''.join(report_txt))
