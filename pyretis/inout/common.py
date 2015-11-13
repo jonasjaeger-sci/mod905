@@ -55,7 +55,8 @@ _PATH_MATCH = {'total': os.extsep.join(['total-probability', '{}']),
                'match': os.extsep.join(['matched-probability', '{}'])}
 # hard-coded patters for report outputs:
 _REPORTFILES = {'mdflux': os.extsep.join(['md_flux_report', '{}']),
-                'tis': os.extsep.join(['tis_report', '{}'])}
+                'tis': os.extsep.join(['tis_report', '{}']),
+                'tis_path': os.extsep.join(['tis_path_report', '{}'])}
 
 
 def create_backup(outputfile):
