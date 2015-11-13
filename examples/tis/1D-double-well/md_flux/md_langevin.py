@@ -28,7 +28,7 @@ simulation_settings = {'type': 'mdflux',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
-                       'endcycle': 10000000,
+                       'endcycle': 10000,
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6, -0.5,
                                       -0.4, -0.3, 1.0],
@@ -103,5 +103,5 @@ analysis_settings = {'skipcross': 1000,
                      'ngrid': 1001}
 results = {}
 results['cross'] = analyse_flux(cross, analysis_settings, simulation_settings)
-report_txt = generate_report('mdflux', results, 'txt')
+report_txt = generate_report('mdflux', results, 'txt')[0]
 print(''.join(report_txt))
