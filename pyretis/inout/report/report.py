@@ -26,6 +26,8 @@ from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as PROGRAM_NAME
 from pyretis.inout.report.common import remove_extensions, latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
+from pyretis.inout.report.report_path import (generate_report_tis,
+                                              generate_report_tis_path)
 
 
 __all__ = ['get_template', 'render_report', 'generate_report']
@@ -179,8 +181,14 @@ def generate_report(report_type, analysis, output, template=None):
         warnings.warn(msg.format(output, report_type))
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
+    generated = None
     if report_type == 'mdflux':
-        report.update(generate_report_mdflux(analysis, output))
+        generated = generate_report_mdflux(analysis, output=output)
+    elif report_type == 'tis':
+        generated = generate_report_tis(analysis, None, output=output)
+    elif report_type == 'tis_path':
+        generated = generate_report_tis_path(analysis, None, output=output)
+    report.update(generated)
     # Remove file extensions for figures and latexify numbers:
     if output in ('latex', 'tex'):
         for fig in report['figures']:
