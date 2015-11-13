@@ -1,12 +1,28 @@
 # -*- coding: utf-8 -*-
-"""Methods for generating reports.
+"""General methods for generating report.
 
-The reports are useful for displaying results from the analysis.
+This module contains some general methods for report generation. These
+methods are used by the specific report generators to format the reports.
+
+Important functions defined here:
+
+- get_template: Returns the template for a specific output format and
+  report type
+
+- render_report: Render a report using a template and jinja2
+
+- apply_format: Apply a format string to a given value.
+
+- generate_rst_table: Generate reStructuredText for a table.
+
+- generate_latex_table: Generate latex code for a table.
+
+- latexify_number: Change exponential notation into something nicer for latex.
+
+- mathexify_number: Change exponential notation into something nicer for
+  reStructuredText.
 """
 from __future__ import absolute_import
-#from pyretis import __version__ as VERSION
-#from pyretis import __program_name__ as PROGRAM_NAME
-import warnings
 # for converting rst to html and/or latex:
 import docutils.core
 from docutils.writers.html4css1 import Writer as HTMLWriter
@@ -19,23 +35,27 @@ import jinja2
 __all__ = ['generate_rst_table']
 
 
-# filename for known templates:
-_TEMPLATES = {'rst': 'report_template_{}.rst',
-              'html': 'report_template_{}.rst',  # html is done via rst,
-              'latex': 'report_template_{}.tex',
-              'tex': 'report_template_{}.tex',
-              'txt': 'report_template_{}.txt'}
-# look-up table for file extensions
+# File names for pre-defined templates.
+# - html is done via rst (i.e. there is no html template)
+# - htm is assumed to be equal to html
+# - tex is assumed to be equal to latex
+_TEMPLATES = {'rst': 'report_{}.rst',
+              'html': 'report_{}.rst',
+              'htm': 'report_{}.rst',
+              'latex': 'report_{}.tex',
+              'tex': 'report_{}.tex',
+              'txt': 'report_{}.txt'}
+# Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
+        'htm': 'htm',  # in case some people prefer it
         'latex': 'tex',
         'tex': 'tex',
         'txt': 'txt'}
 
 
 def _rst_to_html(rst):
-    """
-    Convert a reStrcuturedText string to simple HTML.
+    """Convert a reStrcuturedText string to simple HTML.
 
     Parameters
     ----------
@@ -56,8 +76,7 @@ def _rst_to_html(rst):
 
 
 def _remove_extension(filename):
-    """
-    Remove the extension of a given filename.
+    """Remove the extension of a given filename.
 
     Parameters
     ----------
@@ -76,8 +95,7 @@ def _remove_extension(filename):
 
 
 def remove_extensions(list_of_files):
-    """
-    Remove extensions for a list of files.
+    """Remove extensions for a list of files.
 
     This will strip out extensions for all the files in a given iterable.
     Here, the iterable might be a simple list which contains dictionaries or
@@ -114,8 +132,11 @@ def remove_extensions(list_of_files):
 
 
 def get_template(output, report_type, template=None):
-    """
-    Return the template to use for a specified output format.
+    """Return the template to use for a specified output format.
+
+    The output is one of the defined output types, for instance 'rst' for
+    restrucutred text or 'latex' for latex. Different report types will have
+    different templates and the report types must also be specified here.
 
     Parameters
     ----------
@@ -130,30 +151,34 @@ def get_template(output, report_type, template=None):
 
     Returns
     -------
-    out[0] : string
-        File name of template to use.
     out[1] : string
+        File name of template to use.
+    out[2] : string
         Path to the template to use.
     """
-    if output not in _TEMPLATES:
-        msg = 'Format {} not defined for {} report: Will use rst'
-        warnings.warn(msg.format(output, report_type))
-        output = 'rst'
     if template is None or not os.path.isfile(template):
         # Use default template, this is located in the templates dir:
         path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(path, 'templates')
         template = _TEMPLATES[output].format(report_type.lower())
+        path_to_template = os.path.join(path, template)
+        if not os.path.isfile(path_to_template):
+            msg = 'Could not locate template "{}"!'.format(path_to_template)
+            raise ValueError(msg)
     else:
         # user specified full path to template:
         path = os.path.dirname(template)
         template = os.path.basename(template)
-    return output, template, path
+    return template, path
 
 
-def generate_report(report, output, template, path):
-    """
-    Do the actual generation of a report.
+def render_report(report, output, template, path):
+    """This will render a report using a template and jinja2.
+
+    The report is given as a dictionary which is used to fill in a template
+    with jinja2. The template is given as string (a file name) with a path
+    to the template. The ouput can also be specified here and this is only
+    use to convert to HTML if that is the desired output.
 
     Parameters
     ----------
@@ -162,7 +187,7 @@ def generate_report(report, output, template, path):
         this dict matches the specified template.
     output : string
         This is the desired output format. Here it's used only for generating
-        html as this is done via rst.
+        HTML as this is done via rst.
     template : string
         This is the template to use (the file name).
     path :  string
@@ -174,6 +199,11 @@ def generate_report(report, output, template, path):
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
+
+    Note
+    ----
+    The parameters `template` and `path` are typically obtained by a call to
+    `get_template`.
     """
     env = jinja2.Environment(block_start_string='@{%',
                              block_end_string='%}@',
@@ -190,15 +220,15 @@ def generate_report(report, output, template, path):
 
 
 def apply_format(value, fmt):
-    """
-    Apply format string to a given value.
+    """Apply a format string to a given value.
 
-    This method is to check the formatting of a float. Here we are
-    going to force a maximum length on the resulting string.
-    This is to avoid problems like: '{:7.2f}'.format(12345.7) which
-    returns '12345.70' with a length 8 > 7. Here it is done by simply
-    switching to an exponential notation, but note however that this
-    will have implications for how many decimal places we can show.
+    Here we check the formatting of a float. We are *forcing* a
+    *maximum length* on the resulting string. This is to avoid problems
+    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a length
+    8 > 7. The indended use of this method is to avoid shuch problems when we
+    are formatting numbers for tables. Here it is done by switching to an
+    exponential notation. But note however that this will have implications
+    for how many decimal places we can show.
 
     Parameters
     ----------
@@ -206,6 +236,13 @@ def apply_format(value, fmt):
         The float to format.
     fmt : string
         The format to use.
+
+    Note
+    ----
+    This method converts numbers to have a fixed length. In some cases this
+    may reduce the number of significant digits. Remember to also output your
+    numbers without this format in case a specific number of significant
+    digits is important!
     """
     maxlen = fmt.split(':')[1].split('.')[0]
     align = ''
@@ -228,10 +265,14 @@ def apply_format(value, fmt):
 def generate_rst_table(table, title, headings):
     """Generate reStructuredText for a table.
 
+    This is a general method to generate a table in reStructuredText.
+    The table is specified with a title, headings for the columns and
+    the contents of the columns and rows.
+
     Parameters
     ----------
     table : list of lists
-        table[i][j] is the string contents of column j of table i of the table.
+        `table[i][j]` is the contents of column `j` of row `i` of the table.
     title : string
         The header/title for the table.
     headings : list of strings
@@ -271,12 +312,18 @@ def generate_rst_table(table, title, headings):
 
 
 def generate_latex_table(table, title, headings, fixnum=None):
-    """Generate latex code for a table.
+    r"""Generate latex code for a table.
+
+    This method will generate latex code for a table. The table is given with
+    a title, headings for the columns and the contents of the table. For latex
+    we might wish to make some numbers more pretty by removing exponential
+    notation: i.e. ``1.e-10`` can be replaced by ``1.0 \times 10^{-10}``
+    (which should render like :math:`1.0 \times 10^{-10}`).
 
     Parameters
     ----------
     table : list of lists
-        table[i][j] is the string contents of column j of table i of the table.
+        `table[i][j]` is the contents of column `j` of row `i` of the table.
     title : string
         The header/title for the table.
     headings : list of strings
@@ -306,19 +353,43 @@ def generate_latex_table(table, title, headings, fixnum=None):
 
 
 def latexify_number(str_float):
-    r"""
-    Change exponential notation into something nicer for latex.
+    r"""Change exponential notation into something nicer for latex.
 
     This will change exponential notation, e.g ``1.2e-03``, into
-    ``1.2 \times 10^{-3}`` for latex output.
+    ``1.2 \times 10^{-3}`` for latex output which should be rendered like
+    :math:`1.2 \times 10^{-3}`.
 
     Parameters
     ----------
     str_float : string
         This is the string representation of a float.
+
+    Returns
+    -------
+    out : string
+        A formatted string for latex.
     """
     if 'e' in str_float:
         base, exp = str_float.split('e')
         return r'${0} \times 10^{{{1}}}$'.format(base, int(exp))
     else:
         return r'${}$'.format(str_float)
+
+
+def mathexify_number(str_float):
+    r"""Change exponential notation into something nicer for reStructuredText.
+
+    This will just call `latexify_number` and put it into a math directive for
+    reStructuredText.
+
+    Parameters
+    ----------
+    str_float : string
+        This is the string representation of a float.
+
+    Returns
+    -------
+    out : string
+        A math directive for reStructuredText.
+    """
+    return ':math:`{}`'.format(latexify_number(str_float))

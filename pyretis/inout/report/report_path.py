@@ -4,20 +4,15 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as PROGRAM_NAME
 from pyretis.inout.report.report import (generate_rst_table,
                                          generate_latex_table,
-                                         apply_format, get_template,
-                                         latexify_number,
-                                         remove_extensions, generate_report)
+                                         apply_format)
 
 
 __all__ = ['generate_report_tis', 'generate_report_tis_path']
 
 
-def generate_report_tis_path(path_ensemble, analysis, output='rst',
-                             template=None):
+def generate_report_tis_path(analysis, path_ensemble, output='rst'):
     """Generate a report for a single TIS simulation.
 
     Parameters
@@ -29,13 +24,12 @@ def generate_report_tis_path(path_ensemble, analysis, output='rst',
         'matched' : results from the matching of probability
         'matched-fig' : the figure corresponding to 'matched'
         'detect' : locations of the interfaces used for detection
+    path_ensemble : object like `pyretis.core.path.PathEnsemble`
+        The path ensemble we are reporting results for.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
+        formats defined in `.report._TEMPLATES`. Default is 'rst'
+        (reStructuredText).
 
     Returns
     -------
@@ -44,53 +38,54 @@ def generate_report_tis_path(path_ensemble, analysis, output='rst',
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    # get template and generate:
-    output, template, path = get_template(output, 'TIS_PATH',
-                                          template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'ensemble': path_ensemble.ensemble,
-              'table_int': None,
-              'table_prob': None,
-              'table_path': None,
-              'table_eff': None}
+    report = {'ensemble': path_ensemble.ensemble,
+              'tables': {'interfaces': None,
+                         'probability': None,
+                         'path': None,
+                         'efficiency': None}}
     # get the efficiency results:
-    report['table_int'] = _table_interface([path_ensemble],
-                                           [analysis['detect']],
+    report['tables']['interfaces'] = _table_interface([path_ensemble],
+                                                      [analysis['detect']],
+                                                      fmt=output)[1]
+    report['tables']['probability'] = _table_probability([path_ensemble],
+                                                         [analysis],
+                                                         fmt=output)[1]
+    report['tables']['path'] = _table_path([path_ensemble], [analysis],
                                            fmt=output)[1]
-    report['table_prob'] = _table_probability([path_ensemble],
-                                              [analysis], fmt=output)[1]
-    report['table_path'] = _table_path([path_ensemble],
-                                       [analysis], fmt=output)[1]
-    report['table_eff'] = _table_efficiencies([path_ensemble],
-                                              [analysis], fmt=output)[1]
-    if output in ['latex', 'tex']:
-        pass
+    report['tables']['efficiency'] = _table_efficiencies([path_ensemble],
+                                                         [analysis],
+                                                         fmt=output)[1]
+    #if output in ['latex', 'tex']:
+    #    pass
         #for fig in ['figures', 'totalfig']:
         #    report[fig] = remove_extensions(report[fig])
-    return generate_report(report, output, template, path)
+    return report
 
 
-def generate_report_tis(path_ensembles, analysis, output='rst',
-                        template=None):
+def generate_report_tis(analysis, path_ensembles, output='rst'):
     """Generate a report for the over-all results from a TIS simulation.
 
     Parameters
     ----------
     analysis : dict
-        This is the output (and some input) for the analysis. The keys are:
-        'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of corresponding figures (to 'tis')
-        'matched' : results from the matching of probability
-        'matched-fig' : the figure corresponding to 'matched'
-        'detect' : locations of the interfaces used for detection
+        This is the output (and some input!) for the analysis. The keys
+        we make use of are:
+
+        - 'tis' : dict with the results from analysing path ensembles
+
+        - 'tis-fig' : list of corresponding figures (to 'tis')
+
+        - 'matched' : results from the matching of probability
+
+        - 'matched-fig' : the figure corresponding to 'matched'
+
+        - 'detect' : locations of the interfaces used for detection
+    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+        These are the path ensemble we are analysing for.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
+        formats defined in `.report._TEMPLATES`. Default is 'rst'
+        (reStructuredText).
 
     Returns
     -------
@@ -99,52 +94,48 @@ def generate_report_tis(path_ensembles, analysis, output='rst',
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    # get template and generate:
-    output, template, path = get_template(output, 'TIS', template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'figures': analysis.get('tis-fig', None),
-              'totalfig': analysis.get('matched-fig', None),
-              'table_int': None, 'table_prob': None,
-              'table_path': None, 'table_eff': None,
-              'pcross': None, 'perr': None, 'pcross_simt': None,
-              'pcross_teff': None, 'pcross_opteff': None}
-    # get the efficiency results:
-    report['pcross'] = '{0:16.9e}'.format(analysis['matched']['prob'])
-
-    if analysis['matched']['relerror'] > 0.01:
-        report['perr'] = '{0:16.9f}'.format(analysis['matched']['relerror'] *
-                                            100)
+    report = {'figures': {'tis': None,
+                          'tis-matched': None},
+              'tables': {'interfaces': None,
+                         'probability': None,
+                         'path': None,
+                         'efficiency': None},
+              'numbers': {'pcross': None, 'perr': None, 'simt': None,
+                          'teff': None, 'opteff': None}}
+    # Get figures:
+    report['figures']['tis'] = analysis.get('tis-fig', None)
+    report['figures']['tis-matched'] = analysis.get('tis-fig', None)
+    # Get numbers:
+    fmte = '{0:16.9e}'
+    fmtf = '{0:16.9f}'
+    report['numbers']['pcross'] = fmte.format(analysis['matched']['prob'])
+    scaled = analysis['matched']['relerror'] * 100
+    if scaled > 1.0:
+        report['numbers']['perr'] = fmtf.format(scaled)
     else:
-        report['perr'] = '{0:16.9e}'.format(analysis['matched']['relerror'] *
-                                            100)
-    report['pcross_simt'] = '{0:16.9e}'.format(analysis['matched']['simtime'])
-    report['pcross_teff'] = '{0:16.9e}'.format(analysis['matched']['eff'])
-    report['pcross_opteff'] = '{0:16.9e}'.format(analysis['matched']['opteff'])
-
-    _, report['table_int'] = _table_interface(path_ensembles,
-                                              analysis['detect'], fmt=output)
-    _, report['table_prob'] = _table_probability(path_ensembles,
-                                                 analysis['tis'], fmt=output)
-    _, report['table_path'] = _table_path(path_ensembles,
-                                          analysis['tis'], fmt=output)
-    _, report['table_eff'] = _table_efficiencies(path_ensembles,
-                                                 analysis['tis'], fmt=output)
-    if output in ['latex', 'tex']:
-        for fig in ['figures', 'totalfig']:
-            report[fig] = remove_extensions(report[fig])
-        for key in ['pcross', 'perr', 'pcross_simt', 'pcross_teff',
-                    'pcross_opteff']:
-            report[key] = latexify_number(report[key])
-    return generate_report(report, output, template, path)
+        report['numbers']['perr'] = fmte.format(scaled)
+    report['numbers']['simt'] = fmte.format(analysis['matched']['simtime'])
+    report['numbers']['teff'] = fmte.format(analysis['matched']['eff'])
+    report['numbers']['opteff'] = fmte.format(analysis['matched']['opteff'])
+    # Get tables:
+    report['tables']['interfaces'] = _table_interface(path_ensembles,
+                                                      analysis['detect'],
+                                                      fmt=output)[1]
+    report['tables']['probability'] = _table_probability(path_ensembles,
+                                                         analysis['tis'],
+                                                         fmt=output)[1]
+    report['tables']['path'] = _table_path(path_ensembles, analysis['tis'],
+                                           fmt=output)[1]
+    report['tables']['efficiency'] = _table_efficiencies(path_ensembles,
+                                                         analysis['tis'],
+                                                         fmt=output)[1]
+    return report
 
 
 def _table_interface(path_ensembles, detect, fmt='rst'):
-    """
-    Generate the table for the interfaces.
+    """Generate the table for the interfaces.
 
-    This table will display the location of the different
-    interfaces.
+    This table will display the location of the different interfaces.
 
     Parameters
     ----------
@@ -185,8 +176,7 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
 
 
 def _table_probability(path_ensembles, results, fmt='rst'):
-    """
-    Generate the table for the probabilities.
+    """Generate the table for the probabilities.
 
     This table will display the crossing probabilities with
     uncertainties.
@@ -229,8 +219,7 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
 
 def _table_path(path_ensembles, results, fmt='rst'):
-    """
-    Generate the table for the path lengths.
+    """Generate the table for the path lengths.
 
     This table will display the path lengths and also show the ratio of
     path lengths for all paths and accepted paths.
@@ -275,8 +264,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
 
 def _table_efficiencies(path_ensembles, results, fmt='rst'):
-    """
-    Generate table for efficiencies.
+    """Generate table for efficiencies.
 
     This table will display results for the efficiencies, acceptance
     ratios and correlation.

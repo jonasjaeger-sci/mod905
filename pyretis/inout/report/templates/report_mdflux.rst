@@ -16,41 +16,41 @@ MD energy data
 
 Energy and the running average of the energy:
 
-.. image:: @{{ energy_figures['energies'] }}@
+.. image:: @{{ figures['energy']['energies'] }}@
    :width: 45%
-.. image:: @{{ energy_figures['run_energies'] }}@
+.. image:: @{{ figures['energy']['run_energies'] }}@
    :width: 45%
 
 Temperature and the running average of the temperature:
 
-.. image:: @{{ energy_figures['temperature'] }}@
+.. image:: @{{ figures['energy']['temperature'] }}@
    :width: 45%
-.. image:: @{{ energy_figures['run_temp'] }}@
+.. image:: @{{ figures['energy']['run_temp'] }}@
    :width: 45%
 
 Block error analysis for energies:
 
-.. image:: @{{ energy_figures['ekinblock'] }}@
+.. image:: @{{ figures['energy']['ekinblock'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['vpotblock'] }}@
+.. image:: @{{ figures['energy']['vpotblock'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['etotblock'] }}@
+.. image:: @{{ figures['energy']['etotblock'] }}@
    :width: 30%
 
 Distribution of energies:
 
-.. image:: @{{ energy_figures['ekindist'] }}@
+.. image:: @{{ figures['energy']['ekindist'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['vpotdist'] }}@
+.. image:: @{{ figures['energy']['vpotdist'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['etotdist'] }}@
+.. image:: @{{ figures['energy']['etotdist'] }}@
    :width: 30%
 
 Block error and distribution for temperature:
 
-.. image:: @{{ energy_figures['tempblock'] }}@
+.. image:: @{{ figures['energy']['tempblock'] }}@
    :width: 30%
-.. image:: @{{ energy_figures['tempdist'] }}@
+.. image:: @{{ figures['energy']['tempdist'] }}@
    :width: 30%
 
 .. _order-figures-output:
@@ -58,19 +58,20 @@ Block error and distribution for temperature:
 MD order parameter data
 -----------------------
 
-.. image:: @{{ order_figures['order'] }}@
+.. image:: @{{ figures['order']['order'] }}@
    :width: 30%
-.. image:: @{{ order_figures['run_order'] }}@
+.. image:: @{{ figures['order']['run_order'] }}@
    :width: 30%
-.. image:: @{{ order_figures['block'] }}@
+.. image:: @{{ figures['order']['block'] }}@
    :width: 30%
 
-.. image:: @{{ order_figures['dist'] }}@
+.. image:: @{{ figures['order']['dist'] }}@
    :width: 30%
-.. image:: @{{ order_figures['msd'] }}@
+.. image:: @{{ figures['order']['msd'] }}@
    :width: 30%
-.. image:: @{{ order_figures['ordervel'] }}@
+.. image:: @{{ figures['order']['ordervel'] }}@
    :width: 30%
+
 
 
 .. _flux-figures-output:
@@ -78,16 +79,15 @@ MD order parameter data
 MD flux data
 ------------
 
-@{% for figure in flux_figures %}@
+@{% for figure in figures['flux'] %}@
 .. image:: @{{ figure['runflux'] }}@
    :width: 45%
 .. image:: @{{ figure['errflux'] }}@
    :width: 45%
 @{% endfor %}@
 
-@{{ table_md_flux }}@
+@{{ tables['md-flux'] }}@
 
-@{{ table_md_cycles }}@
+@{{ tables['md-cycles'] }}@
 
-@{{ table_md_efficiency }}@
-
+@{{ tables['md-efficiency'] }}@

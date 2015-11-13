@@ -4,18 +4,17 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as PROGRAM_NAME
 from pyretis.inout.report.report import (generate_rst_table,
                                          generate_latex_table,
-                                         apply_format, get_template,
-                                         remove_extensions, generate_report)
+                                         apply_format)
+                                         #, get_template,
+                                         #remove_extensions)
 
 
 __all__ = ['generate_report_mdflux']
 
 
-def generate_report_mdflux(analysis, output='rst', template=None):
+def generate_report_mdflux(analysis, output='rst'):
     """Generate a report for a MD flux simulation.
 
     Parameters
@@ -24,46 +23,43 @@ def generate_report_mdflux(analysis, output='rst', template=None):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in _TEMPLATES.
-        Default is reStructuredText = 'rst'.
-    template : string, optional
-        This is the template file to use. The default is given
-        by _TEMPLATES[output].
+        formats defined in `_TEMPLATES` in `pyretis.inout.report`.
+        Default is 'rst' (reStructuredText).
 
     Returns
     -------
-    out[0] : string
-        The generated report in the desired format.
-    out[1] : string
-        The file extension (i.e. file type) for the generated report.
+    out : dictionary
+        The generated report as a string
     """
-    output, template, path = get_template(output, 'MD', template=template)
-    report = {'version': VERSION,
-              'program': PROGRAM_NAME,
-              'flux_figures': analysis.get('cross_figures', None),
-              'energy_figures': analysis.get('energy_figures', None),
-              'order_figures': analysis.get('order_figures', None)}
+    report = {'figures': {'flux': None,
+                          'energy': None,
+                          'order': None},
+              'tables': {'md-flux': None,
+                         'md-cycles': None,
+                         'md-efficiency': None}}
     # generate some tables:
-    _, report['table_md_flux'] = _table_md_flux(analysis['cross'], fmt=output)
-    _, report['table_md_cycles'] = _table_md_flux_cycles(analysis['cross'],
-                                                         fmt=output)
-    _, report['table_md_efficiency'] = _table_md_efficiency(analysis['cross'],
-                                                            fmt=output)
+    report['figures']['flux'] = analysis.get('cross_figures', None)
+    report['figures']['energy'] = analysis.get('energy_figures', None)
+    report['figures']['order'] = analysis.get('order_figures', None)
+    report['tables']['md-flux'] = _table_md_flux(analysis['cross'], fmt=output)[1]
+    report['tables']['md-cycles'] = _table_md_flux_cycles(analysis['cross'],
+                                                          fmt=output)[1]
+    report['tables']['md-efficiency'] = _table_md_efficiency(analysis['cross'],
+                                                             fmt=output)[1]
     # check if we need some additional latexification:
-    if output in ['latex', 'tex']:
-        for fig in ['flux_figures', 'energy_figures', 'order_figures']:
-            report[fig] = remove_extensions(report[fig])
-    return generate_report(report, output, template, path)
+    #if output in ['latex', 'tex']:
+    #    for fig in ['flux_figures', 'energy_figures', 'order_figures']:
+    #        report[fig] = remove_extensions(report[fig])
+    return report
 
 
 def _table_md_efficiency(results, fmt='rst'):
-    """
-    Generate a table with  MD-flux results for efficiencies and correlations.
+    """Generate table with MD-flux results for efficiencies and correlations.
 
     Parameters
     ----------
     results : dict
-        These are the results obtained in the ``analyse_flux`` method in
+        These are the results obtained in the `analyse_flux` method in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').
@@ -114,8 +110,7 @@ def _table_md_efficiency(results, fmt='rst'):
 
 
 def _table_md_flux_cycles(results, fmt='rst'):
-    """
-    Generate the table for the MD-flux results for cycle numbers.
+    """Generate a table for the MD-flux results for cycle numbers.
 
     The table will display the number of steps in state A, state B,
     overall state A and B and total number of MD cycles.
@@ -123,7 +118,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the ``analyse_flux`` method in
+        These are the results obtained in the `analyse_flux` method in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').
@@ -155,13 +150,12 @@ def _table_md_flux_cycles(results, fmt='rst'):
 
 
 def _table_md_flux(results, fmt='rst'):
-    """
-    Generate the table for the MD-flux results.
+    """Generate the table for the MD-flux results.
 
     Parameters
     ----------
     results : dict
-        These are the results obtained in the ``analyse_flux`` method in
+        These are the results obtained in the `analyse_flux` method in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').

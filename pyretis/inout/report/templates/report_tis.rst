@@ -17,7 +17,7 @@ analysis:
 Probability figures
 -------------------
 
-@{% for figure in figures %}@
+@{% for figure in figures['tis'] %}@
 .. image:: @{{ figure['pcross'] }}@
    :width: 30%
 .. image:: @{{ figure['prun'] }}@
@@ -32,7 +32,7 @@ Probability figures
 Length and shoots figures
 -------------------------
 
-@{% for figure in figures %}@
+@{% for figure in figures['tis'] %}@
 .. image:: @{{ figure['pathlength'] }}@
    :width: 30%
 .. image:: @{{ figure['shoots'] }}@
@@ -46,9 +46,9 @@ Length and shoots figures
 Total probability
 -----------------
 
-.. image:: @{{ totalfig['total'] }}@
+.. image:: @{{ figures['tis-matched']['total'] }}@
    :width: 45%
-.. image:: @{{ totalfig['match'] }}@
+.. image:: @{{ figures['tis-matched']['match'] }}@
    :width: 45%
 
 .. _tis-results:
@@ -56,22 +56,22 @@ Total probability
 Numerical TIS results
 =====================
 
-@{{ table_int }}@
+@{{ tables['interfaces'] }}@
 
-@{{ table_prob }}@
+@{{ tables['probability'] }}@
 
-@{{ table_path }}@
+@{{ tables['path'] }}@
 
-@{{ table_eff }}@
+@{{ tables['efficiency'] }}@
 
 .. _combined-results:
 
 Combined results
 ================
 
-:math:`P_{\text{cross}}` = @{{ pcross }}@  :math:`\pm`  @{{ perr }}@ %
+:math:`P_{\text{cross}}` = @{{ numbers['pcross'] }}@  :math:`\pm`  @{{ numbers['perr'] }}@ %
 
-:math:`P_{\text{cross}}`: sim.time = @{{ pcross_simt }}@ :math:`\tau_{\text{eff}}` = @{{ pcross_teff}}@ 
+:math:`P_{\text{cross}}`: sim.time = @{{ numbers['simt'] }}@ :math:`\tau_{\text{eff}}` = @{{ numbers['teff']}}@ 
 
-Optimized :math:`P_{\text{cross}}` :math:`\tau_{\text{eff}}`: @{{ pcross_opteff }}@
+Optimized :math:`P_{\text{cross}}` :math:`\tau_{\text{eff}}`: @{{ numbers['opteff'] }}@
 
