@@ -12,20 +12,20 @@ from pyretis.inout.common import apply_format
 __all__ = ['generate_report_tis', 'generate_report_tis_path']
 
 
-def generate_report_tis_path(analysis, path_ensemble, output='rst'):
+def generate_report_tis_path(analysis, output='rst'):
     """Generate a report for a single TIS simulation.
 
     Parameters
     ----------
     analysis : dict
         This is the output (and some input) for the analysis. The keys are:
-        'tis' : dict with the results from analysing path ensembles
-        'tis-fig' : list of corresponding figures (to 'tis')
-        'matched' : results from the matching of probability
-        'matched-fig' : the figure corresponding to 'matched'
-        'detect' : locations of the interfaces used for detection
-    path_ensemble : object like `pyretis.core.path.PathEnsemble`
-        The path ensemble we are reporting results for.
+          - 'tis': dict with the results from analysing path ensembles
+          - 'tis-fig': list of corresponding figures (to 'tis')
+          - 'matched': results from the matching of probability
+          - 'matched-fig': the figure corresponding to 'matched'
+          - 'detect': locations of the interfaces used for detection
+          - 'path_ensemble': object like `pyretis.core.path.PathEnsemble`,
+            the path ensemble we are reporting results for.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in `.report._TEMPLATES`. Default is 'rst'
@@ -38,6 +38,7 @@ def generate_report_tis_path(analysis, path_ensemble, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
+    path_ensemble = analysis['path_ensemble']
     report = {'ensemble': path_ensemble.ensemble,
               'tables': {'interfaces': None,
                          'probability': None,
@@ -55,14 +56,10 @@ def generate_report_tis_path(analysis, path_ensemble, output='rst'):
     report['tables']['efficiency'] = _table_efficiencies([path_ensemble],
                                                          [analysis],
                                                          fmt=output)[1]
-    #if output in ['latex', 'tex']:
-    #    pass
-        #for fig in ['figures', 'totalfig']:
-        #    report[fig] = remove_extensions(report[fig])
     return report
 
 
-def generate_report_tis(analysis, path_ensembles, output='rst'):
+def generate_report_tis(analysis, output='rst'):
     """Generate a report for the over-all results from a TIS simulation.
 
     Parameters
@@ -70,18 +67,14 @@ def generate_report_tis(analysis, path_ensembles, output='rst'):
     analysis : dict
         This is the output (and some input!) for the analysis. The keys
         we make use of are:
-
-        - 'tis' : dict with the results from analysing path ensembles
-
-        - 'tis-fig' : list of corresponding figures (to 'tis')
-
-        - 'matched' : results from the matching of probability
-
-        - 'matched-fig' : the figure corresponding to 'matched'
-
-        - 'detect' : locations of the interfaces used for detection
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
-        These are the path ensemble we are analysing for.
+          - 'tis': dict with the results from analysing path ensembles
+          - 'tis-fig': list of corresponding figures (to 'tis')
+          - 'matched': results from the matching of probability
+          - 'matched-fig': the figure corresponding to 'matched'
+          - 'detect': locations of the interfaces used for detection
+          - 'path_ensembles': list of objects like
+            `pyretis.core.path.PathEnsemble`. These are the path ensembles we
+             are reporting results for.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in `.report._TEMPLATES`. Default is 'rst'
@@ -94,6 +87,7 @@ def generate_report_tis(analysis, path_ensembles, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
+    path_ensembles = analysis['path_ensembles']
     report = {'figures': {'tis': None,
                           'tis-matched': None},
               'tables': {'interfaces': None,
@@ -106,8 +100,8 @@ def generate_report_tis(analysis, path_ensembles, output='rst'):
     report['figures']['tis'] = analysis.get('tis-fig', None)
     report['figures']['tis-matched'] = analysis.get('tis-fig', None)
     # Get numbers:
-    fmte = '{0:16.9e}'
-    fmtf = '{0:16.9f}'
+    fmte = '{0:<16.9e}'
+    fmtf = '{0:<16.9f}'
     report['numbers']['pcross'] = fmte.format(analysis['matched']['prob'])
     scaled = analysis['matched']['relerror'] * 100
     if scaled > 1.0:

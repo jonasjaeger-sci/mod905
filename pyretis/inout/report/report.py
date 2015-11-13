@@ -199,14 +199,17 @@ def generate_report(report_type, analysis, output, template=None):
     if report_type == 'mdflux':
         generated = generate_report_mdflux(analysis, output=output)
     elif report_type == 'tis':
-        generated = generate_report_tis(analysis, None, output=output)
+        generated = generate_report_tis(analysis, output=output)
     elif report_type == 'tis_path':
-        generated = generate_report_tis_path(analysis, None, output=output)
+        generated = generate_report_tis_path(analysis, output=output)
     report.update(generated)
+    # Remove white-space from numbers:
+    for key in report['numbers']:
+        report['numbers'][key] = report['numbers'][key].strip()
     # Remove file extensions for figures and latexify numbers:
     if output in ('latex', 'tex'):
         for key in report['figures']:
-                report['figures'][key] = remove_extensions(report['figures'][key])
+            report['figures'][key] = remove_extensions(report['figures'][key])
         for key in report['numbers']:
             report['numbers'][key] = latexify_number(report['numbers'][key])
     return render_report(report, output, template, path)
