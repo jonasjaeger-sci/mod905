@@ -544,8 +544,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
 
 
 def match_probabilities(path_results, detect):
-    """
-    Match probabilities from several path ensembles.
+    """Match probabilities from several path ensembles.
 
     It will also calculate efficiencies and error for the matched probability.
 
