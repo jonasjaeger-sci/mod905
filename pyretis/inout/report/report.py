@@ -177,6 +177,14 @@ def generate_report(report_type, analysis, output, template=None):
     template : string, optional
         The full path to the template to use. If not given/found, the defaults
         in _TEMPLATES will be used. This is handled by `get_template`.
+
+    Returns
+    -------
+    out[0] : string
+        This is the generated report in the desired format
+    out[1] : string
+        This is an extension which can be used when writing the report to a
+        file.
     """
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
