@@ -4,7 +4,7 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis.inout.report.report import (generate_rst_table,
+from pyretis.inout.report.common import (generate_rst_table,
                                          generate_latex_table,
                                          apply_format)
                                          #, get_template,
@@ -41,7 +41,8 @@ def generate_report_mdflux(analysis, output='rst'):
     report['figures']['flux'] = analysis.get('cross_figures', None)
     report['figures']['energy'] = analysis.get('energy_figures', None)
     report['figures']['order'] = analysis.get('order_figures', None)
-    report['tables']['md-flux'] = _table_md_flux(analysis['cross'], fmt=output)[1]
+    report['tables']['md-flux'] = _table_md_flux(analysis['cross'],
+                                                 fmt=output)[1]
     report['tables']['md-cycles'] = _table_md_flux_cycles(analysis['cross'],
                                                           fmt=output)[1]
     report['tables']['md-efficiency'] = _table_md_efficiency(analysis['cross'],

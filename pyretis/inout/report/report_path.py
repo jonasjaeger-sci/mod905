@@ -4,7 +4,7 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis.inout.report.report import (generate_rst_table,
+from pyretis.inout.report.common import (generate_rst_table,
                                          generate_latex_table,
                                          apply_format)
 
