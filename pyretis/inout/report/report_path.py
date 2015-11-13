@@ -4,9 +4,9 @@
 The reports are useful for displaying results from the analysis.
 """
 from __future__ import absolute_import
-from pyretis.inout.report.common import (generate_rst_table,
-                                         generate_latex_table,
-                                         apply_format)
+from pyretis.inout.report.markup import (generate_rst_table,
+                                         generate_latex_table)
+from pyretis.inout.common import apply_format
 
 
 __all__ = ['generate_report_tis', 'generate_report_tis_path']

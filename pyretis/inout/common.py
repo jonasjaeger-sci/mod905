@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 """This file contains common methods and functions for the input/output.
 
-Important functions
--------------------
+It contains some functions that is used when generating reports, typically
+to format tables and numbers.
 
-create_backup: A method to handle the creation of backups of old files.
+Important functions defined here:
+
+- create_backup: A method to handle the creation of backups of old files.
+
+- apply_format: Apply a format string to a given value.
+
+- remove_extensions: Remove extensions for a list of files.
 """
 from __future__ import absolute_import
 import os
 
 
-__all__ = ['create_backup']
+__all__ = ['create_backup', 'apply_format', 'remove_extensions']
 
 
 # hard-coded patters for energy analysis output files:
@@ -48,7 +54,7 @@ _PATHFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
 _PATH_MATCH = {'total': os.extsep.join(['total-probability', '{}']),
                'match': os.extsep.join(['matched-probability', '{}'])}
 # hard-coded patters for report outputs:
-_REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
+_REPORTFILES = {'mdflux': os.extsep.join(['md_flux_report', '{}']),
                 'tis': os.extsep.join(['tis_report', '{}'])}
 
 
@@ -85,3 +91,102 @@ def create_backup(outputfile):
         msg = 'Backup existing file {} to {}'.format(outputfile, filename)
         os.rename(outputfile, filename)
     return msg
+
+
+def apply_format(value, fmt):
+    """Apply a format string to a given value.
+
+    Here we check the formatting of a float. We are *forcing* a
+    *maximum length* on the resulting string. This is to avoid problems
+    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a length
+    8 > 7. The indended use of this method is to avoid shuch problems when we
+    are formatting numbers for tables. Here it is done by switching to an
+    exponential notation. But note however that this will have implications
+    for how many decimal places we can show.
+
+    Parameters
+    ----------
+    value : float
+        The float to format.
+    fmt : string
+        The format to use.
+
+    Note
+    ----
+    This method converts numbers to have a fixed length. In some cases this
+    may reduce the number of significant digits. Remember to also output your
+    numbers without this format in case a specific number of significant
+    digits is important!
+    """
+    maxlen = fmt.split(':')[1].split('.')[0]
+    align = ''
+    if not maxlen[0].isalnum():
+        align = maxlen[0]
+        maxlen = maxlen[1:]
+    maxlen = int(maxlen)
+    str_fmt = fmt.format(value)
+    if len(str_fmt) > maxlen:  # switch to exponential:
+        if value < 0:
+            deci = maxlen - 7
+        else:
+            deci = maxlen - 6
+        new_fmt = '{{:{0}{1}.{2}e}}'.format(align, maxlen, deci)
+        return new_fmt.format(value)
+    else:
+        return str_fmt
+
+
+def _remove_extension(filename):
+    """Remove the extension of a given filename.
+
+    Parameters
+    ----------
+    filename : string
+        The filename to check.
+
+    Returns
+    -------
+    out : string
+        The filename with the extension removed.
+    """
+    try:
+        return os.path.splitext(filename)[0]
+    except IndexError:
+        return filename
+
+
+def remove_extensions(list_of_files):
+    """Remove extensions for a list of files.
+
+    This will strip out extensions for all the files in a given iterable.
+    Here, the iterable might be a simple list which contains dictionaries or
+    it can be a dictionary. How we to the loop will depend on this.
+
+    Parameters
+    ----------
+    list_of_files : list or dict, iterable
+        This is the list for which we will try to remove extensions.
+
+    Returns
+    -------
+    newlist : list or dict
+        A copy of list_of_files, where the extensions has been removed.
+
+    Note
+    ----
+    If, for some reason, list_of_files is a list and the items are just
+    integers, the TypeError will not be raised. This is pretty unlikely and
+    we therefor do not check for this.
+    """
+    # we assume that list_of_files is a simple dict
+    try:
+        newlist = {}
+        for key in list_of_files:
+            newlist[key] = _remove_extension(list_of_files[key])
+        return newlist
+    except TypeError:
+        newlist = []
+        for fig in list_of_files:
+            newfig = {key: _remove_extension(fig[key]) for key in fig}
+            newlist.append(newfig)
+        return newlist

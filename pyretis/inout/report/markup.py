@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Some common methods for generating reports.
+"""Some common methods for generating simple tables and numbers.
 
 This module contains some common methods for the genration of reports.
 The methods defined here are typically used to format numbers and generate
 tables for the reports.
 
 Important functions defined here:
-
-- apply_format: Apply a format string to a given value.
 
 - generate_rst_table: Generate reStructuredText for a table.
 
@@ -19,109 +17,10 @@ Important functions defined here:
   reStructuredText.
 """
 from __future__ import absolute_import
-import os
-
-__all__ = ['remove_extensions', 'apply_format', 'generate_rst_table',
-           'generate_latex_table', 'latexify_number', 'mathexify_number']
 
 
-def _remove_extension(filename):
-    """Remove the extension of a given filename.
-
-    Parameters
-    ----------
-    filename : string
-        The filename to check.
-
-    Returns
-    -------
-    out : string
-        The filename with the extension removed.
-    """
-    try:
-        return os.path.splitext(filename)[0]
-    except IndexError:
-        return filename
-
-
-def remove_extensions(list_of_files):
-    """Remove extensions for a list of files.
-
-    This will strip out extensions for all the files in a given iterable.
-    Here, the iterable might be a simple list which contains dictionaries or
-    it can be a dictionary. How we to the loop will depend on this.
-
-    Parameters
-    ----------
-    list_of_files : list or dict, iterable
-        This is the list for which we will try to remove extensions.
-
-    Returns
-    -------
-    newlist : list or dict
-        A copy of list_of_files, where the extensions has been removed.
-
-    Note
-    ----
-    If, for some reason, list_of_files is a list and the items are just
-    integers, the TypeError will not be raised. This is pretty unlikely and
-    we therefor do not check for this.
-    """
-    # we assume that list_of_files is a simple dict
-    try:
-        newlist = {}
-        for key in list_of_files:
-            newlist[key] = _remove_extension(list_of_files[key])
-        return newlist
-    except TypeError:
-        newlist = []
-        for fig in list_of_files:
-            newfig = {key: _remove_extension(fig[key]) for key in fig}
-            newlist.append(newfig)
-        return newlist
-
-
-def apply_format(value, fmt):
-    """Apply a format string to a given value.
-
-    Here we check the formatting of a float. We are *forcing* a
-    *maximum length* on the resulting string. This is to avoid problems
-    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a length
-    8 > 7. The indended use of this method is to avoid shuch problems when we
-    are formatting numbers for tables. Here it is done by switching to an
-    exponential notation. But note however that this will have implications
-    for how many decimal places we can show.
-
-    Parameters
-    ----------
-    value : float
-        The float to format.
-    fmt : string
-        The format to use.
-
-    Note
-    ----
-    This method converts numbers to have a fixed length. In some cases this
-    may reduce the number of significant digits. Remember to also output your
-    numbers without this format in case a specific number of significant
-    digits is important!
-    """
-    maxlen = fmt.split(':')[1].split('.')[0]
-    align = ''
-    if not maxlen[0].isalnum():
-        align = maxlen[0]
-        maxlen = maxlen[1:]
-    maxlen = int(maxlen)
-    str_fmt = fmt.format(value)
-    if len(str_fmt) > maxlen:  # switch to exponential:
-        if value < 0:
-            deci = maxlen - 7
-        else:
-            deci = maxlen - 6
-        new_fmt = '{{:{0}{1}.{2}e}}'.format(align, maxlen, deci)
-        return new_fmt.format(value)
-    else:
-        return str_fmt
+__all__ = ['generate_rst_table', 'generate_latex_table', 'latexify_number',
+           'mathexify_number']
 
 
 def generate_rst_table(table, title, headings):

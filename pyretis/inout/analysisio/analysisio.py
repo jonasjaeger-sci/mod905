@@ -31,8 +31,7 @@ from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
                                                   txt_orderp_output)
-from pyretis.inout.report import generate_report
-from pyretis.inout.common import _REPORTFILES
+from pyretis.inout.report import generate_report, write_report
 
 
 __all__ = ['run_md_flux_analysis', 'analyse_file']
@@ -67,15 +66,11 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     else:
         msg = 'Analysis+output have not been implemented for objects yet'
         raise NotImplementedError(msg)
-    if results is not None:
+
+    if results is not None:  # output the report
         for report_type in analysis_settings.get('report', ['rst']):
             report, ext = generate_report('mdflux', results, output=report_type)
-            outfile = _REPORTFILES['md-flux'].format(ext)
-            with open(outfile, 'wt') as report_fh:
-                try:  # will work in python 3
-                    report_fh.write(report)
-                except UnicodeEncodeError:  # for python 2
-                    report_fh.write(report.encode('utf-8'))
+            write_report(report, report_type, ext)
     return results
 
 
