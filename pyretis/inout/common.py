@@ -11,12 +11,16 @@ Important functions defined here:
 - apply_format: Apply a format string to a given value.
 
 - remove_extensions: Remove extensions for a list of files.
+
+- make_dirs: Create directories (for path simulation).
 """
 from __future__ import absolute_import
 import os
+import errno
 
 
-__all__ = ['create_backup', 'apply_format', 'remove_extensions']
+__all__ = ['create_backup', 'apply_format', 'remove_extensions',
+           'make_dirs']
 
 
 # hard-coded patters for energy analysis output files:
@@ -191,3 +195,35 @@ def remove_extensions(list_of_files):
             newfig = {key: _remove_extension(fig[key]) for key in fig}
             newlist.append(newfig)
         return newlist
+
+
+def make_dirs(dirname):
+    """Create directories for path simulations.
+
+    This method will create a folder using a specified path.
+    If the path already exist and if it's a directory, we will do nothing.
+    If the path exist and is a file we will raise an `OSError` exception here.
+
+    Parameters
+    ----------
+    dirname : string
+        This is the directory to create.
+
+    Returns
+    -------
+    out : string
+        A string with some info on what this method did. Intended for output.
+    """
+    try:
+        os.makedirs(dirname)
+        msg = 'Created directory: "{}"'.format(dirname)
+        return msg
+    except OSError as err:
+        if err.errno != errno.EEXIST:
+            raise err
+        if os.path.isfile(dirname):
+            msg = '"{}" is a file. Will abort!'
+            raise OSError(errno.EEXIST, msg, dirname)
+        if os.path.isdir(dirname):
+            msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
+            return msg
