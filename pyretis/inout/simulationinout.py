@@ -5,14 +5,15 @@ This module defines functions and classes for handling the output from
 simulations.
 """
 from __future__ import print_function
+import os
+import warnings
+import pprint
+# opyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
                                      PathFile, PathEnsembleFile,
                                      create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
-# other imports
-import warnings
-import pprint
 
 
 __all__ = ['OutputTask', 'create_output', 'store_settings_as_py']
@@ -321,30 +322,35 @@ def _create_file_writer(task, system, settings):
         attached to a output task object (like `OutputTask`) as a writer.
     """
     writer = None
+    dirname = settings.get('output-dir', None)
+    if dirname is not None:
+        filename = os.path.join(dirname, task['filename'])
+    else:
+        filename = task['filename']
     if task['type'] == 'orderp':
-        writer = OrderFile(task['filename'],
+        writer = OrderFile(filename,
                            mode=task.get('mode', 'w'),
                            oldfile=task.get('oldfile', 'overwrite'))
     elif task['type'] == 'thermo':
-        writer = EnergyFile(task['filename'],
+        writer = EnergyFile(filename,
                             mode=task.get('mode', 'w'),
                             oldfile=task.get('oldfile', 'overwrite'))
     elif task['type'] == 'cross':
-        writer = CrossFile(task['filename'],
+        writer = CrossFile(filename,
                            mode=task.get('mode', 'w'),
                            oldfile=task.get('oldfile', 'overwrite'))
     elif task['type'] == 'traj':
-        writer = create_traj_writer(task['filename'], task['format'],
+        writer = create_traj_writer(filename, task['format'],
                                     task.get('oldfile', 'overwrite'),
                                     system)
     elif task['type'] == 'pathensemble':
-        writer = PathEnsembleFile(task['filename'],
+        writer = PathEnsembleFile(filename,
                                   settings.get('ensemble', '000'),
                                   settings.get('interfaces', None),
                                   mode=task.get('mode', 'w'),
                                   oldfile=task.get('oldfile', 'overwrite'))
     elif task['type'] == 'trialpath':
-        writer = PathFile(task['filename'],
+        writer = PathFile(filename,
                           mode=task.get('mode', 'w'),
                           oldfile=task.get('oldfile', 'overwrite'))
     else:
