@@ -86,10 +86,10 @@ def _running_pcross(path_ensemble, idetect, data=None):
 def _pcross_lambda(path_ensemble, ngrid=1000):
     """Calculate crossing probability for an ensemble.
 
-    The crossing probability is here obtained as a unction of the order
+    The crossing probability is here obtained as a function of the order
     parameter. The actual calculation is performed by
-    `_pcross_lambda_cumulative` and this method is just a wrapper to be
-    able to use an object like `pyretis.core.path.PathEnsemble` as input.
+    `_pcross_lambda_cumulative` and this method is just a wrapper in order to
+    handle input objects like `pyretis.core.path.PathEnsemble`.
 
     Parameters
     ----------
@@ -552,8 +552,14 @@ def match_probabilities(path_results, detect):
     ----------
     path_results : list
         These are the results from the path analysis. `path_results[i]`
-        contains the output from ``analyse_path_ensemble`` applied to
-        ensemble `i`.
+        contains the output from `analyse_path_ensemble` applied to
+        ensemble no. `i`. Here we make use of the following keys from
+        `path_results[i]`:
+
+        * pcross: The crossing probability.
+        * prun: The running average of the crossing probability.
+        * blockerror: The output from the block error analysis.
+        * efficiency: The output from the efficiency analysis.
     detect : list of floats
         These are the detect interfaces used in the analysis.
 
