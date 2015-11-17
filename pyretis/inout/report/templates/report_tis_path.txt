@@ -1,4 +1,3 @@
-
 TIS results for ensemble: @{{ ensemble }}@
 ===============================
 

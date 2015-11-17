@@ -20,4 +20,3 @@ sim.time: @{{ numbers['simt'] }}@
 tau_eff: @{{ numbers['teff'] }}@ 
 
 Optimized P_cross tau_eff: @{{ numbers['opteff'] }}@
-
