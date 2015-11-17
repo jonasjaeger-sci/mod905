@@ -25,12 +25,14 @@ Important functions defined here:
 from __future__ import absolute_import
 import warnings
 # pyretis imports
-from pyretis.analysis import analyse_flux, analyse_energies, analyse_orderp
+from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
+                              analyse_path_ensemble)
 from pyretis.inout.fileinout import get_file_object
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
-                                                  txt_orderp_output)
+                                                  txt_orderp_output,
+                                                  txt_path_output)
 from pyretis.inout.report import generate_report, write_report
 
 
@@ -277,8 +279,8 @@ def check_output(function):
 
 
 @check_output
-def analyse_and_output_cross(analysis_settings, simulation_settings,
-                             rawdata, plotter=None, txt=None):
+def analyse_and_output_cross(analysis_settings, simulation_settings, rawdata,
+                             plotter=None, txt=None):
     """Analyse crossing data and output the results.
 
     Parameters
@@ -314,8 +316,8 @@ def analyse_and_output_cross(analysis_settings, simulation_settings,
 
 
 @check_output
-def analyse_and_output_orderp(analysis_settings, simulation_settings,
-                              rawdata, plotter=None, txt=None):
+def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
+                              plotter=None, txt=None):
     """Analyse and output order parameter data.
 
     Parameters
@@ -353,8 +355,8 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings,
 
 
 @check_output
-def analyse_and_output_energy(analysis_settings, simulation_settings,
-                              rawdata, plotter=None, txt=None):
+def analyse_and_output_energy(analysis_settings, simulation_settings, rawdata,
+                              plotter=None, txt=None):
     """Analyse and output energy data.
 
     Parameters
@@ -387,4 +389,51 @@ def analyse_and_output_energy(analysis_settings, simulation_settings,
                                       sim_settings=simulation_settings)
     if txt is not None:
         outtxt = txt_energy_output(result, rawdata, out_fmt=txt)
+    return result, figures, outtxt
+
+
+@check_output
+def analyse_and_output_path(analysis_settings, simulation_settings,
+                            path_ensemble, plotter=None, txt=None):
+    """Analyse and output path data.
+
+    This will run the path analysis and output the results.
+
+    Parameters
+    ----------
+    analysis_settings : dict
+        This dict contains settings for the analysis.
+    simulation_settings : dict
+        This dict contains information on how the simulation was performed.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is the path ensemble we will analyse. This can also be a object
+        like `PathEnsembleFile` from `pyretis.inout.fileinout`.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : string,
+        If txt is different from None it is assumed to be the format for
+        writing txt files. I.e. the text files will then be written!
+
+    Returns
+    -------
+    out[0] : dict
+        This dict contains the results from the analysis
+    out[1] : list of dicts
+        Dict with the figure files created (if any).
+    out[2] : list of strings
+        List with the text files created (if any).
+    """
+    if 'units' in simulation_settings:
+        warnings.warn('Change of units is not implemented yet!')
+    figures, outtxt = None, None
+    idetect = path_ensemble.detect
+    if idetect is None:
+        idetect = analysis_settings.get('detect', None)
+        if idetect is None:  # Time to panic:
+            raise ValueError('Could not determine detect interface!')
+    result = analyse_path_ensemble(path_ensemble, analysis_settings, idetect)
+    if plotter is not None:
+        figures = plotter.plot_path(path_ensemble, result, idetect)
+    if txt is not None:
+        outtxt = txt_path_output(path_ensemble, result, idetect, out_fmt=txt)
     return result, figures, outtxt

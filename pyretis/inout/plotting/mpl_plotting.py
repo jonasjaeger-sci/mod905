@@ -21,6 +21,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
 # pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
+from pyretis.inout.common import simplify_ensemble_name
 # import styles for newer matplotlibs:
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
@@ -523,7 +524,7 @@ def mpl_block_error(error, title, outputfile):
     axs.plot(error[0], error[3])
     axs.set_xlabel('Block length')
     axs.set_ylabel('Estimated error')
-    titl = '{0}: Rel.err: {1:9.6e} Ncor: {2:9.6f}'
+    titl = '{0}: Rel. err: {1:9.6e}, Ncor: {2:9.6f}'
     titl = titl.format(title, error[4], error[6])
     axs.set_title(titl, fontsize='x-small', loc='left')
     mpl_savefig(canvas, outputfile)
@@ -563,10 +564,10 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
             continue
     mpl_simple_plot(series,
                     outputfile,
-                    fig_settings={'title': 'Ensemble: {0}'.format(ensemble)})
+                    fig_settings={'title': r'Ensemble: ${0}$'.format(ensemble)})
     mpl_simple_plot(series_scale,
                     outputfile_scale,
-                    fig_settings={'title': 'Ensemble: {0}'.format(ensemble)})
+                    fig_settings={'title': r'Ensemble: ${0}$'.format(ensemble)})
 
 
 def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
@@ -590,9 +591,10 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
         we wrote.
     """
     ens = path_ensemble.ensemble  # identify the ensemble
+    ens_simplified = simplify_ensemble_name(ens)
     outfiles = {}
     for key in _PATHFILES:
-        outfiles[key] = _PATHFILES[key].format(ens, out_fmt)
+        outfiles[key] = _PATHFILES[key].format(ens_simplified, out_fmt)
     # First plot `pcross` vs `lambda` with the `idetect` surface:
     series = [{'type': 'xy', 'x': results['pcross'][0],
                'y': results['pcross'][1]}]
@@ -602,7 +604,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                     outfiles['pcross'],
                     fig_settings={'xlabel': r'Order parameter ($\lambda$)',
                                   'ylabel': 'Probability',
-                                  'title': 'Ensemble: {0}'.format(ens)})
+                                  'title': r'Ensemble: ${0}$'.format(ens)})
     # Next plot running ` pcross`:
     series = [{'type': 'xy', 'x': results['cycle'],
                'y': results['prun']}]
@@ -612,9 +614,9 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                     outfiles['prun'],
                     fig_settings={'xlabel': 'Cycle number',
                                   'ylabel': 'Probability (running avg.)',
-                                  'title': 'Ensemble: {0}'.format(ens)})
+                                  'title': r'Ensemble: ${0}$'.format(ens)})
     # Plot results of block-error analysis:
-    mpl_block_error(results['blockerror'], 'Ensemble: {0}'.format(ens),
+    mpl_block_error(results['blockerror'], r'Ensemble: ${0}$'.format(ens),
                     outfiles['perror'])
     # Plot length-histogram:
     hist1 = results['pathlength'][0]
@@ -630,7 +632,7 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
                     outfiles['pathlength'],
                     fig_settings={'xlabel': 'No. of MD steps',
                                   'ylabel': 'Frequency',
-                                  'title': 'Ensemble: {0}'.format(ens)})
+                                  'title': r'Ensemble: ${0}$'.format(ens)})
     _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
                           outfiles['shoots'], outfiles['shoots-scaled'])
     return outfiles

@@ -259,6 +259,11 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
+
+    Returns
+    -------
+    outfiles : dict
+        The output files created by this method.
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     outfiles = {}
@@ -280,6 +285,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     # 4) Shoot histograms
     _txt_shoots_histogram(outfiles['shoots'], results['shoots'][0],
                           results['shoots'][1], ens)
+    return outfiles
 
 
 def txt_total_probability(path_ensembles, detect, results, matched,

@@ -15,9 +15,10 @@ Important functions defined here:
 - make_dirs: Create directories (for path simulation).
 """
 from __future__ import absolute_import
-import os
 import errno
-
+import os
+import re
+import warnings
 
 __all__ = ['create_backup', 'apply_format', 'remove_extensions',
            'make_dirs']
@@ -227,3 +228,44 @@ def make_dirs(dirname):
         if os.path.isdir(dirname):
             msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
             return msg
+
+
+def simplify_ensemble_name(ensemble, fmt='{:03d}'):
+    """A method to simplify path names for file/directory names.
+
+    Here, we are basically translating ensemble names to more friendly names
+    for directories and files that is:
+
+    - ``[0^-]`` returns ``000``,
+    - ``[0^+]`` returns ``001``,
+    - ``[1^+]`` returns ``002``, etc.
+
+    Parameters
+    ----------
+    ensemble : string
+        This is the string to translate
+    fmt : string. optional
+        This is a format to use for the directories.
+    """
+    match_ensemble = re.search(r'(?<=\[)(\d+)(?=\^)', ensemble)
+    if match_ensemble:
+        ens = int(match_ensemble.group())
+    else:
+        match_ensemble = re.search(r'(?<=\[)(\d+)(?=\])', ensemble)
+        if match_ensemble:
+            ens = int(match_ensemble.group())
+        else:
+            return ensemble  # assume that the ensemble is ok as it is.
+    match_dir = re.search(r'(?<=\^)(.)(?=\])', ensemble)
+    if match_dir:
+        dire = match_dir.group()
+        if dire == '-':
+            ens = ens
+        else:
+            ens = ens + 1
+    else:
+        msg = ('Could not get direction for ensemble {}.'.format(ensemble),
+               'We assume +, note that this might overwrite files')
+        warnings.warn('\n'.join(msg))
+        ens = ens + 1
+    return fmt.format(ens)
