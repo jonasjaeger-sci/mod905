@@ -19,13 +19,13 @@ def generate_report_tis_path(analysis, output='rst'):
     ----------
     analysis : dict
         This is the output (and some input) for the analysis. The keys are:
-          - 'tis': dict with the results from analysing path ensembles
-          - 'tis-fig': list of corresponding figures (to 'tis')
-          - 'matched': results from the matching of probability
-          - 'matched-fig': the figure corresponding to 'matched'
-          - 'detect': locations of the interfaces used for detection
-          - 'path_ensemble': object like `pyretis.core.path.PathEnsemble`,
-            the path ensemble we are reporting results for.
+
+        * 'tis-fig': list of corresponding figures (to 'tis')
+        * 'detect': locations of the interfaces used for detection
+        * 'ensemble': The name of the path ensemble we are reporting results
+          for.
+        * 'interfaces': list with the interfaces used for this path
+          ensemble.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in `.report._TEMPLATES`. Default is 'rst'
@@ -38,20 +38,26 @@ def generate_report_tis_path(analysis, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    path_ensemble = analysis['path_ensemble']
-    report = {'ensemble': path_ensemble.ensemble,
+    path_ensemble = analysis['ensemble']
+    interfaces = analysis['interfaces']
+    report = {'ensemble': path_ensemble,
+              'figures': {'tis': None},
               'tables': {'interfaces': None,
                          'probability': None,
                          'path': None,
                          'efficiency': None}}
-    # get the efficiency results:
+    # Get figures (if any):
+    report['figures']['tis'] = analysis.get('tis-fig', None)
+    # Create tables
     report['tables']['interfaces'] = _table_interface([path_ensemble],
+                                                      [interfaces],
                                                       [analysis['detect']],
                                                       fmt=output)[1]
     report['tables']['probability'] = _table_probability([path_ensemble],
                                                          [analysis],
                                                          fmt=output)[1]
-    report['tables']['path'] = _table_path([path_ensemble], [analysis],
+    report['tables']['path'] = _table_path([path_ensemble],
+                                           [analysis],
                                            fmt=output)[1]
     report['tables']['efficiency'] = _table_efficiencies([path_ensemble],
                                                          [analysis],
@@ -67,14 +73,18 @@ def generate_report_tis(analysis, output='rst'):
     analysis : dict
         This is the output (and some input!) for the analysis. The keys
         we make use of are:
-          - 'tis': dict with the results from analysing path ensembles
-          - 'tis-fig': list of corresponding figures (to 'tis')
-          - 'matched': results from the matching of probability
-          - 'matched-fig': the figure corresponding to 'matched'
-          - 'detect': locations of the interfaces used for detection
-          - 'path_ensembles': list of objects like
-            `pyretis.core.path.PathEnsemble`. These are the path ensembles we
-             are reporting results for.
+
+        * 'tis': list of dicts with the results from analysing the path
+          ensembles. `analysis['tis'][i]` contains the analysys results for
+          path ensemble no. `i`.
+        * 'tis-fig': list of corresponding figures (to 'tis')
+        * 'matched': results from the matching of probability
+        * 'matched-fig': the figure corresponding to 'matched'
+        * 'detect': locations of the interfaces used for detection
+        * 'ensembles': list of strings with the names of the path ensembles
+           we are reporting results for.
+        * 'interfaces': list of lists which give the interfaces for the
+           different ensembles.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in `.report._TEMPLATES`. Default is 'rst'
@@ -87,7 +97,8 @@ def generate_report_tis(analysis, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    path_ensembles = analysis['path_ensembles']
+    path_ensembles = analysis['ensembles']
+    interfaces = analysis['interfaces']
     report = {'figures': {'tis': None,
                           'tis-matched': None},
               'tables': {'interfaces': None,
@@ -98,7 +109,7 @@ def generate_report_tis(analysis, output='rst'):
                           'teff': None, 'opteff': None}}
     # Get figures:
     report['figures']['tis'] = analysis.get('tis-fig', None)
-    report['figures']['tis-matched'] = analysis.get('tis-fig', None)
+    report['figures']['tis-matched'] = analysis.get('matched-fig', None)
     # Get numbers:
     fmte = '{0:<16.9e}'
     fmtf = '{0:<16.9f}'
@@ -113,6 +124,7 @@ def generate_report_tis(analysis, output='rst'):
     report['numbers']['opteff'] = fmte.format(analysis['matched']['opteff'])
     # Get tables:
     report['tables']['interfaces'] = _table_interface(path_ensembles,
+                                                      interfaces,
                                                       analysis['detect'],
                                                       fmt=output)[1]
     report['tables']['probability'] = _table_probability(path_ensembles,
@@ -126,15 +138,17 @@ def generate_report_tis(analysis, output='rst'):
     return report
 
 
-def _table_interface(path_ensembles, detect, fmt='rst'):
+def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
     """Generate the table for the interfaces.
 
     This table will display the location of the different interfaces.
 
     Parameters
     ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+    path_ensembles : list of strings
         These are the path ensembles we have analyzed.
+    interfaces : list of lists
+        `interfaces[i]` are the interfaces used for `path_ensembles[i]`.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     fmt : string, optional
@@ -149,11 +163,11 @@ def _table_interface(path_ensembles, detect, fmt='rst'):
         the table.
     """
     table = []
-    for path_e, idet in zip(path_ensembles, detect):
-        row = ['{:^8s}'.format(path_e.ensemble)]
-        row.append(apply_format(path_e.interfaces[0], '{:^8.4f}'))
-        row.append(apply_format(path_e.interfaces[1], '{:^8.4f}'))
-        row.append(apply_format(path_e.interfaces[2], '{:^8.4f}'))
+    for ensemble, interf, idet in zip(path_ensembles, interfaces, detect):
+        row = ['{:^8s}'.format(ensemble)]
+        row.append(apply_format(interf[0], '{:^8.4f}'))
+        row.append(apply_format(interf[1], '{:^8.4f}'))
+        row.append(apply_format(interf[2], '{:^8.4f}'))
         row.append(apply_format(idet, '{:^8.4f}'))
         table.append(row)
     if fmt in ['tex', 'latex']:
@@ -177,7 +191,7 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `pyretis.core.pathP.athEnsemble`.
+    path_ensembles : list of strings
         These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
@@ -193,8 +207,8 @@ def _table_probability(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
+    for ensemble, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(ensemble)]
         row.append(apply_format(result['prun'][-1], '{:^10.6f}'))
         row.append(apply_format(result['blockerror'][2], '{:^10.6f}'))
         row.append(apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
@@ -220,8 +234,10 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
+    path_ensembles : list of strings
         These are the path ensembles we have analyzed.
+    interfaces : list of lists
+        `interfaces[i]` are the interfaces used for `path_ensembles[i]`.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -236,8 +252,8 @@ def _table_path(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
+    for ensemble, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(ensemble)]
         hist1 = result['pathlength'][0]
         hist2 = result['pathlength'][1]
         row.append(apply_format(hist1[2][0], '{:^10.6f}'))
@@ -281,8 +297,8 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for path_e, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(path_e.ensemble)]
+    for ensemble, result in zip(path_ensembles, results):
+        row = ['{:^8s}'.format(ensemble)]
         row.append(apply_format(result['tis-cycles'], '{:^10.0f}'))
         row.append(apply_format(result['efficiency'][1], '{:^10.6f}'))
         row.append(apply_format(result['efficiency'][0], '{:^10.6f}'))
