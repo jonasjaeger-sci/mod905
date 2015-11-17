@@ -75,4 +75,3 @@ from .fileinout import (FileWriter, CrossFile, EnergyFile, OrderFile,
                         create_traj_writer, get_file_object)
 from .report import generate_report
 from .simulationinout import create_output, store_settings_as_py
-from .plotting import create_plotter
