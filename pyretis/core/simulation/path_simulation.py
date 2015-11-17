@@ -206,9 +206,10 @@ class SimulationTIS(Simulation):
     def __str__(self):
         """Just a small function to return some info about the simulation."""
         msg = ['TIS simulation']
+        msg += ['Path ensemble: {}'.format(self.path_ensemble.ensemble)]
+        msg += ['Interfaces: {}'.format(self.interfaces)]
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         msg += ['Integrator: {}'.format(self.integrator)]
         msg += ['Time step: {}'.format(self.integrator.delta_t)]
-        msg += ['Interfaces {}'.format(self.interfaces)]
         return '\n'.join(msg)
