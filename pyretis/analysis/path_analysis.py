@@ -353,7 +353,7 @@ def _create_shoot_histograms(shoot_stats, bins):
     return histograms, scale
 
 
-def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
+def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     """Analyse a path ensemble object.
 
     This method will make use of the different analysis functions and analyse
@@ -380,10 +380,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         - bins: The number of bins to use for creating histograms.
-    idetect : float, optional
-        This is the interface used for detecting if a path is successful
-        or not. If no value is given, ``path_ensemble.interfaces[-1]`` will
-        be assumed.
+    idetect : float
+        Interface to use to check is a path is successful or not.
 
     Returns
     -------
@@ -403,8 +401,6 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
                ' ensemble! Consider re-running the analysis using',
                'the path ensemble file!')
         warnings.warn(msg)
-    if idetect is None:
-        idetect = path_ensemble.interfaces[-1]
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,
                                   ngrid=settings['ngrid'])
@@ -442,7 +438,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     return result
 
 
-def analyse_path_ensemble(path_ensemble, settings, idetect=None):
+def analyse_path_ensemble(path_ensemble, settings, idetect):
     """Analyse a path ensemble.
 
     This method will make use of the different analysis functions and analyse
@@ -471,15 +467,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         - bins: The number of bins to use for creating histograms.
-    detect : float, optional
-        This is the interface used for detecting if a path is successful
-        or not. If no value is given, we will try to get a value in the
-        following order (the first value we can get will be used):
-
-        1) From `path_ensemble.detect`.
-
-        2) From `settings['detect']`
-
+    idetect : float
+        Interface to use to check is a path is successful or not.
 
     Returns
     -------
@@ -498,12 +487,6 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
        http://en.wikipedia.org/wiki/Moving_average
     """
     result = {'prun': [], 'cycle': []}
-    if idetect is None:
-        idetect = path_ensemble.detect
-        if idetect is None:
-            idetect = settings.get('detect', None)
-            if idetect is None:  # ok, time to panic!
-                raise ValueError('Could not determine detect interface!')
     orderparam = []  # list of all accepted order parameters
     weights = []
     success = 0  # determines if the current path is successfull or not
