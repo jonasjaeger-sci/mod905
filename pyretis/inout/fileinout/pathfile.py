@@ -317,7 +317,7 @@ class PathEnsembleFile(FileWriter):
         in `to_path_ensemble`.
     """
 
-    def __init__(self, filename, ensemble, interfaces, mode='w',
+    def __init__(self, filename, ensemble, interfaces, detect=None, mode='w',
                  oldfile='backup'):
         """Initialize the `PathEnsembleFile` object.
 
@@ -328,9 +328,11 @@ class PathEnsembleFile(FileWriter):
         ensemble : str
             This is a string representation of the path ensemble. Typically
             something like '0-', '0+', '1', '2', ..., '001' and so on.
-        interfaces : list of ints
+        interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
+        detect : float
+            The detect interface to use for analysis.
         mode : string
             Mode can be used to select if we should write to the file
             (if mode is equal to 'w') or read from the file (mode equal
@@ -351,6 +353,7 @@ class PathEnsembleFile(FileWriter):
                                                header=header)
         self.ensemble = ensemble
         self.interfaces = interfaces
+        self.detect = detect
 
     def to_path_ensemble(self):
         """Read a file and return a `PathEnsemble` object.

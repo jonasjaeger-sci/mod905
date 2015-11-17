@@ -150,7 +150,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     ordermax : float
         Maximum allowed order parameter.
     ngrid : int
-        This is the number of grid point.s
+        This is the number of grid points.
     weights : numpy.array, optional
         The weight of each order parameter. This is used in order to
         count a specific order parameter more than once. If not given, the
@@ -367,7 +367,19 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect=None):
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         The path ensemble to analyse.
     settings : dict
-        This dictionary contains settings for the analysis.
+        This dictionary contains settings for the analysis. Here we make use
+        of the keys:
+
+        - ngrid: The number of grid points for calculating the crossing
+          probability as a function of the order parameter.
+        - maxblock: The max length of the blocks for the block error
+          analysis. Note that this will maximum be equal the half the length
+          of the data, see `block_error` in `.analysis`.
+        - blockskip: Can be used to skip certain block lengths.
+          A `blockskip` equal to `n` will consider every n'th block up
+          to `maxblock`, i.e. it will use block lengths equal to `1`,
+          `1+n`, `1+2n`, etc.
+        - bins: The number of bins to use for creating histograms.
     idetect : float, optional
         This is the interface used for detecting if a path is successful
         or not. If no value is given, ``path_ensemble.interfaces[-1]`` will
@@ -446,11 +458,28 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
         `pyretis.core.path and `pyretis.inout.pathfile`. This is the path
         ensemble to analyse.
     settings : dict
-        This dictionary contains settings for the analysis.
-    idetect : float, optional
+        This dictionary contains settings for the analysis. We make use of the
+        following keys:
+
+        - ngrid: The number of grid points for calculating the crossing
+          probability as a function of the order parameter.
+        - maxblock: The max length of the blocks for the block error
+          analysis. Note that this will maximum be equal the half the length
+          of the data, see `block_error` in `.analysis`.
+        - blockskip: Can be used to skip certain block lengths.
+          A `blockskip` equal to `n` will consider every n'th block up
+          to `maxblock`, i.e. it will use block lengths equal to `1`,
+          `1+n`, `1+2n`, etc.
+        - bins: The number of bins to use for creating histograms.
+    detect : float, optional
         This is the interface used for detecting if a path is successful
-        or not. If no value is given, ``path_ensemble.interfaces[-1]`` will
-        be used.
+        or not. If no value is given, we will try to get a value in the
+        following order (the first value we can get will be used):
+
+        1) From `path_ensemble.detect`.
+
+        2) From `settings['detect']`
+
 
     Returns
     -------
@@ -470,7 +499,11 @@ def analyse_path_ensemble(path_ensemble, settings, idetect=None):
     """
     result = {'prun': [], 'cycle': []}
     if idetect is None:
-        idetect = path_ensemble.interfaces[-1]
+        idetect = path_ensemble.detect
+        if idetect is None:
+            idetect = settings.get('detect', None)
+            if idetect is None:  # ok, time to panic!
+                raise ValueError('Could not determine detect interface!')
     orderparam = []  # list of all accepted order parameters
     weights = []
     success = 0  # determines if the current path is successfull or not
