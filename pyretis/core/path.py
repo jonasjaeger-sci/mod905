@@ -721,7 +721,7 @@ class PathEnsemble(object):
 
         The acceptance rate is obtained as the fraction of accepted paths to
         the total number of paths in the path ensemble. This will only
-        consider the paths that are currently stored in self.paths.
+        consider the paths that are currently stored in `self.paths`.
 
         Returns
         -------
@@ -754,8 +754,9 @@ class PathEnsemble(object):
     def get_start_condition(self):
         """Return the appropriate start condition for an ensemble.
 
-        This is useful for RETIS simulations where we for one ensemble
-        need to start to the left.
+        This is useful for RETIS simulations where we for [0^-] will have
+        the start condition equal to 'R'ight. For all other ensembles we
+        assume that we start from the 'L'eft.
 
         Returns
         -------
@@ -768,7 +769,7 @@ class PathEnsemble(object):
             return 'L'
 
     def __str__(self):
-        """Return a string with some info about this object."""
+        """Return a string with some info about the path ensemble."""
         msg = ['Path ensemble: {}'.format(self.ensemble)]
         msg += ['\tInterfaces: {}'.format(self.interfaces)]
         if self.detect is not None:
@@ -784,18 +785,17 @@ class PathEnsemble(object):
 
 
 def create_path_ensembles(interfaces, include_zero=False):
-    """Create a set of `PathEnsemble` objects give position of interfaces.
+    """Create a list of `PathEnsemble` objects given positions of interfaces.
 
-    This method will create and return a set of objects representing
-    path ensembles for a given set of interfaces. This is useful when
-    setting up for instance RETIS simulations. Here we assume that
-    the given interfaces define the path ensembles as follows:
-    ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``,
-    where ``|`` is the specified interface locations in ``interfaces``.
-    We assume that to the left of ``interfaces[0]`` we have the reactant
-    state and that to the right of ``interfaces[-1]`` we have the product
-    state. Given ``n`` interfaces we generate ``n`` or ``n-1`` path ensembles,
-    depending on if we want to include [0^-] or not.
+    This method will create and return a set of objects representing path
+    ensembles for a given set of interfaces. This is useful when setting up
+    simulations like RETIS. Here we assume that the given interfaces define
+    the path ensembles as follows:
+    ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``, where ``|`` is the
+    specified interface locations in the input `interfaces`. We assume that
+    the reactant is to the left of `interfaces[0]` and that the product is to
+    the right of `interfaces[-1]`. Given ``n`` interfaces we generate ``n`` or
+    ``n-1`` path ensembles, the former if we include the [0^-] ensemble.
 
     Parameters
     ----------
@@ -809,8 +809,8 @@ def create_path_ensembles(interfaces, include_zero=False):
     ensembles : list of objects like `PathEnsemble`.
         The generated (empty) path ensemble objects.
     detect : list of floats
-        These are interfaces that can be used for an analysis,
-        i.e. for detection and matching of probabilities.
+        These are interfaces that can be used for an analysis, i.e. for
+        detection and matching of probabilities.
     """
     detect = []
     ensembles = []

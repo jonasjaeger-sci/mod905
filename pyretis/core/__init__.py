@@ -78,14 +78,12 @@ Important classes and functions:
 - Simulation: A sub-package defining the simulations. There is also a class
   named `Simulation` which defines a generic simulation.
 """
+from __future__ import absolute_import
 from . import simulation
 from .system import System
-# from .properties import Property
-# from .montecarlo import *
 from .box import Box
 from .particles import Particles
 from .path import Path, PathEnsemble
 from .random_gen import RandomGenerator
 from .orderparameter import (OrderParameter, OrderParameterPosition,
                              OrderParameterParse)
-# from .tis import *
