@@ -315,6 +315,8 @@ class PathEnsembleFile(FileWriter):
         for the order parameters: [left, middle, right]
         This variable is used when creating a `PathEnsemble` object
         in `to_path_ensemble`.
+    detect : float
+        The detect interface to use for analysis.
     """
 
     def __init__(self, filename, ensemble, interfaces, detect=None, mode='w',
