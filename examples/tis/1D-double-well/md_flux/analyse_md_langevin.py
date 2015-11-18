@@ -14,7 +14,7 @@ ANALYSIS_SETTINGS = {'skipcross': 1001,
                      'ngrid': 1001,
                      'maxordermsd': 100,
                      'plot': {'plotter': 'mpl', 'output': 'png',
-                              'style': 'pyretis'},
-                     'txt-output': 'txt.gz',
+                              'style': 'pyretis', 'backup': False},
+                     'txt-output': {'fmt': 'txt.gz', 'backup': False},
                      'report': ['latex', 'rst', 'html']}
 run_md_flux_analysis(ANALYSIS_SETTINGS, simulation_settings, RAW_DATA)
