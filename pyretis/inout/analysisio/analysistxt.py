@@ -29,7 +29,7 @@ __all__ = ['txt_energy_output', 'txt_flux_output',
            'txt_orderp_output', 'txt_path_output']
 
 
-def txt_block_error(outputfile, title, error):
+def txt_block_error(outputfile, title, error, backup=False):
     """Write the output from the error analysis to a text file.
 
     Parameters
@@ -41,13 +41,15 @@ def txt_block_error(outputfile, title, error):
         'Kinetic energy', etc.
     error : list
         This is the result from the error analysis.
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
-    txt_save_columns(outputfile, header, (error[0], error[3]))
+    txt_save_columns(outputfile, header, (error[0], error[3]), backup=backup)
 
 
-def txt_histogram(outputfile, title, *histograms):
+def txt_histogram(outputfile, title, histograms, backup=False):
     """Write histograms to a text file.
 
     Parameters
@@ -58,6 +60,8 @@ def txt_histogram(outputfile, title, *histograms):
         A descriptive title to add to the header.
     histograms : tuple
         The histograms to store.
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
     """
     data = []
     header = [r'{}'.format(title)]
@@ -67,10 +71,10 @@ def txt_histogram(outputfile, title, *histograms):
         data.append(hist[1])
         data.append(hist[0])
     header = ', '.join(header)
-    txt_save_columns(outputfile, header, data)
+    txt_save_columns(outputfile, header, data, backup=backup)
 
 
-def txt_flux_output(results, out_fmt='txt.gz'):
+def txt_flux_output(results, out_fmt='txt.gz', backup=False):
     """Store the output from the flux analysis in text files.
 
     Parameters
@@ -80,6 +84,8 @@ def txt_flux_output(results, out_fmt='txt.gz'):
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
 
     Returns
     -------
@@ -100,16 +106,16 @@ def txt_flux_output(results, out_fmt='txt.gz'):
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
-                         (flux[:, 0], runflux))
+                         (flux[:, 0], runflux), backup=backup)
         # output block-error results:
         outfile = os.extsep.join([_FLUXFILES['block'].format(i + 1), out_fmt])
         outfiles['block'].append(outfile)
         txt_block_error(outfile, 'Block error for flux analysis',
-                        errflux)
+                        errflux, backup=backup)
     return outfiles
 
 
-def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
+def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     """Save the output from the order parameter analysis to text files.
 
     Parameters
@@ -122,6 +128,8 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
 
     Returns
     -------
@@ -149,20 +157,21 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
 
     # output block-error results:
     txt_block_error(outfiles['block'], 'Block error for order param',
-                    results[0]['blockerror'])
+                    results[0]['blockerror'], backup=backup)
     # output distributions:
     txt_histogram(outfiles['dist'], 'Order parameter',
-                  results[0]['distribution'])
+                  [results[0]['distribution']], backup=backup)
     # output msd if it was calculated:
     if 'msd' in results[0]:
         msd = results[0]['msd']
         txt_save_columns(outfiles['msd'], 'Time MSD Std',
-                         (time[:len(msd)], msd[:, 0], msd[:, 1]))
+                         (time[:len(msd)], msd[:, 0], msd[:, 1]),
+                         backup=backup)
         # TODO: time should here be multiplied with the correct dt
     return outfiles
 
 
-def txt_energy_output(results, energies, out_fmt='txt.gz'):
+def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     """Save the output from the energy analysis to text files.
 
     Parameters
@@ -176,6 +185,8 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
 
     Returns
     -------
@@ -194,7 +205,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
             data.append(results[key]['running'])
             header.append(key)
     header = ' '.join(header)
-    txt_save_columns(outfiles['run_energies'], header, data)
+    txt_save_columns(outfiles['run_energies'], header, data, backup=backup)
     # 2) Save block error data:
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
@@ -202,9 +213,8 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
         outkey = _ENERFILES['block'].format(key)
         outfiles[outkey] = os.extsep.join([outkey, out_fmt])
         txt_block_error(outfiles[outkey], _ENERTITLE[key],
-                        results[key]['blockerror'])
+                        results[key]['blockerror'], backup=backup)
     # 3) Save histograms:
-    outfile = _ENERFILES['dist'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
@@ -212,11 +222,12 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
         outfiles[outkey] = os.extsep.join([outkey, out_fmt])
         txt_histogram(outfiles[outkey],
                       r'Histogram for {}'.format(_ENERTITLE[key]),
-                      results[key]['distribution'])
+                      [results[key]['distribution']], backup=backup)
     return outfiles
 
 
-def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
+def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
+                          backup=False):
     """Write the histograms from the shoots analysis to a text file.
 
     Parameters
@@ -230,6 +241,8 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
         This is the ensemble identifier, e.g. 001, 002, etc.
     outputfile : string
         This is the name of the output file to create.
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
     """
     data = []
     header = ['Ensemble: {0}'.format(ensemble)]
@@ -245,10 +258,11 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble):
         except KeyError:
             continue
     header = ', '.join(header)
-    txt_save_columns(outputfile, header, data)
+    txt_save_columns(outputfile, header, data, backup=backup)
 
 
-def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
+def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
+                    backup=False):
     """Output all the results obtained by the path analysis.
 
     Parameters
@@ -262,6 +276,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
         a gzipped file will be written
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
 
     Returns
     -------
@@ -275,19 +291,21 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     # 1) Output pcross vs lambda:
     txt_save_columns(outfiles['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
-                     (results['pcross'][0], results['pcross'][1]))
+                     (results['pcross'][0], results['pcross'][1]),
+                     backup=backup)
     # 2) Output the running average of p:
     txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
-                     (results['prun']))
+                     (results['prun']), backup=backup)
     # 3) Block error results:
     txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
-                    results['blockerror'])
+                    results['blockerror'], backup=backup)
     # 3) Length histograms
     txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
-                  results['pathlength'][0], results['pathlength'][1])
+                  [results['pathlength'][0], results['pathlength'][1]],
+                  backup=backup)
     # 4) Shoot histograms
     _txt_shoots_histogram(outfiles['shoots'], results['shoots'][0],
-                          results['shoots'][1], ens)
+                          results['shoots'][1], ens, backup=backup)
     return outfiles
 
 
@@ -321,7 +339,7 @@ def txt_total_probability(path_ensembles, detect, results, matched,
             np.savetxt(fhandle, mat, header=header)
 
 
-def txt_total_matched_probability(detect, matched, outputfile):
+def txt_total_matched_probability(detect, matched, outputfile, backup=False):
     """Output the overall matched probability.
 
     Parameters
@@ -332,8 +350,10 @@ def txt_total_matched_probability(detect, matched, outputfile):
         The matched probability.
     outputfile : string
         This is the name of the output file to create.
+    backup : boolean, optional
+        Determines if we will do backup of old files or not.
     """
     header = 'Total matched probability. Interfaces: {}'
     interf = ' , '.join([str(idet) for idet in detect])
     header = header.format(interf)
-    txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]))
+    txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]), backup=backup)

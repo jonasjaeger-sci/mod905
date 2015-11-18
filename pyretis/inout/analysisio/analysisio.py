@@ -61,7 +61,7 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     The results from the analysis.
     """
     plotter = create_plotter(analysis_settings.get('plot', None))
-    txtout = analysis_settings.get('txt-format', None)
+    txtout = analysis_settings.get('txt-output', None)
     if 'files' in raw_data:
         results = run_md_flux_files(analysis_settings, simulation_settings,
                                     raw_data['files'], plotter, txtout)
@@ -100,16 +100,17 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files,
         the keys `flux`, `order` and `energy` with the file names to open.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string, optional
-        If txt is different from None it is assumed to be the format for
-        writing txt files. I.e. the text files will then be written!
+    txt : dict
+        If txt is different from None it is assumed to containt the format
+        for the text files and backup settings.
     """
     results = {'txtfile': {}}
     for key in raw_files:
         analyse_func = analyse_file(key, raw_files[key])
         out, fig, txtfile = analyse_func(analysis_settings,
                                          simulation_settings,
-                                         plotter=plotter, txt=txtout)
+                                         plotter=plotter,
+                                         txt=txtout)
 
         if txtfile is not None:
             results['txtfile'].update(txtfile)
@@ -181,9 +182,9 @@ def analyse_file(file_type, file_name):
             was performed.
         plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
             This is the object that handles the plotting.
-        txt : string, optional
-            If txt is different from None it is assumed to be the format for
-            writing txt files. I.e. the text files will then be written!
+        txt : dict
+            If txt is different from None it is assumed to containt the format
+            for the text files and backup settings.
         """
         fileobj = get_file_object(file_type, file_name)
         function = select_analyse_function(file_type)
@@ -223,10 +224,11 @@ def check_output(function):
 
     For text output:
 
-    - Text output can be specified explicitly by a string. If the text output
+    - Text output is specified with a dictionary. if the text output
       is not explicitly specified here, we check if it is defined by the
-      analysis settings by looking for the keyword `txt-ouput` if this is given
-      we assume that this specifies the extension we want.
+      analysis settings by looking for the keyword `txt-ouput`.
+      If this is given we just look for the keys 'fmt' which specifies the
+      format and 'backup' which determines if we should do backups or not.
 
     Parameters
     ----------
@@ -253,9 +255,9 @@ def check_output(function):
             This is the raw data which is processed.
         plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
             This is the object that handles the plotting.
-        txt : string,
-            If txt is different from None it is assumed to be the format for
-            writing txt files. I.e. the text files will then be written!
+        txt : dict
+            If txt is different from None it is assumed to containt the format
+            for the text files and backup settings.
 
         Returns
         -------
@@ -266,6 +268,7 @@ def check_output(function):
         out[2] : list of strings
             List with the text files created (if any).
         """
+        txtout = None
         if plotter is None:
             plotter = create_plotter(analysis_settings.get('plot', None))
         txt = analysis_settings.get('txt-output', None)
@@ -273,8 +276,14 @@ def check_output(function):
             msg = 'No output selected. Skipping analysis!'
             warnings.warn(msg)
             return None, None, None
+        if txt is not None:  # just make sure we specify the things we need:
+            try:
+                txtout = {'fmt': txt.get('fmt', 'txt'),
+                          'backup': txt.get('backup', False)}
+            except AttributeError:
+                txtout = {'fmt': 'txt', 'backup': False}
         return function(analysis_settings, simulation_settings,
-                        rawdata, plotter=plotter, txt=txt)
+                        rawdata, plotter=plotter, txt=txtout)
     return wrapper
 
 
@@ -293,9 +302,9 @@ def analyse_and_output_cross(analysis_settings, simulation_settings, rawdata,
         This is the raw data which is processed.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string
-        If txt is different from None it is assumed to be the format for
-        writing txt files. I.e. the text files will then be written!
+    txt : dict
+        If txt is different from None it is assumed to containt the format
+        for the text files and backup settings.
 
     Returns
     -------
@@ -311,7 +320,8 @@ def analyse_and_output_cross(analysis_settings, simulation_settings, rawdata,
     if plotter is not None:
         figures = plotter.plot_flux(result)
     if txt is not None:
-        outtxt = txt_flux_output(result, out_fmt=txt)
+        outtxt = txt_flux_output(result, out_fmt=txt['fmt'],
+                                 backup=txt['backup'])
     return result, figures, outtxt
 
 
@@ -330,9 +340,9 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
         This is the raw data which is processed.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string,
-        If txt is different from None it is assumed to be the format for
-        writing txt files. I.e. the text files will then be written!
+    txt : dict
+        If txt is different from None it is assumed to containt the format
+        for the text files and backup settings.
 
     Returns
     -------
@@ -350,7 +360,8 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
     if plotter is not None:
         figures = plotter.plot_orderp(result, rawdata)
     if txt is not None:
-        outtxt = txt_orderp_output(result, rawdata, out_fmt=txt)
+        outtxt = txt_orderp_output(result, rawdata, out_fmt=txt['fmt'],
+                                   backup=txt['backup'])
     return result, figures, outtxt
 
 
@@ -369,9 +380,9 @@ def analyse_and_output_energy(analysis_settings, simulation_settings, rawdata,
         This is the raw data which is processed.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string,
-        If txt is different from None it is assumed to be the format for
-        writing txt files. I.e. the text files will then be written!
+    txt : dict
+        If txt is different from None it is assumed to containt the format
+        for the text files and backup settings.
 
     Returns
     -------
@@ -388,7 +399,8 @@ def analyse_and_output_energy(analysis_settings, simulation_settings, rawdata,
         figures = plotter.plot_energy(result, rawdata,
                                       sim_settings=simulation_settings)
     if txt is not None:
-        outtxt = txt_energy_output(result, rawdata, out_fmt=txt)
+        outtxt = txt_energy_output(result, rawdata, out_fmt=txt['fmt'],
+                                   backup=txt['backup'])
     return result, figures, outtxt
 
 
@@ -410,9 +422,9 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
         like `PathEnsembleFile` from `pyretis.inout.fileinout`.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : string,
-        If txt is different from None it is assumed to be the format for
-        writing txt files. I.e. the text files will then be written!
+    txt : dict
+        If txt is different from None it is assumed to containt the format
+        for the text files and backup settings.
 
     Returns
     -------
@@ -435,5 +447,6 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
     if plotter is not None:
         figures = plotter.plot_path(path_ensemble, result, idetect)
     if txt is not None:
-        outtxt = txt_path_output(path_ensemble, result, idetect, out_fmt=txt)
+        outtxt = txt_path_output(path_ensemble, result, idetect, out_fmt=txt['fmt'],
+                                 backup=txt['backup'])
     return result, figures, outtxt
