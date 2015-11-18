@@ -85,7 +85,7 @@ def get_predefined_table(table):
         return tab
 
 
-def txt_save_columns(outputfile, header, variables):
+def txt_save_columns(outputfile, header, variables, backup='False'):
     """Save variables to a text file using `numpy.savetxt`.
 
     Note that the variables are assumed to be numpy.arrays of equal shape
@@ -100,10 +100,13 @@ def txt_save_columns(outputfile, header, variables):
         String that will be written at the beginning of the file.
     variables : tuple of numpy.arrays
         These are the variables that will be save to the text file.
+    backup : boolean
+        Determines if we should backup old files or not.
     """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
+    if backup:
+        msg = create_backup(outputfile)
+        if msg:
+            warnings.warn(msg)
     nvar = len(variables)
     mat = np.zeros((len(variables[0]), nvar))
     for i, vari in enumerate(variables):

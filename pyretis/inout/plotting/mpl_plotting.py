@@ -19,9 +19,9 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
-# pyretis imports
-from pyretis.inout.plotting.plotting import Plotter
-from pyretis.inout.common import simplify_ensemble_name
+# pylint: disable=E0611
+from scipy.stats import gamma
+# pylint: enable=E0611
 # import styles for newer matplotlibs:
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
@@ -32,12 +32,11 @@ else:
         HAS_STYLE = True
     except ImportError:
         HAS_STYLE = False
-# pylint: disable=E0611
-from scipy.stats import gamma
-# pylint: enable=E0611
-from pyretis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
-                                  _FLUXFILES, _ORDERFILES, _PATHFILES,
-                                  _PATH_MATCH)
+# pyretis imports
+from pyretis.inout.plotting.plotting import Plotter
+from pyretis.inout.common import (create_backup, simplify_ensemble_name,
+                                  _ENERFILES, _ENERTITLE, _FLUXFILES,
+                                  _ORDERFILES, _PATHFILES, _PATH_MATCH)
 
 
 __all__ = ['MplPlotter']
@@ -65,25 +64,30 @@ class MplPlotter(Plotter):
         Selects format for output plots.
     """
 
-    def __init__(self, out_fmt, style=None):
+    def __init__(self, out_fmt, backup=False, style=None):
         """Initiate the plotting object.
 
-        Here we only define the style.
+        Here we only define the style and check if the requested file format
+        is something that we actually can handle.
 
         Parameters
         ----------
+        out_fmt : string
+            This is the format to use for the images.
         style : string, optional
             This selects the style to use, it can be a file path or the
             string with the style name.
+        backup : boolean
+            Determines if we should overwrite or backup old files.
         """
-        super(MplPlotter, self).__init__(plotter_type='matplotlib')
+        super(MplPlotter, self).__init__(backup=backup,
+                                         plotter_type='matplotlib')
         self.style = style
         mpl_set_style(self.style)
+        # Check if the requested file format is something we can do:
         fig = Figure()
         canvas = FigureCanvas(fig)
         supported = canvas.get_supported_filetypes()
-        del fig
-        del canvas
         if out_fmt not in supported:
             msg = ['Output format "{}" is not supported.'.format(out_fmt),
                    'Please try:']
@@ -92,27 +96,65 @@ class MplPlotter(Plotter):
             raise ValueError(' '.join(msg))
         else:
             self.out_fmt = out_fmt
+        del fig
+        del canvas
+
+    def _print_figures_to_file(self, canvas):
+        """Function to save figures as files.
+
+        This function will save figures to files. It will append a file format
+        extension to the files when writing.
+
+        Parameters
+        ----------
+        canvas : dict of objects like `FigureCanvas` from `matplotlib`.
+            `canvas[key]` is assumed to define a figure which we will save to
+            a file with a file name defined by `key` and the extension defined
+            by `self.out_fmt`.
+
+        Returns
+        -------
+        out : dict
+            The files written.
+        """
+        outputfiles = {}
+        for key in canvas:
+            outputfiles[key] = os.extsep.join([key, self.out_fmt])
+            mpl_savefig(canvas[key], outputfiles[key], self.backup)
+        return outputfiles
 
     def plot_flux(self, results):
-        """Function to call `mpl_plot_flux`."""
-        return mpl_plot_flux(results, self.out_fmt)
+        """Function to plot flux using `mpl_plot_flux`."""
+        canvas_run, canvas_err = mpl_plot_flux(results)
+        # Restructure output files for reporting
+        outputfiles = []
+        for run, err in zip(canvas_run, canvas_err):
+            outputfiler = os.extsep.join([run['name'], self.out_fmt])
+            outputfilee = os.extsep.join([err['name'], self.out_fmt])
+            mpl_savefig(run['canvas'], outputfiler, self.backup)
+            mpl_savefig(err['canvas'], outputfilee, self.backup)
+            outputfiles.append({'runflux': outputfiler, 'errflux': outputfilee})
+        return outputfiles
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """Function to call `mpl_plot_energy`."""
-        return mpl_plot_energy(results, energies, self.out_fmt,
-                               sim_settings=sim_settings)
+        """Function to plot energy results using `mpl_plot_energy`."""
+        canvas = mpl_plot_energy(results, energies, sim_settings=sim_settings)
+        return self._print_figures_to_file(canvas)
 
     def plot_orderp(self, results, orderdata):
-        """Function to just call `mpl_plot_orderp`."""
-        return mpl_plot_orderp(results, orderdata, self.out_fmt)
+        """Function to plot order parameter using `mpl_plot_orderp`."""
+        canvas = mpl_plot_orderp(results, orderdata)
+        return self._print_figures_to_file(canvas)
 
     def plot_path(self, path_ensemble, results, idetect):
-        """Function to just call `mpl_plot_path`."""
-        return mpl_plot_path(path_ensemble, results, idetect, self.out_fmt)
+        """Function to plot path results using `mpl_plot_path`."""
+        canvas = mpl_plot_path(path_ensemble, results, idetect)
+        return self._print_figures_to_file(canvas)
 
     def plot_total_probability(self, path_ensembles, detect, matched):
-        """Function to just call `mpl_plot_matched`."""
-        return mpl_plot_matched(path_ensembles, detect, matched, self.out_fmt)
+        """Function to plot matched probabilities with `mpl_plot_matched`."""
+        canvas = mpl_plot_matched(path_ensembles, detect, matched)
+        return self._print_figures_to_file(canvas)
 
 
 def _mpl_read_style_file(filename):
@@ -179,7 +221,7 @@ def mpl_set_style(style='pyretis'):
             matplotlib.rcParams.update(rcpar)
 
 
-def mpl_savefig(canvas, outputfile):
+def mpl_savefig(canvas, outputfile, backup=False):
     """Function to save matplotlib figures.
 
     It will save figures so that old ones are not overwritten.
@@ -191,10 +233,14 @@ def mpl_savefig(canvas, outputfile):
         using `canvas.print_figure()`.
     outputfile : string
         This is the name of the output file to create.
+    backup : boolean
+        This determines if we should try to back-up old versions of the
+        figures.
     """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
+    if backup:
+        msg = create_backup(outputfile)
+        if msg:
+            warnings.warn(msg)
     canvas.print_figure(outputfile)
 
 
@@ -269,21 +315,25 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
     return handle
 
 
-def mpl_simple_plot(series, outputfile, fig_settings=None):
+def mpl_simple_plot(series, fig_settings=None):
     """Plot simple time series data (i.e. ``x`` vs ``y`` data).
 
     Parameters
     ----------
     series : list of dicts
         `series[i]` is the dict which contain the data to be plotted.
-    outputfile : string
-        This is the name of the output file to create.
     fig_settings : dict
         This dict contains settings for the figure, keys are:
-        xlabel : string, the label to use for the x-axis.
-        ylabel : string, the label to use for the y-axis.
-        title : string, title to use for the figure.
-        yscale : string, to change the scale for the y-axis.
+
+        * xlabel : string, the label to use for the x-axis.
+        * ylabel : string, the label to use for the y-axis.
+        * title : string, title to use for the figure.
+        * yscale : string, to change the scale for the y-axis.
+
+    Returns
+    -------
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+        This is the figure we create here.
     """
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -316,7 +366,7 @@ def mpl_simple_plot(series, outputfile, fig_settings=None):
         axs.legend(handles, labels, prop={'size': 'x-small'})
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
-    mpl_savefig(canvas, outputfile)
+    return canvas
 
 
 def mpl_linecollection_gradient(axs, series):
@@ -401,7 +451,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     return line
 
 
-def mpl_line_gradient(series, outputfile, fig_settings):
+def mpl_line_gradient(series, fig_settings):
     """Plot time series and color the line with a color gradient.
 
     This method will plot time series data and color the lines with
@@ -411,14 +461,18 @@ def mpl_line_gradient(series, outputfile, fig_settings):
     ----------
     series : list of dicts
         `series[i]` is the dict which contain the data to be plotted.
-    outputfile : string
-        This is the name of the output file to create.
     fig_settings : dict
         This dict contains settings for the figure, keys are:
-        xlabel : string, the label to use for the x-axis.
-        ylabel : string, the label to use for the y-axis.
-        title : string, title to use for the figure.
-        yscale : string, to change the scale for the y-axis.
+
+        * xlabel : string, the label to use for the x-axis.
+        * ylabel : string, the label to use for the y-axis.
+        * title : string, title to use for the figure.
+        * yscale : string, to change the scale for the y-axis.
+
+    Returns
+    -------
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+        This is the figure we create here.
 
     Notes
     -----
@@ -449,11 +503,10 @@ def mpl_line_gradient(series, outputfile, fig_settings):
         axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
-    mpl_savefig(canvas, outputfile)
+    return canvas
 
 
-def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
-                   title=None):
+def mpl_error_plot(series, fig_settings):
     """Plot series with error values.
 
     This will plot a series with error values displayed as a filled region.
@@ -463,14 +516,17 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
     series : list of tuples
         `series[i]` is the tuple which will be plotted. It is assumed
         to be on the form (x-values, y-values, y-error, legend).
-    outputfile : string
-        This is the name of the output file to create.
-    xlabel : string, optional
-        The label to use for the x-axis.
-    ylabel : string, optional
-        The label to use for the y-axis.
-    title : string, optional
-        Title to use for the plot.
+    fig_settings : dict
+        This dict contains settings for the figure, keys are:
+
+        * xlabel : string, the label to use for the x-axis.
+        * ylabel : string, the label to use for the y-axis.
+        * title : string, title to use for the figure.
+
+    Returns
+    -------
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+        This is the figure we create here.
     """
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -489,49 +545,18 @@ def mpl_error_plot(series, outputfile, xlabel='Time', ylabel='Value',
         if add_legend:
             handles.append(handle)
             labels.append(seri[3])
-    if xlabel is not None:
-        axs.set_xlabel(xlabel)
-    if ylabel is not None:
-        axs.set_ylabel(ylabel)
-    if title is not None:
-        axs.set_title(title, fontsize='x-small', loc='left')
+    if 'xlabel' in fig_settings:
+        axs.set_xlabel(fig_settings['xlabel'])
+    if 'ylabel' in fig_settings:
+        axs.set_ylabel(fig_settings['ylabel'])
+    if 'title' in fig_settings:
+        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
-    mpl_savefig(canvas, outputfile)
+    return canvas
 
 
-def mpl_block_error(error, title, outputfile):
-    """Plot results from a block error analysis.
-
-    This will plot the output from a error analysis, i.e. the error
-    as a function of the block length.
-
-    Parameters
-    ----------
-    error : list
-        This list contains the result from the error analysis.
-    title : string
-        String to add to the title to the plot. In addition,
-        the relative error and the correlation length will be written
-        in the title.
-    outputfile : string
-        This is the name of the output file to create.
-    """
-    fig = Figure()
-    canvas = FigureCanvas(fig)
-    axs = fig.add_subplot(111)
-    axs.axhline(y=error[4], alpha=0.8, ls='--')
-    axs.plot(error[0], error[3])
-    axs.set_xlabel('Block length')
-    axs.set_ylabel('Estimated error')
-    titl = '{0}: Rel. err: {1:9.6e}, Ncor: {2:9.6f}'
-    titl = titl.format(title, error[4], error[6])
-    axs.set_title(titl, fontsize='x-small', loc='left')
-    mpl_savefig(canvas, outputfile)
-
-
-def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
-                          outputfile_scale):
+def _mpl_shoots_histogram(histograms, scale, ensemble):
     """Plot the histograms from the shoots analysis.
 
     Parameters
@@ -543,12 +568,13 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
         obtained in the shoots analysis.
     ensemble : string
         This is the ensemble identifier, e.g. 001, 002, etc.
-    outputfile : string
-        This is the name of the output file to create. This will be
-        the unscaled plot.
-    outputfile_scale : string
-        This is the name of the output file to create. This will be
-        the scaled plot.
+
+    Returns
+    -------
+    out[0] : object like `FigureCanvas` from `matplotlib`.
+        This is the unscaled histogram.
+    out[1] : object like `FigureCanvas` from `matplotlib`.
+        This is the scaled histogram.
     """
     series = []
     series_scale = []
@@ -562,15 +588,13 @@ def _mpl_shoots_histogram(histograms, scale, ensemble, outputfile,
                                  'label': '{}'.format(key), 'alpha': 0.8})
         except KeyError:
             continue
-    mpl_simple_plot(series,
-                    outputfile,
-                    fig_settings={'title': r'Ensemble: ${0}$'.format(ensemble)})
-    mpl_simple_plot(series_scale,
-                    outputfile_scale,
-                    fig_settings={'title': r'Ensemble: ${0}$'.format(ensemble)})
+    title = r'Ensemble: ${0}$'.format(ensemble)
+    canvas = mpl_simple_plot(series, fig_settings={'title': title})
+    canvas_scale = mpl_simple_plot(series_scale, fig_settings={'title': title})
+    return canvas, canvas_scale
 
 
-def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
+def mpl_plot_path(path_ensemble, results, idetect):
     """Plot all figures from the path analysis.
 
     Parameters
@@ -581,64 +605,70 @@ def mpl_plot_path(path_ensemble, results, idetect, out_fmt):
         This dict contains the result from the analysis.
     idetect : float
         This is the interface used for the detection in the analysis.
-    out_fmt : string
-        This is the desired output format for the plots.
 
     Returns
     -------
-    out : dict
-        This dictionary contains the filenames of the figures that
-        we wrote.
+    canvas : dict
+        This dictionary contains the different canvases we have
+        created
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     ens_simplified = simplify_ensemble_name(ens)
-    outfiles = {}
+    canvas = {}
+    out = {}
     for key in _PATHFILES:
-        outfiles[key] = _PATHFILES[key].format(ens_simplified, out_fmt)
+        out[key] = _PATHFILES[key].format(ens_simplified)
     # First plot `pcross` vs `lambda` with the `idetect` surface:
     series = [{'type': 'xy', 'x': results['pcross'][0],
                'y': results['pcross'][1]}]
     series.append({'type': 'vline', 'x': idetect, 'ls': '--',
                    'alpha': 0.8})
-    mpl_simple_plot(series,
-                    outfiles['pcross'],
-                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
-                                  'ylabel': 'Probability',
-                                  'title': r'Ensemble: ${0}$'.format(ens)})
+    figset = {'xlabel': r'Order parameter ($\lambda$)',
+              'ylabel': 'Probability',
+              'title': r'Ensemble ${0}$'.format(ens)}
+    canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
     # Next plot running ` pcross`:
     series = [{'type': 'xy', 'x': results['cycle'],
                'y': results['prun']}]
     series.append({'type': 'hline', 'y': results['prun'][-1],
                    'ls': '--', 'alpha': 0.8})
-    mpl_simple_plot(series,
-                    outfiles['prun'],
-                    fig_settings={'xlabel': 'Cycle number',
-                                  'ylabel': 'Probability (running avg.)',
-                                  'title': r'Ensemble: ${0}$'.format(ens)})
+    figset = {'xlabel': 'Cycle number',
+              'ylabel': 'Probability (running avg.)',
+              'title': r'Ensemble: ${0}$'.format(ens)}
+    canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot results of block-error analysis:
-    mpl_block_error(results['blockerror'], r'Ensemble: ${0}$'.format(ens),
-                    outfiles['perror'])
+    series = [{'type': 'xy', 'x': results['blockerror'][0],
+               'y': results['blockerror'][3]}]
+    series.append({'type': 'hline', 'y': results['blockerror'][4],
+                   'ls': '--', 'alpha': 0.8})
+    title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+              'title': title.format(ens, results['blockerror'][4],
+                                    results['blockerror'][6])}
+    canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot length-histogram:
-    hist1 = results['pathlength'][0]
-    hist2 = results['pathlength'][1]
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
-    lab1 = labfmt.format('Accepted', hist1[2][0], hist1[2][1])
-    lab2 = labfmt.format('All', hist2[2][0], hist2[2][1])
-    series = [{'type': 'xy', 'x': hist1[1], 'y': hist1[0],
-               'label': lab1}]
-    series.append({'type': 'xy', 'x': hist2[1], 'y': hist2[0],
-                   'label': lab2})
-    mpl_simple_plot(series,
-                    outfiles['pathlength'],
-                    fig_settings={'xlabel': 'No. of MD steps',
-                                  'ylabel': 'Frequency',
-                                  'title': r'Ensemble: ${0}$'.format(ens)})
-    _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens,
-                          outfiles['shoots'], outfiles['shoots-scaled'])
-    return outfiles
+    series = [{'type': 'xy', 'x': results['pathlength'][0][1],
+               'y': results['pathlength'][0][0],
+               'label': labfmt.format('Accepted',
+                                      results['pathlength'][0][2][0],
+                                      results['pathlength'][0][2][1])}]
+    series.append({'type': 'xy', 'x':results['pathlength'][1][1],
+                   'y': results['pathlength'][1][0],
+                   'label': labfmt.format('All',
+                                          results['pathlength'][1][2][0],
+                                          results['pathlength'][1][2][1])})
+    figset = {'xlabel': 'No. of MD steps', 'ylabel': 'Frequency',
+              'title': r'Ensemble: ${0}$'.format(ens)}
+    canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
+    # Plot shoots-histogram
+    can_tmp = _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens)
+    canvas[out['shoots']] = can_tmp[0]
+    canvas[out['shoots-scaled']] = can_tmp[1]
+    return canvas
 
 
-def mpl_plot_orderp(results, orderdata, out_fmt):
+def mpl_plot_orderp(results, orderdata):
     """Plot the output from the order parameter analysis using matplotlib.
 
     Parameters
@@ -648,13 +678,11 @@ def mpl_plot_orderp(results, orderdata, out_fmt):
         order parameter.
     orderdata : list of numpy.arrays
         This is the raw-data for the order parameter analysis
-    out_fmt : string
-        This is the desired output format for the plots.
 
     Returns
     -------
-    outfiles : dict
-        The output files created by this method.
+    canvas : dict
+        The different plots created by this method.
 
     Note
     ----
@@ -665,51 +693,54 @@ def mpl_plot_orderp(results, orderdata, out_fmt):
     will be plotted against the second one - i.e. the second one will be
     assumed to represent the velocity here.
     """
-    outfiles = {}
-    for key in _ORDERFILES:
-        outfiles[key] = _ORDERFILES[key].format(out_fmt)
-
+    canvas = {}
     time = orderdata[0]
     series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
-    mpl_simple_plot(series, outfiles['order'],
-                    fig_settings={'xlabel': 'Time',
-                                  'ylabel': 'Order parameter'})
+    figset = {'xlabel': 'Time', 'ylabel': 'Order parameter'}
+    canvas[_ORDERFILES['order']] = mpl_simple_plot(series, fig_settings=figset)
     # make running average plot of the energies as function of time
     series = [{'type': 'xy', 'x': time, 'y': results[0]['running'],
                'label': 'Running average'}]
-    mpl_simple_plot(series, outfiles['run_order'],
-                    fig_settings={'xlabel': 'Time',
-                                  'ylabel': 'Order parameter'})
-
+    canvas[_ORDERFILES['run_order']] = mpl_simple_plot(series,
+                                                       fig_settings=figset)
     # plot block-error results:
-    mpl_block_error(results[0]['blockerror'], 'Order parameter',
-                    outfiles['block'])
+    block = results[0]['blockerror']
+    series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
+    series.append({'type': 'hline', 'y': block[4],
+                   'ls': '--', 'alpha': 0.8})
+    title = 'Order parameter. Rel. err.: {0:9.6e}, Ncor: {1:9.6f}'
+    figset = {'xlabel': 'Block length',
+              'ylabel': 'Estimated error',
+              'title': title.format(block[4], block[6])}
+    canvas[_ORDERFILES['block']] = mpl_simple_plot(series, fig_settings=figset)
     # plot distributions
     dist = results[0]['distribution']
     series = [{'type': 'xy', 'x': dist[1], 'y': dist[0]}]
     title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
     title = title.format('Order parameter', dist[2][0], dist[2][1])
-    mpl_simple_plot(series, outfiles['dist'],
-                    fig_settings={'title': title})
+    figset = {'title': title}
+    canvas[_ORDERFILES['dist']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
     # also try a orderp vs ordervel plot:
     if len(orderdata) >= 3:
         series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
-        fig_settings = {'xlabel': r'$\lambda$',
-                        'ylabel': r'$\dot{\lambda}$',
-                        'title': 'Order parameter vs velocity'}
-        mpl_line_gradient(series, outfiles['ordervel'],
-                          fig_settings=fig_settings)
+        figset = {'xlabel': r'$\lambda$',
+                  'ylabel': r'$\dot{\lambda}$',
+                  'title': 'Order parameter vs velocity'}
+        plot = _ORDERFILES['ordervel']
+        canvas[plot] = mpl_line_gradient(series, fig_settings=figset)
     # output msd if it was calculated:
     if 'msd' in results[0]:
         msd = results[0]['msd']
         series = [(np.arange(len(msd)), msd[:, 0], msd[:, 1])]
-        mpl_error_plot(series, outfiles['msd'], xlabel='Time',
-                       ylabel='MSD', title=None)
-    return outfiles
+        figset = {'xlabel': 'Time', 'ylabel': 'MSD'}
+        canvas[_ORDERFILES['msd']] = mpl_error_plot(series,
+                                                    fig_settings=figset)
+    return canvas
 
 
-def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
-    """Plot the output from the energy analysis using matplotlib.
+def mpl_plot_energy(results, energies, sim_settings=None):
+    r"""Plot the output from the energy analysis using matplotlib.
 
     Parameters
     ----------
@@ -719,22 +750,23 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
         'ham', 'temp', 'elec'
     energies : dict of numpy.arrays
         This is the raw-data for the energy analysis
-    out_fmt : string
-        This is the desired output format for the plots.
     sim_settings : dict, optional
         This is the simulation settings which are useful for creating
         theoretical plots of distributions. It is assumed to contain
-        the number of particles, the dimensionality
+        the following keys:
+
+        * npart: The number of particles in the simulation
+        * dim: Number of dimensions used in the simulation
+        * beta: The beta factor :math:`\beta = \frac{1}{k_B T}` where
+          :math:`k_B` is the Boltzmann constant and :math:`T` the temperature.
+        * temperature: The temperature of the system.
 
     Returns
     -------
-    outfiles : dict
-        The output files created by this method.
+    canvas : dict
+        The output figures created by this method.
     """
-    outfiles = {'energies': _ENERFILES['energies'].format(out_fmt),
-                'run_energies': _ENERFILES['run_energies'].format(out_fmt),
-                'temperature': _ENERFILES['temperature'].format(out_fmt),
-                'run_temp': _ENERFILES['run_temp'].format(out_fmt)}
+    canvas = {}
     time = energies['time']
     # make time series plot of the energies
     series = []
@@ -743,8 +775,9 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
             continue
         series.append({'type': 'xy', 'x': time, 'y': energies[key],
                        'label': _ENERTITLE[key]})
-    mpl_simple_plot(series, outfiles['energies'],
-                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
+    figset = {'xlabel': 'Time', 'ylabel': 'Energy'}
+    canvas[_ENERFILES['energies']] = mpl_simple_plot(series,
+                                                     fig_settings=figset)
     # make running average plot of the energies as function of time
     series = []
     for key in ['vpot', 'ekin', 'etot', 'ham']:
@@ -753,29 +786,35 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
         series.append({'type': 'xy', 'x': time,
                        'y': results[key]['running'],
                        'label': _ENERTITLE[key]})
-    mpl_simple_plot(series, outfiles['run_energies'],
-                    fig_settings={'xlabel': 'Time', 'ylabel': 'Energy'})
+    canvas[_ENERFILES['run_energies']] = mpl_simple_plot(series,
+                                                         fig_settings=figset)
     # plot temperature
     series = [{'type': 'xy', 'x': time, 'y': energies['temp']}]
-    mpl_simple_plot(series, outfiles['temperature'],
-                    fig_settings={'xlabel': 'Time',
-                                  'ylabel': 'Temperature'})
+    figset = {'xlabel': 'Time', 'ylabel': 'Temperature'}
+    canvas[_ENERFILES['temperature']] = mpl_simple_plot(series,
+                                                        fig_settings=figset)
     # and running average for temperature
     series = [{'type': 'xy', 'x': time, 'y': results['temp']['running']}]
-    mpl_simple_plot(series, outfiles['run_temp'],
-                    fig_settings={'xlabel': 'Time',
-                                  'ylabel': 'Temperature',
-                                  'title': 'Running average'})
+    figset = {'xlabel': 'Time',
+              'ylabel': 'Temperature',
+              'title': 'Running average'}
+    canvas[_ENERFILES['run_temp']] = mpl_simple_plot(series,
+                                                     fig_settings=figset)
     # plot block-error results:
-    outfile = _ENERFILES['block'].format('{}', out_fmt)
+    title = r'{0}: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        outfiles['{}block'.format(key)] = outfile.format(key)
-        mpl_block_error(results[key]['blockerror'], _ENERTITLE[key],
-                        outfiles['{}block'.format(key)])
+        plot = _ENERFILES['block'].format(key)
+        block = results[key]['blockerror']
+        series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
+        series.append({'type': 'hline', 'y': block[4],
+                       'ls': '--', 'alpha': 0.8})
+        figset = {'xlabel': 'Block length',
+                  'ylabel': 'Estimated error',
+                  'title': title.format(_ENERTITLE[key], block[4], block[6])}
+        canvas[plot] = mpl_simple_plot(series, fig_settings=figset)
     # plot distributions
-    outfile = _ENERFILES['dist'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
@@ -785,10 +824,8 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
         title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
         if sim_settings is not None and key in ['ekin', 'temp']:
-            pos = np.linspace(min(0.0, dist[1].min()),
-                              dist[1].max(), 1000)
-            alp = (0.5 * sim_settings['npart'] *
-                   sim_settings['dim'])
+            pos = np.linspace(min(0.0, dist[1].min()), dist[1].max(), 1000)
+            alp = (0.5 * sim_settings['npart'] * sim_settings['dim'])
             if key == 'ekin':
                 scale = 1.0 / sim_settings['beta']
             elif key == 'temp':
@@ -796,50 +833,61 @@ def mpl_plot_energy(results, energies, out_fmt, sim_settings=None):
             series.append({'type': 'xy', 'x': pos,
                            'y': gamma.pdf(pos, alp, loc=0, scale=scale),
                            'label': 'Boltzmann distribution'})
-        outfiles['{}dist'.format(key)] = outfile.format(key)
-        mpl_simple_plot(series, outfiles['{}dist'.format(key)],
-                        fig_settings={'title': title})
-    return outfiles
+        plot = _ENERFILES['dist'].format(key)
+        canvas[plot] = mpl_simple_plot(series, fig_settings={'title': title})
+    return canvas
 
 
-def mpl_plot_flux(results, out_fmt):
+def mpl_plot_flux(results):
     """Plot the output from the flux analysis using matplotlib.
 
     Parameters
     ----------
     results : dict
         This is the dict with the results from the flux analysis.
-    out_fmt : string
-        This is the desired output format for the plots.
 
     Returns
     -------
-    outfiles : dict
-        The output files created by this method.
+    out[0] : list of dicts
+        The output figures created by this method for running averages.
+        `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
+    out[1] : list of dicts
+        The output figures created by this method for block errors.
+        `out[0][i]['name']` is the name of the figure and
+        `out[0][i]['canvas']` is the corresponding canvas object.
     """
-    outfiles = []
-    # make running average plot and error plot:
+    canvas_run = []
+    canvas_err = []
     for i in range(len(results['flux'])):
+        # Plot running average:
         flux = results['flux'][i]
         runflux = results['runflux'][i]
-        errflux = results['errflux'][i]
-        outfile_run = _FLUXFILES['runflux'].format(i + 1, out_fmt)
         series = [{'type': 'xy', 'x': flux[:, 0], 'y': runflux,
                    'label': 'Running average'}]
         title = 'Flux for interface no. {}'.format(i + 1)
-        mpl_simple_plot(series, outfile_run,
-                        fig_settings={'xlabel': 'Time',
-                                      'ylabel': 'Flux / internal units',
-                                      'title': title})
-        outfile_block = _FLUXFILES['block'].format(i + 1, out_fmt)
-        outfiles.append({'errflux': outfile_block,
-                         'runflux': outfile_run})
-        mpl_block_error(errflux, 'Flux interface no. {}'.format(i + 1),
-                        outfile_block)
-    return outfiles
+        figset = {'xlabel': 'Time',
+                  'ylabel': 'Flux / internal units',
+                  'title': title}
+        canvas = mpl_simple_plot(series, fig_settings=figset)
+        canvas_run.append({'name': _FLUXFILES['runflux'].format(i + 1),
+                           'canvas': canvas})
+        # Plot error results:
+        errflux = results['errflux'][i]
+        title = r'Block error: {0}: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        series = [{'type': 'xy', 'x': errflux[0], 'y': errflux[3]}]
+        series.append({'type': 'hline', 'y': errflux[4],
+                       'ls': '--', 'alpha': 0.8})
+        figset = {'xlabel': 'Block length',
+                  'ylabel': 'Estimated error',
+                  'title': title.format(i + 1, errflux[4], errflux[6])}
+        canvas = mpl_simple_plot(series, fig_settings=figset)
+        canvas_err.append({'name': _FLUXFILES['block'].format(i + 1),
+                           'canvas': canvas})
+    return canvas_run, canvas_err
 
 
-def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
+def mpl_plot_matched(path_ensembles, detect, matched):
     """Plot matched probabilities using matplotlib.
 
     This method will plot the overall matched probabilities for the
@@ -855,20 +903,13 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
     matched : dict
         This dict contains the results from the matching of the probabilities.
         `matched['overall-prob']` and `matched['matched-prob']` are used here.
-    outputfile : string
-        This is the name of the output file to create.
-    out_fmt : string
-        This is the desired output format for the plots.
 
     Returns
     -------
-    outfiles : dict
-        The output files created by this method.
+    canvas : dict
+        The output figures created by this method.
     """
-    outfiles = {}
-    for key in _PATH_MATCH:
-        outfiles[key] = _PATH_MATCH[key].format(out_fmt)
-
+    canvas = {}
     # First plot the matched probabilities for each ensemble:
     series = []
     for idetect in detect:
@@ -879,11 +920,12 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
                        'x': prob[:, 0],
                        'y': prob[:, 1],
                        'lw': 3, 'label': path_e.ensemble})
-    mpl_simple_plot(series, outfiles['total'],
-                    fig_settings={'xlabel': r'Order parameter ($\lambda$)',
-                                  'ylabel': 'Probability',
-                                  'title': 'Matched probabilities',
-                                  'yscale': 'log'})
+    figset = {'xlabel': r'Order parameter ($\lambda$)',
+              'ylabel': 'Probability',
+              'title': 'Matched probabilities',
+              'yscale': 'log'}
+    canvas[_PATH_MATCH['total']] = mpl_simple_plot(series,
+                                                   fig_settings=figset)
     # Also make a plot with the overall matched probability:
     series = []
     for idetect in detect:
@@ -893,10 +935,10 @@ def mpl_plot_matched(path_ensembles, detect, matched, out_fmt):
                    'x': matched['overall-prob'][:, 0],
                    'y': matched['overall-prob'][:, 1],
                    'lw': 3})
-    fig_setts = {'xlabel': r'Order parameter ($\lambda$)',
-                 'ylabel': 'Probability',
-                 'title': 'Matched probability',
-                 'yscale': 'log'}
-    mpl_simple_plot(series, outfiles['match'],
-                    fig_settings=fig_setts)
-    return outfiles
+    figset = {'xlabel': r'Order parameter ($\lambda$)',
+              'ylabel': 'Probability',
+              'title': 'Matched probability',
+              'yscale': 'log'}
+    canvas[_PATH_MATCH['match']] = mpl_simple_plot(series,
+                                                   fig_settings=figset)
+    return canvas

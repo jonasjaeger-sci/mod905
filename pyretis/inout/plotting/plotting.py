@@ -24,13 +24,19 @@ class Plotter(object):
 
     Attributes
     ----------
+    backup : boolean
+        Determines if we overwrite old files or try yo back them up.
     plotter_type : string
         Defines a name for the plotter, in case we want to identify it.
     """
 
-    def __init__(self, plotter_type=None):
+    def __init__(self, backup=True, plotter_type=None):
         """Initiate the plotting object"""
         self.plotter_type = plotter_type
+        if backup in (True, 'yes', 'True'):
+            self.backup = True
+        else:
+            self.backup = False
 
     def plot_flux(self, results):
         """Function that plots flux results"""

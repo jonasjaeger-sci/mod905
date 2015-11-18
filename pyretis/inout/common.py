@@ -24,13 +24,15 @@ __all__ = ['create_backup', 'apply_format', 'remove_extensions',
            'make_dirs']
 
 
-# hard-coded patters for energy analysis output files:
-_ENERFILES = {'energies': os.extsep.join(['energies', '{}']),
-              'run_energies': os.extsep.join(['runenergies', '{}']),
-              'temperature': os.extsep.join(['temperature', '{}']),
-              'run_temp': os.extsep.join(['runtemperature', '{}']),
-              'block': os.extsep.join(['{}block', '{}']),
-              'dist': os.extsep.join(['{}dist', '{}'])}
+# Hard-coded patters for energy analysis output files.
+# These are just used to make it simpler to change these default
+# names in the future.
+_ENERFILES = {'energies': 'energies',
+              'run_energies': 'runenergies',
+              'temperature': 'temperature',
+              'run_temp': 'runtemperature',
+              'block': '{}block',
+              'dist': '{}dist'}
 # hard-coded information for the energy terms:
 _ENERTITLE = {'vpot': 'Potential energy',
               'ekin': 'Kinetic energy',
@@ -39,25 +41,25 @@ _ENERTITLE = {'vpot': 'Potential energy',
               'temp': 'Temperature',
               'elec': 'Energy (externally computed)'}
 # hard-coded patters for flux analysis output files:
-_FLUXFILES = {'runflux': os.extsep.join(['runflux_{}', '{}']),
-              'block': os.extsep.join(['errflux_{}', '{}'])}
+_FLUXFILES = {'runflux': 'runflux_{}',
+              'block': 'errflux_{}'}
 # order files:
-_ORDERFILES = {'order': os.extsep.join(['orderp', '{}']),
-               'ordervel': os.extsep.join(['orderpv', '{}']),
-               'run_order': os.extsep.join(['runorderp', '{}']),
-               'dist': os.extsep.join(['orderdist', '{}']),
-               'block': os.extsep.join(['ordererror', '{}']),
-               'msd': os.extsep.join(['ordermsd', '{}'])}
+_ORDERFILES = {'order': 'orderp',
+               'ordervel': 'orderpv',
+               'run_order': 'runorderp',
+               'dist': 'orderdist',
+               'block': 'ordererror',
+               'msd': 'ordermsd'}
 # hard-coded patters for path analysis output files:
-_PATHFILES = {'pcross': os.extsep.join(['{}_pcross', '{}']),
-              'prun': os.extsep.join(['{}_prun', '{}']),
-              'perror': os.extsep.join(['{}_perror', '{}']),
-              'pathlength': os.extsep.join(['{}_lpath', '{}']),
-              'shoots': os.extsep.join(['{}_shoots', '{}']),
-              'shoots-scaled': os.extsep.join(['{}_shoots_scale', '{}'])}
+_PATHFILES = {'pcross': '{}_pcross',
+              'prun': '{}_prun',
+              'perror': '{}_perror',
+              'pathlength': '{}_lpath',
+              'shoots': '{}_shoots',
+              'shoots-scaled': '{}_shoots_scale'}
 # hard-coded patterns for matched files:
-_PATH_MATCH = {'total': os.extsep.join(['total-probability', '{}']),
-               'match': os.extsep.join(['matched-probability', '{}'])}
+_PATH_MATCH = {'total': 'total-probability',
+               'match': 'matched-probability'}
 # hard-coded patters for report outputs:
 _REPORTFILES = {'mdflux': os.extsep.join(['md_flux_report', '{}']),
                 'tis': os.extsep.join(['tis_report', '{}']),

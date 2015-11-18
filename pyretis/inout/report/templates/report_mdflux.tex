@@ -30,12 +30,12 @@ analysis program:
 Energy and the running average of the energy:
 \begin{center}
 \includegraphics[width=0.45\linewidth]{@{{ figures['energy']['energies'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['energy']['run_energies'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['energy']['runenergies'] }}@}%
 \end{center}
 Temperature and running average of temperature:
 \begin{center}
 \includegraphics[width=0.45\linewidth]{@{{ figures['energy']['temperature'] }}@}%
-\includegraphics[width=0.45\linewidth]{@{{ figures['energy']['run_temp'] }}@}%
+\includegraphics[width=0.45\linewidth]{@{{ figures['energy']['runtemperature'] }}@}%
 \end{center}
 Block error analysis:
 \begin{center}
@@ -57,14 +57,14 @@ Block error and distribution of temperature:
 
 \subsection{MD order parameter data}
 \begin{center}
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['order'] }}@}%
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['run_order'] }}@}%
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['block'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['orderp'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['runorderp'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['ordererror'] }}@}%
 \end{center}
 \begin{center}
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['dist'] }}@}%
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['msd'] }}@}%
-\includegraphics[width=0.30\linewidth]{@{{ figures['order']['ordervel'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['orderdist'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['ordermsd'] }}@}%
+\includegraphics[width=0.30\linewidth]{@{{ figures['order']['orderpv'] }}@}%
 \end{center}
 \subsection{MD flux data}
 @{% for figure in figures['flux'] %}@

@@ -18,6 +18,7 @@ Important classes and functions
 """
 import warnings
 import numpy as np
+import os
 # pyretis imports:
 from pyretis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
                                   _FLUXFILES, _ORDERFILES, _PATHFILES)
@@ -94,13 +95,14 @@ def txt_flux_output(results, out_fmt='txt.gz'):
         flux = results['flux'][i]
         runflux = results['runflux'][i]
         errflux = results['errflux'][i]
-        outfile = _FLUXFILES['runflux'].format(i + 1, out_fmt)
+        outfile = os.extsep.join([_FLUXFILES['runflux'].format(i + 1),
+                                  out_fmt])
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
                          (flux[:, 0], runflux))
         # output block-error results:
-        outfile = _FLUXFILES['block'].format(i + 1, out_fmt)
+        outfile = os.extsep.join([_FLUXFILES['block'].format(i + 1), out_fmt])
         outfiles['block'].append(outfile)
         txt_block_error(outfile, 'Block error for flux analysis',
                         errflux)
@@ -137,7 +139,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz'):
     """
     outfiles = {}
     for key in _ORDERFILES:
-        outfiles[key] = _ORDERFILES[key].format(out_fmt)
+        outfiles[key] = os.extsep.join([_ORDERFILES[key], out_fmt])
 
     time = orderdata[0]
     # output running average:
@@ -180,9 +182,9 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
     outfiles : dict
         The output files created by this method.
     """
-    outfiles = {'run_energies': _ENERFILES['run_energies'].format(out_fmt),
-                'temperature': _ENERFILES['temperature'].format(out_fmt),
-                'run_temp': _ENERFILES['run_temp'].format(out_fmt)}
+    outfiles = {}
+    for key in ['run_energies', 'temperature', 'run_temp']:
+        outfiles[key] = os.extsep.join([_ENERFILES[key], out_fmt])
     time = energies['time']
     # 1) Store the running average:
     header = ['Running average of energy data: time']
@@ -194,20 +196,21 @@ def txt_energy_output(results, energies, out_fmt='txt.gz'):
     header = ' '.join(header)
     txt_save_columns(outfiles['run_energies'], header, data)
     # 2) Save block error data:
-    outfile = _ENERFILES['block'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        outfiles['{}block'.format(key)] = outfile.format(key)
-        txt_block_error(outfiles['{}block'.format(key)], _ENERTITLE[key],
+        outkey = _ENERFILES['block'].format(key)
+        outfiles[outkey] = os.extsep.join([outkey, out_fmt])
+        txt_block_error(outfiles[outkey], _ENERTITLE[key],
                         results[key]['blockerror'])
     # 3) Save histograms:
     outfile = _ENERFILES['dist'].format('{}', out_fmt)
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        outfiles['{}dist'.format(key)] = outfile.format(key)
-        txt_histogram(outfiles['{}dist'.format(key)],
+        outkey = _ENERFILES['dist'].format(key)
+        outfiles[outkey] = os.extsep.join([outkey, out_fmt])
+        txt_histogram(outfiles[outkey],
                       r'Histogram for {}'.format(_ENERTITLE[key]),
                       results[key]['distribution'])
     return outfiles
@@ -268,7 +271,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz'):
     ens = path_ensemble.ensemble  # identify the ensemble
     outfiles = {}
     for key in _PATHFILES:
-        outfiles[key] = _PATHFILES[key].format(ens, out_fmt)
+        outfiles[key] = os.extsep.join([_PATHFILES[key].format(ens), out_fmt])
     # 1) Output pcross vs lambda:
     txt_save_columns(outfiles['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),

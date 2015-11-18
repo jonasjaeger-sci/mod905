@@ -18,14 +18,14 @@ Energy and the running average of the energy:
 
 .. image:: @{{ figures['energy']['energies'] }}@
    :width: 45%
-.. image:: @{{ figures['energy']['run_energies'] }}@
+.. image:: @{{ figures['energy']['runenergies'] }}@
    :width: 45%
 
 Temperature and the running average of the temperature:
 
 .. image:: @{{ figures['energy']['temperature'] }}@
    :width: 45%
-.. image:: @{{ figures['energy']['run_temp'] }}@
+.. image:: @{{ figures['energy']['runtemperature'] }}@
    :width: 45%
 
 Block error analysis for energies:
@@ -58,18 +58,18 @@ Block error and distribution for temperature:
 MD order parameter data
 -----------------------
 
-.. image:: @{{ figures['order']['order'] }}@
+.. image:: @{{ figures['order']['orderp'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['run_order'] }}@
+.. image:: @{{ figures['order']['runorderp'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['block'] }}@
+.. image:: @{{ figures['order']['ordererror'] }}@
    :width: 30%
 
-.. image:: @{{ figures['order']['dist'] }}@
+.. image:: @{{ figures['order']['orderdist'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['msd'] }}@
+.. image:: @{{ figures['order']['ordermsd'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['ordervel'] }}@
+.. image:: @{{ figures['order']['orderpv'] }}@
    :width: 30%
 
 

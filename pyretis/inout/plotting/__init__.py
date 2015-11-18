@@ -78,16 +78,17 @@ def create_plotter(plot_settings):
     """
     if plot_settings is None:
         return None
-    plotter, out_fmt, style = None, None, None
+    plotter, out_fmt, style, backup = None, None, None, None
     try:
         plotter = plot_settings.get('plotter', 'mpl')
         out_fmt = plot_settings.get('output', 'png')
         style = plot_settings.get('style', 'pyretis')
+        backup = plot_settings.get('backup', True)
     except AttributeError:
         # Malformed input settings
         return None
     if plotter.lower() in ['mpl', 'matplotlib']:
-        return MplPlotter(out_fmt, style)
+        return MplPlotter(out_fmt, backup=backup, style=style)
     else:
         msg = 'Unknown plotter: {}'.format(plotter)
         raise ValueError(msg)
