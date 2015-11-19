@@ -5,7 +5,7 @@ This is a convenience script for creating TIS simulations.
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
-import os
+import Queue
 from pyretis.core.path import create_path_ensembles
 from pyretis.core import Box, System
 from pyretis.core.simulation import create_simulation
@@ -14,12 +14,15 @@ from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
 from pyretis.inout import create_output, generate_report
 from pyretis.analysis import analyse_path_ensemble, match_probabilities
+from pyretis.inout.common import make_dirs
+
 
 simulation_settings = {'type': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
-                                      'gamma': 0.3, 'seed': 10,
+                                      'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
-                       'endcycle': 200,
+                       'endcycle': 20000,
+                       #'endcycle': 200,
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                       -0.5, -0.4, -0.3, 1.0],
@@ -33,7 +36,7 @@ simulation_settings = {'type': 'TIS',
                                'aimless': True,
                                'allowmaxlength': False,
                                'sigma_v': -1,
-                               'seed': 10,
+                               'seed': 0,
                                'initial_path': 'kick'},
                        'output': [{'type': 'pathensemble', 'target': 'file',
                                    'when': {'every': 10}},
@@ -41,94 +44,141 @@ simulation_settings = {'type': 'TIS',
                                    'when': {'every': 100}}]}
 
 
+common = ['type', 'integrator',
+          'endcycle',
+          'temperature',
+          'periodic_boundary',
+          'units',
+          'generate-vel',
+          'tis']
+
+
 def set_up_tis_simulation(settings):
-    """Method to do set-up for the TIS simulations"""
+    """Method to set up a single TIS simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains the simulation settings
+
+    Returns
+    -------
+    out : object like `Simulation` from pyretis.core.simulation`
+        This object can be used to run the simulation we create here.
+
+    Note
+    ----
+    `settings` will be updated with a new key - `orderparameter` which
+    stores info about the order parameter object we create here.
+    """
     box = Box(periodic=settings['periodic_boundary'])
     system = System(temperature=settings['temperature'],
                     units=settings['units'],
                     box=box)
     system.add_particle(name='A', pos=np.array([-1.0]))
-    msg = 'Added one particle {} at position: {}'
     if 'generate-vel' in settings:
         system.generate_velocities(**settings['generate-vel'])
-        msg = 'Generated temperatures with average: {}'
     # Set up force field:
     double_well = DoubleWell(a=1.0, b=2.0, c=0.0)
     forcefield = ForceField(potential=[double_well], desc='Double Well')
     system.forcefield = forcefield
     # add order parameter:
-    orderparameter = OrderParameterPosition('position', 0, dim='x', periodic=False)
+    orderparameter = OrderParameterPosition('position', 0, dim='x',
+                                            periodic=False)
     settings['orderparameter'] = orderparameter
-    simulation_tis = create_simulation(settings, system)
-    return simulation_tis
+    return create_simulation(settings, system)
 
-path_results = []
-tis_results = {'path_ensembles': [], 'detect': [],
-               'tis': []}
+
+def run_simulation(simulation, settings, analysis_settings=None):
+    """This method will run a simulation and a simple analysis.
+
+    Parameters
+    ----------
+    """
+    output = [tsk for tsk in create_output(simulation.system, settings)]
+    print('')
+    msg = 'Running simulation:'
+    print(msg)
+    msg = ('=') * len(msg)
+    print(msg)
+    print(simulation)
+    try:
+        msg = 'Output directory: {}'.format(settings['output-dir'])
+        print(msg)
+    except KeyError:
+        pass
+    for result in simulation.run():
+        for otask in output:
+            otask.output(result)
+    msg = 'Simulation done!'
+    print(msg)
+    if analysis_settings is not None:
+        msg = 'Will do a simple analysis...'
+        print(msg)
+        local_results = {'detect': simulation.path_ensemble.detect,
+                         'interfaces': settings['interfaces'],
+                         'ensemble': settings['ensemble']}
+        analyse = analyse_path_ensemble(simulation.path_ensemble,
+                                        analysis_settings,
+                                        idetect=local_results['detect'])
+        local_results.update(analyse)
+        report_txt = generate_report('tis_path', local_results, 'txt')[0]
+        print(''.join(report_txt))
+    return report_txt, analyse
+
+# for storing results etc:
+tis_results = {'tis': [],
+               'ensembles': [],
+               'interfaces': [],
+               'detect': []}
+
 print('Simulation type: {}'.format(simulation_settings['type']))
 print('Setting up TIS simulations:')
-interfaces = simulation_settings['interfaces']
-ensembles, detect = create_path_ensembles(interfaces, include_zero=False)
 
+interfaces = simulation_settings['interfaces']
+
+simulations_to_run = Queue.Queue()
+ensembles, detect = create_path_ensembles(interfaces, include_zero=False)
 for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
     ensemble = '{:03d}'.format(i+1)
     print('\nPath ensemble: {} (no. {})'.format(path_ensemble.ensemble,
                                                 ensemble))
-    # create a home for the simulation:
-    if not os.path.exists(ensemble):
-        print('* Creating folder "{}"'.format(ensemble))
-        os.makedirs(ensemble)
-    else:
-        print('* Folder "{}" already exist, will use it.'.format(ensemble))
-    path_file = os.path.join(ensemble, 'path.dat')
-    ensemble_file = os.path.join(ensemble, 'pathensemble.dat')
-    settings = {}
-    for key in simulation_settings:
-        try:
-            settings[key] = simulation_settings[key].copy()
-        except AttributeError:
-            settings[key] = simulation_settings[key]
-    settings['path-ensemble'] = path_ensemble
-    settings['ensemble'] = path_ensemble.ensemble
-    settings['interfaces'] = path_ensemble.interfaces
-    settings['output'] = [{'type': 'pathensemble',
-                           'target': 'file',
-                           'filename': ensemble_file,
-                           'when': {'every': 10}},
-                          {'type': 'trialpath',
-                           'target': 'file',
-                           'filename': path_file,
-                           'when': {'every': 100}}]
-    simulation_tis = set_up_tis_simulation(settings)
-    print('Created:', simulation_tis)
-    print('Starting', path_ensemble.ensemble)
-    output = [task for task in create_output(simulation_tis.system, settings)]
+    # store results for this ensemble
+    tis_results['tis'].append(None)
+    tis_results['ensembles'].append(path_ensemble.ensemble)
+    tis_results['interfaces'].append(path_ensemble.interfaces)
+    tis_results['detect'].append(idetect)
+    print('Creating directories:')
+    msg_dir = make_dirs(ensemble)
+    print('* {}'.format(msg_dir))
+    # set up local settings:
+    local_settings = {}
+    for key in common:  # this common for all simulations:
+        local_settings[key] = simulation_settings[key]
+    # things we change for each simulation
+    local_settings['path-ensemble'] = path_ensemble
+    local_settings['ensemble'] = path_ensemble.ensemble
+    local_settings['interfaces'] = path_ensemble.interfaces
+    # copy output settings since these will be modified (with path):
+    local_settings['output'] = [task.copy() for task in
+                                simulation_settings['output']]
+    local_settings['output-dir'] = ensemble
+    simulation_tis = set_up_tis_simulation(local_settings)
+    simulations_to_run.put((simulation_tis, local_settings, i))
 
-    for result in simulation_tis.run():
-        cycle = result['cycle']['step']
-        for task in output:
-            task.output(result)
-    print('Done with', path_ensemble.ensemble)
-    print('Will do a simple analysis')
-    analysis_settings = {'skipcross': 1000,
+# all simulations are set up, time to run:
+ANALYSIS_SETTINGS = {'skipcross': 1000,
                      'maxblock': 1000,
                      'blockskip': 1,
                      'bins': 1000,
                      'ngrid': 1001}
-    local_results = {'detect': idetect,
-                     'path_ensemble': path_ensemble}
-    analyse = analyse_path_ensemble(path_ensemble,
-                                    analysis_settings,
-                                    idetect=idetect)
-    local_results.update(analyse)
-    path_results.append(analyse)
-    tis_results['path_ensembles'].append(path_ensemble)
-    tis_results['detect'].append(idetect)
-    tis_results['tis'].append(analyse)
-    report_txt = generate_report('tis_path', local_results, 'txt')[0]
-    print(''.join(report_txt))
-    if i >= 2: break
-print('Done with all path simulation, will do overall analysis\n')
-tis_results['matched'] = match_probabilities(path_results, detect)
-report_txt = generate_report('tis', tis_results, 'txt')[0]
-print(''.join(report_txt))
+while not simulations_to_run.empty():
+    sim, sim_settings, idx = simulations_to_run.get()
+    report_tis, analyse_tis = run_simulation(sim, sim_settings,
+                                             ANALYSIS_SETTINGS)
+    # store output from analysis:
+    tis_results['tis'][idx] = analyse_tis
+print('\nDone with all TIS path ensembles, will do overall analysis\n')
+tis_results['matched'] = match_probabilities(tis_results['tis'], detect)
+report_overall = generate_report('tis', tis_results, 'txt')[0]
+print(''.join(report_overall))
