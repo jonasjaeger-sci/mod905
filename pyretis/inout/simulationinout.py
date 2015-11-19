@@ -445,3 +445,29 @@ def store_settings_as_py(settings, outfile, variable='settings'):
                 elif linenr >= 1:
                     output.append(other.format(line))
         fileh.write('\n'.join(output))
+
+
+def write_path_ensemble_info(path_ensemble, filename='ensemble.txt',
+                             path=None):
+    """Write some simple info about a path ensemble to a file.
+
+    This will write some very basic info about a path ensemble to a file.
+    The information we write here is something which is usefull when running
+    the analysis. We will store info about the interfaces and the detect
+    interface and the name of the path ensemble.
+
+    Parameters
+    ----------
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        The path ensemble to write info for.
+    filename : string, optional
+        The file to create.
+    path : string, optional
+        A path which determines where the file should be written.
+    """
+    if path is not None:
+        filename = os.path.join(path, filename)
+    with open(filename, 'w') as fileh:
+        fileh.write('Ensemble: {}\n'.format(path_ensemble.ensemble))
+        fileh.write('Interfaces: {}\n'.format(path_ensemble.interfaces))
+        fileh.write('Detect interface: {}'.format(path_ensemble.detect))
