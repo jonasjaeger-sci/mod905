@@ -35,7 +35,8 @@ else:
 # pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import (create_backup, simplify_ensemble_name,
-                                  _ENERFILES, _ENERTITLE, _FLUXFILES,
+                                  name_file)
+from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
                                   _ORDERFILES, _PATHFILES, _PATH_MATCH)
 
 
@@ -119,7 +120,7 @@ class MplPlotter(Plotter):
         """
         outputfiles = {}
         for key in canvas:
-            outputfiles[key] = os.extsep.join([key, self.out_fmt])
+            outputfiles[key] = name_file(key, self.out_fmt)
             mpl_savefig(canvas[key], outputfiles[key], self.backup)
         return outputfiles
 
@@ -129,8 +130,8 @@ class MplPlotter(Plotter):
         # Restructure output files for reporting
         outputfiles = []
         for run, err in zip(canvas_run, canvas_err):
-            outputfiler = os.extsep.join([run['name'], self.out_fmt])
-            outputfilee = os.extsep.join([err['name'], self.out_fmt])
+            outputfiler = name_file(run['name'], self.out_fmt)
+            outputfilee = name_file(err['name'], self.out_fmt)
             mpl_savefig(run['canvas'], outputfiler, self.backup)
             mpl_savefig(err['canvas'], outputfilee, self.backup)
             outputfiles.append({'runflux': outputfiler, 'errflux': outputfilee})
