@@ -891,14 +891,13 @@ def mpl_plot_flux(results):
 def mpl_plot_matched(path_ensembles, detect, matched):
     """Plot matched probabilities using matplotlib.
 
-    This method will plot the overall matched probabilities for the
-    different ensembles and a plot with just the over-all matched
-    probability.
+    This method will plot the matched probabilities for the different
+    ensembles and also make a plot with just the over-all matched probability.
 
     Parameters
     ----------
     path_ensembles : list of objects like `PathEnsemble`.
-        This is the path ensembles we have analyzed.
+        This is the path ensembles we have analysed.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict

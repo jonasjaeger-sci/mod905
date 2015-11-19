@@ -15,6 +15,8 @@ Important classes and functions
   analysis.
 
 - txt_path_output: For writing the output from a path simulation.
+
+- txt_matched_probability: For writing output with matched probabilities.
 """
 import warnings
 import numpy as np
@@ -27,7 +29,8 @@ from pyretis.inout.txtinout import txt_save_columns
 
 
 __all__ = ['txt_energy_output', 'txt_flux_output',
-           'txt_orderp_output', 'txt_path_output']
+           'txt_orderp_output', 'txt_path_output',
+           'txt_matched_probability']
 
 
 def txt_block_error(outputfile, title, error, backup=False):
@@ -309,72 +312,47 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
                           results['shoots'][1], ens, backup=backup)
     return out
 
+def txt_matched_probability(path_ensembles, detect, matched,
+                            out_fmt='txt.gz', backup=False):
+    """Output the matched probabilities to text
 
-def txt_total_probability(path_ensembles, detect, results, matched,
-                          out_fmt='txt.gz', backup=False):
-    """Output the overall matched probabilities.
+    This method will output the matched probabilities for the
+    different ensembles and also output the over-all matched
+    probability.
 
     Parameters
     ----------
-    path_ensembles : list of PathEnsemble objects
+    path_ensembles : list of objects like `PathEnsemble`.
         This is the path ensembles we have analysed.
-    results : list of dicts
-        This dict contains the results from the analysis.
     detect : list of floats
         These are the detect interfaces used in the analysis.
-    matched : list of numpy.arrays
-        These are the matched/scaled probabilities
-    out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
-    backup : boolean, optional
-        Determines if we will back up old files or not.
+    matched : dict
+        This dict contains the results from the matching of the probabilities.
+        We make use of `matched['overall-prob']` and `matched['matched-prob']`
+        here.
 
     Returns
     -------
-    out : string
-        The name of the file written.
+    out : dict
+        The files created by this method.
     """
-    outputfile = name_file(_PATH_MATCH['match'], out_fmt)
+    output = {}
+    output['match'] = name_file(_PATH_MATCH['match'], out_fmt)
+    # start by creating the matched file, here we use a custom
+    # file writer:
     if backup:
-        msg = create_backup(outputfile)
+        msg = create_backup(output['match'])
         if msg:
             warnings.warn(msg)
-    with open(outputfile, 'w') as fhandle:
-        for i, path_e in enumerate(path_ensembles):
-            header = 'Ensemble: {}, idetect: {}'.format(path_e.ensemble,
-                                                        detect[i])
-            mat = np.zeros((len(matched[i]), 2))
-            mat[:, 0] = results[i]['pcross'][0]
-            mat[:, 1] = matched[i]
-            np.savetxt(fhandle, mat, header=header)
-    return outputfile
-
-
-def txt_total_matched_probability(detect, matched, out_fmt='txt.gz',
-                                  backup=False):
-    """Output the overall matched probability.
-
-    Parameters
-    ----------
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
-    matched : numpy.array
-        The matched probability.
-    out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
-    backup : boolean, optional
-        Determines if we will do backup of old files or not.
-
-    Returns
-    -------
-    out : string
-        The name of the file written.
-    """
-    outputfile = name_file(_PATH_MATCH['total'], out_fmt)
-    header = 'Total matched probability. Interfaces: {}'
+    with open(output['match'], 'w') as fhandle:
+        for prob, ens, idet in zip(matched['matched-prob'],
+                                   path_ensembles, detect):
+            header = 'Ensemble: {}, idetect: {}'.format(ens.ensemble, idet)
+            np.savetxt(fhandle, prob, header=header)
+    # output the over-all matched probability:
+    output['total'] = name_file(_PATH_MATCH['total'], out_fmt)
     interf = ' , '.join([str(idet) for idet in detect])
-    header = header.format(interf)
-    txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]), backup=backup)
-    return outputfile
+    header = 'Total matched probability. Interfaces: {}'
+    txt_save_columns(output['total'], header.format(interf),
+                     matched['overall-prob'], backup=backup)
+    return output
