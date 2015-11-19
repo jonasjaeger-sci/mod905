@@ -271,3 +271,32 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
         warnings.warn('\n'.join(msg))
         ens = ens + 1
     return fmt.format(ens)
+
+
+def name_file(name, extension, path=None):
+    """Return a file name by joining a name and an file extension.
+
+    This method is used to create file names. It will use `os.extsep` to
+    create the file names and `os.path.join` to prepend a path if a path
+    is given. The returned file name fill be of form (example for posix):
+    ``path/name.extension``.
+
+    Parameters
+    ----------
+    name : string
+        This is the name, without extension, for the file.
+    extension : string
+        The extension to use for the file name.
+    path : string, optional
+        An optional path to prepend to the file name.
+
+    Returns
+    -------
+    out : string
+        The resulting file name
+    """
+    filename = os.extsep.join([name, extension])
+    if path is not None:
+        return os.path.join(path, filename)
+    else:
+        return filename
