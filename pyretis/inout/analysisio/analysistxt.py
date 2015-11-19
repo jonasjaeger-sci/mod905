@@ -18,10 +18,11 @@ Important classes and functions
 """
 import warnings
 import numpy as np
-import os
 # pyretis imports:
-from pyretis.inout.common import (create_backup, _ENERFILES, _ENERTITLE,
-                                  _FLUXFILES, _ORDERFILES, _PATHFILES)
+from pyretis.inout.common import (create_backup, simplify_ensemble_name,
+                                  name_file)
+from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
+                                  _ORDERFILES, _PATHFILES, _PATH_MATCH)
 from pyretis.inout.txtinout import txt_save_columns
 
 
@@ -101,14 +102,13 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
         flux = results['flux'][i]
         runflux = results['runflux'][i]
         errflux = results['errflux'][i]
-        outfile = os.extsep.join([_FLUXFILES['runflux'].format(i + 1),
-                                  out_fmt])
+        outfile = name_file(_FLUXFILES['runflux'].format(i + 1), out_fmt)
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
                          (flux[:, 0], runflux), backup=backup)
         # output block-error results:
-        outfile = os.extsep.join([_FLUXFILES['block'].format(i + 1), out_fmt])
+        outfile = name_file(_FLUXFILES['block'].format(i + 1), out_fmt)
         outfiles['block'].append(outfile)
         txt_block_error(outfile, 'Block error for flux analysis',
                         errflux, backup=backup)
@@ -147,7 +147,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     """
     outfiles = {}
     for key in _ORDERFILES:
-        outfiles[key] = os.extsep.join([_ORDERFILES[key], out_fmt])
+        outfiles[key] = name_file(_ORDERFILES[key], out_fmt)
 
     time = orderdata[0]
     # output running average:
@@ -195,7 +195,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     """
     outfiles = {}
     for key in ['run_energies', 'temperature', 'run_temp']:
-        outfiles[key] = os.extsep.join([_ENERFILES[key], out_fmt])
+        outfiles[key] = name_file(_ENERFILES[key], out_fmt)
     time = energies['time']
     # 1) Store the running average:
     header = ['Running average of energy data: time']
@@ -211,7 +211,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         if key not in results:
             continue
         outkey = _ENERFILES['block'].format(key)
-        outfiles[outkey] = os.extsep.join([outkey, out_fmt])
+        outfiles[outkey] = name_file(outkey, out_fmt)
         txt_block_error(outfiles[outkey], _ENERTITLE[key],
                         results[key]['blockerror'], backup=backup)
     # 3) Save histograms:
@@ -219,7 +219,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         if key not in results:
             continue
         outkey = _ENERFILES['dist'].format(key)
-        outfiles[outkey] = os.extsep.join([outkey, out_fmt])
+        outfiles[outkey] = name_file(outkey, out_fmt)
         txt_histogram(outfiles[outkey],
                       r'Histogram for {}'.format(_ENERTITLE[key]),
                       [results[key]['distribution']], backup=backup)
@@ -281,36 +281,37 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
 
     Returns
     -------
-    outfiles : dict
+    out : dict
         The output files created by this method.
     """
     ens = path_ensemble.ensemble  # identify the ensemble
-    outfiles = {}
+    ens_simplified = simplify_ensemble_name(ens)
+    out = {}
     for key in _PATHFILES:
-        outfiles[key] = os.extsep.join([_PATHFILES[key].format(ens), out_fmt])
+        out[key] = name_file(_PATHFILES[key].format(ens_simplified), out_fmt)
     # 1) Output pcross vs lambda:
-    txt_save_columns(outfiles['pcross'],
+    txt_save_columns(out['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
-                     (results['pcross'][0], results['pcross'][1]),
+                     [results['pcross'][0], results['pcross'][1]],
                      backup=backup)
     # 2) Output the running average of p:
-    txt_save_columns(outfiles['prun'], 'Ensemble: {}'.format(ens),
-                     (results['prun']), backup=backup)
+    txt_save_columns(out['prun'], 'Ensemble: {}'.format(ens),
+                     [results['prun']], backup=backup)
     # 3) Block error results:
-    txt_block_error(outfiles['perror'], 'Ensemble: {0}'.format(ens),
+    txt_block_error(out['perror'], 'Ensemble: {0}'.format(ens),
                     results['blockerror'], backup=backup)
     # 3) Length histograms
-    txt_histogram(outfiles['pathlength'], 'Histograms for acc and all',
+    txt_histogram(out['pathlength'], 'Histograms for acc and all',
                   [results['pathlength'][0], results['pathlength'][1]],
                   backup=backup)
     # 4) Shoot histograms
-    _txt_shoots_histogram(outfiles['shoots'], results['shoots'][0],
+    _txt_shoots_histogram(out['shoots'], results['shoots'][0],
                           results['shoots'][1], ens, backup=backup)
-    return outfiles
+    return out
 
 
 def txt_total_probability(path_ensembles, detect, results, matched,
-                          outputfile):
+                          out_fmt='txt.gz', backup=False):
     """Output the overall matched probabilities.
 
     Parameters
@@ -323,12 +324,22 @@ def txt_total_probability(path_ensembles, detect, results, matched,
         These are the detect interfaces used in the analysis.
     matched : list of numpy.arrays
         These are the matched/scaled probabilities
-    outputfile : string
-        This is the name of the output file to create.
+    out_fmt : string, optional
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
+    backup : boolean, optional
+        Determines if we will back up old files or not.
+
+    Returns
+    -------
+    out : string
+        The name of the file written.
     """
-    msg = create_backup(outputfile)
-    if msg:
-        warnings.warn(msg)
+    outputfile = name_file(_PATH_MATCH['match'], out_fmt)
+    if backup:
+        msg = create_backup(outputfile)
+        if msg:
+            warnings.warn(msg)
     with open(outputfile, 'w') as fhandle:
         for i, path_e in enumerate(path_ensembles):
             header = 'Ensemble: {}, idetect: {}'.format(path_e.ensemble,
@@ -337,9 +348,11 @@ def txt_total_probability(path_ensembles, detect, results, matched,
             mat[:, 0] = results[i]['pcross'][0]
             mat[:, 1] = matched[i]
             np.savetxt(fhandle, mat, header=header)
+    return outputfile
 
 
-def txt_total_matched_probability(detect, matched, outputfile, backup=False):
+def txt_total_matched_probability(detect, matched, out_fmt='txt.gz',
+                                  backup=False):
     """Output the overall matched probability.
 
     Parameters
@@ -348,12 +361,20 @@ def txt_total_matched_probability(detect, matched, outputfile, backup=False):
         These are the detect interfaces used in the analysis.
     matched : numpy.array
         The matched probability.
-    outputfile : string
-        This is the name of the output file to create.
+    out_fmt : string, optional
+        This is the desired format to use for the graphs. If 'gz' is specified,
+        a gzipped file will be written
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+
+    Returns
+    -------
+    out : string
+        The name of the file written.
     """
+    outputfile = name_file(_PATH_MATCH['total'], out_fmt)
     header = 'Total matched probability. Interfaces: {}'
     interf = ' , '.join([str(idet) for idet in detect])
     header = header.format(interf)
     txt_save_columns(outputfile, header, (matched[:, 0], matched[:, 1]), backup=backup)
+    return outputfile
