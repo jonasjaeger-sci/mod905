@@ -252,3 +252,10 @@ class Particles(object):
         for i, itype in enumerate(self.ptype[:-1]):
             for j, jtype in enumerate(self.ptype[i+1:]):
                 yield (i, i+1+j, itype, jtype)
+
+    def __str__(self):
+        """Print out basic info about the particle list."""
+        msg = ['Particles: {}'.format(self.npart)]
+        msg += ['Types: {}'.format(set(self.ptype))]
+        msg += ['Names: {}'.format(set(self.name))]
+        return '\n'.join(msg)
