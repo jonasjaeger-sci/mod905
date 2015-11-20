@@ -7,16 +7,28 @@ import ast
 import re
 import warnings
 
+
+__all__ = ['parse_settings_file', 'parse_setting',
+           'look_for_keyword']
+
+
 KNOWN_KEYWORDS = {'integrator': 'dict',
                   'ensemble': 'string',
                   'interfaces': 'list',
                   'generate-vel': 'dict',
                   'output-dir': 'string',
-                  'periodic_boundary': 'list',
+                  'box': 'dict',
+                  'particles': 'dict',
+                  'initial-pos': 'dict',
+                  'initial-vel': 'dict',
+                  'dimensions': 'number',
                   'temperature': 'number',
                   'tis': 'dict',
                   'units': 'string',
-                  'output': 'list'}
+                  'output': 'list',
+                  'potential-parameters': 'list',
+                  'potential-settings': 'list',
+                  'potential-functions': 'list'}
 
 
 def look_for_keyword(line):
@@ -39,10 +51,11 @@ def look_for_keyword(line):
     out[2] : boolean
         `True` if the keyword is one of the known keywords.
     """
-    key = re.match(r':(.*?):', line)
+    key = re.match(r'(.*?)=', line)
     if key:
-        keyword = key.group(1).lower()
-        return key.group(1), keyword, keyword in KNOWN_KEYWORDS
+        keyword = key.group(1)
+        keywordl = keyword.strip().lower()
+        return keyword, keywordl, keywordl in KNOWN_KEYWORDS
     else:
         return None, None, False
 
@@ -104,7 +117,7 @@ def parse_settings_file(filename):
                 if known:
                     reading = True
                     read_keyword = keyword
-                    to_read = to_read.split(':{}:'.format(match))[1].strip()
+                    to_read = to_read.split('{}='.format(match))[1].strip()
                     settings[read_keyword] = []
                 else:
                     msg = 'Unknown keyword "{}" found. Ignoring.'
@@ -117,6 +130,9 @@ def parse_settings_file(filename):
                 if read_type in ('string', 'number', 'boolean'):
                     reading = False  # just read the current line
                 elif read_type == 'list':
+                    # stop reading if we end by a ')' or ']'
+                    # if this is a list of lists we end by ']]' if the
+                    # input ends, otherwise we end by ','.
                     reading = not (to_read.endswith(']') or
                                    to_read.endswith(')'))
                 elif read_type == 'dict':
