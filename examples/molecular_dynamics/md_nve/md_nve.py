@@ -11,7 +11,7 @@ from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.inout import (get_predefined_table, FileWriter,
                            create_output)
-from pyretis.tools import latticefcc
+from pyretis.tools import generate_lattice
 import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
@@ -32,7 +32,7 @@ settings = {'type': 'NVE',
 
 
 # set up a lattice and create a box
-lattice, size = latticefcc(density=0.9, nrx=3, nry=3, nrz=3)
+lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
 box = Box(size, periodic=[True, True, True])
 ljsystem = System(temperature=2.0, units='lj', box=box)
 ljsystem.forcefield = ForceField(potential=[POTENTIAL],

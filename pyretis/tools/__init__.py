@@ -10,11 +10,10 @@ Package structure
 Modules
 -------
 
-- tools.py: Defines tools for setting up and generating lattice points.
+- lattice.py: Defines tools for setting up and generating lattice points.
 
 Important classes and functions
--------------------------------
 
-- latticefcc: Generates points on a fcc lattice.
+- generate_lattice: Generates points on a lattice
 """
-from pyretis.tools.tools import latticefcc, lattice_simple_cubic
+from pyretis.tools.lattice import generate_lattice

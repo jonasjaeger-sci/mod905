@@ -9,7 +9,7 @@ from pyretis.core.simulation import create_simulation
 from pyretis.core.units import CONVERT
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
-from pyretis.tools import lattice_simple_cubic
+from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 from pyretis.inout import create_output
 # imports for the plotting:
@@ -42,12 +42,15 @@ forcefield = ForceField(potential=[wca, dwca], params=[wca_parameters,
                                                        dwca_parameters])
 
 PCOLOR = {'A': 'blue', 'B': 'magenta'}
-size = np.array([[0.0, 3.4], [0.0, 3.4]])
+# generate some lattice points, this will give 9 points
+lattice, size = generate_lattice('sq', [3, 3], lcon=1.0)
+# increase box slightly:
+size = [[i[0], i[1]*1.1] for i in size]
 box = Box(size)
+# center lattice
+lattice -= np.average(lattice, axis=0) - 0.5 * box.length
 ljsystem = System(temperature=settings['temperature'],
                   units=settings['units'], box=box)
-# generate some lattice points, this will give 9 points
-lattice = lattice_simple_cubic(box.size, spacing=1.0)
 BIDX = [7, 8]
 for i, lattice_pos in enumerate(lattice):
     if i in BIDX:
@@ -67,7 +70,7 @@ ljsystem.forcefield = forcefield
 # create the simulation :-)
 simulationNVE = create_simulation(settings, ljsystem)
 # create outputs for this simulation:
-output_tasks = [task for task in create_output(ljsystem, settings)]
+outputs = [task for task in create_output(ljsystem, settings)]
 # some additional set-up for the animation
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][settings['units'], 'fs'])
@@ -192,6 +195,8 @@ def init():
     patches.append(vel_arrow)
     time_text.set_text('')
     patches.append(time_text)
+    orderscatter.set_offsets(([], []))
+    patches.append(orderscatter)
     return patches
 
 
@@ -331,8 +336,8 @@ def update(frame, system, output_tasks):
 
     if not simulationNVE.is_finished():
         result = simulationNVE.step()
-        for task in output_tasks:
-            task.output(result)
+        for tsk in output_tasks:
+            tsk.output(result)
         # reaction coordinate:
         delta = box.pbc_dist_coordinate(system.particles.pos[BIDX[1]] -
                                         system.particles.pos[BIDX[0]])
@@ -372,7 +377,7 @@ def update(frame, system, output_tasks):
 
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
-                               fargs=[ljsystem, output_tasks], repeat=False,
+                               fargs=[ljsystem, outputs], repeat=False,
                                interval=2, blit=True, init_func=init)
 # for making a movie:
 # anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])

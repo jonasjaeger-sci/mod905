@@ -11,7 +11,7 @@ from pyretis.core.simulation import create_simulation
 from pyretis.core.units import CONVERT
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
-from pyretis.tools import lattice_simple_cubic
+from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 from pyretis.inout import create_output
 # imports for the plotting:
@@ -21,6 +21,9 @@ import matplotlib as mpl
 # other imports:
 import numpy as np
 
+
+SIGMA = CONVERT['length']['lj', 'Å']
+ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
 # set up simulation settings:
 settings = {'type': 'NVE',
@@ -38,20 +41,18 @@ ljparams = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
             'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[ljparams])
 
-# create a box:
-size = np.array([[0.0, 12.0 / 3.405], [0.0, 12.0 / 3.405]])
+# generate system:
+lattice, size = generate_lattice('sq', repeat=[3, 3], lcon=SIGMA/2.9)
 box = Box(size)
-
-# create a system:
+# center lattice on box:
+lattice -= np.average(lattice, axis=0) - 0.5 * box.length
+# remove the center point of the lattice:
+lattice = [lattice_pos for i, lattice_pos in enumerate(lattice) if i != 4]
+# create system
 ljsystem = System(temperature=settings['temperature'],
                   units=settings['units'], box=box)
-
-# generate some lattice points, this will give 9 points
-# also add particles at (some of) the lattice locations
-lattice = lattice_simple_cubic(box.size, spacing=1.0)
+# add particles:
 for i, lattice_pos in enumerate(lattice):
-    if i == 4:
-        continue
     ljsystem.add_particle(name='Ar', pos=lattice_pos, mass=1.0, ptype='Ar')
 
 npart = ljsystem.particles.npart
@@ -71,7 +72,7 @@ ljsystem.forcefield = forcefield
 # create simulation :-)
 simulation_nve = create_simulation(settings, ljsystem)
 # create some outputs:
-output_tasks = [task for task in create_output(ljsystem, settings)]
+outputs = [task for task in create_output(ljsystem, settings)]
 # We will in this example animate on the flym then we will have to do some
 # extra set up. The actual simulation is carried out by calling
 # `simulation_nve.step()` in the `update` function which is executed by
@@ -82,8 +83,6 @@ timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][ljsystem.units, 'fs'])
 timeendfs = settings['endcycle'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
-SIGMA = CONVERT['length']['lj', 'Å']
-ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
@@ -186,7 +185,7 @@ def get_velocity_force_arrows(forces, vels):
     return FU, FV, VU, VV
 
 
-def update(frame, simulation_nve, output_tasks):
+def update(frame, sim, output_tasks):
     """
     This function will be running the simulation and updating the plots.
     It is called one time per step, and we choose to update the simulation
@@ -204,8 +203,8 @@ def update(frame, simulation_nve, output_tasks):
     out : list
         list of the patches to be drawn
     """
-    particles = simulation_nve.system.particles
-    pos = simulation_nve.system.box.pbc_wrap(particles.pos)
+    particles = sim.system.particles
+    pos = sim.system.box.pbc_wrap(particles.pos)
     patches = []
     # update positions of the circles according to the particles:
     for ci, pi in zip(circles, pos):
@@ -224,10 +223,10 @@ def update(frame, simulation_nve, output_tasks):
     vel_arrow.set_visible(True)
     patches.append(vel_arrow)
 
-    if not simulation_nve.is_finished():
-        result = simulation_nve.step()
-        for task in output_tasks:
-            task.output(result)
+    if not sim.is_finished():
+        result = sim.step()
+        for tsk in output_tasks:
+            tsk.output(result)
         # here we calculate some energies and updates the energy plots:
         step.append(result['cycle']['step'])
         time.append(step[-1] * timeunit)
@@ -276,7 +275,7 @@ def init():
 
 # This will run the animation/simulation:
 anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
-                               fargs=[simulation_nve, output_tasks],
+                               fargs=[simulation_nve, outputs],
                                repeat=False, interval=2, blit=True,
                                init_func=init)
 # for making a movie:
