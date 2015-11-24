@@ -58,63 +58,63 @@ between these. The base units are:
 
 - Charge
 
-  * 'e': Electron charge.
-  * 'C': Coulomb.
+  * ``e``: Electron charge.
+  * ``C``: Coulomb.
 
 - Energy
 
-  * 'kcal': Kilocalorie.
-  * 'kcal/mol': Kilocalorie per mol.
-  * 'J': Joule.
-  * 'J/mol': Joule per mol.
-  * 'kJ/mol': Kilojoule per mol.
-  * 'eV': Electronvolt.
-  * 'hartree': Hartree (atomic unit of energy).
+  * ``kcal``: Kilocalorie.
+  * ``kcal/mol``: Kilocalorie per mol.
+  * ``J``: Joule.
+  * ``J/mol``: Joule per mol.
+  * ``kJ/mol``: Kilojoule per mol.
+  * ``eV``: Electronvolt.
+  * ``hartree``: Hartree (atomic unit of energy).
 
 - Force
 
-  * 'N': Newton.
-  * 'pN': Piconewton.
-  * 'dyn': Dyne.
+  * ``N``: Newton.
+  * ``pN``: Piconewton.
+  * ``dyn``: Dyne.
 
 - Length
 
-  * 'A': Ångström.
-  * 'nm': Nanometre.
-  * 'bohr': Bohr radius.
-  * 'm': Meter.
+  * ``A``: Ångström.
+  * ``nm``: Nanometre.
+  * ``bohr``: Bohr radius.
+  * ``m``: Meter.
 
 - Mass
 
-  * 'g/mol': Grams per mol, numerically equal to the atomic mass unit.
-  * 'g': Gram.
-  * 'kg': Kilogram.
+  * ``g/mol``: Grams per mol, numerically equal to the atomic mass unit.
+  * ``g``: Gram.
+  * ``kg``: Kilogram.
 
 - Pressure
 
-  * 'Pa': Pascal.
-  * 'bar': Bar.
-  * 'atm': Atmosphere.
+  * ``Pa``: Pascal.
+  * ``bar``: Bar.
+  * ``atm``: Atmosphere.
 
 - Temperature
 
-  * 'K': Kelvin.
+  * ``K``: Kelvin.
 
 - Time
 
-  * 's': Second.
-  * 'ps': Picosecond.
-  * 'fs': Femtosecond
-  * 'ns': Nanosecond.
-  * 'us': Microsecond.
-  * 'ms': Millisecond.
+  * ``s``: Second.
+  * ``ps``: Picosecond.
+  * ``fs``: Femtosecond
+  * ``ns``: Nanosecond.
+  * ``us``: Microsecond.
+  * ``ms``: Millisecond.
 
 - Velocity
 
-  * 'm/s': Meter per second.
-  * 'nm/ps': Nanometer per picosecond.
-  * 'A/fs': Ångström per femtosecond.
-  * 'A/ps': Ångström per picosecond.
+  * ``m/s``: Meter per second.
+  * ``nm/ps``: Nanometer per picosecond.
+  * ``A/fs``: Ångström per femtosecond.
+  * ``A/ps``: Ångström per picosecond.
 
 
 .. _unit-conversions-systems:
@@ -124,27 +124,27 @@ Unit conversions and internal systems of units
 
 The following system of units are defined for pyretis:
 
-- 'lj': A Lennard-Jones type of units.
+- ``lj``: A Lennard-Jones type of units.
 
-- 'real': A system of units similar to 'real' defined in
-          LAMMPS [LAMMPSUNITS]_.
+- ``real``: A system of units similar to 'real' defined in
+  LAMMPS [LAMMPSUNITS]_.
 
-- 'metal': A system of units similar to 'metal' defined in
+- ``metal``: A system of units similar to 'metal' defined in
            LAMMPS [LAMMPSUNITS]_.
 
-- 'au': Atomic units [ATOMUNITS]_.
+- ``au``: Atomic units [ATOMUNITS]_.
 
-- 'electron': A system of units similar to 'electron' defined in
-   LAMMPS [LAMMPSUNITS]_.
+- ``electron``: A system of units similar to 'electron' defined in
+  LAMMPS [LAMMPSUNITS]_.
 
-- 'si': A system of units similar to 'si' defined in
-   LAMMPS [LAMMPSUNITS]_.
+- ``si``: A system of units similar to 'si' defined in
+  LAMMPS [LAMMPSUNITS]_.
 
-- 'gromacs': A system of units similar to the units used by
-             GROMACS [GROMACSUNIT]_.
+- ``gromacs``: A system of units similar to the units used by
+  GROMACS [GROMACSUNIT]_.
 
 
-The defining units for the Lennard-Jones units ('lj') are typically based
+The defining units for the Lennard-Jones units (``lj``) are typically based
 on the Lennard-Jones parameters for one of the components, e.g.
 :math:`\varepsilon`, :math:`\sigma` and the atomic mass
 of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining units for
@@ -171,13 +171,13 @@ the other systems are given in the table below:
 
 
 The input units for the different energy systems are given in the table
-below. For the 'lj' system all input units are in reduced quantities.
-Further, all system of units expect an input temperature in Kelvin ('K')
-and all systems, with the exception of 'si', expects a charge in units of
-electron charges. The 'si' system uses here Coulomb as it's unit for charge.
-The time unit 'at' given below for 'au' is the atomic time unit which is not
+below. For the ``lj`` system all input units are in reduced quantities.
+Further, all system of units expect an input temperature in Kelvin (``K``)
+and all systems, with the exception of ``si``, expects a charge in units of
+electron charges. The ``si`` system uses here Coulomb as it's unit for charge.
+The time unit ``at`` given below for ``au`` is the atomic time unit which is not
 explicitly shown here, but it's implicitly given by the energy, length and
-mass unit ('at' is approximately 2.41888433e-17 s).
+mass unit (``at`` is approximately 2.41888433e-17 s).
 
 
 .. table:: Input units for energy systems
@@ -224,7 +224,7 @@ References
 .. [E0] https://en.wikipedia.org/wiki/Vacuum_permittivity
 
 .. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
-    doi: http://dx.doi.org/10.1016/0021-9991
+   doi: http://dx.doi.org/10.1016/0021-9991
 
 .. [NIST] http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
