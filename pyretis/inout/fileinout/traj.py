@@ -99,7 +99,7 @@ class WriteXYZ(FileWriter):
     ----------
     Same as for `FileWriter` and in addition:
     convert : dict of floats
-        Defines the conversion of positions from internal units to Å.
+        Defines the conversion of positions from internal units to Ångström.
     atomnames : list
         These are the atom names used for the output.
     """
@@ -111,7 +111,7 @@ class WriteXYZ(FileWriter):
         self.atomnames = []
         self.frame = 0  # number of frames written
         self.system = system
-        self.convert = {'pos': CONVERT['length'][system.units, 'Å']}
+        self.convert = {'pos': CONVERT['length'][system.units, 'A']}
 
     def write_frame(self, pos, names=None, header=None):
         """Write a configuration in xyz-format.

@@ -1,19 +1,37 @@
 # -*- coding: utf-8 -*-
-u"""This module defines natural constants and unit conversions.
+r"""This module defines natural constants and unit conversions.
 
-The natural constants and units are available as the dictionaries
-`CONSTANTS` and `CONVERT`. These are further described in the
-:ref:`natural constants <natural-constants>` and the
-:ref:`unit conversion <unit-conversions>` sections below.
+This module defines some natural constants and conversions between units
+which can be used by the pyretis program.
+The :ref:`natural constants <natural-constants>` are mainly used for
+conversions but it is also used to define the Boltzmann constant which is used
+by simulations in pyretis.
+The :ref:`unit conversions <unit-conversions>` are mainly useful for the
+pyretis input and output.
+
+Internally, all computations are carried out in units which are defined by
+a length scale, an energy scale and a mass scale. This means that the time
+scale is given by these choice. Typically will the input to pyretis be in a
+more human-readable form (e.g. femtoseconds) which is converted to the interal
+units when pyretis is setting up a new simulation.
+
+Charges are typically given (in the input) in units of the electron charge.
+The internal unit for charge is not yet implemented, but one choice here is
+to include the factor :math:`\frac{1}{\sqrt{4\pi\varepsilon_0}}`. An internal
+calculation of :math:`q_1 q_2` will then include coulombs constant in the
+correct units.
+
+The different sets of sytem of units are deseribed below in
+the section on :ref:`unit systems <unit-conversions-systems>`.
+
 
 .. _natural-constants:
 
 Natural constants
 -----------------
-The keys for `CONSTANTS` defines the
-natural constant and its units, for instance `CONSTANTS['kB']['J/K']` is
-the Boltzmann constants in units of Joule per Kelvin. The currently defined
-natural constants are
+The keys for `CONSTANTS` defines the natural constant and its units,
+for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in units
+of Joule per Kelvin. The currently defined natural constants are
 
 - ``kB`` : The Boltzmann constant [KB]_.
 
@@ -21,97 +39,171 @@ natural constants are
 
 - ``e`` : The elementary charge [E]_.
 
+- ``c0`` : The velocity of light in vaccuum [C0]_.
+
+- ``mu0``: Vacuum permeability [M0]_
+
+- ``e0``: Vacuum permittivity (or permittivity of free space or electric
+          constant) [E0]_
+
 
 .. _unit-conversions:
 
 Unit conversions
 ----------------
-The keys for `CONVERT` defines how a unit conversion should be done. The
-format is CONVERT['quantity']['from', 'to'] where 'quantity' is one of the
-defined quantities
-(:ref:`length <units-length>`,
-:ref:`mass <units-mass>`,
-:ref:`energy <units-energy>`,
-:ref:`time <units-time>`,
-:ref:`velocity <units-velocity>` and
-:ref:`charge <units-charge>`)
-and 'from' and 'to' defines the unit conversion.
-The known units are given below.
+For defining the different unit conversions a simple set of base conversions
+are defined. These represent some common units that are convenient for input
+and output. For each dimension [#]_ we define some units and the conversion
+between these. The base units are:
 
-Defined units
--------------
+- Charge
 
-.. _units-length:
+  * 'e': Electron charge.
+  * 'C': Coulomb.
 
-Length
-~~~~~~
+- Energy
 
-- ``m``, ``nm``, ``A`` : Meter, nano-meter and Ångström.
+  * 'kcal': Kilocalorie.
+  * 'kcal/mol': Kilocalorie per mol.
+  * 'J': Joule.
+  * 'J/mol': Joule per mol.
+  * 'kJ/mol': Kilojoule per mol.
+  * 'eV': Electronvolt.
+  * 'hartree': Hartree (atomic unit of energy).
 
-- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
-  by Rowley et al. [ROWLEY]_).
+- Force
 
+  * 'N': Newton.
+  * 'pN': Piconewton.
+  * 'dyn': Dyne.
 
-.. _units-mass:
+- Length
 
-Mass
-~~~~
+  * 'A': Ångström.
+  * 'nm': Nanometre.
+  * 'bohr': Bohr radius.
+  * 'm': Meter.
 
-- ``kg`` : Kilograms.
+- Mass
 
-- ``g/mol`` : Grams per mole.
+  * 'g/mol': Grams per mol, numerically equal to the atomic mass unit.
+  * 'g': Gram.
+  * 'kg': Kilogram.
 
-- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
-  by Rowley et al. [ROWLEY]_).
+- Pressure
 
+  * 'Pa': Pascal.
+  * 'bar': Bar.
+  * 'atm': Atmosphere.
 
-.. _units-energy:
+- Temperature
 
-Energy
-~~~~~~
+  * 'K': Kelvin.
 
-- ``kcal`` : Kilo-calories. This is the
-  `thermo-chemical calorie <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>`_
-  equal to 4184 Joule.
+- Time
 
-- ``J`` : Joule.
+  * 's': Second.
+  * 'ps': Picosecond.
+  * 'fs': Femtosecond
+  * 'ns': Nanosecond.
+  * 'us': Microsecond.
+  * 'ms': Millisecond.
 
-- ``kcal/mol`` : Kilo-calories per mole.
+- Velocity
 
-- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
-  by Rowley et al. [ROWLEY]_).
-
-
-.. _units-time:
-
-Time
-~~~~
-
-- ``s``, ``ps``, ``fs`` : Seconds, pico-seconds and femto-seconds.
-
-- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
-  by Rowley et al. [ROWLEY]_).
-
-
-.. _units-velocity:
-
-Velocity
-~~~~~~~~
-
-- ``nm/ps`` : Nano-meter per pico-second.
-
-- ``lj`` : Lennard-Jones units (based on the Lennard-Jones parameters
-  by Rowley et al. [ROWLEY]_).
+  * 'm/s': Meter per second.
+  * 'nm/ps': Nanometer per picosecond.
+  * 'A/fs': Ångström per femtosecond.
+  * 'A/ps': Ångström per picosecond.
 
 
-.. _units-charge:
+.. _unit-conversions-systems:
 
-Charge
-~~~~~~
+Unit conversions and internal systems of units
+----------------------------------------------
 
-- ``e`` : Charge in units of elementary charge.
+The following system of units are defined for pyretis:
 
-- ``C`` : Coulomb.
+- 'lj': A Lennard-Jones type of units.
+
+- 'real': A system of units similar to 'real' defined in
+          LAMMPS [LAMMPSUNITS]_.
+
+- 'metal': A system of units similar to 'metal' defined in
+           LAMMPS [LAMMPSUNITS]_.
+
+- 'au': Atomic units [ATOMUNITS]_.
+
+- 'electron': A system of units similar to 'electron' defined in
+   LAMMPS [LAMMPSUNITS]_.
+
+- 'si': A system of units similar to 'si' defined in
+   LAMMPS [LAMMPSUNITS]_.
+
+- 'gromacs': A system of units similar to the units used by
+             GROMACS [GROMACSUNIT]_.
+
+
+The defining units for the Lennard-Jones units ('lj') are typically based
+on the Lennard-Jones parameters for one of the components, e.g.
+:math:`\varepsilon`, :math:`\sigma` and the atomic mass
+of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining units for
+the other systems are given in the table below:
+
+
+.. table:: Defining units for energy systems
+
+  +-------------+--------------+-------------+--------------------+
+  | System name | Energy unit  | Length unit | Mass unit          |
+  +=============+==============+=============+====================+
+  | real        | 1 kcal/mol   | 1 Å         |  1 g/mol           |
+  +-------------+--------------+-------------+--------------------+
+  | metal       | 1 eV         | 1 Å         |  1 g/mol           |
+  +-------------+--------------+-------------+--------------------+
+  | au          | 1 hartree    | 1 bohr      |  9.10938291e-31 kg |
+  +-------------+--------------+-------------+--------------------+
+  | electron    | 1 hartree    | 1 bohr      | 1 g/mol            |
+  +-------------+--------------+-------------+--------------------+
+  | si          | 1 J          | 1 m         | 1 kg               |
+  +-------------+--------------+-------------+--------------------+
+  | gromacs     | 1 kJ/mol     | 1 nm        | 1 g/mol            |
+  +-------------+--------------+-------------+--------------------+
+
+
+The input units for the different energy systems are given in the table
+below. For the 'lj' system all input units are in reduced quantities.
+Further, all system of units expect an input temperature in Kelvin ('K')
+and all systems, with the exception of 'si', expects a charge in units of
+electron charges. The 'si' system uses here Coulomb as it's unit for charge.
+The time unit 'at' given below for 'au' is the atomic time unit which is not
+explicitly shown here, but it's implicitly given by the energy, length and
+mass unit ('at' is approximately 2.41888433e-17 s).
+
+
+.. table:: Input units for energy systems
+
+  +-------------+----------+--------+---------------+----------+------+
+  | System name | Energy   | Length | Mass          | Velocity | Time |
+  +=============+==========+========+===============+==========+======+
+  | real        | kcal/mol |  Å     | g/mol         | Å/fs     | fs   |
+  +-------------+----------+--------+---------------+----------+------+
+  | metal       | eV       |  Å     | g/mol         | Å/ps     | ps   |
+  +-------------+----------+--------+---------------+----------+------+
+  | au          | hartree  | bohr   | electron mass | bohr/at  | at   |
+  +-------------+----------+--------+---------------+----------+------+
+  | electron    | hartree  | bohr   | g/mol (amu)   | bohr/fs  | fs   |
+  +-------------+----------+--------+---------------+----------+------+
+  | si          | J        | m      | kg            | s        | s    |
+  +-------------+----------+--------+---------------+----------+------+
+  | gromacs     | kJ/mol   | nm     | g/mol         | ps       | ps   |
+  +-------------+----------+--------+---------------+----------+------+
+
+
+.. rubric:: Footnotes
+
+.. [#] Note that 'dimension' here is, strictly speaking, not a true dimension,
+       for instance we define conversions for the dimension `velocity` which
+       in reality is composed of the dimensions `length` and `time`.
 
 
 .. _unit-references:
@@ -125,51 +217,72 @@ References
 
 .. [E] https://en.wikipedia.org/wiki/Elementary_charge
 
+.. [C0] https://en.wikipedia.org/wiki/Speed_of_light
+
+.. [M0] https://en.wikipedia.org/wiki/Vacuum_permeability
+
+.. [E0] https://en.wikipedia.org/wiki/Vacuum_permittivity
+
 .. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
     doi: http://dx.doi.org/10.1016/0021-9991
 
+.. [NIST] http://physics.nist.gov/cuu/Constants/Table/allascii.txt
+
+.. [LAMMPSUNITS] http://lammps.sandia.gov/doc/units.html
+
+.. [ATOMUNITS] https://en.wikipedia.org/wiki/Atomic_units
+
+.. [GROMACSUNIT] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
+   http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
 """
 from __future__ import print_function
 from collections import deque
+import warnings
 import numpy as np
 
 
-__all__ = ['create_conversion_factors', 'generate_inverse', 'convert_from_to',
-           'convert_bases']
+__all__ = ['generate_conversion_factors', 'generate_inverse',
+           'bfs_convert', 'convert_bases', 'print_table',
+           'write_conversions', 'read_conversions']
 
+
+CAL = 4184.  # Define 1 kcal = `CAL` J.
 CONSTANTS = {}
-CONSTANTS['kB'] = {'eV/K': 8.6173324e-05, 'J/K': 1.3806488e-23,
-                   'kJ/mol/K': 8.3144598e-3, 'kcal/mol/K': 0.0019872041,
-                   'kJ/K': 1.3806488e-26, 'kcal/K': 1.3806488e-23/4184.}
-CONSTANTS['NA'] = {'1/mol': 6.02214129e23}
+CONSTANTS['kB'] = {'eV/K': 8.6173303e-5, 'J/K': 1.38064852e-23,
+                   'kJ/mol/K': 8.3144598e-3}
+CONSTANTS['kB']['J/mol/K'] = CONSTANTS['kB']['kJ/mol/K'] * 1000.
+CONSTANTS['kB']['kJ/K'] = CONSTANTS['kB']['J/K'] / 1000.0
+CONSTANTS['kB']['kcal/K'] = CONSTANTS['kB']['J/K'] / CAL
+CONSTANTS['kB']['kcal/mol/K'] = CONSTANTS['kB']['J/mol/K'] / CAL
+CONSTANTS['NA'] = {'1/mol': 6.022140857e23}
 CONSTANTS['c0'] = {'m/s': 299792458.}
 CONSTANTS['mu0'] = {'H/m': 4.0 * np.pi * 1.0e-7}
 CONSTANTS['e'] = {'C':  1.6021766208e-19}
 CONSTANTS['e0'] = {'F/m': 1.0 / (CONSTANTS['mu0']['H/m'] *
                                  CONSTANTS['c0']['m/s']**2)}
 # Set value of kB in the system of units we have defined.
-# These values will be used in the simulations. We don't really have to
-# set all these values here, this is just to be sure that they are set in case
-# we wish to have simpler scripts that just need the Boltzmann constant.
+# These values will be used in the simulations.
 CONSTANTS['kB']['lj'] = 1.0
 CONSTANTS['kB']['si'] = CONSTANTS['kB']['J/K']
-CONSTANTS['kB']['real'] = 0.00198720414567
+CONSTANTS['kB']['real'] = CONSTANTS['kB']['kcal/mol/K']
 CONSTANTS['kB']['metal'] = CONSTANTS['kB']['eV/K']
-CONSTANTS['kB']['amu'] = 1.0
+CONSTANTS['kB']['au'] = 1.0
 CONSTANTS['kB']['electron'] = 3.16681534e-6
 CONSTANTS['kB']['gromacs'] = CONSTANTS['kB']['kJ/mol/K']
-# define 'dimensions'. Note that not all of these are True dimensions,
-# for instance is 'velocity' in reality 'length'/'time'.
+
+# Define 'dimensions'. Note that not all of these are true dimensions,
+# for instance: 'velocity' in reality 'length'/'time'.
 DIMENSIONS = set(['length', 'mass', 'time', 'energy', 'velocity',
                   'charge', 'temperature', 'pressure', 'force'])
-# for each dimension we want conversion factors and units
+# For each dimension we want conversion factors and units
 CONVERT = {key: {} for key in DIMENSIONS}
 UNITS = {key: {} for key in DIMENSIONS}
 
 # Define a few units and some base conversions:
 UNITS['length'] = set(['A', 'nm', 'bohr', 'm'])
 CONVERT['length']['A', 'nm'] = 0.1
-CONVERT['length']['A', 'bohr'] = 1.0 / 0.52917721092  # wikipedia
+# http://physics.nist.gov/cuu/Constants/Table/allascii.txt
+CONVERT['length']['A', 'bohr'] = 1.0 / 0.52917721067
 CONVERT['length']['A', 'm'] = 1.0e-10
 
 UNITS['mass'] = set(['g/mol', 'g', 'kg'])
@@ -188,15 +301,17 @@ CONVERT['time']['s', 'ms'] = 1.0e3
 UNITS['energy'] = set(['kcal', 'kcal/mol', 'J', 'J/mol', 'kJ/mol',
                        'eV', 'hartree'])
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
-CONVERT['energy']['kcal', 'J'] = 4184.
+CONVERT['energy']['kcal', 'J'] = CAL
 CONVERT['energy']['kcal', 'J/mol'] = (CONSTANTS['NA']['1/mol'] *
                                       CONVERT['energy']['kcal', 'J'])
 CONVERT['energy']['kcal', 'kJ/mol'] = (CONVERT['energy']['kcal', 'J/mol'] *
                                        1.0e-3)
-CONVERT['energy']['kcal', 'eV'] = (CONVERT['energy']['kcal', 'J'] /
-                                   1.602176565e-19)
-CONVERT['energy']['kcal', 'hartree'] = (CONVERT['energy']['kcal', 'J'] /
-                                        4.35974434e-18)
+CONVERT['energy']['kcal', 'eV'] = (CONSTANTS['kB']['eV/K'] /
+                                   CONSTANTS['kB']['kcal/K'])
+CONVERT['energy']['kcal', 'hartree'] = (CONVERT['energy']['kcal', 'eV'] *
+                                        (1.0 / 27.21138602))
+# 27.21138602 is hartee to eV from:
+# http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
 UNITS['velocity'] = set(['m/s', 'nm/ps', 'A/fs', 'A/ps'])
 CONVERT['velocity']['m/s', 'nm/ps'] = 1.0e9 / 1.0e12
@@ -213,118 +328,13 @@ CONVERT['pressure']['Pa', 'atm'] = 1.0 / 101325.
 
 UNITS['temperature'] = set(['K'])
 
+UNITS['force'] = set(['N', 'pN', 'dyn'])
+CONVERT['force']['N', 'pN'] = 1.0e12
+CONVERT['force']['N', 'dyn'] = 1.0e5
 
-def convert_temperature(temp, unit_from, unit_to):
-    """Convert a temperature between two given units.
-
-    This will convert a temperature between two given units. Since
-    temperature conversions is not just simple scalings we handle it with
-    this function. Well, in some cases we can get away with a simple scaling,
-    for instance converting from 'lj' units to 'K'. Such conversions should
-    be handled by `CONVERT['temperature']`.
-
-    Parameters
-    ----------
-    temp : float
-        The value of the temperature in the input units.
-    unit_from : string
-        The input unit.
-    unit_to : string
-        The desired output unit.
-
-    Returns
-    -------
-    out : float
-        The value of the temperature in the desired output units.
-    """
-    # check if this is a simple transformation:
-    if unit_from == 'K':
-        return _convert_kelvin_to(temp, unit_to)
-    elif unit_from == 'C':
-        return _convert_celcius_to(temp, unit_to)
-    elif unit_from == 'F':
-        return _convert_fahrenheit_to(temp, unit_to)
-    else:
-        msg = 'Unknown temperature unit {}'.format(unit_from)
-        raise ValueError(msg)
-
-
-def _convert_celcius_to(temp, unit_out):
-    """Method to convert a temperature in celcius (°C) to something else.
-
-    Parameters
-    ----------
-    temp : float
-        The celcius temperature to convert.
-    unit_out : string
-        The desired output unit.
-
-    Returns
-    -------
-    out : float
-        The converted temperature in the desired unit.
-    """
-    if unit_out == 'K':
-        return temp + 273.15
-    elif unit_out == 'F':
-        return temp * 9.0 / 5.0 + 32.0
-    elif unit_out == 'C':
-        return temp
-    else:
-        msg = 'Conversion "C" to "{}" not defined.'.format(unit_out)
-        raise ValueError(msg)
-
-
-def _convert_kelvin_to(temp, unit_out):
-    """Method to convert a temperature in Kelvin (K) to something else.
-
-    Parameters
-    ----------
-    temp : float
-        The kelvin temperature to convert.
-    unit_out : string
-        The desired output unit.
-
-    Returns
-    -------
-    out : float
-        The converted temperature in the desired unit.
-    """
-    if unit_out == 'K':
-        return temp
-    elif unit_out == 'F':
-        return temp * 9.0 / 5.0 - 459.67
-    elif unit_out == 'C':
-        return temp - 273.15
-    else:
-        msg = 'Conversion "K" to "{}" not defined.'.format(unit_out)
-        raise ValueError(msg)
-
-
-def _convert_fahrenheit_to(temp, unit_out):
-    """Method to convert a temperature in Fahrenheit (F) to something else.
-
-    Parameters
-    ----------
-    temp : float
-        The Fahrenheit temperature to convert.
-    unit_out : string
-        The desired output unit.
-
-    Returns
-    -------
-    out : float
-        The converted temperature in the desired unit.
-    """
-    if unit_out == 'K':
-        return (temp + 459.67) * 5.0 / 9.0
-    elif unit_out == 'F':
-        return temp
-    elif unit_out == 'C':
-        return (temp - 32.0) * 5.0 / 9.0
-    else:
-        msg = 'Conversion "F" to "{}" not defined.'.format(unit_out)
-        raise ValueError(msg)
+# Definitions for systems of units, these were generated using
+# `generate_conversion_factors` as shown in the __main__ routine.
+#CONVERT['
 
 
 def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
@@ -355,8 +365,8 @@ def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
 def _generate_conversion_for_dim(conv_dict, dim, unit):
     """Generate conversion factors for the specified dimension.
 
-    It will generate all conversions for the given dimension considering
-    all units defined in `UNITS`.
+    It will generate all conversions from a specified unit for a given
+    dimension considering all other units defined in `UNITS`.
 
     Parameters
     ----------
@@ -369,13 +379,15 @@ def _generate_conversion_for_dim(conv_dict, dim, unit):
     -------
     None, but updates the given `conv_dict`
     """
-    convert = conv_dict[dim]
+    convertdim = conv_dict[dim]
     for unit_to in UNITS[dim]:
-        value = convert_from_to(convert, unit, unit_to)[1]
-        _add_conversion_and_inverse(convert, value, unit, unit_to)
+        if unit == unit_to:  # just skip
+            continue
+        value = bfs_convert(convertdim, unit, unit_to)[1]
+        _add_conversion_and_inverse(convertdim, value, unit, unit_to)
 
 
-def create_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
+def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     u"""Create conversions for a system of units from fundamental units.
 
     This will create a system of units from the three fundamental units
@@ -480,7 +492,7 @@ def generate_inverse(conversions):
         conversions[newunit] = newconvert[newunit]
 
 
-def convert_from_to(conversions, unit_from, unit_to):
+def bfs_convert(conversions, unit_from, unit_to):
     """Generate unit conversion between the provided units.
 
     The unit conversion can be obtained given that a "path" between these
@@ -506,6 +518,10 @@ def convert_from_to(conversions, unit_from, unit_to):
         `unit_to`. `out[2][i]` gives the `(unit_from, unit_to)` tuple for step
         `i` in the conversion.
     """
+    if unit_from == unit_to:
+        return (unit_from, unit_to), 1.0, None
+    if (unit_from, unit_to) in conversions:
+        return (unit_from, unit_to), conversions[unit_from, unit_to], None
     que = deque([unit_from])
     visited = [unit_from]
     parents = {unit_from: None}
@@ -560,87 +576,215 @@ def convert_bases(dimension):
             elif not unit1 in convert and unit2 in convert:
                 convert[unit1] = 1.0 / convert[unit2]
             else:
-                convert[unit1] = convert_from_to(convert, key1, key2)[1]
+                convert[unit1] = bfs_convert(convert, key1, key2)[1]
                 convert[unit2] = 1.0 / convert[unit1]
 
 
-def print_table(unit):
-    """print out a table with conversion factors"""
-    row_fmt = '| {:10s} | {:16.8e} | {:16.8e} |'
-    row_head = '| {:10s} | {:16s} | {:16s} |'
+def generate_system_conversions(system1, system2):
+    """This will generate conversions between two different systems.
+
+    Parameters
+    ----------
+    system1 : string
+        The system we convert from.
+    system2 : string
+        The system we convert to.
+    """
+    for dim in CONVERT:
+        convert = CONVERT[dim]
+        convert[system1, system2] = bfs_convert(convert, system1, system2)[1]
+        convert[system2, system1] = 1.0 / convert[system1, system2]
+
+
+def print_table(unit, system=False):
+    """Print out tables with conversion factors.
+
+    This is a table in rst format which is useful for displaying conversions.
+    Parameters
+    ----------
+    unit : string
+        The unit we would like to print out conversions for.
+    system : boolean
+        Determines if we print out information for system conversions or not.
+
+    Returns
+    -------
+    None, but print output to screen
+    """
+    row_fmt = '  | {:10s} | {:16.8e} | {:16.8e} |'
+    row_head = '  | {:10s} | {:16s} | {:16s} |'
     row_line = ''.join(['+-', ('-')*10, '-+-', ('-')*16, '-+-',
                         ('-')*16, '-+'])
-    for i in sorted(CONVERT):
-        head = i.capitalize()
-        print('\n.. _{}-{}:\n'.format(i, unit))
-        print('{}'.format(head))
-        print(('-') * len(head))
-
-        header = 'Conversion factors for: {}'.format(unit)
-        line = ''.join(['+', ('-') * 50, '+'])
-        print('\n{}'.format(line))
-        print('|{:49s} |'.format(header))
-        print(row_line)
+    row_line = '  {}'.format(row_line)
+    if system:
+        title = 'Conversions for {} to other systems'.format(unit)
+        print('\n.. _conversions-{}-system:'.format(unit))
+    else:
+        title = 'Conversions for {}'.format(unit)
+        print('\n.. _conversions-{}:'.format(unit))
+    print('\n{}'.format(title))
+    print(('-') * len(title))
+    for dim in sorted(CONVERT):
+        header = '.. table:: Conversion factors for: {}'.format(dim.capitalize())
+        if system:
+            print('\n.. _{}-{}-system:'.format(dim, unit))
+        else:
+            print('\n.. _{}-{}:'.format(dim, unit))
+        print('\n{}\n'.format(header))
         row = row_head.format('Unit', '{} -> unit'.format(unit),
                               'unit -> {}'.format(unit))
-        print(row)
         print(row_line)
-        for j in CONVERT[i]:
-            un1, un2 = j
+        print(row)
+        print(row_line.replace('-', '='))
+        for unt in sorted(CONVERT[dim]):
+            un1, un2 = unt
+            if system and (un1 in UNITS[dim] or un2 in UNITS[dim]):
+                continue
             if un1 == unit:
-                row = row_fmt.format(un2, CONVERT[i][j], CONVERT[i][un2, un1])
+                row = row_fmt.format(un2, CONVERT[dim][unt], CONVERT[dim][un2, un1])
                 print(row)
                 print(row_line)
-        print('\n')
-    print('kB:', CONSTANTS['kB'][unit])
+    print('\n')
+    print('Value of kB: {}'.format(CONSTANTS['kB'][unit]))
+    print('\n')
 
+
+def write_conversions(filename='units.txt'):
+    """This method will print out the information in CONVERT.
+
+    This method is intended for creating a big list of conversion factors
+    that can be included in this script for defining unit conversions.
+
+    Parameters
+    ----------
+    filename : string, optional
+        The file to write units to.
+    """
+    with open(filename, 'wb') as fileh:
+        for dim in sorted(CONVERT):
+            convert = CONVERT[dim]
+            for unit in sorted(convert):
+                out = '{} {} {} {}\n'.format(dim, unit[0], unit[1],
+                                             convert[unit])
+                fileh.write(out.encode('utf-8'))
+
+
+def read_conversions(filename='units.txt', units=None):
+    """Load conversion factors from a file.
+
+    This will load unit conversions from a file.
+
+    Parameters
+    ----------
+    filename : string, optional
+        The file to load units from.
+
+    Returns
+    -------
+    out : dict
+        A dictionary with the conversions.
+    units : string, optional
+        If `select` is different from None, it can be used to pick out only
+        conversions for a specific system of units, e.g. real or gromacs etc.
+    """
+    convert = {}
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            try:
+                dim, unit1, unit2, conv = lines.strip().split()
+                conv = float(conv)
+                if dim not in CONVERT:
+                    raise ValueError
+            except ValueError:
+                msg = 'Skipping line "{}" in {}'.format(lines.strip(),
+                                                        filename)
+                warnings.warn(msg)
+                continue
+            if not dim in convert:
+                convert[dim] = {}
+            if not units:
+                convert[dim][unit1, unit2] = conv
+            else:
+                if units in (unit1, unit2):
+                    convert[dim][unit1, unit2] = conv
+    return convert
+
+
+for key in DIMENSIONS:
+    convert_bases(key)
+
+UNIT_SYSTEMS = {'lj': {'length': (3.405, 'A'),
+                       'energy': (119.8, 'kB'),
+                       'mass': (39.948, 'g/mol'),
+                       'charge': 'e'},
+                'real': {'length': (1.0, 'A'),
+                         'energy': (1.0, 'kcal/mol'),
+                         'mass': (1.0, 'g/mol'),
+                         'charge': 'e'},
+                'metal': {'length': (1.0, 'A'),
+                          'energy': (1.0, 'eV'),
+                          'mass': (1.0, 'g/mol'),
+                          'charge': 'e'},
+                'au': {'length': (1.0, 'bohr'),
+                       'energy': (1.0, 'hartree'),
+                       'mass': (9.10938356e-31, 'kg'),
+                       'charge': 'e'},
+                'electron': {'length': (1.0, 'bohr'),
+                             'energy': (1.0, 'hartree'),
+                             'mass': (1.0, 'g/mol'),
+                             'charge': 'e'},
+                'si': {'length': (1.0, 'm'),
+                       'energy': (1.0, 'J'),
+                       'mass': (1.0, 'kg'),
+                       'charge': 'e'},
+                'gromacs': {'length': (1.0, 'nm'),
+                            'energy': (1.0, 'kJ/mol'),
+                            'mass': (1.0, 'g/mol'),
+                            'charge': 'e'}}
+for uni in UNIT_SYSTEMS:
+    generate_conversion_factors(uni, UNIT_SYSTEMS[uni]['length'],
+                                UNIT_SYSTEMS[uni]['energy'],
+                                UNIT_SYSTEMS[uni]['mass'],
+                                charge_unit=UNIT_SYSTEMS[uni]['charge'])
 
 if __name__ == '__main__':
     # This is intended as an example of how to use the functions
-    # here to generate conversion factors for a system.
-    # First, we just generate conversions between bases:
-    for key in DIMENSIONS:
-        convert_bases(key)
-    # Next we generate conversion factors for certain units.
-    UNIT_SYSTEMS = {'lj': {'length': (3.405, 'A'),
-                           'energy': (119.8, 'kB'),
-                           'mass': (39.948, 'g/mol'),
-                           'charge': 'e'},
-                    'real': {'length': (1.0, 'A'),
-                             'energy': (1.0, 'kcal/mol'),
-                             'mass': (1.0, 'g/mol'),
-                             'charge': 'e'},
-                    'metal': {'length': (1.0, 'A'),
-                              'energy': (1.0, 'eV'),
-                              'mass': (1.0, 'g/mol'),
-                              'charge': 'e'},
-                    'amu': {'length': (1.0, 'bohr'),
-                            'energy': (1.0, 'hartree'),
-                            'mass': (9.10938291e-31, 'kg'),
-                            'charge': 'e'},
-                    'electron': {'length': (1.0, 'bohr'),
-                                 'energy': (1.0, 'hartree'),
-                                 'mass': (1.0, 'g/mol'),
-                                 'charge': 'e'},
-                    'si': {'length': (1.0, 'm'),
-                           'energy': (1.0, 'J'),
-                           'mass': (1.0, 'kg'),
-                           'charge': 'e'},
-                    'gromacs': {'length': (1.0, 'nm'),
-                                'energy': (1.0, 'kJ/mol'),
-                                'mass': (1.0, 'g/mol'),
-                                'charge': 'e'}}
-    for uni in UNIT_SYSTEMS:
-        unit_system = UNIT_SYSTEMS[uni]
-        create_conversion_factors(uni, unit_system['length'],
-                                  unit_system['energy'], unit_system['mass'],
-                                  charge_unit=unit_system['charge'])
-    for uni in UNIT_SYSTEMS:
+    # here to generate conversion factors for systems. This in case you
+    # would like to generate your own system of units.
+    # To make use of this example, just comment out the line where the
+    # units are read above.
+    # First, we just generate conversions between the bases:
+    NEW_UNITS = {}
+    NEW_UNITS['pyretis'] = {'length': (10, 'A'),
+                            'energy': (42.0, 'J'),
+                            'mass': (42.0, 'g/mol'),
+                            'charge': 'e'}
+    for uni in NEW_UNITS:
+        generate_conversion_factors(uni, NEW_UNITS[uni]['length'],
+                                    NEW_UNITS[uni]['energy'],
+                                    NEW_UNITS[uni]['mass'],
+                                    charge_unit=NEW_UNITS[uni]['charge'])
+    # Units can be stored by:
+    #write_conversions()
+    # and loaded by:
+    #ccc = read_conversions(units='metal')
+    #for key in ccc:
+    #    print(key)
+    #    for key2 in ccc[key]:
+    #        print(key2, ccc[key][key2])
+    # just write out a table:
+    for uni in NEW_UNITS:
         print_table(uni)
-    # test, can we convert real to gromacs?
-    print(convert_from_to(CONVERT['energy'], 'lj', 'gromacs'))
-    print(convert_from_to(CONVERT['energy'], 'lj', 'real'))
-    print(convert_from_to(CONVERT['length'], 'lj', 'real'))
-    print(convert_from_to(CONVERT['mass'], 'lj', 'real'))
-    print(convert_from_to(CONVERT['time'], 'lj', 'real'))
-    print(convert_from_to(CONVERT['time'], 'lj', 'ps'))
+    # Also add some conversions between systems:
+    #print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
+    #print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
+    #print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
+    #print(bfs_convert(CONVERT['length'], 'lj', 'real'))
+    #print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
+    # To generate conversions between different systems:
+    #for sys1 in UNIT_SYSTEMS:
+    #    for sys2 in UNIT_SYSTEMS:
+    #        if sys1 != sys2:
+    #            generate_system_conversions(sys1, sys2)
+    #for uni in UNIT_SYSTEMS:
+    #    print_table(uni, system=True)

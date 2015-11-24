@@ -77,7 +77,7 @@ timeunit = (settings['integrator']['timestep'] *
 timeendfs = settings['endcycle'] * timeunit
 
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
-SIGMA = CONVERT['length'][settings['units'], 'Å']
+SIGMA = CONVERT['length'][settings['units'], 'A']
 ECONV = CONVERT['energy'][settings['units'], 'kcal/mol']
 # We will in this example animate on the fly. Here we do some additional
 # set-up to be able to do just that :-)

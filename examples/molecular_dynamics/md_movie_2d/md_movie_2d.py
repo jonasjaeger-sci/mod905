@@ -22,7 +22,7 @@ import matplotlib as mpl
 import numpy as np
 
 
-SIGMA = CONVERT['length']['lj', 'Å']
+SIGMA = CONVERT['length']['lj', 'A']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
 # set up simulation settings:
