@@ -156,7 +156,8 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     # output running average:
     txt_save_columns(outfiles['run_order'],
                      'Time, running average',
-                     (time, results[0]['running']))
+                     (time, results[0]['running']),
+                     backup=backup)
 
     # output block-error results:
     txt_block_error(outfiles['block'], 'Block error for order param',

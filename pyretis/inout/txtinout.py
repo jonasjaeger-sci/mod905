@@ -85,7 +85,7 @@ def get_predefined_table(table):
         return tab
 
 
-def txt_save_columns(outputfile, header, variables, backup='False'):
+def txt_save_columns(outputfile, header, variables, backup=False):
     """Save variables to a text file using `numpy.savetxt`.
 
     Note that the variables are assumed to be numpy.arrays of equal shape
