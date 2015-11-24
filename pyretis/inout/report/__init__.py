@@ -11,8 +11,7 @@ Important functions defined here:
 - generate_report: A function for generating reports.
 
 
-Folders
-~~~~~~~
+Folders:
 
 - templates: A folder containing templates for generating reports.
 """

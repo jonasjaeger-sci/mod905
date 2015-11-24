@@ -12,7 +12,6 @@ Important functions defined here:
 - create_plotter: Method to create a plotter.
 
 Folders
-~~~~~~~
 
 - styles: This folder contains style files for matplotlib.
 

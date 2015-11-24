@@ -46,7 +46,7 @@ class EnergyFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the `FileWriter` class.
+        Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
