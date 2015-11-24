@@ -28,7 +28,7 @@ the section on :ref:`unit systems <unit-conversions-systems>`.
 .. _natural-constants:
 
 Natural constants
------------------
+~~~~~~~~~~~~~~~~~
 The keys for `CONSTANTS` defines the natural constant and its units,
 for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in units
 of Joule per Kelvin. The currently defined natural constants are
@@ -41,16 +41,16 @@ of Joule per Kelvin. The currently defined natural constants are
 
 - ``c0`` : The velocity of light in vaccuum [C0]_.
 
-- ``mu0``: Vacuum permeability [M0]_
+- ``mu0``: Vacuum permeability [M0]_.
 
 - ``e0``: Vacuum permittivity (or permittivity of free space or electric
-          constant) [E0]_
+  constant) [E0]_.
 
 
 .. _unit-conversions:
 
 Unit conversions
-----------------
+~~~~~~~~~~~~~~~~
 For defining the different unit conversions a simple set of base conversions
 are defined. These represent some common units that are convenient for input
 and output. For each dimension [#]_ we define some units and the conversion
@@ -120,25 +120,25 @@ between these. The base units are:
 .. _unit-conversions-systems:
 
 Unit conversions and internal systems of units
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following system of units are defined for pyretis:
 
 - ``lj``: A Lennard-Jones type of units.
 
 - ``real``: A system of units similar to 'real' defined in
-  LAMMPS [LAMMPSUNITS]_.
+  LAMMPS [LAMMPSU]_.
 
 - ``metal``: A system of units similar to 'metal' defined in
-           LAMMPS [LAMMPSUNITS]_.
+  LAMMPS [LAMMPSU]_.
 
 - ``au``: Atomic units [ATOMUNITS]_.
 
 - ``electron``: A system of units similar to 'electron' defined in
-  LAMMPS [LAMMPSUNITS]_.
+  LAMMPS [LAMMPSU]_.
 
 - ``si``: A system of units similar to 'si' defined in
-  LAMMPS [LAMMPSUNITS]_.
+  LAMMPS [LAMMPSU]_.
 
 - ``gromacs``: A system of units similar to the units used by
   GROMACS [GROMACSUNIT]_.
@@ -206,10 +206,8 @@ mass unit (``at`` is approximately 2.41888433e-17 s).
        in reality is composed of the dimensions `length` and `time`.
 
 
-.. _unit-references:
-
 References
-----------
+~~~~~~~~~~
 
 .. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
 
@@ -223,12 +221,13 @@ References
 
 .. [E0] https://en.wikipedia.org/wiki/Vacuum_permittivity
 
-.. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975
+.. [NIST] National Institute of Standards and Technology,
+   http://physics.nist.gov/cuu/Constants/Table/allascii.txt
+
+.. [LAMMPSU] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
+
+.. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
    doi: http://dx.doi.org/10.1016/0021-9991
-
-.. [NIST] http://physics.nist.gov/cuu/Constants/Table/allascii.txt
-
-.. [LAMMPSUNITS] http://lammps.sandia.gov/doc/units.html
 
 .. [ATOMUNITS] https://en.wikipedia.org/wiki/Atomic_units
 
