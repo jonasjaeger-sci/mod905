@@ -63,7 +63,7 @@ def generate_rst_table(table, title, headings):
     hline = [''] + [col * ('-') for col in col_len] + ['']
     hline = '+'.join(hline)
     # generate table
-    str_table = [topline, str_header, hline, row_line, hline]
+    str_table = [topline, str_header, hline, row_line, hline.replace('-', '=')]
     for row in table:
         row_line = [fmt.format(col) for fmt, col in zip(head_fmt, row)]
         row_line = [''] + row_line + ['']
