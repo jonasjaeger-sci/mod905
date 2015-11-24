@@ -4,8 +4,7 @@
 This module defines some classes and functions for performing
 Monte Carlo simulations.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - UmbrellaWindowSimulation: Defines a simulation for performing umbrella
   window simulations. Several umbrella window simulations can be joined

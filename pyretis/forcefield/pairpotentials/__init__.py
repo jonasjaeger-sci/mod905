@@ -5,10 +5,9 @@ This package defines different pair potentials for use with internal
 calculation in pyretis.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: Imports the different pair potential functions.
 
@@ -17,8 +16,7 @@ Modules
 
 - wca.py: Defines potential functions for the WCA interaction.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - PairLennardJonesCut: A class defining a Lennard-Jones potential
 

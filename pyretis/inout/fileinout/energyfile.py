@@ -43,10 +43,6 @@ class EnergyFile(FileWriter):
 
     7) External energy - this is the energy obtained if running using an
        external program for the dynamics.
-
-    Attributes
-    ----------
-        Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):

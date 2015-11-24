@@ -6,17 +6,17 @@ Newtons equations of motion in time, the dynamics in molecular dynamics.
 
 Important classes defined here:
 
-* Integrator: The base class for integrators
+- Integrator: The base class for integrators
 
-* Verlet: A Verlet integrator
+- Verlet: A Verlet integrator
 
-* VelocityVerlet: A Velocity Verlet integrator
+- VelocityVerlet: A Velocity Verlet integrator
 
-* Langevin: A Langevin integrator
+- Langevin: A Langevin integrator
 
 Important functions defined here:
 
-* create_integrator: A function to set up and create an integrator from
+- create_integrator: A function to set up and create an integrator from
   simulation settings.
 """
 from __future__ import absolute_import

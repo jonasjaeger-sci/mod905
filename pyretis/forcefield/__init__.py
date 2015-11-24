@@ -6,10 +6,9 @@ with some parameters. This module defines the force field and the
 potential functions that can be used to build up force fields.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: Imports from the modules.
 
@@ -24,7 +23,7 @@ Modules
 - pairpotentials.py: This package defines different pair interactions,
   for instance the Lennard-Jones 6-12 simple cut potential.
 
-Important classes defined in this module
+Important classes defined in this module:
 
 - ForceField: A class representing a general force field.
 

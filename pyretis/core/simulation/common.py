@@ -3,10 +3,9 @@
 
 This helper functions for setting up simulations.
 
-Important functions
--------------------
+Important functions defined here:
 
-check_settings : Check that required simulation settings are actually given.
+-check_settings: Check that required simulation settings are actually given.
 """
 import warnings
 

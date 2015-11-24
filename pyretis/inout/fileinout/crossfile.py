@@ -35,10 +35,6 @@ class CrossFile(FileWriter):
     3) The direction we are moving in - `+` for the positive direction or
        `-` for the negative direction. Internally this is converted to an
        integer (`+1` or `-1`)
-
-    Attributes
-    ----------
-    Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):

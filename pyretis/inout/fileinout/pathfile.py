@@ -41,7 +41,6 @@ class PathFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the `FileWriter` object. In addition
     block_label : string
         This label is used to identify new blocks of data
     block_head : string
@@ -305,7 +304,6 @@ class PathEnsembleFile(FileWriter):
 
     Attributes
     ----------
-    Same as for the `FileWriter` object, in addition:
     ensemble : str
         This is a string representation of the path ensemble. Typically
         something like '0-', '0+', '1', '2', ..., '001' and so on.

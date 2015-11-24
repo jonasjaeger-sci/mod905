@@ -7,10 +7,9 @@ package is in post-processing of the results from a simulation (or several
 simulations).
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: This file, imports from the other modules. The method to
   analyse results from MD flux simulations is defined here since it uses
@@ -27,7 +26,7 @@ Modules
 - path_analysis.py: Defines methods for analysis of path ensembles.
 
 
-Important functions defined in this module
+Important functions defined in this module:
 
 - analyse_energies: Analyse energy data from a simulation.
   It will calculate a running average, a distribution and do a block

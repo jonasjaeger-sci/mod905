@@ -5,10 +5,9 @@ The core tools are intended to set up simulations and run
 them. This module is not intended to handle output or analysis.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: Import core functions from the other modules.
 

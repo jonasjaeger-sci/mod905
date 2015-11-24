@@ -50,10 +50,6 @@ class OrderFile(FileWriter):
     And so on, that is, columns 2, 4, 6, ... are order parameters, while
     columns 3, 5, 7, ... are the corresponding velocities. The first column
     is always just the time (or step/cycle number).
-
-    Attributes
-    ----------
-    Same as for the `FileWriter` class.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):

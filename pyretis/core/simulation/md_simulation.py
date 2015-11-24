@@ -4,8 +4,7 @@
 This module contains definitions of classes for performing molecular dynamics
 simulations.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - SimulationNVE: Definition of a simple NVE simulation. The integrator used
   for this simulation must have dynamics equal to 'NVE'.

@@ -8,16 +8,14 @@ This is pyretis - a library/simulation package for performing rare event
 simulations with python.
 
 pyretis structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: This is the main pyretis module. It will import useful
   subpackages and define the version number.
 
-Subpackages
------------
+Sub-Packages:
 
 - core: The core objects, methods and functions used for running the rare
   event simulations. This includes objects for defining the system,

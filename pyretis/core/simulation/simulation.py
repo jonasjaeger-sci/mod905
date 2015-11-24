@@ -4,8 +4,7 @@
 This module defines the generic simulation object. This is the base
 class for all other simulations.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here
 
 - Simulation: Object defining a generic simulation.
 """

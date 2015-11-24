@@ -14,11 +14,11 @@ Important functions defined here:
 
 
 References
-----------
+~~~~~~~~~~
 
 .. [TIS] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
-         J. Chem. Phys. 118, 7762 (2003)
-         https://dx.doi.org/10.1063%2F1.1562614
+   J. Chem. Phys. 118, 7762 (2003),
+   https://dx.doi.org/10.1063%2F1.1562614
 """
 from __future__ import absolute_import
 import numpy as np

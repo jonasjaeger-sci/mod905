@@ -9,10 +9,9 @@ different set out 'output' tasks which make use of the results obtained
 in the simulation steps.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - __init__.py: Imports simulations from the other modules and defines a method
   for creating simulations from a dict with settings.
@@ -29,8 +28,7 @@ Modules
 
 - simulation_task.py: Defines objects for handling of simulation tasks.
 
-Important classes and functions
--------------------------------
+Important classes and functions:
 
 - Simulation: The base class for simulations.
 

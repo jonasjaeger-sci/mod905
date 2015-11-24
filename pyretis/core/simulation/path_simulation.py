@@ -3,8 +3,7 @@
 
 This module defines simulations for performing path sampling simulations.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - SimulationTIS: Definition of a TIS simulation.
 """
