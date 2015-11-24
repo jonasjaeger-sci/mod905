@@ -8,10 +8,9 @@ can be combined into reports, which can be templated and are handled by
 the report module.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Sub-packages
-------------
+Sub-packages:
 
 - fileinout: Handles files with output from pyretis which can be used in
   the  analysis. It also defines formats for trajectories.
@@ -22,8 +21,7 @@ Sub-packages
 
 - analysisio: Handles the input and output needed for analysis.
 
-Modules
--------
+Modules:
 
 - common.py: Common functions and variables for the input/output. These
   functions are mainly intended for internal use and are not imported here.
@@ -39,8 +37,7 @@ Modules
 - txtinout.py: Defines objects and some methods for text-based output. This
   is typically text written to the screen during a simulation.
 
-Important classes and functions
--------------------------------
+Important classes and functions:
 
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
@@ -62,11 +59,6 @@ Important classes and functions
 
 - store_settings_as_py: Store simulation settings as a dictionary in a
   python file which can be imported into other python scripts.
-
-Folders
--------
-
-- templates: This folder contains templates for the report.
 """
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table

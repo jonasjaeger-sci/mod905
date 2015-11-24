@@ -5,8 +5,7 @@ This module defines some classes for writing out trajectory data.
 Here we define a class for a simple xyz-format and a class for writing
 in a gromacs format.
 
-Important classes
------------------
+Important classes defined here:
 
 - WriteXYZ: Writing of coordinates to a file in a xyz format.
 

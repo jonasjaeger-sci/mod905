@@ -7,18 +7,17 @@ Here we also hard-code some color schemes which may be useful for
 the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
 from the seaborn project [deep]_ and the husl color scheme [husl]_.
 
-Important functions
--------------------
+Important functions defined here:
 
 - create_plotter: Method to create a plotter.
 
 Folders
--------
+~~~~~~~
 
 - styles: This folder contains style files for matplotlib.
 
 References
-----------
+~~~~~~~~~~
 
 .. [cb10] The colorblind_10 color scheme,
           https://jiffyclub.github.io/palettable/tableau/

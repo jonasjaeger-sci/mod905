@@ -4,8 +4,8 @@
 The energy file will just write out the energy of the system as a
 function of time.
 
-Important classes
------------------
+Important classes defined here:
+
 - EnergyFile: Writing/reading of energy data to a file.
 """
 import numpy as np

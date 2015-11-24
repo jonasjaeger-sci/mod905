@@ -5,14 +5,13 @@ This package defines some simple tools which may be useful for
 creating simulations.
 
 Package structure
-=================
+~~~~~~~~~~~~~~~~~
 
-Modules
--------
+Modules:
 
 - lattice.py: Defines tools for setting up and generating lattice points.
 
-Important classes and functions
+Important classes and functions:
 
 - generate_lattice: Generates points on a lattice
 """

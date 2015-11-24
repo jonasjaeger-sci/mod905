@@ -3,8 +3,7 @@
 
 This module defines classes for writing path data and path ensemble data.
 
-Important classes
------------------
+Important classes defined here:
 
 - PathEnsembleFile: Writing/reading of path ensemble data.
 

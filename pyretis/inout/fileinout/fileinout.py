@@ -4,8 +4,7 @@
 The base objects defines how file should be opened, if we are to write
 headers to the file, if we should overwrite or backup old files etc.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - read_some_lines: A method that can be used to read data from a file. It
   will try to read as many lines as possible with a given parser for lines.

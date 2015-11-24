@@ -5,8 +5,7 @@ This file contians some methods and objects that handle output and input
 of 'table-based' output. Typically the data created here will be written
 to the screen during the simulation or as a simple column output.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - TxtTable: Class for a table of text with a header and formatted rows.
 

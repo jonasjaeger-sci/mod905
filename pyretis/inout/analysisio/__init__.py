@@ -5,8 +5,7 @@ The methods defined here will typically run the analysis on the
 given input and write outputs, typically this will be plots and simple
 text files.
 
-Important functions
--------------------
+Important functions defined here:
 
 - run_md_flux_analysis: Method to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.

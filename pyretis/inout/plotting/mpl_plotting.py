@@ -4,8 +4,7 @@
 This module defines a class for using matplotlib and it also defines
 some standard plots that are used in the analysis.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - MplPlotter: A class for plotting with matplotlib.
 
@@ -134,7 +133,8 @@ class MplPlotter(Plotter):
             outputfilee = name_file(err['name'], self.out_fmt)
             mpl_savefig(run['canvas'], outputfiler, self.backup)
             mpl_savefig(err['canvas'], outputfilee, self.backup)
-            outputfiles.append({'runflux': outputfiler, 'errflux': outputfilee})
+            outputfiles.append({'runflux': outputfiler,
+                                'errflux': outputfilee})
         return outputfiles
 
     def plot_energy(self, results, energies, sim_settings=None):
@@ -654,7 +654,7 @@ def mpl_plot_path(path_ensemble, results, idetect):
                'label': labfmt.format('Accepted',
                                       results['pathlength'][0][2][0],
                                       results['pathlength'][0][2][1])}]
-    series.append({'type': 'xy', 'x':results['pathlength'][1][1],
+    series.append({'type': 'xy', 'x': results['pathlength'][1][1],
                    'y': results['pathlength'][1][0],
                    'label': labfmt.format('All',
                                           results['pathlength'][1][2][0],
@@ -663,7 +663,8 @@ def mpl_plot_path(path_ensemble, results, idetect):
               'title': r'Ensemble: ${0}$'.format(ens)}
     canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot shoots-histogram
-    can_tmp = _mpl_shoots_histogram(results['shoots'][0], results['shoots'][1], ens)
+    can_tmp = _mpl_shoots_histogram(results['shoots'][0],
+                                    results['shoots'][1], ens)
     canvas[out['shoots']] = can_tmp[0]
     canvas[out['shoots-scaled']] = can_tmp[1]
     return canvas

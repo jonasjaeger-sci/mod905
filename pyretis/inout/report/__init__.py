@@ -4,9 +4,17 @@
 The reports will typically summarize the results from different
 analysis and present it as a text file, pdf or web-page.
 
-Important functions
--------------------
+Important functions defined here:
 
+- write_report: A function to write a report to file.
+
+- generate_report: A function for generating reports.
+
+
+Folders
+~~~~~~~
+
+- templates: A folder containing templates for generating reports.
 """
 from __future__ import absolute_import
 from .report import generate_report

@@ -8,8 +8,7 @@ and the second column will be the main order parameter. The third column will
 be the velocity of the main order parameter. The format is fully defined in
 the documentation for the `OrderFile` class.
 
-Important classes
------------------
+Important classes defined here:
 
 - OrderFile: Writing/reading of order parameter data
 """

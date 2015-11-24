@@ -4,8 +4,7 @@
 This file contains methods and objects that handle text files for
 the analysis input/output.
 
-Important classes and functions
--------------------------------
+Important classes and functions defined here:
 
 - txt_energy_output: For writing the output from a energy analysis.
 

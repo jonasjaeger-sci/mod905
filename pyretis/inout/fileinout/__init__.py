@@ -4,11 +4,7 @@
 These files will store results/outputs from the simulation and
 can be used to analyze a simulation.
 
-Package structure
-=================
-
-Modules
--------
+Modules:
 
 - crossfile.py: Module for handling crossing data.
 
@@ -21,7 +17,6 @@ Modules
 - pathfile.py: Module for handling path data and path-ensemble data.
 
 - traj.py: Module for handling writing of trajectory data.
-
 
 Important functions:
 

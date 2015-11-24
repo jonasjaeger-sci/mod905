@@ -6,8 +6,7 @@ data. This is typically needed for the simulation of type 'MDFlux' where
 the goal is to obtain the initial flux. This initial flux can then be used
 to obtain a crossing rate when combined with the crossing probability.
 
-Important classes
------------------
+Important classes defined here:
 
 - CrossFile: Writing/reading of crossing data.
 """
