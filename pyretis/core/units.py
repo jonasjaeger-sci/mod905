@@ -7,7 +7,7 @@ The :ref:`natural constants <natural-constants>` are mainly used for
 conversions but it is also used to define the Boltzmann constant which is used
 by simulations in pyretis.
 The :ref:`unit conversions <unit-conversions>` are mainly useful for the
-pyretis input and output.
+pyretis input and output. All numerical values are from [NIST]_.
 
 Internally, all computations are carried out in units which are defined by
 a length scale, an energy scale and a mass scale. This means that the time
@@ -126,22 +126,17 @@ The following system of units are defined for pyretis:
 
 - ``lj``: A Lennard-Jones type of units.
 
-- ``real``: A system of units similar to 'real' defined in
-  LAMMPS [LAMMPSU]_.
+- ``real``: A system of units similar to the [LAMMPS]_ unit ``real``.
 
-- ``metal``: A system of units similar to 'metal' defined in
-  LAMMPS [LAMMPSU]_.
+- ``metal``: A system of units similar to the LAMMPS_ unit ``metal``.
 
 - ``au``: Atomic units [ATOMUNITS]_.
 
-- ``electron``: A system of units similar to 'electron' defined in
-  LAMMPS [LAMMPSU]_.
+- ``electron``: A system of units similar to the LAMMPS_ unit ``electron``.
 
-- ``si``: A system of units similar to 'si' defined in
-  LAMMPS [LAMMPSU]_.
+- ``si``: A system of units similar to the LAMMPS_ unit ``si``.
 
-- ``gromacs``: A system of units similar to the units used by
-  GROMACS [GROMACSUNIT]_.
+- ``gromacs``: A system of units similar to the units used by [GROMACS]_.
 
 
 The defining units for the Lennard-Jones units (``lj``) are typically based
@@ -175,9 +170,9 @@ below. For the ``lj`` system all input units are in reduced quantities.
 Further, all system of units expect an input temperature in Kelvin (``K``)
 and all systems, with the exception of ``si``, expects a charge in units of
 electron charges. The ``si`` system uses here Coulomb as it's unit for charge.
-The time unit ``at`` given below for ``au`` is the atomic time unit which is not
-explicitly shown here, but it's implicitly given by the energy, length and
-mass unit (``at`` is approximately 2.41888433e-17 s).
+The time unit ``at`` given below for ``au`` is the atomic time unit which is
+not explicitly shown here, but it's implicitly given by the energy, length
+and mass unit (``at`` is approximately 2.41888433e-17 s).
 
 
 .. table:: Input units for energy systems
@@ -224,14 +219,14 @@ References
 .. [NIST] National Institute of Standards and Technology,
    http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
-.. [LAMMPSU] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
+.. [LAMMPS] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
 
 .. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
    doi: http://dx.doi.org/10.1016/0021-9991
 
 .. [ATOMUNITS] https://en.wikipedia.org/wiki/Atomic_units
 
-.. [GROMACSUNIT] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
+.. [GROMACS] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
    http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
 """
 from __future__ import print_function
@@ -460,7 +455,6 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
                                   CONVERT['length']['m', unit]**2))
     value = np.sqrt(4.0 * np.pi * CONSTANTS['e0'][unit])
     _add_conversion_and_inverse(CONVERT['charge'], value, unit, charge_unit)
-    #CONVERT['charge'][unit, charge_unit] = 1.0 / CONVERT['charge'][charge_unit, unit]
     # convert [charge] * V/A to force, in case it's needed in the future:
     #qE = CONVERT['energy']['J', unit] / CONVERT['charge']['C', 'e']
     _generate_conversion_for_dim(CONVERT, 'charge', unit)
@@ -624,7 +618,8 @@ def print_table(unit, system=False):
     print('\n{}'.format(title))
     print(('-') * len(title))
     for dim in sorted(CONVERT):
-        header = '.. table:: Conversion factors for: {}'.format(dim.capitalize())
+        header = '.. table:: Conversion factors for: {}'
+        header = header.format(dim.capitalize())
         if system:
             print('\n.. _{}-{}-system:'.format(dim, unit))
         else:
@@ -640,7 +635,8 @@ def print_table(unit, system=False):
             if system and (un1 in UNITS[dim] or un2 in UNITS[dim]):
                 continue
             if un1 == unit:
-                row = row_fmt.format(un2, CONVERT[dim][unt], CONVERT[dim][un2, un1])
+                row = row_fmt.format(un2, CONVERT[dim][unt],
+                                     CONVERT[dim][un2, un1])
                 print(row)
                 print(row_line)
     print('\n')
