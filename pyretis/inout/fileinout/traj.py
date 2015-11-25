@@ -332,6 +332,12 @@ def read_gromacs_file(filename):
     ------
     out : dict
         This dict contains the snapshot.
+
+    Examples
+    --------
+    >>> from pyretis.inout.fileinout.traj import read_gromacs_file
+    >>> for snapshot in read_gromacs_file('traj.gro'):
+    ...     print(snapshot['x'][0])
     """
     lines_to_read = 0
     snapshot = None
@@ -388,6 +394,12 @@ def read_xyz_file(filename):
     ------
     out : dict
         This dict contains the snapshot.
+
+    Examples
+    --------
+    >>> from pyretis.inout.fileinout.traj import read_xyz_file
+    >>> for snapshot in read_xyz_file('traj.xyz'):
+    ...     print(snapshot['x'][0])
     """
     lines_to_read = 0
     snapshot = None
