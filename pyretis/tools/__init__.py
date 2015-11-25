@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""pyretis tools.
+"""Tools for creating simulations.
 
 This package defines some simple tools which may be useful for
 creating simulations.

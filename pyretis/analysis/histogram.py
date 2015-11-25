@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Histogram methods for data analysis."""
+"""Histogram methods for data analysis.
+
+This module defines some simple methods for histograms.
+
+Important functions defined here:
+
+- histogram: Create a histogram from given data.
+
+- match_all_histograms: Function to match histograms, for instance
+  from an umbrella sampling simulation.
+
+- histogram_and_avg: Create histogram an return bins, midpoints
+  and simple statistics.
+"""
 
 import numpy as np
 
@@ -29,6 +42,22 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
         The edges of the bins.
     bin_mid : numpy.array
         The midpoint of the bins.
+
+    Examples
+    --------
+    >>> import numpy as np
+
+    >>> from pyretis.analysis.histogram import histogram
+
+    >>> data = np.random.randn(50000)
+
+    >>> hist, bins, bin_mid = histogram(data, bins=30, limits=(-5, 5))
+
+    >>> from matplotlib import pyplot as plt
+
+    >>> plt.plot(bin_mid, hist, '-o', lw=3, alpha=0.8, ms=9)
+
+    >>> plt.show()
     """
     hist, bins = np.histogram(data, bins=bins,
                               range=limits, density=density, weights=weights)
@@ -65,6 +94,24 @@ def histogram_and_avg(data, bins, density=True):
     See Also
     --------
     histogram
+
+    Examples
+    --------
+    >>> import numpy as np
+
+    >>> from pyretis.analysis.histogram import histogram_and_avg
+
+    >>> data = np.random.randn(50000)
+
+    >>> hist_data = histogram_and_avg(data, bins=30)
+
+    >>> print(hist_data[2])
+
+    >>> from matplotlib import pyplot as plt
+
+    >>> plt.plot(hist_data[1], hist_data[0], '-o', lw=3, alpha=0.8, ms=9)
+
+    >>> plt.show()
     """
     hist, _, bin_mid = histogram(data, bins=bins,
                                  limits=(data.min(), data.max()),

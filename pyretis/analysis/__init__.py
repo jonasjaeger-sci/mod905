@@ -25,7 +25,6 @@ Modules:
 
 - path_analysis.py: Defines methods for analysis of path ensembles.
 
-
 Important functions defined in this module:
 
 - analyse_energies: Analyse energy data from a simulation.

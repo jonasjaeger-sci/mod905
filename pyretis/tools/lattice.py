@@ -45,13 +45,13 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
         Select the kind of lattice. The following options are currently
         defined in `UNIT_CELL`:
 
-        * sc : simple cubic lattice
-        * sq : square lattice (2D) with one atom in the unit cell.
-        * sq2 : square lattice with two atoms in the unit cell.
-        * bcc : body-centered cubic lattice
-        * fcc : face-centered cubic lattice
-        * hcp : hexagonal close-packed lattice
-        * diamond : a diamond structure
+        * sc : Simple cubic lattice.
+        * sq : Square lattice (2D) with one atom in the unit cell.
+        * sq2 : Square lattice with two atoms in the unit cell.
+        * bcc : Body-centered cubic lattice.
+        * fcc : Face-centered cubic lattice.
+        * hcp : Hexagonal close-packed lattice.
+        * diamond : Diamond structure.
     lcon : float
         The lattice constant.
     density : float, optional
