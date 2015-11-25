@@ -46,17 +46,14 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
     Examples
     --------
     >>> import numpy as np
-
     >>> from pyretis.analysis.histogram import histogram
-
     >>> data = np.random.randn(50000)
-
     >>> hist, bins, bin_mid = histogram(data, bins=30, limits=(-5, 5))
 
+    For plotting the histogram:
+
     >>> from matplotlib import pyplot as plt
-
     >>> plt.plot(bin_mid, hist, '-o', lw=3, alpha=0.8, ms=9)
-
     >>> plt.show()
     """
     hist, bins = np.histogram(data, bins=bins,
@@ -98,19 +95,18 @@ def histogram_and_avg(data, bins, density=True):
     Examples
     --------
     >>> import numpy as np
-
     >>> from pyretis.analysis.histogram import histogram_and_avg
-
     >>> data = np.random.randn(50000)
-
     >>> hist_data = histogram_and_avg(data, bins=30)
+
+    Print out the average and standard deviation:
 
     >>> print(hist_data[2])
 
+    For plotting with matplotlib:
+
     >>> from matplotlib import pyplot as plt
-
     >>> plt.plot(hist_data[1], hist_data[0], '-o', lw=3, alpha=0.8, ms=9)
-
     >>> plt.show()
     """
     hist, _, bin_mid = histogram(data, bins=bins,
