@@ -3,6 +3,12 @@
 
 This module defines a function which may be useful for generating
 initial structures on a lattice.
+
+Examples
+--------
+>>> from pyretis.tools.lattice import generate_lattice
+
+>>> xyz = generate_lattice('diamond', [1, 1, 1], lcon=1)
 """
 import itertools
 import numpy as np

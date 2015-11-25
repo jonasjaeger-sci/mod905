@@ -13,7 +13,7 @@ Package structure
 Sub-packages:
 
 - fileinout: Handles files with output from pyretis which can be used in
-  the  analysis. It also defines formats for trajectories.
+  the analysis. It also defines formats for trajectories.
 
 - plotting: Handles plotting. It defines simple things like colors etc.
   for plotting. It also defines functions which can be used for specific
