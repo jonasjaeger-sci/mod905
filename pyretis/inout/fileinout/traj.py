@@ -365,3 +365,49 @@ def read_gromacs_file(filename):
                         snapshot[key] = [val]
     if snapshot is not None:
         yield snapshot
+
+
+def read_xyz_file(filename):
+    """A function for reading files in xyz format.
+
+    This function will read a xyz file and yield the different snapshots
+    found in the file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to open.
+
+    Yields
+    ------
+    out : dict
+        This dict contains the snapshot.
+    """
+    lines_to_read = 0
+    snapshot = None
+    xyz_keys = ('atomname', 'x', 'y', 'z')
+    read_header = False
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            if read_header:
+                snapshot = {'header': lines.strip()}
+                read_header = False
+                continue
+            if lines_to_read == 0:  # new shapshot
+                if snapshot is not None:
+                    yield snapshot
+                lines_to_read = int(lines.strip())
+                read_header = True
+                snapshot = None
+            else:
+                lines_to_read -= 1
+                data = lines.strip().split()
+                for i, (val, key) in enumerate(zip(data, xyz_keys)):
+                    if i != 0:
+                        val = float(val)
+                    try:
+                        snapshot[key].append(val)
+                    except KeyError:
+                        snapshot[key] = [val]
+    if snapshot is not None:
+        yield snapshot
