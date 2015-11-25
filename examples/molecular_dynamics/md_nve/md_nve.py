@@ -6,6 +6,7 @@ This system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 from __future__ import print_function
 from pyretis.core import Box, System
+from pyretis.core.units import create_conversion_factors
 from pyretis.core.simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
@@ -18,6 +19,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
+create_conversion_factors('lj')
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 

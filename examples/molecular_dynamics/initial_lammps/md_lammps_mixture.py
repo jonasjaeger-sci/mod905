@@ -8,6 +8,7 @@ a mixture of 3 Lennard-Jones particles.
 from __future__ import print_function
 from pyretis.core.simulation import Simulation
 from pyretis.core import System, Box
+from pyretis.core.units import create_conversion_factors
 from pyretis.core.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
@@ -23,6 +24,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib import gridspec as gridspec
 from pyretis.inout.plotting import mpl_set_style
 
+create_conversion_factors('lj')
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
 ljsystem = System(box=box, units='lj')

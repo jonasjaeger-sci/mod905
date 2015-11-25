@@ -6,7 +6,7 @@ Example of running a MD NVE simulation
 from __future__ import print_function
 from pyretis.core import System, Box
 from pyretis.core.simulation import create_simulation
-from pyretis.core.units import CONVERT
+from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
 from pyretis.tools import generate_lattice
@@ -29,6 +29,7 @@ settings = {'type': 'NVE',
                              'distribution': 'maxwell'},
             'temperature': 2.0,
             'units': 'lj'}
+create_conversion_factors(settings['units'])
 # set up potential function(s) and force field:
 wca = PairWCAnp(dim=2)
 wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0},

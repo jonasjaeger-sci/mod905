@@ -130,15 +130,15 @@ The following system of units are defined for pyretis:
 
 - ``lj``: A Lennard-Jones type of units.
 
-- ``real``: A system of units similar to the [LAMMPS]_ unit ``real``.
+- ``real``: A system of units similar to the [LAMMPS]_ unit real.
 
-- ``metal``: A system of units similar to the LAMMPS_ unit ``metal``.
+- ``metal``: A system of units similar to the [LAMMPS]_ unit metal.
 
 - ``au``: Atomic units [ATOMUNITS]_.
 
-- ``electron``: A system of units similar to the LAMMPS_ unit ``electron``.
+- ``electron``: A system of units similar to the [LAMMPS]_ unit electron.
 
-- ``si``: A system of units similar to the LAMMPS_ unit ``si``.
+- ``si``: A system of units similar to the [LAMMPS]_ unit si.
 
 - ``gromacs``: A system of units similar to the units used by [GROMACS]_.
 
@@ -192,9 +192,9 @@ and mass unit (``at`` is approximately 2.41888433e-17 s).
   +-------------+----------+--------+---------------+----------+------+
   | electron    | hartree  | bohr   | g/mol (amu)   | bohr/fs  | fs   |
   +-------------+----------+--------+---------------+----------+------+
-  | si          | J        | m      | kg            | s        | s    |
+  | si          | J        | m      | kg            | m/s      | s    |
   +-------------+----------+--------+---------------+----------+------+
-  | gromacs     | kJ/mol   | nm     | g/mol         | ps       | ps   |
+  | gromacs     | kJ/mol   | nm     | g/mol         | nm/ps    | ps   |
   +-------------+----------+--------+---------------+----------+------+
 
 
@@ -806,7 +806,7 @@ def _check_input_unit(unit, dim, input_unit):
             raise ValueError(msg)
     else:  # Try do get values from default:
         try:
-            value, unit_dim = UNIT_SYSTEMS[unit]['length']
+            value, unit_dim = UNIT_SYSTEMS[unit][dim]
             return value, unit_dim
         except KeyError:
             msg = 'Could not determine {} unit for {}'.format(dim, unit)

@@ -8,7 +8,7 @@ from __future__ import print_function
 # pyretis imports:
 from pyretis.core import System, Box
 from pyretis.core.simulation import create_simulation
-from pyretis.core.units import CONVERT
+from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.tools import generate_lattice
@@ -22,8 +22,6 @@ import matplotlib as mpl
 import numpy as np
 
 
-SIGMA = CONVERT['length']['lj', 'A']
-ECONV = CONVERT['energy']['lj', 'kcal/mol']
 
 # set up simulation settings:
 settings = {'type': 'NVE',
@@ -35,6 +33,9 @@ settings = {'type': 'NVE',
             'temperature': 1.0,
             'generate-vel': {'seed': 0, 'momentum': True,
                              'distribution': 'maxwell'}}
+create_conversion_factors(settings['units'])
+SIGMA = CONVERT['length']['lj', 'A']
+ECONV = CONVERT['energy']['lj', 'kcal/mol']
 # set up potential function(s) and force field:
 ljpot = PairLennardJonesCutnp(dim=2, shift=True)
 ljparams = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
