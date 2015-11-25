@@ -235,9 +235,7 @@ References
 
 Examples
 --------
-# doctest: +ELLIPSIS
-
->>> from pyretis.core.units import CONVERT
+>>> from pyretis.core.units import CONVERT  # doctest: +ELLIPSIS
 
 >>> print(CONVERT['length'])
 {('A', 'nm'): 0.1, ('A', 'bohr'): 1.8897261254578281, ('A', 'm'): 1e-10}
