@@ -28,22 +28,8 @@ class Simulation(object):
         is the cycle number we started at, 'stepno' which is the number
         cycles we have performed to arrive at cycle no 'step'. 'stepno' might
         be different from 'step' since 'start' might be != 0.
-    task : dict
-        Each dich contain the tasks to be done. A task is represented by a
-        object of type `SimulationTask` from `.simulation_task` with some
-        additional settings on how to store the output and when to execute
-        the task. Note that the actual execution of the task in controlled in
-        the object. The keywords are:
-
-            - `func` which is the object
-            - `args` which stores the arguments for the function
-            - `kwargs` which store the keyword arguments for the function
-            - `when` which stores when the task should be executed
-            - `first` which is a boolean which determines if the task should
-              be executed on the initial step, i.e. before the full
-              simulation starts
-            - `result` which is used to label the result. This is used for
-              output.
+    task : list of objects like `SimulationTask` from `.simulation_task`
+        This is the list of simulation tasks to execute.
     first_step : boolean
         True if the first step has not been executed yet.
     system : object like `System` from `pyretis.core.system`
@@ -153,16 +139,27 @@ class Simulation(object):
         Parameters
         ----------
         task : dict
-            A dict defining the task. The recognized keys are 'func'
-            'args', 'kwargs', 'first', 'when', 'result' which correspond
-            to attributes of a (new) `SimulationTask` object. See this object
-            for a definition of the different attributes.
+            A dict defining the task. A task is represented by a
+            object of type `SimulationTask` from `.simulation_task` with some
+            additional settings on how to store the output and when to execute
+            the task. Note that the actual execution of the task in controlled
+            in the object. The keywords are:
+
+            - `func`: A function to execute.
+            - `args` which stores the arguments for the function
+            - `kwargs` which store the keyword arguments for the function
+            - `when` which stores when the task should be executed
+            - `first` which is a boolean which determines if the task should
+              be executed on the initial step, i.e. before the full simulation
+              starts
+            - `result` which is used to label the result. This is used for
+              output.
         position : int
             Can be used to placed the task at a specific position.
 
         Note
         ----
-        SimulationTask will do some tests on the consistency of the keys
+        `SimulationTask` will do some tests on the consistency of the keys
         'func', 'args' and 'kwargs'. If this is not consistent, it will
         throw an AssertionError.
 
