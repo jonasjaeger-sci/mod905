@@ -7,7 +7,11 @@ The :ref:`natural constants <natural-constants>` are mainly used for
 conversions but it is also used to define the Boltzmann constant which is used
 by simulations in pyretis.
 The :ref:`unit conversions <unit-conversions>` are mainly useful for the
-pyretis input and output. All numerical values are from [NIST]_.
+pyretis input and output.
+
+All numerical values are from the National Institute of Standards and
+Technology and can be accessed through a web interface
+http://physics.nist.gov/constants or in plain text [NIST]_.
 
 Internally, all computations are carried out in units which are defined by
 a length scale, an energy scale and a mass scale. This means that the time
@@ -202,7 +206,7 @@ and mass unit (``at`` is approximately 2.41888433e-17 s).
 
 
 References
-~~~~~~~~~~
+----------
 
 .. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
 
@@ -228,6 +232,29 @@ References
 
 .. [GROMACS] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
    http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
+
+Examples
+--------
+# doctest: +ELLIPSIS
+>>> from pyretis.core.units import CONVERT
+>>> print(CONVERT['length'])
+{('A', 'nm'): 0.1, ('A', 'bohr'): 1.8897261254578281, ('A', 'm'): 1e-10}
+>>> from pyretis.core.units import create_conversion_factors
+>>> create_conversion_factors('lj', length=(3.405, 'A'), energy=(119.8, 'kB'),
+...                           mass=(39.948, 'g/mol'), charge_unit='e')
+>>> print(CONVERT['length']['bohr', 'nm'])
+0.052917721067
+>>> print(CONVERT['length']['lj', 'nm'])
+0.3405
+>>> print(CONVERT['length']['bohr', 'lj'])
+0.155411809301
+>>> create_conversion_factors('cgs', length=(0.01, 'm'),
+...                           energy=(1.0e-7, 'J'),
+...                           mass=(1.0, 'g'), charge_unit='e')
+>>> print(round(CONVERT['force']['cgs', 'dyn'], 2))
+1.0
+>>> print(round(CONVERT['time']['cgs', 's'], 2))
+1.0
 """
 from __future__ import print_function
 from collections import deque
@@ -326,9 +353,37 @@ UNITS['force'] = set(['N', 'pN', 'dyn'])
 CONVERT['force']['N', 'pN'] = 1.0e12
 CONVERT['force']['N', 'dyn'] = 1.0e5
 
-# Definitions for systems of units, these were generated using
-# `generate_conversion_factors` as shown in the __main__ routine.
-#CONVERT['
+# Definitions for systems of units:
+UNIT_SYSTEMS = {'lj': {}, 'real': {}, 'metal': {}, 'au': {},
+                'electron': {}, 'si': {}, 'gromacs': {}}
+UNIT_SYSTEMS['lj'] = {'length': (3.405, 'A'),
+                      'energy': (119.8, 'kB'),
+                      'mass': (39.948, 'g/mol'),
+                      'charge': 'e'}
+UNIT_SYSTEMS['real'] = {'length': (1.0, 'A'),
+                        'energy': (1.0, 'kcal/mol'),
+                        'mass': (1.0, 'g/mol'),
+                        'charge': 'e'}
+UNIT_SYSTEMS['metal'] = {'length': (1.0, 'A'),
+                         'energy': (1.0, 'eV'),
+                         'mass': (1.0, 'g/mol'),
+                         'charge': 'e'}
+UNIT_SYSTEMS['au'] = {'length': (1.0, 'bohr'),
+                      'energy': (1.0, 'hartree'),
+                      'mass': (9.10938356e-31, 'kg'),
+                      'charge': 'e'}
+UNIT_SYSTEMS['electron'] = {'length': (1.0, 'bohr'),
+                            'energy': (1.0, 'hartree'),
+                            'mass': (1.0, 'g/mol'),
+                            'charge': 'e'}
+UNIT_SYSTEMS['si'] = {'length': (1.0, 'm'),
+                      'energy': (1.0, 'J'),
+                      'mass': (1.0, 'kg'),
+                      'charge': 'e'}
+UNIT_SYSTEMS['gromacs'] = {'length': (1.0, 'nm'),
+                           'energy': (1.0, 'kJ/mol'),
+                           'mass': (1.0, 'g/mol'),
+                           'charge': 'e'}
 
 
 def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
@@ -705,42 +760,91 @@ def read_conversions(filename='units.txt', units=None):
     return convert
 
 
-for key in DIMENSIONS:
-    convert_bases(key)
+def _check_input_unit(unit, dim, input_unit):
+    """Helper function to check input units for `create_conversion_factors`
 
-UNIT_SYSTEMS = {'lj': {'length': (3.405, 'A'),
-                       'energy': (119.8, 'kB'),
-                       'mass': (39.948, 'g/mol'),
-                       'charge': 'e'},
-                'real': {'length': (1.0, 'A'),
-                         'energy': (1.0, 'kcal/mol'),
-                         'mass': (1.0, 'g/mol'),
-                         'charge': 'e'},
-                'metal': {'length': (1.0, 'A'),
-                          'energy': (1.0, 'eV'),
-                          'mass': (1.0, 'g/mol'),
-                          'charge': 'e'},
-                'au': {'length': (1.0, 'bohr'),
-                       'energy': (1.0, 'hartree'),
-                       'mass': (9.10938356e-31, 'kg'),
-                       'charge': 'e'},
-                'electron': {'length': (1.0, 'bohr'),
-                             'energy': (1.0, 'hartree'),
-                             'mass': (1.0, 'g/mol'),
-                             'charge': 'e'},
-                'si': {'length': (1.0, 'm'),
-                       'energy': (1.0, 'J'),
-                       'mass': (1.0, 'kg'),
-                       'charge': 'e'},
-                'gromacs': {'length': (1.0, 'nm'),
-                            'energy': (1.0, 'kJ/mol'),
-                            'mass': (1.0, 'g/mol'),
-                            'charge': 'e'}}
-for uni in UNIT_SYSTEMS:
-    generate_conversion_factors(uni, UNIT_SYSTEMS[uni]['length'],
-                                UNIT_SYSTEMS[uni]['energy'],
-                                UNIT_SYSTEMS[uni]['mass'],
-                                charge_unit=UNIT_SYSTEMS[uni]['charge'])
+    Parameters
+    ----------
+    unit : string
+        Name for the unit system we are dealing with.
+    dim : string
+        The dimension we are looking at, typically 'length', 'mass' or
+        'energy'.
+    input_unit : tuple
+        This is the input unit on form (value, string) where the value is
+        the numerical value and the string the unit, e.g. `(1.0, nm)`.
+
+    Returns
+    -------
+    out : tuple
+        The `input_unit` if it passes the testes, otherwise an exception
+        will be raised. If the `input_unit` is `None` the default values
+        from `UNIT_SYSTEMS` will be returned if they have been defined.
+
+    Raises
+    ------
+    ValueError
+        If the unit in `input_unit` is unknown or malformed.
+    """
+    if input_unit is not None:
+        try:
+            value, unit_dim = input_unit
+            if not unit_dim in UNITS[dim] and unit_dim != 'kB':
+                msg = 'Unknown {} unit: {}'.format(dim, unit_dim)
+                raise LookupError(msg)
+            else:
+                return value, unit_dim
+        except ValueError:
+            msg = 'Could not understand {} unit: {}'.format(dim, input_unit)
+            raise ValueError(msg)
+    else:  # Try do get values from default:
+        try:
+            value, unit_dim = UNIT_SYSTEMS[unit]['length']
+            return value, unit_dim
+        except KeyError:
+            msg = 'Could not determine {} unit for {}'.format(dim, unit)
+            raise ValueError(msg)
+
+
+def create_conversion_factors(unit, length=None, energy=None, mass=None,
+                              charge_unit=None):
+    """Helper function to set up conversion factors for a system of units.
+
+    Parameters
+    ----------
+    unit : string
+        A name for the system of units
+    length : tuple, optional
+        This is the length unit given as (float, string) where the float is
+        the numerical value and the string the unit, e.g. `(1.0, nm)`.
+    energy : tuple, optional
+        This is the energy unit given as (float, string) where the float is
+        the numerical value and the string the unit, e.g. `(1.0, eV)`.
+    mass : tuple, optional
+        This is the mass unit given as (float, string) where the float is
+        the numerical value and the string the unit, e.g. `(1.0, g/mol)`.
+
+    Returns
+    -------
+    None but will update `CONVERT` so that the conversion factors are
+    available.
+    """
+    # First just set up conversions for the base units:
+    for key in DIMENSIONS:
+        convert_bases(key)
+    # Check inputs and generate factors:
+    length = _check_input_unit(unit, 'length', length)
+    energy = _check_input_unit(unit, 'energy', energy)
+    mass = _check_input_unit(unit, 'mass', mass)
+    if charge_unit is None:
+        try:
+            charge_unit = UNIT_SYSTEMS[unit]['charge']
+        except KeyError:
+            msg = 'Undefined charge unit for {}'.format(unit)
+            raise ValueError(msg)
+    generate_conversion_factors(unit, length, energy, mass,
+                                charge_unit=charge_unit)
+
 
 if __name__ == '__main__':
     # This is intended as an example of how to use the functions
