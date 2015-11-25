@@ -26,7 +26,7 @@ POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 # simulation settings:
 settings = {'type': 'NVE',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
-            'endcycle': 100,
+            'endcycle': 1000,
             'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
                         'format': 'gro', 'filename': 'traj.gro'}],
             'generate-vel': {'seed': 0, 'momentum': True,

@@ -20,15 +20,39 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
-create_conversion_factors('real')
-LJPARAMETERS = {'Ar': {'sigma': 3.405, 'epsilon': 0.238, 'factor': 2.5}}
+UNIT = 'lj'
+with open('unit.txt', 'r') as fileh:
+    for lines in fileh:
+        UNIT = lines.strip()
+epsilon = 0.238066991253  # in kcal/mol
+sigma = 0.3405  # in nm
+mass = 39.948  # in g/mol
+timestep = 0.002  # in lj units
+temperature = 2.0  # in lj units
+create_conversion_factors('lj')
+create_conversion_factors(UNIT)
+generate_system_conversions('lj', UNIT)
+# convert:
+epsilon = epsilon * CONVERT['energy']['kcal/mol', UNIT]
+sigma = sigma * CONVERT['length']['nm', UNIT]
+mass = mass * CONVERT['mass']['g/mol', UNIT]
+timestep = timestep * CONVERT['time']['lj', UNIT]
+temperature = temperature * CONVERT['temperature']['lj', UNIT]
+print('Values in units {}'.format(UNIT))
+print('epsilon: {}'.format(epsilon))
+print('sigma: {}'.format(sigma))
+print('mass: {}'.format(mass))
+print('timestep: {}'.format(timestep))
+print('temperature: {}'.format(temperature))
+
+LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
 # simulation settings:
 settings = {'type': 'NVE',
             'integrator': {'name': 'velocityverlet',
-                           'timestep': 0.08821552861260326},
-            'endcycle': 100,
+                           'timestep': timestep},
+            'endcycle': 1000,
             'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
                         'format': 'gro', 'filename': 'traj.gro'}],
             'generate-vel': {'seed': 0, 'momentum': True,
@@ -37,15 +61,15 @@ settings = {'type': 'NVE',
 
 # set up a lattice and create a box
 lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-lattice = lattice * 3.405
-size = [[dim[0] * 3.405, dim[1] * 3.405] for dim in size]
+lattice = lattice * sigma
+size = [[dim[0] * sigma, dim[1] * sigma] for dim in size]
 box = Box(size, periodic=[True, True, True])
-ljsystem = System(temperature=2.0*119.80000, units='real', box=box)
+ljsystem = System(temperature=temperature, units=UNIT, box=box)
 print(ljsystem.get_boltzmann())
 ljsystem.forcefield = ForceField(potential=[POTENTIAL],
                                  params=[LJPARAMETERS])
 for pos in lattice:
-    ljsystem.add_particle(name='Ar', pos=pos, mass=39.948, ptype='Ar')
+    ljsystem.add_particle(name='Ar', pos=pos, mass=mass, ptype='Ar')
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 

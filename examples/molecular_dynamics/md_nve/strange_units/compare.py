@@ -7,23 +7,57 @@ This system considered is a simple Lennard-Jones fluid.
 from __future__ import print_function
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
+from pyretis.inout.fileinout.traj import read_gromacs_file
+import filecmp
 import numpy as np
 # for plotting:
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from pyretis.inout.plotting import mpl_set_style
-create_conversion_factors('lj')
-create_conversion_factors('real')
-generate_system_conversions('lj', 'real')
 
-mpl_set_style()  # load pyretis style
+def compare_traj(traj1, traj2):
+    print('Comparing trajectories')
+    print('Comparing with filecmp...')
+    result = filecmp.cmp(traj1, traj2)
+    if result is True:
+        result_string = 'Files are equal!'
+    else:
+        result_string = 'Files are NOT equal!'
+    print('Result: {}'.format(result_string))
+    print('Checking mean squared error...')
+    error = 0.0
+    n = 0
+    for snap1, snap2 in zip(read_gromacs_file(traj1),
+                            read_gromacs_file(traj2)):
+        xyz1 = np.column_stack((snap1['x'], snap1['y'], snap1['z']))
+        xyz2 = np.column_stack((snap2['x'], snap2['y'], snap2['z']))
+        diff = (xyz1 - xyz2)**2
+        dsum = np.einsum('ij,ij -> i', diff, diff)
+        error += dsum.sum()
+        n += 1
+    error /= float(n)
+    print('Mean error between trajectories: {}'.format(error))
+#from pyretis.inout.plotting import mpl_set_style
+UNIT = 'lj'
+with open('unit.txt', 'r') as fileh:
+    for lines in fileh:
+        UNIT = lines.strip()
+create_conversion_factors('lj')
+create_conversion_factors(UNIT)
+generate_system_conversions('lj', UNIT)
+
+#mpl_set_style()  # load pyretis style
+
+# compare trajectories
+compare_traj('../traj.gro', 'traj.gro')
+
+
 
 ljunits = np.loadtxt('../thermo.txt')
-realunits = np.loadtxt('thermo.txt')
-# convert realunits:
-realunits[:, 1] *= CONVERT['temperature']['real', 'lj']
-realunits[:, 2:5] *= CONVERT['energy']['real', 'lj']
-realunits[:, 5] *= CONVERT['pressure']['real', 'lj']
+other_units = np.loadtxt('thermo.txt')
+# convert other_units:
+other_units[:, 1] *= CONVERT['temperature'][UNIT, 'lj']
+other_units[:, 2:5] *= CONVERT['energy'][UNIT, 'lj']
+other_units[:, 5] *= CONVERT['pressure'][UNIT, 'lj']
 
 
 # just make a bunch of plots comparing the energies
@@ -36,11 +70,11 @@ ax1.plot(ljunits[:, 0], ljunits[:, 3], label='Kinetic - lj',
          ls='-', lw=3, alpha=0.8)
 ax1.plot(ljunits[:, 0], ljunits[:, 4], label='Total - lj',
          ls='-', lw=3, alpha=0.8)
-ax1.plot(realunits[:, 0], realunits[:, 2], label='real',
+ax1.plot(other_units[:, 0], other_units[:, 2], label=UNIT,
          ls='--', lw=3, alpha=0.8)
-ax1.plot(realunits[:, 0], realunits[:, 3], label='real',
+ax1.plot(other_units[:, 0], other_units[:, 3], label=UNIT,
          ls='--', lw=3, alpha=0.8)
-ax1.plot(realunits[:, 0], realunits[:, 4], label='real',
+ax1.plot(other_units[:, 0], other_units[:, 4], label=UNIT,
          ls='--', lw=3, alpha=0.8)
 ax1.set_xlabel('Step no.')
 ax1.set_ylabel('Energy per particle')
@@ -49,7 +83,7 @@ ax1.legend(loc='center left', prop={'size': 'small'}, ncol=2)
 ax2 = fig1.add_subplot(gs[0, 1])
 ax2.plot(ljunits[:, 0], ljunits[:, 1], label='lj',
          ls='-', lw=3, alpha=0.8)
-ax2.plot(realunits[:, 0], realunits[:, 1], label='real',
+ax2.plot(other_units[:, 0], other_units[:, 1], label=UNIT,
          ls='--', lw=3, alpha=0.8)
 ax2.set_ylabel('Temperature')
 ax2.legend(loc='upper right', prop={'size': 'small'})
@@ -57,7 +91,7 @@ ax2.legend(loc='upper right', prop={'size': 'small'})
 ax3 = fig1.add_subplot(gs[1, 1])
 ax3.plot(ljunits[:, 0], ljunits[:, 5], label='lj',
          ls='-', lw=3, alpha=0.8)
-ax3.plot(realunits[:, 0], realunits[:, 5], label='real',
+ax3.plot(other_units[:, 0], other_units[:, 5], label=UNIT,
          ls='--', lw=3, alpha=0.8)
 ax3.set_xlabel('Step no.')
 ax3.set_ylabel('Pressure')

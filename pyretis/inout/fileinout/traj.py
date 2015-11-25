@@ -309,3 +309,59 @@ class WriteGromacs(FileWriter):
             return boxlength
         else:
             return self.box.length * self.convert['pos']
+
+
+def read_gromacs_file(filename):
+    """A function for reading gromacs GRO files.
+
+    This function will read a gromacs file and yield the different snapshots
+    found in the file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to open.
+
+    Yields
+    ------
+    out : dict
+        This dict contains the snapshot.
+    """
+    lines_to_read = 0
+    snapshot = None
+    read_natoms = False
+    gro = (5, 5, 5, 5, 8, 8, 8)
+    gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
+                'x', 'y', 'z')
+    gro_type = (0, 1, 1, 0, 2, 2, 2)
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            if read_natoms:
+                read_natoms = False
+                lines_to_read = int(lines.strip()) + 1
+                continue  # just skip
+            if lines_to_read == 0:  # new shapshot
+                if snapshot is not None:
+                    yield snapshot
+                snapshot = {'header': lines.strip()}
+                read_natoms = True
+            elif lines_to_read == 1:  # read box
+                snapshot['box'] = [float(length) for length in
+                                   lines.strip().split()]
+                lines_to_read -= 1
+            else:  # read atoms
+                lines_to_read -= 1
+                current = 0
+                for i, key, gtype in zip(gro, gro_keys, gro_type):
+                    val = lines[current:current+i].strip()
+                    if gtype == 0:
+                        val = int(val)
+                    elif gtype == 2:
+                        val = float(val)
+                    current += i
+                    try:
+                        snapshot[key].append(val)
+                    except KeyError:
+                        snapshot[key] = [val]
+    if snapshot is not None:
+        yield snapshot
