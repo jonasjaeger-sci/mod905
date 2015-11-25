@@ -137,8 +137,8 @@ class RandomGenerator(object):
         meanm = np.array([mean, ] * size)
         return meanm + np.dot(norm, cho.T)
 
-    def generate_maxwellian_velocities(self, particles, temperature, dof,
-                                       selection=None, momentum=True):
+    def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
+                                       dof, selection=None, momentum=True):
         """Generate velocities from a Maxwell distribution.
 
         The velocities are drawn to match a given temperature and the method
@@ -157,6 +157,8 @@ class RandomGenerator(object):
         ----------
         particles : object like `Particles` from `pyretis.core.particles`
             These are the particles to set the velocity of.
+        boltzmann : float
+            The Boltzmann factor in correct units.
         temperature : float
             The desired temperature. Typically, system.temperature['set']
             will be used here.
@@ -185,7 +187,8 @@ class RandomGenerator(object):
         if momentum:
             reset_momentum(particles, selection=selection)
 
-        _, avgtemp, _ = calculate_kinetic_temperature(particles, dof=dof,
+        _, avgtemp, _ = calculate_kinetic_temperature(particles, boltzmann,
+                                                      dof=dof,
                                                       selection=selection)
         scale_factor = np.sqrt(temperature/avgtemp)
         particles.vel[selection] *= scale_factor

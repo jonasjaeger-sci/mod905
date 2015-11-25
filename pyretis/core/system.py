@@ -381,7 +381,9 @@ class System(object):
             temperature = self.temperature['set']
         dof = self.temperature['dof']
         if distribution == 'maxwell':
-            rgen.generate_maxwellian_velocities(self.particles, temperature,
+            rgen.generate_maxwellian_velocities(self.particles,
+                                                self.get_boltzmann(),
+                                                temperature,
                                                 dof, momentum=momentum)
         else:
             msg = 'Distribution "{}" not defined!'.format(distribution)
@@ -400,5 +402,7 @@ class System(object):
             The temperature of the system
         """
         dof = self.temperature['dof']
-        _, temp, _ = calculate_kinetic_temperature(self.particles, dof=dof)
+        _, temp, _ = calculate_kinetic_temperature(self.particles,
+                                                   CONSTANTS['kB'][self.units],
+                                                   dof=dof)
         return temp

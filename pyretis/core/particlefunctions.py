@@ -160,7 +160,8 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     return kin_tensor.trace(), kin_tensor
 
 
-def calculate_kinetic_temperature(particles, dof=None, selection=None,
+def calculate_kinetic_temperature(particles, boltzmann, dof=None,
+                                  selection=None,
                                   kin_tensor=None):
     """Return the kinetic temperature of a collection of particles.
 
@@ -168,6 +169,8 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
     ----------
     particles : object like `Particles` from `pyretis.core.particles`
         This object represent the particles.
+    boltzmann : float
+        This is the Boltzmann factor/constant in correct units.
     dof : list of floats, optional
         dof is the degrees of freedom to subtract. It's shape should
         be equal to the number of dimensions.
@@ -203,7 +206,7 @@ def calculate_kinetic_temperature(particles, dof=None, selection=None,
                                                      selection=selection)
     if dof is not None:
         ndof = ndof - dof
-    temperature = 2.0 * kin_tensor.diagonal() / ndof
+    temperature = (2.0 * kin_tensor.diagonal() / ndof) / boltzmann
     return temperature, np.average(temperature), kin_tensor
 
 
@@ -279,7 +282,8 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
         ndof = particles.npart
     else:
         ndof = (particles.npart * dim - np.sum(dof)) / float(dim)
-    _, temperature, _ = calculate_kinetic_temperature(particles, dof=dof)
+    _, temperature, _ = calculate_kinetic_temperature(particles, boltzmann,
+                                                      dof=dof)
     pressvolume = ndof * temperature * boltzmann
     pressvolume += particles.virial.trace() / float(dim)
     press = pressvolume / volume
@@ -385,7 +389,9 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     if dof is None:
         dof = system.temperature['dof']
     kin_tens = calculate_kinetic_energy_tensor(system.particles)
-    _, temp, _ = calculate_kinetic_temperature(system.particles, dof=dof,
+    _, temp, _ = calculate_kinetic_temperature(system.particles,
+                                               system.get_boltzmann(),
+                                               dof=dof,
                                                kin_tensor=kin_tens)
     ekin = kin_tens.trace()
     press = calculate_scalar_pressure(system.particles, volume, dim,

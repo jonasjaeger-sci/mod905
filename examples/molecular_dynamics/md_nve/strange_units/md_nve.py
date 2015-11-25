@@ -1,0 +1,116 @@
+# -*- coding: utf-8 -*-
+"""
+Example of running a MD NVE simulation.
+This system considered is a simple Lennard-Jones fluid.
+"""
+# pylint: disable=C0103
+from __future__ import print_function
+from pyretis.core import Box, System
+from pyretis.core.units import create_conversion_factors, CONVERT
+from pyretis.core.units import generate_system_conversions
+from pyretis.core.simulation import create_simulation
+from pyretis.forcefield import ForceField
+from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
+from pyretis.inout import (get_predefined_table, FileWriter,
+                           create_output)
+from pyretis.tools import generate_lattice
+import numpy as np
+# for plotting:
+from matplotlib import pyplot as plt
+from matplotlib import gridspec as gridspec
+from pyretis.inout.plotting import mpl_set_style
+# define potential function(s) and force field:
+create_conversion_factors('real')
+LJPARAMETERS = {'Ar': {'sigma': 3.405, 'epsilon': 0.238, 'factor': 2.5}}
+POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
+
+# simulation settings:
+settings = {'type': 'NVE',
+            'integrator': {'name': 'velocityverlet',
+                           'timestep': 0.08821552861260326},
+            'endcycle': 100,
+            'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
+                        'format': 'gro', 'filename': 'traj.gro'}],
+            'generate-vel': {'seed': 0, 'momentum': True,
+                             'distribution': 'maxwell'}}
+
+
+# set up a lattice and create a box
+lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
+lattice = lattice * 3.405
+size = [[dim[0] * 3.405, dim[1] * 3.405] for dim in size]
+box = Box(size, periodic=[True, True, True])
+ljsystem = System(temperature=2.0*119.80000, units='real', box=box)
+print(ljsystem.get_boltzmann())
+ljsystem.forcefield = ForceField(potential=[POTENTIAL],
+                                 params=[LJPARAMETERS])
+for pos in lattice:
+    ljsystem.add_particle(name='Ar', pos=pos, mass=39.948, ptype='Ar')
+msg = 'Created fcc grid with {} atoms.'
+print(msg.format(ljsystem.particles.npart))
+
+if 'generate-vel' in settings:
+    ljsystem.generate_velocities(**settings['generate-vel'])
+    msg = 'Generated temperatures with average: {}'
+    print(msg.format(ljsystem.calculate_temperature()))
+
+simulation_nve = create_simulation(settings, ljsystem)
+
+# set up extra output:
+table = get_predefined_table('energies')
+thermo_file = FileWriter('thermo.txt', 'table',
+                         header={'text': table.header})
+store_results = []
+# also create some other outputs:
+output_tasks = [task for task in create_output(ljsystem, settings)]
+# run the simulation :-)
+
+for result in simulation_nve.run():
+    stepno = result['cycle']['stepno']
+    table_row = table.write(stepno, result['thermo'])
+    thermo_file.write_line(table_row)
+    result['thermo']['stepno'] = stepno
+    store_results.append(result['thermo'])
+    for task in output_tasks:
+        task.output(result)
+# the rest is now just plotting:
+# as an example, do some plotting:
+mpl_set_style()  # load pyretis style
+step = [res['stepno'] for res in store_results]
+pot_e = [res['vpot'] for res in store_results]
+kin_e = [res['ekin'] for res in store_results]
+tot_e = [res['etot'] for res in store_results]
+pressure = [res['press'] for res in store_results]
+temp = [res['temp'] for res in store_results]
+# first figure - some energies
+fig1 = plt.figure()
+gs = gridspec.GridSpec(2, 2)
+ax1 = fig1.add_subplot(gs[:, 0])
+ax1.plot(step, pot_e, label='Potential')
+ax1.plot(step, kin_e, label='Kinetic')
+ax1.plot(step, tot_e, label='Total')
+ax1.set_xlabel('Step no.')
+ax1.set_ylabel('Energy per particle')
+ax1.legend(loc='center left', prop={'size': 'small'})
+
+ax2 = fig1.add_subplot(gs[0, 1])
+ax2.plot(step, temp)
+ax2.set_ylabel('Temperature')
+
+ax3 = fig1.add_subplot(gs[1, 1])
+ax3.plot(step, pressure)
+ax3.set_xlabel('Step no.')
+ax3.set_ylabel('Pressure')
+
+fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95, left=0.12, wspace=0.3)
+# second figure, momentum in different directions
+momentum = np.array([res['mom'] for res in store_results])
+fig2 = plt.figure()
+ax4 = fig2.add_subplot(111)
+ax4.plot(step, momentum[:, 0], lw=4, alpha=0.7, label='x')
+ax4.plot(step, momentum[:, 1], lw=4, alpha=0.7, label='y')
+ax4.plot(step, momentum[:, 2], lw=4, alpha=0.7, label='z')
+ax4.set_xlabel('Step')
+ax4.set_ylabel('Linear momentum')
+ax4.legend(loc='upper center', prop={'size': 'small'}, ncol=3)
+plt.show()

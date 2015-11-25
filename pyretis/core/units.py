@@ -862,14 +862,14 @@ if __name__ == '__main__':
     # First, we just generate conversions between the bases:
     NEW_UNITS = {}
     NEW_UNITS['pyretis'] = {'length': (10, 'A'),
-                            'energy': (42.0, 'J'),
-                            'mass': (42.0, 'g/mol'),
+                            'energy': (1000, 'J/mol'),
+                            'mass': (1.0, 'g/mol'),
                             'charge': 'e'}
     for uni in NEW_UNITS:
-        generate_conversion_factors(uni, NEW_UNITS[uni]['length'],
-                                    NEW_UNITS[uni]['energy'],
-                                    NEW_UNITS[uni]['mass'],
-                                    charge_unit=NEW_UNITS[uni]['charge'])
+        create_conversion_factors(uni, length=NEW_UNITS[uni]['length'],
+                                  energy=NEW_UNITS[uni]['energy'],
+                                  mass=NEW_UNITS[uni]['mass'],
+                                  charge_unit=NEW_UNITS[uni]['charge'])
     # Units can be stored by:
     #write_conversions()
     # and loaded by:
