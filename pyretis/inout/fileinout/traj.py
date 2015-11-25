@@ -10,6 +10,12 @@ Important classes defined here:
 - WriteXYZ: Writing of coordinates to a file in a xyz format.
 
 - WriteGromacs: Writing of a coordinates to a file in a gromacs format.
+
+Important functions defined here:
+
+- read_xyz_file: A function for reading snapshots from a xyz file.
+
+- read_gromacs_file: A function for reading snapshots from a gromacs GRO file.
 """
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
@@ -22,7 +28,7 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
-__all__ = ['WriteXYZ', 'WriteGromacs']
+__all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
 
 
 def create_traj_writer(filename, filefmt, oldfile, system):

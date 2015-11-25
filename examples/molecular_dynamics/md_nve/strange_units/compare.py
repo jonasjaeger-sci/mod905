@@ -7,7 +7,7 @@ This system considered is a simple Lennard-Jones fluid.
 from __future__ import print_function
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
-from pyretis.inout.fileinout.traj import read_gromacs_file
+from pyretis.inout.fileinout import read_gromacs_file
 import filecmp
 import numpy as np
 # for plotting:

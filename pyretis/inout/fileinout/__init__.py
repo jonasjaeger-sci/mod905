@@ -25,6 +25,10 @@ Important functions:
 
 - get_file_object: Opens a file for reading given a file type and file name.
 
+- read_xyz_file: Read snapshots from a xyz file.
+
+- read_gro_file: Read snapshots from a gromacs GRO file.
+
 Important classes:
 
 - FileWriter: A generic file writer class.
@@ -42,7 +46,7 @@ Important classes:
 from __future__ import absolute_import
 import warnings
 # pyretis imports
-from .traj import create_traj_writer
+from .traj import create_traj_writer, read_xyz_file, read_gromacs_file
 from .fileinout import FileWriter
 from .crossfile import CrossFile
 from .energyfile import EnergyFile
