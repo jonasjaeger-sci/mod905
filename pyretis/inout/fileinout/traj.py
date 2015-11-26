@@ -18,8 +18,11 @@ Important functions defined here:
 - read_gromacs_file: A function for reading snapshots from a gromacs GRO file.
 """
 import numpy as np
+import logging
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
 from pyretis.inout.fileinout.fileinout import FileWriter
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 # define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
@@ -125,8 +128,8 @@ class WriteXYZ(FileWriter):
         pos : numpy.array
             The positions to write.
         names : numpy.array, optional
-            The atom names. If the atom names are not the generated ones
-            will be used ("X").
+            Atom names. If atom names are not given, dummy names
+            (`X`) will be generated and used.
         header : string, optional
             Header to use for writing the xyz-frame.
         """
@@ -429,3 +432,40 @@ def read_xyz_file(filename):
                         snapshot[key] = [val]
     if snapshot is not None:
         yield snapshot
+
+
+def write_xyz_file(filename, pos, names=None, header=None):
+    """Write a single configuration in xyz-format.
+
+    This is just a simple function to write a single xyz
+    configuration to a file. It will NOT convert posistions and assumes
+    that these are given in correct units.
+
+    Parameters
+    ----------
+    filename : string
+        The file to create.
+    pos : numpy.array or list-like.
+       The positions to write.
+    names : list, optional
+        The atom names.
+    header : string, optional
+        Header to use for writing the xyz-file.
+    """
+    npart = len(pos)
+    pos = _adjust_coordinate(pos)
+    with open(filename, 'w') as fileh:
+        fileh.write('{}\n'.format(npart))
+        if header is None:
+            fileh.write('pyretis xyz writer\n')
+        else:
+            fileh.write('{}\n'.format(header))
+        if names is None:
+            for posi in pos:
+                logging.warning('No atom name given. Using "X"')
+                out = _XYZ_FMT.format('X', posi[0], posi[1], posi[2])
+                fileh.write(out)
+        else:
+            for namei, posi in zip(names, pos):
+                out = _XYZ_FMT.format(namei, posi[0], posi[1], posi[2])
+                fileh.write(out)
