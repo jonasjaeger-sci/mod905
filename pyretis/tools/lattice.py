@@ -7,7 +7,6 @@ initial structures on a lattice.
 Examples
 --------
 >>> from pyretis.tools.lattice import generate_lattice
-
 >>> xyz = generate_lattice('diamond', [1, 1, 1], lcon=1)
 """
 import itertools
@@ -55,7 +54,8 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     lcon : float
         The lattice constant.
     density : float, optional
-        A desired density. If this is given, `lcon` is calculated.
+        A desired density. If this is given, `lcon` is calculated. Note that
+        density will be interpreted as given in internal units.
     repeat : list of ints
         `repead[i]` is the number of repetitions in the `i` direction.
 

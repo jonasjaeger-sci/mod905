@@ -236,30 +236,22 @@ References
 Examples
 --------
 >>> from pyretis.core.units import CONVERT  # doctest: +ELLIPSIS
-
 >>> print(CONVERT['length'])
 {('A', 'nm'): 0.1, ('A', 'bohr'): 1.8897261254578281, ('A', 'm'): 1e-10}
-
 >>> from pyretis.core.units import create_conversion_factors
 >>> create_conversion_factors('lj', length=(3.405, 'A'), energy=(119.8, 'kB'),
 ...                           mass=(39.948, 'g/mol'), charge_unit='e')
-
 >>> print(CONVERT['length']['bohr', 'nm'])
 0.052917721067
-
 >>> print(CONVERT['length']['lj', 'nm'])
 0.3405
-
 >>> print(CONVERT['length']['bohr', 'lj'])
 0.155411809301
-
 >>> create_conversion_factors('cgs', length=(0.01, 'm'),
 ...                           energy=(1.0e-7, 'J'),
 ...                           mass=(1.0, 'g'), charge_unit='e')
-
 >>> print(round(CONVERT['force']['cgs', 'dyn'], 2))
 1.0
-
 >>> print(round(CONVERT['time']['cgs', 's'], 2))
 1.0
 """
