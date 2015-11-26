@@ -13,10 +13,11 @@ Important classes and functions defined here:
 - FileWriter: A generic file writer class.
 """
 import os
-import warnings
+import logging
 # local imports
 from pyretis.inout.common import create_backup
 from pyretis.inout.txtinout import create_and_format_row
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['FileWriter']
@@ -191,7 +192,7 @@ class FileWriter(object):
                 self.fileh = open(self.filename, 'r')
             except IOError as error:
                 msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-                warnings.warn(msg)
+                logging.warning(msg)
         elif self.mode == 'w':  # Write data to file + handle backup:
             try:
                 if os.path.isfile(self.filename):
@@ -206,23 +207,23 @@ class FileWriter(object):
                         msg_back = create_backup(self.filename)
                         msg = '{}: {}'.format(msg, msg_back)
                         self.fileh = open(self.filename, 'w')
-                    warnings.warn(msg)
+                    logging.warning(msg)
                 else:
                     self.fileh = open(self.filename, 'w')
             except IOError as error:
                 msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-                warnings.warn(msg)
+                logging.critical(msg)
             except Exception as error:
                 msg = 'Error: {}'.format(error)
-                warnings.warn(msg)
+                logging.critical(msg)
                 raise
         else:
             msg = 'Unknown file mode "{}"'.format(self.mode)
-            warnings.warn(msg)
+            logging.warning(msg)
 
         if self.fileh is None:
             msg = 'Could not open file!'
-            warnings.warn(msg)
+            logging.warning(msg)
             raise
 
     def close(self):
@@ -255,10 +256,10 @@ class FileWriter(object):
             except IOError as error:
                 msg = 'Write I/O error ({}): {}'.format(error.errno,
                                                         error.strerror)
-                warnings.warn(msg)
+                logging.critical(msg)
             except Exception as error:
                 msg = 'Write error: {}'.format(error)
-                warnings.warn(msg)
+                logging.critical(msg)
                 raise
         else:
             return False

@@ -23,7 +23,7 @@ Important functions defined here:
                                                simulation_settings, rawdata)
 """
 from __future__ import absolute_import
-import warnings
+import logging
 # pyretis imports
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble)
@@ -34,6 +34,7 @@ from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_orderp_output,
                                                   txt_path_output)
 from pyretis.inout.report import generate_report, write_report
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['run_md_flux_analysis', 'analyse_file']
@@ -71,7 +72,8 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
 
     if results is not None:  # output the report
         for report_type in analysis_settings.get('report', ['rst']):
-            report, ext = generate_report('mdflux', results, output=report_type)
+            report, ext = generate_report('mdflux', results,
+                                          output=report_type)
             write_report(report, 'mdflux', ext)
     return results
 
@@ -197,7 +199,8 @@ def analyse_file(file_type, file_name):
                        'This will be ignored by the flux analysis.',
                        'Are you sure you are running the correct analysis',
                        'with correct input?']
-                warnings.warn(' '.join(msg).format(fileobj.filename))
+                msg = '\n'.join(msg).format(fileobj.filename)
+                logging.warning(msg)
                 break
         return function(analysis_settings, simulation_settings,
                         first_block['data'], plotter=plotter, txt=txt)
@@ -274,7 +277,7 @@ def check_output(function):
         txt = analysis_settings.get('txt-output', None)
         if plotter is None and txt is None:
             msg = 'No output selected. Skipping analysis!'
-            warnings.warn(msg)
+            logging.warning(msg)
             return None, None, None
         if txt is not None:  # just make sure we specify the things we need:
             try:
@@ -354,7 +357,7 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
         List with the text files created (if any).
     """
     if 'units' in simulation_settings:
-        warnings.warn('Change of units is not implemented yet!')
+        logging.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     result = analyse_orderp(rawdata, analysis_settings)
     if plotter is not None:
@@ -436,7 +439,7 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
         List with the text files created (if any).
     """
     if 'units' in simulation_settings:
-        warnings.warn('Change of units is not implemented yet!')
+        logging.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     idetect = path_ensemble.detect
     if idetect is None:
@@ -447,6 +450,7 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
     if plotter is not None:
         figures = plotter.plot_path(path_ensemble, result, idetect)
     if txt is not None:
-        outtxt = txt_path_output(path_ensemble, result, idetect, out_fmt=txt['fmt'],
+        outtxt = txt_path_output(path_ensemble, result, idetect,
+                                 out_fmt=txt['fmt'],
                                  backup=txt['backup'])
     return result, figures, outtxt

@@ -32,6 +32,9 @@ from __future__ import print_function
 from pyretis.core.tis import make_tis_step_ensemble, propagate
 from pyretis.core.path import Path, reverse_path
 import numpy as np
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['make_retis_step']
 
@@ -81,11 +84,11 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
-        print('Will execute RETIS moves')
+        logging.info('Will execute RETIS moves')
         return retis_moves(ensembles, system, order_function, integrator,
                            rgen, settings, cycle)
     else:
-        print('Will execute TIS moves')
+        logging.info('Will execute TIS moves')
         return retis_tis_moves(ensembles, system, order_function, integrator,
                                rgen, settings, cycle)
 
@@ -333,8 +336,9 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     out : string
         The result of the swapping move.
     """
-    print('Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
-                                          ensembles[idx+1].ensemble))
+    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
+                                          ensembles[idx+1].ensemble)
+    logging.info(msg)
     status = None
     if idx == 0:
         return retis_swap_zero(ensembles, system, order_function, integrator,
@@ -350,12 +354,12 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         path1, path2 = path2, path1
         if cross[1]:  # accept the swap
             status = 'ACC'
-            print('Accepting the swap')
+            logging.info('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
         else:  # reject:
             status = 'NCR'
-            print('Rejecting the swap')
+            logging.info('Swap was rejected.')
         ensemble1.add_path_data(path1, status, cycle=cycle)
         ensemble2.add_path_data(path2, status, cycle=cycle)
         return status
@@ -452,11 +456,11 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'
-        print('Rejecting path in [0^-], BTX')
+        logging.info('Rejecting path in [0^-], BTX')
     if path1.status == 'FTX':
         path0.status = 'FTX'
         status = 'FTX'
-        print('Rejecting path in [0^+], FTX')
+        logging.info('Rejecting path in [0^+], FTX')
     ensemble0.add_path_data(path0, status, cycle=cycle)
     ensemble1.add_path_data(path1, status, cycle=cycle)
     return status
@@ -480,7 +484,8 @@ def null_move(path_ensemble, cycle):
         The status, which here will be 'ACC' since we just accept the last
         accepted path.
     """
-    print('Null move for {}'.format(path_ensemble.ensemble))
+    msg = 'Null move for {}'.format(path_ensemble.ensemble)
+    logging.info(msg)
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)

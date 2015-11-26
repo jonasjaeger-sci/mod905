@@ -6,12 +6,13 @@ object contains particles, a force field and a box.
 """
 from __future__ import absolute_import
 import numpy as np
-import warnings
+import logging
 # from the pyretis package
 from pyretis.core.units import CONSTANTS
 from pyretis.core.particles import Particles
 from pyretis.core.particlefunctions import calculate_kinetic_temperature
 from pyretis.core.random_gen import RandomGenerator
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['System']
@@ -133,7 +134,8 @@ class System(object):
         try:
             return self.box.dim
         except AttributeError:
-            warnings.warn('Box dimensions not set, defaulting to 1!')
+            msg = 'Box dimensions are not set. Setting dimensions to "1"'
+            logging.warning(msg)
             return 1
 
     def calculate_beta(self, temperature=None):
@@ -380,14 +382,15 @@ class System(object):
         if temperature is None:
             temperature = self.temperature['set']
         dof = self.temperature['dof']
-        if distribution == 'maxwell':
+        if distribution.lower() == 'maxwell':
             rgen.generate_maxwellian_velocities(self.particles,
                                                 CONSTANTS['kB'][self.units],
                                                 temperature,
                                                 dof, momentum=momentum)
         else:
-            msg = 'Distribution "{}" not defined!'.format(distribution)
-            warnings.warn(msg)
+            msg = 'Distribution "{}" not defined! Velocities not set!'
+            msg = msg.format(distribution)
+            logging.error(msg)
 
     def calculate_temperature(self):
         """Calculate the temperature of the the system.

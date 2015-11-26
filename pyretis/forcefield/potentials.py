@@ -2,8 +2,10 @@
 """This file contains positions dependent potentials."""
 from __future__ import absolute_import
 import numpy as np
-import warnings
+import logging
 from pyretis.forcefield.potential import PotentialFunction
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['DoubleWell', 'RectangularWell']
 
@@ -176,11 +178,11 @@ class RectangularWell(PotentialFunction):
         Returns
         -------
         out : None
-            Returns `None` but might raise a warning.
+            Returns `None` but might give a warning.
         """
         if self.left >= self.right:
             msg = 'Setting left >= right in RectangularWell potential!'
-            warnings.warn(msg)
+            logging.warning(msg)
 
     def potential(self, pos):
         """Evaluate the potential.

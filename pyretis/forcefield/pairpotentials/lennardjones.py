@@ -3,9 +3,10 @@
 from __future__ import absolute_import
 import numpy as np
 import itertools
-import warnings
+import logging
 from pyretis.forcefield.potential import PotentialFunction
 from pyretis.forcefield import forcefield
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
@@ -117,25 +118,24 @@ class PairLennardJonesCut(PotentialFunction):
             rcut = params.get('rcut', None)
             if eps is None:
                 msg = 'epsilon for {} not set - ignoring!'.format(key)
-                warnings.warn(msg)
+                logging.warning(msg)
                 continue
             if sigma is None:
                 msg = 'sigma for {} not set - ignoring!'.format(key)
-                warnings.warn(msg)
+                logging.warning(msg)
                 continue
             if rcut is None:
                 factor = self.params['factor']
                 rcut = factor * sigma
-                msg = 'rcut for {} not given. Set to {}*{}'.format(key,
-                                                                   factor,
-                                                                   sigma)
-                warnings.warn(msg)
+                msg = 'rcut for {} not given. Using factor to set it: {} * {}'
+                msg = msg.format(key, factor, sigma)
+                logging.warning(msg)
             if isinstance(key, tuple):  # adding pair
                 key_r = (key[1], key[0])
                 for pair in [key, key_r]:
                     if pair in self.pairparams['pairs']:
                         msg = 'Pair {} already defined - ignored!'.format(key)
-                        warnings.warn(msg)
+                        logging.warning(msg)
                         continue
                     else:
                         self.pairparams['pairs'].add(pair)
@@ -146,7 +146,7 @@ class PairLennardJonesCut(PotentialFunction):
             else:  # adding atom
                 if key in self.typeparams['types']:
                     msg = 'Atom {} already defined - ignored!'.format(key)
-                    warnings.warn(msg)
+                    logging.warning(msg)
                     continue
                 else:
                     self.typeparams['types'].add(key)
@@ -172,7 +172,7 @@ class PairLennardJonesCut(PotentialFunction):
         parameters : dict
             The parameters to update.
         mix : boolean
-            If mix is true, the _generate_mixing_parameters will
+            If mix is true, the `_generate_mixing_parameters` will
             be executed. Default here is False, in case the user want
             to explicitly set some parameters.
         """
@@ -181,7 +181,7 @@ class PairLennardJonesCut(PotentialFunction):
             if key in self.params:
                 if key == 'mixing' and params != self.params[key] and not mix:
                     msg = 'Mixing rule changed, but re-mixing not requested'
-                    warnings.warn(msg)
+                    logging.warning(msg)
                 self.params[key] = params
             else:
                 if isinstance(key, tuple):  # updating pair parameter
@@ -196,7 +196,7 @@ class PairLennardJonesCut(PotentialFunction):
                             self.pairparams[i][key_r] = params[i]
                     else:
                         msg = '{} not found, ignoring pair'.format(key)
-                        warnings.warn(msg)
+                        logging.warning(msg)
                 else:
                     if key in self.typeparams['types']:
                         update_lj = True
@@ -204,7 +204,7 @@ class PairLennardJonesCut(PotentialFunction):
                             self.typeparams[i][key] = params[i]
                     else:
                         msg = '{} not found, ignoring type'.format(key)
-                        warnings.warn(msg)
+                        logging.warning(msg)
         if mix:  # we might have to do re-mixing here independent of update_lj
             self._generate_mixing_parameters()
         if update_lj:

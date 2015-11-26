@@ -10,7 +10,8 @@ Important classes and functions defined here
 """
 from __future__ import absolute_import
 from .simulation_task import SimulationTask
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['Simulation']
@@ -181,8 +182,8 @@ class Simulation(object):
                 self.task.insert(position, new_task)
             return True
         except AssertionError:
-            msg = 'Could not add task: {}'
-            warnings.warn(msg.format(task))
+            msg = 'Could not add task: {}'.format(task)
+            logging.warning(msg)
             return False
 
     def run(self):

@@ -13,11 +13,13 @@ Important classes and functions defined here:
 """
 from __future__ import absolute_import
 import numpy as np
-import warnings
+import logging
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
 from pyretis.core.simulation.common import check_settings
 from pyretis.core.random_gen import RandomGenerator
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['UmbrellaWindowSimulation', 'create_mc_simulation']
 
@@ -66,8 +68,9 @@ def create_mc_simulation(settings, system, sim_type):
             not_found = set(not_found) - set(['seed', 'rgen'])
             required = len(not_found) == 0
     if not required:
-        warnings.warn('Settings not found: {}'.format(not_found))
-        raise ValueError('Please update settings')
+        msg = 'Settings not found: {}'.format(not_found)
+        logging.critical(msg)
+        raise ValueError('Required settings not found!')
     if sim_type == 'umbrellawindow':
         try:
             rgen = settings['rgen']

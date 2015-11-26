@@ -19,7 +19,8 @@ from pyretis.core.simulation.common import check_settings
 from pyretis.core.integrators import create_integrator
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['SimulationNVE', 'SimulationMDFlux', 'create_md_simulation']
@@ -125,8 +126,8 @@ class SimulationNVE(Simulation):
         self.integrator = integrator
         if not self.integrator.dynamics == 'NVE':
             msg = 'Inconsistent integrator {} for NVE dynamics!'
-            warnings.warn(msg.format(integrator.desc))
-
+            msg = msg.format(integrator.desc)
+            logging.warning(msg)
         task_integrate = {'func': self.integrator.integration_step,
                           'args': [self.system]}
         task_thermo = {'func': calculate_thermo,

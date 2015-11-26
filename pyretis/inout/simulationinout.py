@@ -6,7 +6,7 @@ simulations.
 """
 from __future__ import print_function
 import os
-import warnings
+import logging
 import pprint
 # opyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
@@ -14,6 +14,7 @@ from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
                                      PathFile, PathEnsembleFile,
                                      create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['OutputTask', 'create_output', 'store_settings_as_py']
@@ -356,7 +357,8 @@ def _create_file_writer(task, system, settings):
     else:
         msg = ['Unknown type {} for target file'.format(task['type'])]
         msg += ['Ignoring task: {}'.format(task)]
-        warnings.warn('\n'.join(msg))
+        msg = '\n'.join(msg)
+        logging.warning(msg)
     return writer
 
 
@@ -396,7 +398,8 @@ def create_output_task(task, system, settings):
     else:
         msg = ['Unknown task target: {}'.format(task['target'])]
         msg += ['Ignoring task: {}'.format(task)]
-        warnings.warn('\n'.join(msg))
+        msg = '\n'.join(msg)
+        logging.warning(msg)
     if writer is not None:
         task_type = task['type'] if task_type is None else task_type
         return OutputTask(writer,

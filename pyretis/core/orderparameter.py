@@ -18,11 +18,12 @@ Important classes defined here:
 """
 from __future__ import division  # for StringFunctionParser
 import numpy as np
-import warnings
+import logging
 # imports for StringFunctionParser:
 from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
                        Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
 import operator
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
@@ -150,7 +151,7 @@ class OrderParameter(object):
         """
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
-            warnings.warn(msg)
+            logging.warning(msg)
             return False
         self.extra.append(func)
 
@@ -206,7 +207,8 @@ class OrderParameterPosition(OrderParameter):
         try:
             self.dim = dims[dim]
         except KeyError:
-            warnings.warn('Unknown dimension {} requested'.format(dim))
+            msg = 'Unknown dimension {} requested'.format(dim)
+            logging.critical(msg)
             raise
 
     def calculate(self, system):
@@ -346,7 +348,7 @@ class OrderParameterParse(OrderParameter):
         func = StringFunctionParser(string_function=strfunc)
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
-            warnings.warn(msg)
+            logging.warning(msg)
             return False
         self.extra.append(func)
 

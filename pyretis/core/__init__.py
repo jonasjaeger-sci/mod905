@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This package defines the core pyretis tools.
 
-The core tools are intended to set up simulations and run them. 
+The core tools are intended to set up simulations and run them.
 
 Package structure
 -----------------

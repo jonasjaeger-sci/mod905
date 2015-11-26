@@ -3,7 +3,11 @@
 
 This class is sub-classed in all potential functions.
 """
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+__all__ = ['PotentialFunction']
 
 
 class PotentialFunction(object):
@@ -48,7 +52,7 @@ class PotentialFunction(object):
             True if the check(s) pass.
         """
         if len(self.params) == 0:
-            warnings.warn('No parameters are set for the potential')
+            logging.warning('No parameters are set for the potential')
             return False
         return True
 
@@ -75,8 +79,7 @@ class PotentialFunction(object):
         ignored.
         """
         if not isinstance(params, dict):
-            msg = 'Did not understand the parameters...'
-            warnings.warn(msg)
+            logging.warning('Did not understand the parameters.')
             return False
         for param in params:
             if hasattr(self, param):
@@ -85,7 +88,7 @@ class PotentialFunction(object):
                 self.params[param]['value'] = value
             else:
                 msg = 'Ignoring unknown parameter {}'.format(param)
-                warnings.warn(msg)
+                logging.warning(msg)
         return self.check_parameters()
 
     def get_parameters(self):

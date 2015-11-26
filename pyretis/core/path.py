@@ -24,8 +24,10 @@ Important functions defined here:
 
 """
 import numpy as np
-import warnings
 import itertools
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path',
            'create_path_ensembles']
@@ -98,7 +100,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             # pasting!
             maxlen = max(path_back.maxlen, path_forw.maxlen)
             msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
-            warnings.warn(msg)
+            logging.warning(msg)
     time_origin = path_back.time_origin - len(path_back.path) + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
     iter_path_back = reversed(path_back.path)  # iterate in correct time dir
@@ -111,7 +113,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         app = new_path.append(*phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(len(new_path.path))
-            warnings.warn(msg)
+            logging.error(msg)
             return new_path
     return new_path
 
@@ -143,7 +145,7 @@ def reverse_path(path, order_func=None):
         app = new_path.append(pos, vel, orderp, energy)
         if not app:
             msg = 'Could not reverse path'
-            warnings.warn(msg)
+            logging.error(msg)
     return new_path
 
 
@@ -300,7 +302,7 @@ class Path(object):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            warnings.warn(msg)
+            logging.error(msg)
             return False
 
     def _update_orderp(self, orderp, idx):
@@ -381,7 +383,7 @@ class Path(object):
         """
         start, end, middle, cross = None, None, None, None
         if len(self.path) < 1:
-            warnings.warn('Path is empty!')
+            logging.warning('Path is empty!')
             return start, end, middle, cross
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
@@ -444,7 +446,7 @@ class Path(object):
             start = 'R'
         else:
             start = None
-            warnings.warn('Undefined starting point')
+            logging.warning('Undefined starting point.')
         return start
 
     def get_path_data(self, status, interfaces):
@@ -528,8 +530,9 @@ class Path(object):
         else:
             # they are unequal and both is not none, just pick the largest
             maxlen = max(self.maxlen, other.maxlen)
-            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
-            warnings.warn(msg)
+            msg = 'Adding paths with unequal maxlen! Maxlen is set to {}!'
+            msg = msg.format(maxlen)
+            logging.warning(msg)
 
         new_path = Path(maxlen=maxlen)
 
@@ -537,7 +540,7 @@ class Path(object):
             app = new_path.append(*phasepoint)
             if not app:
                 msg = 'Truncated path at: {}'.format(len(new_path.path))
-                warnings.warn(msg)
+                logging.error(msg)
                 return new_path
         return new_path
 
@@ -560,7 +563,7 @@ class Path(object):
             app = self.append(*phasepoint)
             if not app:
                 msg = 'Truncated path at: {}'.format(len(self.path))
-                warnings.warn(msg)
+                logging.error(msg)
                 return self
         return self
 
@@ -679,7 +682,8 @@ class PathEnsemble(object):
             msg += ['Note that this might influence the analysis if']
             msg += ['you run it using this path ensemble object.']
             msg += ['(Hint: Use the path ensemble file for the analysis.)']
-            warnings.warn('\n'.join(msg))
+            msg = '\n'.join(msg)
+            logging.warning(msg)
             self.paths = []
         # update statistics:
         if path is None:

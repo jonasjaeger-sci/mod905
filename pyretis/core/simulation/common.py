@@ -7,7 +7,8 @@ Important functions defined here:
 
 -check_settings: Check that required simulation settings are actually given.
 """
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['check_settings']
@@ -42,7 +43,8 @@ def check_settings(settings, required):
     not_found = []
     for setting in required:
         if setting not in settings:
-            warnings.warn('Setting `{}` not found!'.format(setting))
+            msg = 'Setting `{}` not found!'.format(setting)
+            logging.critical(msg)
             result = False
             not_found.append(setting)
     return result, not_found

@@ -15,25 +15,26 @@ __all__ = ['RandomGenerator']
 
 
 class RandomGenerator(object):
-    """RandomGenerator(object).
+    """RandomGenerator(object) - A random number generator.
 
-    This class that defines a random number generator.
-    It will use `numpy.random.RandomState` for the actual generation, and we
-    refer to the numpy documentation [npr]_.
-    Here we could inherit from RandomState but here we do not wish (?) to
-    inherit from an old-style class. Here, this results in some unfortunate(?)
-    small functions here that will actually just call `RandomState`.
+    This class that defines a random number generator. It will use
+    `numpy.random.RandomState` for the actual generation, and we refer to
+    the numpy documentation [1]_. Here we could inherit from RandomState
+    but here we do not wish (?) to inherit from an old-style class. That is
+    the cause of some small functions here that will actually just call
+    the corresponding function from `RandomState`.
 
     Attributes
     ----------
     rgen : object like `RandomState`
         This is a container for the Mersenne Twiser pseudo-random number
-        generator as implemented in numpy.
+        generator as implemented in numpy [1]_.
 
     References
     ----------
 
-    .. [npr] http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
+    .. [1] The NumPy documentation on RandomState,
+       http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
     """
 
     def __init__(self, seed=None):

@@ -18,7 +18,9 @@ from __future__ import absolute_import
 import errno
 import os
 import re
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['create_backup', 'apply_format', 'remove_extensions',
            'make_dirs']
@@ -267,8 +269,9 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
             ens = ens + 1
     else:
         msg = ('Could not get direction for ensemble {}.'.format(ensemble),
-               'We assume +, note that this might overwrite files')
-        warnings.warn('\n'.join(msg))
+               'We assume "+", note that this might overwrite files')
+        msg = '\n'.join(msg)
+        logging.warning(msg)
         ens = ens + 1
     return fmt.format(ens)
 

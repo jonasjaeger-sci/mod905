@@ -6,7 +6,8 @@ stores positions, velocities, masses etc. and is used for representing
 the particles in the simulations.
 """
 import numpy as np
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['Particles']
@@ -108,7 +109,7 @@ class Particles(object):
 #            dims = [len(i) for i in (self.pos[0], self.vel[0], self.force[0])]
 #        if len(set(dims)) != 1:
 #            msg = 'Inconsistent dimensions in position, velocity and force!'
-#            warnings.warn(msg)
+#            logging.warning(msg)
 #        return dims[0]
 
     def get_phase_point(self):
@@ -145,7 +146,7 @@ class Particles(object):
             self.force = np.copy(phasepoint['force'])
         except KeyError:
             msg = 'Setting particle pos & vel without setting forces'
-            warnings.warn(msg)
+            logging.warning(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype='?'):

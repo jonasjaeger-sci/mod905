@@ -4,7 +4,8 @@ from __future__ import absolute_import
 import numpy as np
 from .lennardjones import PairLennardJonesCutnp
 from pyretis.forcefield.potential import PotentialFunction
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['PairWCAnp', 'DoubleWellWCA']
@@ -94,7 +95,7 @@ class DoubleWellWCA(PotentialFunction):
                 self.params[key] = parameters[key]
             else:
                 msg = 'Unknown parameter {} - ignored!'.format(key)
-                warnings.warn(msg)
+                logging.warning(msg)
         self.types = self.params.get('types', None)
         if self.types is not None:
             self.types = set(self.types)

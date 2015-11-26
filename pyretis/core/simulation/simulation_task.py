@@ -2,7 +2,8 @@
 """Definition of a class for tasks."""
 from __future__ import print_function
 import inspect
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
@@ -44,7 +45,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         given = 0
     if not len(args) == given:
         msg = 'Wrong number of arguments given'
-        warnings.warn(msg)
+        logging.warning(msg)
         return False
     # Check kwargs but only check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
@@ -56,11 +57,11 @@ def _check_args(function, given_args=None, given_kwargs=None):
                 msg = ['Task Keyword arguments: {}'.format(defaults)]
                 msg += ['Unexpected keyword argument: {}'.format(extra)]
                 msg = '\n'.join(msg)
-                warnings.warn(msg)
+                logging.warning(msg)
                 return False
         else:
             msg = 'Unexpected keyword argument!'
-            warnings.warn(msg)
+            logging.warning(msg)
             return False
     return True
 

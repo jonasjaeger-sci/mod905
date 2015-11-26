@@ -44,7 +44,7 @@ Important classes:
 - PathEnembleFile : A writer of path ensemble data.
 """
 from __future__ import absolute_import
-import warnings
+import logging
 # pyretis imports
 from .traj import create_traj_writer, read_xyz_file, read_gromacs_file
 from .fileinout import FileWriter
@@ -52,6 +52,7 @@ from .crossfile import CrossFile
 from .energyfile import EnergyFile
 from .orderfile import OrderFile
 from .pathfile import PathFile, PathEnsembleFile
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def get_file_object(file_type, file_name):
@@ -92,13 +93,13 @@ def get_file_object(file_type, file_name):
     elif file_type == 'energy':
         return EnergyFile(file_name, mode='r')
     elif file_type == 'pathensemble':
-        msg = 'Opening a path ensemble is not yet implemented completely!'
-        warnings.warn(msg)
+        msg = 'Opening a path ensemble is still an experimental feature!'
+        logging.warning(msg)
         return PathEnsembleFile(file_name, None, None, mode='r')
     elif file_type == 'path':
         return PathFile(file_name, mode='r')
     else:
         msg = 'Unknown file type {} requested. Aborting reading {}'
         msg = msg.format(file_type, file_name)
-        warnings.warn(msg)
+        logging.error(msg)
         return None

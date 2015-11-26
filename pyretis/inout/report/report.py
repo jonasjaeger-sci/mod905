@@ -14,7 +14,7 @@ Important functions defined here:
 - generate_report: Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
-import warnings
+import logging
 # for converting rst to html and/or latex:
 import docutils.core
 from docutils.writers.html4css1 import Writer as HTMLWriter
@@ -30,7 +30,7 @@ from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_tis,
                                               generate_report_tis_path)
-
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = ['get_template', 'render_report', 'generate_report']
 
@@ -192,7 +192,8 @@ def generate_report(report_type, analysis, output, template=None):
     # Check if the output is a valid format
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
-        warnings.warn(msg.format(output, report_type))
+        msg = msg.format(output, report_type)
+        logging.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
     generated = None

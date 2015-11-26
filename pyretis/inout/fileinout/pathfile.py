@@ -9,7 +9,7 @@ Important classes defined here:
 
 - PathFile: Writing/reading of path data
 """
-import warnings
+import logging
 try:  # this will fail in python3
     from itertools import izip_longest as zip_longest
 except ImportError:  # for python3
@@ -19,6 +19,7 @@ from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 from pyretis.inout.txtinout import create_and_format_row
 from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
 from pyretis.inout.fileinout.orderfile import ORDER_FMT
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['PathFile', 'PathEnsembleFile']
@@ -392,10 +393,10 @@ class PathEnsembleFile(FileWriter):
                         yield path_data
         except IOError as error:
             msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-            warnings.warn(msg)
+            logging.critical(msg)
         except Exception as error:
             msg = 'Error: {}'.format(error)
-            warnings.warn(msg)
+            logging.critical(msg)
             raise
 
     def write(self, cycle, path_ensemble, path=None):

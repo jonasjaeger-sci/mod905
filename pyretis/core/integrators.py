@@ -21,8 +21,9 @@ Important functions defined here:
 """
 from __future__ import absolute_import
 import numpy as np
-import warnings
+import logging
 from pyretis.core.random_gen import RandomGenerator
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
@@ -56,7 +57,7 @@ def create_integrator(settings, simulation_type):
             return VelocityVerlet(0.002)
         else:
             msg = 'No default integrator for {}'.format(simulation_type)
-            warnings.warn(msg)
+            logging.warning(msg)
             return None
     else:
         name = settings['name'].lower()
@@ -73,7 +74,7 @@ def create_integrator(settings, simulation_type):
                             high_friction=settings['high-friction'])
         else:
             msg = 'Unknown integrator {}'.format(settings['name'])
-            warnings.warn(msg)
+            logging.warning(msg)
             return None
 
 

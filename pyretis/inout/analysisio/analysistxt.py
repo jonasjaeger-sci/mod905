@@ -17,7 +17,7 @@ Important classes and functions defined here:
 
 - txt_matched_probability: For writing output with matched probabilities.
 """
-import warnings
+import logging
 import numpy as np
 # pyretis imports:
 from pyretis.inout.common import (create_backup, simplify_ensemble_name,
@@ -25,6 +25,7 @@ from pyretis.inout.common import (create_backup, simplify_ensemble_name,
 from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
                                   _ORDERFILES, _PATHFILES, _PATH_MATCH)
 from pyretis.inout.txtinout import txt_save_columns
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['txt_energy_output', 'txt_flux_output',
@@ -312,6 +313,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
                           results['shoots'][1], ens, backup=backup)
     return out
 
+
 def txt_matched_probability(path_ensembles, detect, matched,
                             out_fmt='txt.gz', backup=False):
     """Output the matched probabilities to text
@@ -343,7 +345,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
     if backup:
         msg = create_backup(output['match'])
         if msg:
-            warnings.warn(msg)
+            logging.warning(msg)
     with open(output['match'], 'w') as fhandle:
         for prob, ens, idet in zip(matched['matched-prob'],
                                    path_ensembles, detect):

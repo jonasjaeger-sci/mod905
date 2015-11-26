@@ -265,8 +265,9 @@ Examples
 """
 from __future__ import print_function
 from collections import deque
-import warnings
 import numpy as np
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['generate_conversion_factors', 'generate_inverse',
@@ -755,7 +756,7 @@ def read_conversions(filename='units.txt', units=None):
             except ValueError:
                 msg = 'Skipping line "{}" in {}'.format(lines.strip(),
                                                         filename)
-                warnings.warn(msg)
+                logging.warning(msg)
                 continue
             if not dim in convert:
                 convert[dim] = {}

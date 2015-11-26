@@ -43,8 +43,7 @@ from .mc_simulation import create_mc_simulation
 from .md_simulation import create_md_simulation
 from .path_simulation import create_path_simulation
 from .simulation_task import SimulationTask
-# other imports
-import warnings
+
 
 # define known simulations and give them a 'family'
 # the family is used to set up the simulations

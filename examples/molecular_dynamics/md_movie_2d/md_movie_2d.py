@@ -22,7 +22,6 @@ import matplotlib as mpl
 import numpy as np
 
 
-
 # set up simulation settings:
 settings = {'type': 'NVE',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},

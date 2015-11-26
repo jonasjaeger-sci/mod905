@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for a generic force field."""
 import numpy as np
-import warnings
+import logging
 import inspect
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 __all__ = ['ForceField']
 
@@ -32,6 +34,9 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
     out[1] : float
         The mixed ``sigma_ij`` parameter.
     """
+    if mixing not in ('geometric', 'arithmetic', 'sixthpower'):
+        logging.warning('Unknown mixing rule requested. Using "geometric"!')
+        mixing = 'geometric'
     if mixing == 'geometric':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
         sigma_ij = np.sqrt(sigma_i * sigma_j)
@@ -47,13 +52,8 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
         sj6 = sj3**2
         avgs6 = 0.5 * (si6 + sj6)
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
-        sigma_ij = avgs6**(1.0/6.0)
-        rcut_ij = (0.5*(rcut_i**6 + rcut_j**6))**(1.0/6.0)
-    else:
-        warnings.warn('Unknown mixing rule requested!')
-        epsilon_ij = 0.5 * (epsilon_i + epsilon_j)
-        sigma_ij = 0.5 * (sigma_i + sigma_j)
-        rcut_ij = 0.5 * (rcut_i + rcut_j)
+        sigma_ij = avgs6**(1.0 / 6.0)
+        rcut_ij = (0.5 * (rcut_i**6 + rcut_j**6))**(1.0 / 6.0)
     return epsilon_ij, sigma_ij, rcut_ij
 
 
@@ -161,7 +161,7 @@ class ForceField(object):
             self.arguments['pot-and-force'].pop(idx)
             return (potrm, paramrm)
         else:
-            warnings.warn('Potential not found in the force field functions')
+            logging.warning('Potential not found in the force field functions')
             return None
 
     def update_potential_parameters(self, potential, params):
@@ -184,7 +184,7 @@ class ForceField(object):
             potential.update_parameters(params)
             self.params[self.potential.index(potential)] = potential.params
         else:
-            warnings.warn('Unknow potential')
+            logging.warning('Unknow potential. Will not update!')
 
     def evaluate_force(self, **kwargs):
         """Evaluate the force on the particles.

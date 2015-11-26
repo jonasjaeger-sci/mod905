@@ -13,7 +13,8 @@ Important classes and functions defined here:
 """
 import numpy as np
 import os
-import warnings
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -24,7 +25,7 @@ from scipy.stats import gamma
 # import styles for newer matplotlibs:
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
-    warnings.warn('Using Matplotlib version < 1.4.0, please upgrade it!')
+    logging.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
 else:
     try:
         import matplotlib.style
@@ -187,7 +188,8 @@ def _mpl_read_style_file(filename):
                     matplotlib.rcParams[key] = value
                 except KeyError:
                     msg = 'Unknown setting "{}". Please update matplotlib'
-                    warnings.warn(msg.format(key))
+                    msg = msg.format(key)
+                    logging.warning(msg)
 
 
 def mpl_set_style(style='pyretis'):
@@ -211,8 +213,11 @@ def mpl_set_style(style='pyretis'):
     if style == 'pyretis':
         style = _MPL_STYLE_FILE
     if not HAS_STYLE:  # default to loading from file
-        msg = 'Cannot use styles, will load from file'
-        warnings.warn(msg)
+        msg = ('Your matplotlib installation cannot use styles!',
+               'Will try to load style from file: "{}"'.format(style),
+               'Please consider updating matplotlib.')
+        msg = '\n'.join(msg)
+        logging.warning(msg)
         _mpl_read_style_file(style)
     else:
         if style in matplotlib.style.available:
@@ -241,7 +246,7 @@ def mpl_savefig(canvas, outputfile, backup=False):
     if backup:
         msg = create_backup(outputfile)
         if msg:
-            warnings.warn(msg)
+            logging.warning(msg)
     canvas.print_figure(outputfile)
 
 

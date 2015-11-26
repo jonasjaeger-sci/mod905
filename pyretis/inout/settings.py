@@ -5,8 +5,8 @@ This module define the file format for pyretis input files.
 """
 import ast
 import re
-import warnings
-
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = ['parse_settings_file', 'parse_setting',
            'look_for_keyword']
@@ -120,8 +120,8 @@ def parse_settings_file(filename):
                     to_read = to_read.split('{}='.format(match))[1].strip()
                     settings[read_keyword] = []
                 else:
-                    msg = 'Unknown keyword "{}" found. Ignoring.'
-                    warnings.warn(msg.format(match))
+                    msg = 'Unknown keyword "{}" found. Ignored!'.format(match)
+                    logging.warning(msg)
                     reading = False
                     read_keyword = None
             if reading:
@@ -138,7 +138,8 @@ def parse_settings_file(filename):
                 elif read_type == 'dict':
                     reading = not to_read.endswith('}')
                 else:
-                    warnings.warn('{}'.format(read_type))
+                    msg = 'Unknown read type "{}"'.format(read_type)
+                    logging.warning(msg)
     for key in settings:
         settings[key] = parse_setting(settings[key], key)
     return settings
