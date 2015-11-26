@@ -547,7 +547,7 @@ def generate_inverse(conversions):
     -------
     out : None
         Will not return anything, but will update the given parameter
-       `conversions`.
+        `conversions`.
     """
     newconvert = {}
     for unit in conversions:
@@ -656,6 +656,11 @@ def generate_system_conversions(system1, system2):
         The system we convert from.
     system2 : string
         The system we convert to.
+
+    Returns
+    -------
+    out : None
+        Returns nothing, but updates `CONVERT`.
     """
     for dim in CONVERT:
         convert = CONVERT[dim]
