@@ -25,12 +25,12 @@ class System(object):
     box : object like `Box` from `pyretis.core.box`
         Defines the simulation box.
     temperature : dict
-        the float temperature['set'] defines the set temperature of the
-        simulation (if applicable)  and the derived float ``1.0/(k_B*T)``
-        which is stored in temperature['beta'].
-        temperature['dof'] contains information about the degrees of
-        freedom which is used when calculating the instantaneous temperature
-        of the system.
+        This dictionary contains information on the temperature. The
+        following information is stored:
+
+        - set: The set temperature, T, (if any).
+        - beta: The derived property ``1.0/(k_B*T)``.
+        - dof: Information about the degrees of freedom for the system.
     v_pot : float
         the potential energy of the system
     particles : object like `pyretis.core.particles.Particles`
@@ -382,7 +382,7 @@ class System(object):
         dof = self.temperature['dof']
         if distribution == 'maxwell':
             rgen.generate_maxwellian_velocities(self.particles,
-                                                self.get_boltzmann(),
+                                                CONSTANTS['kB'][self.units],
                                                 temperature,
                                                 dof, momentum=momentum)
         else:
