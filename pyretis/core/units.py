@@ -269,6 +269,8 @@ __all__ = ['generate_conversion_factors', 'generate_inverse',
 
 CAL = 4184.  # Define 1 kcal = `CAL` J.
 CONSTANTS = {}
+"""A dict containing the natural constants. Natural constants can be
+accessed with `CONSTANTS['kB']['eV/K']` etc."""
 CONSTANTS['kB'] = {'eV/K': 8.6173303e-5, 'J/K': 1.38064852e-23,
                    'kJ/mol/K': 8.3144598e-3}
 CONSTANTS['kB']['J/mol/K'] = CONSTANTS['kB']['kJ/mol/K'] * 1000.
@@ -291,13 +293,24 @@ CONSTANTS['kB']['au'] = 1.0
 CONSTANTS['kB']['electron'] = 3.16681534e-6
 CONSTANTS['kB']['gromacs'] = CONSTANTS['kB']['kJ/mol/K']
 
-# Define 'dimensions'. Note that not all of these are true dimensions,
-# for instance: 'velocity' in reality 'length'/'time'.
+
 DIMENSIONS = set(['length', 'mass', 'time', 'energy', 'velocity',
                   'charge', 'temperature', 'pressure', 'force'])
+"""A dictionary with the known dimensions. Note that not all of these
+are true dimensions, for instance we are using velocity as a dimension
+here. This is just because it convenient to use this to get conversion
+factors for velocities."""
 # For each dimension we want conversion factors and units
+
 CONVERT = {key: {} for key in DIMENSIONS}
+"""A dictionary with conversion factors. It is used to convert between
+different units, e.g. `CONVERT['length']['bohr', 'nm]` will convert from the
+length unit `bohr` to the length unit `nm`."""
+
 UNITS = {key: {} for key in DIMENSIONS}
+"""A dictionary of sets. Each set defines the known base unit for a dimension,
+i.e. `UNITS['length']` is the set with known base units for the length:
+`UNITS['length'] = set(['A', 'nm', 'bohr', 'm'])`"""
 
 # Define a few units and some base conversions:
 UNITS['length'] = set(['A', 'nm', 'bohr', 'm'])
@@ -356,6 +369,9 @@ CONVERT['force']['N', 'dyn'] = 1.0e5
 # Definitions for systems of units:
 UNIT_SYSTEMS = {'lj': {}, 'real': {}, 'metal': {}, 'au': {},
                 'electron': {}, 'si': {}, 'gromacs': {}}
+"""A dictionary containing basic information about the different
+unit systems. E.g. `UNIT_SYSTEMS['lj']['length']` contains the length
+unit for the `'lj'` unit system."""
 UNIT_SYSTEMS['lj'] = {'length': (3.405, 'A'),
                       'energy': (119.8, 'kB'),
                       'mass': (39.948, 'g/mol'),
@@ -525,10 +541,13 @@ def generate_inverse(conversions):
     ----------
     conversions : dictionary
         The unit conversions, assumed to be of type `convert[quantity]`.
+        Note that this variable will be updated in this method.
 
     Returns
     -------
-    None, but it will update the given parameter `conversions`.
+    out : None
+        Will not return anything, but will update the given parameter
+       `conversions`.
     """
     newconvert = {}
     for unit in conversions:
@@ -648,6 +667,7 @@ def print_table(unit, system=False):
     """Print out tables with conversion factors.
 
     This is a table in rst format which is useful for displaying conversions.
+
     Parameters
     ----------
     unit : string
@@ -657,7 +677,8 @@ def print_table(unit, system=False):
 
     Returns
     -------
-    None, but print output to screen
+    out: None
+        Does not return anything, but will print to the screen.
     """
     row_fmt = '  | {:10s} | {:16.8e} | {:16.8e} |'
     row_head = '  | {:10s} | {:16s} | {:16s} |'
@@ -709,6 +730,11 @@ def write_conversions(filename='units.txt'):
     ----------
     filename : string, optional
         The file to write units to.
+
+    Returns
+    -------
+    out : None
+        Will not return anything, but writes the given file.
     """
     with open(filename, 'wb') as fileh:
         for dim in sorted(CONVERT):
