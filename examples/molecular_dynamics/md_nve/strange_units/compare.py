@@ -11,8 +11,11 @@ from pyretis.inout.fileinout import read_gromacs_file
 import filecmp
 import numpy as np
 # for plotting:
+from pyretis.inout.plotting import mpl_set_style
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
+
+mpl_set_style()  # load pyretis style
 
 def compare_traj(traj1, traj2):
     print('Comparing trajectories')
@@ -36,7 +39,7 @@ def compare_traj(traj1, traj2):
         n += 1
     error /= float(n)
     print('Mean error between trajectories: {}'.format(error))
-#from pyretis.inout.plotting import mpl_set_style
+
 UNIT = 'lj'
 with open('unit.txt', 'r') as fileh:
     for lines in fileh:
@@ -45,7 +48,6 @@ create_conversion_factors('lj')
 create_conversion_factors(UNIT)
 generate_system_conversions('lj', UNIT)
 
-#mpl_set_style()  # load pyretis style
 
 # compare trajectories
 compare_traj('../traj.gro', 'traj.gro')
@@ -65,11 +67,11 @@ fig1 = plt.figure(figsize=(12, 6))
 gs = gridspec.GridSpec(2, 2)
 ax1 = fig1.add_subplot(gs[:, 0])
 ax1.plot(ljunits[:, 0], ljunits[:, 2], label='Potential - lj',
-         ls='-', lw=3, alpha=0.8)
+         ls='-', lw=5, alpha=0.8)
 ax1.plot(ljunits[:, 0], ljunits[:, 3], label='Kinetic - lj',
-         ls='-', lw=3, alpha=0.8)
+         ls='-', lw=5, alpha=0.8)
 ax1.plot(ljunits[:, 0], ljunits[:, 4], label='Total - lj',
-         ls='-', lw=3, alpha=0.8)
+         ls='-', lw=5, alpha=0.8)
 ax1.plot(other_units[:, 0], other_units[:, 2], label=UNIT,
          ls='--', lw=3, alpha=0.8)
 ax1.plot(other_units[:, 0], other_units[:, 3], label=UNIT,
@@ -82,17 +84,17 @@ ax1.legend(loc='center left', prop={'size': 'small'}, ncol=2)
 
 ax2 = fig1.add_subplot(gs[0, 1])
 ax2.plot(ljunits[:, 0], ljunits[:, 1], label='lj',
-         ls='-', lw=3, alpha=0.8)
+         ls='-', lw=5, alpha=0.9)
 ax2.plot(other_units[:, 0], other_units[:, 1], label=UNIT,
-         ls='--', lw=3, alpha=0.8)
+         ls='--', lw=3, alpha=0.8, color='0.2')
 ax2.set_ylabel('Temperature')
 ax2.legend(loc='upper right', prop={'size': 'small'})
 
 ax3 = fig1.add_subplot(gs[1, 1])
 ax3.plot(ljunits[:, 0], ljunits[:, 5], label='lj',
-         ls='-', lw=3, alpha=0.8)
+         ls='-', lw=5, alpha=0.9)
 ax3.plot(other_units[:, 0], other_units[:, 5], label=UNIT,
-         ls='--', lw=3, alpha=0.8)
+         ls='--', lw=3, alpha=0.8, color='0.2')
 ax3.set_xlabel('Step no.')
 ax3.set_ylabel('Pressure')
 ax3.legend(loc='lower right', prop={'size': 'small'})
