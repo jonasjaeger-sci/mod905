@@ -8,7 +8,8 @@ from __future__ import print_function
 import os
 import logging
 import pprint
-# opyretis imports
+import json
+# pyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
                                      PathFile, PathEnsembleFile,
@@ -455,3 +456,30 @@ def store_settings_as_py(settings, outfile, path=None, variable='settings'):
                 elif linenr >= 1:
                     output.append(other.format(line))
         fileh.write('\n'.join(output))
+
+
+def store_settings_as_json(settings, outfile, path=None):
+    """Write simulation settings to a .json file.
+
+    This will just write a dictionary to a file in a way such that
+    it can be imported into another file.
+
+    Parameters
+    ----------
+    settings : dict
+        The dictionary to write
+    outfile : string
+        The file to create
+    path : string, optional
+        A path which determines where the file should be written.
+
+    Note
+    ----
+    This will currently fail for objects.
+    """
+    if path is not None:
+        filename = os.path.join(path, outfile)
+    else:
+        filename = outfile
+    with open(filename, 'w') as fileh:
+        json.dump(settings, fileh, indent=4)
