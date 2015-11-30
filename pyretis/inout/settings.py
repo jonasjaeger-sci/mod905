@@ -34,7 +34,7 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
 def look_for_keyword(line):
     """Function to look for a keyword in a string.
 
-    The keyword is assumed to be given as `:keyword:` at the
+    The keyword is assumed to be given as `keyword =` at the
     beginning of the string.
 
     Parameters
