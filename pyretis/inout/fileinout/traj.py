@@ -345,10 +345,10 @@ def read_gromacs_file(filename):
     lines_to_read = 0
     snapshot = None
     read_natoms = False
-    gro = (5, 5, 5, 5, 8, 8, 8)
+    gro = (5, 5, 5, 5, 8, 8, 8, 8, 8, 8)
     gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
-                'x', 'y', 'z')
-    gro_type = (0, 1, 1, 0, 2, 2, 2)
+                'x', 'y', 'z', 'vx', 'vy', 'vz')
+    gro_type = (0, 1, 1, 0, 2, 2, 2, 2, 2, 2)
     with open(filename, 'r') as fileh:
         for lines in fileh:
             if read_natoms:
@@ -369,6 +369,10 @@ def read_gromacs_file(filename):
                 current = 0
                 for i, key, gtype in zip(gro, gro_keys, gro_type):
                     val = lines[current:current+i].strip()
+                    if len(val) == 0:
+                        # this typically happnes if we try to read velocities
+                        # and they are not present in the file.
+                        break
                     if gtype == 0:
                         val = int(val)
                     elif gtype == 2:
