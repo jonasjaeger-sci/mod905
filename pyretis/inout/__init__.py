@@ -19,7 +19,7 @@ Sub-packages:
   for plotting. It also defines functions which can be used for specific
   plotting by the analysis and report tools.
 
-- analysisio: Handles the input and output needed for analysis.
+- analysisinout: Handles the input and output needed for analysis.
 
 Modules:
 

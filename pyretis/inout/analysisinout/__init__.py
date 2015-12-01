@@ -11,4 +11,4 @@ Important functions defined here:
   of files. It will plot the results and generate a MD-flux report.
 """
 from __future__ import absolute_import
-from .analysisio import run_md_flux_analysis, analyse_file
+from .analysisinout import run_md_flux_analysis, analyse_file
