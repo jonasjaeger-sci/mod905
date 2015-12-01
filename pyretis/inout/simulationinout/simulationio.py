@@ -20,9 +20,9 @@ import pprint
 import json
 # pyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
-from pyretis.inout.fileinout import (CrossFile, EnergyFile, OrderFile,
-                                     PathFile, PathEnsembleFile,
-                                     create_traj_writer)
+from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
+                                  PathFile, PathEnsembleFile,
+                                  create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

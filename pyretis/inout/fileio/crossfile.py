@@ -11,7 +11,7 @@ Important classes defined here:
 - CrossFile: Writing/reading of crossing data.
 """
 # pyretis imports
-from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
 
 
 __all__ = ['CrossFile']

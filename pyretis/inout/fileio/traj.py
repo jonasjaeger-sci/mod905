@@ -20,7 +20,7 @@ Important functions defined here:
 import numpy as np
 import logging
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
-from pyretis.inout.fileinout.fileinout import FileWriter
+from pyretis.inout.fileio.fileinout import FileWriter
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -338,7 +338,7 @@ def read_gromacs_file(filename):
 
     Examples
     --------
-    >>> from pyretis.inout.fileinout.traj import read_gromacs_file
+    >>> from pyretis.inout.fileio.traj import read_gromacs_file
     >>> for snapshot in read_gromacs_file('traj.gro'):
     ...     print(snapshot['x'][0])
     """
@@ -404,7 +404,7 @@ def read_xyz_file(filename):
 
     Examples
     --------
-    >>> from pyretis.inout.fileinout.traj import read_xyz_file
+    >>> from pyretis.inout.fileio.traj import read_xyz_file
     >>> for snapshot in read_xyz_file('traj.xyz'):
     ...     print(snapshot['x'][0])
     """

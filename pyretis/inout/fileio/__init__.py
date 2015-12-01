@@ -76,11 +76,11 @@ def get_file_object(file_type, file_name):
 
     Returns
     -------
-    out : object like `FileWriter` from `pyretis.inout.fileinout`
+    out : object like `FileWriter` from `pyretis.inout.fileio`
 
     Examples
     --------
-    >>> from pyretis.inout.fileinout import get_file_object
+    >>> from pyretis.inout.fileio import get_file_object
     >>> crossfile = get_file_object('cross', 'cross.dat')
     >>> print(crossfile)
     >>> for block in crossfile.load():

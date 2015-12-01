@@ -14,7 +14,7 @@ Sub-packages:
 
 - analysisio: Handles the input and output needed for analysis.
 
-- fileinout: Handles files with output from pyretis which can be used in
+- fileio: Handles files with output from pyretis which can be used in
   the analysis. It also defines formats for trajectories.
 
 - plotting: Handles plotting. It defines simple things like colors etc.
@@ -57,8 +57,8 @@ Important classes and functions:
 """
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table
-from .fileinout import (FileWriter, CrossFile, EnergyFile, OrderFile,
-                        PathFile, PathEnsembleFile,
-                        create_traj_writer, get_file_object)
+from .fileio import (FileWriter, CrossFile, EnergyFile, OrderFile,
+                     PathFile, PathEnsembleFile,
+                     create_traj_writer, get_file_object)
 from .report import generate_report
 from .simulationinout import create_output

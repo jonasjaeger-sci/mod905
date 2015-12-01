@@ -10,7 +10,7 @@ Important classes defined here:
 """
 import numpy as np
 # pyretis imports
-from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
 
 
 __all__ = ['EnergyFile']
@@ -86,7 +86,7 @@ class EnergyFile(FileWriter):
 
         See Also
         --------
-        `read_some_lines` in `pyretis.inout.fileinout.fileinout`.
+        `read_some_lines` in `pyretis.inout.fileio.fileinout`.
         """
         for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])

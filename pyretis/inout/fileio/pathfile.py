@@ -17,8 +17,8 @@ except ImportError:  # for python3
 # pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 from pyretis.inout.txtinout import create_and_format_row
-from pyretis.inout.fileinout.fileinout import FileWriter, read_some_lines
-from pyretis.inout.fileinout.orderfile import ORDER_FMT
+from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.orderfile import ORDER_FMT
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

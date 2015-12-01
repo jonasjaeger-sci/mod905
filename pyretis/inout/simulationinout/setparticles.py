@@ -12,7 +12,7 @@ from pyretis.tools import generate_lattice
 from pyretis.core.box import Box
 from pyretis.core.particles import Particles
 from pyretis.core.units import CONVERT
-from pyretis.inout.fileinout.traj import read_xyz_file, read_gromacs_file
+from pyretis.inout.fileio.traj import read_xyz_file, read_gromacs_file
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
