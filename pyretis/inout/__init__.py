@@ -12,7 +12,7 @@ Package structure
 
 Sub-packages:
 
-- analysisinout: Handles the input and output needed for analysis.
+- analysisio: Handles the input and output needed for analysis.
 
 - fileinout: Handles files with output from pyretis which can be used in
   the analysis. It also defines formats for trajectories.

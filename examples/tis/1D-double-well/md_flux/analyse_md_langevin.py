@@ -2,7 +2,7 @@
 """
 This is an example on how to analyse the output from a MD flux simulation.
 """
-from pyretis.inout.analysisinout import run_md_flux_analysis
+from pyretis.inout.analysisio import run_md_flux_analysis
 from settings import settings as simulation_settings
 
 RAW_DATA = {'files': {'cross': 'cross.dat', 'energy': 'energy.dat',

@@ -12,13 +12,13 @@ Important functions defined here:
 - analyse_file: Method to analyse a file. For example, it can be used
   as
 
-  >>> from pyretis.inout.analysisinout import analyse_file
+  >>> from pyretis.inout.analysisio import analyse_file
   >>> analyse_func = analyse_file('cross', 'cross.dat')
   >>> out, fig, txt = analyse_func(analysis_settings, simulation_settings)
 
   It wraps around the different analysis functions which can be called by
 
-  >>> from pyretis.inout.analysisinout import analyse_and_output_cross
+  >>> from pyretis.inout.analysisio import analyse_and_output_cross
   >>> out, fig, txt = analyse_and_output_cross(analysis_settings,
                                                simulation_settings, rawdata)
 """
@@ -29,10 +29,10 @@ from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble)
 from pyretis.inout.fileinout import get_file_object
 from pyretis.inout.plotting import create_plotter
-from pyretis.inout.analysisinout.analysistxt import (txt_energy_output,
-                                                     txt_flux_output,
-                                                     txt_orderp_output,
-                                                     txt_path_output)
+from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
+                                                  txt_flux_output,
+                                                  txt_orderp_output,
+                                                  txt_path_output)
 from pyretis.inout.report import generate_report, write_report
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
