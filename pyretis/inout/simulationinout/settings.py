@@ -6,6 +6,8 @@ This module define the file format for pyretis input files.
 import ast
 import re
 import logging
+#from pyretis.core.simulation.common import check_settings
+
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -15,7 +17,7 @@ __all__ = ['parse_settings_file', 'parse_setting',
 
 KNOWN_KEYWORDS = {'integrator': 'dict',
                   'task': 'string',
-                  'units': 'string',
+                  'units': 'dict',
                   'ensemble': 'string',
                   'interfaces': 'list',
                   'generate-vel': 'dict',
@@ -31,6 +33,13 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
                   'potential-parameters': 'list',
                   'potential-settings': 'list',
                   'potential-functions': 'list'}
+
+#ALWAYS_REQUIRED = ['task', 'units', 'initial-pos']
+
+#SIM_SPECIFIC = {'tis': ['endcycle', 'tis', 'integrator', 'interfaces'],
+#                  'nve': ['endcycle', 'integrator'],
+#                  'mdflux': ['endcycle', 'integrator', 'interfaces',
+#                             'orderparameter']}
 
 
 def look_for_keyword(line):
@@ -87,7 +96,9 @@ def parse_setting(setting, keyword):
         try:
             ev_setting = ast.literal_eval(str_setting)
         except SyntaxError:
+            msg = 'Could not understand {} = {}'.format(keyword, setting)
             ev_setting = str_setting
+            raise ValueError(msg)
         return ev_setting
 
 
