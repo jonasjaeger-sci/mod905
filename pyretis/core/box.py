@@ -15,6 +15,8 @@ Examples
 >>> box = Box(size=[10, 10, 10], periodic=[True, False, True])
 """
 import numpy as np
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['Box']
@@ -66,6 +68,7 @@ class Box(object):
             if periodic is None:  # Assume 1D non-periodic box
                 size = [[-float('inf'), float('inf')]]
                 periodic = [False]
+                logging.info('Assuming a 1D non-periodic box!')
             else:
                 # this might seem strange, but it's probably something
                 # that is done if we just need a dummy box.
