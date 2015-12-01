@@ -11,10 +11,7 @@ from pyretis.core.simulation import Simulation
 from pyretis.core.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
-from pyretis.core.particlefunctions import (calculate_kinetic_energy_tensor,
-                                            calculate_pressure_tensor,
-                                            calculate_kinetic_temperature,
-                                            calculate_scalar_pressure)
+from pyretis.core.particlefunctions import calculate_thermo
 import numpy as np
 import os
 # for plotting:
@@ -53,35 +50,7 @@ task_integrate = {'func': integrator.integration_step,
 
 simulationLAMMPS.add_task(task_integrate)
 
-
-def common_calculations(system):
-    """
-    This function defines some common calculations that we
-    typically want to do. Here we obtain temperature, pressure,
-    kinetic, potential and total energy
-    """
-    particles = system.particles
-    dof = system.temperature['dof']
-    volume = system.box.calculate_volume()
-    dim = system.get_dim()
-    kin_tensi = calculate_kinetic_energy_tensor(particles)
-
-    press_tensi = calculate_pressure_tensor(particles, volume,
-                                            kin_tensor=kin_tensi)
-    _, tempi, _ = calculate_kinetic_temperature(particles, dof=dof,
-                                                kin_tensor=kin_tensi)
-    ekini = kin_tensi.trace()
-    pressi = calculate_scalar_pressure(particles, volume, dim,
-                                       press_tensor=press_tensi,
-                                       kin_tensor=kin_tensi)
-    vpoti = system.v_pot
-    etoti = ekini + vpoti
-    return vpoti, ekini, etoti, tempi, pressi, press_tensi
-
-
-v_pot, e_kin, e_tot = [], [], []
-temp = []
-pressure, pressure_tensor = [], []
+thermo_output = {}
 step = []
 outfmt = '{0:8d} {1:12.7f} {2:12.7f} {3:12.7f} {4:12.7f} {5:12.7f}'
 outfmt2 = '# {0:>6s} {1:>12s} {2:>12s} {3:>12s} {4:>12s} {5:>12s}'
@@ -90,17 +59,18 @@ print(outfmt2.format('Step', 'Temp', 'Press', 'Pot', 'Kin', 'Total'))
 while not simulationLAMMPS.is_finished():
     # do a step
     simulationLAMMPS.step()
-    vpot, ekin, etot, avgtemp, press, presstens = common_calculations(ljsystem)
-    v_pot.append(vpot / npart)
-    e_kin.append(ekin / npart)
-    e_tot.append(etot / npart)
-    pressure.append(press)
-    pressure_tensor.append(presstens)
-    temp.append(avgtemp)
+    thermo = calculate_thermo(ljsystem)
+    for key in thermo:
+        try:
+            thermo_output[key].append(thermo[key])
+        except KeyError:
+            thermo_output[key] = [thermo[key]]
     step.append(simulationLAMMPS.cycle['step'])
-    print(outfmt.format(step[-1], temp[-1], pressure[-1],
-                        v_pot[-1], e_kin[-1], e_tot[-1]))
+    print(outfmt.format(step[-1], thermo['temp'], thermo['press'],
+                        thermo['vpot'], thermo['ekin'], thermo['etot']))
 
+for key in thermo_output:
+    thermo_output[key] = np.array(thermo_output[key])
 # The simulation have now ended, we will plot some results and compare
 # with output from LAMMPS:
 mpl_set_style()  # load pyretis style
@@ -108,7 +78,7 @@ mpl_set_style()  # load pyretis style
 dirname = 'output_data'
 d = np.loadtxt(os.path.join(dirname, 'lammps-output.txt.gz'))
 # step, temperature, press, potential, ekin, etot, pxx, pyy, pzz, pxy, pxz, pyz
-n = min(len(v_pot), len(d[:, 0]))
+n = min(len(thermo_output['vpot']), len(d[:, 0]))
 
 print('Plotting energies')
 # make figure of energies: potential, kinetic and total:
@@ -118,21 +88,21 @@ ax1.set_ylabel('Potential')
 ax1.set_title('Energies per particle')
 ax1.plot(d[:n, 0], d[:n, 3], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
-ax1.plot(step[:n], v_pot[:n], lw=4, ls='--',
+ax1.plot(step[:n], thermo_output['vpot'][:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pyretis')
 
 ax2 = fig.add_subplot(312)
 ax2.set_ylabel('Kinetic')
 ax2.plot(d[:n, 0], d[:n, 4], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
-ax2.plot(step[:n], e_kin[:n], lw=4, ls='--',
+ax2.plot(step[:n], thermo_output['ekin'][:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pyretis')
 
 ax3 = fig.add_subplot(313)
 ax3.set_ylabel('Total')
 ax3.plot(d[:n, 0], d[:n, 5], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
-ax3.plot(step[:n], e_tot[:n], lw=4, ls='--',
+ax3.plot(step[:n], thermo_output['etot'][:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pyretis')
 
 ax1.set_xticklabels(())
@@ -154,7 +124,7 @@ ax1 = fig2.add_subplot(211)
 ax1.set_ylabel('Temperature')
 ax1.plot(d[:n, 0], d[:n, 1], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
-ax1.plot(step[:n], temp[:n], lw=4, ls='--',
+ax1.plot(step[:n], thermo_output['temp'][:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pyretis')
 ax1.legend(loc='upper right', prop={'size': 'small'})
 ax1.set_xticklabels(())
@@ -163,7 +133,7 @@ ax2 = fig2.add_subplot(212)
 ax2.set_ylabel('Pressure')
 ax2.plot(d[:n, 0], d[:n, 2], lw=4, ls='-',
          color='b', alpha=0.5, label='lammps')
-ax2.plot(step[:n], pressure[:n], lw=4, ls='--',
+ax2.plot(step[:n], thermo_output['press'][:n], lw=4, ls='--',
          color='k', alpha=0.5, label='pyretis')
 plt.subplots_adjust(hspace=0.0)
 ax2.set_xlabel('step no.')
@@ -175,7 +145,6 @@ ax2.yaxis.set_major_locator(MaxNLocator(nbins=len(ax2.get_yticklabels()),
 
 print('Plotting pressure tensor')
 # make detailed plot of pressure tensor:
-pressure_tensor = np.array(pressure_tensor)
 fig3 = plt.figure()
 grid = gridspec.GridSpec(3, 2)
 presslab = ['pxx', 'pyy', 'pzz', 'pxy', 'pxz', 'pyz']
@@ -185,8 +154,8 @@ for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
     ax.set_ylabel(pi)
     ax.plot(d[:n, 0], d[:n, i + 6], lw=4, ls='-',
             color='b', alpha=0.5, label='lammps')
-    ax.plot(step[:n], pressure_tensor[:n, idx[0], idx[1]], lw=4, ls='--',
-            color='k', alpha=0.5, label='pyretis')
+    ax.plot(step[:n], thermo_output['press-tens'][:n, idx[0], idx[1]],
+            lw=4, ls='--', color='k', alpha=0.5, label='pyretis')
     if i == 0:
         ax.legend(loc='upper left', prop={'size': 'small'})
     if i == 2 or i == 5:

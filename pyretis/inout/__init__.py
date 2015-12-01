@@ -12,6 +12,8 @@ Package structure
 
 Sub-packages:
 
+- analysisinout: Handles the input and output needed for analysis.
+
 - fileinout: Handles files with output from pyretis which can be used in
   the analysis. It also defines formats for trajectories.
 
@@ -19,7 +21,9 @@ Sub-packages:
   for plotting. It also defines functions which can be used for specific
   plotting by the analysis and report tools.
 
-- analysisinout: Handles the input and output needed for analysis.
+- simulationinout: Handle input and output from simulations. This includes
+  parsing of input files.
+
 
 Modules:
 
@@ -27,12 +31,6 @@ Modules:
   functions are mainly intended for internal use and are not imported here.
 
 - __init__.py: Imports from the other modules.
-
-- report.py: Module for creating reports based on analysis. This module
-  is responsible for creating the final output from an analysis of (RE)TIS
-  simulations
-
-- simulationinout.py: Module for handling input and output from simulations.
 
 - txtinout.py: Defines objects and some methods for text-based output. This
   is typically text written to the screen during a simulation.
@@ -56,9 +54,6 @@ Important classes and functions:
 
 - TxtTable: A function to write create text based tables. It is used by
   `get_predefined_table`.
-
-- store_settings_as_py: Store simulation settings as a dictionary in a
-  python file which can be imported into other python scripts.
 """
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table
@@ -66,4 +61,4 @@ from .fileinout import (FileWriter, CrossFile, EnergyFile, OrderFile,
                         PathFile, PathEnsembleFile,
                         create_traj_writer, get_file_object)
 from .report import generate_report
-from .simulationinout import create_output, store_settings_as_py
+from .simulationinout import create_output

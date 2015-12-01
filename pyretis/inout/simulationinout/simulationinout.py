@@ -3,6 +3,15 @@
 
 This module defines functions and classes for handling the output from
 simulations.
+
+Important functions defined here:
+
+- create_output: Function that sets up output tasks from a dictionary of
+  settings.
+
+Important classes defined here:
+
+- OutputTask: A class for handling output tasks.
 """
 from __future__ import print_function
 import os
@@ -18,7 +27,7 @@ from pyretis.inout.txtinout import get_predefined_table
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-__all__ = ['OutputTask', 'create_output', 'store_settings_as_py']
+__all__ = ['OutputTask', 'create_output']
 
 
 _DEFAULT_OUTPUT = {}

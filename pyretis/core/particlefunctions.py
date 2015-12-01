@@ -393,6 +393,8 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
                                                system.get_boltzmann(),
                                                dof=dof,
                                                kin_tensor=kin_tens)
+    press_tens = calculate_pressure_tensor(system.particles, volume,
+                                           kin_tensor=kin_tens)
     ekin = kin_tens.trace()
     press = calculate_scalar_pressure(system.particles, volume, dim,
                                       kin_tensor=kin_tens)
@@ -400,5 +402,6 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     npart = float(system.particles.npart)
     result = {'vpot': vpot / npart, 'ekin': ekin / npart,
               'etot': (ekin + vpot) / npart,
-              'temp': temp, 'press': press, 'mom': mom}
+              'temp': temp, 'press': press, 'mom': mom,
+              'press-tens': press_tens}
     return result
