@@ -21,7 +21,7 @@ Sub-packages:
   for plotting. It also defines functions which can be used for specific
   plotting by the analysis and report tools.
 
-- simulationinout: Handle input and output from simulations. This includes
+- simulationio: Handle input and output from simulations. This includes
   parsing of input files.
 
 
@@ -61,4 +61,4 @@ from .fileio import (FileWriter, CrossFile, EnergyFile, OrderFile,
                      PathFile, PathEnsembleFile,
                      create_traj_writer, get_file_object)
 from .report import generate_report
-from .simulationinout import create_output
+from .simulationio import create_output
