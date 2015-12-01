@@ -1,0 +1,302 @@
+# -*- coding: utf-8 -*-
+"""This module handles the set-up of initial positions and a box.
+
+The initial positions can either be generated on a lattice, or it can
+be read from a file.
+"""
+import logging
+import os
+import numpy as np
+# pyretis imports:
+from pyretis.tools import generate_lattice
+from pyretis.core.particles import Particles
+from pyretis.core.units import CONVERT
+from pyretis.inout.fileinout.traj import read_xyz_file, read_gromacs_file
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+__all__ = ['initial_positions', 'initial_positions_file',
+           'initial_positions_lattice']
+
+
+PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
+                  'Be': 9.0121831, 'B': 10.8135, 'C': 12.0106,
+                  'N': 14.006855, 'O': 15.9994, 'F': 18.998403163,
+                  'Ne': 20.1797, 'Na': 22.98976928, 'Mg': 24.3055,
+                  'Al': 26.9815385, 'Si': 28.085, 'P': 30.973761998,
+                  'S': 32.0675, 'Cl': 35.4515, 'Ar': 39.948,
+                  'K': 39.0983, 'Ca': 40.078, 'Sc': 44.955908,
+                  'Ti': 47.867, 'V': 50.9415, 'Cr': 51.9961,
+                  'Mn': 54.938044, 'Fe': 55.845, 'Co': 58.933194,
+                  'Ni': 58.6934, 'Cu': 63.546, 'Zn': 65.38,
+                  'Ga': 69.723, 'Ge': 72.63, 'As': 74.921595,
+                  'Se': 78.971, 'Br': 79.904, 'Kr': 83.798,
+                  'Rb': 85.4678, 'Sr': 87.62, 'Y': 88.90584,
+                  'Zr': 91.224, 'Nb': 92.90637, 'Mo': 95.95,
+                  'Ru': 101.07, 'Rh': 102.9055, 'Pd': 106.42,
+                  'Ag': 107.8682, 'Cd': 112.414, 'In': 114.818,
+                  'Sn': 118.71, 'Sb': 121.76, 'Te': 127.6,
+                  'I': 126.90447, 'Xe': 131.293, 'Cs': 132.90545196,
+                  'Ba': 137.327, 'La': 138.90547, 'Ce': 140.116,
+                  'Pr': 140.90766, 'Nd': 144.242, 'Sm': 150.36,
+                  'Eu': 151.964, 'Gd': 157.25, 'Tb': 158.92535,
+                  'Dy': 162.5, 'Ho': 164.93033, 'Er': 167.259,
+                  'Tm': 168.93422, 'Yb': 173.045, 'Lu': 174.9668,
+                  'Hf': 178.49, 'Ta': 180.94788, 'W': 183.84,
+                  'Re': 186.207, 'Os': 190.23, 'Ir': 192.217,
+                  'Pt': 195.084, 'Au': 196.966569, 'Hg': 200.592,
+                  'Tl': 204.3835, 'Pb': 207.2, 'Bi': 208.9804,
+                  'Th': 232.0377, 'Pa': 231.03588, 'U': 238.02891}
+
+
+# variable that defines some information for reading input files:
+READFILE = {'xyz': {'reader': read_xyz_file,
+                    'units': {'length': 'A', 'velocity': 'A/fs'}},
+            'gro': {'reader': read_gromacs_file,
+                    'units': {'length': 'nm', 'velocity': 'nm/ps'}}}
+
+
+def list_get(input_list, index):
+    """Method to get an item from a list that handles out-of bounds errors.
+
+    This method is intended to be used when we are picking items from a list
+    and possibly we want a number of items which is larger than the number
+    of items in the list. Here, we then just return the last element
+
+    Parameters
+    ----------
+    input_list : list
+        The list to pick from
+    index : integer
+        The index to pick
+    """
+    try:
+        return input_list[index]
+    except IndexError:
+        return input_list[-1]
+
+
+def _guess_particle_mass(particle_no, particle_type, unit):
+    """Method that will try to guess a particle mass from it's type
+
+    Parameters
+    ----------
+    particle_no : integer
+        Just used to identify the particle number
+    particle_type : string
+        Used to idenfity the particle
+    unit : string
+        The system of units. This is used in case we try to get the mass from
+        the periodic table where the units are in `g/mol`.
+    """
+    msg = ['Mass not specified for particle no. {}!'.format(particle_no)]
+    msg += ['Will guess from particle type: {}'.format(particle_type)]
+    mass = PERIODIC_TABLE.get(particle_type, None)
+    if mass is None:
+        particle_mass = 1.0
+        msg += ['->\nCould not find mass. Assuming' +
+                ' {} (internal units)'.format(particle_mass)]
+    else:
+        msg += ['->\nUsing mass of: {} g/mol'.format(mass)]
+        particle_mass = CONVERT['mass']['g/mol', unit] * mass
+        msg += ['({} in internal units)'.format(particle_mass)]
+    msg = ' '.join(msg)
+    logging.warning(msg)
+    return particle_mass
+
+
+def initial_positions_lattice(settings):
+    """Method to generate initial positions based on given settings.
+
+    We assume here the input values are given with the correct units
+    as dictated by `settings['units']`.
+
+    Parameters
+    ----------
+    settings : dict
+        The input settings for the simulation
+
+    Returns
+    -------
+    particles : object like `Particles` from `pyretis.core.particles`
+        The particles we created.
+    size : list of floats
+        A size for the region we created. This can be used to create a box.
+    """
+    pos_settings = settings['particles']['initial-pos']
+    ptype = settings['particles'].get('type', ['Ar'])
+    pname = settings['particles'].get('name', ['Ar'])
+    pmass = settings['particles'].get('mass', {})
+
+    lattice_type = pos_settings['generate'].lower()
+    lattice, size = generate_lattice(lattice_type, pos_settings['repeat'],
+                                     lcon=pos_settings.get('lcon', None),
+                                     density=pos_settings.get('density', None))
+    ndim = settings.get('dimensions', len(size))
+    particles = Particles(dim=ndim)
+    for i, pos in enumerate(lattice):
+        # get particle type:
+        particle_type = list_get(ptype, i)
+        # infer mass from the input masses, or try to get it
+        # from the periodic table
+        try:
+            particle_mass = pmass[particle_type]
+        except KeyError:
+            particle_mass = _guess_particle_mass(i + 1, particle_type,
+                                                 settings['unit'])
+        particles.add_particle(pos,
+                               np.zeros_like(pos), np.zeros_like(pos),
+                               mass=particle_mass, name=list_get(pname, i),
+                               ptype=particle_type)
+    msg = 'Created {} particles on lattice {}'.format(particles.npart,
+                                                      lattice_type)
+    logging.info(msg)
+    return particles, size
+
+
+def _get_snapshot_from_file(pos_settings, units):
+    """Helper function to get a snapshot from a file.
+
+    This snapshot will be used to set up the initial configuration.
+
+    Parameters
+    ----------
+    pos_settings : dict
+        A dict with information on what we should read.
+    units : string
+        The internal units.
+
+    Returns
+    -------
+    snapshot : dict
+        The snapshot we found in the file. It will at least have the keys with
+        the positions ('x', 'y', 'z') and atom name 'atomnames'. It may have
+        information about velocities ('vx', 'vy', 'vz') and the box ('box').
+    convert : dict
+        Dict with conversion factors to internal units.
+    """
+    filename = pos_settings.get('file', None)
+    if filename is None:
+        msg = 'No input file given!'
+        raise ValueError(msg)
+
+    fmt = pos_settings.get('format', os.path.splitext(filename)[1][1:])
+    snaps = []
+    convert = None
+    try:
+        reader = READFILE[fmt]['reader']
+        read_units = READFILE[fmt]['units']
+        convert = {'length': CONVERT['length'][read_units['length'], units],
+                   'velocity': CONVERT['velocity'][read_units['velocity'],
+                                                   units]}
+        msg = 'Reading {} input file.'.format(fmt)
+        logging.info(msg)
+        snaps = [snap for snap in reader(filename)]
+    except KeyError:
+        msg = 'Unknown format {} for input file: {}'
+        raise ValueError(msg.format(fmt, pos_settings))
+
+    snapshot = None
+    if len(snaps) == 0:
+        msg = 'Could not find any configurations in input file: {}'
+        raise ValueError(msg.format(filename))
+    elif len(snaps) == 1:
+        snapshot = snaps[0]
+    else:
+        msg = ('Found several frames ({}) in input file.'
+               ' Will use the last one!')
+        msg = msg.format(len(snaps))
+        logging.warning(msg)
+        snapshot = snaps[-1]
+    return snapshot, convert
+
+
+def initial_positions_file(settings):
+    """Method to get initial positions from an input file.
+
+    Parameters
+    ----------
+    settings : dict
+        The input settings for the simulation
+
+    Returns
+    -------
+    particles : object like `Particles` from `pyretis.core.particles`
+        The particles we created.
+    size : list of floats
+        A size for the region we created. This can be used to create a box.
+    """
+    pos_settings = settings['particles']['initial-pos']
+    ndim = settings.get('dimensions', 3)
+    ptype = settings['particles'].get('type', None)
+    pname = settings['particles'].get('name', None)
+    pmass = settings['particles'].get('mass', {})
+
+    snapshot, convert = _get_snapshot_from_file(pos_settings,
+                                                settings['unit'])
+
+    particles = Particles(dim=ndim)
+    for i, atomname in enumerate(snapshot['atomname']):
+        pos = []
+        vel = []
+        for key in ['x', 'y', 'z'][:ndim]:
+            pos.append(snapshot[key][i])
+            vel_key = 'v{}'.format(key)
+            if vel_key in snapshot:
+                vel.append(snapshot[vel_key][i])
+        pos = np.array(pos) * convert['length']
+        if len(vel) != ndim:
+            vel = np.zeros_like(pos)
+        else:
+            vel = np.array(vel) * convert['velocity']
+        # Get particle type from the atom names or for input list:
+        if ptype is None:
+            particle_type = atomname
+        else:
+            particle_type = list_get(ptype, i)
+        if pname is None:
+            particle_name = atomname
+        else:
+            particle_name = list_get(pname, i)
+        # infer mass from the input masses, or try to get it
+        # from the periodic table
+        try:
+            particle_mass = pmass[particle_type]
+        except KeyError:
+            particle_mass = _guess_particle_mass(i + 1, particle_type,
+                                                 settings['unit'])
+        particles.add_particle(pos,
+                               vel, np.zeros_like(pos),
+                               mass=particle_mass, name=particle_name,
+                               ptype=particle_type)
+    try:
+        size = [lng * convert['length'] for lng in snapshot['box'][:ndim]]
+    except KeyError:
+        size = None
+    return particles, size
+
+
+def initial_positions(settings):
+    """Set up the initial positions from the given settings.
+
+    The settings can specify the initial positions as a file, as a
+    string or to be generated on a lattice.
+
+    Parameters
+    ----------
+    settings : dict
+        Settings for creating the initial positions.
+
+    Returns
+    -------
+    """
+    particles = None
+    if 'generate' in settings['particles']['initial-pos']:
+        particles, size = initial_positions_lattice(settings)
+        return particles, size
+    elif 'file' in settings['particles']['initial-pos']:
+        particles, size = initial_positions_file(settings)
+        return particles, size
+    else:
+        msg = 'Unknown settings for initial positions: {}'
+        raise ValueError(msg.format(settings['particles']['initial-pos']))

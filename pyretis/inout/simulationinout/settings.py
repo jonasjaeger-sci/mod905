@@ -8,6 +8,7 @@ import re
 import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
 __all__ = ['parse_settings_file', 'parse_setting',
            'look_for_keyword']
 
