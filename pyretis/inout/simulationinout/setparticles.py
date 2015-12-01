@@ -9,6 +9,7 @@ import os
 import numpy as np
 # pyretis imports:
 from pyretis.tools import generate_lattice
+from pyretis.core.box import Box
 from pyretis.core.particles import Particles
 from pyretis.core.units import CONVERT
 from pyretis.inout.fileinout.traj import read_xyz_file, read_gromacs_file
@@ -16,7 +17,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['initial_positions', 'initial_positions_file',
-           'initial_positions_lattice']
+           'initial_positions_lattice', 'get_box']
 
 
 PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
@@ -300,3 +301,25 @@ def initial_positions(settings):
     else:
         msg = 'Unknown settings for initial positions: {}'
         raise ValueError(msg.format(settings['particles']['initial-pos']))
+
+
+def get_box(settings):
+    """Method that will try to set up a box from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The dict with the simulation settings
+
+    Returns
+    -------
+    box : object like `Box` from `pyretis.core.box` or None
+        The box if we managed to create it. Otherwise None.
+    """
+    box_settings = settings.get('box', None)
+    if box_settings is not None:
+        logging.info('Created box from simulation settings')
+        box = Box(**box_settings)
+    else:
+        box = None
+    return box
