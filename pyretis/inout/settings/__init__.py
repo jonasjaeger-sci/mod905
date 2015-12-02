@@ -8,5 +8,4 @@ Important functions defined here:
 - parse_settings_file: For parsing input settings from file
 """
 from __future__ import absolute_import
-from .simulationio import create_output
 from .settings import parse_settings_file
