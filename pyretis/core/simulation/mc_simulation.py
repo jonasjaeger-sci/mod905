@@ -9,83 +9,16 @@ Important classes and functions defined here:
 - UmbrellaWindowSimulation: Defines a simulation for performing umbrella
   window simulations. Several umbrella window simulations can be joined
   to perform a umbrella simulation.
-
 """
 from __future__ import absolute_import
 import numpy as np
 import logging
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
-from pyretis.core.simulation.common import check_settings
-from pyretis.core.random_gen import RandomGenerator
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-__all__ = ['UmbrellaWindowSimulation', 'create_mc_simulation']
-
-
-_REQUIRED = {'umbrellawindow': ['umbrella', 'over', 'rgen', 'seed',
-                                'maxdx', 'mincycle']}
-
-
-def create_mc_simulation(settings, system, sim_type):
-    """Create a MC simulation from the given settings.
-
-    This is a helper function that will do some checks and set up one
-    of the MC simulations defined in this module based on the given settings.
-
-    Parameters
-    ----------
-    settings : dict
-        This dictionary contains the settings for the simulation.
-    system : object like `System` from `pyretis.core.system`
-        This is the system for which the simulation will run.
-    sim_type : string
-        This defines the simulation type we are to set up. Note that
-        simulation type is also given in `settings['type']`. It is also
-        given here since we typically call this function after checking the
-        type.
-
-    Returns
-    -------
-    out : object like `Simulation` from `pyretis.core.simulation`.
-        This object will correspond to the selected simulation type.
-
-    Note
-    ----
-    We are duplicating code here - the checking of required settings is
-    identical to the checking in other simulation creators, for instance
-    the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
-    This is just in case someone wants to add some magic that amends missing
-    settings.
-    """
-    simulation = None
-    required, not_found = check_settings(settings, _REQUIRED[sim_type])
-    if sim_type == 'umbrellawindow':
-        if 'seed' in not_found or 'rgen' in not_found:
-            # one or both of these keywords were present
-            # things are OK if there is no other missing
-            not_found = set(not_found) - set(['seed', 'rgen'])
-            required = len(not_found) == 0
-    if not required:
-        msg = 'Settings not found: {}'.format(not_found)
-        logging.critical(msg)
-        raise ValueError('Required settings not found!')
-    if sim_type == 'umbrellawindow':
-        try:
-            rgen = settings['rgen']
-        except KeyError:
-            rgen = RandomGenerator(seed=settings.get('seed', 0))
-        simulation = UmbrellaWindowSimulation(system,
-                                              settings['umbrella'],
-                                              settings['over'],
-                                              rgen,
-                                              settings['maxdx'],
-                                              mincycle=settings['mincycle'])
-    else:
-        msg = 'Unknown MC simulation: {}'.format(sim_type)
-        raise ValueError(msg)
-    return simulation
+__all__ = ['UmbrellaWindowSimulation']
 
 
 def mc_task(rgen, system, maxdx):

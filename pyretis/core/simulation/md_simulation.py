@@ -11,76 +11,16 @@ Important classes and functions defined here:
 
 - SimulationMDFlux: Definition of a simulation for determining the initial
   flux. This is used for calculating rates in TIS simulations.
-
 """
 from __future__ import absolute_import
 from pyretis.core.simulation.simulation import Simulation
-from pyretis.core.simulation.common import check_settings
-from pyretis.core.integrators import create_integrator
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
 import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-__all__ = ['SimulationNVE', 'SimulationMDFlux', 'create_md_simulation']
-
-_REQUIRED = {'nve': ['endcycle', 'integrator'],
-             'mdflux': ['endcycle', 'integrator', 'interfaces',
-                        'orderparameter']}
-
-
-def create_md_simulation(settings, system, sim_type):
-    """Create a MD simulation from the given settings.
-
-    This is a helper function that will do some checks and set up one of the
-    MD simulations defined in this module based on the given settings.
-
-    Parameters
-    ----------
-    settings : dict
-        This dictionary contains the settings for the simulation.
-    system : object like `System` from `pyretis.core.system`
-        This is the system for which the simulation will run.
-    sim_type : string
-        This defines the simulation type we are to set up. Note that
-        simulation type is also given in `settings['type']`. It is also
-        given here since we typically call this function after checking the
-        type.
-
-    Returns
-    -------
-    out : object like `Simulation` from `pyretis.core.simulation`.
-        This object will correspond to the selected simulation type.
-
-    Note
-    ----
-    We are duplicating code here - the checking of required settings is
-    identical to the checking in other simulation creators, for instance
-    the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
-    This is just in case someone wants to add some magic that amends missing
-    settings.
-    """
-    simulation = None
-    required = check_settings(settings, _REQUIRED[sim_type])[0]
-    if not required:
-        raise ValueError('Please update settings!')
-    if sim_type == 'nve':
-        intg = create_integrator(settings.get('integrator'), sim_type)
-        simulation = SimulationNVE(system, intg,
-                                   endcycle=settings['endcycle'],
-                                   startcycle=settings.get('startcycle', 0))
-    elif sim_type == 'mdflux':
-        intg = create_integrator(settings.get('integrator'), sim_type)
-        simulation = SimulationMDFlux(system, intg,
-                                      settings['interfaces'],
-                                      settings['orderparameter'],
-                                      endcycle=settings['endcycle'],
-                                      startcycle=settings.get('startcycle', 0))
-    else:
-        msg = 'Unknown MD simulation: {}'.format(sim_type)
-        raise ValueError(msg)
-    return simulation
+__all__ = ['SimulationNVE', 'SimulationMDFlux']
 
 
 class SimulationNVE(Simulation):
