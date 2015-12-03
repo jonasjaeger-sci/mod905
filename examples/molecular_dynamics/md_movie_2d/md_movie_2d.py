@@ -7,7 +7,7 @@ In this example we animate the output.
 from __future__ import print_function
 # pyretis imports:
 from pyretis.core import System, Box
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings.create_simulation import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
@@ -23,7 +23,7 @@ import numpy as np
 
 
 # set up simulation settings:
-settings = {'type': 'NVE',
+settings = {'type': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 950,
             'output': [{'target': 'file', 'type': 'traj', 'every': 1,

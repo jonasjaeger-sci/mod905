@@ -197,7 +197,7 @@ def generate_report(report_type, analysis, output, template=None):
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
     generated = None
-    if report_type == 'mdflux':
+    if report_type == 'md-flux':
         generated = generate_report_mdflux(analysis, output=output)
     elif report_type == 'tis':
         generated = generate_report_tis(analysis, output=output)

@@ -26,5 +26,5 @@ settings = {'beta': 14.285714285714285,
                         'when': {'every': 100}}],
             'periodic_boundary': [False],
             'temperature': 0.07,
-            'type': 'mdflux',
+            'type': 'md-flux',
             'units': 'lj'}

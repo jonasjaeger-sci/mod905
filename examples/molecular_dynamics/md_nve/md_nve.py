@@ -7,7 +7,7 @@ This system considered is a simple Lennard-Jones fluid.
 from __future__ import print_function
 from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings.create_simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.inout import (get_predefined_table, FileWriter,
@@ -24,7 +24,7 @@ LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
 # simulation settings:
-settings = {'type': 'NVE',
+settings = {'type': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 1000,
             'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},

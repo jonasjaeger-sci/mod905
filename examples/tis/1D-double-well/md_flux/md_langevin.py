@@ -24,7 +24,7 @@ from pyretis.inout import create_output, store_settings_as_py
 
 
 print('MD flux simulation!')
-simulation_settings = {'type': 'mdflux',
+simulation_settings = {'type': 'md-flux',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
@@ -103,5 +103,5 @@ analysis_settings = {'skipcross': 1000,
                      'ngrid': 1001}
 results = {}
 results['cross'] = analyse_flux(cross, analysis_settings, simulation_settings)
-report_txt = generate_report('mdflux', results, 'txt')[0]
+report_txt = generate_report('md-flux', results, 'txt')[0]
 print(''.join(report_txt))

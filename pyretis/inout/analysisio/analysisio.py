@@ -72,9 +72,9 @@ def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
 
     if results is not None:  # output the report
         for report_type in analysis_settings.get('report', ['rst']):
-            report, ext = generate_report('mdflux', results,
+            report, ext = generate_report('md-flux', results,
                                           output=report_type)
-            write_report(report, 'mdflux', ext)
+            write_report(report, 'md-flux', ext)
     return results
 
 

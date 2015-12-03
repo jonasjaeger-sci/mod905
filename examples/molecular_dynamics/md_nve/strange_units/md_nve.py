@@ -8,7 +8,7 @@ from __future__ import print_function
 from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.core.units import generate_system_conversions
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings.create_simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.inout import (get_predefined_table, FileWriter,
@@ -49,7 +49,7 @@ LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
 # simulation settings:
-settings = {'type': 'NVE',
+settings = {'type': 'md-nve',
             'integrator': {'name': 'velocityverlet',
                            'timestep': timestep},
             'endcycle': 1000,

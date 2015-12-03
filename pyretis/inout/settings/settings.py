@@ -36,10 +36,6 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
 
 #ALWAYS_REQUIRED = ['task', 'units', 'initial-pos']
 
-#SIM_SPECIFIC = {'tis': ['endcycle', 'tis', 'integrator', 'interfaces'],
-#                  'nve': ['endcycle', 'integrator'],
-#                  'mdflux': ['endcycle', 'integrator', 'interfaces',
-#                             'orderparameter']}
 
 
 def look_for_keyword(line):

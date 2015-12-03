@@ -63,7 +63,7 @@ _PATHFILES = {'pcross': '{}_pcross',
 _PATH_MATCH = {'total': 'total-probability',
                'match': 'matched-probability'}
 # hard-coded patters for report outputs:
-_REPORTFILES = {'mdflux': os.extsep.join(['md_flux_report', '{}']),
+_REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
                 'tis': os.extsep.join(['tis_report', '{}']),
                 'tis_path': os.extsep.join(['tis_path_report', '{}'])}
 

@@ -5,7 +5,7 @@ Example of running a MD NVE simulation
 # pylint: disable=C0103
 from __future__ import print_function
 from pyretis.core import System, Box
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings.create_simulation import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
@@ -20,7 +20,7 @@ import matplotlib.gridspec as gridspec
 # other imports
 import numpy as np
 # simulation settings:
-settings = {'type': 'NVE',
+settings = {'type': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 1100,
             'output': [{'target': 'file', 'type': 'traj', 'every': 1,
