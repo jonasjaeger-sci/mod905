@@ -103,7 +103,7 @@ class OrderParameter(object):
         pass
 
     def __call__(self, system):
-        """Method to conveniently call `calculate` and `calculate_velocity`.
+        """Conveniently call `calculate` and `calculate_velocity`.
 
         It will also call the additional order parameters defined in
         `self.extra`, if any.

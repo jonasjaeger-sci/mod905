@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods for analysis of order parameter."""
+"""This file contains functions for analysis of order parameter."""
 from __future__ import absolute_import
 from pyretis.analysis.analysis import analyse_data, mean_square_displacement
 

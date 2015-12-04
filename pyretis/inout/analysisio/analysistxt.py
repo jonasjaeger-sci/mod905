@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Methods and objects for text based output from the analysis.
+"""Functions and classes for text based output from the analysis.
 
-This file contains methods and objects that handle text files for
-the analysis input/output.
+This file contains functions and classes that handle text files for the
+analysis input/output.
 
-Important classes and functions defined here:
+Important functions and classes defined here:
 
 - txt_energy_output: For writing the output from a energy analysis.
 
@@ -94,7 +94,7 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
     Returns
     -------
     outfiles : dict
-        The output files created by this method.
+        The output files created by this function.
 
     """
     outfiles = {}
@@ -137,7 +137,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     Returns
     -------
     outfiles : dict
-        The output files created by this method.
+        The output files created by this function.
 
     Note
     ----
@@ -195,7 +195,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     Returns
     -------
     outfiles : dict
-        The output files created by this method.
+        The output files created by this function.
     """
     outfiles = {}
     for key in ['run_energies', 'temperature', 'run_temp']:
@@ -286,7 +286,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     Returns
     -------
     out : dict
-        The output files created by this method.
+        The output files created by this function.
     """
     ens = path_ensemble.ensemble  # identify the ensemble
     ens_simplified = simplify_ensemble_name(ens)
@@ -316,9 +316,9 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
 
 def txt_matched_probability(path_ensembles, detect, matched,
                             out_fmt='txt.gz', backup=False):
-    """Output the matched probabilities to text
+    """Output the matched probabilities to a text file.
 
-    This method will output the matched probabilities for the
+    This function will output the matched probabilities for the
     different ensembles and also output the over-all matched
     probability.
 
@@ -336,7 +336,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
     Returns
     -------
     out : dict
-        The files created by this method.
+        The files created by this function.
     """
     output = {}
     output['match'] = name_file(_PATH_MATCH['match'], out_fmt)

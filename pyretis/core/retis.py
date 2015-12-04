@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
-"""This module contains methods for RETIS.
+"""This module contains functions for RETIS.
 
-This module defines methods that are needed to perform Replica Exchange
+This module defines functions that are needed to perform Replica Exchange
 Transition Interface Sampling (RETIS). The algorithms implemented here and
-the description of RETIS was first described by van Erp [RETIS]_.
+the description of RETIS was first described by van Erp [1]_.
 
 
 Important functions defined here:
 
-- make_retis_step : Method to select and execute the RETIS move.
+- make_retis_step : Function to select and execute the RETIS move.
 
-- retis_tis_moves : Method to execute the TIS steps in the RETIS algorithm.
+- retis_tis_moves : Function to execute the TIS steps in the RETIS algorithm.
 
-- retis_moves : Method to perform RETIS swapping moves - it selects what
+- retis_moves : Function to perform RETIS swapping moves - it selects what
   scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
   ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
 
-- retis_swap : The method that actually swaps two path ensembles.
+- retis_swap : The function that actually swaps two path ensembles.
 
-- retis_swap_zero : The method that performs the swapping for the
+- retis_swap_zero : The function that performs the swapping for the
   ``[0^-] <-> [0^+]`` swap.
 
 References
 ~~~~~~~~~~
 
-.. [RETIS] Titus S. van Erp,
+.. [1] Titus S. van Erp,
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
@@ -52,9 +52,9 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
        values of relative shoot frequencies. This is done by calling
        `make_retis_tis_steps`.
 
-    This method will just determine and execute the appropriate move (1 or 2)
-    based on the given swapping frequencies in the `settings` and drawing a
-    random number from the random number generator `rgen`.
+    This function will just determine and execute the appropriate move
+    (1 or 2) based on the given swapping frequencies in the `settings`
+    and drawing a random number from the random number generator `rgen`.
 
     Parameters
     ----------
@@ -94,7 +94,7 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
 
 
 def _relative_shoots_select(ensembles, rgen, relative):
-    """Method to randomly select the ensemble for 'relative' shooting moves.
+    """Randomly select the ensemble for 'relative' shooting moves.
 
     Here we select the ensemble to do the shooting in based on relative
     probabilities. We draw a random number in [0, 1] which is used to select
@@ -136,9 +136,9 @@ def _relative_shoots_select(ensembles, rgen, relative):
 
 def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
                     settings, cycle):
-    """Method to execute TIS steps in the RETIS method.
+    """Execute the TIS steps in the RETIS method.
 
-    This method will execute the TIS steps in the RETIS method. These
+    This function will execute the TIS steps in the RETIS method. These
     differ slightly from the regular TIS moves since we have two options
     on how to perform them. These two options are controlled by the given
     `settings`:
@@ -218,7 +218,7 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
                 settings, cycle):
     """Perform RETIS moves on the given ensembles.
 
-    This method will perform RETIS moves on the given ensembles.
+    This function will perform RETIS moves on the given ensembles.
     First we have to strategies based on `settings['retis']['swapsimul']`:
 
     1) If `settings['retis']['swapsimul']` is True we will perform several

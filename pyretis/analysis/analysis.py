@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains some simple methods for numerical analysis."""
+"""This file contains some simple functions for numerical analysis."""
 
 import numpy as np
 from pyretis.analysis.histogram import histogram_and_avg
@@ -61,12 +61,11 @@ def _chunks(itera, size):
 def block_error(data, maxblock=None, blockskip=1):
     """Perform block error analysis.
 
-    This method will estimate the standard deviation in the input
+    This function will estimate the standard deviation in the input
     data by performing a block analysis. The number of blocks
     to consider can be specified or it will be taken as the
     half of the length of the input data. Averages and variance is calculated
-    using the on-the-fly algorithm presented here:
-    http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    using a on-the-fly algorithm [1]_.
 
     Parameters
     ----------
@@ -92,6 +91,12 @@ def block_error(data, maxblock=None, blockskip=1):
         Estimate of errors as function of block length.
     block_err_avg : float
         Average of the error estimate for blocks with ``length > maxblock//2``.
+
+    References
+    ----------
+
+    .. [1] Wikipedia, "Algorithms for calculating variance",
+       http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
     """
     if maxblock is None:
         maxblock = len(data) // 2

@@ -60,7 +60,7 @@ def get_file_object(file_type, file_name):
 
     This is a convenience function to return an instance of `FileWriter` or
     derived classes so that we are ready to read data from that file. Usage is
-    indended to be in cases when we just want to open a file easily. The
+    intended to be in cases when we just want to open a file easily. The
     returned object can then be used to read the file using `load()`.
 
     Parameters

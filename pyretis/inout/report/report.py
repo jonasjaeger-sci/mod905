@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""General methods for generating report.
+"""General functions for generating reports.
 
-This module contains some general methods for report generation. These
-methods are used by the specific report generators to format the reports.
+This module contains some general functions for report generation. These
+functions are used by the specific report generators to format the reports.
 
 Important functions defined here:
 
@@ -121,7 +121,7 @@ def render_report(report, output, template, path):
 
     The report is given as a dictionary which is used to fill in a template
     with jinja2. The template is given as string (a file name) with a path
-    to the template. The ouput can also be specified here and this is only
+    to the template. The output can also be specified here and this is only
     use to convert to HTML if that is the desired output.
 
     Parameters

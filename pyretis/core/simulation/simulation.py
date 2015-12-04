@@ -22,13 +22,18 @@ class Simulation(object):
 
     Attributes
     ----------
-    cycle : dict of ints
-        This dict stores information about the number of cycles. The keywords
-        are 'end' which represents the cycle number where the simulation
-        should end, 'step' which is the current cycle number, 'start' which
-        is the cycle number we started at, 'stepno' which is the number
-        cycles we have performed to arrive at cycle no 'step'. 'stepno' might
-        be different from 'step' since 'start' might be != 0.
+    cycle : dict of integers
+        This dictionary stores information about the number of cycles.
+        The keywords are:
+
+        * `end`: Represents the cycle number where the simulation should end.
+        * `step`: The current cycle number.
+        * `start`: The cycle number we started at.
+        * `stepno`: The number of cycles we have performed to arrive at
+          cycle number given by `cycle['step']`.
+
+        Note that `cycle['stepno']` might be different from `cycle['step']`
+        since `cycle['start']` might be != 0.
     task : list of objects like `SimulationTask` from `.simulation_task`
         This is the list of simulation tasks to execute.
     first_step : boolean
@@ -94,16 +99,16 @@ class Simulation(object):
         Returns
         -------
         out : dict
-            This dict contains the results of the defined tasks. Here, this
-            dict is obtained as the return value from self.execute_tasks().
+            This dictionary contains the results of the defined tasks. it is
+            obtained as the return value from `self.execute_tasks()`.
 
         Note
         ----
-        This function will have ``side effects`` and update/change
+        This function will have 'side effects' and update/change
         the state of other attached variables such as the system or other
         variables that are not explicitly shown. This is intended. In order
         to see what actually is happening when running `step()`, investigate
-        the tasks defined in self.task.
+        the tasks defined in `self.task`.
         """
         if not self.first_step:
             self.cycle['step'] += 1
@@ -134,7 +139,7 @@ class Simulation(object):
         """Add a new simulation task.
 
         A task can still be added manually by simply appending to `self.task`.
-        This method will however do some checks so that the task added can
+        This function will however do some checks so that the task added can
         be executed.
 
         Parameters
@@ -146,14 +151,14 @@ class Simulation(object):
             the task. Note that the actual execution of the task in controlled
             in the object. The keywords are:
 
-            - `func`: A function to execute.
-            - `args` which stores the arguments for the function
-            - `kwargs` which store the keyword arguments for the function
-            - `when` which stores when the task should be executed
-            - `first` which is a boolean which determines if the task should
+            * `func`: A function to execute.
+            * `args` which stores the arguments for the function
+            * `kwargs` which store the keyword arguments for the function
+            * `when` which stores when the task should be executed
+            * `first` which is a boolean which determines if the task should
               be executed on the initial step, i.e. before the full simulation
               starts
-            - `result` which is used to label the result. This is used for
+            * `result` which is used to label the result. This is used for
               output.
         position : int
             Can be used to placed the task at a specific position.
@@ -194,15 +199,15 @@ class Simulation(object):
 
         Note
         ----
-        This method will simply run the tasks. In general this is probably
+        This function will simply run the tasks. In general this is probably
         too generic for the simulation you want. It is perhaps best to
-        modify the `run` method of your simulation object to tailor the
+        modify the `run` function of your simulation object to tailor the
         simulation.
 
         Yields
         ------
         out : dict
-            This dict contains the results from the simulation.
+            This dictionary contains the results from the simulation.
         """
         while not self.is_finished():
             yield self.step()

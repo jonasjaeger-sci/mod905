@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods for analysis of crossings for the flux data."""
+"""Functions for analysis of crossings for the flux data."""
 from __future__ import absolute_import
 from pyretis.analysis.analysis import (running_average, block_error_corr,
                                        safe_divide)
@@ -17,7 +17,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
 
     Parameters
     ----------
-    fluxdata : list of tuples of ints
+    fluxdata : list of tuples of integers
         The contents of this array is the data obtained from a MD simulation
         for the fluxes.
     settings : dict
@@ -101,11 +101,11 @@ def _effective_crossings(fluxdata, nint, end_step):
     Returns
     -------
     eff_cross : list of lists
-        eff_cross[i] is the effective crossings times for interface i.
+        `eff_cross[i]` is the effective crossings times for interface `i`.
     ncross : list of ints
-        ncross[i] = the number of crossings for interface i.
+        `ncross[i]` is the number of crossings for interface `i`.
     neffcross : list of ints
-        neffcross[i] = the number of effective crossings for interface i.
+        `neffcross[i]` is the number of effective crossings for interface `i`.
     time_in_state : dict
         The time spent in the different states which are labelled with the
         keys 'A', 'B', 'OA', 'OB' where 'O' is taken to mean overall state.
@@ -176,7 +176,7 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
         The number of effective crossings, obtained from
         ``_effective_crossings``.
     time_in_state : int
-        Time spent in over-all state A.
+        Time spent in over-all state ``A``.
     time_window : int
         This is the time window we consider for calculating the flux.
     time_step : float
@@ -185,7 +185,7 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     Returns
     -------
     time : np.array
-        The times for wich we have calculated the flux.
+        The times for which we have calculated the flux.
     ncross : np.array
         The number of crossings within a time window.
     flux : np.array

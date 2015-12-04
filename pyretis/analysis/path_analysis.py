@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods for analysis of path ensembles.
+"""Functions for analysis of path ensembles.
 
 Path ensembles are defined in the object `PathEnsemble`
 in `pyretis.core.path`.
@@ -73,7 +73,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
     out[0] : numpy.array
         The running average of the crossing probability
     out[1] : numpy.array
-        The original data, can be used further in other analysis methods.
+        The original data, can be used further in other analysis functions.
 
     See Also
     --------
@@ -89,7 +89,7 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
     The crossing probability is here obtained as a function of the order
     parameter. The actual calculation is performed by
-    `_pcross_lambda_cumulative` and this method is just a wrapper in order to
+    `_pcross_lambda_cumulative` and this function is just a wrapper in order to
     handle input objects like `pyretis.core.path.PathEnsemble`.
 
     Parameters
@@ -140,7 +140,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
     It will do the actual calculation of the crossing probability as
     a function of order parameter. It is split off from `pcross_lambda`
     since the analysis is intended to be backwards compatible with the
-    output/results from the old tismol FORTRAN program.
+    output/results from the old ``TISMOL FORTRAN`` program.
 
     Parameters
     ----------
@@ -357,7 +357,7 @@ def _create_shoot_histograms(shoot_stats, bins):
 def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     """Analyse a path ensemble object.
 
-    This method will make use of the different analysis functions and analyse
+    This function will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This analysis function assumes that the given path ensemble
     is an object like `pyretis.core.path.PathEnsemble` and that this path
@@ -442,7 +442,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
 def analyse_path_ensemble(path_ensemble, settings, idetect):
     """Analyse a path ensemble.
 
-    This method will make use of the different analysis functions and analyse
+    This function will make use of the different analysis functions and analyse
     a path ensemble. It will also output the results using the specified
     output object. This function is more general than the
     `analyse_path_ensemble_object` function in that it should work on both

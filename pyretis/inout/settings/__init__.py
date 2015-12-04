@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods input/output for simulations.
+"""This package contains functions for input/output of settings.
 
 Important functions defined here:
 

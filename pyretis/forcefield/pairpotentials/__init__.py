@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Classes for pair potentials.
+"""Package defining classes for pair potentials.
 
 This package defines different pair potentials for use with internal
 calculation in pyretis.

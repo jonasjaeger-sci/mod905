@@ -16,7 +16,7 @@ http://physics.nist.gov/constants or in plain text [NIST]_.
 Internally, all computations are carried out in units which are defined by
 a length scale, an energy scale and a mass scale. This means that the time
 scale is given by these choice. Typically will the input to pyretis be in a
-more human-readable form (e.g. femtoseconds) which is converted to the interal
+more human-readable form (e.g. femtoseconds) which is converted to the internal
 units when pyretis is setting up a new simulation.
 
 Charges are typically given (in the input) in units of the electron charge.
@@ -25,7 +25,7 @@ to include the factor :math:`\frac{1}{\sqrt{4\pi\varepsilon_0}}`. An internal
 calculation of :math:`q_1 q_2` will then include coulombs constant in the
 correct units.
 
-The different sets of sytem of units are deseribed below in
+The different sets of unit systems are described below in
 the section on :ref:`unit systems <unit-conversions-systems>`.
 
 
@@ -541,7 +541,7 @@ def generate_inverse(conversions):
     ----------
     conversions : dictionary
         The unit conversions, assumed to be of type `convert[quantity]`.
-        Note that this variable will be updated in this method.
+        Note that this variable will be updated by this function.
 
     Returns
     -------
@@ -618,9 +618,9 @@ def bfs_convert(conversions, unit_from, unit_to):
 
 
 def convert_bases(dimension):
-    """Method that will create all conversions between base units.
+    """Create all conversions between base units.
 
-    This method will generate all conversions between base units defined in
+    This function will generate all conversions between base units defined in
     a `UNITS[dimension]` dictionary. It assumes that one of the bases have
     been used to defined conversions to all other bases.
 
@@ -726,9 +726,9 @@ def print_table(unit, system=False):
 
 
 def write_conversions(filename='units.txt'):
-    """This method will print out the information in CONVERT.
+    """This function will print out the information in CONVERT.
 
-    This method is intended for creating a big list of conversion factors
+    This function is intended for creating a big list of conversion factors
     that can be included in this script for defining unit conversions.
 
     Parameters

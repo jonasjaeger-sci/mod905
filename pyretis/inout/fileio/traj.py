@@ -35,9 +35,9 @@ __all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
 
 
 def create_traj_writer(filename, filefmt, oldfile, system):
-    """Method to create a trajectory writer from settings.
+    """Function to create a trajectory writer from settings.
 
-    This method will create a trajectory writer based on settings for
+    This function will create a trajectory writer based on settings for
     a format. It will also attach a given `system` so the writer.
 
     Parameters
@@ -66,10 +66,10 @@ def create_traj_writer(filename, filefmt, oldfile, system):
 
 
 def _adjust_coordinate(coord):
-    """Method to adjust the dimensionality of coordinates.
+    """Function to adjust the dimensionality of coordinates.
 
     A lot of the different formats expects us to have 3 dimensional data.
-    This methods just adds dummy dimensions equal to zero.
+    This function just adds dummy dimensions equal to zero.
 
     Parameters
     ----------
@@ -136,7 +136,7 @@ class WriteXYZ(FileWriter):
         npart = len(pos)
         self.write_string('{0}\n'.format(npart))
         if header is None:
-            header = 'Trajectory ouput. Frame: {}'.format(self.frame)
+            header = 'Trajectory output. Frame: {}'.format(self.frame)
         self.write_string('{}\n'.format(header))
         if names is None:
             if len(self.atomnames) != npart:
@@ -157,7 +157,7 @@ class WriteXYZ(FileWriter):
     def write(self, system=None, header=None):
         """Write a configuration in xyz-format.
 
-        This is a method for writing a configuration in xyz-format. It is
+        This is a function for writing a configuration in xyz-format. It is
         similar to `write_frame` and it's meant for convenience: atom names
         will not have to be specified and we are using the `system` to access
         (the positions of) the particles.
@@ -179,7 +179,7 @@ class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
 
     This class handles writing of a system to a file using the gromacs format.
-    The gromacs format is described in the gromacs manual [GRO]_.
+    The gromacs format is described in the gromacs manual [1]_.
 
     Attributes
     ----------
@@ -192,7 +192,8 @@ class WriteGromacs(FileWriter):
     References
     ----------
 
-    .. [GRO] http://manual.gromacs.org/current/online/gro.html
+    .. [1] The GROMACS manual,
+       http://manual.gromacs.org/current/online/gro.html
     """
 
     def __init__(self, filename, system, oldfile='backup'):
@@ -243,7 +244,7 @@ class WriteGromacs(FileWriter):
         if residuename is None:  # just reuse atomnames
             residuename = atomname
         if header is None:
-            header = 'Trajectory ouput. Frame: {}'.format(self.frame)
+            header = 'Trajectory output. Frame: {}'.format(self.frame)
 
         self.write_string('{}\n'.format(header))
         self.write_string('{}\n'.format(npart))
@@ -282,7 +283,7 @@ class WriteGromacs(FileWriter):
     def write(self, system=None, header=None, write_vel=False):
         """Write a configuration in gromacs format.
 
-        This is a method for writing a configuration in gro-format. It is
+        This is a function for writing a configuration in GRO-format. It is
         similar to `write_frame` and it's meant for convenience: atom names
         will not have to be specified and we are using a `system` to access
         the positions and velocities.
@@ -442,7 +443,7 @@ def write_xyz_file(filename, pos, names=None, header=None):
     """Write a single configuration in xyz-format.
 
     This is just a simple function to write a single xyz
-    configuration to a file. It will NOT convert posistions and assumes
+    configuration to a file. It will NOT convert positions and assumes
     that these are given in correct units.
 
     Parameters

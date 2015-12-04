@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Histogram methods for data analysis.
+"""Histogram functions for data analysis.
 
-This module defines some simple methods for histograms.
+This module defines some simple functions for histograms.
 
 Important functions defined here:
 
@@ -129,15 +129,15 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
         The second histogram, this is the histogram that will be scaled.
     bin_x : numpy.array
         This is the bin mid-points of the histograms. Note that we
-        assume here that histo1 and histo2 are obtained using the same
+        assume here that `histo1` and `histo2` are obtained using the same
         number of bins and limits.
-    overlap : list/touple/numpy.array
+    overlap : object like list (or tuple or numpy.array).
         This is the overlapping region.
 
     Returns
     -------
     out[0] : numpy.array
-        A scaled version of histo2.
+        A scaled version of second input histogram `histo2`.
     out[1] : float
         The calculated scale factor.
     """

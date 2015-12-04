@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods for generating reports.
+"""This package contains functions for generating reports.
 
 The reports will typically summarize the results from different
 analysis and present it as a text file, pdf or web-page.

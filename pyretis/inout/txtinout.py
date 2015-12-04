@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Methods and objects for text based output and input.
+"""Functions and classes for text based output and input.
 
-This file contians some methods and objects that handle output and input
+This file contains some functions and classes that handle output and input
 of 'table-based' output. Typically the data created here will be written
 to the screen during the simulation or as a simple column output.
 
@@ -11,7 +11,7 @@ Important classes and functions defined here:
 
 - txt_save_columns: Writing a simple column-based output using numpy.
 
-- get_predefined_table: Method for creating certain TxtTable objects that
+- get_predefined_table: Function for creating certain `TxtTable` objects that
   write/formats predefined tables.
 """
 import numpy as np
@@ -27,7 +27,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 __all__ = ['get_predefined_table', 'TxtTable', 'txt_save_columns']
 
 # Define some table which may be useful. These tables
-# can be selected using the `get_predefined_tables` method defined below.
+# can be selected using the `get_predefined_tables` function defined below.
 _DEFINED_TABLES = {}
 _DEFINED_TABLES['energies'] = {'title': 'Energy output',
                                'var': ['step', 'temp', 'vpot',
@@ -50,7 +50,7 @@ _DEFINED_TABLES['path-stats'] = {'title': 'Path ensemble statistics',
 def get_predefined_table(table):
     """Create predefined `TxtTable` objects.
 
-    This method will set up and return an object like `TxtTable` for some
+    This function will set up and return an object like `TxtTable` for some
     predefined tables. The predefined tables are assumed to be defined in
     a dictionary `_DEFINED_TABLES`. Here, objects like `TxtTable` will be
     initiated based on the given settings in `_DEFINED_TABLES`.
@@ -281,7 +281,7 @@ class TxtTable(object):
     def format_row(self, row_dict, header=False):
         """Return a formatted string representation of a row.
 
-        This method will format a 'row'. The row is given as a dictionary and
+        This function will format a 'row'. The row is given as a dictionary and
         we pick out values based on the variables defined in `self.variables`.
 
         Parameters
@@ -333,7 +333,7 @@ class TxtTable(object):
             return self.format_row(row)
 
     def __call__(self, step, row, first_step=False):
-        """Method to make `self.write` callable.
+        """Function to make `self.write` callable.
 
         Parameters
         ----------

@@ -13,20 +13,17 @@ Package structure
 
 Modules:
 
-- __init__.py: Imports simulations from the other modules and defines a method
-  for creating simulations from a dict with settings.
-
-- md_simulation.py: Defines simulation objects for molecular dynamics
+- md_simulation.py: Defines simulation classes for molecular dynamics
   simulations.
 
-- mc_simulation.py: Define simulation objects for Monte Carlo simulations.
+- mc_simulation.py: Define simulation classes for Monte Carlo simulations.
 
-- path_simulation.py: Defines simulation objects for path simulations.
+- path_simulation.py: Defines simulation classes for path simulations.
 
-- simulation.py: Defines the Simulation object which is the base object for
+- simulation.py: Defines the Simulation class which is the base object for
   simulations.
 
-- simulation_task.py: Defines objects for handling of simulation tasks.
+- simulation_task.py: Defines classes for handling of simulation tasks.
 
 Important classes and functions:
 

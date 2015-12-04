@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods for generating plots using matplotlib.
+"""Functions for generating plots using matplotlib.
 
 This module defines a class for using matplotlib and it also defines
 some standard plots that are used in the analysis.
@@ -8,7 +8,7 @@ Important classes and functions defined here:
 
 - MplPlotter: A class for plotting with matplotlib.
 
-- mpl_set_style: A method for setting the style for the plots, typically
+- mpl_set_style: A function for setting the style for the plots, typically
   used here to load the *pyretis style*.
 """
 import numpy as np
@@ -331,10 +331,10 @@ def mpl_simple_plot(series, fig_settings=None):
     fig_settings : dict
         This dict contains settings for the figure, keys are:
 
-        * xlabel : string, the label to use for the x-axis.
-        * ylabel : string, the label to use for the y-axis.
-        * title : string, title to use for the figure.
-        * yscale : string, to change the scale for the y-axis.
+        * `xlabel`: string, the label to use for the x-axis.
+        * `ylabel`: string, the label to use for the y-axis.
+        * `title`: string, title to use for the figure.
+        * `yscale`: string, to change the scale for the y-axis.
 
     Returns
     -------
@@ -412,11 +412,12 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     """Plot a line gradient in chunks.
 
     Here we will plot a line in chunks and color each chunk with one color.
-    This method can be used as an alternative to `mpl_linecollection_gradient`
-    when the number of points to plot is very large. Typically the chunk size
-    here will be small compared to the size of the data to be plotted, so that
-    each chunk, if plotted with `mpl_linecollection_gradient`, would have
-    approximately the same color anyway.
+    This function can be used as an alternative to
+    `mpl_linecollection_gradient` when the number of points to plot is very
+    large. Typically the chunk size here will be small compared to the size
+    of the data to be plotted, so that each chunk, if plotted
+    with `mpl_linecollection_gradient`, would have approximately the same
+    color anyway.
 
     Parameters
     ---------
@@ -460,7 +461,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 def mpl_line_gradient(series, fig_settings):
     """Plot time series and color the line with a color gradient.
 
-    This method will plot time series data and color the lines with
+    This function will plot time series data and color the lines with
     a gradient according to 'time'
 
     Parameters
@@ -470,10 +471,10 @@ def mpl_line_gradient(series, fig_settings):
     fig_settings : dict
         This dict contains settings for the figure, keys are:
 
-        * xlabel : string, the label to use for the x-axis.
-        * ylabel : string, the label to use for the y-axis.
-        * title : string, title to use for the figure.
-        * yscale : string, to change the scale for the y-axis.
+        * `xlabel`: string, the label to use for the x-axis.
+        * `ylabel`: string, the label to use for the y-axis.
+        * `title`: string, title to use for the figure.
+        * `yscale`: string, to change the scale for the y-axis.
 
     Returns
     -------
@@ -482,7 +483,7 @@ def mpl_line_gradient(series, fig_settings):
 
     Notes
     -----
-    This method is based on the matplotlib example from:
+    This function is based on the matplotlib example from:
     http://matplotlib.org/examples/pylab_examples/multicolored_line.html
     """
     fig = Figure()
@@ -525,9 +526,9 @@ def mpl_error_plot(series, fig_settings):
     fig_settings : dict
         This dict contains settings for the figure, keys are:
 
-        * xlabel : string, the label to use for the x-axis.
-        * ylabel : string, the label to use for the y-axis.
-        * title : string, title to use for the figure.
+        * `xlabel`: string, the label to use for the x-axis.
+        * `ylabel`: string, the label to use for the y-axis.
+        * `title`: string, title to use for the figure.
 
     Returns
     -------
@@ -689,7 +690,7 @@ def mpl_plot_orderp(results, orderdata):
     Returns
     -------
     canvas : dict
-        The different plots created by this method.
+        The different plots created by this function.
 
     Note
     ----
@@ -762,16 +763,16 @@ def mpl_plot_energy(results, energies, sim_settings=None):
         theoretical plots of distributions. It is assumed to contain
         the following keys:
 
-        * npart: The number of particles in the simulation
-        * dim: Number of dimensions used in the simulation
-        * beta: The beta factor :math:`\beta = \frac{1}{k_B T}` where
+        * `npart`: The number of particles in the simulation
+        * `dim`: Number of dimensions used in the simulation
+        * `beta`: The beta factor :math:`\beta = \frac{1}{k_B T}` where
           :math:`k_B` is the Boltzmann constant and :math:`T` the temperature.
-        * temperature: The temperature of the system.
+        * `temperature`: The temperature of the system.
 
     Returns
     -------
     canvas : dict
-        The output figures created by this method.
+        The output figures created by this function.
     """
     canvas = {}
     time = energies['time']
@@ -856,11 +857,11 @@ def mpl_plot_flux(results):
     Returns
     -------
     out[0] : list of dicts
-        The output figures created by this method for running averages.
+        The output figures created by this function for running averages.
         `out[0][i]['name']` is the name of the figure and
         `out[0][i]['canvas']` is the corresponding canvas object.
     out[1] : list of dicts
-        The output figures created by this method for block errors.
+        The output figures created by this function for block errors.
         `out[0][i]['name']` is the name of the figure and
         `out[0][i]['canvas']` is the corresponding canvas object.
     """
@@ -897,7 +898,7 @@ def mpl_plot_flux(results):
 def mpl_plot_matched(path_ensembles, detect, matched):
     """Plot matched probabilities using matplotlib.
 
-    This method will plot the matched probabilities for the different
+    This function will plot the matched probabilities for the different
     ensembles and also make a plot with just the over-all matched probability.
 
     Parameters
@@ -913,7 +914,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     Returns
     -------
     canvas : dict
-        The output figures created by this method.
+        The output figures created by this function.
     """
     canvas = {}
     # First plot the matched probabilities for each ensemble:

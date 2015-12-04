@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Module for handling crossing files.
 
-This file contains method for handling the input and output of crossing
+This file contains functions for handling the input and output of crossing
 data. This is typically needed for the simulation of type 'MDFlux' where
 the goal is to obtain the initial flux. This initial flux can then be used
 to obtain a crossing rate when combined with the crossing probability.

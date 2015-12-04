@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Definition of the system object.
+"""Definition of the system class.
 
 The system object defines the system the simulation acts on. The system
 object contains particles, a force field and a box.
@@ -29,9 +29,9 @@ class System(object):
         This dictionary contains information on the temperature. The
         following information is stored:
 
-        - set: The set temperature, T, (if any).
-        - beta: The derived property ``1.0/(k_B*T)``.
-        - dof: Information about the degrees of freedom for the system.
+        * `set`: The set temperature, ``T``, (if any).
+        * `beta`: The derived property ``1.0/(k_B*T)``.
+        * `dof`: Information about the degrees of freedom for the system.
     v_pot : float
         the potential energy of the system
     particles : object like `pyretis.core.particles.Particles`
@@ -266,8 +266,8 @@ class System(object):
 
         Note
         ----
-        This method will not update the forces, just calculate them.
-        The method `self.force` can be used to update the forces.
+        This function will not update the forces, just calculate them.
+        Use `self.force` to update the forces.
         """
         return self._evaluate_potential_force(what='force', **kwargs)
 
@@ -288,9 +288,9 @@ class System(object):
 
         Note
         ----
-        This method will not update `self.v_pot` but it will just return it's
-        value for the (possibly given) configuration.
-        The method `self.potential` can be used to update `self.v_pot`.
+        This function will not update `self.v_pot` but it will just return
+        it's value for the (possibly given) configuration.
+        The function `self.potential` can be used to update `self.v_pot`.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
 
@@ -393,9 +393,9 @@ class System(object):
             logging.error(msg)
 
     def calculate_temperature(self):
-        """Calculate the temperature of the the system.
+        """Calculate the temperature of the system.
 
-        It is included here for convenience since the dof's
+        It is included here for convenience since the degrees of freedom
         are easily accessible and it's a very common calculation to perform,
         even though it might be cleaner to include it as a particle function.
 

@@ -13,18 +13,18 @@ pyretis structure
 Modules:
 
 - __init__.py: This is the main pyretis module. It will import useful
-  subpackages and define the version number.
+  sub-packages and define the version number.
 
 Sub-Packages:
 
-- core: The core objects, methods and functions used for running the rare
-  event simulations. This includes objects for defining the system,
-  defining a system box, defining simulations etc.
+- core: The core classes and functions used for running the rare
+  event simulations. This includes classes defining the system,
+  a system box, simulations etc.
 
 - forcefield: This package define forcefields and how they are calculated.
 
-- tools: This package defines some methods which can be useful for
-  setting up simple systems, for example methods for generating lattices.
+- tools: This package defines some functions which can be useful for
+  setting up simple systems, for example functions for generating lattices.
 
 - inout: This package defines the io for the pyretis program. This includes
   generating output from the analysis and reading input-files etc.

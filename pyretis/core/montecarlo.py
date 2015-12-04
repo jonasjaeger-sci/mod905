@@ -125,12 +125,13 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
     maxdx : float, optional
         The maximum displacement (default is 0.1).
     idx : int, optional.
-        Index of particle to displace. If idx is not given, the particle
+        Index of particle to displace. If `idx` is not given, the particle
         is chosen randomly.
 
     Returns
     -------
-    out : The outcome of applying the function accept_reject to the system
+    out : boolean
+        The outcome of applying the function `accept_reject` to the system
         and trial position.
     """
     if idx is None:

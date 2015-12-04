@@ -31,7 +31,7 @@ class Plotter(object):
     """
 
     def __init__(self, backup=True, plotter_type=None):
-        """Initiate the plotting object"""
+        """Initiate the plotting object."""
         self.plotter_type = plotter_type
         if backup in (True, 'yes', 'True'):
             self.backup = True
@@ -39,25 +39,25 @@ class Plotter(object):
             self.backup = False
 
     def plot_flux(self, results):
-        """Function that plots flux results"""
+        """Function that plots flux results."""
         raise NotImplementedError()
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """Function that plots energy results"""
+        """Function that plots energy results."""
         raise NotImplementedError()
 
     def plot_orderp(self, results, orderdata):
-        """Function that plots order parameter results"""
+        """Function that plots order parameter results."""
         raise NotImplementedError()
 
     def plot_path(self, path_ensemble, results, idetect):
-        """Function that plots path ensemble results"""
+        """Function that plots path ensemble results."""
         raise NotImplementedError()
 
     def plot_total_probability(self, path_ensembles, detect, matched):
-        """Function that plots the overall probability for path ensembles"""
+        """Function that plots the overall probability for path ensembles."""
         raise NotImplementedError()
 
     def __str__(self):
-        """Just print out the basic info"""
+        """Just print out the basic info."""
         return 'Plotter: {}'.format(self.plotter_type)

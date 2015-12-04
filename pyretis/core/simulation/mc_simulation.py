@@ -85,10 +85,10 @@ class UmbrellaWindowSimulation(Simulation):
         cycle : int, optional.
             The current simulation cycle.
         maxcycle : int, optional.
-            The MINIMUM number of cycles to perform. Note that in the
-            base `Simulation` class this is the MAXIMUM number of
+            The *MINIMUM* number of cycles to perform. Note that in the
+            base `Simulation` class this is the *MAXIMUM* number of
             cycles to perform. The meaning is redefined by redefining
-            the `self.simulation_finished` method.
+            the `self.simulation_finished` function.
         """
         super(UmbrellaWindowSimulation, self).__init__(endcycle=mincycle,
                                                        startcycle=startcycle)

@@ -11,19 +11,19 @@ Package structure
 
 Modules:
 
-- __init__.py: This file, imports from the other modules. The method to
+- __init__.py: This file, imports from the other modules. The function to
   analyse results from MD flux simulations is defined here since it uses
   analysis tools from `energy_analysis.py` and `order_analysis.py`.
 
-- analysis.py: Defines methods for numerical analysis.
+- analysis.py: Defines functions for numerical analysis.
 
-- energy_analysis.py: Defines methods useful for analyzing the energy output.
+- energy_analysis.py: Defines functions useful for analysing the energy output.
 
-- histogram.py: Defines methods useful for generating histograms.
+- histogram.py: Defines functions useful for generating histograms.
 
-- order_analysis.py: Defines methods useful for analysis of order parameters.
+- order_analysis.py: Defines functions useful for analysis of order parameters.
 
-- path_analysis.py: Defines methods for analysis of path ensembles.
+- path_analysis.py: Defines functions for analysis of path ensembles.
 
 Important functions defined in this module:
 
@@ -45,7 +45,7 @@ Important functions defined in this module:
   probability, perform an block error analysis, analyse lengths of paths,
   type of Monte Carlo moves and calculate an efficiency.
 
-- match_probabilities: Method to match probabilities from several
+- match_probabilities: Function to match probabilities from several
   path simulations. Useful for obtaining the overall crossing probability.
 
 - histogram: Generates histogram, basically a wrapper around numpy's
@@ -64,7 +64,7 @@ from .path_analysis import analyse_path_ensemble, match_probabilities
 
 def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
                     simulation_settings):
-    """This method will analyse the output from a MD-flux simulation.
+    """Function to analyse the output from a MD-flux simulation.
 
     The obtained results will be returned as a convenient structure for
     plotting or reporting.
@@ -82,7 +82,7 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         length for error analysis).
     simulation_settings : dict
         This dict contains settings from the simulation (interfaces,
-        time step etc).
+        time step etc.).
 
     Returns
     -------

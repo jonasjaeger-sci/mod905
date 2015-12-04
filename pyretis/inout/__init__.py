@@ -4,8 +4,7 @@
 This package is intended for creating various forms of output
 from the pyretis program. It include writers for simple text based
 output and plotters for creating figures. Figures and the text results
-can be combined into reports, which can be templated and are handled by
-the report module.
+can be combined into reports, which are handled by the report module.
 
 Package structure
 ~~~~~~~~~~~~~~~~~
@@ -32,10 +31,10 @@ Modules:
 
 - __init__.py: Imports from the other modules.
 
-- txtinout.py: Defines objects and some methods for text-based output. This
+- txtinout.py: Defines classes and some functions for text-based output. This
   is typically text written to the screen during a simulation.
 
-- simulationio.py : Handle input output for simulations.
+- simulationio.py: Handle input output for simulations.
 
 Important classes and functions:
 

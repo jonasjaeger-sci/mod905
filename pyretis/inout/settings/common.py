@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module defines common functions for the settings handling
+"""This module defines common functions for the settings handling.
 
 Important functions defined here:
 

@@ -50,7 +50,7 @@ class RandomGenerator(object):
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
-        """Call `self.rgen.rand()`, see the description of this method.
+        """Call `self.rgen.rand()`, see the description of this function.
 
         Parameters
         ----------
@@ -106,7 +106,7 @@ class RandomGenerator(object):
 
         This is an attempt on speeding up the call of
         `RandomState.multivariate_normal` if we need to call it over and
-        over again. Such repeated calling will do a svd repeatedly, which
+        over again. Such repeated calling will do a SVD repeatedly, which
         is wasteful. In this function, this transform can be supplied and it
         is only estimated if it's not explicitly given.
 
@@ -142,7 +142,7 @@ class RandomGenerator(object):
                                        dof, selection=None, momentum=True):
         """Generate velocities from a Maxwell distribution.
 
-        The velocities are drawn to match a given temperature and the method
+        The velocities are drawn to match a given temperature and this function
         can be applied to a sub-set of the particles.
 
         The generation is done in three steps:

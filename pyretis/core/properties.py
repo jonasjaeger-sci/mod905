@@ -88,7 +88,7 @@ class Property(object):
         Note
         ----
         Consider if this should be moved/deleted and just
-        replaced with a function from the analysis method.
+        replaced with a function from the analysis package.
         """
         val = self.val[-1]  # most recent value
         delta = val - self.mean

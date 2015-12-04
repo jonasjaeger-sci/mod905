@@ -61,9 +61,9 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 
 
 def list_get(input_list, index):
-    """Method to get an item from a list that handles out-of bounds errors.
+    """Function to get an item from a list that handles out-of bounds errors.
 
-    This method is intended to be used when we are picking items from a list
+    This function is intended to be used when we are picking items from a list
     and possibly we want a number of items which is larger than the number
     of items in the list. Here, we then just return the last element
 
@@ -81,14 +81,14 @@ def list_get(input_list, index):
 
 
 def _guess_particle_mass(particle_no, particle_type, unit):
-    """Method that will try to guess a particle mass from it's type
+    """Function that will try to guess a particle mass from it's type.
 
     Parameters
     ----------
     particle_no : integer
         Just used to identify the particle number
     particle_type : string
-        Used to idenfity the particle
+        Used to identify the particle
     unit : string
         The system of units. This is used in case we try to get the mass from
         the periodic table where the units are in `g/mol`.
@@ -110,7 +110,7 @@ def _guess_particle_mass(particle_no, particle_type, unit):
 
 
 def initial_positions_lattice(settings):
-    """Method to generate initial positions based on given settings.
+    """Function to generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
     as dictated by `settings['units']`.
@@ -177,7 +177,7 @@ def _get_snapshot_from_file(pos_settings, units):
         the positions ('x', 'y', 'z') and atom name 'atomnames'. It may have
         information about velocities ('vx', 'vy', 'vz') and the box ('box').
     convert : dict
-        Dict with conversion factors to internal units.
+        Dictionary with conversion factors to internal units.
     """
     filename = pos_settings.get('file', None)
     if filename is None:
@@ -216,7 +216,7 @@ def _get_snapshot_from_file(pos_settings, units):
 
 
 def initial_positions_file(settings):
-    """Method to get initial positions from an input file.
+    """Function to get initial positions from an input file.
 
     Parameters
     ----------
@@ -329,7 +329,7 @@ def create_initial_positions(settings):
 
 
 def get_box(settings):
-    """Method that will try to set up a box from settings.
+    """Function that will try to set up a box from settings.
 
     Parameters
     ----------
@@ -399,7 +399,7 @@ def create_velocities(system, settings, vel):
 
 
 def create_system(settings):
-    """Method that will set up a system from settings.
+    """Function that will set up a system from settings.
 
     In order to set up the system, there are several things we might need to
     do:

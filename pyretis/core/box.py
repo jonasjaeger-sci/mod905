@@ -118,7 +118,7 @@ class Box(object):
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.
 
-        For the given positions, this method will apply periodic boundary
+        For the given positions, this function will apply periodic boundary
         conditions to one dimension only. This can be useful for instance
         in connection with order parameters.
 

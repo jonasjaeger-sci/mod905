@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods for generating reports.
+"""Functions for generating reports.
 
 The reports are useful for displaying results from the analysis.
 

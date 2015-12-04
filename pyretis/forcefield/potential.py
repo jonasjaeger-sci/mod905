@@ -23,7 +23,7 @@ class PotentialFunction(object):
         Represents the spatial dimensionality of the potential.
     params : dict
         Contains the parameters. This is a variable included
-        for convenience in case other methods/classes wants to know all
+        for convenience in case other functions/classes wants to know all
         the parameters of the potential.
     """
 
@@ -75,8 +75,8 @@ class PotentialFunction(object):
 
         Note
         ----
-        A parameter in params which is not a attribute of the object will be
-        ignored.
+        A parameter in `params` which is not an attribute of the object will
+        be ignored.
         """
         if not isinstance(params, dict):
             logging.warning('Did not understand the parameters.')

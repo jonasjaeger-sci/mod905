@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Module defining the base objects for file writers.
+"""Module defining the base classes for file writers.
 
 The base objects defines how file should be opened, if we are to write
 headers to the file, if we should overwrite or backup old files etc.
 
 Important classes and functions defined here:
 
-- read_some_lines: A method that can be used to read data from a file. It
+- read_some_lines: A function that can be used to read data from a file. It
   will try to read as many lines as possible with a given parser for lines.
   It will yield blocks of data.
 
@@ -172,7 +172,7 @@ class FileWriter(object):
     def fileopen(self, oldfile='backup'):
         """Open a file and make it ready for reading/writing.
 
-        Method to open a file, to make it ready for reading/writing.
+        Function to open a file, to make it ready for reading/writing.
         This function is separated from `self.__init__` in case some derived
         classes will open the file at a later stage. Default is to run
         open if the mode it set to 'w'.
@@ -239,7 +239,7 @@ class FileWriter(object):
             return None
 
     def write_string(self, towrite):
-        """Method to write a string to the file.
+        """Write a string to the file.
 
         Parameters
         ----------
@@ -267,7 +267,7 @@ class FileWriter(object):
     def write_line(self, towrite):
         """Write a line with a newline at the end.
 
-        This method will call `write_string` adding a new-line to the given
+        This function will call `write_string` adding a new-line to the given
         string.
 
         Parameters
@@ -280,9 +280,10 @@ class FileWriter(object):
     def __del__(self):
         """Close a file in case the object is deleted.
 
-        This method in just to close the file in case the program
-        crashes. It is used here as it's not so nice to add a
-        with statement to the main script running the simulation.
+        This function will just close the file in case the program
+        crashes or exits in some other way. It is used here as it's not so
+        nice to add a with statement to the main script running the
+        simulation.
         """
         if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()

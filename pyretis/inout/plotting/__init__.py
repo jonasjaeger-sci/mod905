@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods for setting up plotters.
+"""This package contains functions for setting up plotters.
 
-Specifically it defines colors, color schemes and a method
+Specifically it defines colors, color schemes and a function
 for selecting a plotter.
 Here we also hard-code some color schemes which may be useful for
 the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
@@ -9,7 +9,7 @@ from the seaborn project [deep]_ and the husl color scheme [husl]_.
 
 Important functions defined here:
 
-- create_plotter: Method to create a plotter.
+- create_plotter: Function to create a plotter.
 
 Folders
 
@@ -55,7 +55,7 @@ _COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
 
 
 def create_plotter(plot_settings):
-    """Method to create a plotter.
+    """Function to create a plotter.
 
     The input plot settings is assumed to be a dictionary which we use
     for creating the plotter. In case the plot settings is not given, we

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods for generating reports.
+"""Functions for generating reports.
 
 The reports are useful for displaying results from the analysis.
 
@@ -62,7 +62,7 @@ def _table_md_efficiency(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` method in
+        These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').
@@ -121,7 +121,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` method in
+        These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').
@@ -158,7 +158,7 @@ def _table_md_flux(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` method in
+        These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or latex ('tex').

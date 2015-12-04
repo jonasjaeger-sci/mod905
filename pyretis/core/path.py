@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Classes and methods for paths and path ensembles.
+"""Classes and functions for paths and path ensembles.
 
-The classes and methods defined in this module are useful for representing
+The classes and functions defined in this module are useful for representing
 paths and path ensembles.
 
 
@@ -14,13 +14,13 @@ Important classes defined here:
 
 Important functions defined here:
 
-- create_path_ensembles: Method for creating a set of `PathEnsemble` objects
+- create_path_ensembles: Function for creating a set of `PathEnsemble` objects
   given locations of interfaces defining the path ensembles.
 
-- paste_paths: Method for joining two paths, one is in a backward time
+- paste_paths: Function for joining two paths, one is in a backward time
   direction and the other is in the forward time direction.
 
-- reverse_path: Method for reversing a path.
+- reverse_path: Function for reversing a path.
 
 """
 import numpy as np
@@ -153,7 +153,7 @@ def check_crossing(cycle, system, order_function, interfaces,
                    leftside_prev=None):
     """Check if we have crossed an interface during the last step.
 
-    This method is useful for checking if an interface was crossed from
+    This function is useful for checking if an interface was crossed from
     the previous step till the current one. This is for instance used in the
     MD simulations for the initial flux.
     If will use a variable to store the previous positions with respect to
@@ -589,7 +589,7 @@ class PathEnsemble(object):
     This class represents a collection of `Paths` in a path ensemble.
     In general paths may be 'long and complicated' so here, we really
     just store an simplified abstraction of the path, which is obtained by the
-    `Path.get_path_data()` method for a given `Path` object. The returned
+    `Path.get_path_data()` function for a given `Path` object. The returned
     dictionary is stored in the list `PathEnsemble.paths`. The only path we
     store, is the last accepted path. This is convenient for the RETIS method
     where paths may be swapped between path ensembles.
@@ -608,7 +608,7 @@ class PathEnsemble(object):
     paths : list
         This list contains the stored information for the paths. Here
         we only store the data returned by calling the `get_path_data()`
-        method of the `Path` object.
+        function of the `Path` object.
     nstats : dict of ints
         This dict store some statistics for the path ensemble. The keys are
 
@@ -651,7 +651,7 @@ class PathEnsemble(object):
         Notes
         -----
         We do not reset `self.last_path` as this might be used in the
-        RETIS method.
+        RETIS function.
         """
         self.paths = []
         for key in self.nstats:
@@ -709,9 +709,9 @@ class PathEnsemble(object):
     def get_accepted(self):
         """Yield accepted paths from the PathEnsemble.
 
-        This method will give an iterator useful for iterating over
+        This function  will give an iterator useful for iterating over
         accepted paths only. In the PathEnsemble we store both accepted
-        and rejected paths. This method will loop over all paths stored
+        and rejected paths. This function will loop over all paths stored
         and yield the accepted paths the correct number of times.
         """
         last_path = None
@@ -791,7 +791,7 @@ class PathEnsemble(object):
 def create_path_ensembles(interfaces, include_zero=False):
     """Create a list of `PathEnsemble` objects given positions of interfaces.
 
-    This method will create and return a set of objects representing path
+    This function will create and return a set of objects representing path
     ensembles for a given set of interfaces. This is useful when setting up
     simulations like RETIS. Here we assume that the given interfaces define
     the path ensembles as follows:

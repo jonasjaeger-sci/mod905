@@ -121,8 +121,8 @@ class OutputTask(object):
         """Output the task.
 
         This will output the task using the result found in the
-        `simulation_step` which should be the dict returned from a simulation
-        object (e.g. object like `Simulation` from
+        `simulation_step` which should be the dictionary returned from a
+        simulation object (e.g. object like `Simulation` from
         `pyretis.core.simulation.simulation`) after a step. For trajectories,
         we don't need to pass the actual `system` since this is already
         attached to the trajectory writer.
@@ -160,12 +160,12 @@ class OutputTask(object):
                 return self.writer.write(step['step'], result)
 
     def close(self):
-        """Method to explicitly close a file if needed."""
+        """Function to explicitly close a file if needed."""
         if self.target == 'file':
             self.writer.close()
 
     def __str__(self):
-        """Ouput some info about this output task."""
+        """Output some info about this output task."""
         msg = ['Output task: {}'.format(self.output_type)]
         msg += ['* Target: {}'.format(self.target)]
         msg += ['* Writer: {}'.format(self.writer)]
@@ -176,7 +176,7 @@ class OutputTask(object):
 def _task_dict_eq(task1, task2):
     """Check if two task dicts are similar.
 
-    This method is used when we decide if we should add a new task or update
+    This function is used when we decide if we should add a new task or update
     an existing one. The two tasks are checked differently depending on the
     target of the task.
 
@@ -236,7 +236,7 @@ def _task_dict_eq(task1, task2):
 def create_output(system, settings):
     """Generate output tasks from settings and defaults.
 
-    This method will return actual objects that can be added to the
+    This function will return actual objects that can be added to the
     simulation. It uses `_get_output_tasks` to generate dictionaries
     for the output tasks which are here converted to objects using
     `create_output_task`.
@@ -250,7 +250,7 @@ def create_output(system, settings):
 
     Yields
     ------
-    out : object like `OuputTask`
+    out : object like `OutputTask`
     """
     defaults = _DEFAULT_OUTPUT.get(settings['type'], [])
     for out_task in _get_output_tasks(settings.get('output', []),
@@ -263,11 +263,11 @@ def create_output(system, settings):
 def _get_output_tasks(output_settings, default_output=None):
     """Generate output tasks (dict representation) from settings.
 
-    This method will generate output tasks from given settings and add
+    This function will generate output tasks from given settings and add
     default output settings. It will check to see if the given output
     settings can be used to update the default settings. Note that the
     returned list of output tasks are dicts and that the `create_output_task`
-    method should be used to generate the output task objects.
+    function should be used to generate the output task objects.
 
     Parameters
     ----------
@@ -318,7 +318,7 @@ def _create_file_writer(task, system, settings):
     Parameters
     ----------
     task : dict
-        This dict describes the task.
+        This dictionary describes the task.
     system : object like `System` from `pyretis.core.system`
         The system we are describing. Needed for creating the
         trajectory writer.
@@ -375,7 +375,7 @@ def _create_file_writer(task, system, settings):
 def create_output_task(task, system, settings):
     """Create object for a output task.
 
-    This method will create an object for a given output task.
+    This function will create an object for a given output task.
     It will make use of some of the predefined output possibilities
     defined in `pyretis.inout`
 
@@ -427,7 +427,7 @@ def store_settings_as_py(settings, outfile, path=None, variable='settings'):
     This will just write a dictionary to a file in a way such that
     it can be imported into another file. I.e. one can do
     `from 'outfile' import 'variable' as settings` to import the
-    given `variable` from the given `outfile` created by this method.
+    given `variable` from the given `outfile` created by this function.
 
     Parameters
     ----------

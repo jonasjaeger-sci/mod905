@@ -19,8 +19,8 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
     Parameters
     ----------
     epsilon_i and epsilon_j : floats
-        For a Lennard-Jones potential, this corresponds to the
-        the epsilon parameters.
+        For a Lennard-Jones potential, this corresponds to the epsilon
+        parameters.
     sigma_i and sigma_j : floats
         For a Lennard-Jones potential, this corresponds to the
         sigma parameters.
@@ -150,7 +150,7 @@ class ForceField(object):
         Returns
         -------
         out : None
-            Returns `None` and updatex `self.potential` and `self.params`.
+            Returns `None` and updates `self.potential` and `self.params`.
         """
         if potential in self.potential:
             idx = self.potential.index(potential)

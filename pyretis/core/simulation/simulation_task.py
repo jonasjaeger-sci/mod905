@@ -10,7 +10,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
     """Check consistency for function and the given (keyword) arguments.
 
     Here we assume that the arguments are given in a list and that
-    the keyword arguments are given as a dict. The function
+    the keyword arguments are given as a dictionary. The function
     `inspect.getargspec` is used to check the input function.
 
     Parameters

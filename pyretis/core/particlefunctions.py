@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods that act on (a selection of) particles.
+"""This file contains functions that act on (a selection of) particles.
 
-These methods are intended for calculating particle properties as the
+These functions are intended for calculating particle properties as the
 kinetic temperature, pressure etc.
 
 Important functions defined here:
@@ -88,7 +88,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
         is the number of dimensions used in the velocities. This tensor
         should be symmetric and it's trace should be identical to the
         output from the `dim` times the averaged output of the
-        `kinetic_energy` method defined below.
+        `kinetic_energy` function defined below.
     """
     if selection is None:
         vel, mass = particles.vel, particles.mass

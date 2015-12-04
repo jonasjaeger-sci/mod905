@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-"""This file contains methods used in TIS.
+"""This file contains functions used in TIS.
 
-This module defines the methods needed to perform TIS simulations.
-The algorithms are implemented as described by van Erp et al. [TIS]_.
+This module defines the functions needed to perform TIS simulations.
+The algorithms are implemented as described by van Erp et al. [1]_.
 
 
 Important functions defined here:
 
-- make_tis_step: Method that will perform a single TIS step.
+- make_tis_step: Function that will perform a single TIS step.
 
-- generate_initial_path_kick: Method for generating an initial path by
+- generate_initial_path_kick: Function for generating an initial path by
   repeatedly kicking a phase point.
 
 
 References
 ~~~~~~~~~~
 
-.. [TIS] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
+.. [1] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
 """
@@ -33,10 +33,10 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
                            integrator, rgen, tis_settings, cycle):
     """Function to preform TIS step for a path ensemble.
 
-    This method will run `make_tis_step` for the given path_ensemble. If will
-    handle adding of the path. This method is intended for convenience when
-    working with path ensembles. If we are using the path ensemble [0^-] then
-    the start condition should be 'R' for right.
+    This function will run `make_tis_step` for the given path_ensemble.
+    It will handle adding of the path. This function is intended for
+    convenience when working with path ensembles. If we are using the path
+    ensemble ``[0^-]`` then the start condition should be 'R' for right.
 
     Parameters
     ----------
@@ -82,10 +82,10 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
 
 def initiate_path_ensemble(path_ensemble, system, order_function,
                            integrator, rgen, tis_settings, cycle=0):
-    """This method will run the initiate for a given ensemble.
+    """This function will run the initiate for a given ensemble.
 
-    This method is intended for convenience. It should handle and call all the
-    possible initiation methods.
+    This function is intended for convenience. It should handle and call all
+    the possible initiation methods.
 
     Parameters
     ----------
@@ -156,7 +156,7 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
         This dictionary contain the settings for the TIS method. Here we
         explicitly use:
 
-        - freq : float, the frequency of how often we should do time reversal
+        * `freq`: float, the frequency of how often we should do time reversal
           moves.
 
     Returns
@@ -221,7 +221,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
            tis_settings):
     """Perform a shooting-move.
 
-    This method will perform the shooting move from a randomly selected
+    This function will perform the shooting move from a randomly selected
     time-slice.
 
     Parameters
@@ -243,11 +243,11 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     tis_settings : dict
         This contains the settings for TIS. Keys used here:
 
-        - aimless : boolean, is the shooting aimless or not?
-        - allowmaxlength : boolean, should paths be allowed to reach
+        * `aimless`: boolean, is the shooting aimless or not?
+        * `allowmaxlength`: boolean, should paths be allowed to reach
           maximum length?
-        - start_cond : string, starting condition, 'L'eft or 'R'ight
-        - maxlength : integer, maximum allowed length of paths.
+        * `start_cond`: string, starting condition, 'L'eft or 'R'ight
+        * `maxlength`: integer, maximum allowed length of paths.
 
     Returns
     -------
@@ -360,13 +360,13 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
 
 def generate_initial_path_kick(system, interfaces, order_function,
                                integrator, rgen, tis_settings):
-    """Simple method to generate an initial path.
+    """Simple function to generate an initial path.
 
-    This method will generate an initial path by repeatedly kicking a
+    This function will generate an initial path by repeatedly kicking a
     phase-space point until the middle interface is crossed.
     The point before and after kicking are stored, so when the
     middle interface is crossed we have two points we can integrate
-    forward and backward in time. This method is intended for use with
+    forward and backward in time. This function is intended for use with
     TIS. For use with RETIS one should set the appropriate `tis_settings`
     so that the starting conditions are fine (i.e. for the [0^-] ensemble
     it might be different for the other ensembles).
@@ -387,8 +387,8 @@ def generate_initial_path_kick(system, interfaces, order_function,
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
 
-        - start_cond : string, starting condition, 'L'eft or 'R'ight
-        - maxlength : integer, maximum allowed length of paths.
+        * `start_cond`: string, starting condition, 'L'eft or 'R'ight
+        * `maxlength`: integer, maximum allowed length of paths.
 
         Note that also `_fix_path_by_tis` will use the `tis_settings`.
 
@@ -485,7 +485,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     ----
     This function will update the system state so that the
     `system.particles.get_phase_point() == out[1]`. This is more convenient
-    for the following usage in the `generate_initial_path_kick` method.
+    for the following usage in the `generate_initial_path_kick` function.
     """
     # first we search for crossing with the middle interface
     # this is done by sequentially kicking the initial phase point
@@ -567,11 +567,11 @@ def propagate(system, interfaces, order_function, integrator,
     a empty path or we are appending to a existing path. Here, we will stop
     the propagation if any of the following happens:
 
-    - We have exceeded the maximum length given in `maxlen`.
+    * We have exceeded the maximum length given in `maxlen`.
 
-    - The point we propagated to crossed the left interface
+    * The point we propagated to crossed the left interface.
 
-    - The point we propagated to crossed the right interface
+    * The point we propagated to crossed the right interface.
 
     Parameters
     ----------
@@ -648,7 +648,7 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
                      integrator, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
-    The fix is performed by making TIS moves and this method is intended
+    The fix is performed by making TIS moves and this function is intended
     to be used in a initialization.
 
     Parameters
@@ -670,11 +670,11 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
     tis_settings : dict
         Settings for TIS method, here we explicitly use:
 
-        - start_cond : string which defines the start condition.
-        - maxlength : integer which give the maximum allowed path length.
+        * `start_cond`: string which defines the start condition.
+        * `maxlength`: integer which give the maximum allowed path length.
 
         Note that we here explicitly set some local TIS settings for use in
-        the `make_tis_step` method.
+        the `make_tis_step` function.
 
     Returns
     -------

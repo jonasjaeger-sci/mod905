@@ -34,7 +34,7 @@ class DoubleWell(PotentialFunction):
     c : float
         Parameter for the potential.
     params : dict
-        Containins the parameters.
+        Contains the parameters.
     """
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
@@ -63,7 +63,7 @@ class DoubleWell(PotentialFunction):
         Parameters
         ----------
         pos : numpy.array
-            Potitions used for evaluation of the potential.
+            Positions used for evaluation of the potential.
 
         Returns
         -------

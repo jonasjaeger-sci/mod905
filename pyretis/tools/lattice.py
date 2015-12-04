@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Some convenient methods for generating initial structures.
+"""Some convenient functions for generating initial structures.
 
 This module defines a function which may be useful for generating
 initial structures on a lattice.
@@ -34,7 +34,7 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     """Generate points on a simple lattice.
 
     The lattice is one of the defined keys in the global variable
-    `UNIT_CELL`. This lattive will be reapeaded a number of times.
+    `UNIT_CELL`. This lattice will be repeated a number of times.
     The lattice spacing can be given explicitly, or it can be given
     implicitly by the number density.
 
@@ -47,8 +47,8 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
         * sc : Simple cubic lattice.
         * sq : Square lattice (2D) with one atom in the unit cell.
         * sq2 : Square lattice with two atoms in the unit cell.
-        * bcc : Body-centered cubic lattice.
-        * fcc : Face-centered cubic lattice.
+        * bcc : Body-centred cubic lattice.
+        * fcc : Face-centred cubic lattice.
         * hcp : Hexagonal close-packed lattice.
         * diamond : Diamond structure.
     lcon : float
@@ -56,8 +56,8 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     density : float, optional
         A desired density. If this is given, `lcon` is calculated. Note that
         density will be interpreted as given in internal units.
-    repeat : list of ints
-        `repead[i]` is the number of repetitions in the `i` direction.
+    repeat : list of integers
+        `repeat[i]` is the number of repetitions in the `i` direction.
 
     Returns
     -------

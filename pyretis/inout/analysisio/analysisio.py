@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Methods that will output results from the different analysis methods.
+"""Functions that will output results from the different analysis functions.
 
-The methods defined here will also run the analysis and output according
+The functions defined here will also run the analysis and output according
 to given settings.
 
 Important functions defined here:
 
-- run_md_flux_analysis: Method to run the MD flux analysis on a set
+- run_md_flux_analysis: Functions to run the MD flux analysis on a set
   of files. It will plot the results and generate a MD-flux report.
 
-- analyse_file: Method to analyse a file. For example, it can be used
+- analyse_file: Function to analyse a file. For example, it can be used
   as
 
   >>> from pyretis.inout.analysisio import analyse_file
@@ -43,7 +43,7 @@ __all__ = ['run_md_flux_analysis', 'analyse_file']
 def run_md_flux_analysis(analysis_settings, simulation_settings, raw_data):
     """Analyse the output from a MD-flux simulation.
 
-    This method will will determine if the data should be read from files or
+    This function will will determine if the data should be read from files or
     if it's passed as other structures directly from the simulation.
 
     Parameters
@@ -83,7 +83,7 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files,
     """Analyse the output from a MD-flux simulation from files.
 
     The raw data will be read from output files obtained by the MD-flux
-    simulation. This method will output a series of plots and generate a
+    simulation. This function will output a series of plots and generate a
     report based on the analysis. The function calls for performing the
     actual analysis are here wrapped with run_analysis_file, this is just
     to ensure that we are only analyzing one block and ignoring the rest
@@ -103,7 +103,7 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files,
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict
-        If txt is different from None it is assumed to containt the format
+        If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
     """
     results = {'txtfile': {}}
@@ -185,7 +185,7 @@ def analyse_file(file_type, file_name):
         plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
             This is the object that handles the plotting.
         txt : dict
-            If txt is different from None it is assumed to containt the format
+            If txt is different from None it is assumed to contain the format
             for the text files and backup settings.
         """
         fileobj = get_file_object(file_type, file_name)
@@ -211,7 +211,7 @@ def check_output(function):
     """A decorator for checking outputs for the analyse functions.
 
     Outputs can either be specified explicitly or implicitly by the analysis
-    settings. Here we create a decorator that will set up ouput if nothing
+    settings. Here we create a decorator that will set up output if nothing
     is specified. We handle plotters and txt output slightly differently since
     the plotter needs to have objects created and the txt output is just a
     string specifying the file extension.
@@ -229,8 +229,8 @@ def check_output(function):
 
     - Text output is specified with a dictionary. if the text output
       is not explicitly specified here, we check if it is defined by the
-      analysis settings by looking for the keyword `txt-ouput`.
-      If this is given we just look for the keys 'fmt' which specifies the
+      analysis settings by looking for the keyword `txt-output`.
+      If this is given we just look for the keys `fmt` which specifies the
       format and 'backup' which determines if we should do backups or not.
 
     Parameters
@@ -259,7 +259,7 @@ def check_output(function):
         plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
             This is the object that handles the plotting.
         txt : dict
-            If txt is different from None it is assumed to containt the format
+            If txt is different from None it is assumed to contain the format
             for the text files and backup settings.
 
         Returns
@@ -306,7 +306,7 @@ def analyse_and_output_cross(analysis_settings, simulation_settings, rawdata,
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict
-        If txt is different from None it is assumed to containt the format
+        If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
 
     Returns
@@ -344,7 +344,7 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict
-        If txt is different from None it is assumed to containt the format
+        If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
 
     Returns
@@ -384,7 +384,7 @@ def analyse_and_output_energy(analysis_settings, simulation_settings, rawdata,
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict
-        If txt is different from None it is assumed to containt the format
+        If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
 
     Returns
@@ -426,7 +426,7 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict
-        If txt is different from None it is assumed to containt the format
+        If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
 
     Returns

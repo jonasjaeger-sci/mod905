@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Methods and classes for input/output of path data.
+"""Functions and classes for input/output of path data.
 
 This module defines classes for writing path data and path ensemble data.
 
@@ -114,7 +114,7 @@ class PathFile(FileWriter):
         """Load a path file into the memory.
 
         The paths are assumed to be organized into blocks defined
-        by `self.block_label`. This method will yield blocks successively.
+        by `self.block_label`. This function will yield blocks successively.
 
         Yields
         ------
@@ -296,7 +296,7 @@ class PathEnsembleFile(FileWriter):
     `pyretis.core.path.PathEnsemble` object. This makes it possible to run
     the analysis tool directly using the `PathEnsembleFile` object rather than
     first converting to a `pyretis.core.path.PathEnsemble` and then running
-    the analysis. The common methods are `get_paths` and `__str__`.
+    the analysis. The common functions are `get_paths` and `__str__`.
     The common properties are `ensemble` and `interfaces`
     In the future, this should be made smarter, for instance could path data
     be read in portions, or the full path file could be read if it's small

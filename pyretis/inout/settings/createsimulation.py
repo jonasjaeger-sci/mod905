@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module handles creation of simulations from settings
+"""This module handles creation of simulations from settings.
 
 The different simulations re defined as objects which inherits from
 the base Simulation object defined in `pyretis.core.simulation.simulation`.
@@ -45,9 +45,9 @@ _REQUIRED['tis'] = ['endcycle', 'tis', 'integrator', 'interfaces']
 
 
 def create_simulation(settings, system):
-    """Method to create simulations from settings and system.
+    """Function to create simulations from settings and system.
 
-    This method will set up some common simulation types.
+    This function will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
     task. It will here check what kind of simulation we are to perform and
     then call the appropriate function for setting that type of simulation up.
