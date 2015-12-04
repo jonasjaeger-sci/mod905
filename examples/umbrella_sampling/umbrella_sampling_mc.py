@@ -9,7 +9,7 @@ landscape by performing umbrella simulations.
 """
 from __future__ import print_function
 from pyretis.core import System, RandomGenerator, Box
-from pyretis.inout.settings.create_simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis import histogram, match_all_histograms

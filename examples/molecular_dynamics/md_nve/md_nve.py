@@ -7,7 +7,7 @@ This system considered is a simple Lennard-Jones fluid.
 from __future__ import print_function
 from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings.create_simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
 from pyretis.inout import (get_predefined_table, FileWriter,

@@ -13,7 +13,7 @@ import numpy as np
 # pyretis imports:
 # for setting up the simulation
 from pyretis.core import Box, System
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition

@@ -9,7 +9,7 @@ import numpy as np
 import os
 from pyretis.core.path import create_path_ensembles
 from pyretis.core import Box, System
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
