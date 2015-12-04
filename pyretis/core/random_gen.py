@@ -28,12 +28,12 @@ class RandomGenerator(object):
     ----------
     rgen : object like `RandomState`
         This is a container for the Mersenne Twiser pseudo-random number
-        generator as implemented in numpy [1]_.
+        generator as implemented in numpy [#]_.
 
     References
     ----------
 
-    .. [1] The NumPy documentation on RandomState,
+    .. [#] The NumPy documentation on RandomState,
        http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
     """
 

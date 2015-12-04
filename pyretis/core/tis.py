@@ -2,7 +2,7 @@
 """This file contains functions used in TIS.
 
 This module defines the functions needed to perform TIS simulations.
-The algorithms are implemented as described by van Erp et al. [1]_.
+The algorithms are implemented as described by van Erp et al. [TIS]_.
 
 
 Important functions defined here:
@@ -16,7 +16,7 @@ Important functions defined here:
 References
 ~~~~~~~~~~
 
-.. [1] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
+.. [TIS] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
 """

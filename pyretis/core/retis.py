@@ -3,7 +3,7 @@
 
 This module defines functions that are needed to perform Replica Exchange
 Transition Interface Sampling (RETIS). The algorithms implemented here and
-the description of RETIS was first described by van Erp [1]_.
+the description of RETIS was first described by van Erp [RETIS]_.
 
 
 Important functions defined here:
@@ -24,7 +24,7 @@ Important functions defined here:
 References
 ~~~~~~~~~~
 
-.. [1] Titus S. van Erp,
+.. [RETIS] Titus S. van Erp,
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
