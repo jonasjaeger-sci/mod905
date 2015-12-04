@@ -37,7 +37,6 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
 #ALWAYS_REQUIRED = ['task', 'units', 'initial-pos']
 
 
-
 def look_for_keyword(line):
     """Function to look for a keyword in a string.
 

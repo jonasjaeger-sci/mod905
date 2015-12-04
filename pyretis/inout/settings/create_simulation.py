@@ -18,6 +18,8 @@ from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.path_simulation import SimulationTIS
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_simulation']
@@ -126,12 +128,15 @@ def create_mc_simulation(settings, system, sim_type):
             required = len(not_found) == 0
     if not required:
         msg = 'Settings not found: {}'.format(not_found)
-        logging.critical(msg)
+        logger.critical(msg)
         raise ValueError('Required settings not found!')
     if sim_type == 'umbrellawindow':
         try:
             rgen = settings['rgen']
         except KeyError:
+            if not 'seed' in settings:
+                msg = 'No random seed given. Will just use "0"'
+                logger.warning(msg)
             rgen = RandomGenerator(seed=settings.get('seed', 0))
         simulation = UmbrellaWindowSimulation(system,
                                               settings['umbrella'],

@@ -8,10 +8,6 @@ Important functions defined here:
 - import_from : A function to dynamically import functions/classes etc. from
   user specified modules.
 """
-import logging
-
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
-logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['check_settings', 'import_from']
@@ -77,8 +73,6 @@ def check_settings(settings, required):
     not_found = []
     for setting in required:
         if setting not in settings:
-            msg = 'Setting `{}` not found!'.format(setting)
-            logging.critical(msg)
             result = False
             not_found.append(setting)
     return result, not_found

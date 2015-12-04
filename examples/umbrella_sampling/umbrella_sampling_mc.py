@@ -8,7 +8,7 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from __future__ import print_function
-from pyretis.core import System, RandomGenerator
+from pyretis.core import System, RandomGenerator, Box
 from pyretis.inout.settings.create_simulation import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
@@ -17,7 +17,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Define system with a temperature in K
-mysystem = System(temperature=500, units='eV/K')
+dummybox = Box(periodic=[False])
+mysystem = System(temperature=500, units='eV/K', box=dummybox)
 # We will only have one particle in the system:
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use
