@@ -16,6 +16,7 @@ __all__ = ['parse_settings_file', 'parse_setting',
 
 
 KNOWN_KEYWORDS = {'integrator': 'dict',
+                  'orderparameter': 'dict',
                   'task': 'string',
                   'units': 'dict',
                   'ensemble': 'string',
