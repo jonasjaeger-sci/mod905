@@ -27,11 +27,11 @@ def generate_report_tis_path(analysis, output='rst'):
     analysis : dict
         This is the output (and some input) for the analysis. The keys are:
 
-        * 'tis-fig': list of corresponding figures (to 'tis')
-        * 'detect': locations of the interfaces used for detection
-        * 'ensemble': The name of the path ensemble we are reporting results
+        * `tis-fig`: list of corresponding figures (to 'tis')
+        * `detect`: locations of the interfaces used for detection
+        * `ensemble`: The name of the path ensemble we are reporting results
           for.
-        * 'interfaces': list with the interfaces used for this path
+        * `interfaces`: list with the interfaces used for this path
           ensemble.
     output : string, optional
         This is the desired output format. It must match one of the
@@ -81,17 +81,17 @@ def generate_report_tis(analysis, output='rst'):
         This is the output (and some input!) for the analysis. The keys
         we make use of are:
 
-        * 'tis': list of dicts with the results from analysing the path
+        * `tis`: list of dicts with the results from analysing the path
           ensembles. `analysis['tis'][i]` contains the analysys results for
           path ensemble no. `i`.
-        * 'tis-fig': list of corresponding figures (to 'tis')
-        * 'matched': results from the matching of probability
-        * 'matched-fig': the figure corresponding to 'matched'
-        * 'detect': locations of the interfaces used for detection
-        * 'ensembles': list of strings with the names of the path ensembles
-           we are reporting results for.
-        * 'interfaces': list of lists which give the interfaces for the
-           different ensembles.
+        * `tis-fig`: list of corresponding figures (to 'tis')
+        * `matched`: results from the matching of probability
+        * `matched-fig`: the figure corresponding to 'matched'
+        * `detect`: locations of the interfaces used for detection
+        * `ensembles`: list of strings with the names of the path ensembles
+          we are reporting results for.
+        * `interfaces`: list of lists which give the interfaces for the
+          different ensembles.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in `.report._TEMPLATES`. Default is 'rst'

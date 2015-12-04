@@ -371,16 +371,16 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
         This dictionary contains settings for the analysis. Here we make use
         of the keys:
 
-        - ngrid: The number of grid points for calculating the crossing
+        * `ngrid`: The number of grid points for calculating the crossing
           probability as a function of the order parameter.
-        - maxblock: The max length of the blocks for the block error
+        * `maxblock`: The max length of the blocks for the block error
           analysis. Note that this will maximum be equal the half the length
           of the data, see `block_error` in `.analysis`.
-        - blockskip: Can be used to skip certain block lengths.
+        * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
-        - bins: The number of bins to use for creating histograms.
+        * `bins`: The number of bins to use for creating histograms.
     idetect : float
         Interface to use to check is a path is successful or not.
 
@@ -458,16 +458,16 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
         This dictionary contains settings for the analysis. We make use of the
         following keys:
 
-        - ngrid: The number of grid points for calculating the crossing
+        * `ngrid`: The number of grid points for calculating the crossing
           probability as a function of the order parameter.
-        - maxblock: The max length of the blocks for the block error
+        * `maxblock`: The max length of the blocks for the block error
           analysis. Note that this will maximum be equal the half the length
           of the data, see `block_error` in `.analysis`.
-        - blockskip: Can be used to skip certain block lengths.
+        * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
-        - bins: The number of bins to use for creating histograms.
+        * `bins`: The number of bins to use for creating histograms.
     idetect : float
         Interface to use to check is a path is successful or not.
 
@@ -573,10 +573,10 @@ def match_probabilities(path_results, detect):
         ensemble no. `i`. Here we make use of the following keys from
         `path_results[i]`:
 
-        * pcross: The crossing probability.
-        * prun: The running average of the crossing probability.
-        * blockerror: The output from the block error analysis.
-        * efficiency: The output from the efficiency analysis.
+        * `pcross`: The crossing probability.
+        * `prun`: The running average of the crossing probability.
+        * `blockerror`: The output from the block error analysis.
+        * `efficiency`: The output from the efficiency analysis.
     detect : list of floats
         These are the detect interfaces used in the analysis.
 
