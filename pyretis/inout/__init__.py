@@ -35,7 +35,7 @@ Modules:
 - txtinout.py: Defines objects and some methods for text-based output. This
   is typically text written to the screen during a simulation.
 
-- simulationio.py : Handle input output for simulations. 
+- simulationio.py : Handle input output for simulations.
 
 Important classes and functions:
 
