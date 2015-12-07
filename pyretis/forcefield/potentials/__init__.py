@@ -10,9 +10,6 @@ Package structure
 
 Modules:
 
-- potential.py: Defines the generic potential function object
-  (`PotentialFunction`) which is sub-classed in other potential functions.
-
 - potentials.py: This module defines some simple potential functions.
 
 Sub-packages:
@@ -22,9 +19,17 @@ Sub-packages:
 
 Important classes defined in this module:
 
-- PotentialFunction: A class representing a general potential function.
+- DoubleWell: A double well potential
+
+- RectangularWell: A rectangural well potential -- usefull as a
+  bias potential.
+
+- PairLennardJonesCut/PairLennardJonesCutnp: The Lennard-Jones potential.
+
+- PairWCAnp: A WCA potential.
+
+- DoubleWellWCA: A n-dimensional Double Well potential.
 """
-from .potential import PotentialFunction
 from .potentials import DoubleWell, RectangularWell
 from .pairpotentials import (PairLennardJonesCut, PairLennardJonesCutnp,
                              PairWCAnp, DoubleWellWCA)

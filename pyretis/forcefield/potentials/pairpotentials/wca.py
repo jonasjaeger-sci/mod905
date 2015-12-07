@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 import numpy as np
 from .lennardjones import PairLennardJonesCutnp
-from pyretis.forcefield.potentials.potential import PotentialFunction
+from pyretis.forcefield.potential import PotentialFunction
 import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
