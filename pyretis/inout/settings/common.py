@@ -8,6 +8,10 @@ Important functions defined here:
 - import_from : A function to dynamically import functions/classes etc. from
   user specified modules.
 """
+import importlib
+import logging
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['check_settings', 'import_from']
@@ -33,15 +37,58 @@ def import_from(module_name, function_name):
         The thing we managed to import.
     """
     try:
-        module = __import__(module_name, fromlist=[function_name])
-        return getattr(module, function_name)
-    except AttributeError:
-        msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                       module_name)
-        raise ValueError(msg)
+        module = importlib.import_module(module_name)
+        msg = 'Imported module: {}'.format(module)
+        logger.info(msg)
+        try:
+            return getattr(module, function_name)
+        except AttributeError:
+            msg = 'Could not import "{}" from "{}"'.format(function_name,
+                                                           module_name)
+            logger.critical(msg)
+            raise ValueError(msg)
     except ImportError:
-        msg = 'Could not import module "{}"'.format(module_name)
+        msg = 'Could not import module: {}'.format(module_name)
+        logger.critical(msg)
         raise ValueError(msg)
+
+
+def initiate_instance(the_class, args=None, kwargs=None):
+    """Function to initiate an instance of a class with optional arguments.
+
+    Parameters
+    ----------
+    the_class : class
+        The class to initiate.
+    args : list, optional
+        Positional arguments to `the_class.__init__()`.
+    kwargs : dict, optional
+        The keyword arguments to `the_class.__init__()`
+
+    Returns
+    -------
+    out : instance of `the_class`
+        Here, we just return the initiated instance of the given class.
+    """
+    if args is None:
+        if kwargs is None:
+            msg = 'Initiated {} without arguments.'.format(the_class)
+            logger.info(msg)
+            return the_class()
+        else:
+            msg = 'Initiated {} with keyword arguments.'.format(the_class)
+            logger.info(msg)
+            return the_class(**kwargs)
+    else:
+        if kwargs is None:
+            msg = 'Initiated {}  with positional arguments.'.format(the_class)
+            logger.info(msg)
+            return the_class(*args)
+        else:
+            msg = 'Initiated {} with positional and keyword arguments.'
+            msg = msg.format(the_class)
+            logger.info(msg)
+            return the_class(*args, **kwargs)
 
 
 def check_settings(settings, required):

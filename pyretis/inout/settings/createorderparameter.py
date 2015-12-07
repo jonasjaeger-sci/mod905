@@ -15,7 +15,7 @@ Important classes and functions:
 from __future__ import absolute_import
 import logging
 import os
-from pyretis.inout.settings.common import import_from
+from pyretis.inout.settings.common import import_from, initiate_instance
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -53,6 +53,9 @@ def create_orderparameter(settings):
     if module is None:
         orderparameter = import_from('pyretis.core.orderparameter', orderclass)
     else:
+        # Here we assume we are to load from a file.
+        # It would be nice to ditch python 2 and just do this:
+        # importlib.machinery.SourceFileLoader('module','/path/module.py')
         module = os.path.splitext(module)[0]
         orderparameter = import_from(module, orderclass)
         # run some checks:
@@ -67,15 +70,5 @@ def create_orderparameter(settings):
                     msg = 'Method {}.{} is not callable!'.format(orderclass,
                                                                  function)
                     raise ValueError(msg)
-    args = orderp.get('args', None)
-    kwargs = orderp.get('kwargs', None)
-    if args is None:
-        if kwargs is not None:
-            return orderparameter(**kwargs)
-        else:
-            return orderparameter()
-    else:
-        if kwargs is not None:
-            return orderparameter(*args, **kwargs)
-        else:
-            return orderparameter(*args)
+    return initiate_instance(orderparameter, args=orderp.get('args', None),
+                             kwargs=orderp.get('kwargs', None))
