@@ -31,9 +31,7 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
                   'temperature': 'number',
                   'tis': 'dict',
                   'output': 'list',
-                  'potential-parameters': 'list',
-                  'potential-settings': 'list',
-                  'potential-functions': 'list'}
+                  'potentials': 'list'}
 
 #ALWAYS_REQUIRED = ['task', 'units', 'initial-pos']
 
