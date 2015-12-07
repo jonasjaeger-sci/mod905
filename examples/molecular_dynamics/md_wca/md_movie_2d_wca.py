@@ -8,7 +8,7 @@ from pyretis.core import System, Box
 from pyretis.inout.settings import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
-from pyretis.forcefield.pairpotentials import PairWCAnp, DoubleWellWCA
+from pyretis.forcefield.potentials import PairWCAnp, DoubleWellWCA
 from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 from pyretis.inout import create_output

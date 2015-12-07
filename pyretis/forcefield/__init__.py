@@ -10,18 +10,13 @@ Package structure
 
 Modules:
 
-- __init__.py: Imports from the modules.
-
-- forcefield.py: Defines the forcefield object (`ForceField`) which can be
+- forcefield.py: Defines the forcefield object (``ForceField``) which can be
   used to represent a generic force field.
 
-- potential.py: Defines the generic potential function object
-  (`PotentialFunction`) which is sub-classed in other potential functions.
+Sub-packages:
 
-- potentials.py: This module defines some simple potential functions.
+- potentials: Sub-packages which defines potentials.
 
-- pairpotentials.py: This package defines different pair interactions,
-  for instance the Lennard-Jones 6-12 simple cut potential.
 
 Important classes defined in this module:
 
@@ -30,6 +25,4 @@ Important classes defined in this module:
 - PotentialFunction: A class representing a general potential function.
 """
 from .forcefield import ForceField
-from .potential import PotentialFunction
-from pyretis.forcefield import potentials
-from pyretis.forcefield import pairpotentials
+from . import potentials

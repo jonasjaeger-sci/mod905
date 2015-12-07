@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import numpy as np
 import itertools
 import logging
-from pyretis.forcefield.potential import PotentialFunction
+from pyretis.forcefield.potentials.potential import PotentialFunction
 from pyretis.forcefield import forcefield
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

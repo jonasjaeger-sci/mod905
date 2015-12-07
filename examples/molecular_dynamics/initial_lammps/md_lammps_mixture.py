@@ -11,7 +11,7 @@ from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
-from pyretis.forcefield.pairpotentials import PairLennardJonesCutnp
+from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.core.particlefunctions import calculate_thermo
 import numpy as np
 import os

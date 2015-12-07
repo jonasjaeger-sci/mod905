@@ -10,7 +10,14 @@
 *.swo
 *~
 
-site/
+# latex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
 
 # for readthedocs:
 _build
@@ -25,7 +32,7 @@ examples/molecular_dynamics/md_wca/traj.gro*
 examples/molecular_dynamics/md_nve/energy.dat*
 examples/molecular_dynamics/md_nve/thermo.txt*
 examples/molecular_dynamics/md_nve/traj.gro*
-# md movied 2: energy and trajectory
+# md movie 2D: energy and trajectory
 examples/molecular_dynamics/md_movie_2d/energy.dat*
 examples/molecular_dynamics/md_movie_2d/traj.gro*
 # umbrella sampling, temp files for movie
@@ -35,4 +42,6 @@ examples/tis/1D-double-well/md_flux/cross.dat
 examples/tis/1D-double-well/md_flux/energy.dat
 examples/tis/1D-double-well/md_flux/order.dat
 examples/tis/1D-double-well/md_flux/traj.gro
+examples/tis/1D-double-well/md_flux/*.png
+examples/tis/1D-double-well/md_flux/*.txt.gz
 examples/tis/1D-double-well/md_flux/report
