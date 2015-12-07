@@ -1,60 +1,12 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for a generic force field."""
-import numpy as np
 import logging
 import inspect
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['ForceField']
-
-
-def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
-                      mixing='geometric'):
-    """Define the so-called mixing rules.
-
-    These mixing rules are used for some force fields when generating cross
-    interactions.
-
-    Parameters
-    ----------
-    epsilon_i and epsilon_j : floats
-        For a Lennard-Jones potential, this corresponds to the epsilon
-        parameters.
-    sigma_i and sigma_j : floats
-        For a Lennard-Jones potential, this corresponds to the
-        sigma parameters.
-    mixing :  string
-        Represents what kind of mixing that should be done.
-
-    Returns
-    -------
-    out[0] : float
-        The mixed ``epsilon_ij`` parameter.
-    out[1] : float
-        The mixed ``sigma_ij`` parameter.
-    """
-    if mixing not in ('geometric', 'arithmetic', 'sixthpower'):
-        logging.warning('Unknown mixing rule requested. Using "geometric"!')
-        mixing = 'geometric'
-    if mixing == 'geometric':
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-        sigma_ij = np.sqrt(sigma_i * sigma_j)
-        rcut_ij = np.sqrt(rcut_i * rcut_j)
-    elif mixing == 'arithmetic':
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
-        sigma_ij = 0.5 * (sigma_i + sigma_j)
-        rcut_ij = 0.5 * (rcut_i + rcut_j)
-    elif mixing == 'sixthpower':
-        si3 = sigma_i**3
-        si6 = si3**2
-        sj3 = sigma_j**3
-        sj6 = sj3**2
-        avgs6 = 0.5 * (si6 + sj6)
-        epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
-        sigma_ij = avgs6**(1.0 / 6.0)
-        rcut_ij = (0.5 * (rcut_i**6 + rcut_j**6))**(1.0 / 6.0)
-    return epsilon_ij, sigma_ij, rcut_ij
 
 
 class ForceField(object):
@@ -74,9 +26,9 @@ class ForceField(object):
         The parameters for the corresponding potential functions.
     arguments : dict
         Contains information on how to call the different functions.
-        arguments['force'] = list with information on how to call the
+        `arguments['force']` = list with information on how to call the
         corresponding potential function, i.e. it is equal to
-        inspect.getargspec(potential.force)
+        `inspect.getargspec(potential.force)`.
     """
 
     def __init__(self, desc='No description', potential=None, params=None):
@@ -136,8 +88,8 @@ class ForceField(object):
         self.arguments['pot-and-force'].append(arg_pot_force)
         self.potential.append(potential)
         if parameters is not None:
-            potential.add_parameters(parameters)
-        self.params.append(potential.params)
+            potential.params = parameters
+        self.params.append(parameters)
 
     def remove_potential(self, potential):
         """Remove a selected potential from the force field.
@@ -161,7 +113,7 @@ class ForceField(object):
             self.arguments['pot-and-force'].pop(idx)
             return (potrm, paramrm)
         else:
-            logging.warning('Potential not found in the force field functions')
+            logger.warning('Potential not found in the force field functions')
             return None
 
     def update_potential_parameters(self, potential, params):
@@ -181,10 +133,10 @@ class ForceField(object):
             and modify the corresponding `self.params`.
         """
         if potential in self.potential:
-            potential.update_parameters(params)
-            self.params[self.potential.index(potential)] = potential.params
+            potential.params = params
+            self.params[self.potential.index(potential)] = params
         else:
-            logging.warning('Unknow potential. Will not update!')
+            logger.warning('Unknow potential. Will not update!')
 
     def evaluate_force(self, **kwargs):
         """Evaluate the force on the particles.

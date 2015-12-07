@@ -4,7 +4,8 @@
 This class is sub-classed in all potential functions.
 """
 import logging
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PotentialFunction']
@@ -39,7 +40,29 @@ class PotentialFunction(object):
         """
         self.dim = dim
         self.desc = desc
-        self.params = {}
+        self._params = {}
+
+    @property
+    def params(self):
+        """Return the parameters as a dict"""
+        return self._params
+
+    @params.setter
+    def params(self, parameters):
+        """Update all parameters. Input is assumed to be a dict."""
+        for key in parameters:
+            if key in self._params:
+                self._params[key] = parameters[key]
+            else:
+                msg = 'Could not find "{}" in parameters. Ignoring!'
+                msg = msg.format(key)
+                logger.warning(msg)
+        self.check_parameters()
+
+    @params.deleter
+    def params(self):
+        """Delete all parameters."""
+        del self._params
 
     def check_parameters(self):
         """Check on the consistency of the parameters.
@@ -51,72 +74,15 @@ class PotentialFunction(object):
         out : boolean
             True if the check(s) pass.
         """
-        if len(self.params) == 0:
-            logging.warning('No parameters are set for the potential')
+        if len(self._params) == 0:
+            logger.warning('No parameters are set for the potential')
             return False
         return True
 
-    def update_parameters(self, params):
-        """Update the parameters for the potential.
-
-        In this generic function, it will just try to set attributes
-        for the object.
-
-        Parameters
-        ----------
-        params : dict
-            The parameters to update.
-
-        Returns
-        -------
-        out : boolean
-            False if parameters could not be set.
-            True if they could be set and if the pass the consistency test.
-
-        Note
-        ----
-        A parameter in `params` which is not an attribute of the object will
-        be ignored.
-        """
-        if not isinstance(params, dict):
-            logging.warning('Did not understand the parameters.')
-            return False
-        for param in params:
-            if hasattr(self, param):
-                value = params[param]
-                setattr(self, param, value)
-                self.params[param]['value'] = value
-            else:
-                msg = 'Ignoring unknown parameter {}'.format(param)
-                logging.warning(msg)
-        return self.check_parameters()
-
-    def get_parameters(self):
-        """Return information about the parameters for the potential.
-
-        Returns
-        -------
-        out : string
-            Information about the parameters.
-        """
-        allinfo = []
-        strinfo = '{}: {}, Value: {}'
-        for param in sorted(self.params):
-            value = self.params[param]['value']
-            desc = self.params[param]['desc']
-            allinfo.append(strinfo.format(param, desc, value))
-        return 'Parameters:\n'+'\n'.join(allinfo)
-
-    def parameters_to_dict(self):
-        """Generate a dictionary containing the parameters for the potential.
-
-        Returns
-        -------
-        out : None
-            Returns `None` and modifies `self.params`.
-        """
-        self.params = {}
-
     def __str__(self):
         """Return the string description of the potential."""
-        return self.desc
+        msg = ['Potential: {}'.format(self.desc)]
+        strinfo = '{}: {}'
+        for key in sorted(self._params):
+            msg.append(strinfo.format(key, self._params[key]))
+        return '\n'.join(msg)

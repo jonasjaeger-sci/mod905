@@ -4,7 +4,8 @@ from __future__ import absolute_import
 import numpy as np
 import logging
 from pyretis.forcefield.potential import PotentialFunction
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['DoubleWell', 'RectangularWell']
@@ -52,10 +53,7 @@ class DoubleWell(PotentialFunction):
             Description of the force field.
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
-        self.a = a
-        self.b = b
-        self.c = c
-        self.parameters_to_dict()
+        self._params = {'a': a, 'b': b, 'c': c}
 
     def potential(self, pos):
         """Evaluate the potential for the one-dimensional double well.
@@ -70,7 +68,8 @@ class DoubleWell(PotentialFunction):
         out : float
             The potential energy.
         """
-        v_pot = self.a * pos**4 - self.b * (pos - self.c)**2
+        v_pot = (self._params['a'] * pos**4 -
+                 self._params['b'] * (pos - self._params['c'])**2)
         return v_pot.sum()
 
     def force(self, pos):
@@ -88,7 +87,8 @@ class DoubleWell(PotentialFunction):
         out[1] : numpy.array
             The virial, currently not implemented for this potential
         """
-        forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
+        forces = (-4.0*(self._params['a'] * pos**3) +
+                  2.0*(self._params['b'] * (pos - self._params['c'])))
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
@@ -110,25 +110,13 @@ class DoubleWell(PotentialFunction):
         out[2] : numpy.array
             The virial, currently not implemented for this potential
         """
-        v_pot = self.a*pos**4 - self.b*(pos - self.c)**2
-        forces = -4.0*(self.a * pos**3) + 2.0*(self.b * (pos - self.c))
+        dist = pos - self._params['c']
+        pos3 = pos**3
+        v_pot = self._params['a'] * pos3 * pos - self._params['b'] * dist**2
+        forces = (-4.0 * (self._params['a'] * pos3) +
+                  2.0 * (self._params['b'] * dist))
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return v_pot.sum(), forces, virial
-
-    def parameters_to_dict(self):
-        """Generate a dictionary with the parameters of the potential.
-
-        Returns
-        -------
-        out : None
-            Returns `None` and updates `self.params`.
-        """
-        self.params = {'a': {'value': self.a,
-                             'desc': 'Parameter for double well'},
-                       'b': {'value': self.b,
-                             'desc': 'Parameter for double well'},
-                       'c': {'value': self.c,
-                             'desc': 'Parameter for double well'}}
 
 
 class RectangularWell(PotentialFunction):
@@ -148,7 +136,7 @@ class RectangularWell(PotentialFunction):
         Value of potential outside the boundaries.
     """
 
-    def __init__(self, left=0.0, right=1.0, largenumber=1e10,
+    def __init__(self, left=0.0, right=1.0, largenumber=float('inf'),
                  desc='1D Rectangular well potential'):
         """Initiate the one-dimensional rectangular well.
 
@@ -166,11 +154,9 @@ class RectangularWell(PotentialFunction):
             The parameters for this potential (left, right, largenumber).
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
-        # largenumber = float('inf') # possible to use this, NOTE FOR LATER
-        self.largenumber = largenumber
-        self.left = left
-        self.right = right
-        self.parameters_to_dict()
+        self._params = {'left': left, 'right': right,
+                        'largenumber': largenumber}
+        self.check_parameters()
 
     def check_parameters(self):
         """Check the consistency of the parameters.
@@ -180,9 +166,9 @@ class RectangularWell(PotentialFunction):
         out : None
             Returns `None` but might give a warning.
         """
-        if self.left >= self.right:
+        if self._params['left'] >= self._params['right']:
             msg = 'Setting left >= right in RectangularWell potential!'
-            logging.warning(msg)
+            logger.warning(msg)
 
     def potential(self, pos):
         """Evaluate the potential.
@@ -197,22 +183,9 @@ class RectangularWell(PotentialFunction):
         out : float
             The potential energy.
         """
-        v_pot = np.where(np.logical_and(pos > self.left, pos < self.right),
-                         0.0, self.largenumber)
+        left = self._params['left']
+        right = self._params['right']
+        largenumber = self._params['largenumber']
+        v_pot = np.where(np.logical_and(pos > left, pos < right),
+                         0.0, largenumber)
         return v_pot.sum()
-
-    def parameters_to_dict(self):
-        """Generate a dictionary with the parameters of the potential.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but updates `self.params`.
-        """
-        self.params = {'left': {'value': self.left,
-                                'desc': 'Left boundary'},
-                       'right': {'value': self.right,
-                                 'desc': 'Right boundary'},
-                       'largenumber': {'value': self.largenumber,
-                                       'desc': 'Potential value\
-                                                outside boundaries'}}

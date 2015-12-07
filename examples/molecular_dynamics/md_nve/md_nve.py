@@ -9,7 +9,7 @@ from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import PairLennardJonesCutnp
+from pyretis.forcefield.potentials.pairpotentials.lennardjonesnew import PairLennardJonesCutnp
 from pyretis.inout import (get_predefined_table, FileWriter,
                            create_output)
 from pyretis.tools import generate_lattice
@@ -21,7 +21,7 @@ from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
 create_conversion_factors('lj')
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
-POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
+POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)  # use a shifted LJ potential
 
 # simulation settings:
 settings = {'type': 'md-nve',
