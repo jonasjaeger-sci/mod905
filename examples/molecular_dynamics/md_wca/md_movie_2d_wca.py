@@ -8,7 +8,7 @@ from pyretis.core import System, Box
 from pyretis.inout.settings import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import PairWCAnp, DoubleWellWCA
+from pyretis.forcefield.potentials import PairLennardJonesCutnp, DoubleWellWCA
 from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
 from pyretis.inout import create_output
@@ -31,9 +31,10 @@ settings = {'type': 'md-nve',
             'units': 'lj'}
 create_conversion_factors(settings['units'])
 # set up potential function(s) and force field:
-wca = PairWCAnp(dim=2)
-wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0},
-                  'B': {'sigma': 1.0, 'epsilon': 1.0}}
+wca = PairLennardJonesCutnp(dim=2)
+wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
+                  'B': {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
+                  'mixing': 'geometric'}
 
 dwca = DoubleWellWCA(dim=2)
 dwca_parameters = {'types': [('B', 'B')], 'rzero': 1.0 * (2.0**(1.0/6.0)),
@@ -165,7 +166,7 @@ ax3 = fig.add_subplot(gs[1, 1])
 rbond, pot_dwca = plot_dwca_potential()
 linedwpot, = ax3.plot(rbond, pot_dwca, lw=3, ls='-',
                       color=_COLORS['almost_black'])
-ax3.set_ylim(0, dwca.height + 1)
+ax3.set_ylim(0, dwca.params['height'] + 1)
 min_max = dwca.min_max()
 ax3.set_xlim(min_max[0] - 0.2, min_max[1] + 0.2)
 ax3.set_ylabel('Double well potential')

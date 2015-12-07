@@ -26,10 +26,8 @@ Important classes defined in this module:
 
 - PairLennardJonesCut/PairLennardJonesCutnp: The Lennard-Jones potential.
 
-- PairWCAnp: A WCA potential.
-
 - DoubleWellWCA: A n-dimensional Double Well potential.
 """
 from .potentials import DoubleWell, RectangularWell
 from .pairpotentials import (PairLennardJonesCut, PairLennardJonesCutnp,
-                             PairWCAnp, DoubleWellWCA)
+                             DoubleWellWCA)

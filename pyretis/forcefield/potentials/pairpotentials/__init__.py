@@ -24,4 +24,4 @@ Important classes and functions defined here:
   reflects that this class is using numpy for calculations.
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
-from .wca import PairWCAnp, DoubleWellWCA
+from .wca import DoubleWellWCA

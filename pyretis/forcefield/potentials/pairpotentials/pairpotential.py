@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['mixing_parameters']
+__all__ = ['mixing_parameters', 'generate_pair_interactions']
 
 
 def _check_pair_parameters(parameters):
@@ -98,10 +98,35 @@ def generate_pair_interactions(parameters):
 
 def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
-    """Define the so-called mixing rules.
+    r"""Define the so-called mixing rules.
 
     These mixing rules are used for some force fields when generating cross
-    interactions.
+    interactions. The known mixing rules are:
+
+    1. Geometric:
+
+       * :math:`\epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}`
+
+       * :math:`\sigma_{ij} = \sqrt{\sigma_{i} \times \sigma_{j}}`
+
+       * :math:`r_{\text{cut},ij} = \sqrt{r_{\text{cut},i} \times r_{\text{cut},j}}`
+
+    2. Arithmetic:
+
+       * :math:`\epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}`
+
+       * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
+
+       * :math:`r_{\text{cut},ij} = \frac{r_{\text{cut},i} \times r_{\text{cut},j}}{2}`
+
+    3. Sixthpower
+
+       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}} \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
+
+       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times \sigma_{j}^6}{2} \right)^{1/6}`
+
+       * :math:`r_{\text{cut},ij} = \left(\frac{r_{\text{cut},i}^6 \times r_{\text{cut},j}^6}{2}\right)^{1/6}`
+
 
     Parameters
     ----------

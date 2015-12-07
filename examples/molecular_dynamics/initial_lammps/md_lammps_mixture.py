@@ -26,7 +26,7 @@ size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
 ljsystem = System(box=box, units='lj')
 
-ljpot = PairLennardJonesCutnp(shift=True, mixing='geometric')
+ljpot = PairLennardJonesCutnp(shift=True)
 lj_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                  'B': {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
                  'C': {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},

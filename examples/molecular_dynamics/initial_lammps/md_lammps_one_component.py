@@ -25,11 +25,11 @@ size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
 ljsystem = System(box=box, units='lj')
 
-ljpot = PairLennardJonesCutnp(shift=False, mixing='geometric')
+ljpot = PairLennardJonesCutnp(shift=False)
+lj_param = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+            'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot],
-                        params=[{'Ar': {'sigma': 1.0,
-                                        'epsilon': 1.0,
-                                        'rcut': 2.5}}])
+                        params=[lj_param])
 ljsystem.forcefield = forcefield
 
 # read initial position and velocity:

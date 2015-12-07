@@ -45,7 +45,8 @@ print('mass: {}'.format(mass))
 print('timestep: {}'.format(timestep))
 print('temperature: {}'.format(temperature))
 
-LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5}}
+LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5},
+                'mixing': 'geometric'}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
 # simulation settings:

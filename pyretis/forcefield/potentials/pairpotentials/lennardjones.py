@@ -2,11 +2,13 @@
 """Classes for Lennard-Jones pair potentials and variations."""
 from __future__ import absolute_import
 import numpy as np
-import itertools
 import logging
+# pyretis imports
 from pyretis.forcefield.potential import PotentialFunction
-from pyretis.forcefield import forcefield
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+from .pairpotential import generate_pair_interactions
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
@@ -36,38 +38,34 @@ class PairLennardJonesCut(PotentialFunction):
 
     Attributes
     ----------
-    params : dict
-        The parameters for the potential. This is assumed to be defined
-        by the force field. Some of the parameters are defined implicitly
-        and are generated from the other parameters. The parameters
-        are `epsilon`, `sigma` and `rcut` which defines the potential
-        parameters and `factor` and `mixing` which are used when creating
-        the derived parameters `epsilon`, `sigma`, `rcut`.
-    lj1 : dict
+    _params : dict
+        The parameters for the potential. This dict is assumed to contain
+        parameters for pairs, i.e. for interactions.
+    _lj1 : dict
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``48.0 * epsilon * sigma**12``
-    lj2 : dict
+    _lj2 : dict
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``24.0 * epsilon * sigma**6``
-    lj3 : dict
+    _lj3 : dict
         Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**12``
-    lj4 : dict
+    _lj4 : dict
         Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**6``
-    offset : dict
+    _offset : dict
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cutoff.
-    rcut2 : dict
+    _rcut2 : dict
         Squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
     """
 
-    def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
+    def __init__(self, dim=3, shift=True,
                  desc='Lennard-Jones pair potential with simple cut-off'):
         """Initiate the Lennard-Jones potential.
 
@@ -75,8 +73,6 @@ class PairLennardJonesCut(PotentialFunction):
         ----------
         dim : int
             The dimensionality to use.
-        mixing : string
-            Selection of mixing rule for the cross interactions.
         shift : boolean
             Determines if the potential should be shifted or not.
         factor : float
@@ -84,182 +80,59 @@ class PairLennardJonesCut(PotentialFunction):
             times the factor.
         """
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
-        self.typeparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
-                           'types': set()}
-        self.pairparams = {'epsilon': {}, 'sigma': {}, 'rcut': {},
-                           'pairs': set()}
-        self.params = {'mixing': mixing, 'factor': factor,
-                       'shift-potential': shift}
-        self.lj1, self.lj2 = {}, {}
-        self.lj3, self.lj4 = {}, {}
-        self.rcut2 = {}
-        self.offset = {}
+        self.shift = shift
+        self._lj1 = {}
+        self._lj2 = {}
+        self._lj3 = {}
+        self._lj4 = {}
+        self._rcut2 = {}
+        self._offset = {}
+        self._params = {}
 
-    def add_parameters(self, parameters, mix=True):
-        """Add new potential parameters for atoms or pairs.
+    @property
+    def params(self):
+        """Return the parameters as a dict."""
+        return self._params
 
-        Parameters
-        ----------
-        parameters : dict
-            The new parameters, they are assume to be dicts of
-            type {'A': {'epsilon': 1.0, 'sigma': 1.0, 'rcut': 2.5}}
-        mix : boolean
-            If mix is true, the _generate_mixing_parameters will
-            be executed. Default here is True since we probably need to
-            generate parameters after adding new ones.
-        """
-        update_lj = False
-        for key, params in parameters.items():
-            if key in self.params:
-                self.params[key] = params
-                continue
-            eps = params.get('epsilon', None)
-            sigma = params.get('sigma', None)
-            rcut = params.get('rcut', None)
-            if eps is None:
-                msg = 'epsilon for {} not set - ignoring!'.format(key)
-                logging.warning(msg)
-                continue
-            if sigma is None:
-                msg = 'sigma for {} not set - ignoring!'.format(key)
-                logging.warning(msg)
-                continue
-            if rcut is None:
-                factor = self.params['factor']
-                rcut = factor * sigma
-                msg = 'rcut for {} not given. Using factor to set it: {} * {}'
-                msg = msg.format(key, factor, sigma)
-                logging.warning(msg)
-            if isinstance(key, tuple):  # adding pair
-                key_r = (key[1], key[0])
-                for pair in [key, key_r]:
-                    if pair in self.pairparams['pairs']:
-                        msg = 'Pair {} already defined - ignored!'.format(key)
-                        logging.warning(msg)
-                        continue
-                    else:
-                        self.pairparams['pairs'].add(pair)
-                    self.pairparams['epsilon'][pair] = eps
-                    self.pairparams['sigma'][pair] = sigma
-                    self.pairparams['rcut'][pair] = rcut
-                    update_lj = True
-            else:  # adding atom
-                if key in self.typeparams['types']:
-                    msg = 'Atom {} already defined - ignored!'.format(key)
-                    logging.warning(msg)
-                    continue
-                else:
-                    self.typeparams['types'].add(key)
-                self.typeparams['epsilon'][key] = eps
-                self.typeparams['sigma'][key] = sigma
-                self.typeparams['rcut'][key] = rcut
-                update_lj = True
+    @params.setter
+    def params(self, parameters):
+        """Update all parameters.
 
-        if update_lj:  # we have added new parameters
-            if mix:
-                self._generate_mixing_parameters()
-            self._generate_lj_cut_offset()
-        return update_lj
-
-    def update_parameters(self, parameters, mix=False):
-        """Update the parameters for the potential.
-
-        Here, the values for 'epsilon', 'sigma' 'rcut', 'mixing', 'factor'
-        are updated.
+        Here, we generate pair interactions, since that is what this potential
+        actually is using.
 
         Parameters
         ----------
         parameters : dict
-            The parameters to update.
-        mix : boolean
-            If mix is true, the `_generate_mixing_parameters` will
-            be executed. Default here is False, in case the user want
-            to explicitly set some parameters.
+            The input base parameters
         """
-        update_lj = False
-        for key, params in parameters.items():
-            if key in self.params:
-                if key == 'mixing' and params != self.params[key] and not mix:
-                    msg = 'Mixing rule changed, but re-mixing not requested'
-                    logging.warning(msg)
-                self.params[key] = params
-            else:
-                if isinstance(key, tuple):  # updating pair parameter
-                    key_r = (key[1], key[0])
-                    present = []
-                    for i in [key, key_r]:
-                        present.append(i in self.pairparams['pairs'])
-                    if any(present):
-                        update_lj = True
-                        for i in params:
-                            self.pairparams[i][key] = params[i]
-                            self.pairparams[i][key_r] = params[i]
-                    else:
-                        msg = '{} not found, ignoring pair'.format(key)
-                        logging.warning(msg)
-                else:
-                    if key in self.typeparams['types']:
-                        update_lj = True
-                        for i in params:
-                            self.typeparams[i][key] = params[i]
-                    else:
-                        msg = '{} not found, ignoring type'.format(key)
-                        logging.warning(msg)
-        if mix:  # we might have to do re-mixing here independent of update_lj
-            self._generate_mixing_parameters()
-        if update_lj:
-            self._generate_lj_cut_offset()
-        return update_lj
-
-    def _generate_mixing_parameters(self):
-        """Generate parameters for pairs, based on the parameters for atoms.
-
-        In order to generate the parameters, we will here make use of the
-        defined mixing rule.
-        """
-        epsilon = self.typeparams['epsilon']
-        sigma = self.typeparams['sigma']
-        types = self.typeparams['types']
-        rcut = self.typeparams['rcut']
-        mix = self.params['mixing']
-        for pair in itertools.product(types, types):
-            i, j = pair
-            # generate:
-            eps, sig, cut = forcefield.mixing_parameters(epsilon[i], sigma[i],
-                                                         rcut[i], epsilon[j],
-                                                         sigma[j], rcut[j],
-                                                         mixing=mix)
-            self.pairparams['pairs'].add(pair)
-            self.pairparams['epsilon'][pair] = eps
-            self.pairparams['sigma'][pair] = sig
-            self.pairparams['rcut'][pair] = cut
-
-    def _generate_lj_cut_offset(self):
-        """Generate Lennard-Jones parameters for the pair interactions."""
-        self.lj1 = {}
-        self.lj2 = {}
-        self.lj3 = {}
-        self.lj4 = {}
-        self.rcut2 = {}
-        self.offset = {}
-        for pair in self.pairparams['pairs']:
-            epsilon_ij = self.pairparams['epsilon'][pair]
-            sigma_ij = self.pairparams['sigma'][pair]
-            self.lj1[pair] = 48.0 * epsilon_ij * sigma_ij**12
-            self.lj2[pair] = 24.0 * epsilon_ij * sigma_ij**6
-            self.lj3[pair] = 4.0 * epsilon_ij * sigma_ij**12
-            self.lj4[pair] = 4.0 * epsilon_ij * sigma_ij**6
-            self.rcut2[pair] = self.pairparams['rcut'][pair]**2
+        self._params = {}
+        pair_param = generate_pair_interactions(parameters)
+        for pair in pair_param:
+            eps_ij = pair_param[pair]['epsilon']
+            sig_ij = pair_param[pair]['sigma']
+            rcut = pair_param[pair]['rcut']
+            self._lj1[pair] = 48.0 * eps_ij * sig_ij**12
+            self._lj2[pair] = 24.0 * eps_ij * sig_ij**6
+            self._lj3[pair] = 4.0 * eps_ij * sig_ij**12
+            self._lj4[pair] = 4.0 * eps_ij * sig_ij**6
+            self._rcut2[pair] = rcut**2
             vcut = 0.0
-            if self.params['shift-potential']:
+            if self.shift:
                 try:
-                    rcut = sigma_ij / self.pairparams['rcut'][pair]
-                    vcut = 4.0 * epsilon_ij * (rcut**12 - rcut**6)
+                    vcut = 4.0 * eps_ij * ((sig_ij / rcut)**12 -
+                                           (sig_ij / rcut)**6)
                 except ZeroDivisionError:
                     vcut = 0.0
-            self.offset[pair] = vcut
+            self._offset[pair] = vcut
+            self._params[pair] = pair_param[pair]
 
-    def str_parameters(self):
+    @params.deleter
+    def params(self):
+        """Delete all parameters."""
+        del self._params
+
+    def __str__(self):
         """Generate a string with the potential parameters.
 
         It will generate a string with both pair and atom parameters.
@@ -270,28 +143,19 @@ class PairLennardJonesCut(PotentialFunction):
             Table with the parameters of all interactions.
         """
         strparam = ['Potential parameters, Lennard-Jones:']
-        strparam.extend(['Mixing: {}'.format(self.params['mixing'])])
-        useshift = self.params['shift-potential']
-        strparam.extend(['Shift potential: {}'.format(useshift)])
+        useshift = 'yes' if self.shift else 'no'
+        strparam.append('Shift potential: {}'.format(useshift))
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
         atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
-        strparam.append('Input parameters:')
-        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
-                                         'cut-off'))
-        for i in self.typeparams['types']:
-            epsilon = self.typeparams['epsilon'][i]
-            sigma = self.typeparams['sigma'][i]
-            rcut = self.typeparams['rcut'][i]
-            strparam.append(atmformat2.format(i, epsilon, sigma, rcut))
         strparam.append('Pair parameters:')
         strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
                                          'cut-off'))
-        for i in self.pairparams['pairs']:
-            epsilon = self.pairparams['epsilon'][i]
-            sigma = self.pairparams['sigma'][i]
-            rcut = self.pairparams['rcut'][i]
-            stri = '{}-{}'.format(*i)
-            strparam.append(atmformat2.format(stri, epsilon, sigma, rcut))
+        for pair in sorted(self._params):
+            eps_ij = self._params[pair]['epsilon']
+            sig_ij = self._params[pair]['sigma']
+            rcut = np.sqrt(self._rcut2[pair])
+            stri = '{}-{}'.format(*pair)
+            strparam.append(atmformat2.format(stri, eps_ij, sig_ij, rcut))
         return '\n'.join(strparam)
 
     def potential(self, particles, box):
@@ -314,12 +178,12 @@ class PairLennardJonesCut(PotentialFunction):
             delta = box.pbc_dist_coordinate(particles.pos[i] -
                                             particles.pos[j])
             rsq = np.dot(delta, delta)
-            if rsq < self.rcut2[itype, jtype]:
+            if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0/rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * ((self.lj3[itype, jtype] * r6inv -
-                                   self.lj4[itype, jtype]) -
-                                  self.offset[itype, jtype])
+                v_pot += r6inv * ((self._lj3[itype, jtype] * r6inv -
+                                   self._lj4[itype, jtype]) -
+                                  self._offset[itype, jtype])
         return v_pot
 
     def force(self, particles, box):
@@ -347,11 +211,11 @@ class PairLennardJonesCut(PotentialFunction):
             delta = box.pbc_dist_coordinate(particles.pos[i] -
                                             particles.pos[j])
             rsq = np.dot(delta, delta)
-            if rsq < self.rcut2[itype, jtype]:
+            if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                forcelj = r2inv * r6inv * (self.lj1[itype, jtype] * r6inv -
-                                           self.lj2[itype, jtype])
+                forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
+                                           self._lj2[itype, jtype])
                 forceij = forcelj * delta
                 forces[i] += forceij
                 forces[j] -= forceij
@@ -398,14 +262,14 @@ class PairLennardJonesCut(PotentialFunction):
             delta = box.pbc_dist_coordinate(particles.pos[i] -
                                             particles.pos[j])
             rsq = np.dot(delta, delta)
-            if rsq < self.rcut2[itype, jtype]:
+            if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * ((self.lj3[itype, jtype] * r6inv -
-                                   self.lj4[itype, jtype]) -
-                                  self.offset[itype, jtype])
-                forcelj = r2inv * r6inv * (self.lj1[itype, jtype] * r6inv -
-                                           self.lj2[itype, jtype])
+                v_pot += r6inv * ((self._lj3[itype, jtype] * r6inv -
+                                   self._lj4[itype, jtype]) -
+                                  self._offset[itype, jtype])
+                forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
+                                           self._lj2[itype, jtype])
                 forceij = forcelj * delta
                 forces[i] += forceij
                 forces[j] -= forceij
@@ -428,7 +292,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         parameters.
     """
 
-    def __init__(self, dim=3, mixing='geometric', shift=True, factor=2.5,
+    def __init__(self, dim=3, shift=True,
                  desc='Lennard-Jones pair potential with simple cut-off'):
         """Initiate the Lennard-Jones potential.
 
@@ -436,18 +300,11 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         ----------
         dim : int
             The dimensionality to use.
-        mixing : string
-            Selection of mixing rule for the cross interactions.
         shift : boolean
             Determines if the potential should be shifted or not.
-        factor : float
-            The factor determines the cut-off, this is given as sigma
-            times the factor.
         """
         super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
-                                                    shift=shift,
-                                                    factor=factor,
-                                                    mixing=mixing)
+                                                    shift=shift)
         self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
                           'rcut2': [], 'offset': []}
 
@@ -491,12 +348,12 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                 rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
                 offset = []
                 for jtype in particles.ptype[i+1:]:
-                    rcut2.append(self.rcut2[itype, jtype])
-                    lj1.append(self.lj1[itype, jtype])
-                    lj2.append(self.lj2[itype, jtype])
-                    lj3.append(self.lj3[itype, jtype])
-                    lj4.append(self.lj4[itype, jtype])
-                    offset.append(self.offset[itype, jtype])
+                    rcut2.append(self._rcut2[itype, jtype])
+                    lj1.append(self._lj1[itype, jtype])
+                    lj2.append(self._lj2[itype, jtype])
+                    lj3.append(self._lj3[itype, jtype])
+                    lj4.append(self._lj4[itype, jtype])
+                    offset.append(self._offset[itype, jtype])
                 self.matrix_np['rcut2'].append(np.array(rcut2))
                 self.matrix_np['lj1'].append(np.array(lj1))
                 self.matrix_np['lj2'].append(np.array(lj2))
@@ -636,46 +493,3 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             forces[k+i+1] -= forceij
             virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return pot, forces, virial
-
-    def add_parameters(self, parameters, mix=True):
-        """Add parameters to the potential.
-
-        Here, we run the `add_parameters` of the super class.
-        This is done just in case the adding of parameters should trigger
-        an update of `self.matrix_np`.
-
-        Parameters
-        ----------
-        parameters : dict
-            The new parameters, they are assume to be dicts of
-            type {'A': {'epsilon': 1.0, 'sigma': 1.0, 'rcut': 2.5}}
-        mix : boolean
-            If mix is true, the _generate_mixing_parameters will
-            be executed. Default here is True since we probably need to
-            generate parameters after adding new ones.
-        """
-        res = super(PairLennardJonesCutnp, self).add_parameters(parameters,
-                                                                mix=mix)
-        if res:
-            self._reset_matrix_np()
-
-    def update_parameters(self, parameters, mix=False):
-        """Update parameters for the potential.
-
-        This function will just run the `update_parameters` of the super
-        class. This is done just in case the updating of parameters
-        should trigger an update of `self.matrix_np`.
-
-        Parameters
-        ----------
-        parameters : dict
-            The parameters to update.
-        mix : boolean
-            If mix is true, the _generate_mixing_parameters will
-            be executed. Default here is False, in case the user want
-            to explicitly set some parameters.
-        """
-        res = super(PairLennardJonesCutnp, self).update_parameters(parameters,
-                                                                   mix=mix)
-        if res:
-            self._reset_matrix_np()

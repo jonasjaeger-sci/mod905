@@ -22,10 +22,10 @@ class PotentialFunction(object):
         Short description of the potential.
     dim : int
         Represents the spatial dimensionality of the potential.
-    params : dict
-        Contains the parameters. This is a variable included
-        for convenience in case other functions/classes wants to know all
-        the parameters of the potential.
+    _params : dict
+        Contains the parameters.
+    params : descriptor object.
+        The parameters, property variant of `_params`.
     """
 
     def __init__(self, dim=1, desc=''):

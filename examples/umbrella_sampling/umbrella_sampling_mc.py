@@ -23,14 +23,15 @@ mysystem = System(temperature=500, units='eV/K', box=dummybox)
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use
 # a simple double well potential
-potential_dw = DoubleWell(a=1, b=1, c=0.02)
+potential_dw = DoubleWell()
 # and a rectangular well potential
 potential_rw = RectangularWell()
 # do set up the unbiased force field
 forcefield = ForceField(desc='Double well', potential=[potential_dw])
 # and the biased
 forcefield_bias = ForceField(desc='Double well with rectangular bias',
-                             potential=[potential_dw, potential_rw])
+                             potential=[potential_dw, potential_rw],
+                             params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}, None])
 mysystem.forcefield = forcefield_bias
 
 # Next we create a list containing the location of the
@@ -53,8 +54,7 @@ msg = '\nRunning umbrella no: {} of {}. Location: {}'
 for i, umbrella in enumerate(umbrellas):
     print(msg.format(i + 1, n_umb, umbrella))
     # Move rectangular potential to correct place:
-    params = {'left': umbrella[0], 'right': umbrella[1]}
-    mysystem.forcefield.update_potential_parameters(potential_rw, params)
+    potential_rw.params = {'left': umbrella[0], 'right': umbrella[1]}
     mysystem.potential()  # recalculate potential energy
     settings['umbrella'] = umbrella
     #calculate position we must cross for this window:
