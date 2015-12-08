@@ -9,19 +9,16 @@ Package structure
 
 Modules:
 
-- __init__.py: Imports the different pair potential functions.
+- lennardjones.py: Potential functions for Lennard-Jones interactions.
 
-- lennardjones.py: Defines potential functions for Lennard-Jones
-  interactions.
-
-- wca.py: Defines potential functions for the WCA interaction.
+- wca.py: Potential functions for WCA-type interactions.
 
 Important classes and functions defined here:
 
 - PairLennardJonesCut: A class defining a Lennard-Jones potential
 
-- PairWCAnp: A class defining a WCA potential. The 'np' in the name
-  reflects that this class is using numpy for calculations.
+- DoubleWellWCA: This class defines a n-dimensional Double Well potential for
+  a pair of particles.
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
 from .wca import DoubleWellWCA

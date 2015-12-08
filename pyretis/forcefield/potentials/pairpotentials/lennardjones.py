@@ -38,7 +38,7 @@ class PairLennardJonesCut(PotentialFunction):
 
     Attributes
     ----------
-    _params : dict
+    params : dict
         The parameters for the potential. This dict is assumed to contain
         parameters for pairs, i.e. for interactions.
     _lj1 : dict
@@ -65,8 +65,7 @@ class PairLennardJonesCut(PotentialFunction):
         Keys are the pairs (particle types) that may interact.
     """
 
-    def __init__(self, dim=3, shift=True,
-                 desc='Lennard-Jones pair potential with simple cut-off'):
+    def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
         """Initiate the Lennard-Jones potential.
 
         Parameters
@@ -292,8 +291,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         parameters.
     """
 
-    def __init__(self, dim=3, shift=True,
-                 desc='Lennard-Jones pair potential with simple cut-off'):
+    def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
         """Initiate the Lennard-Jones potential.
 
         Parameters

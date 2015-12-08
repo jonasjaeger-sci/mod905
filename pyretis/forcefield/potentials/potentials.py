@@ -28,14 +28,15 @@ class DoubleWell(PotentialFunction):
 
     Attributes
     ----------
-    a : float
-        Parameter for the potential typically greater than zero.
-    b : float
-        Parameter for the potential typically greater than zero.
-    c : float
-        Parameter for the potential.
     params : dict
-        Contains the parameters.
+        Contains the parameters. The keys are:
+
+        * `a`: The ``a`` parameter for the potential.
+        * `b`: The ``b`` parameter for the potential.
+        * `c`: The ``c`` parameter for the potential.
+
+        These keys corresponds to the parameters in the potential,
+        ;math:`V_\text{pot} = a x^4 - b (x - c)^2`.
     """
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
@@ -128,12 +129,15 @@ class RectangularWell(PotentialFunction):
 
     Attributes
     ----------
-    left : float
-        Left boundary of the potential.
-    right : float
-        Right boundary of the potential.
-    largenumber : float
-        Value of potential outside the boundaries.
+    params : dict
+        The parameters for the potential. The keys are:
+
+        * `left`: Left boundary of the potential.
+        * `right`: Right boundary of the potential.
+        * `largenumber`: Value of potential outside the boundaries.
+
+        It is possible to define left > right, however a warning will
+        be issued then.
     """
 
     def __init__(self, left=0.0, right=1.0, largenumber=float('inf'),

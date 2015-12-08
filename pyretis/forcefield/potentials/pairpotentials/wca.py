@@ -28,21 +28,23 @@ class DoubleWellWCA(PotentialFunction):
     Attributes
     ----------
     params : dict
-        Containins the parameters. These are:
+        Contains the parameters. These are:
 
-        - `rzero` : float
-            Parameter for the potential, defines the two minima.
-            One is located at ``rzero``, the other at ``rzero+2*width``.
-        - `width` : float
-            Parameter for the potential, describes the "width" of
-            the potential.
-        - `height` : float
-            Parameter for the potential, describes the "height" of
-            the potential.
-        - `types` : set
-            Types defines what kind of particle pairs to consider
-            for this interaction. If types is not set (i.e. set to None),
-            it will be assumed to apply to ALL partilces.
+        * `height`: A float describing the "height" of the potential.
+
+        * `height4`: A float equal to ``4.0 * height`` (for convenience).
+
+        * `rzero`: A float defining the two minima. One is located at
+          ``rzero``, the other at ``rzero+2*width``.
+
+        * `types`: A set defining what kind of particle pairs to consider
+          for this interaction. If `types` is not set (i.e. equal to None),
+          it will be assumed to apply to **ALL** particles.
+
+        * `width`: A float describing the "width" of the potential.
+
+        * `width2`: A float equal to ``width*width`` (for convenience).
+
     """
 
     def __init__(self, dim=3, desc='A WCA double well potential'):
@@ -56,17 +58,17 @@ class DoubleWellWCA(PotentialFunction):
             Description of the force field.
         """
         super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
-        self._params = {'types': None,
-                        'rzero': 0.0,
-                        'width': 0.0,
-                        'height': 0.0,
-                        'width2': 0.0,
+        self._params = {'height': 0.0,
+                        'height4': 0.0,
                         'rwidth': 0.0,
-                        'height4': 0.0}
+                        'rzero': 0.0,
+                        'types': None,
+                        'width': 0.0,
+                        'width2': 0.0}
 
     @property
     def params(self):
-        """Return the parameters as a dict."""
+        """Return the parameter dictionary."""
         return self._params
 
     @params.setter
@@ -112,24 +114,24 @@ class DoubleWellWCA(PotentialFunction):
     def min_max(self):
         """Return the minima & maximum of the `DoubleWellWCA` potential.
 
-        The minima are located at `rzero` and ``rzero+2*width`` and the
-        maximum at ``rzero+width``.
+        The minima are located at ``rzero`` & ``rzero + 2*width``. The maximum
+        is located at ``rzero + width``.
 
         Returns
         -------
         out[0] : float
-            Minimum number one, located at: `rzero`.
+            Minimum number one, located at: ``rzero``.
         out[1] : float
-            Minimum number two, located at: ``rzero+2*width``.
+            Minimum number two, located at: ``rzero + 2*width``.
         out[2] : float
-            Maximum, located at: ``rzero+width``.
+            Maximum, located at: ``rzero + width``.
         """
         rzero = self._params['rzero']
         width = self._params['width']
         return rzero, rzero + 2.0 * width, rzero + width
 
     def potential(self, particles, box):
-        """Calculate the potential energy for the `DoubleWellWCA` potential.
+        """Calculate the potential energy.
 
         Parameters
         ----------
@@ -156,7 +158,7 @@ class DoubleWellWCA(PotentialFunction):
         return v_pot
 
     def force(self, particles, box):
-        """Calculate the force for the `DoubleWellWCA` potential.
+        """Calculate the force.
 
         We also calculate the virial here, since the force is evaluated.
 
@@ -193,7 +195,7 @@ class DoubleWellWCA(PotentialFunction):
         return forces, virial
 
     def potential_and_force(self, particles, box):
-        """Calculate the force & potential for the `DoubleWellWCA` potential.
+        """Calculate the force & potential.
 
         We also calculate the virial here, since the force is evaluated.
 
@@ -211,7 +213,7 @@ class DoubleWellWCA(PotentialFunction):
             The potential energy as a float.
         out[1] : numpy.array
             The force as a numpy.array of the same shape as the positions
-            in particles.pos.
+            in `particles.pos`.
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions (dim, dim) where
             dim is given by the box.
