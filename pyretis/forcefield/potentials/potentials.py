@@ -36,7 +36,7 @@ class DoubleWell(PotentialFunction):
         * `c`: The ``c`` parameter for the potential.
 
         These keys corresponds to the parameters in the potential,
-        ;math:`V_\text{pot} = a x^4 - b (x - c)^2`.
+        :math:`V_\text{pot} = a x^4 - b (x - c)^2`.
     """
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
