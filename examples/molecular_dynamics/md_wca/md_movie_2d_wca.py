@@ -20,7 +20,7 @@ import matplotlib.gridspec as gridspec
 # other imports
 import numpy as np
 # simulation settings:
-settings = {'type': 'md-nve',
+settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 1100,
             'output': [{'target': 'file', 'type': 'traj', 'every': 1,

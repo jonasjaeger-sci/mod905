@@ -49,7 +49,7 @@ class SimulationTIS(Simulation):
         This is used for storing results for the simulation.
     """
 
-    def __init__(self, system, integrator, settings,
+    def __init__(self, system, integrator, orderparameter, settings,
                  endcycle=0, startcycle=0):
         """Initialization of the TIS simulation.
 
@@ -70,7 +70,7 @@ class SimulationTIS(Simulation):
         self.integrator = integrator
         self.interfaces = settings['interfaces']
         self.tis_settings = settings['tis']
-        self.orderparameter = settings['orderparameter']
+        self.orderparameter = orderparameter
         # check for shooting:
         if self.tis_settings['sigma_v'] < 0.0:
             self.tis_settings['sigma_v'] = None

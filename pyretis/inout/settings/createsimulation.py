@@ -67,7 +67,7 @@ def create_simulation(settings, system):
     out : object like `Simulation` from `pyretis.core.simulation.simulation`.
         This object will correspond to the selected simulation type.
     """
-    sim_type = settings['task']
+    sim_type = settings['task'].lower()
     family = None
     simulation = None
     try:
@@ -104,15 +104,14 @@ def create_mc_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the simulation type we are to set up. Note that
-        simulation type is also given in `settings['type']`. It is also
-        given here since we typically call this function after checking the
-        type.
+        This defines the task we are to set up a simulation for. Note that
+        the task is also given in `settings['task']`. It is given here since
+        we typically call this function after checking the task.
 
     Returns
     -------
     out : object like `Simulation` from `pyretis.core.simulation`.
-        This object will correspond to the selected simulation type.
+        This object will correspond to the selected task.
 
     Note
     ----
@@ -167,15 +166,14 @@ def create_md_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the simulation type we are to set up. Note that
-        simulation type is also given in `settings['type']`. It is also
-        given here since we typically call this function after checking the
-        type.
+        This defines the task we are to set up a simulation for. Note that
+        the task is also given in `settings['task']`. It is given here since
+        we typically call this function after checking the task.
 
     Returns
     -------
     out : object like `Simulation` from `pyretis.core.simulation`.
-        This object will correspond to the selected simulation type.
+        This object will correspond to the selected task.
 
     Note
     ----
@@ -187,7 +185,7 @@ def create_md_simulation(settings, system, sim_type):
     simulation = None
     required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
-        msg = '{} settings not found: {}'.format(settings['task'], not_found)
+        msg = '{} settings not found: {}'.format(sim_type, not_found)
         logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'md-nve':
@@ -197,9 +195,9 @@ def create_md_simulation(settings, system, sim_type):
                                    startcycle=settings.get('startcycle', 0))
     elif sim_type == 'md-flux':
         intg = create_integrator(settings.get('integrator'), sim_type)
-        ordp = create_orderparameter(settings)
+        orderp = create_orderparameter(settings)
         simulation = SimulationMDFlux(system, intg, settings['interfaces'],
-                                      ordp, endcycle=settings['endcycle'],
+                                      orderp, endcycle=settings['endcycle'],
                                       startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
@@ -220,15 +218,14 @@ def create_path_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the simulation type we are to set up. Note that
-        simulation type is also given in `settings['type']`. It is also
-        given here since we typically call this function after checking the
-        type.
+        This defines the task we are to set up a simulation for. Note that
+        the task is also given in `settings['task']`. It is given here since
+        we typically call this function after checking the task.
 
     Returns
     -------
     out : object like `Simulation` from `pyretis.core.simulation`.
-        This object will correspond to the selected simulation type.
+        This object will correspond to the selected task.
 
     Note
     ----
@@ -241,12 +238,13 @@ def create_path_simulation(settings, system, sim_type):
     simulation = None
     required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
-        msg = '{} settings not found: {}'.format(settings['task'], not_found)
+        msg = '{} settings not found: {}'.format(sim_type, not_found)
         logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'tis':
         intg = create_integrator(settings['integrator'], sim_type)
-        simulation = SimulationTIS(system, intg, settings,
+        orderp = create_orderparameter(settings)
+        simulation = SimulationTIS(system, intg, orderp, settings,
                                    endcycle=settings['endcycle'],
                                    startcycle=settings.get('startcycle', 0))
     else:

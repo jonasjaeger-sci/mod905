@@ -23,7 +23,7 @@ import numpy as np
 
 
 # set up simulation settings:
-settings = {'type': 'md-nve',
+settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 950,
             'output': [{'target': 'file', 'type': 'traj', 'every': 1,

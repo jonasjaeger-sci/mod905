@@ -50,7 +50,7 @@ LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5},
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
 # simulation settings:
-settings = {'type': 'md-nve',
+settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet',
                            'timestep': timestep},
             'endcycle': 1000,
