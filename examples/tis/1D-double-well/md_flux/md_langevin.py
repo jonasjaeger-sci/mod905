@@ -16,13 +16,13 @@ from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
-from pyretis.core.orderparameter import OrderParameterPosition
 from pyretis.core.units import create_conversion_factors
 # for analysing and output:
 from pyretis.analysis import analyse_flux
 from pyretis.inout import generate_report
 from pyretis.inout import create_output
 from pyretis.inout.simulationio import store_settings_as_json
+from pyretis.inout.settings.settings import write_settings_file
 
 print('MD flux simulation!')
 simulation_settings = {'task': 'md-flux',
@@ -75,10 +75,6 @@ print('\nCreated:', system.forcefield)
 simulation_settings['beta'] = system.temperature['beta']
 simulation_settings['npart'] = system.particles.npart
 simulation_settings['dim'] = system.get_dim()
-
-#simulation_settings['system'] = system
-#simulation_settings['orderparameter'] = orderparameter
-
 # create the simulation:
 simulation_md = create_simulation(simulation_settings, system)
 print('\nCreated:', simulation_md)
@@ -88,6 +84,7 @@ output = [task for task in create_output(system, simulation_settings)]
 settings_file = 'settings.json'
 print('Storing the simulation settings in: {}'.format(settings_file))
 store_settings_as_json(simulation_settings, settings_file)
+write_settings_file(simulation_settings, 'settings.txt')
 
 cross = []  # variable for storing the crossing output
 print('\nStarting simulation!')

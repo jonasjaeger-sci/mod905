@@ -12,11 +12,10 @@ from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
-from pyretis.core.orderparameter import OrderParameterPosition
 from pyretis.inout import create_output
 
 
-simulation_settings = {'type': 'TIS',
+simulation_settings = {'task': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 10,
                                       'high-friction': False},
@@ -28,6 +27,10 @@ simulation_settings = {'type': 'TIS',
                        'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
+                       'orderparameter': {'class': 'OrderParameterPosition',
+                                          'args': ['position', 0],
+                                          'kwargs': {'dim': 'x',
+                                                     'periodic': False}},
                        'tis': {'start_cond': 'L',
                                'freq': 0.5,
                                'maxlength': 10000,
@@ -58,8 +61,6 @@ def set_up_tis_simulation(settings):
     forcefield = ForceField(potential=[double_well], desc='Double Well')
     system.forcefield = forcefield
     # add order parameter:
-    orderparameter = OrderParameterPosition('position', 0, dim='x', periodic=False)
-    settings['orderparameter'] = orderparameter
     simulation_tis = create_simulation(settings, system)
     return simulation_tis
 
@@ -79,7 +80,7 @@ def run_simulation(simulation, settings):
 
 
 if __name__ == '__main__':
-    print('Simulation type: {}'.format(simulation_settings['type']))
+    print('Simulation type: {}'.format(simulation_settings['task']))
     print('Setting up TIS simulations:')
     interfaces = simulation_settings['interfaces']
     ensembles, detect = create_path_ensembles(interfaces, include_zero=False)
@@ -98,7 +99,7 @@ if __name__ == '__main__':
             print('* Folder "{}" already exist, will use it.'.format(ensemble))
         path_file = os.path.join(ensemble, 'path.dat')
         ensemble_file = os.path.join(ensemble, 'pathensemble.dat')
-        settings = {'type': 'TIS',
+        settings = {'task': 'TIS',
                     'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                    'gamma': 0.3, 'seed': 10,
                                    'high-friction': False},
@@ -108,6 +109,10 @@ if __name__ == '__main__':
                     'units': 'lj',
                     'generate-vel': {'seed': 0, 'momentum': False,
                                      'distribution': 'maxwell'},
+                    'orderparameter': {'class': 'OrderParameterPosition',
+                                       'args': ['position', 0],
+                                       'kwargs': {'dim': 'x',
+                                                  'periodic': False}},
                     'tis': {'start_cond': 'L',
                             'freq': 0.5,
                             'maxlength': 10000,

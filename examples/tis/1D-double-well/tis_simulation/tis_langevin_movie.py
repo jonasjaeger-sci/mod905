@@ -7,7 +7,7 @@ from __future__ import print_function
 import numpy as np
 # pyretis imports:
 from pyretis.core import Box, System
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
@@ -21,7 +21,7 @@ import matplotlib.patches as mpatches
 import matplotlib as mpl
 
 
-simulation_settings = {'type': 'TIS',
+simulation_settings = {'task': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
@@ -33,6 +33,10 @@ simulation_settings = {'type': 'TIS',
                        'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
+                       'orderparameter': {'class': 'OrderParameterPosition',
+                                          'args': ['position', 0],
+                                          'kwargs': {'dim': 'x',
+                                                     'periodic': False}},
                        'tis': {'start_cond': 'L',
                                'freq': 0.5,
                                'maxlength': 10000,
@@ -63,10 +67,6 @@ double_well = DoubleWell(a=1.0, b=2.0, c=0.0)
 forcefield = ForceField(potential=[double_well], desc='Double Well')
 system.forcefield = forcefield
 print('\nCreated:', system.forcefield)
-# add order parameter:
-orderparameter = OrderParameterPosition('position', 0, dim='x', periodic=False)
-simulation_settings['orderparameter'] = orderparameter
-print('\nCreated:', orderparameter)
 
 simulation_tis = create_simulation(simulation_settings, system)
 print('\nCreated:', simulation_tis)

@@ -8,7 +8,7 @@ import numpy as np
 import Queue
 from pyretis.core.path import create_path_ensembles
 from pyretis.core import Box, System
-from pyretis.core.simulation import create_simulation
+from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
@@ -17,7 +17,7 @@ from pyretis.analysis import analyse_path_ensemble, match_probabilities
 from pyretis.inout.common import make_dirs
 
 
-simulation_settings = {'type': 'TIS',
+simulation_settings = {'task': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
@@ -30,6 +30,10 @@ simulation_settings = {'type': 'TIS',
                        'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
+                       'orderparameter': {'class': 'OrderParameterPosition',
+                                          'args': ['position', 0],
+                                          'kwargs': {'dim': 'x',
+                                                     'periodic': False}},
                        'tis': {'start_cond': 'L',
                                'freq': 0.5,
                                'maxlength': 10000,
@@ -44,7 +48,7 @@ simulation_settings = {'type': 'TIS',
                                    'when': {'every': 100}}]}
 
 
-common = ['type', 'integrator',
+common = ['task', 'integrator', 'orderparameter',
           'endcycle',
           'temperature',
           'periodic_boundary',
@@ -82,10 +86,6 @@ def set_up_tis_simulation(settings):
     double_well = DoubleWell(a=1.0, b=2.0, c=0.0)
     forcefield = ForceField(potential=[double_well], desc='Double Well')
     system.forcefield = forcefield
-    # add order parameter:
-    orderparameter = OrderParameterPosition('position', 0, dim='x',
-                                            periodic=False)
-    settings['orderparameter'] = orderparameter
     return create_simulation(settings, system)
 
 
@@ -132,7 +132,7 @@ tis_results = {'tis': [],
                'interfaces': [],
                'detect': []}
 
-print('Simulation type: {}'.format(simulation_settings['type']))
+print('Simulation type: {}'.format(simulation_settings['task']))
 print('Setting up TIS simulations:')
 
 interfaces = simulation_settings['interfaces']
@@ -162,6 +162,7 @@ for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
     # copy output settings since these will be modified (with path):
     local_settings['output'] = [task.copy() for task in
                                 simulation_settings['output']]
+    print(local_settings['output'])
     local_settings['output-dir'] = ensemble
     simulation_tis = set_up_tis_simulation(local_settings)
     simulations_to_run.put((simulation_tis, local_settings, i))

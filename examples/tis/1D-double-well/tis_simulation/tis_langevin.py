@@ -7,6 +7,7 @@ from __future__ import print_function
 import jinja2
 import pprint
 import os
+from pyretis.inout.settings import write_settings_file
 
 def simple_template_write(template, variables, outfile, path=None):
     """
@@ -41,7 +42,7 @@ def simple_template_write(template, variables, outfile, path=None):
         fileout.write(render)
     return None
 
-simulation_settings = {'type': 'TIS',
+simulation_settings = {'task': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
@@ -49,12 +50,15 @@ simulation_settings = {'type': 'TIS',
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                       -0.5, -0.4, -0.3, 1.0],
-                       'reactant': -0.9,
-                       'product': 1.0,
                        'periodic_boundary': [False],
                        'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
+                       'orderparameter': {'class': 'OrderParameterPosition',
+                                          'args': ['position', 0],
+                                          'kwargs': {'dim': 'x',
+                                                     'periodic': False}},
+
                        'tis': {'start_cond': 'L',
                                'freq': 0.5,
                                'maxlength': 10000,
@@ -70,7 +74,7 @@ simulation_settings = {'type': 'TIS',
 TEMPLATE_TIS = 'template_tis.txt'
 TEMPLATE_A = 'template_analysis.txt'
 
-print('Simulation type: {}'.format(simulation_settings['type']))
+print('Simulation type: {}'.format(simulation_settings['task']))
 print('Setting up TIS simulations:')
 stateA = simulation_settings['interfaces'][0]
 stateB = simulation_settings['interfaces'][-1]
@@ -105,5 +109,6 @@ for i, middle in enumerate(simulation_settings['interfaces'][:-1]):
                 'ensemble': "'{}'".format(ensemble),
                 'idetect': detect[-1]}
     simple_template_write(TEMPLATE_TIS, to_write, sim_file)
+    write_settings_file(settings, os.path.join(ensemble, 'input.txt'))
     print('* Creating analysis script in "{}"'.format(analysis_file))
     simple_template_write(TEMPLATE_A, to_write, analysis_file)
