@@ -66,13 +66,13 @@ def create_simulation(settings, system):
     out : object like `Simulation` from `pyretis.core.simulation.simulation`.
         This object will correspond to the selected simulation type.
     """
-    sim_type = settings['type'].lower()
+    sim_type = settings['task']
     family = None
     simulation = None
     try:
         family = _KNOWN_SIMULATIONS[sim_type]
     except KeyError:
-        msg = 'Unknown simulation type {} requested'.format(sim_type)
+        msg = 'Unknown simulation task {} requested'.format(sim_type)
         raise ValueError(msg)
     if family == 'md':
         simulation = create_md_simulation(settings, system, sim_type)
@@ -81,9 +81,12 @@ def create_simulation(settings, system):
     elif family == 'path':
         simulation = create_path_simulation(settings, system, sim_type)
     else:
-        msg = 'Unknown simulation type {}'.format(sim_type)
+        msg = 'Unknown simulation task {}'.format(sim_type)
         raise ValueError(msg)
-    settings['type'] = sim_type  # just update for consistency.
+    msg = ['Created simulation:']
+    msg += ['{}'.format(simulation)]
+    msg = '\n'.join(msg)
+    logger.info(msg)
     return simulation
 
 
@@ -181,8 +184,10 @@ def create_md_simulation(settings, system, sim_type):
     add some magic that amends missing settings.
     """
     simulation = None
-    required = check_settings(settings, _REQUIRED[sim_type])[0]
+    required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
+        msg = '{} settings not found: {}'.format(settings['task'], not_found)
+        logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'md-nve':
         intg = create_integrator(settings.get('integrator'), sim_type)
@@ -234,8 +239,10 @@ def create_path_simulation(settings, system, sim_type):
     settings.
     """
     simulation = None
-    required = check_settings(settings, _REQUIRED[sim_type])[0]
+    required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
+        msg = '{} settings not found: {}'.format(settings['task'], not_found)
+        logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'tis':
         intg = create_integrator(settings['integrator'], sim_type)
