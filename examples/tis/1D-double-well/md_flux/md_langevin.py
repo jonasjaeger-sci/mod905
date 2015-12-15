@@ -17,14 +17,15 @@ from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
+from pyretis.core.units import create_conversion_factors
 # for analysing and output:
 from pyretis.analysis import analyse_flux
 from pyretis.inout import generate_report
-from pyretis.inout import create_output, store_settings_as_py
-
+from pyretis.inout import create_output
+from pyretis.inout.simulationio import store_settings_as_json
 
 print('MD flux simulation!')
-simulation_settings = {'type': 'md-flux',
+simulation_settings = {'task': 'md-flux',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
@@ -33,9 +34,14 @@ simulation_settings = {'type': 'md-flux',
                        'interfaces': [-0.9, -0.8, -0.7, -0.6, -0.5,
                                       -0.4, -0.3, 1.0],
                        'periodic_boundary': [False],
-                       'units': 'lj',
+                       'units': {'system': 'lj'},
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
+
+                       'orderparameter': {'class': 'OrderParameterPosition',
+                                          'args': ['position', 0],
+                                          'kwargs': {'dim': 'x',
+                                                     'periodic': False}},
                        'output': [{'type': 'traj', 'target': 'file',
                                    'format': 'gro',
                                    'when': {'every': 100},
@@ -43,10 +49,13 @@ simulation_settings = {'type': 'md-flux',
                                    'header': 'MD FLUX simulation. Step: {}'}]}
 
 # set up simulation
+units = simulation_settings['units']
+simulation_settings['unit-system'] = units['system']
+create_conversion_factors(simulation_settings['unit-system'])
 box = Box(periodic=simulation_settings['periodic_boundary'])
 print('\nCreated:', box)
 system = System(temperature=simulation_settings['temperature'],
-                units=simulation_settings['units'],
+                units=simulation_settings['unit-system'],
                 box=box)
 
 system.add_particle(name='A', pos=np.array([-1.0]))
@@ -62,16 +71,13 @@ double_well = DoubleWell(a=1.0, b=2.0, c=0.0)
 forcefield = ForceField(potential=[double_well], desc='Double Well')
 system.forcefield = forcefield
 print('\nCreated:', system.forcefield)
-# add order parameter:
-orderparameter = OrderParameterPosition('position', 0, dim='x', periodic=False)
-print('\nCreated:', orderparameter)
 # add more info to the settings:
 simulation_settings['beta'] = system.temperature['beta']
 simulation_settings['npart'] = system.particles.npart
 simulation_settings['dim'] = system.get_dim()
 
-simulation_settings['system'] = system
-simulation_settings['orderparameter'] = orderparameter
+#simulation_settings['system'] = system
+#simulation_settings['orderparameter'] = orderparameter
 
 # create the simulation:
 simulation_md = create_simulation(simulation_settings, system)
@@ -79,9 +85,9 @@ print('\nCreated:', simulation_md)
 # create outputs for this simulation:
 output = [task for task in create_output(system, simulation_settings)]
 # store the settings we used, in case we need it later (e.g. for analysis).
-settings_file = 'settings.py'
+settings_file = 'settings.json'
 print('Storing the simulation settings in: {}'.format(settings_file))
-store_settings_as_py(simulation_settings, settings_file, 'settings')
+store_settings_as_json(simulation_settings, settings_file)
 
 cross = []  # variable for storing the crossing output
 print('\nStarting simulation!')

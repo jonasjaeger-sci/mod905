@@ -421,54 +421,8 @@ def create_output_task(task, system, settings):
         return None
 
 
-def store_settings_as_py(settings, outfile, path=None, variable='settings'):
-    """Write simulation settings to a .py file.
-
-    This will just write a dictionary to a file in a way such that
-    it can be imported into another file. I.e. one can do
-    `from 'outfile' import 'variable' as settings` to import the
-    given `variable` from the given `outfile` created by this function.
-
-    Parameters
-    ----------
-    settings : dict
-        The dictionary to write
-    outfile : string
-        The file to create
-    path : string, optional
-        A path which determines where the file should be written.
-    variable : string, optional
-        This is the "variable" which we write, i.e. `variable = settings` is
-        written to the output file.
-
-    Note
-    ----
-    We do not store objects which may exist in the settings dictionary.
-    """
-    first = '{} = {{}}'.format(variable)
-    other = (' ' * (len(first) - 2)) + '{}'
-    output = []
-    if path is not None:
-        filename = os.path.join(path, outfile)
-    else:
-        filename = outfile
-    with open(filename, 'w') as fileh:
-        pretty = pprint.pformat(settings, width=-1)
-        linenr = -1
-        for line in pretty.split('\n'):
-            if line.find(' <') != -1 or line.find('>,') != -1:
-                pass
-            else:
-                linenr += 1
-                if linenr == 0:
-                    output.append(first.format(line))
-                elif linenr >= 1:
-                    output.append(other.format(line))
-        fileh.write('\n'.join(output))
-
-
 def store_settings_as_json(settings, outfile, path=None):
-    """Write simulation settings to a .json file.
+    """Write simulation settings to a json file.
 
     This will just write a dictionary to a file in a way such that
     it can be imported into another file.
@@ -492,3 +446,25 @@ def store_settings_as_json(settings, outfile, path=None):
         filename = outfile
     with open(filename, 'w') as fileh:
         json.dump(settings, fileh, indent=4)
+
+
+def read_json_file(inputfile):
+    """Read simulation settings from a pure json file.
+
+    This method will read simulation settings from a json file and
+    return the data stored in a file as a dictionary.
+
+    Parameters
+    ----------
+    inputfile : string
+        The file to open and decode.
+
+    Returns
+    -------
+    out : dict
+        The decoded json file.
+    """
+    data = None
+    with open(inputfile) as json_data:
+        data = json.load(json_data)
+    return data
