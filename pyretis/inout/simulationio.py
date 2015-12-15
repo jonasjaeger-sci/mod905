@@ -252,7 +252,7 @@ def create_output(system, settings):
     ------
     out : object like `OutputTask`
     """
-    defaults = _DEFAULT_OUTPUT.get(settings['type'], [])
+    defaults = _DEFAULT_OUTPUT.get(settings['task'], [])
     for out_task in _get_output_tasks(settings.get('output', []),
                                       default_output=defaults):
         task = create_output_task(out_task, system, settings)
