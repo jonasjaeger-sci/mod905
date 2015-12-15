@@ -68,6 +68,7 @@ def create_simulation(settings, system):
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['task'].lower()
+    settings['task'] = sim_type  # just to be consistent
     family = None
     simulation = None
     try:
