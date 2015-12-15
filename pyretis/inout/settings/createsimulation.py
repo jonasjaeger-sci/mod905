@@ -14,6 +14,7 @@ import logging
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.integrators import create_integrator
 from pyretis.inout.settings.common import check_settings
+from pyretis.inout.settings.createorderparameter import create_orderparameter
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
@@ -196,10 +197,9 @@ def create_md_simulation(settings, system, sim_type):
                                    startcycle=settings.get('startcycle', 0))
     elif sim_type == 'md-flux':
         intg = create_integrator(settings.get('integrator'), sim_type)
-        simulation = SimulationMDFlux(system, intg,
-                                      settings['interfaces'],
-                                      settings['orderparameter'],
-                                      endcycle=settings['endcycle'],
+        ordp = create_orderparameter(settings)
+        simulation = SimulationMDFlux(system, intg, settings['interfaces'],
+                                      ordp, endcycle=settings['endcycle'],
                                       startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
