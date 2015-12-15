@@ -256,10 +256,11 @@ class ForceField(object):
             Description of force field and the potential functions included
             in the force field.
         """
-        pots = []
-        for i, pot in enumerate(self.potential):
-            pots.append('\t{}: {}'.format(i + 1, pot.desc))
-        pots = '\n'.join(pots)
-        force = 'Force field: {}'.format(self.desc)
-        desc = '{}\nPotential functions:\n {}'.format(force, pots)
-        return desc
+        msg = ['Force field: {}'.format(self.desc)]
+        if len(self.potential) < 1:
+            msg.append('No potential functions added yet!')
+        else:
+            msg.append('Potential functions:')
+            for i, pot in enumerate(self.potential):
+                msg.append('{}: {}'.format(i + 1, pot))
+        return '\n'.join(msg)

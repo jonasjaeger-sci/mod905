@@ -10,3 +10,4 @@ from .settings import parse_settings_file
 from .createsystem import create_system
 from .createsimulation import create_simulation
 from .createorderparameter import create_orderparameter
+from .createforcefield import create_force_field

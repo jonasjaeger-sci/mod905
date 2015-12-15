@@ -17,6 +17,7 @@ from __future__ import absolute_import
 import logging
 import os
 from pyretis.inout.settings.common import import_from, initiate_instance
+from pyretis.forcefield import ForceField
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -92,3 +93,34 @@ def create_potential(settings):
                     raise ValueError(msg)
     return initiate_instance(potential, args=settings.get('args', None),
                              kwargs=settings.get('kwargs', None))
+
+
+def create_force_field(settings):
+    """Function to create a force field from input settings.
+
+    This function will create the required potential functions with the
+    specified parameters from `settings`.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for a single potential.
+
+    Returns
+    -------
+    out : object like `ForceField` from `pyretis.forcefield.forcefield`.
+        This object represents the force field.
+    """
+    ffsettings = settings.get('forcefield', None)
+    try:
+        desc = ffsettings['desc']
+    except KeyError:
+        desc = None
+    potentials = create_potentials(settings)
+    pot_param = settings['potential-parameters']
+    ffield = ForceField(desc=desc, potential=potentials, params=pot_param)
+    msg = ['Created force field:']
+    msg.append('{}'.format(ffield))
+    msg = '\n'.join(msg)
+    logger.info(msg)
+    return ffield
