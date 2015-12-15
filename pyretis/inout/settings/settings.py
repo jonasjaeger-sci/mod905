@@ -6,13 +6,14 @@ This module define the file format for pyretis input files.
 import ast
 import re
 import logging
+import pprint
 #from pyretis.core.simulation.common import check_settings
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['parse_settings_file', 'parse_setting',
-           'look_for_keyword']
+           'look_for_keyword', 'write_settings_file']
 
 
 KNOWN_KEYWORDS = {'integrator': 'dict',
@@ -153,3 +154,35 @@ def parse_settings_file(filename):
     for key in settings:
         settings[key] = parse_setting(settings[key], key)
     return settings
+
+
+def write_settings_file(settings, outfile, path=None):
+    """Write simulation settings to an output file.
+
+    This will write a dictionary to a output file in the pyretis input
+    file format.
+
+    Parameters
+    ----------
+    settings : dict
+        The dictionary to write
+    outfile : string
+        The file to create
+    path : string, optional
+        A path which determines where the file should be written.
+
+    Note
+    ----
+    This will currently fail for objects.
+    """
+    if path is not None:
+        filename = os.path.join(path, outfile)
+    else:
+        filename = outfile
+    with open(filename, 'w') as fileh:
+        for key in settings:
+            leng = len(key) + 3
+            pretty = pprint.pformat(settings[key], width=79-leng)
+            pretty = pretty.replace('\n', '\n' + ' ' * leng)
+            dump = '{} = {}\n'.format(key, pretty)
+            fileh.write(dump)

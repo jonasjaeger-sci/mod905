@@ -16,7 +16,6 @@ Important classes defined here:
 from __future__ import print_function
 import os
 import logging
-import pprint
 import json
 # pyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
