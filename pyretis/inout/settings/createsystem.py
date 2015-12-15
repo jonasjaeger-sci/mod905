@@ -374,7 +374,6 @@ def create_velocities(system, settings, vel):
     vel_settings = particle_settings.get('initial-vel', {})
     if vel:
         msg = 'Velocities already set corresponds to a temperature: {}'
-        np.savetxt('test.txt', system.particles.vel)
         msg = msg.format(system.calculate_temperature())
         logger.info(msg)
     if 'generate' in vel_settings:
