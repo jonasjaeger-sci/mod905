@@ -3,11 +3,11 @@ Installing the pyretis library
 ==============================
 
 1. Place the pyretis library somewhere you can access it, to 
-   `/some/dir/pytismol`
+   `/some/dir/pyretis`
 
 2. Export the python path:
 
-export PYTHONPATH=$PYTHONPATH:/some/dir/pytismol
+export PYTHONPATH=$PYTHONPATH:/some/dir/pyretis
 
 
 Building the documentation
