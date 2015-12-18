@@ -20,19 +20,21 @@ from pyretis.inout import create_output
 
 
 class MultiLineFormatter(logging.Formatter):
+    """Hardcoded formatter for pyretis log."""
     def format(self, record):
         out = logging.Formatter.format(self, record)
         shortname = record.name.split('.')[-1]
         out = out.replace(record.name, shortname)
-        header, footer = out.split(record.message)
+        header, _ = out.split(record.message)
         out = out.replace('\n', '\n' + ' '*len(header))
         return out
 
 
 class MultiLineFormatter2(logging.Formatter):
+    """Hardcoded formatter for pyretis log."""
     def format(self, record):
         out = logging.Formatter.format(self, record)
-        header, footer = out.split(record.message)
+        header, _ = out.split(record.message)
         out = out.replace('\n', '\n' + ' '*len(header))
         return out
 
