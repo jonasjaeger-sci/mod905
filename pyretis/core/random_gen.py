@@ -6,10 +6,10 @@ It derives most of the random number procedures from `RandomState` in
 pseudo-random numbers.
 """
 from __future__ import absolute_import
-from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
-                                            reset_momentum)
 import numpy as np
 from numpy.random import RandomState
+from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
+                                            reset_momentum)
 
 __all__ = ['RandomGenerator']
 

@@ -29,11 +29,11 @@ def _check_pair_parameters(parameters):
         if pair == 'mixing':
             continue
         for key in ('epsilon', 'sigma'):
-            if not key in parameters[pair]:
+            if key not in parameters[pair]:
                 msg = '{} for {} not given. Set to 0.0'.format(key, pair)
                 logger.warning(msg)
                 parameters[pair][key] = 0.0
-        if not 'rcut' in parameters[pair]:
+        if 'rcut' not in parameters[pair]:
             factor = parameters[pair].get('factor', 0.0)
             rcut = factor * parameters[pair]['sigma']
             parameters[pair]['rcut'] = rcut
@@ -67,7 +67,7 @@ def generate_pair_interactions(parameters):
         pari = parameters[atmi]
         parj = parameters[atmj]
         if (atmi, atmj) in pair_param:
-            if not (atmj, atmi) in pair_param:
+            if (atmj, atmi) not in pair_param:
                 pair_param[atmj, atmi] = pair_param[atmi, atmj]
             continue
         if (atmi, atmj) in parameters:
@@ -91,7 +91,7 @@ def generate_pair_interactions(parameters):
                                                         parj['rcut'], mixing)
         pair_param[atmi, atmj] = {'epsilon': eps_ij, 'sigma': sig_ij,
                                   'rcut': rcut_ij}
-        if not (atmj, atmi) in pair_param:
+        if (atmj, atmi) not in pair_param:
             pair_param[atmj, atmi] = pair_param[atmi, atmj]
     return pair_param
 

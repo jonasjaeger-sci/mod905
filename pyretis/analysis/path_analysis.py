@@ -5,8 +5,8 @@ Path ensembles are defined in the object `PathEnsemble`
 in `pyretis.core.path`.
 """
 from __future__ import absolute_import
-import numpy as np
 import logging
+import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr
 from pyretis.analysis.histogram import histogram, histogram_and_avg
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -397,10 +397,10 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     """
     result = {}
     if path_ensemble.nstats['npath'] != len(path_ensemble.paths):
-        msg = ('The number of paths stored in path ensemble does not',
-               'correspond to the number of paths seen by the path',
-               ' ensemble! Consider re-running the analysis using',
-               'the path ensemble file!')
+        msg = ' '.join(['The number of paths stored in path ensemble does not',
+                        'correspond to the number of paths seen by the path',
+                        'ensemble! Consider re-running the analysis using',
+                        'the path ensemble file!'])
         logging.warning(msg)
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,

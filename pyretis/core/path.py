@@ -23,9 +23,9 @@ Important functions defined here:
 - reverse_path: Function for reversing a path.
 
 """
-import numpy as np
 import itertools
 import logging
+import numpy as np
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -682,8 +682,7 @@ class PathEnsemble(object):
             msg += ['Note that this might influence the analysis if']
             msg += ['you run it using this path ensemble object.']
             msg += ['(Hint: Use the path ensemble file for the analysis.)']
-            msg = '\n'.join(msg)
-            logging.warning(msg)
+            logging.warning('\n'.join(msg))
             self.paths = []
         # update statistics:
         if path is None:

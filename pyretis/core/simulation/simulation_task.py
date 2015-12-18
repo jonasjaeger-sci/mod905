@@ -43,7 +43,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         given = len(given_args)
     else:
         given = 0
-    if not len(args) == given:
+    if len(args) != given:
         msg = 'Wrong number of arguments given'
         logging.warning(msg)
         return False
@@ -56,8 +56,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
             if extra:
                 msg = ['Task Keyword arguments: {}'.format(defaults)]
                 msg += ['Unexpected keyword argument: {}'.format(extra)]
-                msg = '\n'.join(msg)
-                logging.warning(msg)
+                logging.warning('\n'.join(msg))
                 return False
         else:
             msg = 'Unexpected keyword argument!'

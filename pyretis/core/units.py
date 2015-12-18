@@ -256,9 +256,9 @@ Examples
 1.0
 """
 from __future__ import print_function
+import logging
 from collections import deque
 import numpy as np
-import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -484,7 +484,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     else:
         CONVERT['energy'][unit, energy[1]] = energy[0]
         # let us also check if we can define kB now:
-        if not unit in CONSTANTS['kB']:
+        if unit not in CONSTANTS['kB']:
             try:
                 kboltz = CONSTANTS['kB']['{}/K'.format(energy[1])] / energy[0]
                 CONSTANTS['kB'][unit] = kboltz
@@ -598,7 +598,7 @@ def bfs_convert(conversions, unit_from, unit_to):
             break
         for unit in conversions:
             unit1, unit2 = unit
-            if not unit1 == node:
+            if unit1 != node:
                 continue
             if unit2 not in visited:
                 visited.append(unit2)
@@ -638,9 +638,9 @@ def convert_bases(dimension):
                 continue
             unit1 = (key1, key2)
             unit2 = (key2, key1)
-            if unit1 in convert and not unit2 in convert:
+            if unit1 in convert and unit2 not in convert:
                 convert[unit2] = 1.0 / convert[unit1]
-            elif not unit1 in convert and unit2 in convert:
+            elif unit1 not in convert and unit2 in convert:
                 convert[unit1] = 1.0 / convert[unit2]
             else:
                 convert[unit1] = bfs_convert(convert, key1, key2)[1]
@@ -781,7 +781,7 @@ def read_conversions(filename='units.txt', units=None):
                                                         filename)
                 logging.warning(msg)
                 continue
-            if not dim in convert:
+            if dim not in convert:
                 convert[dim] = {}
             if not units:
                 convert[dim][unit1, unit2] = conv
@@ -820,7 +820,7 @@ def _check_input_unit(unit, dim, input_unit):
     if input_unit is not None:
         try:
             value, unit_dim = input_unit
-            if not unit_dim in UNITS[dim] and unit_dim != 'kB':
+            if unit_dim not in UNITS[dim] and unit_dim != 'kB':
                 msg = 'Unknown {} unit: {}'.format(dim, unit_dim)
                 raise LookupError(msg)
             else:

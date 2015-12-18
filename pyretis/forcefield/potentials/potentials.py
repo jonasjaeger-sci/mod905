@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains positions dependent potentials."""
 from __future__ import absolute_import
-import numpy as np
 import logging
+import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())

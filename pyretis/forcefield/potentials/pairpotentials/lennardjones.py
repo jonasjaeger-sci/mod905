@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Classes for Lennard-Jones pair potentials and variations."""
 from __future__ import absolute_import
-import numpy as np
 import logging
+import numpy as np
 # pyretis imports
 from pyretis.forcefield.potential import PotentialFunction
 from .pairpotential import generate_pair_interactions
@@ -337,7 +337,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         npart = particles.npart
         update = False
         try:  # this will only check for correct size
-            update = not len(self.matrix_np['lj1'][0]) == (npart - 1)
+            update = len(self.matrix_np['lj1'][0]) != (npart - 1)
         except IndexError:
             update = True
         if update:

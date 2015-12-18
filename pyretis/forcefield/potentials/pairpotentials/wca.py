@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains a WCA pair potential."""
 from __future__ import absolute_import
+import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -62,7 +62,7 @@ class DoubleWellWCA(PotentialFunction):
                         'height4': 0.0,
                         'rwidth': 0.0,
                         'rzero': 0.0,
-                        'types': None,
+                        'types': [],
                         'width': 0.0,
                         'width2': 0.0}
 
@@ -178,7 +178,6 @@ class DoubleWellWCA(PotentialFunction):
         virial = np.zeros((box.dim, box.dim))
         rwidth = self._params['rwidth']
         width2 = self._params['width2']
-        height = self._params['height']
         height4 = self._params['height4']
         for pair in particles.pairs():
             i, j, itype, jtype = pair

@@ -9,8 +9,8 @@ Important classes and functions defined here
 - Simulation: Object defining a generic simulation.
 """
 from __future__ import absolute_import
-from .simulation_task import SimulationTask
 import logging
+from .simulation_task import SimulationTask
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

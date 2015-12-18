@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Functions for analysis of crossings for the flux data."""
 from __future__ import absolute_import
+import numpy as np
 from pyretis.analysis.analysis import (running_average, block_error_corr,
                                        safe_divide)
-import numpy as np
 
 
 __all__ = ['analyse_flux']
@@ -35,10 +35,10 @@ def analyse_flux(fluxdata, settings, simulation_settings):
     results = {}
     end_step = simulation_settings['endcycle']
     time_step = simulation_settings['integrator']['timestep']
-    results = {'eff_cross': None,  # effective crossings times
+    results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
-               'neffcross': None,  # number of effective crossings
-               'times': None,  # time spent in the different states
+               'neffcross': [],  # number of effective crossings
+               'times':{},  # time spent in the different states
                'flux': [],  # store raw flux data
                'runflux': [],  # running average of flux
                'errflux': [],  # block error analysis

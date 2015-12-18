@@ -14,8 +14,8 @@ Examples
 
 >>> box = Box(size=[10, 10, 10], periodic=[True, False, True])
 """
-import numpy as np
 import logging
+import numpy as np
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

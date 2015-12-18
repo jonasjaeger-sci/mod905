@@ -13,10 +13,10 @@ Important classes and functions defined here:
   flux. This is used for calculating rates in TIS simulations.
 """
 from __future__ import absolute_import
+import logging
 from pyretis.core.simulation.simulation import Simulation
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
-import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -64,7 +64,7 @@ class SimulationNVE(Simulation):
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
-        if not self.integrator.dynamics == 'NVE':
+        if self.integrator.dynamics.lower() != 'nve':
             msg = 'Inconsistent integrator {} for NVE dynamics!'
             msg = msg.format(integrator.desc)
             logging.warning(msg)

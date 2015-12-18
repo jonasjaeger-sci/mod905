@@ -5,8 +5,8 @@ The class for particles is in reality a simplistic particle list which
 stores positions, velocities, masses etc. and is used for representing
 the particles in the simulations.
 """
-import numpy as np
 import logging
+import numpy as np
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

@@ -17,12 +17,12 @@ Important classes defined here:
   from a input string.
 """
 from __future__ import division  # for StringFunctionParser
-import numpy as np
 import logging
+import operator
+import numpy as np
 # imports for StringFunctionParser:
 from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
                        Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
-import operator
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -515,7 +515,7 @@ class StringFunctionParser(object):
             also the box.
         """
         oper = stack.pop()
-        result = 0
+        result = 0.0
         if oper == 'unary -':
             result = -self.evaluate_stack(stack)
         else:
@@ -532,7 +532,7 @@ class StringFunctionParser(object):
             elif oper in self.system_functs:
                 result = self.system_function(oper, self.evaluate_stack(stack))
             elif oper[0].isalpha():
-                result = 0
+                result = 0  # TODO: Check if this can be made into 0.0
             else:
                 result = float(oper)
         return result

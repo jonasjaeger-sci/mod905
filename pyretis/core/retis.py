@@ -29,10 +29,10 @@ References
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
 from __future__ import print_function
+import logging
+import numpy as np
 from pyretis.core.tis import make_tis_step_ensemble, propagate
 from pyretis.core.path import Path, reverse_path
-import numpy as np
-import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
