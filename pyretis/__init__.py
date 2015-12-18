@@ -33,13 +33,11 @@ Sub-Packages:
   crossing probabilities, rates etc.
 """
 from __future__ import absolute_import
-
-__version__ = '0.0.1'
-__version_details__ = 'pre-release'
-__program_name__ = 'pyretis'
-
-# imports:
+# pyretis imports:
 from . import core
 from . import forcefield
 from . import analysis
 from . import tools
+__version__ = '0.0.1'
+__version_details__ = 'pre-release'
+__program_name__ = 'pyretis'
