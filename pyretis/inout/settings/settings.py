@@ -4,9 +4,10 @@
 This module define the file format for pyretis input files.
 """
 import ast
-import re
 import logging
+import os
 import pprint
+import re
 #from pyretis.core.simulation.common import check_settings
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

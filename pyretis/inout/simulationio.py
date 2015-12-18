@@ -331,44 +331,42 @@ def _create_file_writer(task, system, settings):
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """
-    writer = None
     dirname = settings.get('output-dir', None)
     if dirname is not None:
         filename = os.path.join(dirname, task['filename'])
     else:
         filename = task['filename']
     if task['type'] == 'orderp':
-        writer = OrderFile(filename,
-                           mode=task.get('mode', 'w'),
-                           oldfile=task.get('oldfile', 'overwrite'))
+        return OrderFile(filename,
+                         mode=task.get('mode', 'w'),
+                         oldfile=task.get('oldfile', 'overwrite'))
     elif task['type'] == 'thermo':
-        writer = EnergyFile(filename,
-                            mode=task.get('mode', 'w'),
-                            oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'cross':
-        writer = CrossFile(filename,
-                           mode=task.get('mode', 'w'),
-                           oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'traj':
-        writer = create_traj_writer(filename, task['format'],
-                                    task.get('oldfile', 'overwrite'),
-                                    system)
-    elif task['type'] == 'pathensemble':
-        writer = PathEnsembleFile(filename,
-                                  settings.get('ensemble', '000'),
-                                  settings.get('interfaces', None),
-                                  mode=task.get('mode', 'w'),
-                                  oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'trialpath':
-        writer = PathFile(filename,
+        return EnergyFile(filename,
                           mode=task.get('mode', 'w'),
                           oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'cross':
+        return CrossFile(filename,
+                         mode=task.get('mode', 'w'),
+                         oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'traj':
+        return create_traj_writer(filename, task['format'],
+                                  task.get('oldfile', 'overwrite'),
+                                  system)
+    elif task['type'] == 'pathensemble':
+        return PathEnsembleFile(filename,
+                                settings.get('ensemble', '000'),
+                                settings.get('interfaces', None),
+                                mode=task.get('mode', 'w'),
+                                oldfile=task.get('oldfile', 'overwrite'))
+    elif task['type'] == 'trialpath':
+        return PathFile(filename,
+                        mode=task.get('mode', 'w'),
+                        oldfile=task.get('oldfile', 'overwrite'))
     else:
         msg = ['Unknown type {} for target file'.format(task['type'])]
         msg += ['Ignoring task: {}'.format(task)]
-        msg = '\n'.join(msg)
-        logging.warning(msg)
-    return writer
+        logging.warning('\n'.join(msg))
+        return None
 
 
 def create_output_task(task, system, settings):
@@ -407,8 +405,7 @@ def create_output_task(task, system, settings):
     else:
         msg = ['Unknown task target: {}'.format(task['target'])]
         msg += ['Ignoring task: {}'.format(task)]
-        msg = '\n'.join(msg)
-        logging.warning(msg)
+        logging.warning('\n'.join(msg))
     if writer is not None:
         task_type = task['type'] if task_type is None else task_type
         return OutputTask(writer,

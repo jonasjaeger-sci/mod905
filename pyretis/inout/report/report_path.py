@@ -186,8 +186,8 @@ def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
         table_str = generate_rst_table(table, 'Interfaces',
                                        ['Ensemble', 'Left', 'Middle',
                                         'Right', 'Detect'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
 
 
 def _table_probability(path_ensembles, results, fmt='rst'):
@@ -229,8 +229,8 @@ def _table_probability(path_ensembles, results, fmt='rst'):
         table_str = generate_rst_table(table, r'Probabilities',
                                        [r'Ensemble', r'Pcross', r'Error',
                                         r'Rel. error (%)'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
 
 
 def _table_path(path_ensembles, results, fmt='rst'):
@@ -276,8 +276,8 @@ def _table_path(path_ensembles, results, fmt='rst'):
         table_str = generate_rst_table(table, 'Path lengths',
                                        ['Ensemble', 'Accepted', 'All',
                                         'All/Accepted'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
 
 
 def _table_efficiencies(path_ensembles, results, fmt='rst'):
@@ -323,5 +323,5 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
                                         'Acceptance ratio', 'Correlation',
                                         'Efficiency'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt

@@ -268,10 +268,9 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
         else:
             ens = ens + 1
     else:
-        msg = ('Could not get direction for ensemble {}.'.format(ensemble),
-               'We assume "+", note that this might overwrite files')
-        msg = '\n'.join(msg)
-        logging.warning(msg)
+        msg = ['Could not get direction for ensemble {}.'.format(ensemble),
+               'We assume "+", note that this might overwrite files']
+        logging.warning('\n'.join(msg))
         ens = ens + 1
     return fmt.format(ens)
 

@@ -121,6 +121,6 @@ def create_force_field(settings):
     ffield = ForceField(desc=desc, potential=potentials, params=pot_param)
     msg = ['Created force field:']
     msg.append('{}'.format(ffield))
-    msg = '\n'.join(msg)
-    logger.info(msg)
+    msgtxt = '\n'.join(msg)
+    logger.info(msgtxt)
     return ffield

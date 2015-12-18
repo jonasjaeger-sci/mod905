@@ -15,11 +15,11 @@ Important functions defined here:
 """
 from __future__ import absolute_import
 import logging
+import os
 # for converting rst to html and/or latex:
 import docutils.core
 from docutils.writers.html4css1 import Writer as HTMLWriter
 from docutils.writers.html4css1 import HTMLTranslator
-import os
 # for using templates
 import jinja2
 # pyretis imports:

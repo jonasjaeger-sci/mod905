@@ -108,8 +108,8 @@ def _table_md_efficiency(results, fmt='rst'):
                                         r':math:`p_\text{MD}`',
                                         r':math:`\frac{1-p}{p}`',
                                         'Efficiency time', 'Correlation'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
 
 
 def _table_md_flux_cycles(results, fmt='rst'):
@@ -148,8 +148,8 @@ def _table_md_flux_cycles(results, fmt='rst'):
     else:
         table_str = generate_rst_table(table, 'Cycles spent in state',
                                        ['State', 'Cycles'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
 
 
 def _table_md_flux(results, fmt='rst'):
@@ -200,5 +200,5 @@ def _table_md_flux(results, fmt='rst'):
                                         'Error', 'Rel. error', 'Ncross',
                                         'Neffcross', 'Neffcross/Ncross',
                                         'Steps per cross'])
-    table_str = '\n'.join(table_str)
-    return table, table_str
+    table_txt = '\n'.join(table_str)
+    return table, table_txt

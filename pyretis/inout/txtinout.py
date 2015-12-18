@@ -14,12 +14,12 @@ Important classes and functions defined here:
 - get_predefined_table: Function for creating certain `TxtTable` objects that
   write/formats predefined tables.
 """
-import numpy as np
 import logging
 try:  # this will fail in python3
     from itertools import izip_longest as zip_longest
 except ImportError:  # for python3
     from itertools import zip_longest as zip_longest
+import numpy as np
 from pyretis.inout.common import create_backup
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

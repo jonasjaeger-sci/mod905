@@ -6,8 +6,8 @@ be read from a file.
 """
 import logging
 import os
-import numpy as np
 import pprint
+import numpy as np
 # pyretis imports:
 from pyretis.tools import generate_lattice
 from pyretis.core.box import Box
@@ -104,8 +104,8 @@ def _guess_particle_mass(particle_no, particle_type, unit):
         msg += ['->\nUsing mass of: {} g/mol'.format(mass)]
         particle_mass = CONVERT['mass']['g/mol', unit] * mass
         msg += ['({} in internal units)'.format(particle_mass)]
-    msg = ' '.join(msg)
-    logger.warning(msg)
+    msgtxt = ' '.join(msg)
+    logger.warning(msgtxt)
     return particle_mass
 
 

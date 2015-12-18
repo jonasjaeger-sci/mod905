@@ -87,8 +87,8 @@ def create_simulation(settings, system):
         raise ValueError(msg)
     msg = ['Created simulation:']
     msg += ['{}'.format(simulation)]
-    msg = '\n'.join(msg)
-    logger.info(msg)
+    msgtxt = '\n'.join(msg)
+    logger.info(msgtxt)
     return simulation
 
 
@@ -138,7 +138,7 @@ def create_mc_simulation(settings, system, sim_type):
         try:
             rgen = settings['rgen']
         except KeyError:
-            if not 'seed' in settings:
+            if 'seed' not in settings:
                 msg = 'No random seed given. Will just use "0"'
                 logger.warning(msg)
             rgen = RandomGenerator(seed=settings.get('seed', 0))

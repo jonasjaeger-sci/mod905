@@ -74,8 +74,8 @@ def txt_histogram(outputfile, title, histograms, backup=False):
                                                              hist[2][1]))
         data.append(hist[1])
         data.append(hist[0])
-    header = ', '.join(header)
-    txt_save_columns(outputfile, header, data, backup=backup)
+    headertxt = ', '.join(header)
+    txt_save_columns(outputfile, headertxt, data, backup=backup)
 
 
 def txt_flux_output(results, out_fmt='txt.gz', backup=False):
@@ -208,8 +208,8 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         if key in results:
             data.append(results[key]['running'])
             header.append(key)
-    header = ' '.join(header)
-    txt_save_columns(outfiles['run_energies'], header, data, backup=backup)
+    headertxt = ' '.join(header)
+    txt_save_columns(outfiles['run_energies'], headertxt, data, backup=backup)
     # 2) Save block error data:
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
@@ -261,8 +261,8 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
             header.append('{} (mid, hist, hist*scale)'.format(key))
         except KeyError:
             continue
-    header = ', '.join(header)
-    txt_save_columns(outputfile, header, data, backup=backup)
+    headertxt = ', '.join(header)
+    txt_save_columns(outputfile, headertxt, data, backup=backup)
 
 
 def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',

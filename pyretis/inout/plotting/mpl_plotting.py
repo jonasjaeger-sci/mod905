@@ -11,33 +11,34 @@ Important classes and functions defined here:
 - mpl_set_style: A function for setting the style for the plots, typically
   used here to load the *pyretis style*.
 """
-import numpy as np
 import os
 import logging
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+import numpy as np
+from scipy.stats import gamma  # pylint: disable=E0611
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
-# pylint: disable=E0611
-from scipy.stats import gamma
-# pylint: enable=E0611
-# import styles for newer matplotlibs:
-if matplotlib.__version__ < '1.4.0':
-    HAS_STYLE = False
-    logging.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
-else:
-    try:
-        import matplotlib.style
-        HAS_STYLE = True
-    except ImportError:
-        HAS_STYLE = False
 # pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import (create_backup, simplify_ensemble_name,
                                   name_file)
 from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
                                   _ORDERFILES, _PATHFILES, _PATH_MATCH)
+
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+# import styles for newer matplotlibs:
+if matplotlib.__version__ < '1.4.0':
+    HAS_STYLE = False
+    logger.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
+else:
+    try:
+        import matplotlib.style
+        HAS_STYLE = True
+    except ImportError:
+        HAS_STYLE = False
 
 
 __all__ = ['MplPlotter']
@@ -189,7 +190,7 @@ def _mpl_read_style_file(filename):
                 except KeyError:
                     msg = 'Unknown setting "{}". Please update matplotlib'
                     msg = msg.format(key)
-                    logging.warning(msg)
+                    logger.warning(msg)
 
 
 def mpl_set_style(style='pyretis'):
@@ -216,13 +217,17 @@ def mpl_set_style(style='pyretis'):
         msg = ('Your matplotlib installation cannot use styles!',
                'Will try to load style from file: "{}"'.format(style),
                'Please consider updating matplotlib.')
-        msg = '\n'.join(msg)
-        logging.warning(msg)
+        msgtxt = '\n'.join(msg)
+        logger.warning(msgtxt)
         _mpl_read_style_file(style)
     else:
         if style in matplotlib.style.available:
+            msgtxt = 'Loading matplotlib style: {}'.format(style)
+            logger.info(msgtxt)
             matplotlib.style.use(style)
         else:  # assume this is just a file
+            msgtxt = 'Loading matplitlib style from file: {}'.format(style)
+            logger.info(msgtxt)
             rcpar = matplotlib.rc_params_from_file(style)
             matplotlib.rcParams.update(rcpar)
 
@@ -246,7 +251,7 @@ def mpl_savefig(canvas, outputfile, backup=False):
     if backup:
         msg = create_backup(outputfile)
         if msg:
-            logging.warning(msg)
+            logger.warning(msg)
     canvas.print_figure(outputfile)
 
 
