@@ -243,6 +243,12 @@ def _get_path_length(path):
         return 0
     elif move == 'sh':
         return path['length'] - 1
+    elif move == 's+':
+        return 0
+    elif move == 's-':
+        return 0
+    elif move == '00':
+        return 0
     else:
         msg = 'Ignored unknown mc move: {}'.format(move)
         logging.warning(msg)
