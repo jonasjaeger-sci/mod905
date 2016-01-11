@@ -937,7 +937,14 @@ def mpl_plot_matched(path_ensembles, detect, matched):
         series.append({'type': 'vline', 'x': idetect,
                        'ls': '--', 'alpha': 0.8, 'lw': 1})
 
-    if len(matplotlib.rcParams['axes.color_cycle']) < len(path_ensembles):
+    # Matplotlib changed some rc params, this is to be compatible with more
+    # versions:
+    if 'axes.prop_cycle' in matplotlib.rcParams:
+        ckey = 'axes.prop_cycle'
+    else:
+        ckey = 'axes.color_cycle'
+    # Check if we need to have more colors:
+    if len(matplotlib.rcParams[ckey]) < len(path_ensembles):
         logger.warning('Overriding color cycle')
         colors = matplotlib.cm.Set1(np.linspace(0, 1, len(path_ensembles)))
     else:
