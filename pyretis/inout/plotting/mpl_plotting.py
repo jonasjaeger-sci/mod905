@@ -320,6 +320,11 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
               'linewidth': series.get('lw', 2.0)}
     if color is not None:
         kwargs['color'] = color
+    else:
+        try:  # try to set color if it's specified
+            kwargs['color'] = series['color']
+        except KeyError:
+            pass
 
     handle, = axs.plot(series['x'][low:high], series['y'][low:high],
                        **kwargs)
@@ -931,11 +936,21 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
                        'ls': '--', 'alpha': 0.8, 'lw': 1})
-    for prob, path_e in zip(matched['matched-prob'], path_ensembles):
-        series.append({'type': 'xy',
-                       'x': prob[:, 0],
-                       'y': prob[:, 1],
-                       'lw': 3, 'label': '${}$'.format(path_e.ensemble)})
+
+    if len(matplotlib.rcParams['axes.color_cycle']) < len(path_ensembles):
+        logger.warning('Overriding color cycle')
+        colors = matplotlib.cm.Set1(np.linspace(0, 1, len(path_ensembles)))
+    else:
+        colors = None
+
+    for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
+                                           path_ensembles)):
+        new_series = {'type': 'xy', 'x': prob[:, 0], 'y': prob[:, 1], 'lw': 3,
+                      'label': '${}$'.format(path_e.ensemble)}
+        if colors is not None:
+            new_series['color'] = colors[i]
+        series.append(new_series)
+
     figset = {'xlabel': r'Order parameter ($\lambda$)',
               'ylabel': 'Probability',
               'title': 'Matched probabilities',
