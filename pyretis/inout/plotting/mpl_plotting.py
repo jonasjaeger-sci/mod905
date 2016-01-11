@@ -229,6 +229,8 @@ def mpl_set_style(style='pyretis'):
             msgtxt = 'Loading matplitlib style from file: {}'.format(style)
             logger.info(msgtxt)
             rcpar = matplotlib.rc_params_from_file(style)
+            # For version mpl version 1.5: use_default_template=False can be
+            # added to matplotlib.rc_params_from_file().
             matplotlib.rcParams.update(rcpar)
 
 
