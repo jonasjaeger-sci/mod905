@@ -21,6 +21,8 @@ grid.linestyle: :
 
 legend.numpoints: 1
 legend.scatterpoints: 1
+legend.handlelength: 1.5
+legend.handleheight: 0.5
 
 lines.linewidth: 2
 lines.color: 262626

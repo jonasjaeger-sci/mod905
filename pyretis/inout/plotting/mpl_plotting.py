@@ -374,7 +374,11 @@ def mpl_simple_plot(series, fig_settings=None):
     if 'title' in fig_settings:
         axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
+        ncol, rest = divmod(len(labels), 10)
+        if rest > 0:
+            ncol += 1
+        axs.legend(handles, labels, prop={'size': 'x-small'},
+                   ncol=ncol)
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
     return canvas
@@ -926,12 +930,12 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
-                       'ls': '--', 'alpha': 0.8})
+                       'ls': '--', 'alpha': 0.8, 'lw': 1})
     for prob, path_e in zip(matched['matched-prob'], path_ensembles):
         series.append({'type': 'xy',
                        'x': prob[:, 0],
                        'y': prob[:, 1],
-                       'lw': 3, 'label': path_e.ensemble})
+                       'lw': 3, 'label': '${}$'.format(path_e.ensemble)})
     figset = {'xlabel': r'Order parameter ($\lambda$)',
               'ylabel': 'Probability',
               'title': 'Matched probabilities',
@@ -942,7 +946,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     series = []
     for idetect in detect:
         series.append({'type': 'vline', 'x': idetect,
-                       'ls': '--', 'alpha': 0.8})
+                       'ls': '--', 'alpha': 0.8, 'lw': 1})
     series.append({'type': 'xy',
                    'x': matched['overall-prob'][:, 0],
                    'y': matched['overall-prob'][:, 1],
