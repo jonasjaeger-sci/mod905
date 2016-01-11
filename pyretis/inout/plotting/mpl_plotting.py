@@ -609,7 +609,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
                                  'label': '{}'.format(key), 'alpha': 0.8})
         except KeyError:
             continue
-    title = r'Ensemble: ${0}$'.format(ensemble)
+    title = r'Ensemble ${0}$'.format(ensemble)
     canvas = mpl_simple_plot(series, fig_settings={'title': title})
     canvas_scale = mpl_simple_plot(series_scale, fig_settings={'title': title})
     return canvas, canvas_scale
@@ -655,7 +655,7 @@ def mpl_plot_path(path_ensemble, results, idetect):
                    'ls': '--', 'alpha': 0.8})
     figset = {'xlabel': 'Cycle number',
               'ylabel': 'Probability (running avg.)',
-              'title': r'Ensemble: ${0}$'.format(ens)}
+              'title': r'Ensemble ${0}$'.format(ens)}
     canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot results of block-error analysis:
     series = [{'type': 'xy', 'x': results['blockerror'][0],
@@ -680,7 +680,7 @@ def mpl_plot_path(path_ensemble, results, idetect):
                                           results['pathlength'][1][2][0],
                                           results['pathlength'][1][2][1])})
     figset = {'xlabel': 'No. of MD steps', 'ylabel': 'Frequency',
-              'title': r'Ensemble: ${0}$'.format(ens)}
+              'title': r'Ensemble ${0}$'.format(ens)}
     canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot shoots-histogram
     can_tmp = _mpl_shoots_histogram(results['shoots'][0],
