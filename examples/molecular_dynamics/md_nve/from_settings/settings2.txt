@@ -1,0 +1,55 @@
+Molecular dynamics example settings
+===================================
+
+Simulation settings
+-------------------
+
+task md-nve
+units system lj
+units system lj, mass 39.6 g/mol
+
+integrator name velocityverlet, timestep 0.002
+
+integrator timestep 0.002,
+           gamma 0.3,
+           high-friction True,
+           name Langevin
+
+endcycle 100
+
+interfaces 1.0, 2.0, 3.0, 4.0, 6.0, 8.0
+
+System settings
+---------------
+
+temperature 2.0
+
+particles-position file initial.gro
+
+particles-velocity generate maxwell,
+                   temperature 2.0,
+                   momentum True, seed 0
+
+particle-mass Ar 1.0,
+              Kr 2.0,
+
+
+Force field settings
+--------------------
+
+forcefield Lennard Jones test
+
+potential-function name PairLennardJonesCutnp, shift True
+
+potential-parameters Ar, sigma 1.0, epsilon 1.0, rcut 2.5
+potential-parameters Kr, sigma 1.0, epsilon 2.0, rcut 2.5
+
+potential-function name Test, shift False, setting 10
+
+
+Order parameter settings
+------------------------
+orderparameter name OrderParameterPosition,
+               position 0,
+               dim x,
+               periodic False

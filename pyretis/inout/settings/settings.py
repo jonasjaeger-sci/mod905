@@ -19,27 +19,26 @@ __all__ = ['parse_settings_file', 'parse_setting',
 
 
 KNOWN_KEYWORDS = {'integrator': {'type': 'dict'},
-                  #'orderparameter': 'many',
+                  'orderparameter': {'type': 'dict'},
                   'endcycle': {'type': 'number'},
                   'task': {'type': 'string'},
                   'units': {'type': 'dict'},
-                  #'ensemble': 'string',
+                  'ensemble': 'string',
                   'interfaces': {'type': 'list'},
-                  #'generate-vel': 'many',
                   'output-dir': {'type': 'string'},
                   'box': {'type': 'dict'},
                   'particle-position': {'type': 'dict'},
                   'particle-velocity': {'type': 'dict'},
-                  'particle-mass': {'type': 'dict', 'append': True},
+                  'particle-mass': {'type': 'dict'},
                   'dimensions': {'type': 'number'},
                   'temperature': {'type': 'number'},
                   'tis': {'type': 'dict'},
                   'particles-position': {'type': 'dict'},
-                  'particles-velocity': {'type': 'dict'}}
+                  'particles-velocity': {'type': 'dict'},
                   #a'output': 'many',
-                  #'potentials': 'many',
-                  #'potential-parameters': 'many',
-                  #'forcefield': 'many'}
+                  'potential-function': {'type': 'dict', 'append': True},
+                  'potential-parameters': {'type': 'dict', 'append': True},
+                  'forcefield': {'type': 'string'}}
 
 
 def look_for_keyword(line):
@@ -131,6 +130,12 @@ def parse_setting(setting, keyword):
             except ValueError:
                 parsed[key] = val
         success = True
+    elif key_type == 'list':
+        try:
+            parsed = ast.literal_eval('[{}]'.format(str_setting))
+            success = True
+        except SyntaxError:
+            success = False
     return parsed, success
 
 
@@ -187,6 +192,8 @@ def parse_settings_file(filename):
                                   settings)
                     current_keyword = None
                     to_parse = []
+    if current_keyword is not None:
+        parse_and_add(' '.join(to_parse), current_keyword, settings)
     return settings
 
 
@@ -209,8 +216,7 @@ def parse_and_add(text, keyword, settings):
     parsed, success = parse_setting(text, keyword)
     if success:
         append = KNOWN_KEYWORDS[keyword].get('append', False)
-        append = False
-        if append:
+        if append:  # maybe to be removed?
             try:
                 settings[keyword].append(parsed)
             except KeyError:
