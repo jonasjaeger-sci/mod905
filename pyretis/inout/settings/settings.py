@@ -24,7 +24,7 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
                   'task': 'string',
                   'units': 'dict',
                   #'ensemble': 'string',
-                  #'interfaces': ('many'),
+                  'interfaces': 'list',
                   #'generate-vel': 'many',
                   'output-dir': 'string',
                   'box': 'dict',
@@ -32,20 +32,13 @@ KNOWN_KEYWORDS = {'integrator': 'dict',
                   'particle-velocity': 'dict',
                   'dimensions': 'number',
                   'temperature': 'number',
-                  'tis': 'dict'}
+                  'tis': 'dict',
+                  'particles-position': 'dict',
+                  'particles-velocity': 'dict'}
                   #a'output': 'many',
                   #'potentials': 'many',
                   #'potential-parameters': 'many',
                   #'forcefield': 'many'}
-
-INTEGRATOR_SETTINGS = {}
-
-INTEGRATOR_SETTINGS['verlet'] = {'timestep', 'number'}
-INTEGRATOR_SETTINGS['velocityverlet'] = {'timestep', 'number'}
-INTEGRATOR_SETTINGS['langevin'] = {'timestep': 'number', 'gamma': 'number',
-                                   'high-friction': 'boolean'}
-
-KEYWORD_SETTINGS = {'integrator': INTEGRATOR_SETTINGS}
 
 
 def look_for_keyword(line):
@@ -118,17 +111,20 @@ def parse_setting(setting, keyword):
         try:
             parsed = ast.literal_eval(str_setting)
             success = True
-        except ValueError:
+        except SyntaxError:
             success = False
     elif KNOWN_KEYWORDS[keyword] == 'dict':
         parsed = {}
-        par, _, opt = str_setting.partition(',')
-        parsed['name'] = par.strip()
-        opt = opt.strip()
-        if len(opt) > 0:
-            for opti in opt.split(','):
-                key, _, val = opti.strip().partition(' ')
-                parsed[key.strip().lower()] = val
+        for opti in str_setting.split(','):
+            key, _, val = opti.strip().partition(' ')
+            key = key.strip().lower()
+            val = val.strip()
+            try:
+                parsed[key] = ast.literal_eval(val)
+            except SyntaxError:
+                parsed[key] = val
+            except ValueError:
+                parsed[key] = val
         success = True
     return parsed, success
 
