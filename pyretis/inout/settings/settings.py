@@ -7,10 +7,11 @@ import ast
 import logging
 import os
 import pprint
-import re
 #from pyretis.core.simulation.common import check_settings
 
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 
 
 __all__ = ['parse_settings_file', 'parse_setting',
@@ -18,34 +19,40 @@ __all__ = ['parse_settings_file', 'parse_setting',
 
 
 KNOWN_KEYWORDS = {'integrator': 'dict',
-                  'orderparameter': 'dict',
+                  #'orderparameter': 'many',
                   'endcycle': 'number',
                   'task': 'string',
                   'units': 'dict',
-                  'ensemble': 'string',
-                  'interfaces': 'list',
-                  'generate-vel': 'dict',
+                  #'ensemble': 'string',
+                  #'interfaces': ('many'),
+                  #'generate-vel': 'many',
                   'output-dir': 'string',
                   'box': 'dict',
-                  'particles': 'dict',
-                  'initial-pos': 'dict',
-                  'initial-vel': 'dict',
+                  'particle-position': 'dict',
+                  'particle-velocity': 'dict',
                   'dimensions': 'number',
                   'temperature': 'number',
-                  'tis': 'dict',
-                  'output': 'list',
-                  'potentials': 'list',
-                  'potential-parameters': 'list',
-                  'forcefield': 'dict'}
+                  'tis': 'dict'}
+                  #a'output': 'many',
+                  #'potentials': 'many',
+                  #'potential-parameters': 'many',
+                  #'forcefield': 'many'}
 
-#ALWAYS_REQUIRED = ['task', 'units', 'initial-pos']
+INTEGRATOR_SETTINGS = {}
+
+INTEGRATOR_SETTINGS['verlet'] = {'timestep', 'number'}
+INTEGRATOR_SETTINGS['velocityverlet'] = {'timestep', 'number'}
+INTEGRATOR_SETTINGS['langevin'] = {'timestep': 'number', 'gamma': 'number',
+                                   'high-friction': 'boolean'}
+
+KEYWORD_SETTINGS = {'integrator': INTEGRATOR_SETTINGS}
 
 
 def look_for_keyword(line):
     """Function to look for a keyword in a string.
 
-    The keyword is assumed to be given as `keyword =` at the
-    beginning of the string.
+    A string is assumed to define a keyword if the keyword appears as
+    the first word in the string.
 
     Parameters
     ----------
@@ -61,11 +68,13 @@ def look_for_keyword(line):
     out[2] : boolean
         `True` if the keyword is one of the known keywords.
     """
-    key = re.match(r'(.*?)=', line)
-    if key:
-        keyword = key.group(1)
-        keywordl = keyword.strip().lower()
-        return keyword, keywordl, keywordl in KNOWN_KEYWORDS
+    try:
+        key = line.split()[0].strip()
+    except IndexError:
+        return None, None, False
+    keyword = key.lower()
+    if keyword in KNOWN_KEYWORDS:
+        return key, keyword, True
     else:
         return None, None, False
 
@@ -73,36 +82,62 @@ def look_for_keyword(line):
 def parse_setting(setting, keyword):
     """Parse one setting to python usable stuff.
 
-    This will parse settings using the `ast` module. The output will
-    be usable as input to pyretis.
+    The setting for keywords are on the form:
+
+    keyword setting, optional1 10, optional2, 100, optional3 1000
 
     Parameters
     ----------
-    settings : list
+    setting : string
         The setting to parse.
     keyword : string
         The keyword for which we are parsing a setting.
 
     Returns
     -------
-    out : string, number, tuple, list, dict, boolea or None
+    out[0] : string, dict, list, boolean, etc.
         The parsed setting.
+    out[1] : boolean
+        True if we managed to parse the setting, False otherwise.
     """
-    str_setting = ''.join(setting)
+    parsed = None
+    success = False
+
+    if keyword not in KNOWN_KEYWORDS:
+        return None, False
+
+    try:
+        str_setting = setting.split(' ', 1)[1].strip()
+    except IndexError:
+        return None, False
+
     if KNOWN_KEYWORDS[keyword] == 'string':
-        return str_setting
-    else:
+        parsed = str_setting
+        success = True
+    elif KNOWN_KEYWORDS[keyword] == 'number':
         try:
-            ev_setting = ast.literal_eval(str_setting)
-        except SyntaxError:
-            msg = 'Could not understand {} = {}'.format(keyword, setting)
-            ev_setting = str_setting
-            raise ValueError(msg)
-        return ev_setting
+            parsed = ast.literal_eval(str_setting)
+            success = True
+        except ValueError:
+            success = False
+    elif KNOWN_KEYWORDS[keyword] == 'dict':
+        parsed = {}
+        par, _, opt = str_setting.partition(',')
+        parsed['name'] = par.strip()
+        opt = opt.strip()
+        if len(opt) > 0:
+            for opti in opt.split(','):
+                key, _, val = opti.strip().partition(' ')
+                parsed[key.strip().lower()] = val
+        success = True
+    return parsed, success
 
 
 def parse_settings_file(filename):
     """Parse settings from a file name.
+
+    Here, we read the file line-by-line and check if the current line
+    contains a keyword, if so, we parse that keyword.
 
     Parameters
     ----------
@@ -115,8 +150,6 @@ def parse_settings_file(filename):
         A dictionary with settings for pyretis.
     """
     settings = {}
-    reading = False
-    read_keyword = None
     with open(filename, 'r') as fileh:
         for lines in fileh:
             to_read = lines.strip()
@@ -124,36 +157,19 @@ def parse_settings_file(filename):
                 continue
             if to_read.startswith('#'):
                 continue
-            match, keyword, known = look_for_keyword(to_read)
-            if keyword:  # found a new keyword!
-                if known:
-                    reading = True
-                    read_keyword = keyword
-                    to_read = to_read.split('{}='.format(match))[1].strip()
-                    settings[read_keyword] = []
+            _, keyword, known = look_for_keyword(to_read)
+            if known:
+                parsed, success = parse_setting(to_read, keyword)
+                if success:
+                    if keyword in settings:
+                        msg = 'Updating already defined setting {}: {}'
+                        msgtxt = msg.format(keyword, settings[keyword])
+                        logger.warning(msgtxt)
+                    settings[keyword] = parsed
                 else:
-                    msg = 'Unknown keyword "{}" found. Ignored!'.format(match)
-                    logging.warning(msg)
-                    reading = False
-                    read_keyword = None
-            if reading:
-                settings[read_keyword].append(to_read)
-                read_type = KNOWN_KEYWORDS[read_keyword]
-                if read_type in ('string', 'number', 'boolean'):
-                    reading = False  # just read the current line
-                elif read_type == 'list':
-                    # stop reading if we end by a ')' or ']'
-                    # if this is a list of lists we end by ']]' if the
-                    # input ends, otherwise we end by ','.
-                    reading = not (to_read.endswith(']') or
-                                   to_read.endswith(')'))
-                elif read_type == 'dict':
-                    reading = not to_read.endswith('}')
-                else:
-                    msg = 'Unknown read type "{}"'.format(read_type)
-                    logging.warning(msg)
-    for key in settings:
-        settings[key] = parse_setting(settings[key], key)
+                    msg = 'Could not understand setting "{}"'
+                    msgtxt = msg.format(to_read)
+                    logger.warning(msgtxt)
     return settings
 
 
