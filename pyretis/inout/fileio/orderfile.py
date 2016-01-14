@@ -98,8 +98,7 @@ class OrderFile(FileWriter):
         for blocks in read_some_lines(self.filename):
             data = np.array(blocks['data'])
             _, col = data.shape
-            data_dict = {'comment': blocks['comment']}
-            data_dict['data'] = []
+            data_dict = {'comment': blocks['comment'], 'data': []}
             for i in range(col):
                 data_dict['data'].append(data[:, i])
             yield data_dict

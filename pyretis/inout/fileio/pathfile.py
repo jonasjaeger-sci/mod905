@@ -227,14 +227,13 @@ def _line_to_path_data(line):
     data = [col.strip() for col in linec.split()]
     if len(data) < 16:  # valid data should have 15 columns!
         return None
-    path_info = {}
-    path_info['cycle'] = int(data[0])
-    path_info['generated'] = [str(data[8]), float(data[13]),
-                              int(data[14]), int(data[15])]
-    path_info['status'] = str(data[7])
-    path_info['length'] = int(data[6])
-    path_info['ordermax'] = (float(data[10]), int(data[12]))
-    path_info['ordermin'] = (float(data[9]), int(data[11]))
+    path_info = {'cycle': int(data[0]),
+                 'generated': [str(data[8]), float(data[13]),
+                               int(data[14]), int(data[15])],
+                 'status': str(data[7]),
+                 'length': int(data[6]),
+                 'ordermax': (float(data[10]), int(data[12])),
+                 'ordermin': (float(data[9]), int(data[11]))}
     start = str(data[3])
     middle = str(data[4])
     end = str(data[5])
