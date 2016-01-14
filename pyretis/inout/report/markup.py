@@ -49,7 +49,7 @@ def generate_rst_table(table, title, headings):
                 col_len[i] = len(col) + 2  # add some extra space
 
     width = len(col_len) + sum(col_len) - 1
-    topline = '+' + width * ('-') + '+'
+    topline = '+' + width * '-' + '+'
     # create the header
     str_header = '|{{0:<{0}s}}|'.format(width)
     str_header = str_header.format(title)
@@ -60,7 +60,7 @@ def generate_rst_table(table, title, headings):
     row_line = [''] + row_line + ['']
     row_line = '|'.join(row_line)
     # also set-up the horizontal line:
-    hline = [''] + [col * ('-') for col in col_len] + ['']
+    hline = [''] + [col * '-' for col in col_len] + ['']
     hline = '+'.join(hline)
     # generate table
     str_table = [topline, str_header, hline, row_line, hline.replace('-', '=')]
@@ -96,7 +96,7 @@ def generate_latex_table(table, title, headings, fixnum=None):
     str_table = [r'\renewcommand{\arraystretch}{1.25}',
                  r'\noindent', r'\begin{minipage}{\textwidth}', r'\centering',
                  r'\textbf{' + title + r'} \\', r'\medskip'
-                 r'\begin{tabular}{' + len(headings) * ('| c ') + '|}']
+                 r'\begin{tabular}{' + len(headings) * '| c ' + '|}']
     str_table.append(r'\hline')
     str_table.append(' & '.join(headings) + r'\\ \hline')
     for row in table:

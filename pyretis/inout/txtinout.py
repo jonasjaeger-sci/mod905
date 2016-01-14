@@ -79,7 +79,7 @@ def get_predefined_table(table):
                            headers=settings['headers'],
                            spacing=settings['spacing'])
         if 'row_fmt' in settings:  # override the row-format:
-            tab.row_fmt = (' ') * settings['spacing']
+            tab.row_fmt = ' ' * settings['spacing']
             tab.row_fmt = tab.row_fmt.join(settings['row_fmt'])
         return tab
 
