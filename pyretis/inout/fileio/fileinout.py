@@ -224,7 +224,7 @@ class FileWriter(object):
         if self.fileh is None:
             msg = 'Could not open file!'
             logging.warning(msg)
-            raise
+            raise SystemExit(msg)
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
