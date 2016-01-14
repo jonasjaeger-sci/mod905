@@ -22,7 +22,7 @@ class ForceField(object):
         Description of the force field.
     potential : list
         The potential functions that the force field is built up from.
-    param : list
+    params : list
         The parameters for the corresponding potential functions.
     arguments : dict
         Contains information on how to call the different functions.
