@@ -900,6 +900,10 @@ def mpl_plot_energy(results, energies, sim_settings=None):
                 scale = 1.0 / sim_settings['beta']
             elif key == 'temp':
                 scale = sim_settings['temperature'] / alp
+            else:
+                msgtxt = 'No scale defined for {}! Assuming "1.0"'.format(key)
+                logger.warning(msgtxt)
+                scale = 1.0
             series.append({'type': 'xy', 'x': pos,
                            'y': gamma.pdf(pos, alp, loc=0, scale=scale),
                            'label': 'Boltzmann distribution'})
