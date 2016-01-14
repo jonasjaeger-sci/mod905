@@ -79,7 +79,7 @@ class CrossFile(FileWriter):
         try:
             step, inter = int(linessplit[0]), int(linessplit[1])
             direction = -1 if linessplit[2] == '-' else 1
-            return (step, inter, direction)
+            return step, inter, direction
         except IndexError:
             return None
 

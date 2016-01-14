@@ -697,7 +697,7 @@ def print_table(unit, system=False):
         title = 'Conversions for {}'.format(unit)
         print('\n.. _conversions-{}:'.format(unit))
     print('\n{}'.format(title))
-    print(('-') * len(title))
+    print('-' * len(title))
     for dim in sorted(CONVERT):
         header = '.. table:: Conversion factors for: {}'
         header = header.format(dim.capitalize())
