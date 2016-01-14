@@ -132,7 +132,13 @@ class WriteXYZ(FileWriter):
             (`X`) will be generated and used.
         header : string, optional
             Header to use for writing the xyz-frame.
+
+        Returns
+        -------
+        status : boolean
+            True if we managed to write to the file, False otherwise.
         """
+        status = False
         npart = len(pos)
         self.write_string('{0}\n'.format(npart))
         if header is None:

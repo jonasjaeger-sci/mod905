@@ -245,6 +245,11 @@ class FileWriter(object):
         ----------
         towrite : string
             The string to output to the file.
+
+        Returns
+        -------
+        out : boolean
+            True if we managed to write, False otherwise.
         """
         if towrite is None:
             return False
