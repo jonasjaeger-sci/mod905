@@ -23,8 +23,8 @@ from matplotlib.collections import LineCollection
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import (create_backup, simplify_ensemble_name,
                                   name_file)
-from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
-                                  _ORDERFILES, _PATHFILES, _PATH_MATCH)
+from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
+                                  ORDERFILES, PATHFILES, PATH_MATCH)
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -639,8 +639,8 @@ def mpl_plot_path(path_ensemble, results, idetect):
     ens_simplified = simplify_ensemble_name(ens)
     canvas = {}
     out = {}
-    for key in _PATHFILES:
-        out[key] = _PATHFILES[key].format(ens_simplified)
+    for key in PATHFILES:
+        out[key] = PATHFILES[key].format(ens_simplified)
     # First plot `pcross` vs `lambda` with the `idetect` surface:
     series = [{'type': 'xy', 'x': results['pcross'][0],
                'y': results['pcross'][1]}]
@@ -721,12 +721,12 @@ def mpl_plot_orderp(results, orderdata):
     time = orderdata[0]
     series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
     figset = {'xlabel': 'Time', 'ylabel': 'Order parameter'}
-    canvas[_ORDERFILES['order']] = mpl_simple_plot(series, fig_settings=figset)
+    canvas[ORDERFILES['order']] = mpl_simple_plot(series, fig_settings=figset)
     # make running average plot of the energies as function of time
     series = [{'type': 'xy', 'x': time, 'y': results[0]['running'],
                'label': 'Running average'}]
-    canvas[_ORDERFILES['run_order']] = mpl_simple_plot(series,
-                                                       fig_settings=figset)
+    canvas[ORDERFILES['run_order']] = mpl_simple_plot(series,
+                                                      fig_settings=figset)
     # plot block-error results:
     block = results[0]['blockerror']
     series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
@@ -736,30 +736,30 @@ def mpl_plot_orderp(results, orderdata):
     figset = {'xlabel': 'Block length',
               'ylabel': 'Estimated error',
               'title': title.format(block[4], block[6])}
-    canvas[_ORDERFILES['block']] = mpl_simple_plot(series, fig_settings=figset)
+    canvas[ORDERFILES['block']] = mpl_simple_plot(series, fig_settings=figset)
     # plot distributions
     dist = results[0]['distribution']
     series = [{'type': 'xy', 'x': dist[1], 'y': dist[0]}]
     title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
     title = title.format('Order parameter', dist[2][0], dist[2][1])
     figset = {'title': title}
-    canvas[_ORDERFILES['dist']] = mpl_simple_plot(series,
-                                                  fig_settings=figset)
+    canvas[ORDERFILES['dist']] = mpl_simple_plot(series,
+                                                 fig_settings=figset)
     # also try a orderp vs ordervel plot:
     if len(orderdata) >= 3:
         series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
         figset = {'xlabel': r'$\lambda$',
                   'ylabel': r'$\dot{\lambda}$',
                   'title': 'Order parameter vs velocity'}
-        plot = _ORDERFILES['ordervel']
+        plot = ORDERFILES['ordervel']
         canvas[plot] = mpl_line_gradient(series, fig_settings=figset)
     # output msd if it was calculated:
     if 'msd' in results[0]:
         msd = results[0]['msd']
         series = [(np.arange(len(msd)), msd[:, 0], msd[:, 1])]
         figset = {'xlabel': 'Time', 'ylabel': 'MSD'}
-        canvas[_ORDERFILES['msd']] = mpl_error_plot(series,
-                                                    fig_settings=figset)
+        canvas[ORDERFILES['msd']] = mpl_error_plot(series,
+                                                   fig_settings=figset)
     return canvas
 
 
@@ -798,10 +798,10 @@ def mpl_plot_energy(results, energies, sim_settings=None):
         if key not in energies:
             continue
         series.append({'type': 'xy', 'x': time, 'y': energies[key],
-                       'label': _ENERTITLE[key]})
+                       'label': ENERTITLE[key]})
     figset = {'xlabel': 'Time', 'ylabel': 'Energy'}
-    canvas[_ENERFILES['energies']] = mpl_simple_plot(series,
-                                                     fig_settings=figset)
+    canvas[ENERFILES['energies']] = mpl_simple_plot(series,
+                                                    fig_settings=figset)
     # make running average plot of the energies as function of time
     series = []
     for key in ['vpot', 'ekin', 'etot', 'ham']:
@@ -809,34 +809,34 @@ def mpl_plot_energy(results, energies, sim_settings=None):
             continue
         series.append({'type': 'xy', 'x': time,
                        'y': results[key]['running'],
-                       'label': _ENERTITLE[key]})
-    canvas[_ENERFILES['run_energies']] = mpl_simple_plot(series,
-                                                         fig_settings=figset)
+                       'label': ENERTITLE[key]})
+    canvas[ENERFILES['run_energies']] = mpl_simple_plot(series,
+                                                        fig_settings=figset)
     # plot temperature
     series = [{'type': 'xy', 'x': time, 'y': energies['temp']}]
     figset = {'xlabel': 'Time', 'ylabel': 'Temperature'}
-    canvas[_ENERFILES['temperature']] = mpl_simple_plot(series,
-                                                        fig_settings=figset)
+    canvas[ENERFILES['temperature']] = mpl_simple_plot(series,
+                                                       fig_settings=figset)
     # and running average for temperature
     series = [{'type': 'xy', 'x': time, 'y': results['temp']['running']}]
     figset = {'xlabel': 'Time',
               'ylabel': 'Temperature',
               'title': 'Running average'}
-    canvas[_ENERFILES['run_temp']] = mpl_simple_plot(series,
-                                                     fig_settings=figset)
+    canvas[ENERFILES['run_temp']] = mpl_simple_plot(series,
+                                                    fig_settings=figset)
     # plot block-error results:
     title = r'{0}: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        plot = _ENERFILES['block'].format(key)
+        plot = ENERFILES['block'].format(key)
         block = results[key]['blockerror']
         series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
         series.append({'type': 'hline', 'y': block[4],
                        'ls': '--', 'alpha': 0.8})
         figset = {'xlabel': 'Block length',
                   'ylabel': 'Estimated error',
-                  'title': title.format(_ENERTITLE[key], block[4], block[6])}
+                  'title': title.format(ENERTITLE[key], block[4], block[6])}
         canvas[plot] = mpl_simple_plot(series, fig_settings=figset)
     # plot distributions
     for key in ['vpot', 'ekin', 'etot', 'temp']:
@@ -844,9 +844,9 @@ def mpl_plot_energy(results, energies, sim_settings=None):
             continue
         dist = results[key]['distribution']
         series = [{'type': 'xy', 'x': dist[1], 'y': dist[0],
-                   'label': _ENERTITLE[key]}]
+                   'label': ENERTITLE[key]}]
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
-        title = title.format(_ENERTITLE[key], dist[2][0], dist[2][1])
+        title = title.format(ENERTITLE[key], dist[2][0], dist[2][1])
         if sim_settings is not None and key in ['ekin', 'temp']:
             pos = np.linspace(min(0.0, dist[1].min()), dist[1].max(), 1000)
             alp = (0.5 * sim_settings['npart'] * sim_settings['dim'])
@@ -857,7 +857,7 @@ def mpl_plot_energy(results, energies, sim_settings=None):
             series.append({'type': 'xy', 'x': pos,
                            'y': gamma.pdf(pos, alp, loc=0, scale=scale),
                            'label': 'Boltzmann distribution'})
-        plot = _ENERFILES['dist'].format(key)
+        plot = ENERFILES['dist'].format(key)
         canvas[plot] = mpl_simple_plot(series, fig_settings={'title': title})
     return canvas
 
@@ -894,7 +894,7 @@ def mpl_plot_flux(results):
                   'ylabel': 'Flux / internal units',
                   'title': title}
         canvas = mpl_simple_plot(series, fig_settings=figset)
-        canvas_run.append({'name': _FLUXFILES['runflux'].format(i + 1),
+        canvas_run.append({'name': FLUXFILES['runflux'].format(i + 1),
                            'canvas': canvas})
         # Plot error results:
         errflux = results['errflux'][i]
@@ -906,7 +906,7 @@ def mpl_plot_flux(results):
                   'ylabel': 'Estimated error',
                   'title': title.format(i + 1, errflux[4], errflux[6])}
         canvas = mpl_simple_plot(series, fig_settings=figset)
-        canvas_err.append({'name': _FLUXFILES['block'].format(i + 1),
+        canvas_err.append({'name': FLUXFILES['block'].format(i + 1),
                            'canvas': canvas})
     return canvas_run, canvas_err
 
@@ -964,8 +964,8 @@ def mpl_plot_matched(path_ensembles, detect, matched):
               'ylabel': 'Probability',
               'title': 'Matched probabilities',
               'yscale': 'log'}
-    canvas[_PATH_MATCH['total']] = mpl_simple_plot(series,
-                                                   fig_settings=figset)
+    canvas[PATH_MATCH['total']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
     # Also make a plot with the overall matched probability:
     series = []
     for idetect in detect:
@@ -979,6 +979,6 @@ def mpl_plot_matched(path_ensembles, detect, matched):
               'ylabel': 'Probability',
               'title': 'Matched probability',
               'yscale': 'log'}
-    canvas[_PATH_MATCH['match']] = mpl_simple_plot(series,
-                                                   fig_settings=figset)
+    canvas[PATH_MATCH['match']] = mpl_simple_plot(series,
+                                                  fig_settings=figset)
     return canvas

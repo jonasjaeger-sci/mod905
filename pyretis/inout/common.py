@@ -29,43 +29,43 @@ __all__ = ['create_backup', 'apply_format', 'remove_extensions',
 # Hard-coded patters for energy analysis output files.
 # These are just used to make it simpler to change these default
 # names in the future.
-_ENERFILES = {'energies': 'energies',
-              'run_energies': 'runenergies',
-              'temperature': 'temperature',
-              'run_temp': 'runtemperature',
-              'block': '{}block',
-              'dist': '{}dist'}
+ENERFILES = {'energies': 'energies',
+             'run_energies': 'runenergies',
+             'temperature': 'temperature',
+             'run_temp': 'runtemperature',
+             'block': '{}block',
+             'dist': '{}dist'}
 # hard-coded information for the energy terms:
-_ENERTITLE = {'vpot': 'Potential energy',
-              'ekin': 'Kinetic energy',
-              'etot': 'Total energy',
-              'ham': 'Hamilt. energy',
-              'temp': 'Temperature',
-              'elec': 'Energy (externally computed)'}
+ENERTITLE = {'vpot': 'Potential energy',
+             'ekin': 'Kinetic energy',
+             'etot': 'Total energy',
+             'ham': 'Hamilt. energy',
+             'temp': 'Temperature',
+             'elec': 'Energy (externally computed)'}
 # hard-coded patters for flux analysis output files:
-_FLUXFILES = {'runflux': 'runflux_{}',
-              'block': 'errflux_{}'}
+FLUXFILES = {'runflux': 'runflux_{}',
+             'block': 'errflux_{}'}
 # order files:
-_ORDERFILES = {'order': 'orderp',
-               'ordervel': 'orderpv',
-               'run_order': 'runorderp',
-               'dist': 'orderdist',
-               'block': 'ordererror',
-               'msd': 'ordermsd'}
+ORDERFILES = {'order': 'orderp',
+              'ordervel': 'orderpv',
+              'run_order': 'runorderp',
+              'dist': 'orderdist',
+              'block': 'ordererror',
+              'msd': 'ordermsd'}
 # hard-coded patters for path analysis output files:
-_PATHFILES = {'pcross': '{}_pcross',
-              'prun': '{}_prun',
-              'perror': '{}_perror',
-              'pathlength': '{}_lpath',
-              'shoots': '{}_shoots',
-              'shoots-scaled': '{}_shoots_scale'}
+PATHFILES = {'pcross': '{}_pcross',
+             'prun': '{}_prun',
+             'perror': '{}_perror',
+             'pathlength': '{}_lpath',
+             'shoots': '{}_shoots',
+             'shoots-scaled': '{}_shoots_scale'}
 # hard-coded patterns for matched files:
-_PATH_MATCH = {'total': 'total-probability',
-               'match': 'matched-probability'}
+PATH_MATCH = {'total': 'total-probability',
+              'match': 'matched-probability'}
 # hard-coded patters for report outputs:
-_REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
-                'tis': os.extsep.join(['tis_report', '{}']),
-                'tis_path': os.extsep.join(['tis_path_report', '{}'])}
+REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
+               'tis': os.extsep.join(['tis_report', '{}']),
+               'tis_path': os.extsep.join(['tis_path_report', '{}'])}
 
 
 def create_backup(outputfile):

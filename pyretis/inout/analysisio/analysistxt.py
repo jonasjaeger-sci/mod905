@@ -22,8 +22,8 @@ import numpy as np
 # pyretis imports:
 from pyretis.inout.common import (create_backup, simplify_ensemble_name,
                                   name_file)
-from pyretis.inout.common import (_ENERFILES, _ENERTITLE, _FLUXFILES,
-                                  _ORDERFILES, _PATHFILES, _PATH_MATCH)
+from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
+                                  ORDERFILES, PATHFILES, PATH_MATCH)
 from pyretis.inout.txtinout import txt_save_columns
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -98,20 +98,20 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
 
     """
     outfiles = {}
-    for key in _FLUXFILES:
+    for key in FLUXFILES:
         outfiles[key] = []
     # make running average plot and error plot:
     for i in range(len(results['flux'])):
         flux = results['flux'][i]
         runflux = results['runflux'][i]
         errflux = results['errflux'][i]
-        outfile = name_file(_FLUXFILES['runflux'].format(i + 1), out_fmt)
+        outfile = name_file(FLUXFILES['runflux'].format(i + 1), out_fmt)
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
                          (flux[:, 0], runflux), backup=backup)
         # output block-error results:
-        outfile = name_file(_FLUXFILES['block'].format(i + 1), out_fmt)
+        outfile = name_file(FLUXFILES['block'].format(i + 1), out_fmt)
         outfiles['block'].append(outfile)
         txt_block_error(outfile, 'Block error for flux analysis',
                         errflux, backup=backup)
@@ -149,8 +149,8 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     assumed to represent the velocity here.
     """
     outfiles = {}
-    for key in _ORDERFILES:
-        outfiles[key] = name_file(_ORDERFILES[key], out_fmt)
+    for key in ORDERFILES:
+        outfiles[key] = name_file(ORDERFILES[key], out_fmt)
 
     time = orderdata[0]
     # output running average:
@@ -199,7 +199,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     """
     outfiles = {}
     for key in ['run_energies', 'temperature', 'run_temp']:
-        outfiles[key] = name_file(_ENERFILES[key], out_fmt)
+        outfiles[key] = name_file(ENERFILES[key], out_fmt)
     time = energies['time']
     # 1) Store the running average:
     header = ['Running average of energy data: time']
@@ -214,18 +214,18 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        outkey = _ENERFILES['block'].format(key)
+        outkey = ENERFILES['block'].format(key)
         outfiles[outkey] = name_file(outkey, out_fmt)
-        txt_block_error(outfiles[outkey], _ENERTITLE[key],
+        txt_block_error(outfiles[outkey], ENERTITLE[key],
                         results[key]['blockerror'], backup=backup)
     # 3) Save histograms:
     for key in ['vpot', 'ekin', 'etot', 'temp']:
         if key not in results:
             continue
-        outkey = _ENERFILES['dist'].format(key)
+        outkey = ENERFILES['dist'].format(key)
         outfiles[outkey] = name_file(outkey, out_fmt)
         txt_histogram(outfiles[outkey],
-                      r'Histogram for {}'.format(_ENERTITLE[key]),
+                      r'Histogram for {}'.format(ENERTITLE[key]),
                       [results[key]['distribution']], backup=backup)
     return outfiles
 
@@ -291,8 +291,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     ens = path_ensemble.ensemble  # identify the ensemble
     ens_simplified = simplify_ensemble_name(ens)
     out = {}
-    for key in _PATHFILES:
-        out[key] = name_file(_PATHFILES[key].format(ens_simplified), out_fmt)
+    for key in PATHFILES:
+        out[key] = name_file(PATHFILES[key].format(ens_simplified), out_fmt)
     # 1) Output pcross vs lambda:
     txt_save_columns(out['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
@@ -339,7 +339,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
         The files created by this function.
     """
     output = {}
-    output['match'] = name_file(_PATH_MATCH['match'], out_fmt)
+    output['match'] = name_file(PATH_MATCH['match'], out_fmt)
     # start by creating the matched file, here we use a custom
     # file writer:
     if backup:
@@ -352,7 +352,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
             header = 'Ensemble: {}, idetect: {}'.format(ens.ensemble, idet)
             np.savetxt(fhandle, prob, header=header)
     # output the over-all matched probability:
-    output['total'] = name_file(_PATH_MATCH['total'], out_fmt)
+    output['total'] = name_file(PATH_MATCH['total'], out_fmt)
     interf = ' , '.join([str(idet) for idet in detect])
     header = 'Total matched probability. Interfaces: {}'
     txt_save_columns(output['total'], header.format(interf),

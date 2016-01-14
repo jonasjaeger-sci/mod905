@@ -17,7 +17,7 @@ Folders:
 """
 from __future__ import absolute_import
 from .report import generate_report
-from pyretis.inout.common import _REPORTFILES
+from pyretis.inout.common import REPORTFILES
 
 
 def write_report(report, report_type, ext):
@@ -32,7 +32,7 @@ def write_report(report, report_type, ext):
     ext : string
         Extension for the file to write
     """
-    outfile = _REPORTFILES[report_type].format(ext)
+    outfile = REPORTFILES[report_type].format(ext)
     with open(outfile, 'wt') as report_fh:
         try:  # will work in python 3
             report_fh.write(report)
