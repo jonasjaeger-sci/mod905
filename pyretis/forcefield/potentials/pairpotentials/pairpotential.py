@@ -148,11 +148,6 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
     out[2] : float
         The mixed ``rcut_ij`` parameter.
     """
-    if mixing not in ('geometric', 'arithmetic', 'sixthpower'):
-        epsilon_ij = 0.0
-        sigma_ij = 0.0
-        rcut_ij = 0.0
-        logger.warning('No mixing requested. Cross interactions set to zero')
     if mixing == 'geometric':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)
         sigma_ij = np.sqrt(sigma_i * sigma_j)
@@ -170,4 +165,9 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j) * si3 * sj3 / avgs6
         sigma_ij = avgs6**(1.0 / 6.0)
         rcut_ij = (0.5 * (rcut_i**6 + rcut_j**6))**(1.0 / 6.0)
+    else:
+        epsilon_ij = 0.0
+        sigma_ij = 0.0
+        rcut_ij = 0.0
+        logger.warning('No mixing requested. Cross interactions set to 0')
     return epsilon_ij, sigma_ij, rcut_ij
