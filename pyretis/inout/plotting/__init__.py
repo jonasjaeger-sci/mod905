@@ -64,7 +64,7 @@ def create_plotter(plot_settings):
 
     Parameters
     ----------
-    settings : dict
+    plot_settings : dict
         These are the settings to create the plotter from. Here, we
         look for the keys `plotter`, `output` and `style` which defines
         the plotter to use, the output format and the style to use.
