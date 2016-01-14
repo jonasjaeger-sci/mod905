@@ -945,9 +945,9 @@ def mpl_plot_flux(results):
         # Plot error results:
         errflux = results['errflux'][i]
         title = r'Block error: {0}: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
-        series = [{'type': 'xy', 'x': errflux[0], 'y': errflux[3]}]
-        series.append({'type': 'hline', 'y': errflux[4],
-                       'ls': '--', 'alpha': 0.8})
+        series = [{'type': 'xy', 'x': errflux[0], 'y': errflux[3]},
+                  {'type': 'hline', 'y': errflux[4], 'ls': '--',
+                   'alpha': 0.8}]
         figset = {'xlabel': 'Block length',
                   'ylabel': 'Estimated error',
                   'title': title.format(i + 1, errflux[4], errflux[6])}
