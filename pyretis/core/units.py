@@ -884,11 +884,10 @@ if __name__ == '__main__':
     # To make use of this example, just comment out the line where the
     # units are read above.
     # First, we just generate conversions between the bases:
-    NEW_UNITS = {}
-    NEW_UNITS['pyretis'] = {'length': (10, 'A'),
-                            'energy': (1000, 'J/mol'),
-                            'mass': (1.0, 'g/mol'),
-                            'charge': 'e'}
+    NEW_UNITS = {'pyretis': {'length': (10, 'A'),
+                             'energy': (1000, 'J/mol'),
+                             'mass': (1.0, 'g/mol'),
+                             'charge': 'e'}}
     for uni in NEW_UNITS:
         create_conversion_factors(uni, length=NEW_UNITS[uni]['length'],
                                   energy=NEW_UNITS[uni]['energy'],

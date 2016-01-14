@@ -66,8 +66,8 @@ class System(object):
         possibly have a more general temperature object.
         """
         self.units = units
-        self.temperature = {'set': temperature, 'dof': None}
-        self.temperature['beta'] = self.calculate_beta()
+        self.temperature = {'set': temperature, 'dof': None,
+                            'beta': self.calculate_beta()}
         self.box = box
         self._adjust_dof_according_to_box()
         # initialize other variables:
@@ -334,12 +334,11 @@ class System(object):
             particles and/or box. Default values are taken from `self.box` or
             `self.particles`.
         """
-        args = {}
-        args['pos'] = kwargs.get('pos', self.particles.pos)
-        args['name'] = kwargs.get('name', self.particles.name)
-        args['ptype'] = kwargs.get('ptype', self.particles.ptype)
-        args['particles'] = kwargs.get('particles', self.particles)
-        args['box'] = kwargs.get('box', self.box)
+        args = {'pos': kwargs.get('pos', self.particles.pos),
+                'name': kwargs.get('name', self.particles.name),
+                'ptype': kwargs.get('ptype', self.particles.ptype),
+                'particles': kwargs.get('particles', self.particles),
+                'box': kwargs.get('box', self.box)}
         # Here we allow for **args when calling the force field. This is
         # simply because we do not know what parameters we should
         # pass into the force field.
