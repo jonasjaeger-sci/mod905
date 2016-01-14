@@ -282,12 +282,12 @@ class Langevin(Integrator):
     Attributes
     ----------
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        This is the class that handles generation of random numbers
+        This is the class that handles generation of random numbers.
     gamma : float
-        The friction parameter
+        The friction parameter.
     high_friction : boolean
         Determines if we are in the high_friction limit and should
-        do the over damped version
+        do the over-damped version.
     init_params : boolean
         If true, we will initiate parameters for the Langevin integrator when
         integrate_step is invoked.
@@ -322,12 +322,12 @@ class Langevin(Integrator):
           equal to the shape of the masses.
         * `b1` : numpy.array
           Corresponds to ``(c1-c2)*dt/mass`` in the equation above.
-          Here we also divide by the masses, resulting in a numpy.array
+          Here we also divide by the masses, resulting in a numpy.array.
         * `b2` : numpy.array
           Corresponds to ``c2*dt/mass`` in the equation above.
-          Here we also divide by the masses, resulting in a numpy.array
+          Here we also divide by the masses, resulting in a numpy.array.
         * `mean` : numpy.array (2,)
-          The means for the bivariate Gaussian distribution
+          The means for the bivariate Gaussian distribution.
         * `cov` : numpy.array (2,2)
           This array contains the covariance for the bivariate Gaussian
           distribution. `param_iner['mean']` and `param_iner['cov']` are
@@ -363,12 +363,11 @@ class Langevin(Integrator):
         seed : integer, optional.
             A seed which can be used if a `RandomGenerator` is to be created
             here.
+        high_friction : boolean
+            Determines if we are in the high_friction limit and should
+            do the over-damped version.
         desc : string
             Description of the integrator.
-        param_high : dict
-            Parameters for the high friction limit.
-        param_iner : dict
-            Parameters for the non-high friction limit.
         """
         super(Langevin, self).__init__(delta_t, desc=desc,
                                        dynamics='stochastic')

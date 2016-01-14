@@ -243,8 +243,6 @@ def _table_path(path_ensembles, results, fmt='rst'):
     ----------
     path_ensembles : list of strings
         These are the path ensembles we have analyzed.
-    interfaces : list of lists
-        `interfaces[i]` are the interfaces used for `path_ensembles[i]`.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional

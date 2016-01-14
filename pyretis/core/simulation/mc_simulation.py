@@ -82,13 +82,15 @@ class UmbrellaWindowSimulation(Simulation):
             The position we have to cross before the simulation is done.
         rgen : object like `pyretis.core.random_gen.RandomGenerator`
             Object to use for random number generation.
-        cycle : int, optional.
-            The current simulation cycle.
-        maxcycle : int, optional.
+        maxdx : float
+            Defines the maximum movement allowed in the Monte Carlo moves.
+        mincycle : int, optional.
             The *MINIMUM* number of cycles to perform. Note that in the
             base `Simulation` class this is the *MAXIMUM* number of
             cycles to perform. The meaning is redefined by redefining
             the `self.simulation_finished` function.
+        startcycle : int, optional.
+            The current simulation cycle, i.e. where we start.
         """
         super(UmbrellaWindowSimulation, self).__init__(endcycle=mincycle,
                                                        startcycle=startcycle)

@@ -200,7 +200,7 @@ class TxtTable(object):
     headers : list of strings
         These can be used as headers for the table. If they are
         not given, the strings in variables will be used.
-    header : string
+    headers : string
         This is the formatted header for the table.
     width : int or iterable
         This defines the maximum width of one cell.
