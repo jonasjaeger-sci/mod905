@@ -91,9 +91,8 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         dictionary. This dict can be used further for plotting or for
         generating reports.
     """
-    results = {}
-    results['flux'] = analyse_flux(crossdata, analysis_settings,
-                                   simulation_settings)
-    results['energy'] = analyse_energies(energydata, analysis_settings)
-    results['order'] = analyse_orderp(orderdata, analysis_settings)
+    results = {'flux': analyse_flux(crossdata, analysis_settings,
+                                    simulation_settings),
+               'energy': analyse_energies(energydata, analysis_settings),
+               'order': analyse_orderp(orderdata, analysis_settings)}
     return results

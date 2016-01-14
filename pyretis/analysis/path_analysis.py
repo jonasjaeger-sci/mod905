@@ -592,9 +592,8 @@ def match_probabilities(path_results, detect):
         These are results for the over-all probability and error
         and also some over-all TIS efficiencies.
     """
-    results = {}
-    results['matched-prob'] = []
-    results['overall-prob'] = [[], []]
+    results = {'matched-prob': [],
+               'overall-prob': [[], []]}
     accprob = 1.0
     accprob_err = 0.0
     prob_simtime = 0.0
