@@ -461,10 +461,9 @@ class Path(object):
         interfaces : list
             These are just the interfaces we are currently considering.
         """
-        path_info = {}
-        path_info['generated'] = self.generated
-        path_info['status'] = status
-        path_info['length'] = len(self.path)
+        path_info = {'generated': self.generated,
+                     'status': status,
+                     'length': len(self.path)}
 
         if self.ordermax is not None:
             path_info['ordermax'] = tuple(self.ordermax)
