@@ -102,7 +102,7 @@ def run_md_flux_files(analysis_settings, simulation_settings, raw_files,
         the keys `flux`, `order` and `energy` with the file names to open.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : dict
+    txtout : dict
         If txt is different from None it is assumed to contain the format
         for the text files and backup settings.
     """
@@ -235,12 +235,12 @@ def check_output(function):
 
     Parameters
     ----------
-    func : function
+    function : A callable function
         The function to decorate
 
     Returns
     -------
-    out : function
+    out : A callable function
         The decorated function which will not run if we have not
         specified any outputs.
     """
