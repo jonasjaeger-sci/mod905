@@ -44,7 +44,7 @@ Length and shoots figures
 .. _tis-results:
 
 TIS results for ensemble: @{{ ensemble }}@
-===============================
+==========================================
 
 @{{ tables['interfaces'] }}@
 
