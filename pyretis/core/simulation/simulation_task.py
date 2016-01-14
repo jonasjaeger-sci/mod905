@@ -162,12 +162,6 @@ class SimulationTask(object):
         step : dict of ints
             Keys are 'step' (current cycle number), 'start' cycle number at
             start and 'stepno' the number of cycles we have performed so far.
-        args : list
-            These are the arguments to the function. Can be used to override
-            `self.args`.
-        kwargs : dict
-            These are keyword arguments to the function.
-            Can be used to override `self.kwargs`.
 
         Returns
         -------

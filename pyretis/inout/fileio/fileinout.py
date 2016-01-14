@@ -55,10 +55,10 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     is found. A special string (`block_label`) is assumed to identify the
     start of blocks.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     filename : string
-        This is the filename to open and read
+        This is the name/path of the file to open and read.
     line_parser : function, optional
         This is a function which knows how to translate a given line
         to a desired internal format. If not given, a simple float

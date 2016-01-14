@@ -110,11 +110,6 @@ class UmbrellaWindowSimulation(Simulation):
         cycle is larger than maxcycle and all particles have
         crossed self.overlap.
 
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            Used to check if current position(s) satisfy the ending criterion.
-
         Returns
         -------
         out : boolean

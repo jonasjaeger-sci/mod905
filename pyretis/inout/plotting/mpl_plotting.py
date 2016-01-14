@@ -10,7 +10,9 @@ Important classes and functions defined here:
 
 - mpl_set_style: A function for setting the style for the plots, typically
   used here to load the *pyretis style*.
+
 """
+# TODO: See if the plotting functions mpl_* can be moved into the object.
 import os
 import logging
 import numpy as np
@@ -126,7 +128,16 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def plot_flux(self, results):
-        """Function to plot flux using `mpl_plot_flux`."""
+        """Function to plot flux results using `mpl_plot_flux`.
+
+        The parameters for this method is described in `mpl_plot_flux`.
+
+        Returns
+        -------
+        outputfile : dict
+            A dict containing the files created for the flux and for
+            the error in the flux.
+        """
         canvas_run, canvas_err = mpl_plot_flux(results)
         # Restructure output files for reporting
         outputfiles = []
@@ -140,22 +151,54 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def plot_energy(self, results, energies, sim_settings=None):
-        """Function to plot energy results using `mpl_plot_energy`."""
+        """Function to plot energy results using `mpl_plot_energy`.
+
+        The parameters for this method is described in `mpl_plot_energy`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+        """
         canvas = mpl_plot_energy(results, energies, sim_settings=sim_settings)
         return self._print_figures_to_file(canvas)
 
     def plot_orderp(self, results, orderdata):
-        """Function to plot order parameter using `mpl_plot_orderp`."""
+        """Function to plot order parameter using `mpl_plot_orderp`.
+
+        The parameters for this method is described in `mpl_plot_orderp`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+        """
         canvas = mpl_plot_orderp(results, orderdata)
         return self._print_figures_to_file(canvas)
 
     def plot_path(self, path_ensemble, results, idetect):
-        """Function to plot path results using `mpl_plot_path`."""
+        """Function to plot path results using `mpl_plot_path`.
+
+        The parameters for this method is described in `mpl_plot_path`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+        """
         canvas = mpl_plot_path(path_ensemble, results, idetect)
         return self._print_figures_to_file(canvas)
 
     def plot_total_probability(self, path_ensembles, detect, matched):
-        """Function to plot matched probabilities with `mpl_plot_matched`."""
+        """Function to plot matched probabilities with `mpl_plot_matched`
+
+        The parameters for this method is described in `mpl_plot_matched`.
+
+        Returns
+        -------
+        out : dict
+            This dict contains the files created by the plotting.
+        """
         canvas = mpl_plot_matched(path_ensembles, detect, matched)
         return self._print_figures_to_file(canvas)
 
@@ -441,6 +484,9 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
         Where to do the plotting.
     series : dict
         Represents the data to be plotted.
+    chunksize : int
+        This is the maximum size (number of points) we will try to plot in
+        one go.
 
     Returns
     -------

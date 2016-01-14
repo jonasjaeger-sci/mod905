@@ -31,7 +31,15 @@ class Plotter(object):
     """
 
     def __init__(self, backup=True, plotter_type=None):
-        """Initiate the plotting object."""
+        """Initiate the plotting object.
+
+        Parameters
+        ----------
+        backup : boolean
+            Determines if we overwrite old files or not.
+        plotter_type : string
+            A name for the plotter.
+        """
         self.plotter_type = plotter_type
         if backup in (True, 'yes', 'True'):
             self.backup = True

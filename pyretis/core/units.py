@@ -750,7 +750,7 @@ def write_conversions(filename='units.txt'):
                 fileh.write(out.encode('utf-8'))
 
 
-def read_conversions(filename='units.txt', units=None):
+def read_conversions(filename='units.txt', select_units=None):
     """Load conversion factors from a file.
 
     This will load unit conversions from a file.
@@ -759,14 +759,15 @@ def read_conversions(filename='units.txt', units=None):
     ----------
     filename : string, optional
         The file to load units from.
+    select_units : string, optional
+        If `select_units` is different from None, it can be used to pick out
+        only conversions for a specific system of units, e.g. 'real' or
+        'gromacs', ... etc.
 
     Returns
     -------
     out : dict
         A dictionary with the conversions.
-    units : string, optional
-        If `select` is different from None, it can be used to pick out only
-        conversions for a specific system of units, e.g. real or gromacs etc.
     """
     convert = {}
     with open(filename, 'r') as fileh:
@@ -783,10 +784,10 @@ def read_conversions(filename='units.txt', units=None):
                 continue
             if dim not in convert:
                 convert[dim] = {}
-            if not units:
+            if not select_units:
                 convert[dim][unit1, unit2] = conv
             else:
-                if units in (unit1, unit2):
+                if select_units in (unit1, unit2):
                     convert[dim][unit1, unit2] = conv
     return convert
 
@@ -854,6 +855,8 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
     mass : tuple, optional
         This is the mass unit given as (float, string) where the float is
         the numerical value and the string the unit, e.g. `(1.0, g/mol)`.
+    charge_unit : string
+        This is the unit of charge given as a string, e.g. 'e' or 'C'.
 
     Returns
     -------

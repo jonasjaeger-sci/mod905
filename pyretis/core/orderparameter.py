@@ -388,6 +388,7 @@ class StringFunctionParser(object):
         string_function : string, optional
             This is the string that defines the function we wish to use.
         """
+        self.exprstack = []
         self.pars = self._initiate_parser()
 
         self.operators = {'+': operator.add,
@@ -510,9 +511,6 @@ class StringFunctionParser(object):
         ----------
         stack : list
             This is the list of operations/expressions to execute
-        system : object like `System` from `pyretis.core.system`
-            The system object is used to access particles and
-            also the box.
         """
         oper = stack.pop()
         result = 0.0
@@ -538,7 +536,13 @@ class StringFunctionParser(object):
         return result
 
     def parse_function(self, string_function):
-        """Parse the string and set up the expression stack."""
+        """Parse the string and set up the expression stack.
+
+        Parameters
+        ----------
+        string_function : string, optional
+            This is the string that defines the function we wish to use.
+        """
         self.exprstack = []
         self.pars.parseString(string_function, True)
         self.string_function = string_function

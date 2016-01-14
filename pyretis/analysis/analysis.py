@@ -71,15 +71,15 @@ def block_error(data, maxblock=None, blockskip=1):
     ----------
     data : numpy.array (or iterable with data points)
         The data to analyse.
-    maxblock : int
-        Can be used to set the max length of the blocks to consider.
-        Note that the maxbloc will never be set longer than half
+    maxblock : int, optional
+        Can be used to set the maximum length of the blocks to consider.
+        Note that the `maxbloc` will never be set longer than half
         the length in data.
-    blockskip : int
+    blockskip : int, optional
         This can be used to skip certain block lengths, i.e.
-        blockskip = 1 will consider all blocks up to maxblock, while
-        blockskip = n will consider every n'th block up to maxblock. That
-        is it will use block lengths equal to 1, 1+n, 1+n+n, etc.
+        `blockskip = 1` will consider all blocks up to `maxblock`, while
+        `blockskip = n` will consider every n'th block up to `maxblock`, i.e.
+        it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`, etc.
 
     Returns
     -------
@@ -133,18 +133,20 @@ def block_error(data, maxblock=None, blockskip=1):
     return blocklen, block_avg, block_err, block_err_avg
 
 
-def block_error_corr(data, maxblock=5000, blockskip=1):
+def block_error_corr(data, maxblock=None, blockskip=1):
     """Run block error analysis, obtain relative errors & correlation length.
 
     Parameters
     ----------
     data : numpy.array
         Data to analyse.
-    maxblock : int
+    maxblock : int, optional
         The maximum block length to consider.
-    blockskip = int
-        Interval between blocks. Blocks are created as 1, 1+blockskip, ...
-        up to maxblock.
+    blockskip : int, optional
+        This can be used to skip certain block lengths, i.e.
+        `blockskip = 1` will consider all blocks up to `maxblock`, while
+        `blockskip = n` will consider every n'th block up to `maxblock`, i.e.
+        it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`, etc.
 
     Returns
     -------

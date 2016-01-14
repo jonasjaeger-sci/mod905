@@ -61,6 +61,9 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
         to access the beta factor.
     dke : float
         The change in kinetic energy.
+    aimless : boolean
+        This variable can be used to override the acceptance rule and if it's
+        True, all changes will be accepted.
 
     Returns
     -------

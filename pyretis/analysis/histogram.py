@@ -33,6 +33,8 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
         The max/min values to consider.
     density : boolean
         If True the histogram will be normalized.
+    weights : numpy.array
+        Weighting factors for data.
 
     Returns
     -------

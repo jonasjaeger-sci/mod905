@@ -69,10 +69,6 @@ def get_file_object(file_type, file_name):
         The desired file type
     file_name : string
         The file to open
-    ensemble : string
-        In case we are opening a path ensemble, we can specify the which one.
-    interfaces : list of floats
-        In case we are opening a path ensemble we can specify the interfaces
 
     Returns
     -------

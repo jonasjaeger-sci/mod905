@@ -134,6 +134,14 @@ class Particles(object):
         The function is included here for convenience - it can be used together
         with `self.get_phase_point()` for easy change of the particle state.
 
+        Parameters
+        ----------
+        phasepoint : dict
+            This dict contains the phase point we wish to set.
+            It contains the positions in the key `'pos'` and the velocities
+            in the key `'vel'`. It may optionally include the forces in
+            the key `'forces'`.
+
         Returns
         -------
         out : None

@@ -332,6 +332,12 @@ def txt_matched_probability(path_ensembles, detect, matched,
         This dict contains the results from the matching of the probabilities.
         We make use of `matched['overall-prob']` and `matched['matched-prob']`
         here.
+    out_fmt : string
+        Determines the output format for the text file. If 'gz' is used, a
+        gzipp'ed file will be written.
+    backup : boolean
+        If `backup` is False, we will overwrite files, otherwise we will
+        backup.
 
     Returns
     -------

@@ -295,6 +295,8 @@ class Path(object):
             `orderp[0]` is the actual order parameter used in path sampling
             methods while `orderp[1:]` can represent other order parameters
             for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+        energy : numpy.array
+            The energies associated with the pase point `pos` and `vel`.
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             self.path.append([np.copy(pos), np.copy(vel), orderp, energy])

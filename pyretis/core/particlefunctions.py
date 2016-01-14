@@ -361,8 +361,8 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
 
     Parameters
     ----------
-    particles : object like `Particles` from `pyretis.core.particles`
-        This object represent the particles.
+    system : object like `System` from `pyretis.core.system`.
+        This object is used to access the particles and the box.
     dof : list of floats
         `dof` is the degrees of freedom, typically provided with
         a `system.temperature['dof']`.
@@ -370,7 +370,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
         The dimensionality of, typically provided with a `system.get_dim()`.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
-        be obtained by a `box.calculate_volume()`.
+        be obtained by a `system.box.calculate_volume()`.
     vpot : float
         The potential energy of the particles. It can typically be obtained
         by from `system.v_pot`.
