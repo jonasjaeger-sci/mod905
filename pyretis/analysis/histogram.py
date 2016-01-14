@@ -114,7 +114,7 @@ def histogram_and_avg(data, bins, density=True):
     hist, _, bin_mid = histogram(data, bins=bins,
                                  limits=(data.min(), data.max()),
                                  density=density)
-    return (hist, bin_mid, (data.mean(), data.std()))
+    return hist, bin_mid, (data.mean(), data.std())
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):

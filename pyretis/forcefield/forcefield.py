@@ -101,8 +101,9 @@ class ForceField(object):
 
         Returns
         -------
-        out : None
-            Returns `None` and updates `self.potential` and `self.params`.
+        out : None or tuple
+            Returns `None` if not potential was removed, otherwise it
+            will return the removed potential and it's parameters.
         """
         if potential in self.potential:
             idx = self.potential.index(potential)
@@ -111,7 +112,7 @@ class ForceField(object):
             self.arguments['force'].pop(idx)
             self.arguments['pot'].pop(idx)
             self.arguments['pot-and-force'].pop(idx)
-            return (potrm, paramrm)
+            return potrm, paramrm
         else:
             logger.warning('Potential not found in the force field functions')
             return None

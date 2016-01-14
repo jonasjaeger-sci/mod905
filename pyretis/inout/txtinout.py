@@ -178,7 +178,7 @@ def create_and_format_row(row, width, header=False, spacing=1, fmt_str=None):
                     fmt[-1] = '{{:> {}}}'.format(wid)
             rowi = fmt[-1].format(col)
             row_str.append(rowi)
-        str_white = (' ') * spacing
+        str_white = ' ' * spacing
         return str_white.join(fmt), str_white.join(row_str)
     else:
         row_str = fmt_str.format(*row)

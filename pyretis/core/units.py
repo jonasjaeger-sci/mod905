@@ -687,8 +687,8 @@ def print_table(unit, system=False):
     """
     row_fmt = '  | {:10s} | {:16.8e} | {:16.8e} |'
     row_head = '  | {:10s} | {:16s} | {:16s} |'
-    row_line = ''.join(['+-', ('-')*10, '-+-', ('-')*16, '-+-',
-                        ('-')*16, '-+'])
+    row_line = ''.join(['+-', '-' * 10, '-+-', '-' * 16, '-+-',
+                        '-' * 16, '-+'])
     row_line = '  {}'.format(row_line)
     if system:
         title = 'Conversions for {} to other systems'.format(unit)
