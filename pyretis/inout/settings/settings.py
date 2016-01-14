@@ -14,7 +14,7 @@ logger.addHandler(logging.NullHandler())
 
 
 
-__all__ = ['parse_settings_file', 'parse_setting',
+__all__ = ['parse_settings_file',
            'look_for_keyword', 'write_settings_file']
 
 
@@ -22,7 +22,10 @@ KNOWN_KEYWORDS = {'integrator': {'type': 'dict'},
                   'orderparameter': {'type': 'dict'},
                   'endcycle': {'type': 'number'},
                   'task': {'type': 'string'},
-                  'units': {'type': 'dict'},
+                  'units': {'type': 'dict',
+                            'sub-types': {'mass': ['number', 'string'],
+                                          'length': ['number', 'string'],
+                                          'energy': ['number', 'string']}},
                   'ensemble': 'string',
                   'interfaces': {'type': 'list'},
                   'output-dir': {'type': 'string'},
@@ -72,19 +75,46 @@ def look_for_keyword(line):
         return None, None, False
 
 
-def parse_setting(setting, keyword):
-    """Parse one setting to python usable stuff.
-
-    The setting for keywords are on the form:
-
-    keyword setting, optional1 10, optional2, 100, optional3 1000
+def parse_primitive(text):
+    """Parse text to python using the ast module
 
     Parameters
     ----------
-    setting : string
-        The setting to parse.
-    keyword : string
-        The keyword for which we are parsing a setting.
+    text : string
+        The text to parse.
+
+    Returns
+    -------
+    out[0] : string, dict, list, boolean, etc.
+        The parsed text.
+    out[1] : boolean
+        True if we managed to parse the text, False otherwise.
+    """
+    parsed = None
+    success = False
+    try:
+        parsed = ast.literal_eval(text)
+        success = True
+    except SyntaxError:
+        parsed = text
+        success = True
+    except ValueError:
+        parsed = text
+        success = True
+    return parsed, success
+
+
+def parse_type(key_type, str_setting, keyword=None):
+    """Parse a specific setting based on type.
+
+    Parameters
+    ----------
+    key_type : string
+        Identifies the type for the setting to parse.
+    str_setting : string
+        The actual string to parse with the keyword *REMOVED*.
+    keyword : string, optional
+        The current keyword for which we are parsing.
 
     Returns
     -------
@@ -95,47 +125,32 @@ def parse_setting(setting, keyword):
     """
     parsed = None
     success = False
-
-    try:
-        str_setting = setting.split(' ', 1)[1].strip()
-    except IndexError:
-        return None, False
-
-    key_type = KNOWN_KEYWORDS[keyword].get('type', '')
-
-    if key_type == 'string':
-        parsed = str_setting
-        success = True
-    elif key_type == 'number':
-        try:
-            parsed = ast.literal_eval(str_setting)
-            success = True
-        except SyntaxError:
-            success = False
+    if key_type in {'string', 'number', 'boolean', 'list'}:
+        parsed, success = parse_primitive(str_setting)
+    #elif key_type == 'list':
+    #    parsed, success = parse_primitive('[{}]'.format(str_setting))
     elif key_type == 'dict':
         parsed = {}
+        sub_types = KNOWN_KEYWORDS[keyword].get('sub-types', [])
         for opti in str_setting.split(','):
             key, _, val = opti.strip().partition(' ')
             key = key.strip().lower()
-            if len(key) < 1:
-                continue
             val = val.strip()
-            if len(val) < 1:
+            if len(key) < 1 or len(val) < 1:
                 msg = 'Ignoring empty value: {} = {}'.format(key, val)
                 logger.warning(msg)
-            try:
-                parsed[key] = ast.literal_eval(val)
-            except SyntaxError:
-                parsed[key] = val
-            except ValueError:
-                parsed[key] = val
+                continue
+            if key in sub_types:
+                parsed[key] = []
+                for vali in val.split():
+                    parsi, successi = parse_primitive(vali)
+                    if successi:
+                        parsed[key].append(parsi)
+                    else:
+                        parsed[key].append(None)
+            else:
+                parsed[key], success = parse_primitive(val)
         success = True
-    elif key_type == 'list':
-        try:
-            parsed = ast.literal_eval('[{}]'.format(str_setting))
-            success = True
-        except SyntaxError:
-            success = False
     return parsed, success
 
 
@@ -213,7 +228,12 @@ def parse_and_add(text, keyword, settings):
     -------
     N/A but updates the input dictionary `settings`.
     """
-    parsed, success = parse_setting(text, keyword)
+    try:
+        str_setting = text.split(' ', 1)[1].strip()
+    except IndexError:
+        return None, False
+    key_type = KNOWN_KEYWORDS[keyword]['type']
+    parsed, success = parse_type(key_type, str_setting, keyword)
     if success:
         append = KNOWN_KEYWORDS[keyword].get('append', False)
         if append:  # maybe to be removed?
