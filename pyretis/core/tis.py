@@ -489,6 +489,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     """
     # first we search for crossing with the middle interface
     # this is done by sequentially kicking the initial phase point
+    previous = None
     particles = system.particles
     curr = order_function(system)[0]
     while True:
@@ -607,6 +608,7 @@ def propagate(system, interfaces, order_function, integrator,
         Human representation of the result.
     """
     # first we store the initial pos, vel and forces for the system:
+    success = False
     initial_system = system.particles.get_phase_point()
     left, _, right = interfaces
     if path is None:
