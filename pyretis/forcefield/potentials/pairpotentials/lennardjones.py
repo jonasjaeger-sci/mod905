@@ -74,9 +74,6 @@ class PairLennardJonesCut(PotentialFunction):
             The dimensionality to use.
         shift : boolean
             Determines if the potential should be shifted or not.
-        factor : float
-            The factor determines the cut-off, this is given as sigma
-            times the factor.
         """
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
         self.shift = shift
