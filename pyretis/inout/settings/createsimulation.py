@@ -36,13 +36,12 @@ _KNOWN_SIMULATIONS = {'md-nve': 'md',
 
 
 # Define required settings for known simulations:
-_REQUIRED = {}
-_REQUIRED['umbrellawindow'] = ['umbrella', 'over', 'rgen', 'seed',
-                               'maxdx', 'mincycle']
-_REQUIRED['md-nve'] = ['endcycle', 'integrator']
-_REQUIRED['md-flux'] = ['endcycle', 'integrator', 'interfaces',
-                        'orderparameter']
-_REQUIRED['tis'] = ['endcycle', 'tis', 'integrator', 'interfaces']
+_REQUIRED = {'umbrellawindow': ['umbrella', 'over', 'rgen', 'seed',
+                                'maxdx', 'mincycle'],
+             'md-nve': ['endcycle', 'integrator'],
+             'md-flux': ['endcycle', 'integrator', 'interfaces',
+                         'orderparameter'],
+             'tis': ['endcycle', 'tis', 'integrator', 'interfaces']}
 
 
 def create_simulation(settings, system):
