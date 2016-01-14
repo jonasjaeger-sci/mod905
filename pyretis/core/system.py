@@ -66,8 +66,8 @@ class System(object):
         possibly have a more general temperature object.
         """
         self.units = units
-        self.temperature = {'set': temperature, 'dof': None,
-                            'beta': self.calculate_beta()}
+        self.temperature = {'set': temperature, 'dof': None}
+        self.temperature['beta'] = self.calculate_beta()
         self.box = box
         self._adjust_dof_according_to_box()
         # initialize other variables:
