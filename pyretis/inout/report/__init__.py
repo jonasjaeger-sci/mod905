@@ -20,12 +20,12 @@ from .report import generate_report
 from pyretis.inout.common import REPORTFILES
 
 
-def write_report(report, report_type, ext):
+def write_report(report_txt, report_type, ext):
     """Write a generated report to a given file.
 
     Parameters
     ----------
-    report : string
+    report_txt : string
         This is the generated report as a string
     report_type : string
         Identifier for the report we are writing
@@ -35,6 +35,6 @@ def write_report(report, report_type, ext):
     outfile = REPORTFILES[report_type].format(ext)
     with open(outfile, 'wt') as report_fh:
         try:  # will work in python 3
-            report_fh.write(report)
+            report_fh.write(report_txt)
         except UnicodeEncodeError:  # for python 2
-            report_fh.write(report.encode('utf-8'))
+            report_fh.write(report_txt.encode('utf-8'))
