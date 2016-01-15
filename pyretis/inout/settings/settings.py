@@ -16,7 +16,7 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['parse_settings_file', 'write_settings_file']
 
-
+KEYSPLIT = ';'
 KEYWORDS = {'integrator': {'type': 'dict'},
             'orderparameter': {'type': 'dict', 'sub-type': {'args'},
                                'special': {'args', 'class', 'module'}},
@@ -38,10 +38,12 @@ KEYWORDS = {'integrator': {'type': 'dict'},
             'particles-position': {'type': 'dict'},
             'particles-velocity': {'type': 'dict'},
             #a'output': 'many',
-            'potential-function': {'type': 'dict', 'append': True,
-                                   'special': {'args', 'class', 'module'}},
-            'potential-parameters': {'type': 'dict', 'append': True},
-            'forcefield': {'type': 'string'}}
+            'potentials': {'type': 'dict', 'append': True,
+                           'sub-type': {'args'},
+                           'special': {'args', 'class', 'module'}},
+            'potential-parameters': {'type': 'dict', 'append': True,
+                                     'special': {'potential'}},
+            'forcefield': {'type': 'dict'}}
 
 
 def look_for_keyword(line):
@@ -131,7 +133,7 @@ def parse_type(key_type, str_setting, keyword=None):
     elif key_type == 'dict':
         parsed = {}
         sub_types = KEYWORDS[keyword].get('sub-type', [])
-        for opti in str_setting.split(','):
+        for opti in str_setting.split(';'):
             key, _, val = opti.strip().partition(' ')
             key = key.strip().lower()
             val = val.strip()
@@ -175,8 +177,8 @@ def parse_settings_file(filename):
     to_parse = []
     with open(filename, 'r') as fileh:
         for lines in fileh:
-            to_read = lines.strip()
-            if to_read.startswith('#') or not to_read:
+            to_read, _, _ = lines.strip().partition('#')
+            if not to_read:
                 if current_keyword is not None:
                     parse_and_add(' '.join(to_parse), current_keyword,
                                   settings)
@@ -189,7 +191,7 @@ def parse_settings_file(filename):
                 if current_keyword is not None:
                     parse_and_add(' '.join(to_parse), current_keyword,
                                   settings)
-                keyword_split = to_read.endswith(',')
+                keyword_split = to_read.endswith(';')
                 to_parse = []
                 if not keyword_split:
                     # just parse this line
@@ -199,7 +201,7 @@ def parse_settings_file(filename):
                     current_keyword = keyword
             if keyword_split:
                 to_parse.append(to_read)
-                keyword_split = to_read.endswith(',')
+                keyword_split = to_read.endswith(';')
                 if not keyword_split:
                     # parse things
                     parse_and_add(' '.join(to_parse), current_keyword,
@@ -208,6 +210,7 @@ def parse_settings_file(filename):
                     to_parse = []
     if current_keyword is not None:
         parse_and_add(' '.join(to_parse), current_keyword, settings)
+    _convert_potential_parameters(settings)
     return settings
 
 
@@ -318,3 +321,32 @@ def _group_keyword_settings(setting, special=None):
     if len(kwargs) > 0:
         setting['kwargs'] = kwargs
 
+
+def _convert_potential_parameters(settings):
+    """Convert the potential parameters to the internal structure.
+
+    The potential parameters are a special case for the parameters, since it
+    matters for which potential they are defined, they need to be inserted at
+    the right place. This is handled by this function.
+
+    Parameters
+    ----------
+    settings : dict
+        The dictionary with all simulation settings
+
+    Returns
+    -------
+    None, but will update `settings['potential-parameters']`.
+    """
+    pot_params = [None for _ in settings['potentials']]
+    for param in settings['potential-parameters']:
+        potid = param['potential']
+        try:
+            if pot_params[potid] is None:
+                pot_params[potid] = {}
+            for key in param['kwargs']:
+                pot_params[potid][key] = param['kwargs'][key]
+        except IndexError:
+            msgtxt = 'Could not add parameters: {}'.format(param)
+            logger.warning(msgtxt)
+    settings['potential-parameters'] = pot_params
