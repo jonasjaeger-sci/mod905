@@ -7,25 +7,25 @@ import ast
 import logging
 import os
 import pprint
+import re
 #from pyretis.core.simulation.common import check_settings
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-
-__all__ = ['parse_settings_file',
-           'look_for_keyword', 'write_settings_file']
+__all__ = ['parse_settings_file', 'write_settings_file']
 
 
 KNOWN_KEYWORDS = {'integrator': {'type': 'dict'},
                   'orderparameter': {'type': 'dict'},
                   'endcycle': {'type': 'number'},
                   'task': {'type': 'string'},
-                  'units': {'type': 'dict',
-                            'sub-types': {'mass': ['number', 'string'],
-                                          'length': ['number', 'string'],
-                                          'energy': ['number', 'string']}},
+                  'units': {'type': 'string'},
+                  'units-base': {'type': 'dict',
+                                 'sub-types': {'mass',
+                                               'length',
+                                               'energy'}},
                   'ensemble': 'string',
                   'interfaces': {'type': 'list'},
                   'output-dir': {'type': 'string'},
@@ -64,13 +64,12 @@ def look_for_keyword(line):
     out[2] : boolean
         `True` if the keyword is one of the known keywords.
     """
-    try:
-        key = line.split()[0].strip()
-    except IndexError:
-        return None, None, False
-    keyword = key.lower()
-    if keyword in KNOWN_KEYWORDS:
-        return key, keyword, True
+
+    key = re.match(r':(.*?):', line)
+    if key:
+        keyword = key.group(1)
+        keywordl = keyword.strip().lower()
+        return keyword, keywordl, keywordl in KNOWN_KEYWORDS
     else:
         return None, None, False
 
