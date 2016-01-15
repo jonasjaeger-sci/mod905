@@ -4,54 +4,74 @@ Molecular dynamics example settings
 Simulation settings
 -------------------
 
-task md-nve
-units system lj
-units system lj, mass 39.6 g/mol, charge e, length 1.0 A
+:task: md-nve
 
-integrator name velocityverlet, timestep 0.002
+:units: lj
+:units-base: mass 39.6 g/mol; length 1.0 A; charge_unit e; energy 119.8 kB
 
-integrator timestep 0.002,
-           gamma 0.3,
-           high-friction True,
-           name Langevin
+:integrator: name velocityverlet; timestep 0.002
 
-endcycle 100
+:integrator: timestep 0.002;
+             gamma 0.3;
+             high-friction True;
+             name Langevin
 
-interfaces 1.0, 2.0, 3.0, 4.0,
-           6.0, 5.0, 8.0
+
+:endcycle: 100
+
+:interfaces: [1.0, 2.0, 3.0, 4.0,
+              6.0, 5.0, 8.0]
 
 
 System settings
 ---------------
 
-temperature 2.0
+:temperature: 2.0
 
-particles-position file initial.gro
+:particles-position: file initial.gro
 
-particles-velocity generate maxwell,
-                   temperature 2.0,
-                   momentum True, seed 0
+:particles-velocity: generate maxwell;
+                     set-temperature 2.0;
+                     momentum True, seed 0
 
-particle-mass Ar 1.0,
-              Kr 2.0,
-
+:particle-mass: Ar 1.0;
+                Kr 2.0
 
 Force field settings
 --------------------
 
-forcefield Lennard Jones test
+:forcefield: desc 'Lennard Jones test'
 
-potential-function name PairLennardJonesCutnp, shift True
+:potentials: class PairLennardJonesCutnp;
+             shift True
 
-potential-parameters Ar, sigma 1.0, epsilon 1.0, rcut 2.5
-potential-parameters Kr, sigma 1.0, epsilon 2.0, rcut 2.5
+:potential-parameters: potential 0;
+                       Ar {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5};
+                       Kr {'sigma': 1.0, 'epsilon': 1.1, 'rcut': 3.0};
+                       mixing arithmetic
 
-potential-function name Test, shift False, setting 10
+:potential-parameters: potential 0;
+                       Ne {'sigma': 1.0, 'epsilon': 2.0, 'rcut': 3.5}
+
+:potential-parameters: potential 1;
+                       rzero 1.0
+
+:potentials: class MyPotential;
+             module my_potential.py;
+             args 'par1' 10.0;
+             kw1 101;
+             kw2 102;
 
 
 Order parameter settings
 ------------------------
-orderparameter name OrderParameterPosition,
-               position 0,
-               dim x,
-               periodic False
+
+:orderparameter: class MyOrderParameter;
+                 module my_order_parameter.py;
+                 args position 0 2 4;
+                 stuff x, periodic False
+
+#:orderparameter: class OrderParameterPosition,
+#                 args position 1,
+#                 dim z,
+#                 periodic False
