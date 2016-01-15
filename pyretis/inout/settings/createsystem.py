@@ -147,7 +147,7 @@ def initial_positions_lattice(settings):
             particle_mass = pmass[particle_type]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_type,
-                                                 settings['unit-system'])
+                                                 settings['units'])
         particles.add_particle(pos,
                                np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=list_get(pname, i),
@@ -239,7 +239,7 @@ def initial_positions_file(settings):
     pmass = settings['particles'].get('mass', {})
 
     snapshot, convert = _get_snapshot_from_file(pos_settings,
-                                                settings['unit-system'])
+                                                settings['units'])
     vel_read = False
     particles = Particles(dim=ndim)
     for i, atomname in enumerate(snapshot['atomname']):
@@ -271,7 +271,7 @@ def initial_positions_file(settings):
             particle_mass = pmass[particle_type]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_type,
-                                                 settings['unit-system'])
+                                                 settings['units'])
         particles.add_particle(pos,
                                vel, np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
@@ -430,7 +430,7 @@ def create_system(settings):
     msg = 'Box created:\n{}'.format(box)
     logger.info(msg)
     system = System(temperature=settings.get('temperature', None),
-                    units=settings['unit-system'], box=box)
+                    units=settings['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
     vel_gen = create_velocities(system, settings, vel)

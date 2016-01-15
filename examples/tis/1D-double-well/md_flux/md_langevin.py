@@ -34,7 +34,7 @@ simulation_settings = {'task': 'md-flux',
                        'interfaces': [-0.9, -0.8, -0.7, -0.6, -0.5,
                                       -0.4, -0.3, 1.0],
                        'periodic_boundary': [False],
-                       'units': {'system': 'lj'},
+                       'units': 'lj',
                        'generate-vel': {'seed': 0, 'momentum': False,
                                         'distribution': 'maxwell'},
 
@@ -50,12 +50,11 @@ simulation_settings = {'task': 'md-flux',
 
 # set up simulation
 units = simulation_settings['units']
-simulation_settings['unit-system'] = units['system']
-create_conversion_factors(simulation_settings['unit-system'])
+create_conversion_factors(units)
 box = Box(periodic=simulation_settings['periodic_boundary'])
 print('\nCreated:', box)
 system = System(temperature=simulation_settings['temperature'],
-                units=simulation_settings['unit-system'],
+                units=simulation_settings['units'],
                 box=box)
 
 system.add_particle(name='A', pos=np.array([-1.0]))

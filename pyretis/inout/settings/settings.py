@@ -22,9 +22,10 @@ KEYWORDS = {'integrator': {'type': 'dict'},
                                'special': {'args', 'class', 'module'}},
             'endcycle': {'type': 'number'},
             'task': {'type': 'string'},
-            'units': {'type': 'string'},
+            'units': {'type': 'string', 'default': 'lj'},
             'units-base': {'type': 'dict',
-                           'sub-type': {'mass', 'length', 'energy'}},
+                           'sub-type': {'mass', 'length', 'energy'},
+                           'default': {}},
             'ensemble': 'string',
             'interfaces': {'type': 'list'},
             'output-dir': {'type': 'string'},
@@ -211,6 +212,7 @@ def parse_settings_file(filename):
     if current_keyword is not None:
         parse_and_add(' '.join(to_parse), current_keyword, settings)
     _convert_potential_parameters(settings)
+    add_default_settings(settings)
     return settings
 
 
@@ -350,3 +352,20 @@ def _convert_potential_parameters(settings):
             msgtxt = 'Could not add parameters: {}'.format(param)
             logger.warning(msgtxt)
     settings['potential-parameters'] = pot_params
+
+
+def add_default_settings(settings):
+    """Method that will add default values to the settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The current settings.
+
+    Returns
+    -------
+    None, but will update `settings` with default values.
+    """
+    for key in KEYWORDS:
+        if 'default' in KEYWORDS[key] and key not in settings:
+            settings[key] = KEYWORDS[key]['default']
