@@ -17,38 +17,38 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['parse_settings_file', 'write_settings_file']
 
 
-KNOWN_KEYWORDS = {'integrator': {'type': 'dict'},
-                  'orderparameter': {'type': 'dict'},
-                  'endcycle': {'type': 'number'},
-                  'task': {'type': 'string'},
-                  'units': {'type': 'string'},
-                  'units-base': {'type': 'dict',
-                                 'sub-types': {'mass',
-                                               'length',
-                                               'energy'}},
-                  'ensemble': 'string',
-                  'interfaces': {'type': 'list'},
-                  'output-dir': {'type': 'string'},
-                  'box': {'type': 'dict'},
-                  'particle-position': {'type': 'dict'},
-                  'particle-velocity': {'type': 'dict'},
-                  'particle-mass': {'type': 'dict'},
-                  'dimensions': {'type': 'number'},
-                  'temperature': {'type': 'number'},
-                  'tis': {'type': 'dict'},
-                  'particles-position': {'type': 'dict'},
-                  'particles-velocity': {'type': 'dict'},
-                  #a'output': 'many',
-                  'potential-function': {'type': 'dict', 'append': True},
-                  'potential-parameters': {'type': 'dict', 'append': True},
-                  'forcefield': {'type': 'string'}}
+KEYWORDS = {'integrator': {'type': 'dict'},
+            'orderparameter': {'type': 'dict', 'sub-type': {'args'},
+                               'special': {'args', 'class', 'module'}},
+            'endcycle': {'type': 'number'},
+            'task': {'type': 'string'},
+            'units': {'type': 'string'},
+            'units-base': {'type': 'dict',
+                           'sub-type': {'mass', 'length', 'energy'}},
+            'ensemble': 'string',
+            'interfaces': {'type': 'list'},
+            'output-dir': {'type': 'string'},
+            'box': {'type': 'dict'},
+            'particle-position': {'type': 'dict'},
+            'particle-velocity': {'type': 'dict'},
+            'particle-mass': {'type': 'dict'},
+            'dimensions': {'type': 'number'},
+            'temperature': {'type': 'number'},
+            'tis': {'type': 'dict'},
+            'particles-position': {'type': 'dict'},
+            'particles-velocity': {'type': 'dict'},
+            #a'output': 'many',
+            'potential-function': {'type': 'dict', 'append': True,
+                                   'special': {'args', 'class', 'module'}},
+            'potential-parameters': {'type': 'dict', 'append': True},
+            'forcefield': {'type': 'string'}}
 
 
 def look_for_keyword(line):
     """Function to look for a keyword in a string.
 
     A string is assumed to define a keyword if the keyword appears as
-    the first word in the string.
+    the first word in the string, enclosed in ':'.
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def look_for_keyword(line):
     if key:
         keyword = key.group(1)
         keywordl = keyword.strip().lower()
-        return keyword, keywordl, keywordl in KNOWN_KEYWORDS
+        return keyword, keywordl, keywordl in KEYWORDS
     else:
         return None, None, False
 
@@ -130,7 +130,7 @@ def parse_type(key_type, str_setting, keyword=None):
     #    parsed, success = parse_primitive('[{}]'.format(str_setting))
     elif key_type == 'dict':
         parsed = {}
-        sub_types = KNOWN_KEYWORDS[keyword].get('sub-types', [])
+        sub_types = KEYWORDS[keyword].get('sub-type', [])
         for opti in str_setting.split(','):
             key, _, val = opti.strip().partition(' ')
             key = key.strip().lower()
@@ -231,10 +231,13 @@ def parse_and_add(text, keyword, settings):
         str_setting = text.split(' ', 1)[1].strip()
     except IndexError:
         return None, False
-    key_type = KNOWN_KEYWORDS[keyword]['type']
+    key_type = KEYWORDS[keyword]['type']
     parsed, success = parse_type(key_type, str_setting, keyword)
+    special = KEYWORDS[keyword].get('special', None)
+    if special is not None:
+        _group_keyword_settings(parsed, special=special)
     if success:
-        append = KNOWN_KEYWORDS[keyword].get('append', False)
+        append = KEYWORDS[keyword].get('append', False)
         if append:  # maybe to be removed?
             try:
                 settings[keyword].append(parsed)
@@ -283,3 +286,35 @@ def write_settings_file(settings, outfile, path=None):
             pretty = pretty.replace('\n', '\n' + ' ' * leng)
             dump = '{} = {}\n'.format(key, pretty)
             fileh.write(dump)
+
+
+def _group_keyword_settings(setting, special=None):
+    """Group keyword settings into a 'kwargs' key.
+
+    This method will take in a setting as a dict and grop keys into
+    a kwargs key. The keys which are given in the input special is ignored.
+
+    Parameters
+    ----------
+    setting : dict
+        The setting for which we want to group keyword arguments.
+    special : dict/set
+        The keys we will not include in the grouping.
+
+    Returns
+    -------
+    None but alters the input setting.
+    """
+    if special is None:
+        special = {}
+    to_pop = []
+    kwargs = {}
+    for key in setting:
+        if key not in special:
+            to_pop.append(key)
+    for key in to_pop:
+        val = setting.pop(key)
+        kwargs[key] = val
+    if len(kwargs) > 0:
+        setting['kwargs'] = kwargs
+
