@@ -19,7 +19,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_initial_positions', 'create_system', 'create_velocities',
-           'get_box', 'initial_positions_file', 'initial_positions_lattice']
+           'create_box', 'initial_positions_file', 'initial_positions_lattice']
 
 
 PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
@@ -53,6 +53,7 @@ PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
 
 
 # variable that defines some information for reading input files:
+# TODO: Move this to the place where the file readers are defined?
 READFILE = {'xyz': {'reader': read_xyz_file,
                     'units': {'length': 'A', 'velocity': 'A/fs'}},
             'gro': {'reader': read_gromacs_file,
@@ -138,7 +139,6 @@ def initial_positions_lattice(settings):
     ndim = settings.get('dimensions', len(size))
     particles = Particles(dim=ndim)
     for i, pos in enumerate(lattice):
-        # get particle type:
         particle_type = list_get(ptype, i)
         # infer mass from the input masses, or try to get it
         # from the periodic table
@@ -147,12 +147,13 @@ def initial_positions_lattice(settings):
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_type,
                                                  settings['units'])
-        particles.add_particle(pos,
-                               np.zeros_like(pos), np.zeros_like(pos),
+        particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=list_get(pname, i),
                                ptype=particle_type)
-    msg = 'Created {} particles on lattice {}'.format(particles.npart,
-                                                      lattice_type)
+    msg = ['Initiated {} particles on lattice "{}".'.format(particles.npart,
+                                                            lattice_type)]
+    msg += ['Lattice is {}D.'.format(ndim)]
+    msg = '\n'.join(msg)
     logger.info(msg)
     return particles, size
 
@@ -186,18 +187,19 @@ def _get_snapshot_from_file(pos_settings, units):
     fmt = pos_settings.get('format', os.path.splitext(filename)[1][1:])
     snaps = []
     convert = None
-    try:
-        reader = READFILE[fmt]['reader']
-        read_units = READFILE[fmt]['units']
-        convert = {'length': CONVERT['length'][read_units['length'], units],
-                   'velocity': CONVERT['velocity'][read_units['velocity'],
-                                                   units]}
-        msg = 'Reading {} input file.'.format(fmt)
-        logger.info(msg)
-        snaps = [snap for snap in reader(filename)]
-    except KeyError:
+    if fmt not in READFILE:
         msg = 'Unknown format {} for input file: {}'
-        raise ValueError(msg.format(fmt, pos_settings))
+        msgtxt = msg.format(fmt, pos_settings)
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
+
+    reader = READFILE[fmt]['reader']
+    read_units = READFILE[fmt]['units']
+    convert = {'length': CONVERT['length'][read_units['length'], units],
+               'velocity': CONVERT['velocity'][read_units['velocity'], units]}
+    msg = 'Reading "{}" input file.'.format(fmt)
+    logger.info(msg)
+    snaps = [snap for snap in reader(filename)]
 
     snapshot = None
     if len(snaps) == 0:
@@ -309,33 +311,34 @@ def create_initial_positions(settings):
         True if we have read/created velocities different from just zeros.
         This is only True if we have read from a file with velocities.
     """
-    msg = 'Creating initial configuration (positions).'
-    logger.info(msg)
-    msg = 'Parameters used:\n{}'.format(settings['particles-position'])
-    logger.info(msg)
+    msg = 'Settings used for initial potisions:\n{}'
+    debugtxt = msg.format(settings['particles-position'])
+    #logger.info('Creating initial positions:')
+    logger.debug(debugtxt)
     particles = None
     if 'generate' in settings['particles-position']:
-        msg = 'Generating initial positions!'
-        logger.info(msg)
         particles, size = initial_positions_lattice(settings)
         return particles, size, False
     elif 'file' in settings['particles-position']:
-        msg = 'Reading initial positions from file.'
-        logger.info(msg)
         particles, size, vel = initial_positions_file(settings)
         return particles, size, vel
     else:
         msg = 'Unknown settings for initial positions: {}'
-        raise ValueError(msg.format(settings['particles-position']))
+        msgtxt = msg.format(settings['particles-position'])
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
 
 
-def get_box(settings):
+def create_box(settings, size):
     """Function that will try to set up a box from settings.
 
     Parameters
     ----------
     settings : dict
         The dict with the simulation settings
+    size : list of floats
+        If no box settings are given, we can still create a box,
+        inferred from the positions of the particles.
 
     Returns
     -------
@@ -343,12 +346,19 @@ def get_box(settings):
         The box if we managed to create it. Otherwise None.
     """
     box_settings = settings.get('box', None)
+    msg = 'Box created {}:\n{}'
     if box_settings is not None:
-        msg = 'Creating box from settings: \n\t{}'.format(box_settings)
-        logger.info(msg)
         box = Box(**box_settings)
+        msgtxt = msg.format('from settings', box)
+        logger.info(msgtxt)
+        debugtxt = 'Settings used:\n{}'.format(box_settings)
+        logger.debug(debugtxt)
     else:
-        box = None
+        box = Box(size=size)
+        msgtxt = msg.format('from initial positions', box)
+        logger.info(msgtxt)
+        msgwarn = 'The box was assumed periodic in ALL directions.'
+        logger.warning(msgwarn)
     return box
 
 
@@ -390,8 +400,9 @@ def create_velocities(system, settings, vel):
         msg = 'Generated velocities with average temperature: {}'
         msg = msg.format(system.calculate_temperature())
         logger.info(msg)
-        msg = 'Settings used for generating: \n{}'.format(gen_settings)
-        logger.info(msg)
+        msg = 'Settings used for generating velocities: \n{}'
+        msg = msg.format(gen_settings)
+        logger.debug(msg)
         return True
     else:
         return False
@@ -420,21 +431,13 @@ def create_system(settings):
         The system object we create here.
     """
     particles, size, vel = create_initial_positions(settings)
-    box = get_box(settings)
-    if box is None:
-        box = Box(size=size)
-        msg = 'Created box from initial positions-size.'
-        logger.info(msg)
-        msg = 'Assuming periodic boundaries for box.'
-        logger.warning(msg)
-    msg = 'Box created:\n{}'.format(box)
-    logger.info(msg)
+    box = create_box(settings, size)
     system = System(temperature=settings.get('temperature', None),
                     units=settings['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
     vel_gen = create_velocities(system, settings, vel)
     if not (vel_gen or vel):
-        msg = 'Velocities not created/read. Just set to zero!'
+        msg = 'Velocities were not created or read. Just set to zero!'
         logger.warning(msg)
     return system

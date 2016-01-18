@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = []
+__all__ = ['create_force_field']
 
 
 def create_potentials(settings):
@@ -45,6 +45,10 @@ def create_potentials(settings):
     out = []
     for pot_settings in potentials:
         potential_function = create_potential(pot_settings)
+        if potential_function is None:
+            warn = 'The following potential settings were ignored!\n{}'
+            warntxt = warn.format(pot_settings)
+            logger.warning(warntxt)
         out.append(potential_function)
     return out
 
@@ -68,7 +72,7 @@ def create_potential(settings):
         pot_class = settings['class']
     except KeyError:
         msg = 'No potential function class specified!'
-        logger.error(msg)
+        logger.critical(msg)
         return None
     if module is None:
         potential = import_from('pyretis.forcefield.potentials',
@@ -85,11 +89,13 @@ def create_potential(settings):
             if not functionc:
                 msg = 'Could not find method {}.{}'.format(pot_class,
                                                            function)
+                logger.error(msg)
                 raise ValueError(msg)
             else:
                 if not callable(functionc):
                     msg = 'Method {}.{} is not callable!'.format(pot_class,
                                                                  function)
+                    logger.error(msg)
                     raise ValueError(msg)
     return initiate_instance(potential, args=settings.get('args', None),
                              kwargs=settings.get('kwargs', None))

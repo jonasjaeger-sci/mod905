@@ -71,6 +71,11 @@ class ForceField(object):
         out : None
             Returns `None` and updates `self.potential` and `self.params`.
         """
+        if potential is None:
+            msg = ('Trying to add empty potential to force field.\n'
+                   'This was ignored -- please check your settings.')
+            logger.warning(msg)
+            return None
         try:
             arg_force = inspect.getargspec(potential.force)
         except AttributeError:

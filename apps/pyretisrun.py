@@ -18,6 +18,8 @@ import os
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
+from pyretis import __url__ as URL
+from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.settings import (create_system, create_force_field,
@@ -53,27 +55,28 @@ class MultiLineFormatterDebug(logging.Formatter):
         return out
 
 
-def hello_word(version, infile, basedir):
+def hello_world(infile, basedir, logfile):
     """Method to print out a standard greeting for pyretis.
 
     Parameters
     ----------
-    version : string
-        The version number of pyretis being used.
     inputfile : string
         String showing the location of the input file.
     basedir : string
         String showing the location we are running in.
+    logfile : string
+        The output log file
     """
     timestart = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
-    msg = ['This is pyretis version {}'.format(version)]
-    msg += ['Start of pyretis execution: {}'.format(timestart)]
-    msg += ['Input file: {}'.format(infile)]
-    msg += ['Running in directory: {}'.format(basedir)]
-    msg += ['Please cite: [1] A. A., B. B., C. C, Some Journal, 99, pp. 100']
-    msgtxt = '\n'.join(msg)
-    print(msgtxt)
-    logger.info(msgtxt)
+    msg = ['# Running {} version {}'.format(NAME, VERSION)]
+    msg += ['# Start of execution: {}'.format(timestart)]
+    msg += ['# Running in directory: {}'.format(basedir)]
+    msg += ['# Input file: {}'.format(infile)]
+    msg += ['# Log file: {}'.format(logfile)]
+    printtxt = '\n'.join(msg)
+    print(printtxt)
+    logtxt = printtxt.replace('# ', '').strip()
+    logger.info(logtxt)
 
 
 def bye_bye_world():
@@ -85,20 +88,34 @@ def bye_bye_world():
         String with the version number of pyretis.
     """
     timeend = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
-    msg = ['End of pyretis execution: {}'.format(timeend)]
-    msg += ['http://www.pyretis.org']
-    msgtxt = '\n'.join(msg)
-    print(msgtxt)
-    logger.info(msgtxt)
+    msg = ['# End of {} execution: {}'.format(NAME, timeend)]
+    txt = '# Please cite: {}'
+    indent = len(txt) - 5
+    for line in CITE.split('\n'):
+        if line:
+            txt = txt.format(line)
+            msg.append(txt)
+            txt = '# ' + ' ' * indent + ' {}'
+    msg += ['# Visit us at: {}'.format(URL)]
+    printtxt = '\n'.join(msg)
+    print(printtxt)
+    logtxt = printtxt.replace('# ', '').strip()
+    logger.info(logtxt)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='pyretis')
-    parser.add_argument('-i', '--input', help='pyretis input file)',
+    parser = argparse.ArgumentParser(description=NAME)
+    parser.add_argument('-i', '--input',
+                        help='Location of {} input file'.format(NAME),
                         required=True)
-    parser.add_argument('-v', '--version', action='version',
+    parser.add_argument('-V', '--version', action='version',
                         version='{} {}'.format(NAME, VERSION))
+    parser.add_argument('-l', '--log',
+                        help='Specify log to write',
+                        required=False,
+                        default='{}.log'.format(NAME.lower()))
     args_dict = vars(parser.parse_args())
+
     inputfile = args_dict['input']
     if not os.path.isfile(inputfile):
         raise ValueError('{} is not a file'.format(inputfile))
@@ -110,7 +127,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    fileh = logging.FileHandler('pyretis.log', mode='w')
+    fileh = logging.FileHandler(args_dict['log'], mode='w')
     fileh.setLevel(logging.DEBUG)
     formatter = MultiLineFormatter('[%(levelname)s]: %(message)s')
     formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
@@ -119,16 +136,22 @@ if __name__ == '__main__':
     logger.addHandler(fileh)
     logger.addHandler(console)
 
-    hello_word(VERSION, localfile, basepath)
+    hello_world(localfile, basepath, args_dict['log'])
 
+    print('# Reading input settings.')
     settings = parse_settings_file(localfile)
     create_conversion_factors(settings['units'], **settings['units-base'])
 
+    print('# Creating systems from settings.')
     system = create_system(settings)
     system.forcefield = create_force_field(settings)
+    print('# Creating simulation from settings.')
     simulation = create_simulation(settings, system)
+    print('# Creating output tasks from settings.')
     output_tasks = [task for task in create_output(system, settings)]
 
+    print('# Running simulation.')
+    logger.info('Running simulation')
     for result in simulation.run():
         #stepno = result['cycle']['stepno']
         #result['thermo']['stepno'] = stepno

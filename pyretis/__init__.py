@@ -41,3 +41,11 @@ from . import tools
 __version__ = '0.0.1'
 __version_details__ = 'pre-release'
 __program_name__ = 'pyretis'
+__url__ = 'http://www.pyretis.org'
+__git_url__ = 'https://github.com/user/pyretis'
+__cite__ = """
+[1] A. A., B. B and C. C., Journal Name, 42, pp. 101--102
+    doi: doi/number/here
+[2] A. A. and B. B, Journal Name, 43, pp. 101-102
+    doi: doi/number/here
+"""
