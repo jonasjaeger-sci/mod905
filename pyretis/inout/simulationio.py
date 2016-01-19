@@ -331,6 +331,7 @@ def _create_file_writer(task, system, settings):
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """
+    # TODO: This needs to be improved too much special things going on!
     dirname = settings.get('output-dir', None)
     if dirname is not None:
         filename = os.path.join(dirname, task['filename'])
