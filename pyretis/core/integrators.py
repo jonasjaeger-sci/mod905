@@ -165,7 +165,7 @@ class Integrator(object):
             step += 1
             orderp = order_function(system)
             if maxlen is not None:
-                if step == maxlen:
+                if step >= maxlen:
                     status = 'Max. path length exceeded'
                     success = False
                     yield orderp, system, status, success
@@ -183,10 +183,10 @@ class Integrator(object):
             yield orderp, system, status, success
             if reverse:
                 system.particles.vel = -1.0 * system.particles.vel
-                self.integration_step(system)
+                self(system)
                 system.particles.vel = -1.0 * system.particles.vel
             else:
-                self.integration_step(system)
+                self(system)
 
     def __call__(self, system):
         """To allow calling `Integrator(system)`.
@@ -566,7 +566,6 @@ class Langevin(Integrator):
                 else:
                     pos_rand[i] = randxv[:, 0]
                     vel_rand[i] = randxv[:, 1]
-
         particles.pos += (self.param_iner['a1'] * particles.vel +
                           self.param_iner['a2'] * particles.force + pos_rand)
 
