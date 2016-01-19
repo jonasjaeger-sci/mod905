@@ -20,7 +20,7 @@ References
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import numpy as np
 from pyretis.core.path import Path, paste_paths, reverse_path
 from pyretis.core.montecarlo import metropolis_accept_reject
@@ -77,6 +77,9 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
                                           rgen,
                                           tis_settings)
     path_ensemble.add_path_data(trial, status, cycle=cycle)
+    print('TIS STEP', cycle)
+    for point in trial:
+        print('{:16.9f} {:16.9f} {:16.9f}'.format(point[0][0], point[1][0], point[2][0]))
     return accept, trial, status
 
 
@@ -266,7 +269,6 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # TODO: Modify if we use reservoir sampling:
     idx = rgen.random_integers(1, len(path.path) - 2)
     orderp, pos, vel = path.path[idx][0:3]  # extract phase point
-    print(idx, len(path.path))
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
@@ -621,7 +623,6 @@ def propagate(system, interfaces, order_function, integrator,
                                            left, right,
                                            maxlen=maxlen, reverse=reverse):
         orderp, sys, status, success = step
-        print(system.particles.pos == sys.particles.pos)
         add = path.append(orderp, sys.particles.pos, sys.particles.vel)
         #print(step)
     # reset the system to initial state
