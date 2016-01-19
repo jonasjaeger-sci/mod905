@@ -135,6 +135,59 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
+    def integrate_until(self, system, order_function, left, right,
+                        maxlen=None, reverse=False):
+        """Integrate until an order parameter satisfy a certain condition.
+
+        This function is useful when generating trajectories in path ensemble
+        methods. For internal integrators it is not really needed however, it
+        convenient for external integrators and to make all integrators have
+        a similar interface.
+
+        Parameters
+        ----------
+        system : object like `System` from `pyretis.core.system`
+            The system object given is assumed to be defined with the correct
+            particle list for the system to be propagated. It is also assumed
+            to contain the force field.
+        order_function : object like `OrderParameter` from `.orderparameter`
+            This function takes the `System` as it's argument and returns a
+            float which is equal to the order parameter.
+        maxlen : integer
+            The maximum length of the path.
+        reverse : boolean
+            If True, the system will be propagated backwards in time.
+        """
+        success = False
+        status = 'Propagating'
+        step = 0
+        while True:
+            step += 1
+            orderp = order_function(system)
+            if maxlen is not None:
+                if step == maxlen:
+                    status = 'Max. path length exceeded'
+                    success = False
+                    yield orderp, system, status, success
+                    raise StopIteration
+            if orderp[0] < left:
+                status = 'Crossed left interface!'
+                success = True
+                yield orderp, system, status, success
+                raise StopIteration
+            elif orderp[0] > right:
+                status = 'Crossed right interface!'
+                success = True
+                yield orderp, system, status, success
+                raise StopIteration
+            yield orderp, system, status, success
+            if reverse:
+                system.particles.vel = -1.0 * system.particles.vel
+                self.integration_step(system)
+                system.particles.vel = -1.0 * system.particles.vel
+            else:
+                self.integration_step(system)
+
     def __call__(self, system):
         """To allow calling `Integrator(system)`.
 

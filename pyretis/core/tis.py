@@ -169,11 +169,9 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
-        # print('Reversing path')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
-        # print('Shooting')
         accept, new_path, status = _shoot(path, system, interfaces,
                                           order_function, integrator, rgen,
                                           tis_settings)
@@ -268,6 +266,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # TODO: Modify if we use reservoir sampling:
     idx = rgen.random_integers(1, len(path.path) - 2)
     orderp, pos, vel = path.path[idx][0:3]  # extract phase point
+    print(idx, len(path.path))
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
@@ -577,20 +576,20 @@ def propagate(system, interfaces, order_function, integrator,
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `pyretis.core.system`.
         The system object given is assumed to be defined with the correct
         particle list for the system to be propagated. It is also assumed
         to contain the force field.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
-    order_function : function
+    order_function : object like `OrderParameter`.
         This function takes the system as it's argument and returns a float
         which is equal to the order parameter.
     integrator : object like `Integrator` from `pyretis.core.integrators`
         The integrator will be used to propagate the system. It is assumed
         to be correctly set up for the system under consideration.
-    maxlen : float
-        The maximum length of the path
+    maxlen : integer
+        The maximum length of the path.
     reverse : boolean
         If True, the system will be propagated backwards in time
     path : object like `Path` from `pyretis.core.path`.
@@ -617,30 +616,14 @@ def propagate(system, interfaces, order_function, integrator,
         status = 'Empty path'
     else:
         status = 'Appending to old path'
-    while True:
-        orderp = order_function(system)
-        add = path.append(orderp, system.particles.pos, system.particles.vel)
-        if not add:
-            if len(path.path) >= path.maxlen:
-                status = 'Max. path length exceeded'
-            else:
-                status = 'Could not add for unknown reason'
-            success = False
-            break
-        if orderp[0] < left:
-            status = 'Crossed left interface!'
-            success = True
-            break
-        elif orderp[0] > right:
-            status = 'Crossed right interface!'
-            success = True
-            break
-        if reverse:
-            system.particles.vel = -1.0 * system.particles.vel
-            integrator(system)
-            system.particles.vel = -1.0 * system.particles.vel
-        else:
-            integrator(system)
+    print('Start...')
+    for step in integrator.integrate_until(system, order_function,
+                                           left, right,
+                                           maxlen=maxlen, reverse=reverse):
+        orderp, sys, status, success = step
+        print(system.particles.pos == sys.particles.pos)
+        add = path.append(orderp, sys.particles.pos, sys.particles.vel)
+        #print(step)
     # reset the system to initial state
     system.particles.set_phase_point(initial_system)
     return path, success, status
