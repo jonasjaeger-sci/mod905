@@ -136,13 +136,15 @@ def reverse_path(path, order_func=None):
     """
     new_path = Path(maxlen=path.maxlen)
     for phasepoint in reversed(path.path):
-        pos, vel = phasepoint[0], -1.0 * phasepoint[1]
-        energy = phasepoint[3]
-        if order_func:
+        pos = phasepoint[1]
+        vel = phasepoint[2]
+        if vel is not None:
+            vel *= -1
+        if order_func and pos is not None:
             orderp = order_func(pos, vel)
         else:
-            orderp = phasepoint[2]
-        app = new_path.append(pos, vel, orderp, energy)
+            orderp = phasepoint[0]
+        app = new_path.append(orderp, pos, vel)
         if not app:
             msg = 'Could not reverse path'
             logging.error(msg)
@@ -223,8 +225,8 @@ class Path(object):
         be set. Others don't, which is indicated by setting `maxlen` equal to
         None.
     path : list
-        This is the trajectory/series of snapshots, stored as a list of tuples.
-        Each tuple stores (positions, velocities, order parameters, energy).
+        This is the trajectory/series of snapshots, stored as a list of tuples
+        on the form (order parameters, position, velocity).
     ordermin : tuple
         This is the (current) minimum order parameter for the path.
         `ordermin[0]` is the value, `ordermin[1]` is the index in `self.path`.
@@ -277,7 +279,7 @@ class Path(object):
         for phasepoint in self.path:
             yield phasepoint
 
-    def append(self, pos, vel, orderp, energy):
+    def append(self, orderp, pos, vel):
         """Append a new phase point to the path.
 
         We will here append a new phase space point to the path.
@@ -286,20 +288,20 @@ class Path(object):
 
         Parameters
         ----------
-        pos : numpy.array
-            The positions of the particles,
-        vel: numpy.array
-            The velocities of the particles,
         orderp : list of floats
             This variable is the order parameter for the given point.
             `orderp[0]` is the actual order parameter used in path sampling
             methods while `orderp[1:]` can represent other order parameters
             for instance is `orderp[1]` typically the velocity of `orderp[0]`.
-        energy : numpy.array
-            The energies associated with the pase point `pos` and `vel`.
+        pos : numpy.array
+            The positions of the particles,
+        vel: numpy.array
+            The velocities of the particles,
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
-            self.path.append([np.copy(pos), np.copy(vel), orderp, energy])
+            pos_copy = np.copy(pos) if pos is not None else None
+            vel_copy = np.copy(vel) if vel is not None else None
+            self.path.append([orderp, pos_copy, vel_copy])
             self._update_orderp(orderp[0], len(self.path) - 1)
             return True
         else:
@@ -344,7 +346,7 @@ class Path(object):
         ordermin = None
         ordermax = None
         for i, phasepoint in enumerate(self.path):
-            orderp = phasepoint[2][0]
+            orderp = phasepoint[0][0]
             if ordermin is None or ordermax is None:
                 ordermin = (orderp, i)
                 ordermax = (orderp, i)
@@ -415,9 +417,9 @@ class Path(object):
             String representing where the end point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[-1][2][0] < left:
+        if self.path[-1][0][0] < left:
             end = 'L'
-        elif self.path[-1][2][0] > right:
+        elif self.path[-1][0][0] > right:
             end = 'R'
         else:
             end = None
@@ -442,9 +444,9 @@ class Path(object):
             String representing where the start point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[0][2][0] <= left:
+        if self.path[0][0][0] <= left:
             start = 'L'
-        elif self.path[0][2][0] >= right:
+        elif self.path[0][0][0] >= right:
             start = 'R'
         else:
             start = None

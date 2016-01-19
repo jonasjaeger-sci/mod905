@@ -422,7 +422,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     ensemble1 = ensembles[1]
     # 1) Generate path for [0^-] from [0^+]:
     # Set the system at the initial point of path in [0^+]:
-    pos, vel = ensemble1.last_path.path[0][0:2]
+    pos, vel = ensemble1.last_path.path[0][1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
@@ -439,7 +439,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     path1 = Path(maxlen=maxlen)
     path1.append(*ensemble0.last_path.path[-2])
     # We start the generation from the LAST point
-    pos, vel = ensemble0.last_path.path[-1][0:2]
+    pos, vel = ensemble0.last_path.path[-1][1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential

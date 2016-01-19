@@ -49,8 +49,6 @@ class PathFile(FileWriter):
         identify different blocks.
     header_order : string
         Header used for the order parameter.
-    header_energy
-        Header used for the energy data.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
@@ -79,15 +77,15 @@ class PathFile(FileWriter):
                                                   header=True,
                                                   spacing=1,
                                                   fmt_str=None)
-        header = {'text': ['Time', 'Potential', 'Kinetic',
-                           'Total', 'Hamiltonian',
-                           'Temperature', 'External'],
-                  'width': [10, 12]}
-        self.header_energy = create_and_format_row(header['text'],
-                                                   header['width'],
-                                                   header=True,
-                                                   spacing=1,
-                                                   fmt_str=None)
+        #header = {'text': ['Time', 'Potential', 'Kinetic',
+        #                   'Total', 'Hamiltonian',
+        #                   'Temperature', 'External'],
+        #          'width': [10, 12]}
+        #self.header_energy = create_and_format_row(header['text'],
+        #                                           header['width'],
+        #                                           header=True,
+        #                                           spacing=1,
+        #                                           fmt_str=None)
         self.block_label = '#>'
         self.block_head = ' '.join([self.block_label,
                                     'Cycle: {}, Path status: {}, Length: {}'])
@@ -149,12 +147,11 @@ class PathFile(FileWriter):
         """
         block_head = self.block_head.format(step, path.status, len(path.path))
         self.write_line(block_head)
-        for i, (pos, vel, orderp, energy) in enumerate(path.path):
+        for i, (orderp, pos, vel) in enumerate(path.path):
             self.write_line('# Frame: {}'.format(i))
             order_write = (['# Order:'] +
                            [ORDER_FMT[1].format(val) for val in orderp])
             self.write_line(' '.join(order_write))
-            self.write_line('# Energy: {}'.format(energy))
             self.write_line('# Trajectory in INTERNAL UNITS')
             traj = []
             for fmt, posi in zip_longest(POSVEL_FMT, pos, fillvalue=0.0):
@@ -414,7 +411,7 @@ class PathEnsembleFile(FileWriter):
             This is the path to write to the file.
         """
         if path is None:
-            path_dict = path_ensemble.paths[-1]
+            path_dict = path_ensemblepaths[-1]
         else:
             path_dict = path.get_path_data(path.status,
                                            path_ensemble.interfaces)
