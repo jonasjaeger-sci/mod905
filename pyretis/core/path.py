@@ -334,7 +334,8 @@ class Path(object):
         Update the minimum and maximum order parameter on the path and
         return them. This function will explicitly loop over the path,
         check all phase space points and find the minimum and maximum order
-        parameter.
+        parameter. This is usefull if the path was read directly without
+        calling `append`.
 
         Returns
         -------
@@ -577,8 +578,8 @@ class Path(object):
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
         msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
         if len(self.path) > 0:
-            msg += ['\tStart {}'.format(self.path[0][2][0])]
-            msg += ['\tEnd {}'.format(self.path[-1][2][0])]
+            msg += ['\tStart {}'.format(self.path[0][0][0])]
+            msg += ['\tEnd {}'.format(self.path[-1][0][0])]
         if self.status:
             msg += ['\tStatus: {}'.format(_STATUS[self.status])]
         if self.generated:

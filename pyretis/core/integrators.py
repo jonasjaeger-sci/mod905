@@ -23,6 +23,7 @@ from __future__ import absolute_import
 import numpy as np
 import logging
 from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.path import Path
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -135,58 +136,70 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def integrate_until(self, system, order_function, left, right,
-                        maxlen=None, reverse=False):
-        """Integrate until an order parameter satisfy a certain condition.
+    def generate_path(self, system, interfaces, order_function,
+                      maxlen=None, reverse=False, path=None):
+        """Generate a path by integrating until a specific criterion is met.
 
-        This function is useful when generating trajectories in path ensemble
-        methods. For internal integrators it is not really needed however, it
-        convenient for external integrators and to make all integrators have
-        a similar interface.
+        This function will generate a path by calling the function specifying
+        the integration step repeatedly. The integration is carried out until
+        the order parameter has passed the specified interfaces or if we have
+        integrated for more than a specified maximum number of steps.
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
-            The system object given is assumed to be defined with the correct
-            particle list for the system to be propagated. It is also assumed
-            to contain the force field.
+        system : object like `System` from `pyretis.core.system`.
+            The system object gives the initial state for the integration.
+            The initial state is stored and the system is reset to the initial
+            state when the integration is done.
+        interfaces : list of floats.
+            These interfaces define the stopping criterion.
         order_function : object like `OrderParameter` from `.orderparameter`
-            This function takes the `System` as it's argument and returns a
-            float which is equal to the order parameter.
+            This object is callable and takes the `System` as it's argument
+            and returns a tuple where the first item is equal to the order
+            parameter.
         maxlen : integer
             The maximum length of the path.
         reverse : boolean
             If True, the system will be propagated backwards in time.
+        path : object like `Path` from `pyretis.core.Path`.
+            A path can be specified if we want to append the generated path
+            rather than creating a new one.
         """
         success = False
-        status = 'Propagating'
-        step = 0
+        initial_system = system.particles.get_phase_point()
+        left, _, right = interfaces
+        if path is None:
+            path = Path(maxlen=maxlen)
+            status = 'Empty path'
+        else:
+            status = 'Appending to old path'
         while True:
-            step += 1
             orderp = order_function(system)
-            if maxlen is not None:
-                if step >= maxlen:
+            add = path.append(orderp, system.particles.pos,
+                              system.particles.vel)
+            if not add:
+                if len(path.path) >= path.maxlen:
                     status = 'Max. path length exceeded'
-                    success = False
-                    yield orderp, system, status, success
-                    raise StopIteration
+                else:
+                    status = 'Could not add for unknown reason'
+                success = False
+                break
             if orderp[0] < left:
                 status = 'Crossed left interface!'
                 success = True
-                yield orderp, system, status, success
-                raise StopIteration
+                break
             elif orderp[0] > right:
                 status = 'Crossed right interface!'
                 success = True
-                yield orderp, system, status, success
-                raise StopIteration
-            yield orderp, system, status, success
+                break
             if reverse:
-                system.particles.vel = -1.0 * system.particles.vel
+                system.particles.vel *= -1.0
                 self(system)
-                system.particles.vel = -1.0 * system.particles.vel
+                system.particles.vel *= -1.0
             else:
                 self(system)
+        system.particles.set_phase_point(initial_system)
+        return path, success, status
 
     def __call__(self, system):
         """To allow calling `Integrator(system)`.

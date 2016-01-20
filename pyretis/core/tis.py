@@ -20,13 +20,13 @@ References
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 import numpy as np
 from pyretis.core.path import Path, paste_paths, reverse_path
 from pyretis.core.montecarlo import metropolis_accept_reject
 from pyretis.core.particlefunctions import calculate_kinetic_energy
 
-__all__ = ['make_tis_step', 'generate_initial_path_kick', 'propagate']
+__all__ = ['make_tis_step', 'generate_initial_path_kick']
 
 
 def make_tis_step_ensemble(path_ensemble, system, order_function,
@@ -77,9 +77,6 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
                                           rgen,
                                           tis_settings)
     path_ensemble.add_path_data(trial, status, cycle=cycle)
-    print('TIS STEP', cycle)
-    for point in trial:
-        print('{:16.9f} {:16.9f} {:16.9f}'.format(point[0][0], point[1][0], point[2][0]))
     return accept, trial, status
 
 
@@ -268,7 +265,6 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # Select the shooting point from path at random.
     # We do not include the end point as these are out of bounds - i.e. they
     # have crossed the interface. See also the documentation for RETIS.
-    # TODO: Modify if we use reservoir sampling:
     idx = rgen.random_integers(1, len(path.path) - 2)
     orderp, pos, vel = path.path[idx][0:3]  # extract phase point
     system.particles.vel = np.copy(vel)
@@ -286,7 +282,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(orderp, pos, vel)  # add shooting point
+        trial_path.append(orderp, pos, vel) # add shooting point
         accept, trial_path.status = False, 'KOB'  # just to be explicit
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
@@ -309,11 +305,10 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back, success_back, _ = propagate(system, interfaces,
-                                           order_function,
-                                           integrator,
-                                           maxlen=maxlenb,
-                                           reverse=True)
+    path_back, success_back, _ = integrator.generate_path(system, interfaces,
+                                                          order_function,
+                                                          maxlen=maxlenb,
+                                                          reverse=True)
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
     if not success_back:
@@ -332,12 +327,10 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         return accept, trial_path, trial_path.status
     # everything seems fine, propagate forward
     maxlenf = maxlen - len(path_back.path) + 1
-    path_forw, success_forw, _ = propagate(system,
-                                           interfaces,
-                                           order_function,
-                                           integrator,
-                                           maxlen=maxlenf,
-                                           reverse=False)
+    path_forw, success_forw, _ = integrator.generate_path(system, interfaces,
+                                                          order_function,
+                                                          maxlen=maxlenf,
+                                                          reverse=False)
     path_forw.time_origin = time_shoot
     # now, the forward could have failed by exceeding maxlenf
     # however, it could also fail when we paste together so that
@@ -403,23 +396,21 @@ def generate_initial_path_kick(system, interfaces, order_function,
     """
     previous, _ = _kick_across_middle(system, order_function, integrator,
                                       rgen, interfaces[1])
-    # note: current point is stored in system
-    # Loop is done, we have two points (previous and the
-    # current system.particles)
-    # we can propagate current phase point forward:
-    path_forw, success, msg = propagate(system, interfaces, order_function,
-                                        integrator,
-                                        maxlen=tis_settings['maxlength'])
+    # Note: current point is stored in system
+    # When the kicking is done, we have two points (`previous` and the
+    # current system.particles).
+    # We then propagate current phase point forward:
+    path_forw, success, msg = integrator.generate_path(system, interfaces,
+                                                       order_function,
+                                                       maxlen=tis_settings['maxlength'])
     if not success:
         raise ValueError('Forward path not successful.', msg)
-    # and previous phase point backward.
-    # First we set system to be at this point:
+    # And the previous phase point backward:
     system.particles.set_phase_point(previous)
-    # then propagate :-)
-    path_back, success, msg = propagate(system, interfaces, order_function,
-                                        integrator,
-                                        maxlen=tis_settings['maxlength'],
-                                        reverse=True)
+    path_back, success, msg = integrator.generate_path(system, interfaces,
+                                                       order_function,
+                                                       maxlen=tis_settings['maxlength'],
+                                                       reverse=True)
     if not success:
         raise ValueError('Backward path not successful.', msg)
     # Merge backward and forward, here we do not set maxlen since
@@ -560,74 +551,6 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
     # NOTE velocity should for some dynamics be rescaled
     dek = kin_new[0] - kin_old[0]
     return dek, kin_new
-
-
-def propagate(system, interfaces, order_function, integrator,
-              maxlen=None, reverse=False, path=None):
-    """Propagate a system in time.
-
-    During the propagation, the system will be modified. However, at the end,
-    the positions, velocities and forces will be reset to the initial state.
-    We are here are generating a path and we assume that we are starting with
-    a empty path or we are appending to a existing path. Here, we will stop
-    the propagation if any of the following happens:
-
-    * We have exceeded the maximum length given in `maxlen`.
-
-    * The point we propagated to crossed the left interface.
-
-    * The point we propagated to crossed the right interface.
-
-    Parameters
-    ----------
-    system : object like `System` from `pyretis.core.system`
-        The system object given is assumed to be defined with the correct
-        particle list for the system to be propagated. It is also assumed
-        to contain the force field.
-    interfaces : list/tuple of floats
-        These are the interface positions on form [left, middle, right]
-    order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
-        The integrator will be used to propagate the system. It is assumed
-        to be correctly set up for the system under consideration.
-    maxlen : float
-        The maximum length of the path
-    reverse : boolean
-        If True, the system will be propagated backwards in time
-    path : object like `Path` from `pyretis.core.path`.
-        If `path` is given, we assume that we want to append the
-        propagated trajectory to an already existing path and we do not
-        generate a completely new path.
-
-    Returns
-    -------
-    out[0] : object of type `Path` from `pyretis.core.path`
-        The generated path from integrating the system in time
-    out[1] : boolean
-        False if something in propagate went wrong. This is described
-        in out[2].
-    out[2] : string
-        Human representation of the result.
-    """
-    # first we store the initial pos, vel and forces for the system:
-    success = False
-    initial_system = system.particles.get_phase_point()
-    left, _, right = interfaces
-    if path is None:
-        path = Path(maxlen=maxlen)
-        status = 'Empty path'
-    else:
-        status = 'Appending to old path'
-    for step in integrator.integrate_until(system, order_function,
-                                           left, right,
-                                           maxlen=maxlen, reverse=reverse):
-        orderp, sys, status, success = step
-        add = path.append(orderp, sys.particles.pos, sys.particles.vel)
-    # reset the system to initial state
-    system.particles.set_phase_point(initial_system)
-    return path, success, status
 
 
 def _fix_path_by_tis(initial_path, system, interfaces, order_function,
