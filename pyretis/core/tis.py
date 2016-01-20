@@ -265,8 +265,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # Select the shooting point from path at random.
     # We do not include the end point as these are out of bounds - i.e. they
     # have crossed the interface. See also the documentation for RETIS.
-    idx = rgen.random_integers(1, len(path.path) - 2)
-    orderp, pos, vel = path.path[idx][0:3]  # extract phase point
+    (orderp, pos, vel), idx = path.get_shooting_point(rgen)
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential

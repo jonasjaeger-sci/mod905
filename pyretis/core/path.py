@@ -454,6 +454,32 @@ class Path(object):
             logging.warning('Undefined starting point.')
         return start
 
+    def get_shooting_point(self, rgen):
+        """Return a shooting point from the path.
+
+        This will simply draw a shooting point from the path at
+        random. The reason for including this function in the path object
+        is for the future: when we want to do reservoir sampling this method
+        should be made more advanced so that we can select phase points from
+        the reservoir.
+
+        Parameters
+        ----------
+        rgen : object like `RandomGenerator` from `random_gen`.
+            This object is used to draw a random integer.
+
+        Returns
+        -------
+        phasepoint : tuple
+            `phasepoint[0]` is the order parameter (as a tuple) and the two
+            next items are the positions and velocities.
+        idx : integer
+            The shooting point index.
+        """
+        idx = rgen.random_integers(1, len(self.path) - 2)
+        phasepoint = self.path[idx][0:3]
+        return phasepoint, idx
+
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
 
