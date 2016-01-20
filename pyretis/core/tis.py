@@ -21,10 +21,14 @@ References
    https://dx.doi.org/10.1063%2F1.1562614
 """
 from __future__ import absolute_import
+import logging
 import numpy as np
 from pyretis.core.path import Path, paste_paths, reverse_path
 from pyretis.core.montecarlo import metropolis_accept_reject
 from pyretis.core.particlefunctions import calculate_kinetic_energy
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 
 __all__ = ['make_tis_step', 'generate_initial_path_kick']
 
@@ -115,13 +119,13 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
     initial_path = None
     status = ''
     if tis_settings['initial_path'] not in ['kick']:
+        logger.error('Unknown initiation method')
         raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
         initial_path = generate_initial_path_kick(system,
                                                   path_ensemble.interfaces,
                                                   order_function,
-                                                  integrator,
-                                                  rgen,
+                                                  integrator, rgen,
                                                   tis_settings)
         status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle=cycle)
@@ -281,8 +285,8 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(orderp, pos, vel) # add shooting point
-        accept, trial_path.status = False, 'KOB'  # just to be explicit
+        trial_path.append(orderp, pos, vel)
+        accept, trial_path.status = False, 'KOB'
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
     if not tis_settings['aimless']:
@@ -399,24 +403,31 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # When the kicking is done, we have two points (`previous` and the
     # current system.particles).
     # We then propagate current phase point forward:
+    maxlen = tis_settings['maxlength']
     path_forw, success, msg = integrator.generate_path(system, interfaces,
                                                        order_function,
-                                                       maxlen=tis_settings['maxlength'])
+                                                       maxlen=maxlen,
+                                                       reverse=False)
     if not success:
+        msgtxt = 'Forward path not successful: {}'.format(msg)
+        logger.error(msgtxt)
         raise ValueError('Forward path not successful.', msg)
     # And the previous phase point backward:
     system.particles.set_phase_point(previous)
     path_back, success, msg = integrator.generate_path(system, interfaces,
                                                        order_function,
-                                                       maxlen=tis_settings['maxlength'],
+                                                       maxlen=maxlen,
                                                        reverse=True)
     if not success:
+        msgtxt = 'Backward path not successful: {}'.format(msg)
+        logger.error(msgtxt)
         raise ValueError('Backward path not successful.', msg)
     # Merge backward and forward, here we do not set maxlen since
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
-    if len(initial_path.path) == tis_settings['maxlength']:
-        raise ValueError('Initial path too long len(path) >= NX')
+    if len(initial_path.path) >= maxlen:
+        logger.error('Initial path too long `len(path) >= NX`')
+        raise ValueError('Initial path too long `len(path) >= NX`')
     start, end, _, _ = initial_path.check_interfaces(interfaces)
     # ok, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
@@ -443,7 +454,8 @@ def generate_initial_path_kick(system, interfaces, order_function,
                                         order_function, integrator, rgen,
                                         tis_settings)
     else:
-        raise ValueError('Could not generate initial path')
+        logger.error('Could not generate initial path.')
+        raise ValueError('Could not generate initial path.')
     return initial_path
 
 
@@ -618,6 +630,7 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
                     initial_path = trial
                 path_ok = initial_path.ordermin[0] < left
             else:
-                raise ValueError('Unknown start_cond')
+                logger.error('Unknown start condition (should be R/L')
+                raise ValueError('Unknown start condition (should be R/L)')
     initial_path.status = 'ACC'
     return initial_path
