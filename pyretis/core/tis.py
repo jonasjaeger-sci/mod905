@@ -172,9 +172,11 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
+        # print('Reversing path')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
+        # print('Shooting')
         accept, new_path, status = _shoot(path, system, interfaces,
                                           order_function, integrator, rgen,
                                           tis_settings)
@@ -578,20 +580,20 @@ def propagate(system, interfaces, order_function, integrator,
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`.
+    system : object like `System` from `pyretis.core.system`
         The system object given is assumed to be defined with the correct
         particle list for the system to be propagated. It is also assumed
         to contain the force field.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
-    order_function : object like `OrderParameter`.
+    order_function : function
         This function takes the system as it's argument and returns a float
         which is equal to the order parameter.
     integrator : object like `Integrator` from `pyretis.core.integrators`
         The integrator will be used to propagate the system. It is assumed
         to be correctly set up for the system under consideration.
-    maxlen : integer
-        The maximum length of the path.
+    maxlen : float
+        The maximum length of the path
     reverse : boolean
         If True, the system will be propagated backwards in time
     path : object like `Path` from `pyretis.core.path`.
@@ -618,13 +620,11 @@ def propagate(system, interfaces, order_function, integrator,
         status = 'Empty path'
     else:
         status = 'Appending to old path'
-    print('Start...')
     for step in integrator.integrate_until(system, order_function,
                                            left, right,
                                            maxlen=maxlen, reverse=reverse):
         orderp, sys, status, success = step
         add = path.append(orderp, sys.particles.pos, sys.particles.vel)
-        #print(step)
     # reset the system to initial state
     system.particles.set_phase_point(initial_system)
     return path, success, status

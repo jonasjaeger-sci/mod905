@@ -411,7 +411,7 @@ class PathEnsembleFile(FileWriter):
             This is the path to write to the file.
         """
         if path is None:
-            path_dict = path_ensemble.paths[-1]
+            path_dict = path_ensemblepaths[-1]
         else:
             path_dict = path.get_path_data(path.status,
                                            path_ensemble.interfaces)
