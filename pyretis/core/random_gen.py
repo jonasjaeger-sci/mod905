@@ -6,12 +6,16 @@ It derives most of the random number procedures from `RandomState` in
 pseudo-random numbers.
 """
 from __future__ import absolute_import
+import logging
 import numpy as np
 from numpy.random import RandomState
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             reset_momentum)
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
-__all__ = ['RandomGenerator']
+
+__all__ = ['RandomGenerator', 'ReservoirSampler']
 
 
 class RandomGenerator(object):
@@ -212,3 +216,85 @@ class RandomGenerator(object):
         vel = self.normal(loc=0.0, scale=sigma_v,
                           size=system.particles.vel.shape)
         return vel, sigma_v
+
+
+class ReservoirSampler(object):
+    """ReservoirSampler - A class for reservoir sampling.
+
+    The reservoir sampler will maintains a list of `k` items drawn randomly
+    from a set of `N > k` items. The list is created and maintained so that
+    we only need to store `k`items This is useful when `N` is very large or
+    when storing all `N` items require a lot of memory. The algorithm is
+    described by Knuth [#]_.
+
+
+    Attributes
+    ----------
+    rgen : object like `RandomState`
+        This is a container for the Mersenne Twiser pseudo-random number
+        generator as implemented in numpy, see the documentation of
+        `RandomGenerator`.
+    items : integer
+        The number of items seen so far, i.e. the current `N`.
+    reservoir : list
+        The items we have stored.
+    length : integer
+        The maximum number of items to store in the reservoir (i.e. `k`).
+    returnidx : integer
+        This is the index of the item to return if we are requesting items
+        from the reservoir.
+
+    References
+    ----------
+
+    .. [#] The Art of Computer Programming.
+    """
+    def __init__(self, seed=0, length=10, rgen=None):
+        """Initiate the reservoir.
+
+        Parameters
+        ----------
+        seed : int, optional
+            An integer used for seeding the generator.
+        length : int, optional
+            The maximum number of items to store.
+        rgen : object like `RandomGenerator`.
+            In case we want to re-use a random generator object.
+            If this is specified, the parameter `seed` is ignored.
+        """
+        if rgen is not None:
+            self.rgen = rgen
+        else:
+            self.rgen = RandomState(seed=seed)
+        self.items = 0
+        self.reservoir = []
+        self.length = length
+        self.ret_idx = 0
+
+    def append(self, item):
+        """Try to add an item to the reservoir."""
+        self.items += 1
+        if len(self.reservoir) < self.length:
+            self.reservoir.append(item)
+        else:
+            idx = int(self.rgen.rand() * self.items)
+            if idx < self.length:
+                self.reservoir[idx] = item
+
+    def get_item(self):
+        """This method will return one of the items from the reservoir.
+
+        Returns
+        -------
+        out : any type
+            Returns an item from the reservoir.
+        """
+        if self.ret_idx >= self.length:
+            self.ret_idx = 0
+            msg = ['Out of bounds in the reservoir sampler!']
+            msg += ['Please increase the size of the reservoir.']
+            msgtxt = '\n'.join(msg)
+            logger.critical(msgtxt)
+        ret = self.reservoir[self.ret_idx]
+        self.ret_idx += 1
+        return ret
