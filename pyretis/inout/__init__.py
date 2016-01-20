@@ -34,8 +34,6 @@ Modules:
 - txtinout.py: Defines classes and some functions for text-based output. This
   is typically text written to the screen during a simulation.
 
-- simulationio.py: Handle input output for simulations.
-
 Important classes and functions:
 
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
@@ -62,4 +60,4 @@ from .fileio import (FileWriter, CrossFile, EnergyFile, OrderFile,
                      PathFile, PathEnsembleFile,
                      create_traj_writer, get_file_object)
 from .report import generate_report
-from .simulationio import create_output
+from .settings import create_output

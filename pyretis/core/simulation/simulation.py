@@ -191,7 +191,7 @@ class Simulation(object):
             logging.warning(msg)
             return False
 
-    def run(self):
+    def run(self, output=None):
         """Run a simulation.
 
         The intended usage is for simulations where all tasks have
@@ -204,13 +204,23 @@ class Simulation(object):
         modify the `run` function of your simulation object to tailor the
         simulation.
 
+        Parameters
+        ----------
+        output : list, objects like `OutputTask` from `pyretis.inout.settings`.
+            If outputs are given, they will be executed here.
+
         Yields
         ------
         out : dict
             This dictionary contains the results from the simulation.
         """
+        if output is None:
+            output = []
         while not self.is_finished():
-            yield self.step()
+            result = self.step()
+            for task in output:
+                task.output(result)
+            yield result
 
     def __str__(self):
         """Just a small function to return some info about the simulation."""

@@ -3,7 +3,7 @@
 This is an example on how to analyse the output from a MD flux simulation.
 """
 from pyretis.inout.analysisio import run_md_flux_analysis
-from pyretis.inout.simulationio import read_json_file
+from pyretis.inout.settings.createoutput import read_json_file
 
 RAW_DATA = {'files': {'cross': 'cross.dat', 'energy': 'energy.dat',
                       'order': 'order.dat'}}

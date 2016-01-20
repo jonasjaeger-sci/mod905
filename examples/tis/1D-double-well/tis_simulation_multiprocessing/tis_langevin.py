@@ -70,11 +70,11 @@ def run_simulation(simulation, settings):
     interfaces = simulation.path_ensemble.interfaces
     output = [task for task in create_output(simulation.system, settings)]
     print('Running:', ensemble)
-    for result in simulation.run():
+    for result in simulation.run(output=output):
         step = result['cycle']
         #result['traj'] = simulation.system
-        for task in output:
-            task.output(result)
+        #for task in output:
+        #    task.output(result)
     print('Done with:', ensemble)
     return True
 

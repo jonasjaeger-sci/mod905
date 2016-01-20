@@ -21,7 +21,7 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.analysis import analyse_flux
 from pyretis.inout import generate_report
 from pyretis.inout import create_output
-from pyretis.inout.simulationio import store_settings_as_json
+from pyretis.inout.settings.createoutput import store_settings_as_json
 from pyretis.inout.settings.settings import write_settings_file
 
 print('MD flux simulation!')
