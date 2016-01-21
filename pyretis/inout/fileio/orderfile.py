@@ -116,7 +116,7 @@ class OrderFile(FileWriter):
         Returns
         -------
         out : boolean
-            True if line could be written, False otherwise.
+            True if the line could be written, False otherwise.
         """
         towrite = [ORDER_FMT[0].format(step)]
         for orderp in orderdata:
