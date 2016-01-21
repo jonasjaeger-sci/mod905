@@ -130,9 +130,6 @@ class SimulationTIS(Simulation):
             self.path_ensemble.add_path_data(initial_path, status,
                                              cycle=self.cycle['step'])
             self.first_step = False
-            results['accept'] = accept
-            results['trialpath'] = trial
-            results['status'] = status
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
@@ -143,12 +140,11 @@ class SimulationTIS(Simulation):
                                                            self.rgen,
                                                            self.tis_settings,
                                                            self.cycle['step'])
-            results['accept'] = accept
-            results['trialpath'] = trial
-            results['status'] = status
+        results['accept'] = accept
+        results['trialpath'] = trial
+        results['status'] = status
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
-        #self.output(results)
         return results
 
     def __str__(self):
