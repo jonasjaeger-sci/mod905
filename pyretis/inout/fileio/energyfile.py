@@ -18,7 +18,7 @@ __all__ = ['EnergyFile']
 
 # format for the energy files, here also as a tuple since this makes
 # convenient for outputting in a specific order:
-ENERGY_FMT = ['{:>10d}'] + 6*['{:>12.6f}']
+ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6f}']
 
 
 class EnergyFile(FileWriter):
@@ -40,9 +40,6 @@ class EnergyFile(FileWriter):
        Nose-Hoover dynamics.
 
     6) Temperature.
-
-    7) External energy - this is the energy obtained if running using an
-       external program for the dynamics.
     """
 
     def __init__(self, filename, mode='w', oldfile='backup'):
@@ -62,7 +59,7 @@ class EnergyFile(FileWriter):
             set to `'w'`.
         """
         header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
-                           'Hamiltonian', 'Temperature', 'External'],
+                           'Hamiltonian', 'Temperature'],
                   'width': [10, 12]}
         super(EnergyFile, self).__init__(filename, 'energyfile',
                                          mode=mode,
@@ -96,8 +93,7 @@ class EnergyFile(FileWriter):
                                   'ekin': data[:, 2],
                                   'etot': data[:, 3],
                                   'ham': data[:, 4],
-                                  'temp': data[:, 5],
-                                  'ext': data[:, 6]}}
+                                  'temp': data[:, 5]}}
             yield data_dict
 
     def write(self, step, energy):
@@ -117,11 +113,10 @@ class EnergyFile(FileWriter):
         """
         towrite = [ENERGY_FMT[0].format(step)]
         for i, key in enumerate(['vpot', 'ekin', 'etot', 'ham',
-                                 'temp', 'ext']):
+                                 'temp']):
             value = energy.get(key, 0.0)
             towrite.append(ENERGY_FMT[i + 1].format(value))
-        towrite = ' '.join(towrite)
-        return self.write_line(towrite)
+        return self.write_line(' '.join(towrite))
 
     def __str__(self):
         """Return a string with some info about the energy file."""
