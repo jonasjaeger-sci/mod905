@@ -20,8 +20,7 @@ import json
 # pyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
-                                  PathFile, PathEnsembleFile,
-                                  create_traj_writer)
+                                  PathEnsembleFile, create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -57,9 +56,6 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp', 'target': 'file',
 _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble', 'target': 'file',
                            'when': {'every': 10},
                            'filename': 'pathensemble.dat'},
-                          {'type': 'trialpath', 'target': 'file',
-                           'when': {'every': 10},
-                           'filename': 'paths.dat'},
                           {'type': 'path-stats', 'target': 'screen',
                            'when': {'every': 10}}]
 
@@ -359,10 +355,6 @@ def _create_file_writer(task, system, settings):
                                 settings.get('interfaces', None),
                                 mode=task.get('mode', 'w'),
                                 oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'trialpath':
-        return PathFile(filename,
-                        mode=task.get('mode', 'w'),
-                        oldfile=task.get('oldfile', 'overwrite'))
     else:
         msg = ['Unknown type {} for target file'.format(task['type'])]
         msg += ['Ignoring task: {}'.format(task)]

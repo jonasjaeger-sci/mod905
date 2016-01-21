@@ -7,22 +7,15 @@ Important classes defined here:
 
 - PathEnsembleFile: Writing/reading of path ensemble data.
 
-- PathFile: Writing/reading of path data
 """
 import logging
-try:  # this will fail in python3
-    from itertools import izip_longest as zip_longest
-except ImportError:  # for python3
-    from itertools import zip_longest as zip_longest
 # pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
-from pyretis.inout.txtinout import create_and_format_row
-from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
-from pyretis.inout.fileio.orderfile import ORDER_FMT
+from pyretis.inout.fileio.fileinout import FileWriter
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-__all__ = ['PathFile', 'PathEnsembleFile']
+__all__ = ['PathEnsembleFile']
 
 
 # Define a format used for the path files. Here it's not really needed,
@@ -33,138 +26,6 @@ PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
             '{13:>16.9e} {14:>7d} {15:7d}')
 # Define a format for position and velocities in the path file:
 POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
-
-
-class PathFile(FileWriter):
-    """PathFile(FileWriter) - A writer for paths.
-
-    This class handles writing/reading of path data.
-
-    Attributes
-    ----------
-    block_label : string
-        This label is used to identify new blocks of data
-    block_head : string
-        This is a header written for each new block. It can be used to
-        identify different blocks.
-    header_order : string
-        Header used for the order parameter.
-    """
-
-    def __init__(self, filename, mode='w', oldfile='backup'):
-        """Initialize the `PathFile` object.
-
-        Parameters
-        ----------
-        filename : string
-            Name of file to read/write.
-        mode : string
-            Mode can be used to select if we should write to the file
-            (if mode is equal to 'w') or read from the file (mode equal
-            to 'r'). The default is mode equal to 'w'.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only useful when the mode is
-            set to 'w'.
-        """
-        super(PathFile, self).__init__(filename, 'pathfile',
-                                       mode=mode, oldfile=oldfile,
-                                       header=None)
-        header = {'text': ['Time', 'Orderp', 'Orderv'],
-                  'width': [10, 12]}
-        self.header_order = create_and_format_row(header['text'],
-                                                  header['width'],
-                                                  header=True,
-                                                  spacing=1,
-                                                  fmt_str=None)
-        #header = {'text': ['Time', 'Potential', 'Kinetic',
-        #                   'Total', 'Hamiltonian',
-        #                   'Temperature', 'External'],
-        #          'width': [10, 12]}
-        #self.header_energy = create_and_format_row(header['text'],
-        #                                           header['width'],
-        #                                           header=True,
-        #                                           spacing=1,
-        #                                           fmt_str=None)
-        self.block_label = '#>'
-        self.block_head = ' '.join([self.block_label,
-                                    'Cycle: {}, Path status: {}, Length: {}'])
-
-    @staticmethod
-    def line_parser(line):
-        """Define a simple parser for reading the path file.
-
-        It is used in `self.load()` to parse the input file.
-
-        Parameters
-        ----------
-        line : string
-            A line to parse
-
-        Returns
-        -------
-        out : list of strings
-            Here it will just strip and split the given line.
-        """
-        return line.strip().split()
-
-    def load(self):
-        """Load a path file into the memory.
-
-        The paths are assumed to be organized into blocks defined
-        by `self.block_label`. This function will yield blocks successively.
-
-        Yields
-        ------
-        data_dict : dict
-            Data read from the order parameter file.
-
-        See Also
-        --------
-        read_some_lines
-        """
-        for blocks in read_some_lines(self.filename,
-                                      line_parser=self.line_parser,
-                                      block_label=self.block_label):
-            data_dict = {'comment': blocks['comment'],
-                         'data': blocks['data']}
-            yield data_dict
-
-    def write(self, step, path):
-        """Write a path to the file.
-
-        Parameters
-        ----------
-        step : int
-            This is the current step number.
-        path : object like `Path` from `pyretis.core.path`
-            The path to write to the file.
-
-        Returns
-        -------
-        out : boolean
-            True if line could be written, False otherwise.
-        """
-        block_head = self.block_head.format(step, path.status, len(path.path))
-        self.write_line(block_head)
-        for i, (orderp, pos, vel) in enumerate(path.path):
-            self.write_line('# Frame: {}'.format(i))
-            order_write = (['# Order:'] +
-                           [ORDER_FMT[1].format(val) for val in orderp])
-            self.write_line(' '.join(order_write))
-            self.write_line('# Trajectory in INTERNAL UNITS')
-            traj = []
-            for fmt, posi in zip_longest(POSVEL_FMT, pos, fillvalue=0.0):
-                traj.append(fmt.format(posi))
-            for fmt, veli in zip_longest(POSVEL_FMT, vel, fillvalue=0.0):
-                traj.append(fmt.format(veli))
-            self.write_line(''.join(traj))
-        return None
-
-    def __str__(self):
-        """Return a string with some info about the path file."""
-        msg = 'Path file: {} (mode: {})'.format(self.filename, self.mode)
-        return msg
 
 
 def _line_to_path_object(line):

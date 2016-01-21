@@ -39,7 +39,7 @@ Important classes and functions:
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
 
-- PathFile, PathEnembleFile: Classes for writing path and path ensemble data.
+- PathEnembleFile: Class for writing path ensemble data.
 
 - generate_report: A function to generate reports from analysis output(s).
 
@@ -57,7 +57,6 @@ Important classes and functions:
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table
 from .fileio import (FileWriter, CrossFile, EnergyFile, OrderFile,
-                     PathFile, PathEnsembleFile,
-                     create_traj_writer, get_file_object)
+                     PathEnsembleFile, create_traj_writer, get_file_object)
 from .report import generate_report
 from .settings import create_output

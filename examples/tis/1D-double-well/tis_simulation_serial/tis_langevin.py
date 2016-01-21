@@ -4,8 +4,11 @@ This is a convenience script for creating TIS simulations.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 import numpy as np
-import Queue
 from pyretis.core.path import create_path_ensembles
 from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
@@ -43,9 +46,7 @@ simulation_settings = {'task': 'TIS',
                                'seed': 0,
                                'initial_path': 'kick'},
                        'output': [{'type': 'pathensemble', 'target': 'file',
-                                   'when': {'every': 10}},
-                                  {'type': 'trialpath', 'target': 'file',
-                                   'when': {'every': 100}}]}
+                                   'when': {'every': 10}}]}
 
 
 common = ['task', 'integrator', 'orderparameter',
@@ -137,7 +138,7 @@ print('Setting up TIS simulations:')
 
 interfaces = simulation_settings['interfaces']
 
-simulations_to_run = Queue.Queue()
+simulations_to_run = queue.Queue()
 ensembles, detect = create_path_ensembles(interfaces, include_zero=False)
 for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
     ensemble = '{:03d}'.format(i+1)

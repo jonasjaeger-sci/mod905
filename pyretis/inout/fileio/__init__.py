@@ -39,8 +39,6 @@ Important classes:
 
 - OrderFile: A writer of order parameter data.
 
-- PathFile: A writer for path data.
-
 - PathEnembleFile : A writer of path ensemble data.
 """
 from __future__ import absolute_import
@@ -51,7 +49,7 @@ from .fileinout import FileWriter
 from .crossfile import CrossFile
 from .energyfile import EnergyFile
 from .orderfile import OrderFile
-from .pathfile import PathFile, PathEnsembleFile
+from .pathfile import PathEnsembleFile
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -92,8 +90,6 @@ def get_file_object(file_type, file_name):
         msg = 'Opening a path ensemble is still an experimental feature!'
         logging.warning(msg)
         return PathEnsembleFile(file_name, None, None, mode='r')
-    elif file_type == 'path':
-        return PathFile(file_name, mode='r')
     else:
         msg = 'Unknown file type {} requested. Aborting reading {}'
         msg = msg.format(file_type, file_name)

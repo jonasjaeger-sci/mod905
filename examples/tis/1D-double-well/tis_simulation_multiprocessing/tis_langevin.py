@@ -4,9 +4,9 @@ This is a convenience script for creating TIS simulations.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import os
 import multiprocessing
 import numpy as np
-import os
 from pyretis.core.path import create_path_ensembles
 from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
@@ -40,9 +40,7 @@ simulation_settings = {'task': 'TIS',
                                'seed': 10,
                                'initial_path': 'kick'},
                        'output': [{'type': 'pathensemble', 'target': 'file',
-                                   'when': {'every': 10}},
-                                  {'type': 'trialpath', 'target': 'file',
-                                   'when': {'every': 100}}]}
+                                   'when': {'every': 10}}]}
 
 
 def set_up_tis_simulation(settings):
@@ -125,10 +123,7 @@ if __name__ == '__main__':
         settings['interfaces'] = path_ensemble.interfaces
         settings['output'] = [{'type': 'pathensemble',
                                'target': 'file',
-                               'filename': ensemble_file, 'use': True},
-                              {'type': 'trialpath',
-                               'target': 'file',
-                               'filename': path_file, 'use': False}]
+                               'filename': ensemble_file, 'use': True}]
         simulation_tis = set_up_tis_simulation(settings)
         proc = multiprocessing.Process(target=run_simulation,
                                        args=(simulation_tis, settings))

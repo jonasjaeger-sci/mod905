@@ -4,9 +4,9 @@ This is a convenience script for creating TIS simulations.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-import jinja2
 import pprint
 import os
+import jinja2
 from pyretis.inout.settings import write_settings_file
 
 def simple_template_write(template, variables, outfile, path=None):
@@ -68,9 +68,7 @@ simulation_settings = {'task': 'TIS',
                                'seed': 0,
                                'initial_path': 'kick'},
                        'output': [{'type': 'pathensemble', 'target': 'file',
-                                   'when': {'every': 10}},
-                                  {'type': 'trialpath', 'target': 'file',
-                                   'when': {'every': 100}}]}
+                                   'when': {'every': 10}}]}
 TEMPLATE_TIS = 'template_tis.txt'
 TEMPLATE_A = 'template_analysis.txt'
 
