@@ -17,8 +17,8 @@ Important functions defined here:
 
 - read_gromacs_file: A function for reading snapshots from a gromacs GRO file.
 """
-import numpy as np
 import logging
+import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
 from pyretis.inout.fileio.fileinout import FileWriter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -35,7 +35,7 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 __all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
 
 
-def create_traj_writer(filename, filefmt, oldfile, units):
+def create_traj_writer(filename, filefmt, units, oldfile='backup'):
     """Function to create a trajectory writer from settings.
 
     This function will create a trajectory writer based on settings for
@@ -52,19 +52,21 @@ def create_traj_writer(filename, filefmt, oldfile, units):
     units : string
         This defines the internal units and is used for converting
         to the external units.
+
+    Returns
+    -------
+    out : object like `WriteXYZ` or `WriteGromacs`.
+        The trajectory writer we created here.
     """
     if filefmt == 'xyz':
-        trajwriter = WriteXYZ(filename, units,
-                              oldfile=oldfile)
+        return WriteXYZ(filename, units, oldfile=oldfile)
     elif filefmt == 'gro':
-        trajwriter = WriteGromacs(filename, units,
-                                  oldfile=oldfile)
+        return WriteGromacs(filename, units, oldfile=oldfile)
     else:
         msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
         msgtxt = msgtxt.format(filefmt)
         logger.warning(msgtxt)
-        trajwriter = None
-    return trajwriter
+        return None
 
 
 def _adjust_coordinate(coord):
@@ -286,7 +288,7 @@ class WriteGromacs(FileWriter):
                 return status
         # Write box, note that we update the box-lengths here since
         # it may change during the simulation.
-        status = self.write_string(_GRO_BOX_FMT.format(*self._box_lengths(box)))
+        status = self.write_string(_GRO_BOX_FMT.format(*self.box_lengths(box)))
         self.frame += 1
         return status
 
@@ -314,7 +316,7 @@ class WriteGromacs(FileWriter):
                                 atomname=system.particles.name,
                                 header=header)
 
-    def _box_lengths(self, box):
+    def box_lengths(self, box):
         """Obtain the box lengths from a object."""
         missing = 3 - box.dim
         if missing > 0:
@@ -349,7 +351,7 @@ def read_gromacs_file(filename):
     ...     print(snapshot['x'][0])
     """
     lines_to_read = 0
-    snapshot = None
+    snapshot = {}
     read_natoms = False
     gro = (5, 5, 5, 5, 8, 8, 8, 8, 8, 8)
     gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
@@ -360,9 +362,9 @@ def read_gromacs_file(filename):
             if read_natoms:
                 read_natoms = False
                 lines_to_read = int(lines.strip()) + 1
-                continue  # just skip
+                continue  # just skip to next line
             if lines_to_read == 0:  # new shapshot
-                if snapshot is not None:
+                if len(snapshot) > 0:
                     yield snapshot
                 snapshot = {'header': lines.strip()}
                 read_natoms = True
@@ -376,7 +378,7 @@ def read_gromacs_file(filename):
                 for i, key, gtype in zip(gro, gro_keys, gro_type):
                     val = lines[current:current+i].strip()
                     if len(val) == 0:
-                        # this typically happnes if we try to read velocities
+                        # This typically happens if we try to read velocities
                         # and they are not present in the file.
                         break
                     if gtype == 0:
@@ -388,7 +390,7 @@ def read_gromacs_file(filename):
                         snapshot[key].append(val)
                     except KeyError:
                         snapshot[key] = [val]
-    if snapshot is not None:
+    if len(snapshot) > 1:
         yield snapshot
 
 

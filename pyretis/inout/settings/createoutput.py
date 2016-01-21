@@ -22,11 +22,20 @@ from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
                                   PathEnsembleFile, create_traj_writer)
 from pyretis.inout.txtinout import get_predefined_table
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['OutputTask', 'create_output']
 
+
+WRITERS = {'screen': {'thermo': 'energies',
+                      'pathensemble': 'path-stats'},
+           'file': {'orderp': OrderFile,
+                    'thermo': EnergyFile,
+                    'cross': CrossFile,
+                    'traj': create_traj_writer,
+                    'pathensemble': PathEnsembleFile}}
 
 _DEFAULT_OUTPUT = {}
 _DEFAULT_OUTPUT['md-nve'] = [{'type': 'thermo', 'target': 'file',
@@ -84,7 +93,8 @@ class OutputTask(object):
         to display the current step for a written frame.
     """
 
-    def __init__(self, writer, output_type, target, when=None, header=None):
+    def __init__(self, writer, output_type, target, when=None,
+                 header='Step: {}'):
         """Initiate the OutputTask object.
 
         Parameters
@@ -97,35 +107,33 @@ class OutputTask(object):
         target : string
             This determines what kind out output target we have in mind,
             'file' and 'screen' are handled slightly differently.
-        when : dict
+        when : dict, optional
             Determines if the task should be executed.
-        header : string
+        header : string, optional
             Some object will have a header written each time the we use the
             write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame.
+            to display the current step for a written frame. It is assumed to
+            contain one '{}' field so that we can insert the current step
+            number.
         """
         self.output_type = output_type
         self.writer = writer  # output type can be derived from writer?
-        msg = 'Unknown target: {}'.format(target)
-        assert target in ('screen', 'file'), msg
         self.target = target
         self.when = when
         self.header = header
 
     def output(self, simulation_result):
-        """Output the task.
+        """Output a task given results from a simulation.
 
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned from a
         simulation object (e.g. object like `Simulation` from
         `pyretis.core.simulation.simulation`) after a step. For trajectories,
-        we don't need to pass the actual `system` since this is already
-        attached to the trajectory writer.
+        we expect that `simulation_result` contain the key `traj` so we can
+        pass it to the trajectory writer.
 
         Parameters
         ----------
-        simulation : object like `Simulation` from `pyretis.core`.
-            This is the simulation we are currently running.
         simulation_result : dict
             This is the result from a simulation step.
         """
@@ -135,9 +143,7 @@ class OutputTask(object):
         try:
             result = simulation_result[self.output_type]
         except KeyError:  # result was not calculated at this step
-            result = None
-            if self.output_type != 'traj':
-                return False
+            return False
         # Handle the output:
         if self.target == 'screen':
             out = self.writer.write(step['step'], result,
@@ -146,11 +152,8 @@ class OutputTask(object):
 
         else:
             if self.output_type == 'traj':
-                try:
-                    header = self.header.format(step['step'])
-                except AttributeError:
-                    header = 'Step: {}'.format(step['step'])
-                self.writer.write(result, header=header)
+                header = self.header.format(step['step'])
+                return self.writer.write(result, header=header)
             elif self.output_type == 'cross':
                 return self.writer.write(result)
             else:
@@ -320,43 +323,35 @@ def _create_file_writer(task, settings):
 
     Returns
     -------
-    out : object like `FileWriter` from `pyretis.inout.txtinout`.
+    out : object like `FileWriter` from `pyretis.inout.fileio`.
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """
-    # TODO: This needs to be improved too much special things going on!
     dirname = settings.get('output-dir', None)
     if dirname is not None:
         filename = os.path.join(dirname, task['filename'])
     else:
         filename = task['filename']
-    if task['type'] == 'orderp':
-        return OrderFile(filename,
-                         mode=task.get('mode', 'w'),
-                         oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'thermo':
-        return EnergyFile(filename,
-                          mode=task.get('mode', 'w'),
-                          oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'cross':
-        return CrossFile(filename,
-                         mode=task.get('mode', 'w'),
-                         oldfile=task.get('oldfile', 'overwrite'))
-    elif task['type'] == 'traj':
-        return create_traj_writer(filename, task['format'],
-                                  task.get('oldfile', 'overwrite'),
-                                  settings['units'])
+    oldfile = task.get('oldfile', 'overwrite')
+    if task['type'] == 'traj':
+        return create_traj_writer(filename, task['format'], settings['units'],
+                                  oldfile=oldfile)
     elif task['type'] == 'pathensemble':
         return PathEnsembleFile(filename,
                                 settings.get('ensemble', '000'),
                                 settings.get('interfaces', None),
-                                mode=task.get('mode', 'w'),
-                                oldfile=task.get('oldfile', 'overwrite'))
+                                mode='w',
+                                oldfile=oldfile)
     else:
-        msg = ['Unknown type {} for target file'.format(task['type'])]
-        msg += ['Ignoring task: {}'.format(task)]
-        logging.warning('\n'.join(msg))
-        return None
+        if task['type'] not in WRITERS['file']:
+            msg = ['Unknown type "{}" for target "file"'.format(task['type'])]
+            msg += ['Ignoring task: {}'.format(task)]
+            msgtxt = '\n'.join(msg)
+            logger.warning(msgtxt)
+            return None
+        else:
+            writer = WRITERS['file'][task['type']]
+            return writer(filename, mode='w', oldfile=oldfile)
 
 
 def create_output_task(task, settings):
@@ -380,23 +375,24 @@ def create_output_task(task, settings):
         This is the output task that can be added to a simulation.
     """
     writer = None
-    task_type = None
     if task['target'] == 'file':
         writer = _create_file_writer(task, settings)
     elif task['target'] == 'screen':
-        if task['type'] == 'thermo':
-            writer = get_predefined_table('energies')
-        if task['type'] == 'path-stats':
-            task_type = 'pathensemble'
-            writer = get_predefined_table('path-stats')
+        if task['type'] not in WRITERS['screen']:
+            msg = ['Unknown task type "{}"'.format(task['type'])]
+            msg += ['Ignoring task: {}'.format(task)]
+            msgtxt = '\n'.join(msg)
+            logger.warning(msgtxt)
+        else:
+            writer = get_predefined_table(WRITERS['screen'][task['type']])
     else:
         msg = ['Unknown task target: {}'.format(task['target'])]
         msg += ['Ignoring task: {}'.format(task)]
-        logging.warning('\n'.join(msg))
+        msgtxt = '\n'.join(msg)
+        logger.warning(msgtxt)
     if writer is not None:
-        task_type = task['type'] if task_type is None else task_type
         return OutputTask(writer,
-                          task_type,
+                          task['type'],
                           task['target'],
                           when=task.get('when', None),
                           header=task.get('header', None))
