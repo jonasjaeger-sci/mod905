@@ -135,6 +135,7 @@ class Simulation(object):
                 resi = task.execute(self.cycle)
                 if task.result is not None:
                     results[task.result] = resi
+        results['traj'] = self.system
         return results
 
     def add_task(self, task, position=None):

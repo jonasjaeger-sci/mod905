@@ -72,7 +72,7 @@ ljsystem.forcefield = forcefield
 # create the simulation :-)
 simulationNVE = create_simulation(settings, ljsystem)
 # create outputs for this simulation:
-outputs = [task for task in create_output(ljsystem, settings)]
+outputs = [task for task in create_output(settings)]
 # some additional set-up for the animation
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][settings['units'], 'fs'])

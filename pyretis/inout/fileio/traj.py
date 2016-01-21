@@ -21,7 +21,8 @@ import numpy as np
 import logging
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
 from pyretis.inout.fileio.fileinout import FileWriter
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 # define formats for the trajectory output:
@@ -34,7 +35,7 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 __all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
 
 
-def create_traj_writer(filename, filefmt, oldfile, system):
+def create_traj_writer(filename, filefmt, oldfile, units):
     """Function to create a trajectory writer from settings.
 
     This function will create a trajectory writer based on settings for
@@ -48,19 +49,20 @@ def create_traj_writer(filename, filefmt, oldfile, system):
         Format of file, 'xyz' for xyz, 'gro' for gromacs.
     oldfile : string
         How to deal with backups of old files with the same name.
-    system : object like `System` from `pyretis.core.system`
-        This object is included since information about the units (and
-        possibly the box) is needed.
+    units : string
+        This defines the internal units and is used for converting
+        to the external units.
     """
     if filefmt == 'xyz':
-        trajwriter = WriteXYZ(filename,
-                              system,
+        trajwriter = WriteXYZ(filename, units,
                               oldfile=oldfile)
     elif filefmt == 'gro':
-        trajwriter = WriteGromacs(filename,
-                                  system,
+        trajwriter = WriteGromacs(filename, units,
                                   oldfile=oldfile)
     else:
+        msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
+        msgtxt = msgtxt.format(filefmt)
+        logger.warning(msgtxt)
         trajwriter = None
     return trajwriter
 
@@ -105,20 +107,21 @@ class WriteXYZ(FileWriter):
 
     Attributes
     ----------
-    convert : dict of floats
-        Defines the conversion of positions from internal units to Ångström.
     atomnames : list
         These are the atom names used for the output.
+    convert : dict of floats
+        Defines the conversion of positions from internal units to Ångström.
+    frame : integer
+        The number of frames written.
     """
 
-    def __init__(self, filename, system, oldfile='backup'):
+    def __init__(self, filename, units, oldfile='backup'):
         """Initialization of the XYZ writer."""
         super(WriteXYZ, self).__init__(filename, 'xyz', mode='w',
                                        oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
-        self.system = system
-        self.convert = {'pos': CONVERT['length'][system.units, 'A']}
+        self.convert = {'pos': CONVERT['length'][units, 'A']}
 
     def write_frame(self, pos, names=None, header=None):
         """Write a configuration in xyz-format.
@@ -160,7 +163,7 @@ class WriteXYZ(FileWriter):
         self.frame += 1
         return status
 
-    def write(self, system=None, header=None):
+    def write(self, system, header=None):
         """Write a configuration in xyz-format.
 
         This is a function for writing a configuration in xyz-format. It is
@@ -175,8 +178,6 @@ class WriteXYZ(FileWriter):
         header : string, optional
             Header to use for writing the xyz-frame.
         """
-        if system is None:
-            system = self.system
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
 
@@ -185,36 +186,37 @@ class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
 
     This class handles writing of a system to a file using the gromacs format.
-    The gromacs format is described in the gromacs manual [1]_.
+    The gromacs format is described in the gromacs manual [#]_.
 
     Attributes
     ----------
-    box : object like `Box` from `pyretis.core.box`
-        The simulation box, used for box-lengths.
+    atomnames : list
+        These are the atom names used for the output.
     convert : dict of floats
-        Defines the conversion of positions from internal units to nm
-        and nm/ps.
+        Defines the conversion of positions from internal units to `nm` and
+        velocities from internal units to `nm/ps`.
+    frame : integer
+        The number of frames written.
 
     References
     ----------
 
-    .. [1] The GROMACS manual,
+    .. [#] The GROMACS manual,
        http://manual.gromacs.org/current/online/gro.html
     """
 
-    def __init__(self, filename, system, oldfile='backup'):
+    def __init__(self, filename, units, oldfile='backup'):
         """Initiate the gromacs writer."""
         super(WriteGromacs, self).__init__(filename, 'gromacs', mode='w',
                                            oldfile=oldfile)
         self.atomnames = []
-        self.box = system.box
-        self.system = system
         self.frame = 0  # number of frames written
-        self.convert = {'pos': CONVERT['length'][system.units, 'nm'],
-                        'vel': CONVERT['velocity'][system.units, 'nm/ps']}
+        self.convert = {'pos': CONVERT['length'][units, 'nm'],
+                        'vel': CONVERT['velocity'][units, 'nm/ps']}
 
-    def write_frame(self, pos, vel=None, residuenum=None, residuename=None,
-                    atomname=None, atomnum=None, header=None):
+    def write_frame(self, pos, box, vel=None, residuenum=None,
+                    residuename=None, atomname=None, atomnum=None,
+                    header=None):
         """Write a configuration in gromacs format.
 
         This will write a specific frame with given positions to the file.
@@ -224,6 +226,8 @@ class WriteGromacs(FileWriter):
         ----------
         pos : numpy.array
             The positions to write.
+        box : object like `Box` from `pyretis.core.box`
+            The simulation box, used for box-lengths.
         vel : numpy.array, optional
             Velocities to write.
         residuenum : list of ints, optional
@@ -282,11 +286,11 @@ class WriteGromacs(FileWriter):
                 return status
         # Write box, note that we update the box-lengths here since
         # it may change during the simulation.
-        status = self.write_string(_GRO_BOX_FMT.format(*self._box_lengths()))
+        status = self.write_string(_GRO_BOX_FMT.format(*self._box_lengths(box)))
         self.frame += 1
         return status
 
-    def write(self, system=None, header=None, write_vel=False):
+    def write(self, system, header=None, write_vel=False):
         """Write a configuration in gromacs format.
 
         This is a function for writing a configuration in GRO-format. It is
@@ -303,28 +307,23 @@ class WriteGromacs(FileWriter):
         write_vel : boolean, optional
             If true, velocities will be written
         """
-        if system is None:
-            system = self.system
-        if not write_vel:
-            return self.write_frame(system.particles.pos,
-                                    atomname=system.particles.name,
-                                    header=header)
-        else:
-            return self.write_frame(system.particles.pos,
-                                    vel=system.particles.vel,
-                                    atomname=system.particles.name,
-                                    header=header)
+        velocity = None if not write_vel else system.particles.vel
+        return self.write_frame(system.particles.pos,
+                                system.box,
+                                vel=velocity,
+                                atomname=system.particles.name,
+                                header=header)
 
-    def _box_lengths(self):
-        """Obtain the box lengths from the box object."""
-        missing = 3 - self.box.dim
+    def _box_lengths(self, box):
+        """Obtain the box lengths from a object."""
+        missing = 3 - box.dim
         if missing > 0:
             boxlength = np.ones(3)
-            for i, length in enumerate(self.box.length):
+            for i, length in enumerate(box.length):
                 boxlength[i] = length * self.convert['pos']
             return boxlength
         else:
-            return self.box.length * self.convert['pos']
+            return box.length * self.convert['pos']
 
 
 def read_gromacs_file(filename):

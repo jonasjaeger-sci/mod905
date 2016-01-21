@@ -112,11 +112,11 @@ class OutputTask(object):
         self.when = when
         self.header = header
 
-    def output(self, simulation_step):
+    def output(self, simulation_result):
         """Output the task.
 
         This will output the task using the result found in the
-        `simulation_step` which should be the dictionary returned from a
+        `simulation_result` which should be the dictionary returned from a
         simulation object (e.g. object like `Simulation` from
         `pyretis.core.simulation.simulation`) after a step. For trajectories,
         we don't need to pass the actual `system` since this is already
@@ -124,14 +124,16 @@ class OutputTask(object):
 
         Parameters
         ----------
-        simulation_step : dict
-            This is the result from a simulation step
+        simulation : object like `Simulation` from `pyretis.core`.
+            This is the simulation we are currently running.
+        simulation_result : dict
+            This is the result from a simulation step.
         """
-        step = simulation_step['cycle']
+        step = simulation_result['cycle']
         if not execute_now(step, self.when):
             return False
         try:
-            result = simulation_step[self.output_type]
+            result = simulation_result[self.output_type]
         except KeyError:  # result was not calculated at this step
             result = None
             if self.output_type != 'traj':
@@ -148,7 +150,7 @@ class OutputTask(object):
                     header = self.header.format(step['step'])
                 except AttributeError:
                     header = 'Step: {}'.format(step['step'])
-                self.writer.write(header=header)
+                self.writer.write(result, header=header)
             elif self.output_type == 'cross':
                 return self.writer.write(result)
             else:
@@ -228,7 +230,7 @@ def _task_dict_eq(task1, task2):
         raise ValueError('\n'.join(msg))
 
 
-def create_output(system, settings):
+def create_output(settings):
     """Generate output tasks from settings and defaults.
 
     This function will return actual objects that can be added to the
@@ -238,8 +240,6 @@ def create_output(system, settings):
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`.
-        The system we are investigating in the simulation.
     settings : dict
         These are the settings for the simulation.
 
@@ -250,7 +250,7 @@ def create_output(system, settings):
     defaults = _DEFAULT_OUTPUT.get(settings['task'], [])
     for out_task in _get_output_tasks(settings.get('output', []),
                                       default_output=defaults):
-        task = create_output_task(out_task, system, settings)
+        task = create_output_task(out_task, settings)
         if task is not None:
             yield task
 
@@ -307,16 +307,13 @@ def _get_output_tasks(output_settings, default_output=None):
     return output_tasks
 
 
-def _create_file_writer(task, system, settings):
+def _create_file_writer(task, settings):
     """This will create an object for writing to files.
 
     Parameters
     ----------
     task : dict
         This dictionary describes the task.
-    system : object like `System` from `pyretis.core.system`
-        The system we are describing. Needed for creating the
-        trajectory writer.
     settings : dict
         These are the settings used for setting up the simulation.
         Some of these settings might be useful for creating the output tasks.
@@ -348,7 +345,7 @@ def _create_file_writer(task, system, settings):
     elif task['type'] == 'traj':
         return create_traj_writer(filename, task['format'],
                                   task.get('oldfile', 'overwrite'),
-                                  system)
+                                  settings['units'])
     elif task['type'] == 'pathensemble':
         return PathEnsembleFile(filename,
                                 settings.get('ensemble', '000'),
@@ -362,7 +359,7 @@ def _create_file_writer(task, system, settings):
         return None
 
 
-def create_output_task(task, system, settings):
+def create_output_task(task, settings):
     """Create object for a output task.
 
     This function will create an object for a given output task.
@@ -373,9 +370,6 @@ def create_output_task(task, system, settings):
     ----------
     task : dict
         This dict describes the task.
-    system : object like `System` from `pyretis.core.system`
-        The system we are describing. Needed for creating the
-        trajectory writer.
     settings : dict
         These are the settings used for setting up the simulation.
         Some of these settings might be useful for creating the output tasks.
@@ -388,7 +382,7 @@ def create_output_task(task, system, settings):
     writer = None
     task_type = None
     if task['target'] == 'file':
-        writer = _create_file_writer(task, system, settings)
+        writer = _create_file_writer(task, settings)
     elif task['target'] == 'screen':
         if task['type'] == 'thermo':
             writer = get_predefined_table('energies')

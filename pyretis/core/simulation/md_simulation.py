@@ -179,7 +179,8 @@ class SimulationMDFlux(Simulation):
         # collect energy and order parameter, this is done at all steps
         results = {'cycle': self.cycle,
                    'thermo': calculate_thermo(self.system),
-                   'orderp': self.order_function(self.system)}
+                   'orderp': self.order_function(self.system),
+                   'traj': self.system}
         # do not check crossing at step 0
         if not self.first_step:
             leftside, cross = check_crossing(self.cycle['step'],

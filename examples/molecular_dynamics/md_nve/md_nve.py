@@ -25,6 +25,7 @@ POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)  # use a shifted LJ potenti
 
 # simulation settings:
 settings = {'task': 'md-nve',
+            'units': 'lj',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 1000,
             'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
@@ -57,7 +58,7 @@ thermo_file = FileWriter('thermo.txt', 'table',
                          header={'text': table.header})
 store_results = []
 # also create some other outputs:
-output_tasks = [task for task in create_output(ljsystem, settings)]
+output_tasks = [task for task in create_output(settings)]
 # run the simulation :-)
 
 for result in simulation_nve.run():
