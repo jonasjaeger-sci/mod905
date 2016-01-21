@@ -225,7 +225,8 @@ class ReservoirSampler(object):
     from a set of `N > k` items. The list is created and maintained so that
     we only need to store `k`items This is useful when `N` is very large or
     when storing all `N` items require a lot of memory. The algorithm is
-    described by Knuth [#]_.
+    described by Knuth [#]_ but here we do a variation, so that each item
+    may be choosen several times.
 
 
     Attributes
@@ -271,15 +272,16 @@ class ReservoirSampler(object):
         self.length = length
         self.ret_idx = 0
 
-    def append(self, item):
+    def append(self, new_item):
         """Try to add an item to the reservoir."""
         self.items += 1
-        if len(self.reservoir) < self.length:
-            self.reservoir.append(item)
+        if self.items == 1:
+            self.reservoir = [new_item for _ in range(self.length)]
         else:
-            idx = int(self.rgen.rand() * self.items)
-            if idx < self.length:
-                self.reservoir[idx] = item
+            factor = 1.0/float(self.items)
+            for i in range(self.length):
+                if self.rgen.rand() < factor:
+                    self.reservoir[i] = new_item
 
     def get_item(self):
         """This method will return one of the items from the reservoir.
