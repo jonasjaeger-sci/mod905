@@ -44,8 +44,8 @@ def _check_args(function, given_args=None, given_kwargs=None):
     else:
         given = 0
     if len(args) != given:
-        msg = 'Wrong number of arguments given'
-        logging.warning(msg)
+        msgtxt = 'Wrong number of arguments given'
+        logging.warning(msgtxt)
         return False
     # Check kwargs but only check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
@@ -56,11 +56,12 @@ def _check_args(function, given_args=None, given_kwargs=None):
             if extra:
                 msg = ['Task Keyword arguments: {}'.format(defaults)]
                 msg += ['Unexpected keyword argument: {}'.format(extra)]
-                logging.warning('\n'.join(msg))
+                msgtxt = '\n'.join(msg)
+                logging.warning(msgtxt)
                 return False
         else:
-            msg = 'Unexpected keyword argument!'
-            logging.warning(msg)
+            msgtxt = 'Unexpected keyword argument!'
+            logging.warning(msgtxt)
             return False
     return True
 
@@ -151,7 +152,7 @@ class SimulationTask(object):
         self.args = args
         self.kwargs = kwargs
         self.when = when
-        self.result = result
+        self._result = result
         self.first = first
 
     def execute(self, step):
@@ -206,9 +207,10 @@ class SimulationTask(object):
             for key in when:
                 self.when[key] = when[key]
 
-    def get_result_label(self):
+    @property
+    def result(self):
         """Return the result label."""
-        return self.result
+        return self._result
 
     def run_first(self):
         """Return True if task should be executed before first step."""

@@ -132,7 +132,9 @@ class Simulation(object):
         results = {'cycle': self.cycle}
         for task in self.task:
             if not self.first_step or task.run_first():
-                results[task.get_result_label()] = task.execute(self.cycle)
+                resi = task.execute(self.cycle)
+                if task.result is not None:
+                    results[task.result] = resi
         return results
 
     def add_task(self, task, position=None):
