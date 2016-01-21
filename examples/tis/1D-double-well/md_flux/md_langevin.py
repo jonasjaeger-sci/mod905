@@ -78,7 +78,7 @@ simulation_settings['dim'] = system.get_dim()
 simulation_md = create_simulation(simulation_settings, system)
 print('\nCreated:', simulation_md)
 # create outputs for this simulation:
-output = [task for task in create_output(system, simulation_settings)]
+output = [task for task in create_output(simulation_settings)]
 # store the settings we used, in case we need it later (e.g. for analysis).
 settings_file = 'settings.json'
 print('Storing the simulation settings in: {}'.format(settings_file))
