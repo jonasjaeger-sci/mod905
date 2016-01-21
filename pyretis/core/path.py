@@ -138,13 +138,14 @@ def reverse_path(path, order_func=None):
     for phasepoint in reversed(path.path):
         pos = phasepoint[1]
         vel = phasepoint[2]
+        energy = phasepoint[3]
         if vel is not None:
             vel *= -1
         if order_func and pos is not None:
             orderp = order_func(pos, vel)
         else:
             orderp = phasepoint[0]
-        app = new_path.append(orderp, pos, vel)
+        app = new_path.append(orderp, pos, vel, energy)
         if not app:
             msg = 'Could not reverse path'
             logging.error(msg)
@@ -279,7 +280,7 @@ class Path(object):
         for phasepoint in self.path:
             yield phasepoint
 
-    def append(self, orderp, pos, vel):
+    def append(self, orderp, pos, vel, energy):
         """Append a new phase point to the path.
 
         We will here append a new phase space point to the path.
@@ -296,12 +297,14 @@ class Path(object):
         pos : numpy.array
             The positions of the particles,
         vel: numpy.array
-            The velocities of the particles,
+            The velocities of the particles.
+        energy : dict
+            A dict with energy terms for the phase point.
         """
         if self.maxlen is None or len(self.path) < self.maxlen:
             pos_copy = np.copy(pos) if pos is not None else None
             vel_copy = np.copy(vel) if vel is not None else None
-            self.path.append([orderp, pos_copy, vel_copy])
+            self.path.append([orderp, pos_copy, vel_copy, energy])
             self._update_orderp(orderp[0], len(self.path) - 1)
             return True
         else:

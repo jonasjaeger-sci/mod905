@@ -20,10 +20,12 @@ Important functions defined here:
   simulation settings.
 """
 from __future__ import absolute_import
-import numpy as np
 import logging
+import numpy as np
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.path import Path
+from pyretis.core.particlefunctions import calculate_thermo
+
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -175,8 +177,10 @@ class Integrator(object):
             status = 'Appending to old path'
         while True:
             orderp = order_function(system)
-            add = path.append(orderp, system.particles.pos,
-                              system.particles.vel)
+            add = path.append(orderp,
+                              system.particles.pos,
+                              system.particles.vel,
+                              calculate_thermo(system))
             if not add:
                 if len(path.path) >= path.maxlen:
                     status = 'Max. path length exceeded'
