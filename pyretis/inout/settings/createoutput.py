@@ -14,6 +14,7 @@ Important classes defined here:
 - OutputTask: A class for handling output tasks.
 """
 from __future__ import print_function
+import itertools
 import logging
 import os
 import re
@@ -67,7 +68,7 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp', 'target': 'file',
 _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble', 'target': 'file',
                            'when': {'every': 10},
                            'filename': 'pathensemble.dat'},
-                          {'type': 'path-stats', 'target': 'screen',
+                          {'type': 'pathensemble', 'target': 'screen',
                            'when': {'every': 10}}]
 
 
@@ -96,7 +97,7 @@ class OutputTask(object):
     """
 
     def __init__(self, writer, output_type, target, when=None,
-                 header='Step: {}'):
+                 header=None):
         """Initiate the OutputTask object.
 
         Parameters
@@ -123,6 +124,10 @@ class OutputTask(object):
         self.target = target
         self.when = when
         self.header = header
+        if self.header is None:
+            self.header = 'Step: {}'
+            # default header is defined here in case we would like to
+            # add some extra info in the future from say the output_type.
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
@@ -180,8 +185,8 @@ class OutputTask(object):
         return '\n'.join(msg)
 
 
-def tasks_equal(task1, task2):
-    """Check if two given tasks are similar by comparing their settings.
+def task_dict_equal(task1, task2):
+    """Check if two given tasks are equak by comparing their settings.
 
     This function will determine if two tasks are identical. The test for
     similarity depends on the target of the two tasks. If the target is
@@ -189,9 +194,10 @@ def tasks_equal(task1, task2):
     identical. If the target is `file` then the tasks are equal if their
     file name is the same.
 
-    In addition we also say that two tasks are identical if they match for
-    sufficent number of settings and if one of the tasks are missing
-    sufficient settings to be an independent task.
+    In addition we have the complicating fact that not all settings need
+    to be set and here, the matching is greedy for settings not defined.
+    This is to make it easy to update tasks, especially the default
+    tasks.
     """
     match_type = task1['type'] == task2['type']
     target1 = task1.get('target', '(.+)')
@@ -202,68 +208,34 @@ def tasks_equal(task1, task2):
     file2 = task2.get('filename', '(.+)')
     match_filename = (re.match(file1, file2) is not None or
                       re.match(file2, file1) is not None)
-    return match_type, match_target, match_filename
+    # now, two tasks are equal if:
+    # 1) match_type is True
+    # 2) match_target is True
+    # 3) In addition, for files if the file_name match
+    equal = match_type and match_target
+    if match_target and 'file' in (target1, target2):
+        equal = equal and match_filename
+    return equal
 
 
-def _task_dict_eq(task1, task2):
-    """Check if two task dicts are similar.
-
-    This function is used when we decide if we should add a new task or update
-    an existing one. The two tasks are checked differently depending on the
-    target of the task.
-
-    - If the 'target' equals 'screen', then two tasks are equal if they are
-      of the same 'type'.
-
-    - If the 'target' equals 'file' then the two tasks are equal if they
-      write to the same file.
-
-      If we find that two tasks have different 'type' but are using the same
-      'filename', then this is probably an error and we raise an `ValueError`.
+def task_dict_ok(task):
+    """Check if a task has enough settings given.
 
     Parameters
     ----------
-    task1 : dict
-        Representation of a task. The possible keys are 'type',
-        'target', 'when', 'filename', 'format', 'header'.
-        'type' and 'target' will always be given and we use these two
-        as a first test to see if the two tasks are similar.
-    task2 : dict
-        Representation of a task. See definition above for `task1`.
+    task : dict
+        The settings for creating a task
 
     Returns
     -------
     out : boolean
-        True if the tasks are similar.
+        True if a task can be created from the settings.
     """
-    # check that the tasks make sense:
-    same_target = task1['target'] == task2['target']
-    same_type = task1['type'] == task2['type']
-    if not same_target:  # different target, just stop
-        return False
-    if task1['target'] == 'screen':  # same targets are equal if same type
-        return same_type
-    elif task1['target'] == 'file':
-        # check if they both give file name or just one of them
-        same_file = False
-        try:
-            same_file = task1['filename'] == task2['filename']
-        except KeyError:
-            # if just one of them gives a file name, we will assume that we
-            # will write to the same file if types are equal.
-            same_file = same_type
-        if same_file and not same_type:
-            # different types writing to same file!
-            msg = ['Two different task attempting to write to the same file:']
-            msg.append('Task1: {}'.format(task1))
-            msg.append('Task2: {}'.format(task2))
-            raise ValueError('\n'.join(msg))
-        return same_type
-    else:
-        msg = ['Did not understand output target:']
-        msg.append('Task1: {}'.format(task1))
-        msg.append('Task2: {}'.format(task2))
-        raise ValueError('\n'.join(msg))
+    task_ok = 'type' in task and 'target' in task
+    if task_ok:
+        if task['target'] == 'file':
+            task_ok = 'filename' in task
+    return task_ok
 
 
 def create_output(settings):
@@ -284,63 +256,24 @@ def create_output(settings):
     out : object like `OutputTask`
     """
     defaults = _DEFAULT_OUTPUT.get(settings['task'], [])
-    for out_task in _get_output_tasks(settings.get('output', []),
-                                      default_output=defaults):
-        task = create_output_task(out_task, settings)
-        if task is not None:
-            yield task
-
-
-def _get_output_tasks(output_settings, default_output=None):
-    """Generate output tasks (dict representation) from settings.
-
-    This function will generate output tasks from given settings and add
-    default output settings. It will check to see if the given output
-    settings can be used to update the default settings. Note that the
-    returned list of output tasks are dicts and that the `create_output_task`
-    function should be used to generate the output task objects.
-
-    Parameters
-    ----------
-    output_settings : list of dicts
-        These are user-specified output tasks.
-    default_output : list of dicts
-        These are default tasks.
-
-    Returns
-    -------
-    output_tasks : list of dicts
-        List of output tasks that can be added to the simulation.
-        Note that the tasks should be created with `create_output_task`
-        before they can be added.
-    """
-    output_tasks = []
-    # First add default outputs:
-    # we do not add if it has been turned off by the user
-    if default_output is not None:
-        for default in default_output:
-            # check if this task is turned off:
-            add = True
-            for output in output_settings:
-                if _task_dict_eq(default, output):  # found a similar task
-                    add = output.get('use', True)
-            if add:
-                output_tasks.append(default)
-    # Next, add user specified outputs, but check if we can update
-    # already added defaults:
-    for output in output_settings:
-        add = output.get('use', True)
-        update = []
-        for i, task in enumerate(output_tasks):  # loop over the added
-            if _task_dict_eq(output, task):  # True if found similar
-                add = False
-                update.append(i)  # will try to update task no. i
-        if add:  # this is a completely new task, will add
-            output_tasks.append(output)
-        else:  # we should possibly update or not add it
-            for i in update:
-                output_tasks[i].update(output)  # just update dict
-    return output_tasks
+    from_settings = settings.get('output', [])
+    task_list = []
+    for task in itertools.chain(defaults, from_settings):
+        to_update = []
+        for i, task1 in enumerate(task_list):
+            if task_dict_equal(task1, task):
+                to_update.append(i)
+        if len(to_update) > 0:
+            for i in to_update:
+                task_list[i].update(task)
+        else:
+            if task_dict_ok(task):
+                task_list.append(task)
+    for out_task in task_list:
+        if out_task.get('use', True):
+            task = create_output_task(out_task, settings)
+            if task is not None:
+                yield task
 
 
 def _create_file_writer(task, settings):
