@@ -14,8 +14,9 @@ Important classes defined here:
 - OutputTask: A class for handling output tasks.
 """
 from __future__ import print_function
-import os
 import logging
+import os
+import re
 import json
 # pyretis imports
 from pyretis.core.simulation.simulation_task import execute_now
@@ -36,6 +37,7 @@ WRITERS = {'screen': {'thermo': 'energies',
                     'cross': CrossFile,
                     'traj': create_traj_writer,
                     'pathensemble': PathEnsembleFile}}
+
 
 _DEFAULT_OUTPUT = {}
 _DEFAULT_OUTPUT['md-nve'] = [{'type': 'thermo', 'target': 'file',
@@ -136,20 +138,25 @@ class OutputTask(object):
         ----------
         simulation_result : dict
             This is the result from a simulation step.
+
+        Returns
+        -------
+        out : boolean
+            True if the writer wrote something, False otherwise.
         """
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
             return False
-        try:
-            result = simulation_result[self.output_type]
-        except KeyError:  # result was not calculated at this step
+        if self.output_type not in simulation_result:
+            # This probably just means that the required result was not
+            # calculated at this step.
             return False
-        # Handle the output:
+        result = simulation_result[self.output_type]
         if self.target == 'screen':
             out = self.writer.write(step['step'], result,
                                     first_step=(step['stepno'] == 0))
             print(out)
-
+            return True
         else:
             if self.output_type == 'traj':
                 header = self.header.format(step['step'])
@@ -173,6 +180,31 @@ class OutputTask(object):
         return '\n'.join(msg)
 
 
+def tasks_equal(task1, task2):
+    """Check if two given tasks are similar by comparing their settings.
+
+    This function will determine if two tasks are identical. The test for
+    similarity depends on the target of the two tasks. If the target is
+    `screen` then the two tasks are equal if and only if their type is also
+    identical. If the target is `file` then the tasks are equal if their
+    file name is the same.
+
+    In addition we also say that two tasks are identical if they match for
+    sufficent number of settings and if one of the tasks are missing
+    sufficient settings to be an independent task.
+    """
+    match_type = task1['type'] == task2['type']
+    target1 = task1.get('target', '(.+)')
+    target2 = task2.get('target', '(.+)')
+    match_target = (re.match(target1, target2) is not None or
+                    re.match(target2, target1) is not None)
+    file1 = task1.get('filename', '(.+)')
+    file2 = task2.get('filename', '(.+)')
+    match_filename = (re.match(file1, file2) is not None or
+                      re.match(file2, file1) is not None)
+    return match_type, match_target, match_filename
+
+
 def _task_dict_eq(task1, task2):
     """Check if two task dicts are similar.
 
@@ -183,9 +215,10 @@ def _task_dict_eq(task1, task2):
     - If the 'target' equals 'screen', then two tasks are equal if they are
       of the same 'type'.
 
-    - If the 'target' equals 'file' then the two tasks are equal if they write
-      to the same 'filename' or if they are of the same 'type'. In we find
-      that the two tasks have different 'type' but are using the same
+    - If the 'target' equals 'file' then the two tasks are equal if they
+      write to the same file.
+
+      If we find that two tasks have different 'type' but are using the same
       'filename', then this is probably an error and we raise an `ValueError`.
 
     Parameters
