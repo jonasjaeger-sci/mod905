@@ -273,6 +273,8 @@ def create_output(settings):
         if out_task.get('use', True):
             task = create_output_task(out_task, settings)
             if task is not None:
+                msgtxt = 'Output task created: {}'.format(task)
+                logger.info(msgtxt)
                 yield task
 
 
