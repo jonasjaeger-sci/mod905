@@ -97,7 +97,7 @@ class OutputTask(object):
     """
 
     def __init__(self, writer, output_type, target, when=None,
-                 header=None):
+                 header=None, kwargs=None):
         """Initiate the OutputTask object.
 
         Parameters
@@ -124,10 +124,10 @@ class OutputTask(object):
         self.target = target
         self.when = when
         self.header = header
-        if self.header is None:
-            self.header = 'Step: {}'
-            # default header is defined here in case we would like to
-            # add some extra info in the future from say the output_type.
+        if kwargs is None:
+            self.kwargs = {}
+        else:
+            self.kwargs = kwargs
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
@@ -164,8 +164,10 @@ class OutputTask(object):
             return True
         else:
             if self.output_type == 'traj':
-                header = self.header.format(step['step'])
-                return self.writer.write(result, header=header)
+                if self.header is not None:
+                    header = self.header.format(step['step'])
+                    self.kwargs['header'] = header
+                return self.writer.write(result, **self.kwargs)
             else:
                 return self.writer.write(step['step'], result)
 
@@ -309,15 +311,15 @@ def _create_file_writer(task, settings):
                                 mode='w',
                                 oldfile=oldfile)
     else:
-        if task['type'] not in WRITERS['file']:
+        if task['type'] in WRITERS['file']:
+            writer = WRITERS['file'][task['type']]
+            return writer(filename, mode='w', oldfile=oldfile)
+        else:
             msg = ['Unknown type "{}" for target "file"'.format(task['type'])]
             msg += ['Ignoring task: {}'.format(task)]
             msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
             return None
-        else:
-            writer = WRITERS['file'][task['type']]
-            return writer(filename, mode='w', oldfile=oldfile)
 
 
 def create_output_task(task, settings):
@@ -364,7 +366,8 @@ def create_output_task(task, settings):
                           task['type'],
                           task['target'],
                           when=task.get('when', None),
-                          header=task.get('header', None))
+                          header=task.get('header', None),
+                          kwargs=task.get('kwargs', None))
 
 
 def store_settings_as_json(settings, outfile, path=None):
