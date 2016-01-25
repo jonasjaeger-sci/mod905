@@ -42,11 +42,11 @@ simulation_settings = {'task': 'md-flux',
                                           'args': ['position', 0],
                                           'kwargs': {'dim': 'x',
                                                      'periodic': False}},
-                       'output': [{'type': 'traj', 'target': 'file',
-                                   'format': 'gro',
-                                   'when': {'every': 100},
-                                   'filename': 'traj.gro',
-                                   'header': 'MD FLUX simulation. Step: {}'}]}
+                       'output-modify': [{'name': 'traj',
+                                          'format': 'gro',
+                                          'when': {'every': 100},
+                                          'filename': 'traj.gro',
+                                          'header': 'MD FLUX simulation. Step: {}'}]}
 
 # set up simulation
 units = simulation_settings['units']

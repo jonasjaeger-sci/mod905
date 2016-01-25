@@ -310,12 +310,18 @@ def create_output(settings):
             task_list.append(task)
 
     for task in settings.get('output-modify', []):
+        match = False
         for taski in task_list:
             if task['name'] == taski['name']:
                 msgtxt = 'Updating task "{}"'.format(task['name'])
                 logger.info(msgtxt)
                 taski.update(task)
+                match = True
                 break
+        if not match:
+            msgtxt = 'No match for output-modify setting: {}'
+            msgtxt = msgtxt.format(task)
+            logger.warning(msgtxt)
 
     for task in task_list:
         if task.get('use', True):

@@ -45,8 +45,8 @@ simulation_settings = {'task': 'TIS',
                                'sigma_v': -1,
                                'seed': 0,
                                'initial_path': 'kick'},
-                       'output': [{'type': 'pathensemble', 'target': 'file',
-                                   'when': {'every': 10}}]}
+                       'output-modify': [{'name': 'pathensemble-file',
+                                          'when': {'every': 10}}]}
 
 
 common = ['task', 'integrator', 'orderparameter',
@@ -161,9 +161,8 @@ for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
     local_settings['ensemble'] = path_ensemble.ensemble
     local_settings['interfaces'] = path_ensemble.interfaces
     # copy output settings since these will be modified (with path):
-    local_settings['output'] = [task.copy() for task in
-                                simulation_settings['output']]
-    print(local_settings['output'])
+    local_settings['output-modify'] = [task.copy() for task in
+                                       simulation_settings['output-modify']]
     local_settings['output-dir'] = ensemble
     simulation_tis = set_up_tis_simulation(local_settings)
     simulations_to_run.put((simulation_tis, local_settings, i))

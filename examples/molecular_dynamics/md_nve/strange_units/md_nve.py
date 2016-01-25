@@ -55,8 +55,8 @@ settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet',
                            'timestep': timestep},
             'endcycle': 1000,
-            'output': [{'target': 'file', 'type': 'traj', 'when': {'every': 1},
-                        'format': 'gro', 'filename': 'traj.gro'}],
+            'output-modify': [{'name': 'traj', 'when': {'every': 1},
+                               'filename': 'traj.gro'}],
             'generate-vel': {'seed': 0, 'momentum': True,
                              'distribution': 'maxwell'}}
 
