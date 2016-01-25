@@ -14,12 +14,13 @@ Important classes defined here:
 - OutputTask: A class for handling output tasks.
 """
 from __future__ import print_function
-import itertools
 import logging
+import itertools
 import os
-import re
+import pprint
 import json
 # pyretis imports
+from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
                                   PathEnsembleFile, create_traj_writer)
@@ -31,44 +32,69 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['OutputTask', 'create_output']
 
 
-WRITERS = {'screen': {'thermo': 'energies',
-                      'pathensemble': 'path-stats'},
-           'file': {'orderp': OrderFile,
-                    'thermo': EnergyFile,
-                    'cross': CrossFile,
-                    'traj': create_traj_writer,
-                    'pathensemble': PathEnsembleFile}}
+# Define the known output types:
+_OUTPUT_TYPES = {'energy-file': {'target': 'file', 'writer': EnergyFile,
+                                 'result': 'thermo'},
+                 'traj': {'target': 'file', 'writer': create_traj_writer,
+                          'result': 'traj'},
+                 'thermo-screen': {'target': 'screen', 'writer': 'energies',
+                                   'result': 'thermo'},
+                 'orderp': {'target': 'file', 'writer': OrderFile,
+                            'result': 'orderp'},
+                 'cross': {'target': 'file', 'writer': CrossFile,
+                           'result': 'cross'},
+                 'pathensemble-file': {'target': 'file',
+                                       'writer': PathEnsembleFile,
+                                       'result': 'pathensemble'},
+                 'pathensemble-screen': {'target': 'screen',
+                                         'writer': 'path-stats',
+                                         'result': 'pathensemble'}}
 
-
+# Define the default outputs:
 _DEFAULT_OUTPUT = {}
-_DEFAULT_OUTPUT['md-nve'] = [{'type': 'thermo', 'target': 'file',
+_DEFAULT_OUTPUT['md-nve'] = [{'type': 'energy-file',
+                              'name': 'energy-file',
                               'when': {'every': 10},
                               'filename': 'energy.dat'},
-                             {'type': 'traj', 'target': 'file',
+                             {'type': 'traj',
+                              'name': 'traj',
                               'when': {'every': 10},
-                              'filename': 'traj.gro', 'format': 'gro',
+                              'filename': 'traj.gro',
+                              'format': 'gro',
                               'header': 'NVE simulation. Step: {}'},
-                             {'type': 'thermo', 'target': 'screen',
+                             {'type': 'thermo-screen',
+                              'name': 'thermo-screen',
                               'when': {'every': 10}}]
-_DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp', 'target': 'file',
+_DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
+                               'name': 'orderp',
+                               'target': 'file',
                                'when': {'every': 10},
                                'filename': 'order.dat'},
-                              {'type': 'thermo', 'target': 'file',
+                              {'type': 'energy-file',
+                               'name': 'energy-file',
+                               'target': 'file',
                                'when': {'every': 100},
                                'filename': 'energy.dat'},
-                              {'type': 'cross', 'target': 'file',
+                              {'type': 'cross',
+                               'name': 'cross',
                                'when': {'every': 1},
                                'filename': 'cross.dat'},
-                              {'type': 'traj', 'target': 'file',
-                               'format': 'gro', 'when': {'every': 10},
+                              {'type': 'traj',
+                               'name': 'traj',
+                               'format': 'gro',
+                               'when': {'every': 10},
                                'filename': 'traj.gro',
                                'header': 'MDFLUX simulation. Step: {}'},
-                              {'type': 'thermo', 'target': 'screen',
+                              {'type': 'thermo-screen',
+                               'name': 'thermo-screen',
                                'when': {'every': 10}}]
-_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble', 'target': 'file',
+_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble-file',
+                           'name': 'pathensemble-file',
                            'when': {'every': 10},
                            'filename': 'pathensemble.dat'},
-                          {'type': 'pathensemble', 'target': 'screen',
+                          {'type': 'pathensemble-screen',
+                           'name': 'pathensemble-screen',
+                           'target': 'screen',
                            'when': {'every': 10}}]
 
 
@@ -81,35 +107,43 @@ class OutputTask(object):
 
     Attributes
     ----------
-    output_type : string
-        This string identifies the result we want to write.
+    name : string
+        This string identifies the task, it can for instance be used
+        to reference the dictionary used to create the writer.
     target : string
         This determines what kind out output target we have in mind,
         'file' and 'screen' are handled slightly differently.
-    when : dict
-        Determines if the task should be executed.
+    result : string
+        This string defines the result we are going to output.
     writer : object like `FileWriter` from `pyretis.inout.txtinout`
         This object will handle the actual writing of the result.
+    when : dict
+        Determines if the task should be executed.
     header : string
         Some objects will have a specific header written each time we use
         the write routine. This is for instance used in the trajectory writer
         to display the current step for a written frame.
+    kwargs : dict
+        This dictionary contains some extra parameters that can be passed
+        to the writers.
     """
 
-    def __init__(self, writer, output_type, target, when=None,
-                 header=None, kwargs=None):
+    def __init__(self, name, target, result, writer,
+                 when=None, header=None, kwargs=None):
         """Initiate the OutputTask object.
 
         Parameters
         ----------
-        writer : object
-            This object will handle the actual writing of the result.
-        output_type : string
-            This string defines the output type. It is used to get the
-            output from the simulation.
+        name : string
+            This string identifies the task, it can for instance be used
+            to reference the dictionary used to create the writer.
         target : string
             This determines what kind out output target we have in mind,
             'file' and 'screen' are handled slightly differently.
+        result : string
+            This string defines the result we are going to output.
+        writer : object like `FileWriter` from `pyretis.inout.txtinout`
+            This object will handle the actual writing of the result.
         when : dict, optional
             Determines if the task should be executed.
         header : string, optional
@@ -118,10 +152,14 @@ class OutputTask(object):
             to display the current step for a written frame. It is assumed to
             contain one '{}' field so that we can insert the current step
             number.
+        kwargs : dict
+            This dictionary contains some extra parameters that can be passed
+            to the writers.
         """
-        self.output_type = output_type
-        self.writer = writer  # output type can be derived from writer?
+        self.name = name
         self.target = target
+        self.result = result
+        self.writer = writer
         self.when = when
         self.header = header
         if kwargs is None:
@@ -152,18 +190,18 @@ class OutputTask(object):
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
             return False
-        if self.output_type not in simulation_result:
+        if self.result not in simulation_result:
             # This probably just means that the required result was not
             # calculated at this step.
             return False
-        result = simulation_result[self.output_type]
+        result = simulation_result[self.result]
         if self.target == 'screen':
             out = self.writer.write(step['step'], result,
                                     first_step=(step['stepno'] == 0))
             print(out)
             return True
         else:
-            if self.output_type == 'traj':
+            if self.result == 'traj':
                 if self.header is not None:
                     header = self.header.format(step['step'])
                     self.kwargs['header'] = header
@@ -178,64 +216,66 @@ class OutputTask(object):
 
     def __str__(self):
         """Output some info about this output task."""
-        msg = ['Output task: {}'.format(self.output_type)]
+        msg = ['Output task: {}'.format(self.name)]
+        msg += ['* Result: {}'.format(self.result)]
         msg += ['* Target: {}'.format(self.target)]
         msg += ['* Writer: {}'.format(self.writer)]
         msg += ['* When: {}'.format(self.when)]
         return '\n'.join(msg)
 
 
-def task_dict_equal(task1, task2):
-    """Check if two given tasks are equak by comparing their settings.
+def check_user_output_task(task, def_tasks):
+    """Add a user-specified output task.
 
-    This function will determine if two tasks are identical. The test for
-    similarity depends on the target of the two tasks. If the target is
-    `screen` then the two tasks are equal if and only if their type is also
-    identical. If the target is `file` then the tasks are equal if their
-    file name is the same.
-
-    In addition we have the complicating fact that not all settings need
-    to be set and here, the matching is greedy for settings not defined.
-    This is to make it easy to update tasks, especially the default
-    tasks.
-    """
-    match_type = task1['type'] == task2['type']
-    target1 = task1.get('target', '(.+)')
-    target2 = task2.get('target', '(.+)')
-    match_target = (re.match(target1, target2) is not None or
-                    re.match(target2, target1) is not None)
-    file1 = task1.get('filename', '(.+)')
-    file2 = task2.get('filename', '(.+)')
-    match_filename = (re.match(file1, file2) is not None or
-                      re.match(file2, file1) is not None)
-    # now, two tasks are equal if:
-    # 1) match_type is True
-    # 2) match_target is True
-    # 3) In addition, for files if the file_name match
-    equal = match_type and match_target
-    if match_target and 'file' in (target1, target2):
-        equal = equal and match_filename
-    return equal
-
-
-def task_dict_ok(task):
-    """Check if a task has enough settings given.
+    This method will check the user specified settings for an output task
+    and check if it can be added or not.
 
     Parameters
     ----------
     task : dict
-        The settings for creating a task
+        A dict defining the task we want to add.
+    def_tasks : list of dicts
+        A list of the tasks that have already been defined.
 
     Returns
     -------
-    out : boolean
-        True if a task can be created from the settings.
+    out[0] : boolean
+        True if the task can be added.
+    out[1] : list of strings
+        If a task can not be added, this list will contain some information
+        on why not.
     """
-    task_ok = 'type' in task and 'target' in task
-    if task_ok:
-        if task['target'] == 'file':
-            task_ok = 'filename' in task
-    return task_ok
+    msg = []
+    add = True
+    task_names = set([taski['name'] for taski in def_tasks])
+    task_files = set([taski.get('filename', None) for taski in def_tasks])
+    if not 'type' in task:
+        msg += ['Task does not define a "type"']
+        add = False
+    else:
+        if not task['type'] in _OUTPUT_TYPES:
+            msg += ['Unknown type "{}" specified'.format(task['type'])]
+            keys = [key for key in _OUTPUT_TYPES]
+            msg += ['Type should be one of:\n{}'.format(keys)]
+            add = False
+        else:
+            req = ['name']
+            if _OUTPUT_TYPES[task['type']]['target'] == 'file':
+                req += ['filename']
+            result, not_found = check_settings(task, req)
+            if not result:
+                msg += ['Missing output setting(s): {}'.format(not_found)]
+                add = False
+            else:
+                if 'filename' in task and task['filename'] in task_files:
+                    errtxt = 'A task using the file "{}" is already defined!'
+                    msg += [errtxt.format(task['filename'])]
+                    add = False
+                if task['name'] in task_names:
+                    errtxt = 'A task with the name "{}" is already defined!'
+                    msg += [errtxt.format(task['name'])]
+                    add = False
+    return add, msg
 
 
 def create_output(settings):
@@ -255,27 +295,35 @@ def create_output(settings):
     ------
     out : object like `OutputTask`
     """
-    defaults = _DEFAULT_OUTPUT.get(settings['task'], [])
-    from_settings = settings.get('output', [])
     task_list = []
-    for task in itertools.chain(defaults, from_settings):
-        to_update = []
-        for i, task1 in enumerate(task_list):
-            if task_dict_equal(task1, task):
-                to_update.append(i)
-        if len(to_update) > 0:
-            for i in to_update:
-                task_list[i].update(task)
+    for task in itertools.chain(_DEFAULT_OUTPUT.get(settings['task'], []),
+                                settings.get('output-add', [])):
+        add, msg = check_user_output_task(task, task_list)
+        if not add:
+            leng = len('Ignoring task:') + 1
+            pretty = pprint.pformat(task, width=79-leng)
+            pretty = pretty.replace('\n', '\n' + ' ' * leng)
+            msg += ['Ignoring task: {}'.format(pretty)]
+            msgtxt = '\n'.join(msg)
+            logger.warning(msgtxt)
         else:
-            if task_dict_ok(task):
-                task_list.append(task)
-    for out_task in task_list:
-        if out_task.get('use', True):
-            task = create_output_task(out_task, settings)
-            if task is not None:
-                msgtxt = 'Output task created: {}'.format(task)
+            task_list.append(task)
+
+    for task in settings.get('output-modify', []):
+        for taski in task_list:
+            if task['name'] == taski['name']:
+                msgtxt = 'Updating task "{}"'.format(task['name'])
                 logger.info(msgtxt)
-                yield task
+                taski.update(task)
+                break
+
+    for task in task_list:
+        if task.get('use', True):
+            out_task = create_output_task(task, settings)
+            if out_task is not None:
+                msgtxt = 'Output task created: {}'.format(out_task)
+                logger.info(msgtxt)
+                yield out_task
 
 
 def _create_file_writer(task, settings):
@@ -304,22 +352,15 @@ def _create_file_writer(task, settings):
     if task['type'] == 'traj':
         return create_traj_writer(filename, task['format'], settings['units'],
                                   oldfile=oldfile)
-    elif task['type'] == 'pathensemble':
+    elif task['type'] == 'pathensemble-file':
         return PathEnsembleFile(filename,
                                 settings['ensemble'],
                                 settings['interfaces'],
                                 mode='w',
                                 oldfile=oldfile)
     else:
-        if task['type'] in WRITERS['file']:
-            writer = WRITERS['file'][task['type']]
-            return writer(filename, mode='w', oldfile=oldfile)
-        else:
-            msg = ['Unknown type "{}" for target "file"'.format(task['type'])]
-            msg += ['Ignoring task: {}'.format(task)]
-            msgtxt = '\n'.join(msg)
-            logger.warning(msgtxt)
-            return None
+        writer = _OUTPUT_TYPES[task['type']]['writer']
+        return writer(filename, mode='w', oldfile=oldfile)
 
 
 def create_output_task(task, settings):
@@ -343,31 +384,21 @@ def create_output_task(task, settings):
         This is the output task that can be added to a simulation.
     """
     writer = None
-    msgtxt = None
-    if task['target'] == 'file':
+    target = _OUTPUT_TYPES[task['type']]['target']
+    if target == 'file':
         writer = _create_file_writer(task, settings)
-    elif task['target'] == 'screen':
-        if task['type'] in WRITERS['screen']:
-            writer = get_predefined_table(WRITERS['screen'][task['type']])
-        else:
-            msg = ['Unknown task type "{}" for screen'.format(task['type'])]
-            msg += ['Ignoring task: {}'.format(task)]
-            msgtxt = '\n'.join(msg)
-    else:
-        msg = ['Unknown task target: {}'.format(task['target'])]
-        msg += ['Ignoring task: {}'.format(task)]
-        msgtxt = '\n'.join(msg)
-    if writer is None:
-        if msgtxt:
-            logger.warning(msgtxt)
-        return None
-    else:
-        return OutputTask(writer,
-                          task['type'],
-                          task['target'],
+    elif target == 'screen':
+        writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
+    if writer is not None:
+        return OutputTask(task['name'],
+                          target,
+                          _OUTPUT_TYPES[task['type']]['result'],
+                          writer,
                           when=task.get('when', None),
                           header=task.get('header', None),
                           kwargs=task.get('kwargs', None))
+    else:
+        return None
 
 
 def store_settings_as_json(settings, outfile, path=None):
