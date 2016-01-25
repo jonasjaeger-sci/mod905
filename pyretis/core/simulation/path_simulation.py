@@ -73,7 +73,6 @@ class SimulationTIS(Simulation):
         self.orderparameter = orderparameter
         # check for shooting:
         if self.tis_settings['sigma_v'] < 0.0:
-            self.tis_settings['sigma_v'] = None
             self.tis_settings['aimless'] = True
         else:
             self.tis_settings['sigma_v'] = (self.tis_settings['sigma_v'] *

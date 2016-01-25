@@ -210,7 +210,7 @@ class RandomGenerator(object):
             Standard deviation in velocity, one for each particle.
             If it's not given it will be estimated.
         """
-        if not sigma_v:
+        if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
             sigma_v = np.sqrt(kbt*system.particles.imass)
         vel = self.normal(loc=0.0, scale=sigma_v,

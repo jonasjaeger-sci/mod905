@@ -96,7 +96,7 @@ def run_simulation(simulation, settings, analysis_settings=None):
     Parameters
     ----------
     """
-    output = [tsk for tsk in create_output(simulation.system, settings)]
+    output = [tsk for tsk in create_output(settings)]
     print('')
     msg = 'Running simulation:'
     print(msg)
