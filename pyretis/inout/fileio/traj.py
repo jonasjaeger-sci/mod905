@@ -183,6 +183,12 @@ class WriteXYZ(FileWriter):
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
 
+    def __str__(self):
+        """Return a string with some info about the xyz file."""
+        msg = 'XYZ-file: {} (mode: {})'.format(self.filename, self.mode)
+        return msg
+
+
 
 class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
@@ -326,6 +332,11 @@ class WriteGromacs(FileWriter):
             return boxlength
         else:
             return box.length * self.convert['pos']
+
+    def __str__(self):
+        """Return a string with some info about the gro file."""
+        msg = 'GRO-file: {} (mode: {})'.format(self.filename, self.mode)
+        return msg
 
 
 def read_gromacs_file(filename):

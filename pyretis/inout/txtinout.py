@@ -347,6 +347,12 @@ class TxtTable(object):
         """
         return self.write(step, row, first_step=first_step)
 
+    def __str__(self):
+        """Return a string with some info about the TxtTable."""
+        msg = 'TxtTable: {}'.format(self.variables)
+        return msg
+
+
 
 class PathTable(TxtTable):
     """PathTable(object) - Special table for path ensembles.
