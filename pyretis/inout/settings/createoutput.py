@@ -304,8 +304,8 @@ def _create_file_writer(task, settings):
                                   oldfile=oldfile)
     elif task['type'] == 'pathensemble':
         return PathEnsembleFile(filename,
-                                settings.get('ensemble', '000'),
-                                settings.get('interfaces', None),
+                                settings['ensemble'],
+                                settings['interfaces'],
                                 mode='w',
                                 oldfile=oldfile)
     else:
@@ -341,29 +341,30 @@ def create_output_task(task, settings):
         This is the output task that can be added to a simulation.
     """
     writer = None
+    msgtxt = None
     if task['target'] == 'file':
         writer = _create_file_writer(task, settings)
     elif task['target'] == 'screen':
-        if task['type'] not in WRITERS['screen']:
-            msg = ['Unknown task type "{}"'.format(task['type'])]
+        if task['type'] in WRITERS['screen']:
+            writer = get_predefined_table(WRITERS['screen'][task['type']])
+        else:
+            msg = ['Unknown task type "{}" for screen'.format(task['type'])]
             msg += ['Ignoring task: {}'.format(task)]
             msgtxt = '\n'.join(msg)
-            logger.warning(msgtxt)
-        else:
-            writer = get_predefined_table(WRITERS['screen'][task['type']])
     else:
         msg = ['Unknown task target: {}'.format(task['target'])]
         msg += ['Ignoring task: {}'.format(task)]
         msgtxt = '\n'.join(msg)
-        logger.warning(msgtxt)
-    if writer is not None:
+    if writer is None:
+        if msgtxt:
+            logger.warning(msgtxt)
+        return None
+    else:
         return OutputTask(writer,
                           task['type'],
                           task['target'],
                           when=task.get('when', None),
                           header=task.get('header', None))
-    else:
-        return None
 
 
 def store_settings_as_json(settings, outfile, path=None):
