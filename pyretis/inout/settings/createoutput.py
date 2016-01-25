@@ -166,8 +166,6 @@ class OutputTask(object):
             if self.output_type == 'traj':
                 header = self.header.format(step['step'])
                 return self.writer.write(result, header=header)
-            elif self.output_type == 'cross':
-                return self.writer.write(result)
             else:
                 return self.writer.write(step['step'], result)
 

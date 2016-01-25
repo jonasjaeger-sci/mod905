@@ -10,8 +10,11 @@ Important classes defined here:
 
 - CrossFile: Writing/reading of crossing data.
 """
+import logging
 # pyretis imports
 from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['CrossFile']
@@ -102,13 +105,18 @@ class CrossFile(FileWriter):
                          'data': blocks['data']}
             yield data_dict
 
-    def write(self, cross):
+    def write(self, step, cross):
         """Write the cross data to a file.
 
         It will just write a space separated file without fancy formatting.
 
         Parameters
         ----------
+        step : int
+            This is the current step number. It is only used here for
+            debugging and can possibly be removed. However, it's useful
+            to have here since this gives a common write interface for
+            all writers.
         cross : list of tuples
             The tuples are crossing with interfaces (if any) on the form
             `(timestep, interface, direction)` where the direction
@@ -126,6 +134,8 @@ class CrossFile(FileWriter):
         rather than 0, 1, ... .
         """
         retval = []
+        msgtxt = 'Writing crossing file at step: {}'.format(step)
+        logger.debug(msgtxt)
         for cro in cross:
             towrite = CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
             retval.append(self.write_line(towrite))
