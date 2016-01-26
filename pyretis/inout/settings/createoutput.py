@@ -23,7 +23,8 @@ import json
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
-                                  PathEnsembleFile, create_traj_writer)
+                                  PathEnsembleFile, create_traj_writer,
+                                  PathWriter)
 from pyretis.inout.txtinout import get_predefined_table
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -33,26 +34,37 @@ __all__ = ['OutputTask', 'create_output']
 
 
 # Define the known output types:
-_OUTPUT_TYPES = {'energy-file': {'target': 'file', 'writer': EnergyFile,
-                                 'result': 'thermo'},
-                 'traj': {'target': 'file', 'writer': create_traj_writer,
-                          'result': 'traj'},
-                 'thermo-screen': {'target': 'screen', 'writer': 'energies',
-                                   'result': 'thermo'},
-                 'orderp': {'target': 'file', 'writer': OrderFile,
+_OUTPUT_TYPES = {'energy': {'target': 'file',
+                            'writer': EnergyFile,
+                            'result': 'thermo'},
+                 'orderp': {'target': 'file',
+                            'writer': OrderFile,
                             'result': 'orderp'},
-                 'cross': {'target': 'file', 'writer': CrossFile,
+                 'cross': {'target': 'file',
+                           'writer': CrossFile,
                            'result': 'cross'},
-                 'pathensemble-file': {'target': 'file',
-                                       'writer': PathEnsembleFile,
-                                       'result': 'pathensemble'},
-                 'pathensemble-screen': {'target': 'screen',
-                                         'writer': 'path-stats',
-                                         'result': 'pathensemble'}}
+                 'traj': {'target': 'file',
+                          'writer': create_traj_writer,
+                          'result': 'traj'},
+                 'thermo-screen': {'target': 'screen',
+                                   'writer': 'energies',
+                                   'result': 'thermo'},
+                 'pathensemble': {'target':
+                                  'file',
+                                  'writer': PathEnsembleFile,
+                                  'result': 'pathensemble'},
+                 'pathensemble-screen': {'target':
+                                         'screen',
+                                         'writer':
+                                         'path-stats',
+                                         'result': 'pathensemble'},
+                 'trialpath': {'target': 'files',
+                               'writer': PathWriter,
+                               'result': 'trialpath'}}
 
 # Define the default outputs:
 _DEFAULT_OUTPUT = {}
-_DEFAULT_OUTPUT['md-nve'] = [{'type': 'energy-file',
+_DEFAULT_OUTPUT['md-nve'] = [{'type': 'energy',
                               'name': 'energy-file',
                               'when': {'every': 10},
                               'filename': 'energy.dat'},
@@ -70,7 +82,7 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                                'target': 'file',
                                'when': {'every': 10},
                                'filename': 'order.dat'},
-                              {'type': 'energy-file',
+                              {'type': 'energy',
                                'name': 'energy-file',
                                'target': 'file',
                                'when': {'every': 100},
@@ -88,14 +100,22 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                               {'type': 'thermo-screen',
                                'name': 'thermo-screen',
                                'when': {'every': 10}}]
-_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble-file',
+_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
                            'name': 'pathensemble-file',
                            'when': {'every': 10},
                            'filename': 'pathensemble.dat'},
                           {'type': 'pathensemble-screen',
                            'name': 'pathensemble-screen',
-                           'target': 'screen',
-                           'when': {'every': 10}}]
+                           'when': {'every': 10}},
+                          {'type': 'trialpath',
+                           'name': 'trialpath',
+                           'when': {'every': 1},
+                           'orderp': {'filename': 'orderp.dat',
+                                      'when': {'every': 10},
+                                      'freq': 10},
+                           'energy': {'filename': 'energyp.dat',
+                                      'when': {'every': 10},
+                                      'freq': 10}}]
 
 
 class OutputTask(object):
@@ -358,7 +378,7 @@ def _create_file_writer(task, settings):
     if task['type'] == 'traj':
         return create_traj_writer(filename, task['format'], settings['units'],
                                   oldfile=oldfile)
-    elif task['type'] == 'pathensemble-file':
+    elif task['type'] == 'pathensemble':
         return PathEnsembleFile(filename,
                                 settings['ensemble'],
                                 settings['interfaces'],
@@ -395,6 +415,17 @@ def create_output_task(task, settings):
         writer = _create_file_writer(task, settings)
     elif target == 'screen':
         writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
+    elif target == 'files':
+        if task['type'] == 'trialpath':
+            file_settings = {}
+            for key in PathWriter.known_files:
+                if key in task:
+                    task[key]['type'] = key
+                    task[key]['writer'] = _create_file_writer(task[key],
+                                                              settings)
+                    file_settings[key] = task[key]
+            settings['ensemble'] = '001'
+            writer = PathWriter(settings['ensemble'], file_settings)
     if writer is not None:
         return OutputTask(task['name'],
                           target,

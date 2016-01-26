@@ -12,7 +12,8 @@ import logging
 # pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
 from pyretis.inout.fileio.fileinout import FileWriter
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PathEnsembleFile']
@@ -287,4 +288,91 @@ class PathEnsembleFile(FileWriter):
         msg = ['Path (file) ensemble : {}'.format(self.ensemble)]
         msg += ['\tFile name: {}'.format(self.filename)]
         msg += ['\tFile mode: {}'.format(self.mode)]
+        return '\n'.join(msg)
+
+
+class PathWriter(object):
+    """PathWriter(object) - For writing path information.
+
+    This class handles writing of path information. It combines the
+    writers for the order parameter, the energy and the trajectory.
+
+    Attributes
+    ----------
+    """
+    known_files = {'orderp', 'energy', 'traj'}
+
+    def __init__(self, ensemble, file_settings):
+        """Initialize the `PathWriter` object.
+
+        Parameters
+        ----------
+        ensemble : str
+            This is a string representation of the path ensemble. Typically
+            something like '0-', '0+', '1', '2', ..., '001' and so on.
+        file_settings : dict
+            This dict contains the settings for each file we want to create.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only useful when the mode is
+            set to 'w'.
+        """
+        self.order = file_settings.get('orderp', None)
+        self.energy = file_settings.get('energy', None)
+        self.traj = file_settings.get('traj', None)
+        self.ensemble = ensemble
+
+    def __new__(cls, ensemble, file_settings):
+        """Check if at least one file is given in the input.
+
+        Parameters
+        ----------
+        ensemble : str
+            This is a string representation of the path ensemble. Typically
+            something like '0-', '0+', '1', '2', ..., '001' and so on.
+        file_settings : dict
+            This dict contains the settings for each file we want to create.
+        oldfile : string
+            Defines how we handle existing files with the same name as given
+            in `filename`. Note that this is only useful when the mode is
+            set to 'w'.
+
+        Returns
+        -------
+        out : A `PathWriter` object or None
+            If at least one file is given with settings, then we create a new
+            `PathWriter` object. Otherwise we return None.
+        """
+        files = any([key in file_settings for key in cls.known_files])
+        if files:
+            return super(PathWriter, cls).__new__(cls, ensemble,
+                                                  file_settings)
+        else:
+            return None
+
+    def write(self, cycle, path):
+        """Write path data to the files.
+
+        Parameters
+        ----------
+        cycle : integer
+            This is the current cycle number.
+        path : object like `Path` from `pyretis.core.path`
+            This is the path to write to the file.
+        """
+        msg = 'Path file @ {}... len(path) = {}'.format(cycle, len(path.path))
+        logger.warning(msg)
+        if self.order is not None:
+            pass
+
+    def __str__(self):
+        """Return a string with some info about the path file."""
+        msg = ['Path file for ensemble: {}'.format(self.ensemble)]
+        msg += ['\tWriters defined:']
+        if self.order is not None:
+            msg += ['\t- {}'.format(self.order['writer'])]
+        if self.energy is not None:
+            msg += ['\t- {}'.format(self.energy['writer'])]
+        if self.traj is not None:
+            msg += ['\t- {}'.format(self.traj['writer'])]
         return '\n'.join(msg)

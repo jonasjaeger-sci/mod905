@@ -39,7 +39,9 @@ Important classes:
 
 - OrderFile: A writer of order parameter data.
 
-- PathEnsembleFile : A writer of path ensemble data.
+- PathEnsembleFile: A writer of path ensemble data.
+
+- PathWriter: A writer for data on paths.
 """
 from __future__ import absolute_import
 import logging
@@ -49,7 +51,7 @@ from .fileinout import FileWriter
 from .crossfile import CrossFile
 from .energyfile import EnergyFile
 from .orderfile import OrderFile
-from .pathfile import PathEnsembleFile
+from .pathfile import PathEnsembleFile, PathWriter
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
