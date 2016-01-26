@@ -72,7 +72,7 @@ class Box(object):
             else:
                 # this might seem strange, but it's probably something
                 # that is done if we just need a dummy box.
-                size = [[-float('inf'), float('inf')] for i in periodic]
+                size = [[-float('inf'), float('inf')] for _ in periodic]
         self.size = size
         for i, dim in enumerate(size):
             try:
