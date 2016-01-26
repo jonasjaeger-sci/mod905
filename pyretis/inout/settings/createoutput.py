@@ -389,6 +389,37 @@ def _create_file_writer(task, settings):
         return writer(filename, mode='w', oldfile=oldfile)
 
 
+def _create_files_writer(task, settings):
+    """This will create an object for writing to files.
+
+    Here, we create an object that can write to several files
+    at once.
+
+    Parameters
+    ----------
+    task : dict
+        This dictionary describes the task.
+    settings : dict
+        These are the settings used for setting up the simulation.
+        Some of these settings might be useful for creating the output tasks.
+
+    Returns
+    -------
+    out : object like `PathWriter` from `pyretis.inout.fileio`.
+        This object can be used to write to files. It will typically be
+        attached to a output task object (like `OutputTask`) as a writer.
+    """
+    if task['type'] == 'trialpath':
+        file_settings = {}
+        for key in PathWriter.known_files:
+            if key in task:
+                task[key]['type'] = key
+                task[key]['writer'] = _create_file_writer(task[key],
+                                                          settings)
+                file_settings[key] = task[key]
+        return PathWriter(settings['ensemble'], file_settings)
+
+
 def create_output_task(task, settings):
     """Create object for a output task.
 
@@ -416,16 +447,7 @@ def create_output_task(task, settings):
     elif target == 'screen':
         writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
     elif target == 'files':
-        if task['type'] == 'trialpath':
-            file_settings = {}
-            for key in PathWriter.known_files:
-                if key in task:
-                    task[key]['type'] = key
-                    task[key]['writer'] = _create_file_writer(task[key],
-                                                              settings)
-                    file_settings[key] = task[key]
-            settings['ensemble'] = '001'
-            writer = PathWriter(settings['ensemble'], file_settings)
+        writer = _create_files_writer(task, settings)
     if writer is not None:
         return OutputTask(task['name'],
                           target,
