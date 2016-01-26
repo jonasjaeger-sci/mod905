@@ -12,7 +12,7 @@ from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell
 from pyretis.core.orderparameter import OrderParameterPosition
 # imports for the plotting:
-from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 import collections
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -74,19 +74,19 @@ print('\nCreated:', simulation_tis)
 # Simulation is now set up and ready to run.
 # We will now add some plotting specific things:
 mpl.rc('axes', labelsize='large')
-mpl.rc('axes', edgecolor=_COLORS['almost_black'])
-mpl.rc('axes', labelcolor=_COLORS['almost_black'])
-mpl.rc('text', color=_COLORS['almost_black'])
-mpl.rc('xtick', color=_COLORS['almost_black'])
-mpl.rc('ytick', color=_COLORS['almost_black'])
+mpl.rc('axes', edgecolor=COLORS['almost_black'])
+mpl.rc('axes', labelcolor=COLORS['almost_black'])
+mpl.rc('text', color=COLORS['almost_black'])
+mpl.rc('xtick', color=COLORS['almost_black'])
+mpl.rc('ytick', color=COLORS['almost_black'])
 mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
 # This adds the first axis. Here we will plot the paths.
 ax = fig.add_subplot(111)
 left, middle, right = simulation_settings['interfaces']
-ax.axvline(x=left, lw=2, ls=':', color=_COLORS['almost_black'])
-ax.axvline(x=middle, lw=2, ls=':', color=_COLORS['almost_black'])
-ax.axvline(x=right, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axvline(x=left, lw=2, ls=':', color=COLORS['almost_black'])
+ax.axvline(x=middle, lw=2, ls=':', color=COLORS['almost_black'])
+ax.axvline(x=right, lw=2, ls=':', color=COLORS['almost_black'])
 
 AXPAD = 0.2
 ax.set_xlim(min(simulation_settings['interfaces']) - AXPAD,
@@ -123,15 +123,15 @@ scatter_test = ax.scatter([], [], alpha=0.5, color='blue',
                           marker='o', s=100, label='Path start/end')
 alpha = np.linspace(0.05, 1.0, N)
 MAP = 'husl_10'
-status_color = {'ACC': _COLOR_SCHEME[MAP][7],
-                'MCR': _COLOR_SCHEME[MAP][1],
-                'BWI': _COLOR_SCHEME[MAP][0],
-                'BTL': _COLOR_SCHEME[MAP][3],
-                'BTX': _COLOR_SCHEME[MAP][4],
-                'KOB': _COLOR_SCHEME[MAP][5],
-                'FTL': _COLOR_SCHEME[MAP][6],
-                'FTX': _COLOR_SCHEME[MAP][2],
-                'NCR': _COLOR_SCHEME[MAP][8]}
+status_color = {'ACC': COLOR_SCHEME[MAP][7],
+                'MCR': COLOR_SCHEME[MAP][1],
+                'BWI': COLOR_SCHEME[MAP][0],
+                'BTL': COLOR_SCHEME[MAP][3],
+                'BTX': COLOR_SCHEME[MAP][4],
+                'KOB': COLOR_SCHEME[MAP][5],
+                'FTL': COLOR_SCHEME[MAP][6],
+                'FTX': COLOR_SCHEME[MAP][2],
+                'NCR': COLOR_SCHEME[MAP][8]}
 MYORDER = ['ACC', 'NCR', 'BWI', 'FTL', 'BTL', 'MCR',
            'FTX', 'BTX', 'KOB']
 for key in status_color:
@@ -232,17 +232,17 @@ def update(frame, simulation):
             initial = False
             path = trial
 
-        orderp = [p[2][0] for p in path.path[::6]]
-        orderp.append(path.path[-1][2][0])  # force adding of the last point
+        orderp = [p[0][0] for p in path.path[::6]]
+        orderp.append(path.path[-1][0][0])  # force adding of the last point
         orderp = np.array(orderp)
-        ordervel = [p[2][1] for p in path.path[::6]]
-        ordervel.append(path.path[-1][2][1])  # force adding of the last point
+        ordervel = [p[0][1] for p in path.path[::6]]
+        ordervel.append(path.path[-1][0][1])  # force adding of the last point
         ordervel = np.array(ordervel)
 
         new_line = last_paths.popleft()
         new_line.set_data(orderp, ordervel)
         if initial:
-            new_line.set_color(_COLORS['almost_black'])
+            new_line.set_color(COLORS['almost_black'])
         else:
             new_line.set_color(status_color[status])
         last_paths.append(new_line)

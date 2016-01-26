@@ -10,7 +10,7 @@ from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp, DoubleWellWCA
 from pyretis.tools import generate_lattice
-from pyretis.inout.plotting import _COLORS, _COLOR_SCHEME
+from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout import create_output
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -108,22 +108,22 @@ for _ in range(int(npart)):
     ax.add_patch(circles[-1])
 # add arrows for the forces and velocities:
 force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
-                         color=_COLORS['almost_black'], zorder=4)
+                         color=COLORS['almost_black'], zorder=4)
 vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
-                       color=_COLOR_SCHEME['colorblind_10'][1], zorder=4)
+                       color=COLOR_SCHEME['colorblind_10'][1], zorder=4)
 # also add arrows for a "legend":
 plt.quiverkey(force_arrow, 3, -3.5, 9, 'Forces', coordinates='data',
-              color=_COLORS['almost_black'], fontproperties={'size': 'large'})
+              color=COLORS['almost_black'], fontproperties={'size': 'large'})
 plt.quiverkey(vel_arrow, 9, -3.5, 9, 'Velocities', coordinates='data',
-              color=_COLOR_SCHEME['colorblind_10'][1],
+              color=COLOR_SCHEME['colorblind_10'][1],
               fontproperties={'size': 'large'})
 # also add a line representing the bond
 linebond, = ax.plot([], [], lw=3, ls='-', color=PCOLOR['B'], alpha=0.8)
 # draw lines representing the box boundaries:
-ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
-ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
-ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
-ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color=_COLORS['almost_black'])
+ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
+ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
+ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
+ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
 # add second axis for displaying energies:
 ax2 = fig.add_subplot(gs[0, 1])
 ax2.set_xlim(0, timeendfs)
@@ -131,11 +131,11 @@ ax2.set_ylim(-0.55, 0.55)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.90, '', transform=ax2.transAxes)
-linepot, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][0],
+linepot, = ax2.plot([], [], lw=4, ls='-', color=COLOR_SCHEME['deep'][0],
                     alpha=0.8, label='Potential')
-linekin, = ax2.plot([], [], lw=4, ls='-', color=_COLOR_SCHEME['deep'][1],
+linekin, = ax2.plot([], [], lw=4, ls='-', color=COLOR_SCHEME['deep'][1],
                     alpha=0.8, label='Kinetic')
-linetot, = ax2.plot([], [], lw=4, ls='-', color=_COLORS['almost_black'],
+linetot, = ax2.plot([], [], lw=4, ls='-', color=COLORS['almost_black'],
                     alpha=0.8, label='Total')
 ax2.legend(loc='lower left', ncol=3, frameon=False,
            columnspacing=1, labelspacing=1)
@@ -164,7 +164,7 @@ def plot_dwca_potential():
 ax3 = fig.add_subplot(gs[1, 1])
 rbond, pot_dwca = plot_dwca_potential()
 linedwpot, = ax3.plot(rbond, pot_dwca, lw=3, ls='-',
-                      color=_COLORS['almost_black'])
+                      color=COLORS['almost_black'])
 ax3.set_ylim(0, dwca.params['height'] + 1)
 min_max = dwca.min_max()
 ax3.set_xlim(min_max[0] - 0.2, min_max[1] + 0.2)

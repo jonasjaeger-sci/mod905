@@ -31,27 +31,27 @@ __all__ = ['create_plotter']
 
 
 # Custom named colors:
-_COLORS = {'almost_black': '#262626'}
+COLORS = {'almost_black': '#262626'}
 # Custom color-schemes. The default will be defined by the style file.
 # The husl schemes are suited when many different colors are needed. They
 # are hard-coded with different number of colors.
-_COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
-                                   '#5F9ED1', '#C85200', '#898989', '#A2C8EC',
-                                   '#FFBC79', '#CFCFCF'],
-                 'deep': ['#4C72B0', '#55A868', '#C44E52', '#8172B2',
-                          '#CCB974', '#64B5CD'],
-                 'husl_10': ['#f67088', '#db8831', '#ad9c31', '#77aa31',
-                             '#33b07a', '#35aca4', '#38a8c5', '#6e9af4',
-                             '#cc79f4', '#f565cc'],
-                 'husl_15': ['#f67088', '#f37932', '#ca9131', '#ad9c31',
-                             '#8ea531', '#4fb031', '#33b07a', '#34ad99',
-                             '#36abae', '#38a8c5', '#3ba3ec', '#9491f4',
-                             '#cc79f4', '#f45fe3', '#f569b7'],
-                 'husl_20': ['#f67088', '#f7754f', '#db8831', '#c29431',
-                             '#ad9c31', '#96a331', '#77aa31', '#31b23e',
-                             '#33b07a', '#34ae92', '#35aca4', '#36abb3',
-                             '#38a8c5', '#3aa5de', '#6e9af4', '#a38cf4',
-                             '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
+COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
+                                  '#5F9ED1', '#C85200', '#898989', '#A2C8EC',
+                                  '#FFBC79', '#CFCFCF'],
+                'deep': ['#4C72B0', '#55A868', '#C44E52', '#8172B2',
+                         '#CCB974', '#64B5CD'],
+                'husl_10': ['#f67088', '#db8831', '#ad9c31', '#77aa31',
+                            '#33b07a', '#35aca4', '#38a8c5', '#6e9af4',
+                            '#cc79f4', '#f565cc'],
+                'husl_15': ['#f67088', '#f37932', '#ca9131', '#ad9c31',
+                            '#8ea531', '#4fb031', '#33b07a', '#34ad99',
+                            '#36abae', '#38a8c5', '#3ba3ec', '#9491f4',
+                            '#cc79f4', '#f45fe3', '#f569b7'],
+                'husl_20': ['#f67088', '#f7754f', '#db8831', '#c29431',
+                            '#ad9c31', '#96a331', '#77aa31', '#31b23e',
+                            '#33b07a', '#34ae92', '#35aca4', '#36abb3',
+                            '#38a8c5', '#3aa5de', '#6e9af4', '#a38cf4',
+                            '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
 def create_plotter(plot_settings):
