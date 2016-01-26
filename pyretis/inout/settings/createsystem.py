@@ -345,13 +345,12 @@ def create_box(settings, size):
     box : object like `Box` from `pyretis.core.box` or None
         The box if we managed to create it. Otherwise None.
     """
-    box_settings = settings.get('box', None)
     msg = 'Box created {}:\n{}'
-    if box_settings is not None:
-        box = Box(**box_settings)
+    if settings.get('box', None) is not None:
+        box = Box(**settings['box'])
         msgtxt = msg.format('from settings', box)
         logger.info(msgtxt)
-        debugtxt = 'Settings used:\n{}'.format(box_settings)
+        debugtxt = 'Settings used:\n{}'.format(settings['box'])
         logger.debug(debugtxt)
     else:
         box = Box(size=size)
