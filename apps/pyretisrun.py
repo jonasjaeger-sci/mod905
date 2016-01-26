@@ -148,7 +148,7 @@ if __name__ == '__main__':
     print('# Creating simulation from settings.')
     simulation = create_simulation(settings, system)
     print('# Creating output tasks from settings.')
-    output_tasks = [task for task in create_output(system, settings)]
+    output_tasks = [task for task in create_output(settings)]
 
     print('# Running simulation.')
     logger.info('Running simulation')
