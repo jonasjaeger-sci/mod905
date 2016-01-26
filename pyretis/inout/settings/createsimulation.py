@@ -68,8 +68,6 @@ def create_simulation(settings, system):
     """
     sim_type = settings['task'].lower()
     settings['task'] = sim_type  # just to be consistent
-    family = None
-    simulation = None
     try:
         family = _KNOWN_SIMULATIONS[sim_type]
     except KeyError:
