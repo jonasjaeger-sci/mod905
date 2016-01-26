@@ -76,7 +76,6 @@ def create_plotter(plot_settings):
     """
     if plot_settings is None:
         return None
-    plotter, out_fmt, style, backup = None, None, None, None
     try:
         plotter = plot_settings.get('plotter', 'mpl')
         out_fmt = plot_settings.get('output', 'png')
