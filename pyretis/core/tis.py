@@ -285,7 +285,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(orderp, pos, vel)
+        trial_path.append(orderp, pos, vel, None)
         accept, trial_path.status = False, 'KOB'
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
@@ -294,7 +294,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
-            trial_path.append(orderp, pos, vel)
+            trial_path.append(orderp, pos, vel, None)
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
     # OK: kick was either aimless or it was accepted by Metropolis
