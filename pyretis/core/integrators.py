@@ -321,7 +321,7 @@ class VelocityVerlet(Integrator):
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
-        """Verlocity Verlet integration, one time step.
+        """Velocity Verlet integration, one time step.
 
         Parameters
         ----------

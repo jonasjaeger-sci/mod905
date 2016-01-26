@@ -337,7 +337,7 @@ class Path(object):
         Update the minimum and maximum order parameter on the path and
         return them. This function will explicitly loop over the path,
         check all phase space points and find the minimum and maximum order
-        parameter. This is usefull if the path was read directly without
+        parameter. This is useful if the path was read directly without
         calling `append`.
 
         Returns

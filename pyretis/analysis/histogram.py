@@ -127,7 +127,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
     ----------
     histo1 : numpy.array
         The first histogram.
-    histo2 : numpy.arraym
+    histo2 : numpy.array
         The second histogram, this is the histogram that will be scaled.
     bin_x : numpy.array
         This is the bin mid-points of the histograms. Note that we

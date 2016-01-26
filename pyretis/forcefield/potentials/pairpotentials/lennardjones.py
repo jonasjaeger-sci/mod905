@@ -373,7 +373,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         """
         pot = 0.0
         # the particle list may implement a list which we can
-        # loop over. This could be some kind of fancy neghborlist
+        # loop over. This could be some kind of fancy neighborlist
         # here, we ignore this and loop over all pairs using numpy.
         self._generate_tables_for_numpy(particles)
         for i, particle_i in enumerate(particles.pos[:-1]):

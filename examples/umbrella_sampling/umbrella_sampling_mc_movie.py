@@ -15,7 +15,7 @@ from umbrella_sampling_mc import (trajectory, energy, umbrellas, n_umb, VPOT,
 # Create very simple animation:
 fig = plt.figure()
 axs = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
-# replot the potential:
+# re-plot the potential:
 line, = axs.plot(XPOT, VPOT, lw=3, color='blue')
 # plot the line we have to cross:
 linec = axs.axvline(x=-10, lw=2, ls=':', color='black')

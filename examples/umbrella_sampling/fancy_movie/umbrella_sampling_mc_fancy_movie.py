@@ -111,7 +111,7 @@ for i, (traj, ener) in enumerate(zip(trajectory, energy)):
     ax_pot.set_ylim(potlim)
     scatter = ax_pot.scatter(None, None, s=150, c='green', alpha=0.6)
     scatter_last = []  # to store n last points:
-    npoint = 0  # settings this > 0 will draw the npoint last points
+    npoint = 0  # setting npoint > 0 will draw the npoint last points
     for j in range(npoint):
         alphamax = 0.5
         alphamin = 0.1
@@ -135,7 +135,7 @@ for i, (traj, ener) in enumerate(zip(trajectory, energy)):
     rects2 = ax_all_hist.bar(bin_mid - 0.5 * db, hist, db,
                              color=colors[i], alpha=0.5)
 
-    pos_so_far = []  # stor all positions
+    pos_so_far = []  # store all positions
     pos_last = []  # store the most recent npoint positions
     for j, (posj, enerj) in enumerate(zip(pos, ener)):
         print(j)

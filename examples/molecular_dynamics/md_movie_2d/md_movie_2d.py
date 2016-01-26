@@ -72,7 +72,7 @@ ljsystem.forcefield = forcefield
 simulation_nve = create_simulation(settings, ljsystem)
 # create some outputs:
 outputs = [task for task in create_output(settings)]
-# We will in this example animate on the flym then we will have to do some
+# We will in this example animate on the fly. We will then have to do some
 # extra set up. The actual simulation is carried out by calling
 # `simulation_nve.step()` in the `update` function which is executed by
 # the animation.FuncAnimation() call. In effect animation.FuncAnimation will

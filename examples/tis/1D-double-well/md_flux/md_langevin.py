@@ -5,7 +5,7 @@ This is an example on how to perform a simple MD simulation for determining
 the initial flux for a TIS rate calculation.
 
 It will simulate a one particle in a double well potential using the
-Langvin integrator.
+Langevin integrator.
 """
 # pylint: disable=C0103
 from __future__ import print_function
