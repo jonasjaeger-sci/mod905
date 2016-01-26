@@ -39,7 +39,7 @@ Important classes and functions:
 - CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
 
-- PathEnembleFile: Class for writing path ensemble data.
+- PathEnsembleFile: Class for writing path ensemble data.
 
 - generate_report: A function to generate reports from analysis output(s).
 

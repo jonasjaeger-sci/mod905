@@ -43,7 +43,7 @@ of Joule per Kelvin. The currently defined natural constants are
 
 - ``e`` : The elementary charge [E]_.
 
-- ``c0`` : The velocity of light in vaccuum [C0]_.
+- ``c0`` : The velocity of light in vacuum [C0]_.
 
 - ``mu0``: Vacuum permeability [M0]_.
 
@@ -344,7 +344,7 @@ CONVERT['energy']['kcal', 'eV'] = (CONSTANTS['kB']['eV/K'] /
                                    CONSTANTS['kB']['kcal/K'])
 CONVERT['energy']['kcal', 'hartree'] = (CONVERT['energy']['kcal', 'eV'] *
                                         (1.0 / 27.21138602))
-# 27.21138602 is hartee to eV from:
+# 27.21138602 is hartree to eV from:
 # http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
 UNITS['velocity'] = set(['m/s', 'nm/ps', 'A/fs', 'A/ps'])

@@ -21,7 +21,7 @@ Important classes defined in this module:
 
 - DoubleWell: A double well potential
 
-- RectangularWell: A rectangural well potential -- usefull as a
+- RectangularWell: A rectangular well potential -- useful as a
   bias potential.
 
 - PairLennardJonesCut/PairLennardJonesCutnp: The Lennard-Jones potential.

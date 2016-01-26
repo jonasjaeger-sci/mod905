@@ -29,7 +29,7 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
         The data for making the histogram.
     bins : int,
         The number of bins to divide the data into.
-    limits : touple/list
+    limits : tuple/list
         The max/min values to consider.
     density : boolean
         If True the histogram will be normalized.

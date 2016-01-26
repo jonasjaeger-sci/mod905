@@ -31,7 +31,7 @@ class RandomGenerator(object):
     Attributes
     ----------
     rgen : object like `RandomState`
-        This is a container for the Mersenne Twiser pseudo-random number
+        This is a container for the Mersenne Twister pseudo-random number
         generator as implemented in numpy [#]_.
 
     References
@@ -226,13 +226,13 @@ class ReservoirSampler(object):
     we only need to store `k`items This is useful when `N` is very large or
     when storing all `N` items require a lot of memory. The algorithm is
     described by Knuth [#]_ but here we do a variation, so that each item
-    may be choosen several times.
+    may be picked several times.
 
 
     Attributes
     ----------
     rgen : object like `RandomState`
-        This is a container for the Mersenne Twiser pseudo-random number
+        This is a container for the Mersenne Twister pseudo-random number
         generator as implemented in numpy, see the documentation of
         `RandomGenerator`.
     items : integer

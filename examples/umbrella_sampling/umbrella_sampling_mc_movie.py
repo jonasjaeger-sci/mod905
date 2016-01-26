@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This is an simple example of how we can create a simple animation.
-It will run the umbrella sampling defined in umbrella_samplin_mc.py and
+It will run the umbrella sampling defined in `umbrella_sampling_mc.py` and
 draw the frames as a very simple animation.
 """
 from __future__ import print_function

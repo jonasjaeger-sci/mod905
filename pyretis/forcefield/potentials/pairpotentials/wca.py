@@ -22,7 +22,7 @@ class DoubleWellWCA(PotentialFunction):
        V_\text{pot} = h (1 - (r - r_0 - w)^2/w^2)^2,
 
     where :math:`h` gives the 'height' of the potential, :math:`r_0` the
-    minima and :math:`w` the width. These parameters are stored in the
+    minimum and :math:`w` the width. These parameters are stored in the
     attributes `height`, `rzero` and `width` respectively.
 
     Attributes
@@ -34,7 +34,7 @@ class DoubleWellWCA(PotentialFunction):
 
         * `height4`: A float equal to ``4.0 * height`` (for convenience).
 
-        * `rzero`: A float defining the two minima. One is located at
+        * `rzero`: A float defining the two minimums. One is located at
           ``rzero``, the other at ``rzero+2*width``.
 
         * `types`: A set defining what kind of particle pairs to consider

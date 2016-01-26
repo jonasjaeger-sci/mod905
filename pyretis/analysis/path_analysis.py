@@ -16,10 +16,10 @@ __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
            'match_probabilities']
 
 
-def _get_successfull(path_ensemble, idetect):
+def _get_successful(path_ensemble, idetect):
     """Build the data of accepted (successful) paths.
 
-    In the `PathEmsemble` object all paths are stored, both accepted and
+    In the `PathEnsemble` object all paths are stored, both accepted and
     rejected and the `PathEnsemble.get_accepted()` is used here to
     iterate over accepted paths. Successful paths are defined as paths
     which are able to reach the interface specified with `idetect`. For
@@ -64,7 +64,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
         This is the interface used for detecting if a path is successful
         or not.
     data : numpy.array
-        This is the data created by `_get_successfull(path_ensemble)`
+        This is the data created by `_get_successful(path_ensemble)`
         If this function has been executed, the result can be re-used here
         by specifying data. If not, it will be generated.
 
@@ -77,10 +77,10 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
     See Also
     --------
-    `_get_successfull`
+    `_get_successful`
     """
     if data is None:
-        data = _get_successfull(path_ensemble, idetect)
+        data = _get_successful(path_ensemble, idetect)
     return running_average(data), data
 
 
@@ -496,7 +496,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     result = {'prun': [], 'cycle': []}
     orderparam = []  # list of all accepted order parameters
     weights = []
-    success = 0  # determines if the current path is successfull or not
+    success = 0  # determines if the current path is successful or not
     pdata = []
     length_acc = []
     length_all = []

@@ -210,7 +210,7 @@ def _table_probability(path_ensembles, results, fmt='rst'):
     out[0] : list of strings
         These are the rows of the table.
     out[1] : string
-        This is a string in reStrucutredText format which represents
+        This is a string in reStructuredText format which represents
         the table.
     """
     table = []
@@ -253,7 +253,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
     out[0] : list of strings
         These are the rows of the table.
     out[1] : string
-        This is a string in reStrucutredText format which represents
+        This is a string in reStructuredText format which represents
         the table.
     """
     table = []
@@ -298,7 +298,7 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
     out[0] : list of strings
         These are the rows of the table.
     out[1] : string
-        This is a string in reStrucutredText format which represents
+        This is a string in reStructuredText format which represents
         the table.
     """
     table = []

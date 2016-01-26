@@ -224,8 +224,8 @@ def get_velocity_force_arrows(forces, vels):
     This is a helper function to obtain the force and
     velocity vectors
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     pos : numpy.array
         The positions of the particles
     force : numpy.array
@@ -254,8 +254,8 @@ def spring_bond(delta, dr, part1, part2):
     Parameters
     ----------
     delta : numpy.array
-        Distance vector between part1 and part2, subjected to periodic boundary
-        conditions.
+        Distance vector between `part1` and `part2`, subjected to periodic
+        boundary conditions.
     dr : float
         Length of `delta` vector.
     part1 : numpy.array

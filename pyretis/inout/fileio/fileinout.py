@@ -133,14 +133,14 @@ class FileWriter(object):
                  count=0, header=None):
         """Initiate the file writer object.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         filename : string
             Name of the file to write.
         filetype : string
             Identifies the file type to write (i.e. the format).
         mode : string, optional
-            This determines if we write (= 'w') or read (='r') the file.
+            This determines if we write (`'w'`) or read (`'r'`) the file.
         oldfile : string, optional
             Behavior if `filename` is an existing file.
         frame : int

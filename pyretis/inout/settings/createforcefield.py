@@ -46,9 +46,9 @@ def create_potentials(settings):
     for pot_settings in potentials:
         potential_function = create_potential(pot_settings)
         if potential_function is None:
-            warn = 'The following potential settings were ignored!\n{}'
-            warntxt = warn.format(pot_settings)
-            logger.warning(warntxt)
+            msg = 'The following potential settings were ignored!\n{}'
+            msgtxt = msg.format(pot_settings)
+            logger.warning(msgtxt)
         out.append(potential_function)
     return out
 

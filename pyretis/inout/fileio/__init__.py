@@ -39,7 +39,7 @@ Important classes:
 
 - OrderFile: A writer of order parameter data.
 
-- PathEnembleFile : A writer of path ensemble data.
+- PathEnsembleFile : A writer of path ensemble data.
 """
 from __future__ import absolute_import
 import logging

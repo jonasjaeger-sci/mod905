@@ -87,7 +87,7 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
         This is the dict with the results from the flux analysis.
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
+        the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -130,7 +130,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
         This is the raw-data for the order parameter analysis
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
+        the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -188,7 +188,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         This is the raw-data for the energy analysis
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
+        the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -279,7 +279,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
         This is the interface used for the detection in the analysis.
     out_fmt : string, optional
         This is the desired format to use for the graphs. If 'gz' is specified,
-        a gzipped file will be written
+        the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -334,7 +334,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
         here.
     out_fmt : string
         Determines the output format for the text file. If 'gz' is used, a
-        gzipp'ed file will be written.
+        the file will be written in compressed gzip format.
     backup : boolean
         If `backup` is False, we will overwrite files, otherwise we will
         backup.

@@ -26,7 +26,7 @@ import numpy as np
 settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 950,
-            'output-modify': [{'name': 'traj', 'when':{'every': 1}}],
+            'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
             'units': 'lj',
             'temperature': 1.0,
             'generate-vel': {'seed': 0, 'momentum': True,
@@ -163,8 +163,8 @@ def get_velocity_force_arrows(forces, vels):
     This is a helper function to obtain the force and
     velocity vectors
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     pos : numpy.array
         The positions of the particles
     force : numpy.array

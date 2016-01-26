@@ -88,8 +88,8 @@ def txt_save_columns(outputfile, header, variables, backup=False):
     """Save variables to a text file using `numpy.savetxt`.
 
     Note that the variables are assumed to be numpy.arrays of equal shape
-    and that the output file may also be a gzipped file (this is selected
-    by letting the output file name end with '.gz').
+    and that the output file may also be a compressed file in gzip format
+    (this is selected by letting the output file name end with '.gz').
 
     Parameters
     ----------
@@ -351,7 +351,6 @@ class TxtTable(object):
         """Return a string with some info about the TxtTable."""
         msg = 'TxtTable: {}'.format(self.variables)
         return msg
-
 
 
 class PathTable(TxtTable):
