@@ -127,7 +127,7 @@ def create_mc_simulation(settings, system, sim_type):
         if 'seed' in not_found or 'rgen' in not_found:
             # one or both of these keywords were present
             # things are OK if there is no other missing
-            not_found = set(not_found) - set(['seed', 'rgen'])
+            not_found = set(not_found) - {'seed', 'rgen'}
             required = len(not_found) == 0
     if not required:
         msg = 'Settings not found: {}'.format(not_found)

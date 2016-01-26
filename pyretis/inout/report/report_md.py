@@ -95,7 +95,7 @@ def _table_md_efficiency(results, fmt='rst'):
                                           r'$p_\text{MD}$',
                                           r'$\frac{1-p}{p}$',
                                           'Efficiency time', 'Correlation'],
-                                         fixnum=set([1, 2, 3, 4]))
+                                         fixnum={1, 2, 3, 4})
     elif fmt in ['txt']:
         table_str = generate_rst_table(table, 'Efficiency',
                                        ['Interface',
@@ -144,7 +144,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Cycles spent in state',
                                          ['State', 'Cycles'],
-                                         fixnum=set([2]))
+                                         fixnum={2})
     else:
         table_str = generate_rst_table(table, 'Cycles spent in state',
                                        ['State', 'Cycles'])
@@ -193,7 +193,7 @@ def _table_md_flux(results, fmt='rst'):
                                           'Error', 'Rel. error', 'Ncross',
                                           'Neffcross', 'Neffcross/Ncross',
                                           'Steps per cross'],
-                                         fixnum=set([2, 3, 4, 5, 6, 7, 8]))
+                                         fixnum={2, 3, 4, 5, 6, 7, 8})
     else:
         table_str = generate_rst_table(table, 'Flux for interfaces',
                                        ['Int.', 'Position', 'Flux / units',

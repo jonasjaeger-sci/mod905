@@ -294,8 +294,8 @@ CONSTANTS['kB']['electron'] = 3.16681534e-6
 CONSTANTS['kB']['gromacs'] = CONSTANTS['kB']['kJ/mol/K']
 
 
-DIMENSIONS = set(['length', 'mass', 'time', 'energy', 'velocity',
-                  'charge', 'temperature', 'pressure', 'force'])
+DIMENSIONS = {'length', 'mass', 'time', 'energy', 'velocity', 'charge',
+              'temperature', 'pressure', 'force'}
 """A dictionary with the known dimensions. Note that not all of these
 are true dimensions, for instance we are using velocity as a dimension
 here. This is just because it convenient to use this to get conversion
@@ -310,30 +310,30 @@ length unit `bohr` to the length unit `nm`."""
 UNITS = {key: {} for key in DIMENSIONS}
 """A dictionary of sets. Each set defines the known base unit for a dimension,
 i.e. `UNITS['length']` is the set with known base units for the length:
-`UNITS['length'] = set(['A', 'nm', 'bohr', 'm'])`"""
+`UNITS['length'] = {'A', 'nm', 'bohr', 'm'}`"""
 
 # Define a few units and some base conversions:
-UNITS['length'] = set(['A', 'nm', 'bohr', 'm'])
+UNITS['length'] = {'A', 'nm', 'bohr', 'm'}
 CONVERT['length']['A', 'nm'] = 0.1
 # http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 CONVERT['length']['A', 'bohr'] = 1.0 / 0.52917721067
 CONVERT['length']['A', 'm'] = 1.0e-10
 
-UNITS['mass'] = set(['g/mol', 'g', 'kg'])
+UNITS['mass'] = {'g/mol', 'g', 'kg'}
 CONVERT['mass']['g', 'kg'] = 1.e-3
 CONVERT['mass']['g/mol', 'g'] = 1.0 / CONSTANTS['NA']['1/mol']
 CONVERT['mass']['g/mol', 'kg'] = (CONVERT['mass']['g', 'kg'] /
                                   CONSTANTS['NA']['1/mol'])
 
-UNITS['time'] = set(['s', 'ps', 'fs', 'ns', 'us', 'ms'])
+UNITS['time'] = {'s', 'ps', 'fs', 'ns', 'us', 'ms'}
 CONVERT['time']['s', 'ps'] = 1.0e12
 CONVERT['time']['s', 'fs'] = 1.0e15
 CONVERT['time']['s', 'ns'] = 1.0e9
 CONVERT['time']['s', 'us'] = 1.0e6
 CONVERT['time']['s', 'ms'] = 1.0e3
 
-UNITS['energy'] = set(['kcal', 'kcal/mol', 'J', 'J/mol', 'kJ/mol',
-                       'eV', 'hartree'])
+UNITS['energy'] = {'kcal', 'kcal/mol', 'J', 'J/mol', 'kJ/mol', 'eV',
+                   'hartree'}
 CONVERT['energy']['kcal', 'kcal/mol'] = CONSTANTS['NA']['1/mol']
 CONVERT['energy']['kcal', 'J'] = CAL
 CONVERT['energy']['kcal', 'J/mol'] = (CONSTANTS['NA']['1/mol'] *
@@ -347,22 +347,22 @@ CONVERT['energy']['kcal', 'hartree'] = (CONVERT['energy']['kcal', 'eV'] *
 # 27.21138602 is hartree to eV from:
 # http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
-UNITS['velocity'] = set(['m/s', 'nm/ps', 'A/fs', 'A/ps'])
+UNITS['velocity'] = {'m/s', 'nm/ps', 'A/fs', 'A/ps'}
 CONVERT['velocity']['m/s', 'nm/ps'] = 1.0e9 / 1.0e12
 CONVERT['velocity']['m/s', 'A/fs'] = 1.0e10 / 1.0e15
 CONVERT['velocity']['m/s', 'A/ps'] = 1.0e10 / 1.0e12
 
-UNITS['charge'] = set(['e', 'C'])
+UNITS['charge'] = {'e', 'C'}
 CONVERT['charge']['e', 'C'] = CONSTANTS['e']['C']
 CONVERT['charge']['C', 'e'] = 1.0 / CONSTANTS['e']['C']
 
-UNITS['pressure'] = set(['Pa', 'bar', 'atm'])
+UNITS['pressure'] = {'Pa', 'bar', 'atm'}
 CONVERT['pressure']['Pa', 'bar'] = 1.0e-5
 CONVERT['pressure']['Pa', 'atm'] = 1.0 / 101325.
 
-UNITS['temperature'] = set(['K'])
+UNITS['temperature'] = {'K'}
 
-UNITS['force'] = set(['N', 'pN', 'dyn'])
+UNITS['force'] = {'N', 'pN', 'dyn'}
 CONVERT['force']['N', 'pN'] = 1.0e12
 CONVERT['force']['N', 'dyn'] = 1.0e5
 

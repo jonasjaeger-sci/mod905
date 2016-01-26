@@ -181,7 +181,7 @@ def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
         table_str = generate_latex_table(table, 'Interfaces',
                                          ['Ensemble', 'Left', 'Middle',
                                           'Right', 'Detect'],
-                                         fixnum=set([1, 2, 3, 4]))
+                                         fixnum={1, 2, 3, 4})
     else:
         table_str = generate_rst_table(table, 'Interfaces',
                                        ['Ensemble', 'Left', 'Middle',
@@ -224,7 +224,7 @@ def _table_probability(path_ensembles, results, fmt='rst'):
         table_str = generate_latex_table(table, r'Probabilities',
                                          [r'Ensemble', r'$P_\text{cross}$',
                                           r'Error', r'Rel. error (\%)'],
-                                         fixnum=set([1, 2, 3]))
+                                         fixnum={1, 2, 3})
     else:
         table_str = generate_rst_table(table, r'Probabilities',
                                        [r'Ensemble', r'Pcross', r'Error',
@@ -269,7 +269,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
         table_str = generate_latex_table(table, 'Path lengths',
                                          ['Ensemble', 'Accepted', 'All',
                                           'All/Accepted'],
-                                         fixnum=set([1, 2, 3]))
+                                         fixnum={1, 2, 3})
     else:
         table_str = generate_rst_table(table, 'Path lengths',
                                        ['Ensemble', 'Accepted', 'All',
@@ -315,7 +315,7 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
                                          ['Ensemble', 'TIS cycles',
                                           'Tot sim.', 'Acceptance ratio',
                                           'Correlation', 'Efficiency'],
-                                         fixnum=set([1, 2, 3, 4, 5]))
+                                         fixnum={1, 2, 3, 4, 5})
     else:
         table_str = generate_rst_table(table, 'Efficiency',
                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
