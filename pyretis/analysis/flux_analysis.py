@@ -37,7 +37,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
                'neffcross': [],  # number of effective crossings
-               'times':{},  # time spent in the different states
+               'times': {},  # time spent in the different states
                'flux': [],  # store raw flux data
                'runflux': [],  # running average of flux
                'errflux': [],  # block error analysis
