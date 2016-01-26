@@ -273,7 +273,13 @@ class ReservoirSampler(object):
         self.ret_idx = 0
 
     def append(self, new_item):
-        """Try to add an item to the reservoir."""
+        """Try to add an item to the reservoir.
+
+        Parameters
+        ----------
+        new_time : any type
+            This is the item we try to add to the reservoir.
+        """
         self.items += 1
         if self.items == 1:
             self.reservoir = [new_item for _ in range(self.length)]

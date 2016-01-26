@@ -189,7 +189,6 @@ class WriteXYZ(FileWriter):
         return msg
 
 
-
 class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
 
@@ -323,7 +322,18 @@ class WriteGromacs(FileWriter):
                                 header=header)
 
     def box_lengths(self, box):
-        """Obtain the box lengths from a object."""
+        """Obtain the box lengths from a object.
+
+        Parameters
+        ----------
+        box : object like `pyretis.core.Box`.
+            This is the simulation box.
+
+        Returns
+        -------
+        out : list of floats
+            The box lengths in the different dimensions.
+        """
         missing = 3 - box.dim
         if missing > 0:
             boxlength = np.ones(3)

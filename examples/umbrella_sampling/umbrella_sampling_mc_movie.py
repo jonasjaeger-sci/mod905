@@ -47,6 +47,20 @@ def init():
 def update(frame):
     """
     Function to update animation
+
+    Parameters
+    ----------
+    frame : integer
+        The current frame we are at.
+
+    Returns
+    -------
+    scat : object like `matplotlib.collections.PathCollection`.
+        The scatter points with updated positions.
+    axv : object like `matplotlib.patches.Polygon`.
+        The region to highlight.
+    linec : object like `matplotlib.lines.Line2D`.
+        The crossing line.
     """
     pos_ener = np.array([traj_data[frame], ener_data[frame]])
     scat.set_offsets(pos_ener)

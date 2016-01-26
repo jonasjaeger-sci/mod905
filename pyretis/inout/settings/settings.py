@@ -8,8 +8,6 @@ import logging
 import os
 import pprint
 import re
-#from pyretis.core.simulation.common import check_settings
-
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

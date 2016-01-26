@@ -60,7 +60,7 @@ def hello_world(infile, basedir, logfile):
 
     Parameters
     ----------
-    inputfile : string
+    infile : string
         String showing the location of the input file.
     basedir : string
         String showing the location we are running in.
@@ -80,13 +80,7 @@ def hello_world(infile, basedir, logfile):
 
 
 def bye_bye_world():
-    """Method to print out the goodbye message for pyretis.
-
-    Parameters
-    ----------
-    version : string
-        String with the version number of pyretis.
-    """
+    """Method to print out the goodbye message for pyretis."""
     timeend = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
     msg = ['# End of {} execution: {}'.format(NAME, timeend)]
     txt = '# Please cite: {}'

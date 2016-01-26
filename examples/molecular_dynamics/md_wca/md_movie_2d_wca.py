@@ -142,10 +142,19 @@ ax2.legend(loc='lower left', ncol=3, frameon=False,
 
 
 def plot_dwca_potential():
-    """
+    """Plot the double well WCA potential.
+
     This is a helper function to plot the dwca potential.
     It is creating a fake system with a fake box and moves a
     particle relative to another one in order to obtain the potential.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        Positions, can be used as an x-coordinate in a plot.
+    out[1] : numpy.array
+        The potential energy as a function of `out[0]`, can be used as the
+        y-coordinate in a plot.
     """
     rpos = np.linspace(0.1, 5, 500)
     potdwca = []
@@ -176,8 +185,7 @@ plt.subplots_adjust(left=0.08, top=0.95, bottom=0.15, right=0.95, hspace=0.3)
 
 
 def init():
-    """
-    This function declears what to re-draw when clearing the frame:
+    """Declare what to re-draw when clearing the animation frame.
 
     Returns
     -------
@@ -202,14 +210,17 @@ def init():
 
 
 def get_max_vector(vectors):
-    """
-    Helper function that determines the "largest vector" given a set
-    of vectors
+    """Determine the longest vector in a list of vectors.
 
     Parameters
     ----------
     vectors : numpy.array
-        Numpy array of vectors to analyse, using np.dot
+        Numpy array of vectors to analyse, using `numpy.dot`.
+
+    Returns
+    -------
+    vmax : float
+        The length of the largest vector.
     """
     vmax = None
     for vi in vectors:
@@ -220,18 +231,25 @@ def get_max_vector(vectors):
 
 
 def get_velocity_force_arrows(forces, vels):
-    """
-    This is a helper function to obtain the force and
-    velocity vectors
+    """Obtain the force and velocity vectors.
 
     Parameters
     ----------
-    pos : numpy.array
-        The positions of the particles
     force : numpy.array
-        The forces on the particles
-    vel : numpy.array
-        The velocity of the particles
+        The forces on the particles.
+    vels : numpy.array
+        The velocity of the particles.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The x-component of the forces, normalized.
+    out[1] : numpy.array
+        The y-component of the forces, normalized.
+    out[2] : numpy.array
+        The x-component of the velocities, normalized.
+    out[3] : numpy.array
+        The y-component of the velocities, normalized.
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     FU, FV, VU, VV = [], [], [], []
@@ -246,9 +264,10 @@ def get_velocity_force_arrows(forces, vels):
 
 
 def spring_bond(delta, dr, part1, part2):
-    """
+    """Create positions for a zig-zag line.
+
     This is a function that will create positions which can be used to
-    create a zig-zag bond. It is here used to illustrate a spring bond
+    create a zig-zag bond. It is used here to illustrate a spring bond
     between two atoms
 
     Parameters
@@ -266,9 +285,9 @@ def spring_bond(delta, dr, part1, part2):
     Returns
     -------
     out[0] : numpy.array
-        X-coordinates for the line
+        X-coordinates for the line.
     out[1] : numpy.array
-        Y-coordinates for the line
+        Y-coordinates for the line.
     """
     delta_u = delta / dr
     xpos = [part1[0]]
@@ -297,7 +316,8 @@ def spring_bond(delta, dr, part1, part2):
 
 
 def update(frame, system, output_tasks):
-    """
+    """Update plots for the animation.
+
     This function will be running the simulation and updating the plots.
     It is called one time per step, and we choose to update the simulation
     inside this function
@@ -305,16 +325,16 @@ def update(frame, system, output_tasks):
     Parameters
     ----------
     frame : int
-        The current frame number, supplied by animation.FuncAnimation
+        The current frame number, supplied by `animation.FuncAnimation`.
     system : object
         The system object we are simulating
     output_tasks : list of objects like `OutputTask`
-        This list defines the outputs to do for this imulation.
+        This list defines the outputs to do for this simulation.
 
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        List of the patches to be drawn.
     """
     pos = box.pbc_wrap(system.particles.pos)
     patches = []

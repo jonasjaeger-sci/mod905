@@ -141,14 +141,17 @@ plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.15)
 
 
 def get_max_vector(vectors):
-    """
-    Helper function that determines the "largest vector" given a set
-    of vectors
+    """Determine the longest vector in a list of vectors.
 
     Parameters
     ----------
     vectors : numpy.array
-        Numpy array of vectors to analyse, using np.dot
+        Numpy array of vectors to analyse, using `numpy.dot`.
+
+    Returns
+    -------
+    vmax : float
+        The length of the largest vector.
     """
     vmax = None
     for vi in vectors:
@@ -159,18 +162,25 @@ def get_max_vector(vectors):
 
 
 def get_velocity_force_arrows(forces, vels):
-    """
-    This is a helper function to obtain the force and
-    velocity vectors
+    """Obtain the force and velocity vectors.
 
     Parameters
     ----------
-    pos : numpy.array
-        The positions of the particles
     force : numpy.array
-        The forces on the particles
-    vel : numpy.array
-        The velocity of the particles
+        The forces on the particles.
+    vels : numpy.array
+        The velocity of the particles.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The x-component of the forces, normalized.
+    out[1] : numpy.array
+        The y-component of the forces, normalized.
+    out[2] : numpy.array
+        The x-component of the velocities, normalized.
+    out[3] : numpy.array
+        The y-component of the velocities, normalized.
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     FU, FV, VU, VV = [], [], [], []
@@ -185,7 +195,8 @@ def get_velocity_force_arrows(forces, vels):
 
 
 def update(frame, sim, output_tasks):
-    """
+    """Update plots for the animation.
+
     This function will be running the simulation and updating the plots.
     It is called one time per step, and we choose to update the simulation
     inside this function
@@ -193,14 +204,16 @@ def update(frame, sim, output_tasks):
     Parameters
     ----------
     frame : int
-        The current frame number, supplied by animation.FuncAnimation
+        The current frame number, supplied by `animation.FuncAnimation`.
     system : object
-        The system object we are simulating
+        The system object we are simulating.
+    output_tasks : list of objects like `OutputTask`.
+        A list of output tasks to perform during the simulation.
 
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        list of the patches to be drawn.
     """
     particles = sim.system.particles
     pos = sim.system.box.pbc_wrap(particles.pos)
@@ -251,8 +264,7 @@ def update(frame, sim, output_tasks):
 
 
 def init():
-    """
-    This function declears what to re-draw when clearing the frame:
+    """Declare what to re-draw when clearing the animation frame.
 
     Returns
     -------

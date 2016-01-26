@@ -130,12 +130,18 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
     Parameters
     ----------
-    epsilon_i and epsilon_j : floats
-        For a Lennard-Jones potential, this corresponds to the epsilon
-        parameters.
-    sigma_i and sigma_j : floats
-        For a Lennard-Jones potential, this corresponds to the
-        sigma parameters.
+    epsilon_i : float
+        Lennard-Jones epsilon parameter for particle of type `i`.
+    sigma_i : float
+        Lennard-Jones sigma parameter for particle of type `i`.
+    rcut_i : float
+        Lennard-Jones cut-off value for particle of type `i`.
+    epsilon_j : float
+        Lennard-Jones epsilon parameter for particle of type `j`.
+    sigma_j : float
+        Lennard-Jones sigma parameter for particle of type `j`.
+    rcut_j : float
+        Lennard-Jones cut-off value for particle of type `j`.
     mixing :  string
         Represents what kind of mixing that should be done.
 
