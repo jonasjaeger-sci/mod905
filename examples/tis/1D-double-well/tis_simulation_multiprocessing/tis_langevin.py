@@ -66,7 +66,7 @@ def set_up_tis_simulation(settings):
 def run_simulation(simulation, settings):
     ensemble = simulation.path_ensemble.ensemble
     interfaces = simulation.path_ensemble.interfaces
-    output = [task for task in create_output(simulation.system, settings)]
+    output = [task for task in create_output(settings)]
     print('Running:', ensemble)
     for result in simulation.run(output=output):
         step = result['cycle']
