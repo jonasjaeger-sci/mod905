@@ -222,13 +222,6 @@ class FileIO(object):
         if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()
 
-    def get_mode(self):
-        """Return mode of the file."""
-        try:
-            return self.fileh.mode
-        except AttributeError:
-            return None
-
     def load(self):
         """Load data from a file - can be implemented in derived classes."""
         raise NotImplementedError
