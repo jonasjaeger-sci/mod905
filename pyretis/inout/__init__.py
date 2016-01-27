@@ -56,7 +56,7 @@ Important classes and functions:
 """
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table
-from .fileio import (FileWriter, CrossFile, EnergyFile, OrderFile,
+from .fileio import (FileIO, CrossFile, EnergyFile, OrderFile,
                      PathEnsembleFile, create_traj_writer, get_file_object)
 from .report import generate_report
 from .settings import create_output
