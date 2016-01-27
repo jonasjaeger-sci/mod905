@@ -26,10 +26,10 @@ logger.addHandler(logging.NullHandler())
 
 
 # define formats for the trajectory output:
-_GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}\n'
-_GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.4f}{8:8.4f}{9:8.4f}\n'
-_GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}\n'
-_XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
+_GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
+_GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.4f}{8:8.4f}{9:8.4f}'
+_GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
+_XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 
 
 __all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
@@ -145,10 +145,10 @@ class WriteXYZ(FileWriter):
         """
         status = False
         npart = len(pos)
-        self.write_string('{0}\n'.format(npart))
+        self.write_line('{0}'.format(npart))
         if header is None:
             header = 'Trajectory output. Frame: {}'.format(self.frame)
-        self.write_string('{}\n'.format(header))
+        self.write_line('{}'.format(header))
         if names is None:
             if len(self.atomnames) != npart:
                 self.atomnames = ['X'] * npart
@@ -159,7 +159,7 @@ class WriteXYZ(FileWriter):
                                   posi[0] * self.convert['pos'],
                                   posi[1] * self.convert['pos'],
                                   posi[2] * self.convert['pos'])
-            status = self.write_string(out)
+            status = self.write_line(out)
             if not status:
                 return status
         self.frame += 1
@@ -263,8 +263,8 @@ class WriteGromacs(FileWriter):
         if header is None:
             header = 'Trajectory output. Frame: {}'.format(self.frame)
 
-        self.write_string('{}\n'.format(header))
-        self.write_string('{}\n'.format(npart))
+        self.write_line('{}'.format(header))
+        self.write_line('{}'.format(npart))
 
         pos = _adjust_coordinate(pos)  # in case pos is 1D or 2D
         if vel is not None:
@@ -288,12 +288,12 @@ class WriteGromacs(FileWriter):
                                           vel[i][0] * self.convert['vel'],
                                           vel[i][1] * self.convert['vel'],
                                           vel[i][2] * self.convert['vel'])
-            status = self.write_string(out)
+            status = self.write_line(out)
             if not status:
                 return status
         # Write box, note that we update the box-lengths here since
         # it may change during the simulation.
-        status = self.write_string(_GRO_BOX_FMT.format(*self.box_lengths(box)))
+        status = self.write_line(_GRO_BOX_FMT.format(*self.box_lengths(box)))
         self.frame += 1
         return status
 
