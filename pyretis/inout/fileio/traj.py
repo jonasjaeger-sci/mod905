@@ -119,7 +119,7 @@ class WriteXYZ(FileWriter):
 
     def __init__(self, filename, units, oldfile='backup'):
         """Initialization of the XYZ writer."""
-        super(WriteXYZ, self).__init__(filename, 'xyz', mode='w',
+        super(WriteXYZ, self).__init__(filename, 'xyz-traj', mode='w',
                                        oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -183,11 +183,6 @@ class WriteXYZ(FileWriter):
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
 
-    def __str__(self):
-        """Return a string with some info about the xyz file."""
-        msg = 'XYZ-file: {} (mode: {})'.format(self.filename, self.mode)
-        return msg
-
 
 class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
@@ -214,7 +209,7 @@ class WriteGromacs(FileWriter):
 
     def __init__(self, filename, units, oldfile='backup'):
         """Initiate the gromacs writer."""
-        super(WriteGromacs, self).__init__(filename, 'gromacs', mode='w',
+        super(WriteGromacs, self).__init__(filename, 'gromacs-traj', mode='w',
                                            oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -342,11 +337,6 @@ class WriteGromacs(FileWriter):
             return boxlength
         else:
             return box.length * self.convert['pos']
-
-    def __str__(self):
-        """Return a string with some info about the gro file."""
-        msg = 'GRO-file: {} (mode: {})'.format(self.filename, self.mode)
-        return msg
 
 
 def read_gromacs_file(filename):

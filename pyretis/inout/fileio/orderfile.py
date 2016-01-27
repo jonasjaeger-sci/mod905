@@ -123,9 +123,3 @@ class OrderFile(FileWriter):
             towrite.append(ORDER_FMT[1].format(orderp))
         towrite = ' '.join(towrite)
         return self.write_line(towrite)
-
-    def __str__(self):
-        """Return a string with some info about the order parameter file."""
-        msg = 'Order parameter file: {} (mode: {})'.format(self.filename,
-                                                           self.mode)
-        return msg

@@ -295,3 +295,10 @@ class FileWriter(object):
         """
         if self.fileh is not None and not self.fileh.closed:
             self.fileh.close()
+
+    def __str__(self):
+        """Return basic info."""
+        msg = 'File "{}": {} (mode: "{}")'.format(self.filetype,
+                                                  self.filename,
+                                                  self.get_mode())
+        return msg

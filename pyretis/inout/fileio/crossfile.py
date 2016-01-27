@@ -140,9 +140,3 @@ class CrossFile(FileWriter):
             towrite = CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
             retval.append(self.write_line(towrite))
         return retval
-
-    def __str__(self):
-        """Return a string with some info about this object."""
-        msg = 'Crossing file: {} (mode: {})'.format(self.filename,
-                                                    self.mode)
-        return msg

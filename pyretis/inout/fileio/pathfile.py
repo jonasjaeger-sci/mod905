@@ -283,13 +283,6 @@ class PathEnsembleFile(FileWriter):
                                      path_ensemble.nstats['nshoot'])
         return self.write_line(towrite)
 
-    def __str__(self):
-        """Return a string with some info about the path ensemble file."""
-        msg = ['Path (file) ensemble : {}'.format(self.ensemble)]
-        msg += ['\tFile name: {}'.format(self.filename)]
-        msg += ['\tFile mode: {}'.format(self.mode)]
-        return '\n'.join(msg)
-
 
 class PathWriter(object):
     """PathWriter(object) - For writing path information.

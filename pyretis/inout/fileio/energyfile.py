@@ -117,8 +117,3 @@ class EnergyFile(FileWriter):
             value = energy.get(key, 0.0)
             towrite.append(ENERGY_FMT[i + 1].format(value))
         return self.write_line(' '.join(towrite))
-
-    def __str__(self):
-        """Return a string with some info about the energy file."""
-        msg = 'Energy file: {} (mode: {})'.format(self.filename, self.mode)
-        return msg
