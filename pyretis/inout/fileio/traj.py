@@ -117,9 +117,9 @@ class WriteXYZ(FileWriter):
         The number of frames written.
     """
 
-    def __init__(self, filename, units, oldfile='backup'):
+    def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initialization of the XYZ writer."""
-        super(WriteXYZ, self).__init__(filename, 'xyz-traj', mode='w',
+        super(WriteXYZ, self).__init__(filename, 'xyz-traj', mode=mode,
                                        oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -183,6 +183,24 @@ class WriteXYZ(FileWriter):
         return self.write_frame(system.particles.pos,
                                 names=system.particles.name, header=header)
 
+    def load(self):
+        """Read snapshots from the trajectory file.
+
+        Here we simply use the `read_xyz_file` method defined below.
+        In addition we convert positions to internal units.
+
+        Yields
+        ------
+        out : dict
+            This dict contains the snapshot.
+        """
+        convert = 1.0 / self.convert['pos']
+        for snapshot in read_xyz_file(self.filename):
+            snapshot['x'] = np.array(snapshot['x']) * convert
+            snapshot['y'] = np.array(snapshot['y']) * convert
+            snapshot['z'] = np.array(snapshot['z']) * convert
+            yield snapshot
+
 
 class WriteGromacs(FileWriter):
     """WriteGromacs(FileWriter) - A class for GRO files.
@@ -207,9 +225,9 @@ class WriteGromacs(FileWriter):
        http://manual.gromacs.org/current/online/gro.html
     """
 
-    def __init__(self, filename, units, oldfile='backup'):
+    def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initiate the gromacs writer."""
-        super(WriteGromacs, self).__init__(filename, 'gromacs-traj', mode='w',
+        super(WriteGromacs, self).__init__(filename, 'gromacs-traj', mode=mode,
                                            oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -338,6 +356,28 @@ class WriteGromacs(FileWriter):
         else:
             return box.length * self.convert['pos']
 
+    def load(self):
+        """Read snapshots from the trajectory file.
+
+        Here we simply use the `read_gromacs_file` method defined below.
+        In addition we convert positions/velocities to internal units.
+
+        Yields
+        ------
+        out : dict
+            This dict contains the snapshot.
+        """
+        convert_pos = 1.0 / self.convert['pos']
+        convert_vel = 1.0 / self.convert['vel']
+        for snapshot in read_gromacs_file(self.filename):
+            snapshot['x'] = np.array(snapshot['x']) * convert_pos
+            snapshot['y'] = np.array(snapshot['y']) * convert_pos
+            snapshot['z'] = np.array(snapshot['z']) * convert_pos
+            for key in ('vx', 'vy', 'vz'):
+                if key in snapshot:
+                    snapshot[key] = np.array(snapshot[key]) * convert_vel
+            yield snapshot
+
 
 def read_gromacs_file(filename):
     """A function for reading gromacs GRO files.
@@ -426,6 +466,10 @@ def read_xyz_file(filename):
     >>> from pyretis.inout.fileio.traj import read_xyz_file
     >>> for snapshot in read_xyz_file('traj.xyz'):
     ...     print(snapshot['x'][0])
+
+    Note
+    ----
+    The positions will not be converted to a specified set of units.
     """
     lines_to_read = 0
     snapshot = None
@@ -462,7 +506,8 @@ def write_xyz_file(filename, pos, names=None, header=None):
 
     This is just a simple function to write a single xyz
     configuration to a file. It will NOT convert positions and assumes
-    that these are given in correct units.
+    that these are given in correct units. This method is intended as a
+    lightweight alternative to the WriteXYZ.
 
     Parameters
     ----------
