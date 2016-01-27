@@ -214,11 +214,7 @@ class FileIO(object):
                 logger.critical(msg)
                 raise
         else:
-            msg = 'Unknown file mode "{}"'.format(self.mode)
-            logger.warning(msg)
-
-        if self.fileh is None:
-            msg = 'Could not open file: "{}"'.format(self.filename)
+            msg = 'Expected mode "w" not file mode "{}"'.format(self.mode)
             logger.warning(msg)
 
     def close(self):
@@ -296,5 +292,5 @@ class FileIO(object):
         """Return basic info."""
         msg = '{} (file: "{}", mode: "{}")'.format(self.filetype,
                                                    self.filename,
-                                                   self.get_mode())
+                                                   self.mode())
         return msg
