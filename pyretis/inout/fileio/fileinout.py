@@ -166,14 +166,14 @@ class FileWriter(object):
             else:
                 self.header = header['text']
         if self.mode == 'w':
-            self.fileopen(oldfile=oldfile)
+            self._write_open(oldfile=oldfile)
             if oldfile != 'append' and self.header is not None:
                 self.write_line(self.header)
 
-    def fileopen(self, oldfile='backup'):
-        """Open a file and make it ready for reading/writing.
+    def _write_open(self, oldfile='backup'):
+        """Open a file and make it ready for writing.
 
-        Function to open a file, to make it ready for reading/writing.
+        Function to open a file, to make it ready for writing.
         This function is separated from `self.__init__` in case some derived
         classes will open the file at a later stage. Default is to run
         open if the mode it set to 'w'.
@@ -188,14 +188,7 @@ class FileWriter(object):
         -------
         None, but `self.fileh` is set to the open file.
         """
-        if self.mode == 'r':  # Read data
-            try:
-                self.fileh = open(self.filename, 'r')
-            except IOError as error:
-                msgtxt = 'I/O error ({}): {}'.format(error.errno,
-                                                     error.strerror)
-                logger.warning(msgtxt)
-        elif self.mode == 'w':  # Write data to file + handle backup:
+        if self.mode == 'w':  # Write data to file + handle backup:
             try:
                 if os.path.isfile(self.filename):
                     msg = ['File "{}" exist'.format(self.filename)]
@@ -225,9 +218,8 @@ class FileWriter(object):
             logger.warning(msg)
 
         if self.fileh is None:
-            msg = 'Could not open file!'
+            msg = 'Could not open file: "{}"'.format(self.filename)
             logger.warning(msg)
-            raise SystemExit(msg)
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
@@ -240,6 +232,10 @@ class FileWriter(object):
             return self.fileh.mode
         except AttributeError:
             return None
+
+    def load(self):
+        """Load data from a file - can be implemented in derived classes."""
+        raise NotImplementedError
 
     def _write_string(self, towrite):
         """Write a string to the file.
