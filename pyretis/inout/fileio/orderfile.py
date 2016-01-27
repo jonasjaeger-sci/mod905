@@ -70,7 +70,7 @@ class OrderFile(FileWriter):
         """
         header = {'text': ['Time', 'Orderp', 'Orderv'],
                   'width': [10, 12]}
-        super(OrderFile, self).__init__(filename, 'orderparameter',
+        super(OrderFile, self).__init__(filename, 'OrderFile',
                                         mode=mode, oldfile=oldfile,
                                         header=header)
 

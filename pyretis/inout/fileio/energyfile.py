@@ -61,7 +61,7 @@ class EnergyFile(FileWriter):
         header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
                            'Hamiltonian', 'Temperature'],
                   'width': [10, 12]}
-        super(EnergyFile, self).__init__(filename, 'energyfile',
+        super(EnergyFile, self).__init__(filename, 'EnergyFile',
                                          mode=mode,
                                          oldfile=oldfile,
                                          header=header)

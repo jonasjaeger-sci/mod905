@@ -206,7 +206,7 @@ class PathEnsembleFile(FileWriter):
                            'O-shoot', 'Idx-sh', 'Idx-shN'],
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
-        super(PathEnsembleFile, self).__init__(filename, 'pathensemble',
+        super(PathEnsembleFile, self).__init__(filename, 'PathEnsembleFile',
                                                mode=mode, oldfile=oldfile,
                                                header=header)
         self.ensemble = ensemble
@@ -360,7 +360,7 @@ class PathWriter(object):
 
     def __str__(self):
         """Return a string with some info about the path file."""
-        msg = ['Path file for ensemble: {}'.format(self.ensemble)]
+        msg = ['PathWriter for ensemble: {}'.format(self.ensemble)]
         msg += ['\tWriters defined:']
         if self.order is not None:
             msg += ['\t- {}'.format(self.order['writer'])]

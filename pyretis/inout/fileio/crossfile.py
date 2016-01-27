@@ -58,7 +58,7 @@ class CrossFile(FileWriter):
         """
         header = {'text': ['Step', 'Int', 'Dir'],
                   'width': [10, 4, 3]}
-        super(CrossFile, self).__init__(filename, 'crossingfile',
+        super(CrossFile, self).__init__(filename, 'CrossFile',
                                         mode=mode, oldfile=oldfile,
                                         header=header)
 
