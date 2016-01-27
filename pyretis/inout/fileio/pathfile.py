@@ -232,6 +232,11 @@ class PathEnsembleFile(FileIO):
         return path_ensemble
 
     def get_paths(self):
+        """To have a common interface with the PathEnsemble object."""
+        for path in self.load():
+            yield path
+
+    def load(self):
         """Yield the different paths stored in the file.
 
         The lines are read on-the-fly, converted and yielded one-by-one.
