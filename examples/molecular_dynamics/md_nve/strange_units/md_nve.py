@@ -11,7 +11,7 @@ from pyretis.core.units import generate_system_conversions
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
-from pyretis.inout import (get_predefined_table, FileWriter,
+from pyretis.inout import (get_predefined_table, FileIO,
                            create_output)
 from pyretis.tools import generate_lattice
 import numpy as np
@@ -84,8 +84,8 @@ simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
 table = get_predefined_table('energies')
-thermo_file = FileWriter('thermo.txt', 'table',
-                         header={'text': table.header})
+thermo_file = FileIO('thermo.txt', 'table',
+                     header={'text': table.header})
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]
