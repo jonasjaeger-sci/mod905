@@ -241,7 +241,7 @@ class FileWriter(object):
         except AttributeError:
             return None
 
-    def write_string(self, towrite):
+    def _write_string(self, towrite):
         """Write a string to the file.
 
         Parameters
@@ -283,7 +283,7 @@ class FileWriter(object):
         towrite : string
             The string to output to the file
         """
-        return self.write_string('{}\n'.format(towrite))
+        return self._write_string('{}\n'.format(towrite))
 
     def __del__(self):
         """Close a file in case the object is deleted.
@@ -298,7 +298,7 @@ class FileWriter(object):
 
     def __str__(self):
         """Return basic info."""
-        msg = 'File "{}": {} (mode: "{}")'.format(self.filetype,
-                                                  self.filename,
-                                                  self.get_mode())
+        msg = '{} (file: "{}", mode: "{}")'.format(self.filetype,
+                                                   self.filename,
+                                                   self.get_mode())
         return msg
