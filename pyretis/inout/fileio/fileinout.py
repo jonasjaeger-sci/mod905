@@ -17,7 +17,8 @@ import logging
 # local imports
 from pyretis.inout.common import create_backup
 from pyretis.inout.txtinout import create_and_format_row
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['FileWriter']
@@ -191,39 +192,41 @@ class FileWriter(object):
             try:
                 self.fileh = open(self.filename, 'r')
             except IOError as error:
-                msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-                logging.warning(msg)
+                msgtxt = 'I/O error ({}): {}'.format(error.errno,
+                                                     error.strerror)
+                logger.warning(msgtxt)
         elif self.mode == 'w':  # Write data to file + handle backup:
             try:
                 if os.path.isfile(self.filename):
-                    msg = 'File {} exist'.format(self.filename)
+                    msg = ['File "{}" exist'.format(self.filename)]
                     if oldfile == 'overwrite':
-                        msg = '{}: Will overwrite!'.format(msg)
+                        msg += ['Will overwrite!']
                         self.fileh = open(self.filename, 'w')
                     elif oldfile == 'append':
-                        msg = '{}: Will append to file'.format(msg)
+                        msg += ['Will append to file']
                         self.fileh = open(self.filename, 'a')
                     else:
                         msg_back = create_backup(self.filename)
-                        msg = '{}: {}'.format(msg, msg_back)
+                        msg += [msg_back]
                         self.fileh = open(self.filename, 'w')
-                    logging.warning(msg)
+                    msgtxt = ': '.join(msg)
+                    logger.warning(msgtxt)
                 else:
                     self.fileh = open(self.filename, 'w')
             except IOError as error:
                 msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-                logging.critical(msg)
+                logger.critical(msg)
             except Exception as error:
                 msg = 'Error: {}'.format(error)
-                logging.critical(msg)
+                logger.critical(msg)
                 raise
         else:
             msg = 'Unknown file mode "{}"'.format(self.mode)
-            logging.warning(msg)
+            logger.warning(msg)
 
         if self.fileh is None:
             msg = 'Could not open file!'
-            logging.warning(msg)
+            logger.warning(msg)
             raise SystemExit(msg)
 
     def close(self):
@@ -261,10 +264,10 @@ class FileWriter(object):
             except IOError as error:
                 msg = 'Write I/O error ({}): {}'.format(error.errno,
                                                         error.strerror)
-                logging.critical(msg)
+                logger.critical(msg)
             except Exception as error:
                 msg = 'Write error: {}'.format(error)
-                logging.critical(msg)
+                logger.critical(msg)
                 raise
         else:
             return False
