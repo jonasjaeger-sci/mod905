@@ -95,10 +95,10 @@ def create_backup(outputfile):
     fileid = 0
     msg = None
     while os.path.isfile(filename) or os.path.isdir(filename):
-        filename = '{}_{}'.format(outputfile, fileid)
+        filename = '{}_{:03d}'.format(outputfile, fileid)
         fileid += 1
     if fileid > 0:
-        msg = 'Backup existing file {} to {}'.format(outputfile, filename)
+        msg = 'Backup existing file "{}" to "{}"'.format(outputfile, filename)
         os.rename(outputfile, filename)
     return msg
 
