@@ -7,9 +7,9 @@ in a gromacs format.
 
 Important classes defined here:
 
-- WriteXYZ: Writing of coordinates to a file in a xyz format.
+- TrajXYZ: Writing of coordinates to a file in a xyz format.
 
-- WriteGromacs: Writing of a coordinates to a file in a gromacs format.
+- TrajGRO: Writing of a coordinates to a file in a gromacs format.
 
 Important functions defined here:
 
@@ -32,7 +32,7 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 
 
-__all__ = ['WriteXYZ', 'WriteGromacs', 'read_gromacs_file', 'read_xyz_file']
+__all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
 
 
 def create_traj_writer(filename, filefmt, units, oldfile='backup'):
@@ -55,13 +55,13 @@ def create_traj_writer(filename, filefmt, units, oldfile='backup'):
 
     Returns
     -------
-    out : object like `WriteXYZ` or `WriteGromacs`.
+    out : object like `TrajXYZ` or `TrajGRO`.
         The trajectory writer we created here.
     """
     if filefmt == 'xyz':
-        return WriteXYZ(filename, units, oldfile=oldfile)
+        return TrajXYZ(filename, units, mode='w', oldfile=oldfile)
     elif filefmt == 'gro':
-        return WriteGromacs(filename, units, oldfile=oldfile)
+        return TrajGRO(filename, units, mode='w', oldfile=oldfile)
     else:
         msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
         msgtxt = msgtxt.format(filefmt)
@@ -102,8 +102,8 @@ def _adjust_coordinate(coord):
         return adjusted
 
 
-class WriteXYZ(FileWriter):
-    u"""WriteXYZ(FileWriter) - A class for XYZ files.
+class TrajXYZ(FileWriter):
+    u"""TrajXYZ(FileWriter) - A class for XYZ files.
 
     This class handles writing of a system to a file in a simple xyz format.
 
@@ -119,8 +119,8 @@ class WriteXYZ(FileWriter):
 
     def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initialization of the XYZ writer."""
-        super(WriteXYZ, self).__init__(filename, 'xyz-traj', mode=mode,
-                                       oldfile=oldfile)
+        super(TrajXYZ, self).__init__(filename, 'TrajXYZ', mode=mode,
+                                      oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'A']}
@@ -202,8 +202,8 @@ class WriteXYZ(FileWriter):
             yield snapshot
 
 
-class WriteGromacs(FileWriter):
-    """WriteGromacs(FileWriter) - A class for GRO files.
+class TrajGRO(FileWriter):
+    """TrajGRO(FileWriter) - A class for gromacs GRO files.
 
     This class handles writing of a system to a file using the gromacs format.
     The gromacs format is described in the gromacs manual [#]_.
@@ -227,8 +227,8 @@ class WriteGromacs(FileWriter):
 
     def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initiate the gromacs writer."""
-        super(WriteGromacs, self).__init__(filename, 'gromacs-traj', mode=mode,
-                                           oldfile=oldfile)
+        super(TrajGRO, self).__init__(filename, 'TrajGRO', mode=mode,
+                                      oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'nm'],
@@ -507,7 +507,7 @@ def write_xyz_file(filename, pos, names=None, header=None):
     This is just a simple function to write a single xyz
     configuration to a file. It will NOT convert positions and assumes
     that these are given in correct units. This method is intended as a
-    lightweight alternative to the WriteXYZ.
+    lightweight alternative to `TrajXYZ`.
 
     Parameters
     ----------
