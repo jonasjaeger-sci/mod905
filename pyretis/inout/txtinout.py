@@ -304,11 +304,11 @@ class TxtTable(object):
         return str_row
 
     def write(self, step, row, first_step=False):
-        """Function which mimics the `write` function of a `FileWriter`.
+        """Function which mimics the `write` function of a `FileIO`.
 
         This function is intended to wrap the `self.get_row()` function so
         that we can use `self.write()` defined here in a similar way to the
-        `FileWriter.write` function.
+        `FileIO.write` function.
 
         Parameters
         ----------
@@ -371,11 +371,11 @@ class PathTable(TxtTable):
                                         headers=headers, spacing=spacing)
 
     def write(self, step, path_ensemble, first_step=False):
-        """Function which mimics the `write` function of a `FileWriter`.
+        """Function which mimics the `write` function of a `FileIO`.
 
         This function is intended to wrap the `self.get_row()` function so
         that we can use `self.write()` defined here in a similar way to the
-        `FileWriter.write` function. Here we overload the `write`function
+        `FileIO.write` function. Here we overload the `write`function
         defined in `TxtTable` so that we can write path ensemble statistics to
         the screen.
 

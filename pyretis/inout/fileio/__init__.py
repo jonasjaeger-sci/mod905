@@ -31,9 +31,9 @@ Important functions:
 
 Important classes:
 
-- FileWriter: A generic file writer class.
+- FileIO: A generic file writer class.
 
-- CrossWriter: A writer of crossing data.
+- CrossFile: A writer of crossing data.
 
 - EnergyFile: A writer of energy data
 
@@ -47,7 +47,7 @@ from __future__ import absolute_import
 import logging
 # pyretis imports
 from .traj import create_traj_writer, read_xyz_file, read_gromacs_file
-from .fileinout import FileWriter
+from .fileinout import FileIO
 from .crossfile import CrossFile
 from .energyfile import EnergyFile
 from .orderfile import OrderFile
@@ -58,7 +58,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 def get_file_object(file_type, file_name):
     """Open a file for reading using a file reader based on file type.
 
-    This is a convenience function to return an instance of `FileWriter` or
+    This is a convenience function to return an instance of `FileIO` or
     derived classes so that we are ready to read data from that file. Usage is
     intended to be in cases when we just want to open a file easily. The
     returned object can then be used to read the file using `load()`.
@@ -72,7 +72,7 @@ def get_file_object(file_type, file_name):
 
     Returns
     -------
-    out : object like `FileWriter` from `pyretis.inout.fileio`
+    out : object like `FileIO` from `pyretis.inout.fileio`
 
     Examples
     --------

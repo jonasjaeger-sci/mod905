@@ -11,7 +11,7 @@ Important classes defined here:
 import logging
 # pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
-from pyretis.inout.fileio.fileinout import FileWriter
+from pyretis.inout.fileio.fileinout import FileIO
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -146,8 +146,8 @@ def _path_to_line_data(path, cycle, acc, shoot):
     return out
 
 
-class PathEnsembleFile(FileWriter):
-    """PathEnsembleFile(FileWriter).
+class PathEnsembleFile(FileIO):
+    """PathEnsembleFile(FileIO) - A class for path ensemble data.
 
     This class handles writing/reading of path ensemble data to a file.
     It also supports some attributes and functions found in the

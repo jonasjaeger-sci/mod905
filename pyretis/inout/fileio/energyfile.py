@@ -10,7 +10,7 @@ Important classes defined here:
 """
 import numpy as np
 # pyretis imports
-from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.fileinout import FileIO, read_some_lines
 
 
 __all__ = ['EnergyFile']
@@ -21,9 +21,8 @@ __all__ = ['EnergyFile']
 ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6f}']
 
 
-class EnergyFile(FileWriter):
-    """
-    EnergyFile(FileWriter).
+class EnergyFile(FileIO):
+    """EnergyFile(FileIO) - Handle energy data for pyretis.
 
     This class handles writing/reading of energy data. The data is written in
     7 columns:

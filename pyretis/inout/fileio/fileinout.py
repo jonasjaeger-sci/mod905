@@ -10,7 +10,7 @@ Important classes and functions defined here:
   will try to read as many lines as possible with a given parser for lines.
   It will yield blocks of data.
 
-- FileWriter: A generic file writer class.
+- FileIO: A generic class for handling files (input and output).
 """
 import os
 import logging
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['FileWriter']
+__all__ = ['FileIO']
 
 
 def _simple_line_parser(line):
@@ -100,8 +100,8 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
         yield new_block
 
 
-class FileWriter(object):
-    """FileWriter(object) - A generic file writer class.
+class FileIO(object):
+    """FileIO(object) - A generic file writer class.
 
     This class defines a simple object to output to a file.
     Actual formatting are handled by derived objects such as the trajectory

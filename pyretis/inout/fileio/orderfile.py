@@ -14,7 +14,7 @@ Important classes defined here:
 """
 import numpy as np
 # pyretis imports
-from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.fileinout import FileIO, read_some_lines
 
 
 __all__ = ['OrderFile']
@@ -25,8 +25,8 @@ __all__ = ['OrderFile']
 ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 
 
-class OrderFile(FileWriter):
-    """OrderFile(FileWriter) - A class for order parameter files.
+class OrderFile(FileIO):
+    """OrderFile(FileIO) - A class for order parameter files.
 
     This class handles writing/reading of order parameter data.
     The format for the order file is column-based and the columns are:

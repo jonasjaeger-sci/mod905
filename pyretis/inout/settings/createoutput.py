@@ -135,7 +135,7 @@ class OutputTask(object):
         'file' and 'screen' are handled slightly differently.
     result : string
         This string defines the result we are going to output.
-    writer : object like `FileWriter` from `pyretis.inout.txtinout`
+    writer : object like `FileIO` from `pyretis.inout.txtinout`
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
@@ -162,7 +162,7 @@ class OutputTask(object):
             'file' and 'screen' are handled slightly differently.
         result : string
             This string defines the result we are going to output.
-        writer : object like `FileWriter` from `pyretis.inout.txtinout`
+        writer : object like `FileIO` from `pyretis.inout.txtinout`
             This object will handle the actual writing of the result.
         when : dict, optional
             Determines if the task should be executed.
@@ -365,7 +365,7 @@ def _create_file_writer(task, settings):
 
     Returns
     -------
-    out : object like `FileWriter` from `pyretis.inout.fileio`.
+    out : object like `FileIO` from `pyretis.inout.fileio`.
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """

@@ -12,7 +12,7 @@ Important classes defined here:
 """
 import logging
 # pyretis imports
-from pyretis.inout.fileio.fileinout import FileWriter, read_some_lines
+from pyretis.inout.fileio.fileinout import FileIO, read_some_lines
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -24,8 +24,8 @@ __all__ = ['CrossFile']
 CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
 
-class CrossFile(FileWriter):
-    """CrossFile(FileWriter) - A class for crossing data.
+class CrossFile(FileIO):
+    """CrossFile(FileIO) - A class for crossing data.
 
     This class handles writing/reading of crossing data. The format for the
     crossing file is in three columns:

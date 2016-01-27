@@ -20,7 +20,7 @@ Important functions defined here:
 import logging
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
-from pyretis.inout.fileio.fileinout import FileWriter
+from pyretis.inout.fileio.fileinout import FileIO
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -102,8 +102,8 @@ def _adjust_coordinate(coord):
         return adjusted
 
 
-class TrajXYZ(FileWriter):
-    u"""TrajXYZ(FileWriter) - A class for XYZ files.
+class TrajXYZ(FileIO):
+    u"""TrajXYZ(FileIO) - A class for XYZ files.
 
     This class handles writing of a system to a file in a simple xyz format.
 
@@ -202,11 +202,11 @@ class TrajXYZ(FileWriter):
             yield snapshot
 
 
-class TrajGRO(FileWriter):
-    """TrajGRO(FileWriter) - A class for gromacs GRO files.
+class TrajGRO(FileIO):
+    """TrajGRO(FileIO) - A class for gromacs GRO files.
 
     This class handles writing of a system to a file using the gromacs format.
-    The gromacs format is described in the gromacs manual [#]_.
+    The gromacs format is described in the GROMACS manual [#]_.
 
     Attributes
     ----------
