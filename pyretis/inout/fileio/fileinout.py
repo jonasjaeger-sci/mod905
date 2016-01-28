@@ -285,5 +285,5 @@ class FileIO(object):
         """Return basic info."""
         msg = '{} (file: "{}", mode: "{}")'.format(self.filetype,
                                                    self.filename,
-                                                   self.mode())
+                                                   self.mode)
         return msg
