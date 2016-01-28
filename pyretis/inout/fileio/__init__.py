@@ -20,9 +20,6 @@ Modules:
 
 Important functions:
 
-- create_traj_writer: A function to create a trajectory writer from given
-  settings.
-
 - get_file_object: Opens a file for reading given a file type and file name.
 
 - read_xyz_file: Read snapshots from a xyz file.
@@ -46,7 +43,7 @@ Important classes:
 from __future__ import absolute_import
 import logging
 # pyretis imports
-from .traj import create_traj_writer, read_xyz_file, read_gromacs_file
+from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
 from .fileinout import FileIO
 from .crossfile import CrossFile
 from .energyfile import EnergyFile

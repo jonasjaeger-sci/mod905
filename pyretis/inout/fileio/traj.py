@@ -35,40 +35,6 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 __all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
 
 
-def create_traj_writer(filename, filefmt, units, oldfile='backup'):
-    """Function to create a trajectory writer from settings.
-
-    This function will create a trajectory writer based on settings for
-    a format. It will also attach a given `system` so the writer.
-
-    Parameters
-    ----------
-    filename : string
-        Name of file to create
-    filefmt : string
-        Format of file, 'xyz' for xyz, 'gro' for gromacs.
-    oldfile : string
-        How to deal with backups of old files with the same name.
-    units : string
-        This defines the internal units and is used for converting
-        to the external units.
-
-    Returns
-    -------
-    out : object like `TrajXYZ` or `TrajGRO`.
-        The trajectory writer we created here.
-    """
-    if filefmt == 'xyz':
-        return TrajXYZ(filename, units, mode='w', oldfile=oldfile)
-    elif filefmt == 'gro':
-        return TrajGRO(filename, units, mode='w', oldfile=oldfile)
-    else:
-        msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
-        msgtxt = msgtxt.format(filefmt)
-        logger.warning(msgtxt)
-        return None
-
-
 def _adjust_coordinate(coord):
     """Function to adjust the dimensionality of coordinates.
 

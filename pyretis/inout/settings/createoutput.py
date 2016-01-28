@@ -23,7 +23,7 @@ import json
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
-                                  PathEnsembleFile, create_traj_writer,
+                                  PathEnsembleFile, TrajXYZ, TrajGRO,
                                   PathWriter)
 from pyretis.inout.txtinout import get_predefined_table
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -44,7 +44,7 @@ _OUTPUT_TYPES = {'energy': {'target': 'file',
                            'writer': CrossFile,
                            'result': 'cross'},
                  'traj': {'target': 'file',
-                          'writer': create_traj_writer,
+                          'writer': _create_traj_writer,
                           'result': 'traj'},
                  'thermo-screen': {'target': 'screen',
                                    'writer': 'energies',
@@ -352,6 +352,40 @@ def create_output(settings):
                 yield out_task
 
 
+def _create_traj_writer(filename, filefmt, units, oldfile='backup'):
+    """Function to create a trajectory writer from settings.
+
+    This function will create a trajectory writer based on settings for
+    a format. It will also attach a given `system` so the writer.
+
+    Parameters
+    ----------
+    filename : string
+        Name of file to create
+    filefmt : string
+        Format of file, 'xyz' for xyz, 'gro' for gromacs.
+    oldfile : string
+        How to deal with backups of old files with the same name.
+    units : string
+        This defines the internal units and is used for converting
+        to the external units.
+
+    Returns
+    -------
+    out : object like `TrajXYZ` or `TrajGRO`.
+        The trajectory writer we created here.
+    """
+    if filefmt == 'xyz':
+        return TrajXYZ(filename, units, mode='w', oldfile=oldfile)
+    elif filefmt == 'gro':
+        return TrajGRO(filename, units, mode='w', oldfile=oldfile)
+    else:
+        msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
+        msgtxt = msgtxt.format(filefmt)
+        logger.warning(msgtxt)
+        return None
+
+
 def _create_file_writer(task, settings):
     """This will create an object for writing to files.
 
@@ -376,8 +410,8 @@ def _create_file_writer(task, settings):
         filename = task['filename']
     oldfile = task.get('oldfile', 'overwrite')
     if task['type'] == 'traj':
-        return create_traj_writer(filename, task['format'], settings['units'],
-                                  oldfile=oldfile)
+        return _create_traj_writer(filename, task['format'], settings['units'],
+                                   oldfile=oldfile)
     elif task['type'] == 'pathensemble':
         return PathEnsembleFile(filename,
                                 settings['ensemble'],

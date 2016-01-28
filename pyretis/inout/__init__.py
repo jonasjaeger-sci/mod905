@@ -43,9 +43,6 @@ Important classes and functions:
 
 - generate_report: A function to generate reports from analysis output(s).
 
-- create_traj_writer: A function to create a trajectory writer from given
-  settings.
-
 - create_output_task: A function to create output tasks for a simulation.
 
 - get_predefined_table: A function to get an object which can be used to
@@ -57,6 +54,7 @@ Important classes and functions:
 from __future__ import absolute_import
 from .txtinout import TxtTable, get_predefined_table
 from .fileio import (FileIO, CrossFile, EnergyFile, OrderFile,
-                     PathEnsembleFile, create_traj_writer, get_file_object)
+                     TrajXYZ, TrajGRO, PathEnsembleFile,
+                     get_file_object)
 from .report import generate_report
 from .settings import create_output
