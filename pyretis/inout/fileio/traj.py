@@ -20,7 +20,7 @@ Important functions defined here:
 import logging
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
-from pyretis.inout.fileio.fileinout import FileIO
+from pyretis.inout.fileio.fileinout import FileIO, add_dirname
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -82,14 +82,40 @@ class TrajXYZ(FileIO):
     frame : integer
         The number of frames written.
     """
+    filetype = 'TrajXYZ'
 
     def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initialization of the XYZ writer."""
-        super(TrajXYZ, self).__init__(filename, 'TrajXYZ', mode=mode,
-                                      oldfile=oldfile)
+        super(TrajXYZ, self).__init__(filename, mode=mode, oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'A']}
+
+    @classmethod
+    def from_task_settings(cls, task, sim_settings):
+        """This is a factory method to create objects from settings.
+
+        This method is used when creating methods from user input when
+        setting up a simulation.
+
+        Parameters
+        ----------
+        task : dict
+            This dictionary describes the task (i.e. gives the settings).
+        sim_settings : dict.
+            These are the settings used for setting up the simulation. Here
+            we might use some of these settings, for instance to determine
+            where we should output the file.
+
+        Returns
+        -------
+        out : object like `cls`.
+            A new object, which typically will be used in output tasks.
+        """
+        filename = add_dirname(task['filename'],
+                               sim_settings.get('output-dir', None))
+        oldfile = task.get('oldfile', 'overwrite')
+        return cls(filename, sim_settings['units'], mode='w', oldfile=oldfile)
 
     def write_frame(self, pos, names=None, header=None):
         """Write a configuration in xyz-format.
@@ -190,15 +216,41 @@ class TrajGRO(FileIO):
     .. [#] The GROMACS manual,
        http://manual.gromacs.org/current/online/gro.html
     """
+    filetype = 'TrajGRO'
 
     def __init__(self, filename, units, mode='w', oldfile='backup'):
         """Initiate the gromacs writer."""
-        super(TrajGRO, self).__init__(filename, 'TrajGRO', mode=mode,
-                                      oldfile=oldfile)
+        super(TrajGRO, self).__init__(filename, mode=mode, oldfile=oldfile)
         self.atomnames = []
         self.frame = 0  # number of frames written
         self.convert = {'pos': CONVERT['length'][units, 'nm'],
                         'vel': CONVERT['velocity'][units, 'nm/ps']}
+
+    @classmethod
+    def from_task_settings(cls, task, sim_settings):
+        """This is a factory method to create objects from settings.
+
+        This method is used when creating methods from user input when
+        setting up a simulation.
+
+        Parameters
+        ----------
+        task : dict
+            This dictionary describes the task (i.e. gives the settings).
+        sim_settings : dict.
+            These are the settings used for setting up the simulation. Here
+            we might use some of these settings, for instance to determine
+            where we should output the file.
+
+        Returns
+        -------
+        out : object like `cls`.
+            A new object, which typically will be used in output tasks.
+        """
+        filename = add_dirname(task['filename'],
+                               sim_settings.get('output-dir', None))
+        oldfile = task.get('oldfile', 'overwrite')
+        return cls(filename, sim_settings['units'], mode='w', oldfile=oldfile)
 
     def write_frame(self, pos, box, vel=None, residuenum=None,
                     residuename=None, atomname=None, atomnum=None,

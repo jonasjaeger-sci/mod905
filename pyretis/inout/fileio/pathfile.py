@@ -11,7 +11,11 @@ Important classes defined here:
 import logging
 # pyretis imports:
 from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
-from pyretis.inout.fileio.fileinout import FileIO
+from pyretis.inout.fileio.fileinout import FileIO, add_dirname
+from pyretis.inout.fileio.orderfile import OrderFile
+from pyretis.inout.fileio.energyfile import EnergyFile
+from pyretis.inout.fileio.traj import TrajGRO, TrajXYZ
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -174,6 +178,7 @@ class PathEnsembleFile(FileIO):
     detect : float
         The detect interface to use for analysis.
     """
+    filetype = 'PathEnsembleFile'
 
     def __init__(self, filename, ensemble, interfaces, detect=None, mode='w',
                  oldfile='backup'):
@@ -206,12 +211,39 @@ class PathEnsembleFile(FileIO):
                            'O-shoot', 'Idx-sh', 'Idx-shN'],
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
-        super(PathEnsembleFile, self).__init__(filename, 'PathEnsembleFile',
-                                               mode=mode, oldfile=oldfile,
+        super(PathEnsembleFile, self).__init__(filename, mode=mode,
+                                               oldfile=oldfile,
                                                header=header)
         self.ensemble = ensemble
         self.interfaces = interfaces
         self.detect = detect
+
+    @classmethod
+    def from_task_settings(cls, task, sim_settings):
+        """This is a factory method to create objects from settings.
+
+        This method is used when creating methods from user input when
+        setting up a simulation.
+
+        Parameters
+        ----------
+        task : dict
+            This dictionary describes the task (i.e. gives the settings).
+        sim_settings : dict.
+            These are the settings used for setting up the simulation. Here
+            we might use some of these settings, for instance to determine
+            where we should output the file.
+
+        Returns
+        -------
+        out : object like `cls`.
+            A new object, which typically will be used in output tasks.
+        """
+        filename = add_dirname(task['filename'],
+                               sim_settings.get('output-dir', None))
+        oldfile = task.get('oldfile', 'overwrite')
+        return cls(filename, sim_settings['ensemble'],
+                   sim_settings['interfaces'], mode='w', oldfile=oldfile)
 
     def to_path_ensemble(self):
         """Read a file and return a `PathEnsemble` object.
@@ -298,9 +330,10 @@ class PathWriter(object):
     Attributes
     ----------
     """
-    known_files = {'orderp', 'energy', 'traj'}
+    known_files = {'orderp': OrderFile, 'energy': EnergyFile,
+                   'traj': {'gro': TrajGRO, 'xyz': TrajXYZ}}
 
-    def __init__(self, ensemble, file_settings):
+    def __init__(self, ensemble, orderp=None, energy=None, traj=None):
         """Initialize the `PathWriter` object.
 
         Parameters
@@ -308,19 +341,19 @@ class PathWriter(object):
         ensemble : str
             This is a string representation of the path ensemble. Typically
             something like '0-', '0+', '1', '2', ..., '001' and so on.
-        file_settings : dict
-            This dict contains the settings for each file we want to create.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only useful when the mode is
-            set to 'w'.
+        order : dict
+            This dict contains the settings for writing order parameter data.
+        energy : dict
+            This dict contains the settings for writing energy data.
+        traj : dict
+            This dict contains the settings for writing trajectories.
         """
-        self.order = file_settings.get('orderp', None)
-        self.energy = file_settings.get('energy', None)
-        self.traj = file_settings.get('traj', None)
+        self.orderp = orderp
+        self.energy = energy
+        self.traj = traj
         self.ensemble = ensemble
 
-    def __new__(cls, ensemble, file_settings):
+    def __new__(cls, ensemble, orderp=None, energy=None, traj=None):
         """Check if at least one file is given in the input.
 
         Parameters
@@ -328,12 +361,12 @@ class PathWriter(object):
         ensemble : str
             This is a string representation of the path ensemble. Typically
             something like '0-', '0+', '1', '2', ..., '001' and so on.
-        file_settings : dict
-            This dict contains the settings for each file we want to create.
-        oldfile : string
-            Defines how we handle existing files with the same name as given
-            in `filename`. Note that this is only useful when the mode is
-            set to 'w'.
+        order : dict
+            This dict contains the settings for writing order parameter data.
+        energy : dict
+            This dict contains the settings for writing energy data.
+        traj : dict
+            This dict contains the settings for writing trajectories.
 
         Returns
         -------
@@ -341,12 +374,48 @@ class PathWriter(object):
             If at least one file is given with settings, then we create a new
             `PathWriter` object. Otherwise we return None.
         """
-        files = any([key in file_settings for key in cls.known_files])
+        files = any([orderp != None, energy != None, traj != None])
         if files:
             return super(PathWriter, cls).__new__(cls, ensemble,
-                                                  file_settings)
+                                                  orderp=orderp,
+                                                  energy=energy,
+                                                  traj=traj)
         else:
             return None
+
+    @classmethod
+    def from_task_settings(cls, task, sim_settings):
+        """This is a factory method to create objects from settings.
+
+        This method is used when creating methods from user input when
+        setting up a simulation.
+
+        Parameters
+        ----------
+        task : dict
+            This dictionary describes the task (i.e. gives the settings).
+        sim_settings : dict.
+            These are the settings used for setting up the simulation. Here
+            we might use some of these settings, for instance to determine
+            where we should output the file.
+
+        Returns
+        -------
+        out : object like `cls`.
+            A new object, which typically will be used in output tasks.
+        """
+        file_settings = {}
+        for key in cls.known_files:
+            if key in task:
+                if key == 'traj':
+                    wclass = cls.known_files[key][task[key]['format']]
+                else:
+                    wclass = cls.known_files[key]
+                writer = wclass.from_task_settings(task[key], sim_settings)
+                file_settings[key] = {'writer': writer,
+                                      'when': task[key]['when'],
+                                      'freq': task[key]['freq']}
+        return cls(sim_settings['ensemble'], **file_settings)
 
     def write(self, cycle, path):
         """Write path data to the files.
@@ -360,17 +429,15 @@ class PathWriter(object):
         """
         msg = 'Path file @ {}... len(path) = {}'.format(cycle, len(path.path))
         logger.warning(msg)
-        if self.order is not None:
+        if self.orderp is not None:
             pass
 
     def __str__(self):
         """Return a string with some info about the path file."""
         msg = ['PathWriter for ensemble: {}'.format(self.ensemble)]
         msg += ['\tWriters defined:']
-        if self.order is not None:
-            msg += ['\t- {}'.format(self.order['writer'])]
-        if self.energy is not None:
-            msg += ['\t- {}'.format(self.energy['writer'])]
-        if self.traj is not None:
-            msg += ['\t- {}'.format(self.traj['writer'])]
+        for writer in [self.orderp, self.energy, self.traj]:
+            if writer is not None:
+                msg += ['\t- {}'.format(writer['writer'])]
+                msg += ['\t  (When: {}, freq.: {})'.format(writer['when'], writer['freq'])]
         return '\n'.join(msg)

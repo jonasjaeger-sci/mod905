@@ -40,6 +40,7 @@ class EnergyFile(FileIO):
 
     6) Temperature.
     """
+    filetype = 'EnergyFile'
 
     def __init__(self, filename, mode='w', oldfile='backup'):
         """Initialize the `EnergyFile` class.
@@ -60,7 +61,7 @@ class EnergyFile(FileIO):
         header = {'text': ['Time', 'Potential', 'Kinetic', 'Total',
                            'Hamiltonian', 'Temperature'],
                   'width': [10, 12]}
-        super(EnergyFile, self).__init__(filename, 'EnergyFile',
+        super(EnergyFile, self).__init__(filename,
                                          mode=mode,
                                          oldfile=oldfile,
                                          header=header)

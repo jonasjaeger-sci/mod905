@@ -51,6 +51,7 @@ class OrderFile(FileIO):
     columns 3, 5, 7, ... are the corresponding velocities. The first column
     is always just the time (or step/cycle number).
     """
+    filetype = 'OrderFile'
 
     def __init__(self, filename, mode='w', oldfile='backup'):
         """Initialize the `OrderFile` class.
@@ -70,7 +71,7 @@ class OrderFile(FileIO):
         """
         header = {'text': ['Time', 'Orderp', 'Orderv'],
                   'width': [10, 12]}
-        super(OrderFile, self).__init__(filename, 'OrderFile',
+        super(OrderFile, self).__init__(filename,
                                         mode=mode, oldfile=oldfile,
                                         header=header)
 

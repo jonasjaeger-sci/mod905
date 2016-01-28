@@ -39,6 +39,7 @@ class CrossFile(FileIO):
        `-` for the negative direction. Internally this is converted to an
        integer (`+1` or `-1`)
     """
+    filetype = 'CrossFile'
 
     def __init__(self, filename, mode='w', oldfile='backup'):
         """Initialize the `CrossFile` class.
@@ -58,8 +59,7 @@ class CrossFile(FileIO):
         """
         header = {'text': ['Step', 'Int', 'Dir'],
                   'width': [10, 4, 3]}
-        super(CrossFile, self).__init__(filename, 'CrossFile',
-                                        mode=mode, oldfile=oldfile,
+        super(CrossFile, self).__init__(filename, mode=mode, oldfile=oldfile,
                                         header=header)
 
     @staticmethod

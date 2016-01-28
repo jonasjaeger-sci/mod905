@@ -44,7 +44,7 @@ _OUTPUT_TYPES = {'energy': {'target': 'file',
                            'writer': CrossFile,
                            'result': 'cross'},
                  'traj': {'target': 'file',
-                          'writer': None,
+                          'writer': {'gro': TrajGRO, 'xyz': TrajXYZ},
                           'result': 'traj'},
                  'thermo-screen': {'target': 'screen',
                                    'writer': 'energies',
@@ -352,40 +352,6 @@ def create_output(settings):
                 yield out_task
 
 
-def _create_traj_writer(filename, filefmt, units, oldfile='backup'):
-    """Function to create a trajectory writer from settings.
-
-    This function will create a trajectory writer based on settings for
-    a format. It will also attach a given `system` so the writer.
-
-    Parameters
-    ----------
-    filename : string
-        Name of file to create
-    filefmt : string
-        Format of file, 'xyz' for xyz, 'gro' for gromacs.
-    oldfile : string
-        How to deal with backups of old files with the same name.
-    units : string
-        This defines the internal units and is used for converting
-        to the external units.
-
-    Returns
-    -------
-    out : object like `TrajXYZ` or `TrajGRO`.
-        The trajectory writer we created here.
-    """
-    if filefmt == 'xyz':
-        return TrajXYZ(filename, units, mode='w', oldfile=oldfile)
-    elif filefmt == 'gro':
-        return TrajGRO(filename, units, mode='w', oldfile=oldfile)
-    else:
-        msgtxt = 'Ignored unknown format "{}" for trajectory writer!'
-        msgtxt = msgtxt.format(filefmt)
-        logger.warning(msgtxt)
-        return None
-
-
 def _create_file_writer(task, settings):
     """This will create an object for writing to files.
 
@@ -403,55 +369,11 @@ def _create_file_writer(task, settings):
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """
-    dirname = settings.get('output-dir', None)
-    if dirname is not None:
-        filename = os.path.join(dirname, task['filename'])
-    else:
-        filename = task['filename']
-    oldfile = task.get('oldfile', 'overwrite')
     if task['type'] == 'traj':
-        return _create_traj_writer(filename, task['format'], settings['units'],
-                                   oldfile=oldfile)
-    elif task['type'] == 'pathensemble':
-        return PathEnsembleFile(filename,
-                                settings['ensemble'],
-                                settings['interfaces'],
-                                mode='w',
-                                oldfile=oldfile)
+        writer = _OUTPUT_TYPES[task['type']]['writer'][task['format']]
     else:
         writer = _OUTPUT_TYPES[task['type']]['writer']
-        return writer(filename, mode='w', oldfile=oldfile)
-
-
-def _create_files_writer(task, settings):
-    """This will create an object for writing to files.
-
-    Here, we create an object that can write to several files
-    at once.
-
-    Parameters
-    ----------
-    task : dict
-        This dictionary describes the task.
-    settings : dict
-        These are the settings used for setting up the simulation.
-        Some of these settings might be useful for creating the output tasks.
-
-    Returns
-    -------
-    out : object like `PathWriter` from `pyretis.inout.fileio`.
-        This object can be used to write to files. It will typically be
-        attached to a output task object (like `OutputTask`) as a writer.
-    """
-    if task['type'] == 'trialpath':
-        file_settings = {}
-        for key in PathWriter.known_files:
-            if key in task:
-                task[key]['type'] = key
-                task[key]['writer'] = _create_file_writer(task[key],
-                                                          settings)
-                file_settings[key] = task[key]
-        return PathWriter(settings['ensemble'], file_settings)
+    return writer.from_task_settings(task, settings)
 
 
 def create_output_task(task, settings):
@@ -476,12 +398,10 @@ def create_output_task(task, settings):
     """
     writer = None
     target = _OUTPUT_TYPES[task['type']]['target']
-    if target == 'file':
+    if target == 'file' or target == 'files':
         writer = _create_file_writer(task, settings)
     elif target == 'screen':
         writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
-    elif target == 'files':
-        writer = _create_files_writer(task, settings)
     if writer is not None:
         return OutputTask(task['name'],
                           target,

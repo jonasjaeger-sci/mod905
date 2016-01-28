@@ -24,6 +24,28 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['FileIO']
 
 
+def add_dirname(filename, dirname):
+    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
+
+    Parameters
+    ----------
+    filename : string
+        The filename.
+    dirname : string
+        The directory we want to prefix. It can be None, in which
+        case we ignore it.
+
+    Returns
+    -------
+    out : string
+        The path to the resulting file.
+    """
+    if dirname is not None:
+        return os.path.join(dirname, filename)
+    else:
+        return filename
+
+
 def _simple_line_parser(line):
     """A simple line parser. Returns floats from columns in a file.
 
@@ -112,8 +134,6 @@ class FileIO(object):
     ----------
     filename : string
         Name of file to write.
-    filetype : string
-        Identifies the file type to write - the "format".
     mode : string
         Mode can be used to select if we should write to the file
         (if mode is equal to 'w') or read from the file (mode equal to 'r').
@@ -129,8 +149,9 @@ class FileIO(object):
     header : string
         A header (comment) for the first line of the file.
     """
+    filetype = 'FileIO'
 
-    def __init__(self, filename, filetype, mode='w', oldfile='backup',
+    def __init__(self, filename, mode='w', oldfile='backup',
                  count=0, header=None):
         """Initiate the file writer object.
 
@@ -138,8 +159,6 @@ class FileIO(object):
         ----------
         filename : string
             Name of the file to write.
-        filetype : string
-            Identifies the file type to write (i.e. the format).
         mode : string, optional
             This determines if we write (`'w'`) or read (`'r'`) the file.
         oldfile : string, optional
@@ -152,7 +171,6 @@ class FileIO(object):
         """
         self.count = count
         self.filename = filename
-        self.filetype = filetype
         self.mode = mode.lower()
         self.fileh = None
         self.header = None
@@ -169,6 +187,32 @@ class FileIO(object):
             self._write_open(oldfile=oldfile)
             if oldfile != 'append' and self.header is not None:
                 self.write_line(self.header)
+
+    @classmethod
+    def from_task_settings(cls, task, sim_settings):
+        """This is a factory method to create objects from settings.
+
+        This method is used when creating methods from user input when
+        setting up a simulation.
+
+        Parameters
+        ----------
+        task : dict
+            This dictionary describes the task (i.e. gives the settings).
+        sim_settings : dict.
+            These are the settings used for setting up the simulation. Here
+            we might use some of these settings, for instance to determine
+            where we should output the file.
+
+        Returns
+        -------
+        out : object like `cls`.
+            A new object, which typically will be used in output tasks.
+        """
+        filename = add_dirname(task['filename'],
+                               sim_settings.get('output-dir', None))
+        oldfile = task.get('oldfile', 'overwrite')
+        return cls(filename, mode='w', oldfile=oldfile)
 
     def _write_open(self, oldfile='backup'):
         """Open a file and make it ready for writing.
