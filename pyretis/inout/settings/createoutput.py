@@ -23,8 +23,7 @@ import json
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
-                                  PathEnsembleFile, TrajXYZ, TrajGRO,
-                                  PathWriter)
+                                  PathEnsembleFile, TrajXYZ, TrajGRO)
 from pyretis.inout.txtinout import get_predefined_table
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -59,7 +58,7 @@ _OUTPUT_TYPES = {'energy': {'target': 'file',
                                          'path-stats',
                                          'result': 'pathensemble'},
                  'trialpath': {'target': 'files',
-                               'writer': PathWriter,
+                               'writer': None,
                                'result': 'trialpath'}}
 
 # Define the default outputs:
@@ -373,7 +372,10 @@ def _create_file_writer(task, settings):
         writer = _OUTPUT_TYPES[task['type']]['writer'][task['format']]
     else:
         writer = _OUTPUT_TYPES[task['type']]['writer']
-    return writer.from_task_settings(task, settings)
+    if writer is not None:
+        return writer.from_task_settings(task, settings)
+    else:
+        return None
 
 
 def create_output_task(task, settings):
