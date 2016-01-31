@@ -246,7 +246,20 @@ class OutputTask(object):
         return self.write(step, result)
 
     def write(self, step, result):
-        """Write the obtained result using the writer"""
+        """Write the obtained result using the writer.
+
+        Parameters
+        ----------
+        step : dict
+            Information about the current simulation step.
+        result : Any type
+            This is the result to be written, handled by the writer.
+
+        Returns
+        -------
+        out : boolean
+            True if we managed to do the writing, False otherwise.
+        """
         if self.result == 'traj':
             if self.header is not None:
                 header = self.header.format(step['step'])
@@ -318,11 +331,24 @@ class OutputTaskScreen(OutputTask):
                                                kwargs=None)
 
     def write(self, step, result):
-        """Ouput the result to screen"""
+        """Ouput the result to screen
+
+        Parameters
+        ----------
+        step : dict
+            Information about the current simulation step.
+        result : Any type
+            This is the result to be written, handled by the writer.
+
+        Returns
+        -------
+        out : boolean
+            True if we are printing something, False otherwise.
+        """
         out = self.writer.write(step['step'], result,
                                 first_step=(step['stepno'] == 0))
         print(out)
-        return True
+        return out is None
 
 
 def check_user_output_task(task, def_tasks):
