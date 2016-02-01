@@ -138,13 +138,12 @@ class OutputTask(object):
         Some objects will have a specific header written each time we use
         the write routine. This is for instance used in the trajectory writer
         to display the current step for a written frame.
-    kwargs : dict
+    extra : dict
         This dictionary contains some extra parameters that can be passed
         to the writers.
     """
-
-    def __init__(self, name, result, writer, when=None, header=None,
-                 kwargs=None):
+    target = 'file'
+    def __init__(self, name, result, writer, **kwargs):
         """Initiate the OutputTask object.
 
         Parameters
@@ -156,30 +155,31 @@ class OutputTask(object):
             This string defines the result we are going to output.
         writer : object like `FileIO` from `pyretis.inout.txtinout`
             This object will handle the actual writing of the result.
-        when : dict, optional
-            Determines if the task should be executed.
-        header : string, optional
-            Some object will have a header written each time the we use the
-            write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame. It is assumed to
-            contain one '{}' field so that we can insert the current step
-            number.
         kwargs : dict
             This dictionary contains some extra parameters that can be passed
-            to the writers.
+            to the writers. The following keywords are currently used:
+
+            * `when`: dict. Determines if and when the task should be executed.
+              Example: `{'every': 10}` will be executed at every 10th step.
+            * `header`: string. Some objects will have a header written each
+              time the we use the write routine. This is for instance used in
+              the trajectory writer to display the current step for a written
+              frame. The given `header` is assumed to contain one '{}' field
+              so that we can insert the current step number.
+            * `extra`: dict. Contains extra settings for the writer. For the
+              trajectory writer this setting can be used to turn on writing
+              of velocities, i.e. `kwargs['extra'] = {'write_vel': True}`.
         """
         self.name = name
         self.result = result
         self.writer = writer
-        self.when = when
-        self.header = header
-        if kwargs is None:
-            self.kwargs = {}
-        else:
-            self.kwargs = kwargs
+        self.when = kwargs.get('when', None)
+        self.header = kwargs.get('header', None)
+        self.extra = kwargs.get('extra', {})
+        if self.extra is None:
+            self.extra = {}
 
-    def __new__(cls, name, result, writer,
-                when=None, header=None, kwargs=None):
+    def __new__(cls, name, result, writer, **kwargs):
         """Check a writer is given in the input.
 
         Parameters
@@ -212,8 +212,7 @@ class OutputTask(object):
             return None
         else:
             return super(OutputTask, cls).__new__(cls, name, result, writer,
-                                                  when=when, header=header,
-                                                  kwargs=kwargs)
+                                                  **kwargs)
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
@@ -262,15 +261,29 @@ class OutputTask(object):
         """
         if self.result == 'traj':
             if self.header is not None:
-                header = self.header.format(step['step'])
-                self.kwargs['header'] = header
-            return self.writer.write(result, **self.kwargs)
+                try:
+                    header = self.header.format(step['step'])
+                    self.extra['header'] = header
+                except IndexError:
+                    # Something went wrong in the format. Forget that we
+                    # every used that header and nuke it from self.extra
+                    # if it's present.
+                    msg = ['Could not use specified header in trajectory.']
+                    msg += ['Ignoring']
+                    msgtxt = '\n'.join(msg)
+                    logger.warning(msgtxt)
+                    self.header = None
+                    try:
+                        del self.extra['header']
+                    except KeyError:
+                        pass
+            return self.writer.write(result, **self.extra)
         else:
             return self.writer.write(step['step'], result)
 
     def __str__(self):
         """Output some info about this output task."""
-        msg = ['Output task: {}'.format(self.name)]
+        msg = ['Output task: {} ({})'.format(self.name, self.target)]
         msg += ['* Result: {}'.format(self.result)]
         msg += ['* Writer: {}'.format(self.writer)]
         msg += ['* When: {}'.format(self.when)]
@@ -297,11 +310,11 @@ class OutputTaskScreen(OutputTask):
         Some objects will have a specific header written each time we use
         the write routine. This is for instance used in the trajectory writer
         to display the current step for a written frame.
-    kwargs : dict
+    extra : dict
         This dictionary contains some extra parameters that can be passed
         to the writers.
     """
-
+    target = 'screen'
     def __init__(self, name, result, writer, when=None):
         """Initiate the OutputTask object.
 
@@ -322,13 +335,12 @@ class OutputTaskScreen(OutputTask):
             to display the current step for a written frame. It is assumed to
             contain one '{}' field so that we can insert the current step
             number.
-        kwargs : dict
+        extra : dict
             This dictionary contains some extra parameters that can be passed
             to the writers.
         """
         super(OutputTaskScreen, self).__init__(name, result, writer,
-                                               when=when, header=None,
-                                               kwargs=None)
+                                               when=when)
 
     def write(self, step, result):
         """Ouput the result to screen
@@ -510,16 +522,14 @@ def create_output_task(task, settings):
     writer = None
     when = task.get('when', None)
     header = task.get('header', None)
-    kwargs = task.get('kwargs', None)
+    extra = task.get('extra', None)
     result = _OUTPUT_TYPES[task['type']]['result']
     if target == 'file':
         writer = _create_file_writer(task, settings)
-        print(task)
         return OutputTask(task['name'], result, writer,
-                          when=when, header=header, kwargs=kwargs)
+                          when=when, header=header, extra=extra)
     elif target == 'screen':
         writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
-        print(task)
         return OutputTaskScreen(task['name'], result, writer,
                                 when=when)
     else:
