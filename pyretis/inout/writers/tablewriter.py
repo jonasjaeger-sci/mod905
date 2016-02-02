@@ -178,7 +178,7 @@ class TxtTable(Writer):
         """
         var = []
         for i in self.variables:
-            if i == step:
+            if i == 'step':
                 var.append(step)
             else:
                 var.append(row.get(i, float('nan')))
