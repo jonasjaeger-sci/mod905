@@ -24,7 +24,7 @@ from pyretis.inout.common import (create_backup, simplify_ensemble_name,
                                   name_file)
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
-from pyretis.inout.txtinout import txt_save_columns
+from pyretis.inout.writers.txtinout import txt_save_columns
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

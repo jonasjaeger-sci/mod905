@@ -13,16 +13,13 @@ Sub-packages:
 
 - analysisio: Handles the input and output needed for analysis.
 
-- fileio: Handles files with output from pyretis which can be used in
-  the analysis. It also defines formats for trajectories.
-
 - plotting: Handles plotting. It defines simple things like colors etc.
   for plotting. It also defines functions which can be used for specific
   plotting by the analysis and report tools.
 
 - settings: Handle input and output settings
 
-
+- writers: Handle formatting and presentation of text based output.
 
 Modules:
 
@@ -31,8 +28,7 @@ Modules:
 
 - __init__.py: Imports from the other modules.
 
-- txtinout.py: Defines classes and some functions for text-based output. This
-  is typically text written to the screen during a simulation.
+- txtinout.py: Defines functions for text-based output.
 
 Important classes and functions:
 
@@ -52,9 +48,8 @@ Important classes and functions:
   `get_predefined_table`.
 """
 from __future__ import absolute_import
-from .txtinout import TxtTable, get_predefined_table
-from .fileio import (FileIO, CrossFile, EnergyFile, OrderFile,
-                     TrajXYZ, TrajGRO, PathEnsembleFile,
-                     get_file_object)
+from .writers import (CrossFile, EnergyFile, OrderFile,
+                      TrajXYZ, TrajGRO, PathEnsembleFile, TxtTable,
+                      get_file_object, get_predefined_table)
 from .report import generate_report
 from .settings import create_output

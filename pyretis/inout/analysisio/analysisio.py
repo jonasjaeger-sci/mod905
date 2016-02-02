@@ -27,7 +27,7 @@ import logging
 # pyretis imports
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble)
-from pyretis.inout.fileio import get_file_object
+from pyretis.inout.writers import get_file_object
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
@@ -188,10 +188,10 @@ def analyse_file(file_type, file_name):
             If txt is different from None it is assumed to contain the format
             for the text files and backup settings.
         """
-        fileobj = get_file_object(file_type, file_name)
+        fileobj = get_file_object(file_type)
         function = select_analyse_function(file_type)
         first_block = None
-        for block in fileobj.load():
+        for block in fileobj.load(file_name):
             if first_block is None:
                 first_block = block
             else:
@@ -422,7 +422,7 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
         This dict contains information on how the simulation was performed.
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we will analyse. This can also be a object
-        like `PathEnsembleFile` from `pyretis.inout.fileio`.
+        like `PathEnsembleFile` from `pyretis.inout.writers`.
     plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
     txt : dict

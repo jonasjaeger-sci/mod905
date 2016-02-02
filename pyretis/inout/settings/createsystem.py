@@ -13,7 +13,7 @@ from pyretis.core.box import Box
 from pyretis.core.system import System
 from pyretis.core.particles import Particles
 from pyretis.core.units import CONVERT
-from pyretis.inout.fileio.traj import read_xyz_file, read_gromacs_file
+from pyretis.inout.writers.traj import read_xyz_file, read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

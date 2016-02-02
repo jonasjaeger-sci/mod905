@@ -22,9 +22,9 @@ import json
 # pyretis imports
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
-from pyretis.inout.fileio import (CrossFile, EnergyFile, OrderFile,
-                                  PathEnsembleFile, TrajXYZ, TrajGRO)
-from pyretis.inout.txtinout import get_predefined_table
+from pyretis.inout.writers import (CrossFile, EnergyFile, OrderFile,
+                                   PathEnsembleFile, TrajXYZ, TrajGRO,
+                                   get_predefined_table)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -130,8 +130,8 @@ class OutputTask(object):
         to reference the dictionary used to create the writer.
     result : string
         This string defines the result we are going to output.
-    writer : object like `FileIO` from `pyretis.inout.txtinout`
-        This object will handle the actual writing of the result.
+    writer : object like `Writer` from `pyretis.inout.writers`
+        This object will handle the actual formatting of the result.
     when : dict
         Determines if the task should be executed.
     header : string
@@ -153,7 +153,7 @@ class OutputTask(object):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `FileIO` from `pyretis.inout.txtinout`
+        writer : object like `Writer` from `pyretis.inout.writers`
             This object will handle the actual writing of the result.
         kwargs : dict
             This dictionary contains some extra parameters that can be passed
@@ -189,7 +189,7 @@ class OutputTask(object):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `FileIO` from `pyretis.inout.txtinout`
+        writer : object like `Writer` from `pyretis.inout.writers`
             This object will handle the actual writing of the result.
         when : dict, optional
             Determines if the task should be executed.
@@ -302,7 +302,7 @@ class OutputTaskScreen(OutputTask):
         to reference the dictionary used to create the writer.
     result : string
         This string defines the result we are going to output.
-    writer : object like `FileIO` from `pyretis.inout.txtinout`
+    writer : object like `Writer` from `pyretis.inout.writers`
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
@@ -325,7 +325,7 @@ class OutputTaskScreen(OutputTask):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `FileIO` from `pyretis.inout.txtinout`
+        writer : object like `Writer` from `pyretis.inout.writers`
             This object will handle the actual writing of the result.
         when : dict, optional
             Determines if the task should be executed.
@@ -484,7 +484,7 @@ def _create_file_writer(task, settings):
 
     Returns
     -------
-    out : object like `FileIO` from `pyretis.inout.fileio`.
+    out : object like `Writer` from `pyretis.inout.writers`.
         This object can be used to write to files. It will typically be
         attached to a output task object (like `OutputTask`) as a writer.
     """
