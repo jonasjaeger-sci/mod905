@@ -277,9 +277,9 @@ class OutputTask(object):
                         del self.extra['header']
                     except KeyError:
                         pass
-            return self.writer.write(result, **self.extra)
+            return self.writer.generate_output(result, **self.extra)
         else:
-            return self.writer.write(step['step'], result)
+            return self.writer.generate_output(step['step'], result)
 
     def __str__(self):
         """Output some info about this output task."""
@@ -341,6 +341,7 @@ class OutputTaskScreen(OutputTask):
         """
         super(OutputTaskScreen, self).__init__(name, result, writer,
                                                when=when)
+        self.print_header = True
 
     def write(self, step, result):
         """Ouput the result to screen
@@ -357,10 +358,12 @@ class OutputTaskScreen(OutputTask):
         out : boolean
             True if we are printing something, False otherwise.
         """
-        out = self.writer.write(step['step'], result,
-                                first_step=(step['stepno'] == 0))
-        print(out)
-        return out is None
+        if self.print_header:
+            print(self.writer.header)
+            self.print_header = False
+        for lines in self.writer.generate_output(step['step'], result):
+            print(lines)
+        return None
 
 
 def check_user_output_task(task, def_tasks):
@@ -490,12 +493,10 @@ def _create_file_writer(task, settings):
     """
     if task['type'] == 'traj':
         writer = _OUTPUT_TYPES[task['type']]['writer'][task['format']]
+        return writer(settings['units'])
     else:
         writer = _OUTPUT_TYPES[task['type']]['writer']
-    if writer is not None:
-        return writer.from_task_settings(task, settings)
-    else:
-        return None
+        return writer()
 
 
 def create_output_task(task, settings):
