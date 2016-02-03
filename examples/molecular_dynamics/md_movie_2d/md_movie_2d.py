@@ -166,7 +166,7 @@ def get_velocity_force_arrows(forces, vels):
 
     Parameters
     ----------
-    force : numpy.array
+    forces : numpy.array
         The forces on the particles.
     vels : numpy.array
         The velocity of the particles.
@@ -205,8 +205,8 @@ def update(frame, sim, output_tasks):
     ----------
     frame : int
         The current frame number, supplied by `animation.FuncAnimation`.
-    system : object
-        The system object we are simulating.
+    sim : object like `Simulation`.
+        The simulation we are running.
     output_tasks : list of objects like `OutputTask`.
         A list of output tasks to perform during the simulation.
 

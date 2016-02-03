@@ -235,7 +235,7 @@ def get_velocity_force_arrows(forces, vels):
 
     Parameters
     ----------
-    force : numpy.array
+    forces : numpy.array
         The forces on the particles.
     vels : numpy.array
         The velocity of the particles.
