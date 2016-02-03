@@ -39,10 +39,22 @@ class FileIO(object):
     OLDFILE = ('append', 'overwrite', 'backup')
 
     def __init__(self, filename, oldfile='backup', header=None):
-        """Just a simple initialize of the file object."""
+        """Just a simple initialize of the file object.
+
+        Parameters
+        ----------
+        filename : string
+            This is the name of the file we want to open.
+        oldfile : string, optional
+            The is used to control how we do backup.
+        header = string, optional
+            This is a header we write to the file as the first line.
+            Typically this gives some meta information about the contents
+            in the file.
+        """
         self.filename = filename
         self.fileh = None
-        self.open_file(oldfile)
+        self.open_file(oldfile.lower())
         if header is not None:
             self.write(header)
 
