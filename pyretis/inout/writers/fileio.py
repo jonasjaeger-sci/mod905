@@ -142,6 +142,10 @@ class FileIO(object):
                 logger.critical(msg)
             return status
         else:
+            if self.fileh is not None and self.fileh.closed:
+                logger.warning('Ignored writing to closed file.')
+            if self.fileh is None:
+                logger.warning('File handle is empty.')
             return False
 
     def close(self):
