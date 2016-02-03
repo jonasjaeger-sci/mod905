@@ -465,5 +465,5 @@ class OrderWriter(Writer):
         towrite = [self.ORDER_FMT[0].format(step)]
         for orderp in orderdata:
             towrite.append(self.ORDER_FMT[1].format(orderp))
-        towrite = ' '.join(towrite)
-        yield towrite
+        out = ' '.join(towrite)
+        yield out
