@@ -93,7 +93,9 @@ class TrajXYZ(Writer):
             self.convert_pos = CONVERT['length'][units, 'A']
         except KeyError:
             self.convert_pos = 1.0
-            msgtxt = 'Could not get conversion for units "{}"'.format(units)
+            msg = ['Could not get conversion for units "{}"'.format(units)]
+            msg += ['Positions will be in A']
+            msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
 
     def xyz_format(self, pos, names=None, header=None):
@@ -212,10 +214,12 @@ class TrajGRO(Writer):
             self.convert_pos = CONVERT['length'][units, 'nm']
             self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
         except KeyError:
-            msgtxt = 'Could not get conversion for units "{}"'.format(units)
-            logger.warning(msgtxt)
             self.convert_pos = 1.0
             self.convert_vel = 1.0
+            msg = ['Could not get conversion for units "{}"'.format(units)]
+            msg += ['Positions will be in nm, velocity in nm/ps']
+            msgtxt = '\n'.join(msg)
+            logger.warning(msgtxt)
 
     def gro_format(self, pos, vel, box, **kwargs):
         """Format positions, box and velocities according to the GRO format.
