@@ -22,8 +22,7 @@ import json
 # pyretis imports
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
-from pyretis.inout.writers import (CrossWriter, EnergyWriter, OrderWriter,
-                                   PathEnsembleWriter, TrajXYZ, TrajGRO)
+from pyretis.inout.writers import get_writer, FileIO
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -32,30 +31,23 @@ __all__ = ['OutputTask', 'create_output']
 
 
 # Define the known output types:
-_OUTPUT_TYPES = {'energy': {'target': 'file',
-                            'writer': EnergyWriter,
+_OUTPUT_TYPES = {'energy': {'target': 'file', 'writer': 'energy',
                             'result': 'thermo'},
-                 'orderp': {'target': 'file',
-                            'writer': OrderWriter,
+                 'orderp': {'target': 'file', 'writer': 'order',
                             'result': 'orderp'},
-                 'cross': {'target': 'file',
-                           'writer': CrossWriter,
+                 'cross': {'target': 'file', 'writer': 'cross',
                            'result': 'cross'},
-                 'traj': {'target': 'file',
-                          'writer': {'gro': TrajGRO, 'xyz': TrajXYZ},
-                          'result': 'traj'},
-                 'thermo-screen': {'target': 'screen',
-                                   'writer': 'energies',
+                 'traj-gro': {'target': 'file', 'writer': 'trajgro',
+                              'result': 'traj'},
+                 'traj-xyz': {'target': 'file', 'writer': 'trajxyz',
+                              'result': 'traj'},
+                 'thermo-screen': {'target': 'screen', 'writer': 'thermotable',
                                    'result': 'thermo'},
-                 'pathensemble': {'target': 'file',
-                                  'writer': PathEnsembleWriter,
+                 'pathensemble': {'target': 'file', 'writer': 'pathensemble',
                                   'result': 'pathensemble'},
                  'pathensemble-screen': {'target': 'screen',
-                                         'writer': 'path-stats',
-                                         'result': 'pathensemble'},
-                 'trialpath': {'target': 'files',
-                               'writer': None,
-                               'result': 'trialpath'}}
+                                         'writer': 'pathtable',
+                                         'result': 'pathensemble'}}
 
 # Define the default outputs:
 _DEFAULT_OUTPUT = {}
@@ -63,11 +55,10 @@ _DEFAULT_OUTPUT['md-nve'] = [{'type': 'energy',
                               'name': 'energy-file',
                               'when': {'every': 10},
                               'filename': 'energy.dat'},
-                             {'type': 'traj',
+                             {'type': 'traj-gro',
                               'name': 'traj',
                               'when': {'every': 10},
                               'filename': 'traj.gro',
-                              'format': 'gro',
                               'header': 'NVE simulation. Step: {}'},
                              {'type': 'thermo-screen',
                               'name': 'thermo-screen',
@@ -120,7 +111,9 @@ class OutputTask(object):
 
     This class will handle a output task for a simulation. The
     output task may be something that should print to the screen or
-    a file.
+    a file. This object is a general class for output tasks and the specific
+    writers for file and screen are implemented in the `OutputTaskFile` and
+    `OutputTaskScreen` tasks.
 
     Attributes
     ----------
@@ -133,18 +126,14 @@ class OutputTask(object):
         This object will handle the actual formatting of the result.
     when : dict
         Determines if the task should be executed.
-    header : string
-        Some objects will have a specific header written each time we use
-        the write routine. This is for instance used in the trajectory writer
-        to display the current step for a written frame.
     extra : dict
         This dictionary contains some extra parameters that can be passed
         to the writers.
     """
-    target = 'file'
-    
+    target = 'undefined'
+
     def __init__(self, name, result, writer, **kwargs):
-        """Initiate the OutputTask object.
+        """Initiate a OutputTask object.
 
         Parameters
         ----------
@@ -154,7 +143,8 @@ class OutputTask(object):
         result : string
             This string defines the result we are going to output.
         writer : object like `Writer` from `pyretis.inout.writers`
-            This object will handle the actual writing of the result.
+            This object will handle formatting of the actual result which can
+            be printed to the screen or to a file.
         kwargs : dict
             This dictionary contains some extra parameters that can be passed
             to the writers. The following keywords are currently used:
@@ -179,40 +169,43 @@ class OutputTask(object):
         if self.extra is None:
             self.extra = {}
 
-    def __new__(cls, name, result, writer, **kwargs):
-        """Check a writer is given in the input.
+    @classmethod
+    def factory_create(cls, task, settings):
+        """Method to create output task from simulation settings.
 
         Parameters
         ----------
-        name : string
-            This string identifies the task, it can for instance be used
-            to reference the dictionary used to create the writer.
-        result : string
-            This string defines the result we are going to output.
-        writer : object like `Writer` from `pyretis.inout.writers`
-            This object will handle the actual writing of the result.
-        when : dict, optional
-            Determines if the task should be executed.
-        header : string, optional
-            Some object will have a header written each time the we use the
-            write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame. It is assumed to
-            contain one '{}' field so that we can insert the current step
-            number.
-        kwargs : dict
-            This dictionary contains some extra parameters that can be passed
-            to the writers.
+        task : dict
+            Settings related to the specific task.
+        settings : dict
+            Settings for the simulation.
 
         Returns
         -------
-        out : A `OutputTask` object or None
-            If no writer is given, we simply return a None.
+        out : object like `OutputTask`
+            An output task we can use in the simulation
         """
-        if writer is None:
-            return None
+        writer_type = _OUTPUT_TYPES[task['type']]['writer']
+        writer = get_writer(writer_type, settings=settings)
+        target = _OUTPUT_TYPES[task['type']]['target']
+        result = _OUTPUT_TYPES[task['type']]['result']
+        when = task.get('when', None)
+        header = task.get('header', None)
+        extra = task.get('extra', None)
+#        return OutputTask(task['name'], result, writer,
+#                          when=when, header=header, extra=extra)
+        if target == 'file':
+            filename = task['filename']
+            return OutputTaskFile(task['name'], result, writer,
+                                  filename, when=when, header=header,
+                                  extra=extra)
+        elif target == 'screen':
+            return OutputTaskScreen(task['name'], result, writer,
+                                    when=when)
         else:
-            return super(OutputTask, cls).__new__(cls, name, result, writer,
-                                                  **kwargs)
+            msg = 'Unknown target "{}" ignored!'.format(target)
+            logger.warning(msg)
+            return None
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
@@ -259,27 +252,7 @@ class OutputTask(object):
         out : boolean
             True if we managed to do the writing, False otherwise.
         """
-        if self.result == 'traj':
-            if self.header is not None:
-                try:
-                    header = self.header.format(step['step'])
-                    self.extra['header'] = header
-                except IndexError:
-                    # Something went wrong in the format. Forget that we
-                    # every used that header and nuke it from self.extra
-                    # if it's present.
-                    msg = ['Could not use specified header in trajectory.']
-                    msg += ['Ignoring']
-                    msgtxt = '\n'.join(msg)
-                    logger.warning(msgtxt)
-                    self.header = None
-                    try:
-                        del self.extra['header']
-                    except KeyError:
-                        pass
-            return self.writer.generate_output(result, **self.extra)
-        else:
-            return self.writer.generate_output(step['step'], result)
+        raise NotImplementedError
 
     def __str__(self):
         """Output some info about this output task."""
@@ -364,6 +337,103 @@ class OutputTaskScreen(OutputTask):
             self.print_header = False
         for lines in self.writer.generate_output(step['step'], result):
             print(lines)
+        return None
+
+
+class OutputTaskFile(OutputTask):
+    """Class OutputTaskFile(object) - Simulation output tasks.
+
+    This class will handle a output task for a simulation to a file.
+
+    Attributes
+    ----------
+    name : string
+        This string identifies the task, it can for instance be used
+        to reference the dictionary used to create the writer.
+    result : string
+        This string defines the result we are going to output.
+    writer : object like `Writer` from `pyretis.inout.writers`
+        This object will handle the actual writing of the result.
+    when : dict
+        Determines if the task should be executed.
+    header : string
+        Some objects will have a specific header written each time we use
+        the write routine. This is for instance used in the trajectory writer
+        to display the current step for a written frame.
+    extra : dict
+        This dictionary contains some extra parameters that can be passed
+        to the writers.
+    """
+    target = 'file'
+
+    def __init__(self, name, result, writer, filename, **kwargs):
+        """Initiate the OutputTaskFile object.
+
+        Parameters
+        ----------
+        name : string
+            This string identifies the task, it can for instance be used
+            to reference the dictionary used to create the writer.
+        result : string
+            This string defines the result we are going to output.
+        writer : object like `Writer` from `pyretis.inout.writers`
+            This object will handle the actual writing of the result.
+        when : dict, optional
+            Determines if the task should be executed.
+        header : string, optional
+            Some object will have a header written each time the we use the
+            write routine. This is for instance used in the trajectory writer
+            to display the current step for a written frame. It is assumed to
+            contain one '{}' field so that we can insert the current step
+            number.
+        extra : dict
+            This dictionary contains some extra parameters that can be passed
+            to the writers.
+        """
+        super(OutputTaskFile, self).__init__(name, result, writer, **kwargs)
+        self.print_header = True
+        self.fileh = FileIO(filename)
+        if self.writer.header is not None:
+            self.fileh.write(self.writer.header)
+
+    def write(self, step, result):
+        """Ouput the result to screen
+
+        Parameters
+        ----------
+        step : dict
+            Information about the current simulation step.
+        result : Any type
+            This is the result to be written, handled by the writer.
+
+        Returns
+        -------
+        out : boolean
+            True if we are printing something, False otherwise.
+        """
+        if self.result == 'traj':
+            if self.header is not None:
+                try:
+                    header = self.header.format(step['step'])
+                    self.extra['header'] = header
+                except IndexError:
+                    # Something went wrong in the format. Forget that we
+                    # every used that header and nuke it from self.extra
+                    # if it's present.
+                    msg = ['Could not use specified header in trajectory.']
+                    msg += ['Ignoring']
+                    msgtxt = '\n'.join(msg)
+                    logger.warning(msgtxt)
+                    self.header = None
+                    try:
+                        del self.extra['header']
+                    except KeyError:
+                        pass
+            for lines in self.writer.generate_output(result, **self.extra):
+                self.fileh.write(lines)
+        else:
+            for lines in self.writer.generate_output(step['step'], result):
+                self.fileh.write(lines)
         return None
 
 
@@ -468,75 +538,50 @@ def create_output(settings):
 
     for task in task_list:
         if task.get('use', True):
-            out_task = create_output_task(task, settings)
+            out_task = OutputTask.factory_create(task, settings)
             if out_task is not None:
                 msgtxt = 'Output task created: {}'.format(out_task)
                 logger.info(msgtxt)
                 yield out_task
 
 
-def _create_file_writer(task, settings):
-    """This will create an object for writing to files.
-
-    Parameters
-    ----------
-    task : dict
-        This dictionary describes the task.
-    settings : dict
-        These are the settings used for setting up the simulation.
-        Some of these settings might be useful for creating the output tasks.
-
-    Returns
-    -------
-    out : object like `Writer` from `pyretis.inout.writers`.
-        This object can be used to write to files. It will typically be
-        attached to a output task object (like `OutputTask`) as a writer.
-    """
-    if task['type'] == 'traj':
-        writer = _OUTPUT_TYPES[task['type']]['writer'][task['format']]
-        return writer(settings['units'])
-    else:
-        writer = _OUTPUT_TYPES[task['type']]['writer']
-        return writer()
-
-
-def create_output_task(task, settings):
-    """Create object for a output task.
-
-    This function will create an object for a given output task.
-    It will make use of some of the predefined output possibilities
-    defined in `pyretis.inout`
-
-    Parameters
-    ----------
-    task : dict
-        This dict describes the task.
-    settings : dict
-        These are the settings used for setting up the simulation.
-        Some of these settings might be useful for creating the output tasks.
-
-    Returns
-    -------
-    out : object like `OutputTask` from `core.simulation.simulation_task`.
-        This is the output task that can be added to a simulation.
-    """
-    target = _OUTPUT_TYPES[task['type']]['target']
-    writer = None
-    when = task.get('when', None)
-    header = task.get('header', None)
-    extra = task.get('extra', None)
-    result = _OUTPUT_TYPES[task['type']]['result']
-    if target == 'file':
-        writer = _create_file_writer(task, settings)
-        return OutputTask(task['name'], result, writer,
-                          when=when, header=header, extra=extra)
-    elif target == 'screen':
-        #writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
-        writer = None
-        return OutputTaskScreen(task['name'], result, writer,
-                                when=when)
-    else:
-        return None
+#def create_output_task(task, settings):
+#    """Create object for a output task.
+#
+#    This function will create an object for a given output task.
+#    It will make use of some of the predefined output possibilities
+#    defined in `pyretis.inout`
+#
+#    Parameters
+#    ----------
+#    task : dict
+#        This dict describes the task.
+#    settings : dict
+#        These are the settings used for setting up the simulation.
+#        Some of these settings might be useful for creating the output tasks.
+#
+#    Returns
+#    -------
+#    out : object like `OutputTask` from `core.simulation.simulation_task`.
+#        This is the output task that can be added to a simulation.
+#    """
+#    target = _OUTPUT_TYPES[task['type']]['target']
+#    writer = None
+#    when = task.get('when', None)
+#    header = task.get('header', None)
+#    extra = task.get('extra', None)
+#    result = _OUTPUT_TYPES[task['type']]['result']
+#    if target == 'file':
+#        writer = None#_create_file_writer(task, settings)
+#        return OutputTask(task['name'], result, writer,
+#                          when=when, header=header, extra=extra)
+#    elif target == 'screen':
+#        #writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
+#        writer = None
+#        return OutputTaskScreen(task['name'], result, writer,
+#                                when=when)
+#    else:
+#        return None
 
 
 def store_settings_as_json(settings, outfile, path=None):

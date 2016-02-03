@@ -44,8 +44,5 @@ Important classes and functions:
 - TxtTable: A function to write create text based tables.
 """
 from __future__ import absolute_import
-from .writers import (CrossWriter, EnergyWriter, OrderWriter,
-                      TrajXYZ, TrajGRO, PathEnsembleWriter, TxtTable,
-                      get_file_object)
 from .report import generate_report
 from .settings import create_output

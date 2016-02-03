@@ -5,23 +5,23 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import gridspec as gridspec
 from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
-from pyretis.inout import (get_predefined_table, FileIO,
-                           create_output)
+from pyretis.inout.writers import FileIO, ThermoTable
+from pyretis.inout import create_output
 from pyretis.tools import generate_lattice
-import numpy as np
 # for plotting:
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
 from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
 create_conversion_factors('lj')
 LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
-POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)  # use a shifted LJ potential
+POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
 
 # simulation settings:
 settings = {'task': 'md-nve',
@@ -53,9 +53,8 @@ if 'generate-vel' in settings:
 simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
-table = get_predefined_table('energies')
-thermo_file = FileIO('thermo.txt', 'table',
-                     header={'text': table.header})
+table = ThermoTable()
+thermo_file = FileIO('thermo.txt', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]
@@ -63,8 +62,8 @@ output_tasks = [task for task in create_output(settings)]
 
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    table_row = table.write(stepno, result['thermo'])
-    thermo_file.write_line(table_row)
+    for lines in table.generate_output(stepno, result['thermo']):
+        thermo_file.write(lines)
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
     for task in output_tasks:

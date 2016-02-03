@@ -36,15 +36,26 @@ Important classes:
 
 - PathEnsembleFile: A class which represent path ensembles in files.
   This class is useful for the analysis.
+
+- TrajXYZ: A writer of trajectories in xyz-format.
+
+- TrajGRO: A writer of trajectories in GROMACS gro-format.
+
+- TxtTable: A generic table writer.
+
+- ThermoTable: A specific table writer for energy output.
+
+- PathTable: A specific table writer for path results.
 """
 from __future__ import absolute_import
 import logging
 # pyretis imports
-from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
-from .writers import CrossWriter, EnergyWriter, OrderWriter
+from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .tablewriter import TxtTable, ThermoTable, PathTable
+from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
 from .txtinout import txt_save_columns
+from .tablewriter import TxtTable, ThermoTable, PathTable
+from .writers import CrossWriter, EnergyWriter, OrderWriter
 from pyretis.inout.settings.common import initiate_instance
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -100,22 +111,22 @@ def get_file_object(file_type):
         return None
 
 
-def get_writer(writer, settings=None):
+def get_writer(writer_type, settings=None):
     """This method is intented as a factory method for writers.
 
     Parameters
     ----------
-    writer : string
+    writer_type : string
         This string defines the class we want to initiate
     settings : dict, optional
         Additional settings that might be required for the
         initialization of the class.
     """
     try:
-        writer_class = _CLASS_MAP[writer]
-        cls = writer_class['class']
-        args = writer_class.get('args', None)
-        kwargs = writer_class.get('kwargs', None)
+        writer = _CLASS_MAP[writer_type]
+        cls = writer['class']
+        args = writer.get('args', None)
+        kwargs = writer.get('kwargs', None)
         if args is not None:
             if settings is None:
                 arg_val = [arg[1] for arg in args]
@@ -123,7 +134,6 @@ def get_writer(writer, settings=None):
                 arg_val = [settings.get(arg[0], arg[1]) for arg in args]
         else:
             arg_val = None
-
         if kwargs is not None:
             kwarg_val = {}
             if settings is not None:
@@ -133,6 +143,6 @@ def get_writer(writer, settings=None):
             kwarg_val = None
         return initiate_instance(cls, args=arg_val, kwargs=kwarg_val)
     except KeyError:
-        msg = 'Ignored creating unknown writer "{}"!'.format(writer_class)
+        msg = 'Ignored creating unknown writer "{}"!'.format(writer_type)
         logger.error(msg)
         return None
