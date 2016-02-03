@@ -361,6 +361,7 @@ class TrajGRO(Writer):
             snapshot['x'] = np.array(snapshot['x']) * convert_pos
             snapshot['y'] = np.array(snapshot['y']) * convert_pos
             snapshot['z'] = np.array(snapshot['z']) * convert_pos
+            snapshot['box'] = [boxl * convert_pos for boxl in snapshot['box']]
             for key in ('vx', 'vy', 'vz'):
                 if key in snapshot:
                     snapshot[key] = np.array(snapshot[key]) * convert_vel
