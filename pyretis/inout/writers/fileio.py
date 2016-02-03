@@ -38,11 +38,13 @@ class FileIO(object):
     """
     OLDFILE = ('append', 'overwrite', 'backup')
 
-    def __init__(self, filename, oldfile='backup'):
+    def __init__(self, filename, oldfile='backup', header=None):
         """Just a simple initialize of the file object."""
         self.filename = filename
         self.fileh = None
         self.open_file(oldfile)
+        if header is not None:
+            self.write(header)
 
     def open_file(self, oldfile):
         """Open the file for writing.
