@@ -26,24 +26,41 @@ Important functions:
 
 Important classes:
 
-- CrossFile: A writer of crossing data.
+- CrossWriter: A writer of crossing data.
 
-- EnergyFile: A writer of energy data
+- EnergyWriter: A writer of energy data
 
-- OrderFile: A writer of order parameter data.
+- OrderWriter: A writer of order parameter data.
 
-- PathEnsembleFile: A writer of path ensemble data.
+- PathEnsembleWriter: A writer of path ensemble data.
+
+- PathEnsembleFile: A class which represent path ensembles in files.
+  This class is useful for the analysis.
 """
 from __future__ import absolute_import
 import logging
 # pyretis imports
 from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
-from .writers import CrossFile, EnergyFile, OrderFile
-from .pathfile import PathEnsembleFile
-from .tablewriter import TxtTable, get_predefined_table
+from .writers import CrossWriter, EnergyWriter, OrderWriter
+from .pathfile import PathEnsembleWriter, PathEnsembleFile
+from .tablewriter import TxtTable, ThermoTable, PathTable
 from .txtinout import txt_save_columns
+from pyretis.inout.settings.common import initiate_instance
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+
+_CLASS_MAP = {'cross': {'class': CrossWriter},
+              'order': {'class': OrderWriter},
+              'energy': {'class': EnergyWriter},
+              'trajgro': {'class': TrajGRO, 'args': [('units', 'lj')]},
+              'trajxyz': {'class': TrajXYZ, 'args': [('units', 'lj')]},
+              'pathensemble': {'class': PathEnsembleWriter,
+                               'args': [('ensemble', '000'),
+                                        ('interfaces', None)]},
+              'thermotable': {'class': ThermoTable},
+              'pathtable': {'class': PathTable}}
 
 
 def get_file_object(file_type):
@@ -72,17 +89,50 @@ def get_file_object(file_type):
     >>> for block in crossfile.load('cross.dat'):
     >>>     print(len(block['data']))
     """
-    file_map = {'cross': CrossFile, 'order':  OrderFile,
-                'energy': EnergyFile, 'pathensemble': PathEnsembleFile}
     try:
-        file_class = file_map[file_type]
         if file_type == 'pathensemble':
             msg = 'Opening a path ensemble file. Experimental feature!'
             logger.warning(msg)
-            return file_class('000', None, None)
-        else:
-            return file_class()
+        return get_writer(file_type, settings=None)
     except KeyError:
         msg = 'Unknown file type {} requested. Ignored'.format(file_type)
+        logger.error(msg)
+        return None
+
+
+def get_writer(writer, settings=None):
+    """This method is intented as a factory method for writers.
+
+    Parameters
+    ----------
+    writer : string
+        This string defines the class we want to initiate
+    settings : dict, optional
+        Additional settings that might be required for the
+        initialization of the class.
+    """
+    try:
+        writer_class = _CLASS_MAP[writer]
+        cls = writer_class['class']
+        args = writer_class.get('args', None)
+        kwargs = writer_class.get('kwargs', None)
+        if args is not None:
+            if settings is None:
+                arg_val = [arg[1] for arg in args]
+            else:
+                arg_val = [settings.get(arg[0], arg[1]) for arg in args]
+        else:
+            arg_val = None
+
+        if kwargs is not None:
+            kwarg_val = {}
+            if settings is not None:
+                for key in kwargs:
+                    kwarg_val[key] = settings.get(key, kwargs[key])
+        else:
+            kwarg_val = None
+        return initiate_instance(cls, args=arg_val, kwargs=kwarg_val)
+    except KeyError:
+        msg = 'Ignored creating unknown writer "{}"!'.format(writer_class)
         logger.error(msg)
         return None

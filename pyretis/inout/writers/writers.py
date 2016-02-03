@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['CrossFile', 'EnergyFile', 'OrderFile']
+__all__ = ['CrossWriter', 'EnergyWriter', 'OrderWriter']
 
 
 def _make_header(labels, width, spacing=1):
@@ -214,8 +214,8 @@ class Writer(object):
         return 'Writer: {}'.format(self.file_type)
 
 
-class CrossFile(Writer):
-    """CrossFile(Writer) - A class for crossing data.
+class CrossWriter(Writer):
+    """CrossWriter(Writer) - A class for crossing data.
 
     This class handles writing/reading of crossing data. The format for the
     crossing file is in three columns:
@@ -233,9 +233,9 @@ class CrossFile(Writer):
     CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
     def __init__(self):
-        """Initialize the `CrossFile` class."""
+        """Initialize a `CrossWriter`."""
         header = {'labels': ['Step', 'Int', 'Dir'], 'width': [10, 4, 3]}
-        super(CrossFile, self).__init__('CrossFile', header=header)
+        super(CrossWriter, self).__init__('CrossWriter', header=header)
 
     @staticmethod
     def line_parser(line):
@@ -300,8 +300,8 @@ class CrossFile(Writer):
             yield self.CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
 
 
-class EnergyFile(Writer):
-    """EnergyFile(Writer) - Handle energy data for pyretis.
+class EnergyWriter(Writer):
+    """EnergyWriter(Writer) - Handle energy data for pyretis.
 
     This class handles writing/reading of energy data. The data is written in
     7 columns:
@@ -324,11 +324,11 @@ class EnergyFile(Writer):
     ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6f}']
 
     def __init__(self):
-        """Initialize the `EnergyFile` class."""
+        """Initialize a `EnergyWriter`."""
         header = {'labels': ['Time', 'Potential', 'Kinetic', 'Total',
                              'Hamiltonian', 'Temperature'],
                   'width': [10, 12]}
-        super(EnergyFile, self).__init__('EnergyFile', header=header)
+        super(EnergyWriter, self).__init__('EnergyWriter', header=header)
 
     def load(self, filename):
         """Load entire energy blocks into memory.
@@ -383,8 +383,8 @@ class EnergyFile(Writer):
         yield ' '.join(towrite)
 
 
-class OrderFile(Writer):
-    """OrderFile(Writer) - A class for order parameter files.
+class OrderWriter(Writer):
+    """OrderWriter(Writer) - A class for order parameter files.
 
     This class handles writing/reading of order parameter data.
     The format for the order file is column-based and the columns are:
@@ -414,9 +414,9 @@ class OrderFile(Writer):
     ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 
     def __init__(self):
-        """Initialize the `OrderFile` class."""
+        """Initialize a `OrderWriter`."""
         header = {'labels': ['Time', 'Orderp', 'Orderv'], 'width': [10, 12]}
-        super(OrderFile, self).__init__('OrderFile', header=header)
+        super(OrderWriter, self).__init__('OrderWriter', header=header)
 
     def load(self, filename):
         """Load entire order parameter blocks into memory.

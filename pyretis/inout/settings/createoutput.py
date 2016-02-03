@@ -22,9 +22,8 @@ import json
 # pyretis imports
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
-from pyretis.inout.writers import (CrossFile, EnergyFile, OrderFile,
-                                   PathEnsembleFile, TrajXYZ, TrajGRO,
-                                   get_predefined_table)
+from pyretis.inout.writers import (CrossWriter, EnergyWriter, OrderWriter,
+                                   PathEnsembleWriter, TrajXYZ, TrajGRO)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -34,13 +33,13 @@ __all__ = ['OutputTask', 'create_output']
 
 # Define the known output types:
 _OUTPUT_TYPES = {'energy': {'target': 'file',
-                            'writer': EnergyFile,
+                            'writer': EnergyWriter,
                             'result': 'thermo'},
                  'orderp': {'target': 'file',
-                            'writer': OrderFile,
+                            'writer': OrderWriter,
                             'result': 'orderp'},
                  'cross': {'target': 'file',
-                           'writer': CrossFile,
+                           'writer': CrossWriter,
                            'result': 'cross'},
                  'traj': {'target': 'file',
                           'writer': {'gro': TrajGRO, 'xyz': TrajXYZ},
@@ -49,7 +48,7 @@ _OUTPUT_TYPES = {'energy': {'target': 'file',
                                    'writer': 'energies',
                                    'result': 'thermo'},
                  'pathensemble': {'target': 'file',
-                                  'writer': PathEnsembleFile,
+                                  'writer': PathEnsembleWriter,
                                   'result': 'pathensemble'},
                  'pathensemble-screen': {'target': 'screen',
                                          'writer': 'path-stats',
@@ -143,6 +142,7 @@ class OutputTask(object):
         to the writers.
     """
     target = 'file'
+    
     def __init__(self, name, result, writer, **kwargs):
         """Initiate the OutputTask object.
 
@@ -315,6 +315,7 @@ class OutputTaskScreen(OutputTask):
         to the writers.
     """
     target = 'screen'
+
     def __init__(self, name, result, writer, when=None):
         """Initiate the OutputTask object.
 
@@ -530,7 +531,8 @@ def create_output_task(task, settings):
         return OutputTask(task['name'], result, writer,
                           when=when, header=header, extra=extra)
     elif target == 'screen':
-        writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
+        #writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
+        writer = None
         return OutputTaskScreen(task['name'], result, writer,
                                 when=when)
     else:

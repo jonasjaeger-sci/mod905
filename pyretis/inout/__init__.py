@@ -32,24 +32,20 @@ Modules:
 
 Important classes and functions:
 
-- CrossFile, EnergyFile, OrderFile: Classes for writing crossing data
+- CrossWriter, EnergyWriter, OrderWriter: Classes for writing crossing data
   (for initial the flux), energy data and order parameter data.
 
-- PathEnsembleFile: Class for writing path ensemble data.
+- PathEnsembleWriter: Class for writing path ensemble data.
 
 - generate_report: A function to generate reports from analysis output(s).
 
 - create_output_task: A function to create output tasks for a simulation.
 
-- get_predefined_table: A function to get an object which can be used to
-  pretty-print tables to the screen/file during a simulation.
-
-- TxtTable: A function to write create text based tables. It is used by
-  `get_predefined_table`.
+- TxtTable: A function to write create text based tables.
 """
 from __future__ import absolute_import
-from .writers import (CrossFile, EnergyFile, OrderFile,
-                      TrajXYZ, TrajGRO, PathEnsembleFile, TxtTable,
-                      get_file_object, get_predefined_table)
+from .writers import (CrossWriter, EnergyWriter, OrderWriter,
+                      TrajXYZ, TrajGRO, PathEnsembleWriter, TxtTable,
+                      get_file_object)
 from .report import generate_report
 from .settings import create_output

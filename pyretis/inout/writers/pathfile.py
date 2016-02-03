@@ -5,23 +5,21 @@ This module defines classes for writing path ensemble data.
 
 Important classes defined here:
 
-- PathEnsembleFile: Writing/reading of path ensemble data.
+- PathEnsembleWriter: Writing/reading of path ensemble data.
+
+- PathEnsembleFile : Reading of path ensemble data. Mainly used for analysis.
 
 """
 import logging
 # pyretis imports:
-from pyretis.core.path import Path, PathEnsemble  # for PathEnsembleFile
+from pyretis.core.path import Path, PathEnsemble
 from pyretis.inout.writers.writers import Writer
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['PathEnsembleFile']
-
-
-# Define a format for position and velocities in the path file:
-#POSVEL_FMT = ['{:8.3f}', '{:8.3f}', '{:8.3f}']
+__all__ = ['PathEnsembleWriter', 'PathEnsembleFile']
 
 
 def _line_to_path_object(line):
@@ -57,16 +55,11 @@ def _line_to_path_object(line):
     return path
 
 
-class PathEnsembleFile(Writer):
-    """PathEnsembleFile(Writer) - A class for path ensemble data.
+class PathEnsembleWriter(Writer):
+    """PathEnsembleWriter(Writer) - A class for path ensemble data.
 
     This class handles writing/reading of path ensemble data to a file.
-    It also supports some attributes and functions found in the
-    `pyretis.core.path.PathEnsemble` object. This makes it possible to run
-    the analysis tool directly using the `PathEnsembleFile` object rather than
-    first converting to a `pyretis.core.path.PathEnsemble` and then running
-    the analysis. The common functions are `get_paths` and `__str__`.
-    The common properties are `ensemble` and `interfaces`
+
     In the future, this should be made smarter, for instance could path data
     be read in portions, or the full path file could be read if it's small
     enough to fit in the memory. A line-by-line analysis as it is right now
@@ -82,8 +75,6 @@ class PathEnsembleFile(Writer):
         for the order parameters: [left, middle, right]
         This variable is used when creating a `PathEnsemble` object
         in `to_path_ensemble`.
-    detect : float
-        The detect interface to use for analysis.
     """
     # Define a format used for the path files. Here it's not really needed,
     # we are going to assume that these files will be comma separated anyway.
@@ -92,8 +83,8 @@ class PathEnsembleFile(Writer):
                 '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
                 '{13:>16.9e} {14:>7d} {15:7d}')
 
-    def __init__(self, ensemble, interfaces, detect=None):
-        """Initialize the `PathEnsembleFile` object.
+    def __init__(self, ensemble, interfaces):
+        """Initialize the `PathEnsembleWriter`.
 
         Parameters
         ----------
@@ -112,34 +103,10 @@ class PathEnsembleFile(Writer):
                              'O-shoot', 'Idx-sh', 'Idx-shN'],
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
-        super(PathEnsembleFile, self).__init__('PathEnsembleFile',
-                                               header=header)
-        self.ensemble = ensemble
-        self.interfaces = interfaces
-        self.detect = detect
-
-    def to_path_ensemble(self):
-        """Read a file and return a `PathEnsemble` object.
-
-        This will read an entire file and return a path ensemble object.
-        Note that this might not be the fastest way of using the path ensemble
-        file and that this can require a lot of memory. For analysis
-        purposes, this object also supports a on-line analysis.
-
-        Returns
-        -------
-        out : object like `PathEnsemble` from `pyretis.core.path`
-            The path ensemble read from the file.
-        """
-        path_ensemble = PathEnsemble(self.ensemble, self.interfaces)
-        for path in self.get_paths():
-            path_ensemble.add_path_data(path, path.status)
-        return path_ensemble
-
-    def get_paths(self):
-        """To have a common interface with the PathEnsemble object."""
-        for path in self.load():
-            yield path
+        super(PathEnsembleWriter, self).__init__('PathEnsembleWriter',
+                                                 header=header)
+        self.ensemble = ensemble  # Check if this can be deleted
+        self.interfaces = interfaces  # Check if this can be deleted
 
     @staticmethod
     def line_parser(line):
@@ -183,8 +150,7 @@ class PathEnsembleFile(Writer):
         """Yield the different paths stored in the file.
 
         The lines are read on-the-fly, converted and yielded one-by-one.
-        Note that the file will be opened here, i.e. it will assumed that
-        it's not open in `self.fileh`.
+        Note that the file will be opened and closed here.
 
         Yields
         ------
@@ -255,3 +221,48 @@ class PathEnsembleFile(Writer):
                                    path_dict['generated'][2],
                                    path_dict['generated'][3])
         yield out
+
+
+class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
+    """Class PathEnsembleFile(PathEnsemble, PathEnsembleWriter)
+
+    This class is intended to mimic the `PathEnsemble` class but using files.
+    It overloads the `get_paths()` from the PathEnsemble so that the analysis
+    can be run on this object in the same way that it is run on a
+    `PathEnsemble` object.
+
+    Attributes
+    ----------
+    filename : string
+        The file we are going to read.
+    """
+
+    def __init__(self, filename, ensemble, interfaces, detect=None):
+        """Initiate the `PathEnsembleFile`."""
+        super(PathEnsembleFile, self).__init__(ensemble, interfaces,
+                                               detect=detect)
+        self.filename = filename
+
+    def get_paths(self):
+        """Load paths from the file."""
+        for path in self.load(self.filename):
+            yield path
+
+    def to_path_ensemble(self):
+        """Read a file and return a pure `PathEnsemble` object.
+
+        This will read an entire file and return a path ensemble object.
+        Note that this might not be the fastest way of using the path ensemble
+        file and that this can require a lot of memory. For analysis
+        purposes, this object also supports a on-line analysis.
+
+        Returns
+        -------
+        out : object like `PathEnsemble` from `pyretis.core.path`
+            The path ensemble read from the file.
+        """
+        path_ensemble = PathEnsemble(self.ensemble, self.interfaces,
+                                     detect=self.detect)
+        for path in self.get_paths():
+            path_ensemble.add_path_data(path, path.status)
+        return path_ensemble

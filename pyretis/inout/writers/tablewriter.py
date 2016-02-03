@@ -17,58 +17,19 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['TxtTable', 'PathTable', 'get_predefined_table']
+__all__ = ['TxtTable', 'PathTable', 'ThermoTable']
 
 
-_DEFINED_TABLES = {}
-_DEFINED_TABLES['energies'] = {'title': 'Energy output',
-                               'var': ['step', 'temp', 'vpot',
-                                       'ekin', 'etot', 'press'],
-                               'format': {'labels': ['Step', 'Temp', 'Pot',
-                                                     'Kin', 'Tot', 'Press'],
-                                          'width': (10, 12),
-                                          'spacing': 2,
-                                          'row_fmt': ['{:> 10d}',
-                                                      '{:> 12.6g}']}}
-
-_DEFINED_TABLES['path-stats'] = {'title': 'Path ensemble statistics',
-                                 'var': ['step', 'ACC', 'BWI',
-                                         'BTL', 'FTL', 'BTX', 'FTX'],
-                                 'format': {'labels': ['Cycle', 'Accepted',
-                                                       'BWI', 'BTL', 'FTL',
-                                                       'BTX', 'FTX'],
-                                            'width': (10, 12), 'spacing': 2,
-                                            'row_fmt': ['{:> 10d}',
-                                                        '{:> 12d}']}}
-
-
-def get_predefined_table(table):
-    """Create predefined `TxtTable` objects.
-
-    This function will set up and return an object like `TxtTable` for some
-    predefined tables. The predefined tables are assumed to be defined in
-    a dictionary `_DEFINED_TABLES`. Here, objects like `TxtTable` will be
-    initiated based on the given settings in `_DEFINED_TABLES`.
-
-    Parameters
-    ----------
-    table : string
-        This should match one of the defined tables in `_DEFINED_TABLES`.
-
-    Returns
-    -------
-    out : object like `TxtTable` from `pyretis.inout.txtinout`
-        This is the text table that can be used for output.
-    """
-    settings = _DEFINED_TABLES.get(table.lower(), None)
-    if settings is None:
-        return None
-    else:
-        if table.lower() == 'path-stats':
-            tab = PathTable
-        else:
-            tab = TxtTable
-        return tab(settings['var'], settings['title'], **settings['format'])
+# Tables can be defined and created as follows:
+#tabl = {'title': 'Energy output',
+#        'var': ['step', 'temp', 'vpot',
+#                'ekin', 'etot', 'press'],
+#        'format': {'labels': ['Step', 'Temp', 'Pot',
+#                              'Kin', 'Tot', 'Press'],
+#                   'width': (10, 12),
+#                   'spacing': 2,
+#                   'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
+#table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
 
 
 def _fill_list(the_list, length, fillvalue=None):
@@ -205,9 +166,17 @@ class PathTable(TxtTable):
     ----------
     Identical to the `TxtTable` object.
     """
-    def __init__(self, variables, title, **kwargs):
+    def __init__(self):
         """Initiate parent."""
-        super(PathTable, self).__init__(variables, title, **kwargs)
+        title = 'Path Ensemble Statistics'
+        var = ['step', 'ACC', 'BWI',
+               'BTL', 'FTL', 'BTX', 'FTX']
+        table_format = {'labels': ['Cycle', 'Accepted', 'BWI', 'BTL', 'FTL',
+                                   'BTX', 'FTX'],
+                        'width': (10, 12),
+                        'spacing': 2,
+                        'row_fmt': ['{:> 10d}', '{:> 12d}']}
+        super(PathTable, self).__init__(var, title, **table_format)
 
     def generate_output(self, step, path_ensemble):
         """Generate the output for the PathTable.
@@ -236,3 +205,26 @@ class PathTable(TxtTable):
             row[key] = value
         var = [row.get(i, float('nan')) for i in self.variables]
         yield self.fmt.format(*var)
+
+
+class ThermoTable(TxtTable):
+    """Class ThermoTable(TxtTable) - Special table for energy output.
+
+    This object will return a table of text with a header and with formatted
+    rows for energy output. Typical use is in MD simulation where we want
+    to display energies at different steps in the simulations.
+
+    Attributes
+    ----------
+    Identical to the `TxtTable` object.
+    """
+    def __init__(self):
+        """Initiate parent."""
+        title = 'Energy Output'
+        var = ['step', 'temp', 'vpot', 'ekin', 'etot', 'press']
+        table_format = {'labels': ['Step', 'Temp', 'Pot',
+                                   'Kin', 'Tot', 'Press'],
+                        'width': (10, 12),
+                        'spacing': 2,
+                        'row_fmt': ['{:> 10d}', '{:> 12.6g}']}
+        super(ThermoTable, self).__init__(var, title, **table_format)
