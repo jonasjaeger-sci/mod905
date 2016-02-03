@@ -87,7 +87,7 @@ write_settings_file(simulation_settings, 'settings.txt')
 
 cross = []  # variable for storing the crossing output
 print('\nStarting simulation!')
-print(('=')*79)
+print('=' * 79)
 for i, result in enumerate(simulation_md.run()):
     try:
         for cri in result['cross']:
@@ -96,7 +96,7 @@ for i, result in enumerate(simulation_md.run()):
         pass
     for task in output:
         task.output(result)
-print(('=')*79)
+print('=' * 79)
 print('Simulation finished, will do a simple flux analysis:')
 analysis_settings = {'skipcross': 1000,
                      'maxblock': 1000,

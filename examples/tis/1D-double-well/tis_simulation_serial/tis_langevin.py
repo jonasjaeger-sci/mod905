@@ -100,7 +100,7 @@ def run_simulation(simulation, settings, analysis_settings=None):
     print('')
     msg = 'Running simulation:'
     print(msg)
-    msg = ('=') * len(msg)
+    msg = '=' * len(msg)
     print(msg)
     print(simulation)
     try:

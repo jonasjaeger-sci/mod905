@@ -81,7 +81,7 @@ for i, middle in enumerate(simulation_settings['interfaces'][:-1]):
     ensemble = '{:03d}'.format(i+1)
     strensemble = '\nEnsemble: {}'.format(ensemble)
     print(strensemble)
-    print(('-') * len(strensemble))
+    print('-' * len(strensemble))
     interface = [stateA, middle, stateB]
     print('* Interfaces: {} {} {}'.format(*interface))
     try:
