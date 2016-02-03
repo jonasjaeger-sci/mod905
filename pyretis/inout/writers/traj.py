@@ -89,7 +89,12 @@ class TrajXYZ(Writer):
         super(TrajXYZ, self).__init__('TrajXYZ')
         self.atomnames = []
         self.frame = 0  # number of frames written
-        self.convert_pos = CONVERT['length'][units, 'A']
+        try:
+            self.convert_pos = CONVERT['length'][units, 'A']
+        except KeyError:
+            self.convert_pos = 1.0
+            msgtxt = 'Could not get conversion for units "{}"'.format(units)
+            logger.warning(msgtxt)
 
     def xyz_format(self, pos, names=None, header=None):
         """Generate output for a configuration in xyz-format.
@@ -203,8 +208,14 @@ class TrajGRO(Writer):
         super(TrajGRO, self).__init__('TrajGRO', header=None)
         self.atomnames = []
         self.frame = 0  # number of frames written
-        self.convert_pos = CONVERT['length'][units, 'nm']
-        self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
+        try:
+            self.convert_pos = CONVERT['length'][units, 'nm']
+            self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
+        except KeyError:
+            msgtxt = 'Could not get conversion for units "{}"'.format(units)
+            logger.warning(msgtxt)
+            self.convert_pos = 1.0
+            self.convert_vel = 1.0
 
     def gro_format(self, pos, vel, box, **kwargs):
         """Format positions, box and velocities according to the GRO format.
