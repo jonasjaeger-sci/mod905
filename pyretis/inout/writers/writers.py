@@ -338,6 +338,11 @@ class EnergyWriter(Writer):
         may be in order, but for now the entire file is read as it's very
         convenient for the subsequent analysis.
 
+        Parameters
+        ----------
+        filename : string
+            The path/file name of the file we want to open.
+
         Yields
         ------
         data_dict : dict
@@ -429,6 +434,11 @@ class OrderWriter(Writer):
         The format is `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
         where the actual meaning of `orderp1` `orderp2` and the following
         order parameters are left to be defined by the user.
+
+        Parameters
+        ----------
+        filename : string
+            The path/file name of the file we want to open.
 
         Yields
         ------

@@ -167,6 +167,11 @@ class TrajXYZ(Writer):
         Here we simply use the `read_xyz_file` method defined below.
         In addition we convert positions to internal units.
 
+        Parameters
+        ----------
+        filename : string
+            The path/filename to open.
+
         Yields
         ------
         out : dict
@@ -349,6 +354,11 @@ class TrajGRO(Writer):
 
         Here we simply use the `read_gromacs_file` method defined below.
         In addition we convert positions/velocities to internal units.
+
+        Parameters
+        ----------
+        filename : string
+            The path/filename to open.
 
         Yields
         ------

@@ -277,7 +277,7 @@ class ReservoirSampler(object):
 
         Parameters
         ----------
-        new_time : any type
+        new_item : any type
             This is the item we try to add to the reservoir.
         """
         self.items += 1

@@ -152,6 +152,11 @@ class PathEnsembleWriter(Writer):
         The lines are read on-the-fly, converted and yielded one-by-one.
         Note that the file will be opened and closed here.
 
+        Parameters
+        ----------
+        filename : string
+            The path/filename to open.
+
         Yields
         ------
         out : object like `Path` from `pyretis.core.path`
