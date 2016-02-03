@@ -203,7 +203,7 @@ class PathEnsembleWriter(Writer):
                                            path_ensemble.interfaces)
 
         interface_list = []
-        for val in path['interface']:
+        for val in path_dict['interface']:
             if val is None:
                 interface_list.append('*')
             else:
