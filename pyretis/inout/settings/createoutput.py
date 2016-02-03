@@ -545,45 +545,6 @@ def create_output(settings):
                 yield out_task
 
 
-#def create_output_task(task, settings):
-#    """Create object for a output task.
-#
-#    This function will create an object for a given output task.
-#    It will make use of some of the predefined output possibilities
-#    defined in `pyretis.inout`
-#
-#    Parameters
-#    ----------
-#    task : dict
-#        This dict describes the task.
-#    settings : dict
-#        These are the settings used for setting up the simulation.
-#        Some of these settings might be useful for creating the output tasks.
-#
-#    Returns
-#    -------
-#    out : object like `OutputTask` from `core.simulation.simulation_task`.
-#        This is the output task that can be added to a simulation.
-#    """
-#    target = _OUTPUT_TYPES[task['type']]['target']
-#    writer = None
-#    when = task.get('when', None)
-#    header = task.get('header', None)
-#    extra = task.get('extra', None)
-#    result = _OUTPUT_TYPES[task['type']]['result']
-#    if target == 'file':
-#        writer = None#_create_file_writer(task, settings)
-#        return OutputTask(task['name'], result, writer,
-#                          when=when, header=header, extra=extra)
-#    elif target == 'screen':
-#        #writer = get_predefined_table(_OUTPUT_TYPES[task['type']]['writer'])
-#        writer = None
-#        return OutputTaskScreen(task['name'], result, writer,
-#                                when=when)
-#    else:
-#        return None
-
-
 def store_settings_as_json(settings, outfile, path=None):
     """Write simulation settings to a json file.
 
