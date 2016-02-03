@@ -101,6 +101,12 @@ class FileIO(object):
             msgtxt = '\n'.join(msg)
             logger.critical(msgtxt)
             status = False
+        except TypeError as error:  # for cases when self.filename is None
+            msg = ['File "{}" could not be opened!'.format(self.filename)]
+            msg += ['TypeError: {}'.format(error)]
+            msgtxt = '\n'.join(msg)
+            logger.critical(msgtxt)
+            status = False
         return status
 
     def write(self, towrite, end='\n'):
