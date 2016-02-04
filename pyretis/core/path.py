@@ -26,7 +26,8 @@ Important functions defined here:
 import itertools
 import logging
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Path', 'PathEnsemble', 'paste_paths', 'reverse_path',
@@ -52,34 +53,31 @@ _GENERATED = {'sh': 'Path was generated with a shooting move',
 
 
 def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
-    """Merge a backward and a forward path.
+    """Merge a backward with a forward path into a new path.
 
-    Merge two paths: one is in the backward and the other in the forward
-    time direction.
-
-    The resulting path is equal to the two paths stacked in correct time.
-    Note that the ordering is important here:
+    The resulting path is equal to the two paths stacked, in correct time.
+    Note that the ordering is important here so that:
     ``paste_paths(path1, path2) != paste_paths(path2, path1)``.
 
-    The code is very similar to `Path.__add__` but we have to take care:
-
+    There are two things we need to take care of here:
+    
     - `path_back` must be iterated in reverse (it is assumed to be a
       backward trajectory).
     - we may have to remove one point in `path2` (if the paths overlap).
 
     Parameters
     ----------
-    path_back : object like `Path`
+    path_back : object like `Path`.
         This is the backward trajectory.
-    path_forw : object like `Path`
+    path_forw : object like `Path`.
         This is the forward trajectory.
-    overlap : boolean, default is True
+    overlap : boolean, default is True.
         If true, `path_back` and `path_forw` have a common starting-point,
         that is, the first point in `path_forw` is identical to the first point
         in `path_back`. In time-space this means that the first point in
         `path_forw` is identical to the last point in path_back (the backward
         and forward path started at the same location in space).
-    maxlen : float, optional
+    maxlen : float, optional.
         This is the maximum length for the new path. If it's not given, it will
         just be set to the largest of the `maxlen` of the two given paths.
 
@@ -91,7 +89,6 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     """
     if maxlen is None:
         if path_back.maxlen == path_forw.maxlen:
-            # everything is ok, they have the same maximum length
             maxlen = path_back.maxlen
         else:
             # They are unequal and both is not None, just pick the largest.
@@ -103,17 +100,22 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             logging.warning(msg)
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
-    iter_path_back = reversed(path_back.path)  # iterate in correct time dir
-    if overlap:  # do not include the overlapping point:
-        iter_path_forw = path_forw.path[1:]
-    else:
-        iter_path_forw = path_forw.path
-
-    for phasepoint in itertools.chain(iter_path_back, iter_path_forw):
+    for phasepoint in path_back.trajectory(reverse=True):
+        app = new_path.append(*phasepoint)
+        if not app:
+            msg = 'Truncated while pasting backwards at: {}'
+            msg = msg.format(new_path.length)
+            logging.warning(msg)
+            return new_path
+    first = True
+    for phasepoint in path_forw.trajectory():
+        if first and overlap:
+            first = False
+            continue
         app = new_path.append(*phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(new_path.length)
-            logging.error(msg)
+            logging.warning(msg)
             return new_path
     return new_path
 
@@ -135,7 +137,7 @@ def reverse_path(path, order_func=None):
         path, the function order_func can be specified to do this.
     """
     new_path = Path(maxlen=path.maxlen)
-    for phasepoint in reversed(path.path):
+    for phasepoint in path.trajectory(reverse=True):
         pos = phasepoint[1]
         vel = phasepoint[2]
         energy = phasepoint[3]
@@ -152,8 +154,7 @@ def reverse_path(path, order_func=None):
     return new_path
 
 
-def check_crossing(cycle, system, order_function, interfaces,
-                   leftside_prev=None):
+def check_crossing(cycle, orderp, interfaces, leftside_prev):
     """Check if we have crossed an interface during the last step.
 
     This function is useful for checking if an interface was crossed from
@@ -166,16 +167,8 @@ def check_crossing(cycle, system, order_function, interfaces,
     ----------
     cycle : int
         This is the current simulation cycle number.
-    system : object like `System` from `pyretis.core.system`
-        This is the system which defines the phase point we are currently
-        investigating.
-    order_function : function or object like `OrderParameter` or float.
-        `OrderParameter` is defined in `pyretis.core.orderparameter`.
-        `order_function` is assumed to be a function accepting
-        `system` as a parameter and returning at least two scalars.
-        In case a single float is given, the order parameter will not be
-        recalculated and this float will just be used as the current order
-        parameter.
+    orderp : float
+        The current order parameter.
     interfaces : list of floats
         These are the interfaces to check.
     leftside_prev : list of booleans
@@ -192,11 +185,6 @@ def check_crossing(cycle, system, order_function, interfaces,
         where direction is '-' for a crossing in the negative direction and
         '+' for a crossing in the positive direction.
     """
-    try:
-        orderp = order_function(system)[0]
-    except TypeError:
-        # Assume TypeError is caused by order_function = a float
-        orderp = order_function
     cross = []
     if leftside_prev is None:
         leftside_curr = [orderp < interf for interf in interfaces]
@@ -225,9 +213,13 @@ class Path(object):
         This is the maximum path length. Some algorithms requires this to
         be set. Others don't, which is indicated by setting `maxlen` equal to
         None.
-    path : list
-        This is the trajectory/series of snapshots, stored as a list of tuples
-        on the form (order parameters, position, velocity).
+    order : list of floats
+        The order parameters as function of time.
+    traj : list of numpy.arrays
+        `traj[0]` are the positions as function of time.
+        `traj[1]` are the velocites as function of time.
+    energy : list of floats
+        The energy as a function of time.
     ordermin : tuple
         This is the (current) minimum order parameter for the path.
         `ordermin[0]` is the value, `ordermin[1]` is the index in `self.path`.
@@ -262,24 +254,63 @@ class Path(object):
             trajectory.
         """
         self.maxlen = maxlen
-        self.path = []
         self.length = 0
+        self.order = []
+        self.energy = []
+        self.traj = []
         self.ordermin = None
         self.ordermax = None
         self.time_origin = time_origin
         self.status = None
         self.generated = None
+        self.reservoir = False
 
-    def __iter__(self):
-        """Iterate over the phase-space points.
+    def trajectory(self, reverse=False):
+        """Iterate over the pase-space points in the path.
+
+        Parameters
+        ----------
+        reverse : boolean
+            If this is True, we iterate in the reverse direction.
 
         Yields
         ------
         out : tuple
-            The phase-space points will be yielded.
+            The phase-space points in the path.
         """
-        for phasepoint in self.path:
-            yield phasepoint
+        if not reverse and self.reservoir:
+            for i in range(self.length):
+                yield self.order[i], None, None, self.energy[i]
+        elif not reverse and not self.reservoir:
+            for i in range(self.length):
+                yield (self.order[i], self.traj[i][0], self.traj[i][1],
+                       self.energy[i])
+        elif reverse and self.reservoir:
+            for i in range(self.length - 1, -1, -1):
+                yield self.order[i], None, None, self.energy[i]
+        elif reverse and not self.reservoir:
+            for i in range(self.length - 1, -1, -1):
+                yield (self.order[i], self.traj[i][0], self.traj[i][1],
+                       self.energy[i])
+
+    def phasepoint(self, idx):
+        """Return a specific phase point.
+
+        Parameters
+        ----------
+        idx : interger
+            Used to select the phase point
+
+        Returns
+        -------
+        out : tuple
+            A phase-space point in the path.
+        """
+        if self.reservoir:
+            raise NotImplementedError
+        else:
+            return (self.order[idx], self.traj[idx][0], self.traj[idx][1],
+                    self.energy[idx])
 
     def append(self, orderp, pos, vel, energy):
         """Append a new phase point to the path.
@@ -303,15 +334,16 @@ class Path(object):
             A dict with energy terms for the phase point.
         """
         if self.maxlen is None or self.length < self.maxlen:
-            pos_copy = np.copy(pos) if pos is not None else None
-            vel_copy = np.copy(vel) if vel is not None else None
-            self.path.append([orderp, pos_copy, vel_copy, energy])
+            if pos is not None and vel is not None:
+                self.traj.append([np.copy(pos), np.copy(vel)])
+            self.order.append(orderp)
+            self.energy.append(energy)
             self.length += 1
             self._update_orderp(orderp[0], self.length - 1)
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logging.warning(msg)
+            logging.info(msg)
             return False
 
     def _update_orderp(self, orderp, idx):
@@ -351,8 +383,8 @@ class Path(object):
         """
         ordermin = None
         ordermax = None
-        for i, phasepoint in enumerate(self.path):
-            orderp = phasepoint[0][0]
+        for i in range(self.length):
+            orderp = self.order[i][0]
             if ordermin is None or ordermax is None:
                 ordermin = (orderp, i)
                 ordermax = (orderp, i)
@@ -391,10 +423,9 @@ class Path(object):
         out[3] : list of boolean
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
-        start, end, middle, cross = None, None, None, None
         if self.length < 1:
             logging.warning('Path is empty!')
-            return start, end, middle, cross
+            return None, None, None, None
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
         left, right = min(interfaces), max(interfaces)
@@ -423,12 +454,13 @@ class Path(object):
             String representing where the end point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[-1][0][0] < left:
+        if self.order[-1][0] < left:
             end = 'L'
-        elif self.path[-1][0][0] > right:
+        elif self.order[-1][0] > right:
             end = 'R'
         else:
             end = None
+            logger.info('Undefined end point.')
         return end
 
     def get_start_point(self, left, right):
@@ -450,13 +482,13 @@ class Path(object):
             String representing where the start point is ('L' - left,
             'R' - right or None).
         """
-        if self.path[0][0][0] <= left:
+        if self.order[0][0] <= left:
             start = 'L'
-        elif self.path[0][0][0] >= right:
+        elif self.order[0][0] >= right:
             start = 'R'
         else:
             start = None
-            logging.warning('Undefined starting point.')
+            logger.info('Undefined starting point.')
         return start
 
     def get_shooting_point(self, rgen):
@@ -481,9 +513,11 @@ class Path(object):
         idx : integer
             The shooting point index.
         """
-        idx = rgen.random_integers(1, self.length - 2)
-        phasepoint = self.path[idx][0:3]
-        return phasepoint, idx
+        if self.reservoir:
+            raise NotImplementedError
+        else:
+            idx = rgen.random_integers(1, self.length - 2)
+            return self.order[idx], self.traj[idx][0], self.traj[idx][1], idx
 
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
@@ -547,38 +581,6 @@ class Path(object):
         """
         return self.ordermax[0] > idetect
 
-    def __add__(self, other):
-        """Define how we add two paths, i.e.: ``new_path = self + other``.
-
-        Parameters
-        ----------
-        self, other : objects of type like `Path`
-
-        Returns
-        -------
-        out : object of type `Path`
-            The Path obtained as ``out = self + other``.
-        """
-        if self.maxlen == other.maxlen:
-            # everything is ok, they have the same length
-            maxlen = self.maxlen
-        else:
-            # they are unequal and both is not none, just pick the largest
-            maxlen = max(self.maxlen, other.maxlen)
-            msg = 'Adding paths with unequal maxlen! Maxlen is set to {}!'
-            msg = msg.format(maxlen)
-            logging.warning(msg)
-
-        new_path = Path(maxlen=maxlen)
-
-        for phasepoint in itertools.chain(self.path, other.path):
-            app = new_path.append(*phasepoint)
-            if not app:
-                msg = 'Truncated path at: {}'.format(new_path.length)
-                logging.error(msg)
-                return new_path
-        return new_path
-
     def __iadd__(self, other):
         """Add path data to a path from another path, i.e. ``self += other``.
 
@@ -594,11 +596,11 @@ class Path(object):
         self : object of type `Path`
             The updated path object.
         """
-        for phasepoint in other.path:
+        for phasepoint in other.trajectory():
             app = self.append(*phasepoint)
             if not app:
-                msg = 'Truncated path at: {}'.format(self.length)
-                logging.error(msg)
+                msg = 'Truncated path while +=: {}'.format(self.length)
+                logging.warning(msg)
                 return self
         return self
 
@@ -609,13 +611,14 @@ class Path(object):
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
         msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
         if self.length > 0:
-            msg += ['\tStart {}'.format(self.path[0][0][0])]
-            msg += ['\tEnd {}'.format(self.path[-1][0][0])]
+            msg += ['\tStart {}'.format(self.order[0][0])]
+            msg += ['\tEnd {}'.format(self.order[-1][0])]
         if self.status:
             msg += ['\tStatus: {}'.format(_STATUS[self.status])]
         if self.generated:
             msg += ['\tGenerated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
+
 
 
 class PathEnsemble(object):

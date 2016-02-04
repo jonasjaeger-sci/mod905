@@ -155,8 +155,8 @@ class SimulationMDFlux(Simulation):
         self.order_function = order_function
         # set up for initial crossing
         self.leftside_prev = None
-        leftside, _ = check_crossing(self.cycle['step'], self.system,
-                                     self.order_function,
+        leftside, _ = check_crossing(self.cycle['step'],
+                                     self.order_function(self.system)[0],
                                      self.interfaces,
                                      self.leftside_prev)
         self.leftside_prev = leftside
@@ -184,7 +184,6 @@ class SimulationMDFlux(Simulation):
         # do not check crossing at step 0
         if not self.first_step:
             leftside, cross = check_crossing(self.cycle['step'],
-                                             self.system,
                                              results['orderp'][0],
                                              self.interfaces,
                                              self.leftside_prev)

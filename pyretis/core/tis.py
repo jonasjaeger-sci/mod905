@@ -269,7 +269,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # Select the shooting point from path at random.
     # We do not include the end point as these are out of bounds - i.e. they
     # have crossed the interface. See also the documentation for RETIS.
-    (orderp, pos, vel), idx = path.get_shooting_point(rgen)
+    orderp, pos, vel, idx = path.get_shooting_point(rgen)
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
@@ -426,8 +426,9 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
     if initial_path.length >= maxlen:
-        logger.error('Initial path too long `>= NX`')
-        raise ValueError('Initial path too long `>= NX`')
+        msgtxt = 'Initial path too long (exceeded "MAXLEN").'
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
     start, end, _, _ = initial_path.check_interfaces(interfaces)
     # ok, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
@@ -444,12 +445,14 @@ def generate_initial_path_kick(system, interfaces, order_function,
         return initial_path
     # Now we do the other cases:
     if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
-        # print('Initial path is in the wrong direction: Reversing it!')
+        msgtxt = 'Initial path is in the wrong direction: Reversing it!'
+        logger.info(msgtxt)
         initial_path = reverse_path(initial_path)
         initial_path.status = 'ACC'
     elif end == start:  # case 2
-        # print('Initial path start & end at wrong interface')
-        # print('Running TIS to fix initial path:')
+        msgtxt = ('Initial path start & end at wrong interface.' +
+                  '\nRunning TIS to fix it!')
+        logger.info(msgtxt)
         initial_path = _fix_path_by_tis(initial_path, system, interfaces,
                                         order_function, integrator, rgen,
                                         tis_settings)
