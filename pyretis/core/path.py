@@ -309,7 +309,7 @@ class Path(object):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logging.error(msg)
+            logging.warning(msg)
             return False
 
     def _update_orderp(self, orderp, idx):
