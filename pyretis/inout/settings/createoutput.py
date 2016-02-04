@@ -106,6 +106,28 @@ _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
                                       'freq': 10}}]
 
 
+def add_dirname(filename, dirname):
+    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
+
+    Parameters
+    ----------
+    filename : string
+        The filename.
+    dirname : string
+        The directory we want to prefix. It can be None, in which
+        case we ignore it.
+
+    Returns
+    -------
+    out : string
+        The path to the resulting file.
+    """
+    if dirname is not None:
+        return os.path.join(dirname, filename)
+    else:
+        return filename
+
+
 class OutputTask(object):
     """Class OutputTask(object) - Simulation output tasks.
 
@@ -189,19 +211,18 @@ class OutputTask(object):
         writer = get_writer(writer_type, settings=settings)
         target = _OUTPUT_TYPES[task['type']]['target']
         result = _OUTPUT_TYPES[task['type']]['result']
-        when = task.get('when', None)
-        header = task.get('header', None)
-        extra = task.get('extra', None)
-#        return OutputTask(task['name'], result, writer,
-#                          when=when, header=header, extra=extra)
         if target == 'file':
-            filename = task['filename']
+            filename = add_dirname(task['filename'],
+                                   settings.get('output-dir', None))
+            kwargs = {}
+            for key in ('header', 'extra', 'when', 'oldfile'):
+                if key in task:
+                    kwargs[key] = task[key]
             return OutputTaskFile(task['name'], result, writer,
-                                  filename, when=when, header=header,
-                                  extra=extra)
+                                  filename, **kwargs)
         elif target == 'screen':
             return OutputTaskScreen(task['name'], result, writer,
-                                    when=when)
+                                    when=task.get('when', None))
         else:
             msg = 'Unknown target "{}" ignored!'.format(target)
             logger.warning(msg)
@@ -303,15 +324,6 @@ class OutputTaskScreen(OutputTask):
             This object will handle the actual writing of the result.
         when : dict, optional
             Determines if the task should be executed.
-        header : string, optional
-            Some object will have a header written each time the we use the
-            write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame. It is assumed to
-            contain one '{}' field so that we can insert the current step
-            number.
-        extra : dict
-            This dictionary contains some extra parameters that can be passed
-            to the writers.
         """
         super(OutputTaskScreen, self).__init__(name, result, writer,
                                                when=when)
@@ -378,21 +390,29 @@ class OutputTaskFile(OutputTask):
             This string defines the result we are going to output.
         writer : object like `Writer` from `pyretis.inout.writers`
             This object will handle the actual writing of the result.
-        when : dict, optional
-            Determines if the task should be executed.
-        header : string, optional
-            Some object will have a header written each time the we use the
-            write routine. This is for instance used in the trajectory writer
-            to display the current step for a written frame. It is assumed to
-            contain one '{}' field so that we can insert the current step
-            number.
-        extra : dict
+        filename : string
+            The path/filename to write to.
+        kwargs : dict
             This dictionary contains some extra parameters that can be passed
-            to the writers.
+            to the writers. The following keywords are currently used:
+
+            * `when`: dict. Determines if and when the task should be executed.
+              Example: `{'every': 10}` will be executed at every 10th step.
+            * `header`: string. Some objects will have a header written each
+              time the we use the write routine. This is for instance used in
+              the trajectory writer to display the current step for a written
+              frame. The given `header` is assumed to contain one '{}' field
+              so that we can insert the current step number.
+            * `extra`: dict. Contains extra settings for the writer. For the
+              trajectory writer this setting can be used to turn on writing
+              of velocities, i.e. `kwargs['extra'] = {'write_vel': True}`.
+            * `oldfile` : string. Determines if we should
+              overwrite/backup/append to old files.
         """
         super(OutputTaskFile, self).__init__(name, result, writer, **kwargs)
+        oldfile = kwargs.get('oldfile', 'backup')
         self.print_header = True
-        self.fileh = FileIO(filename)
+        self.fileh = FileIO(filename, oldfile=oldfile)
         if self.writer.header is not None:
             self.fileh.write(self.writer.header)
 
