@@ -101,7 +101,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             maxlen = max(path_back.maxlen, path_forw.maxlen)
             msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
             logging.warning(msg)
-    time_origin = path_back.time_origin - len(path_back.path) + 1
+    time_origin = path_back.time_origin - path_back.length + 1
     new_path = Path(maxlen=maxlen, time_origin=time_origin)
     iter_path_back = reversed(path_back.path)  # iterate in correct time dir
     if overlap:  # do not include the overlapping point:
@@ -112,7 +112,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     for phasepoint in itertools.chain(iter_path_back, iter_path_forw):
         app = new_path.append(*phasepoint)
         if not app:
-            msg = 'Truncated path at: {}'.format(len(new_path.path))
+            msg = 'Truncated path at: {}'.format(new_path.length)
             logging.error(msg)
             return new_path
     return new_path
@@ -263,6 +263,7 @@ class Path(object):
         """
         self.maxlen = maxlen
         self.path = []
+        self.length = 0
         self.ordermin = None
         self.ordermax = None
         self.time_origin = time_origin
@@ -301,11 +302,12 @@ class Path(object):
         energy : dict
             A dict with energy terms for the phase point.
         """
-        if self.maxlen is None or len(self.path) < self.maxlen:
+        if self.maxlen is None or self.length < self.maxlen:
             pos_copy = np.copy(pos) if pos is not None else None
             vel_copy = np.copy(vel) if vel is not None else None
             self.path.append([orderp, pos_copy, vel_copy, energy])
-            self._update_orderp(orderp[0], len(self.path) - 1)
+            self.length += 1
+            self._update_orderp(orderp[0], self.length - 1)
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
@@ -390,7 +392,7 @@ class Path(object):
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
         start, end, middle, cross = None, None, None, None
-        if len(self.path) < 1:
+        if self.length < 1:
             logging.warning('Path is empty!')
             return start, end, middle, cross
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
@@ -479,7 +481,7 @@ class Path(object):
         idx : integer
             The shooting point index.
         """
-        idx = rgen.random_integers(1, len(self.path) - 2)
+        idx = rgen.random_integers(1, self.length - 2)
         phasepoint = self.path[idx][0:3]
         return phasepoint, idx
 
@@ -497,7 +499,7 @@ class Path(object):
         """
         path_info = {'generated': self.generated,
                      'status': status,
-                     'length': len(self.path)}
+                     'length': self.length}
 
         if self.ordermax is not None:
             path_info['ordermax'] = tuple(self.ordermax)
@@ -572,7 +574,7 @@ class Path(object):
         for phasepoint in itertools.chain(self.path, other.path):
             app = new_path.append(*phasepoint)
             if not app:
-                msg = 'Truncated path at: {}'.format(len(new_path.path))
+                msg = 'Truncated path at: {}'.format(new_path.length)
                 logging.error(msg)
                 return new_path
         return new_path
@@ -595,18 +597,18 @@ class Path(object):
         for phasepoint in other.path:
             app = self.append(*phasepoint)
             if not app:
-                msg = 'Truncated path at: {}'.format(len(self.path))
+                msg = 'Truncated path at: {}'.format(self.length)
                 logging.error(msg)
                 return self
         return self
 
     def __str__(self):
         """Return a simple string representation of the Path."""
-        msg = ['Path with length {} (max: {})'.format(len(self.path),
+        msg = ['Path with length {} (max: {})'.format(self.length,
                                                       self.maxlen)]
         msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
         msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
-        if len(self.path) > 0:
+        if self.length > 0:
             msg += ['\tStart {}'.format(self.path[0][0][0])]
             msg += ['\tEnd {}'.format(self.path[-1][0][0])]
         if self.status:

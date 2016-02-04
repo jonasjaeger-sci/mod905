@@ -303,7 +303,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     if tis_settings['allowmaxlength']:
         maxlen = tis_settings['maxlength']
     else:
-        maxlen = int((len(path.path) - 2) / rgen.rand()) + 2
+        maxlen = int((path.length - 2) / rgen.rand()) + 2
         maxlen = min(maxlen, tis_settings['maxlength'])
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
@@ -319,7 +319,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         accept, trial_path.status = False, 'BTL'
         trial_path += path_back  # just store path for analysis
         # BTL is backward trajectory too long (maxlenb "too small")
-        if len(path_back.path) == tis_settings['maxlength'] - 1:
+        if path_back.length == tis_settings['maxlength'] - 1:
             trial_path.status = 'BTX'  # exceeds maximum memory length
         return accept, trial_path, trial_path.status
     # backward seems OK so far, check if the ending point is correct:
@@ -329,7 +329,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         trial_path += path_back  # just store path for analysis
         return accept, trial_path, trial_path.status
     # everything seems fine, propagate forward
-    maxlenf = maxlen - len(path_back.path) + 1
+    maxlenf = maxlen - path_back.length + 1
     path_forw, success_forw, _ = integrator.generate_path(system, interfaces,
                                                           order_function,
                                                           maxlen=maxlenf,
@@ -342,10 +342,10 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     trial_path = paste_paths(path_back, path_forw, overlap=True,
                              maxlen=tis_settings['maxlength'])
     # Also update information about the shooting:
-    trial_path.generated = ('sh', orderp[0], idx, len(path_back.path) - 1)
+    trial_path.generated = ('sh', orderp[0], idx, path_back.length - 1)
     if not success_forw:
         accept, trial_path.status = False, 'FTL'
-        if len(trial_path.path) == tis_settings['maxlength']:
+        if trial_path.length == tis_settings['maxlength']:
             trial_path.status = 'FTX'  # exceeds "memory"
         return accept, trial_path, trial_path.status
     # we have made it so far, check if we cross middle interface
@@ -425,9 +425,9 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # Merge backward and forward, here we do not set maxlen since
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
-    if len(initial_path.path) >= maxlen:
-        logger.error('Initial path too long `len(path) >= NX`')
-        raise ValueError('Initial path too long `len(path) >= NX`')
+    if initial_path.length >= maxlen:
+        logger.error('Initial path too long `>= NX`')
+        raise ValueError('Initial path too long `>= NX`')
     start, end, _, _ = initial_path.check_interfaces(interfaces)
     # ok, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle

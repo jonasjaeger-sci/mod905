@@ -182,7 +182,7 @@ class Integrator(object):
                               system.particles.vel,
                               calculate_thermo(system))
             if not add:
-                if len(path.path) >= path.maxlen:
+                if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
                 else:
                     status = 'Could not add for unknown reason'

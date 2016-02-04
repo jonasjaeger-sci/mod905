@@ -451,8 +451,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     status = 'ACC'  # we are optimistic and hope that this is the default
     path0.set_move('s+')
     path1.set_move('s-')
-    path0.status = 'BTX' if len(path0.path) == maxlen else 'ACC'
-    path1.status = 'FTX' if len(path1.path) == maxlen else 'ACC'
+    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
+    path1.status = 'FTX' if path1.length == maxlen else 'ACC'
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'
