@@ -10,7 +10,7 @@ Important classes and functions defined here:
 from __future__ import absolute_import
 import numpy as np
 from pyretis.core.simulation.simulation import Simulation
-from pyretis.core.path import PathEnsemble
+from pyretis.core.pathensemble import PathEnsemble
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.tis import (generate_initial_path_kick,
                               make_tis_step_ensemble)

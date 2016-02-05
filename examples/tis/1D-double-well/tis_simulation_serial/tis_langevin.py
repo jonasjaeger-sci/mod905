@@ -9,7 +9,7 @@ try:
 except ImportError:
     import Queue as queue
 import numpy as np
-from pyretis.core.path import create_path_ensembles
+from pyretis.core.pathensemble import create_path_ensembles
 from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
@@ -24,8 +24,8 @@ simulation_settings = {'task': 'TIS',
                        'integrator': {'name': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
-                       'endcycle': 20000,
-                       #'endcycle': 200,
+                       #'endcycle': 20000,
+                       'endcycle': 200,
                        'temperature': 0.07,
                        'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                       -0.5, -0.4, -0.3, 1.0],
@@ -46,6 +46,7 @@ simulation_settings = {'task': 'TIS',
                                'seed': 0,
                                'initial_path': 'kick'},
                        'output-modify': [{'name': 'pathensemble-file',
+                                          'oldfile': 'overwrite',
                                           'when': {'every': 10}}]}
 
 

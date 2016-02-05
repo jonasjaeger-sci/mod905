@@ -34,8 +34,10 @@ Modules:
 - particles.py: This module define the particles class which is used to
   represent a collection of particles.
 
-- path.py: This module defines functions and classes for paths. It defines
-  the class for a path and a collection of paths (i.e. a path ensemble).
+- path.py: This module defines functions and classes for paths.
+
+- pathensemble.py: This module defines the class for a collection of
+  paths (i.e. a path ensemble).
 
 - properties.py: This module defines a class for a generic property.
 
@@ -86,7 +88,8 @@ from . import simulation
 from .system import System
 from .box import Box
 from .particles import Particles
-from .path import Path, PathEnsemble
+from .path import Path
+from .pathensemble import PathEnsemble
 from .random_gen import RandomGenerator
 from .orderparameter import (OrderParameter, OrderParameterPosition,
                              OrderParameterParse)

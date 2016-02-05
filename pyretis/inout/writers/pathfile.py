@@ -12,7 +12,8 @@ Important classes defined here:
 """
 import logging
 # pyretis imports:
-from pyretis.core.path import Path, PathEnsemble
+from pyretis.core.path import Path
+from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

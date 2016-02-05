@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 import multiprocessing
 import numpy as np
-from pyretis.core.path import create_path_ensembles
+from pyretis.core.pathensemble import create_path_ensembles
 from pyretis.core import Box, System
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
