@@ -217,7 +217,7 @@ class Path(object):
         The order parameters as function of time.
     traj : list of numpy.arrays
         `traj[0]` are the positions as function of time.
-        `traj[1]` are the velocites as function of time.
+        `traj[1]` are the velocities as function of time.
     energy : list of floats
         The energy as a function of time.
     ordermin : tuple
@@ -266,7 +266,7 @@ class Path(object):
         self.reservoir = False
 
     def trajectory(self, reverse=False):
-        """Iterate over the pase-space points in the path.
+        """Iterate over the phase-space points in the path.
 
         Parameters
         ----------
@@ -298,8 +298,8 @@ class Path(object):
 
         Parameters
         ----------
-        idx : interger
-            Used to select the phase point
+        idx : int
+            Index for phase-pase point to return.
 
         Returns
         -------
@@ -315,7 +315,7 @@ class Path(object):
     def append(self, orderp, pos, vel, energy):
         """Append a new phase point to the path.
 
-        We will here append a new phase space point to the path.
+        We will here append a new phase-space point to the path.
         The phase point is assumed to be given by positions and velocities
         with a corresponding scalar order parameter and energy.
 
@@ -357,7 +357,7 @@ class Path(object):
         -----------
         orderp : float
             This is the new order parameter.
-        idx : integer
+        idx : int
             This is the index of the new order parameter in `self.path`.
         """
         if self.ordermax is None or orderp > self.ordermax[0]:
@@ -370,7 +370,7 @@ class Path(object):
 
         Update the minimum and maximum order parameter on the path and
         return them. This function will explicitly loop over the path,
-        check all phase space points and find the minimum and maximum order
+        check all phase-space points and find the minimum and maximum order
         parameter. This is useful if the path was read directly without
         calling `append`.
 
@@ -510,7 +510,7 @@ class Path(object):
         phasepoint : tuple
             `phasepoint[0]` is the order parameter (as a tuple) and the two
             next items are the positions and velocities.
-        idx : integer
+        idx : int
             The shooting point index.
         """
         if self.reservoir:
@@ -567,19 +567,20 @@ class Path(object):
             self.generated = (move, self.generated[1], self.generated[2],
                               self.generated[3])
 
-    def success(self, idetect):
+    def success(self, detect):
         """Check if the path is successful.
 
         The check is based on the maximum order parameter and the value of
-        `idetect`. It is successful if the maximum order parameter is greater
-        than `idetect`.
+        `detect`. It is successful if the maximum order parameter is greater
+        than `detect`.
 
         Parameters
         ----------
-        idetect : float
-            The value for which the path is successful
+        detect : float
+            The value for which the path is successful, i.e. the "detect"
+            interface.
         """
-        return self.ordermax[0] > idetect
+        return self.ordermax[0] > detect
 
     def __iadd__(self, other):
         """Add path data to a path from another path, i.e. ``self += other``.
