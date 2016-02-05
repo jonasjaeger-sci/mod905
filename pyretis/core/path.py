@@ -7,7 +7,9 @@ paths.
 
 Important classes defined here:
 
-- Path: Class for defining paths.
+- PathBase: A base class for paths.
+
+- Path: Class for a generic path that stores all possible information.
 
 Important functions defined here:
 
@@ -15,7 +17,6 @@ Important functions defined here:
   direction and the other is in the forward time direction.
 
 - reverse_path: Function for reversing a path.
-
 """
 import logging
 import numpy as np
@@ -192,12 +193,14 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class Path(object):
-    """Path(object) - representation of paths.
+class PathBase(object):
+    """PathBase(object) - base class for representation of paths.
 
     This class represents a path. A path consist of a series of consecutive
     snapshots (the trajectory) with the corresponding order parameter.
-    We assume here that the order parameter is a scalar value.
+    We are going to assume that we always store the order parameter as a
+    function of the time. For the other properties, the different sub-classes
+    might not store all the intformation.
 
     Attributes
     ----------
@@ -255,88 +258,6 @@ class Path(object):
         self.time_origin = time_origin
         self.status = None
         self.generated = None
-        self.reservoir = False
-
-    def trajectory(self, reverse=False):
-        """Iterate over the phase-space points in the path.
-
-        Parameters
-        ----------
-        reverse : boolean
-            If this is True, we iterate in the reverse direction.
-
-        Yields
-        ------
-        out : tuple
-            The phase-space points in the path.
-        """
-        if not reverse and self.reservoir:
-            for i in range(self.length):
-                yield self.order[i], None, None, self.energy[i]
-        elif not reverse and not self.reservoir:
-            for i in range(self.length):
-                yield (self.order[i], self.traj[i][0], self.traj[i][1],
-                       self.energy[i])
-        elif reverse and self.reservoir:
-            for i in range(self.length - 1, -1, -1):
-                yield self.order[i], None, None, self.energy[i]
-        elif reverse and not self.reservoir:
-            for i in range(self.length - 1, -1, -1):
-                yield (self.order[i], self.traj[i][0], self.traj[i][1],
-                       self.energy[i])
-
-    def phasepoint(self, idx):
-        """Return a specific phase point.
-
-        Parameters
-        ----------
-        idx : int
-            Index for phase-pase point to return.
-
-        Returns
-        -------
-        out : tuple
-            A phase-space point in the path.
-        """
-        if self.reservoir:
-            raise NotImplementedError
-        else:
-            return (self.order[idx], self.traj[idx][0], self.traj[idx][1],
-                    self.energy[idx])
-
-    def append(self, orderp, pos, vel, energy):
-        """Append a new phase point to the path.
-
-        We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and velocities
-        with a corresponding scalar order parameter and energy.
-
-        Parameters
-        ----------
-        orderp : list of floats
-            This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path sampling
-            methods while `orderp[1:]` can represent other order parameters
-            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
-        pos : numpy.array
-            The positions of the particles,
-        vel: numpy.array
-            The velocities of the particles.
-        energy : dict
-            A dict with energy terms for the phase point.
-        """
-        if self.maxlen is None or self.length < self.maxlen:
-            if pos is not None and vel is not None:
-                self.traj.append([np.copy(pos), np.copy(vel)])
-            self.order.append(orderp)
-            self.energy.append(energy)
-            self.length += 1
-            self._update_orderp(orderp[0], self.length - 1)
-            return True
-        else:
-            msg = 'Path length exceeded! Could not append to path!'
-            logging.info(msg)
-            return False
 
     def _update_orderp(self, orderp, idx):
         """Update current min/max order parameter.
@@ -486,12 +407,6 @@ class Path(object):
     def get_shooting_point(self, rgen):
         """Return a shooting point from the path.
 
-        This will simply draw a shooting point from the path at
-        random. The reason for including this function in the path object
-        is for the future: when we want to do reservoir sampling this method
-        should be made more advanced so that we can select phase points from
-        the reservoir.
-
         Parameters
         ----------
         rgen : object like `RandomGenerator` from `random_gen`.
@@ -505,11 +420,56 @@ class Path(object):
         idx : int
             The shooting point index.
         """
-        if self.reservoir:
-            raise NotImplementedError
-        else:
-            idx = rgen.random_integers(1, self.length - 2)
-            return self.order[idx], self.traj[idx][0], self.traj[idx][1], idx
+        raise NotImplementedError
+
+    def trajectory(self, reverse=False):
+        """Iterate over the phase-space points in the path.
+
+        Parameters
+        ----------
+        reverse : boolean
+            If this is True, we iterate in the reverse direction.
+
+        Yields
+        ------
+        out : tuple
+            The phase-space points in the path.
+        """
+        raise NotImplementedError
+
+    def phasepoint(self, idx):
+        """Return a specific phase point.
+
+        Parameters
+        ----------
+        idx : int
+            Index for phase-pase point to return.
+
+        Returns
+        -------
+        out : tuple
+            A phase-space point in the path.
+        """
+        raise NotImplementedError
+
+    def append(self, orderp, pos, vel, energy):
+        """Append a new phase point to the path.
+
+        Parameters
+        ----------
+        orderp : list of floats
+            This variable is the order parameter for the given point.
+            `orderp[0]` is the actual order parameter used in path sampling
+            methods while `orderp[1:]` can represent other order parameters
+            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+        pos : numpy.array
+            The positions of the particles,
+        vel: numpy.array
+            The velocities of the particles.
+        energy : dict
+            A dict with energy terms for the phase point.
+        """
+        raise NotImplementedError
 
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
@@ -611,3 +571,120 @@ class Path(object):
         if self.generated:
             msg += ['\tGenerated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
+
+
+class Path(PathBase):
+    """Path(PathBase) - representation of paths.
+
+    This class represents a path. A path consist of a series of consecutive
+    snapshots (the trajectory) with the corresponding order parameter. Here
+    we store all information for all phase points on the path.
+    """
+
+    def __init__(self, maxlen=None, time_origin=0):
+        """Initialize the Path object.
+
+        Parameters
+        ----------
+        maxlen : int, optional
+            This is the max-length of the path. The default value,
+            None, is just a path of arbitrary length.
+        time_origin : int, optional
+            This can be used to store the shooting point of a parent
+            trajectory.
+        """
+        super(Path, self).__init__(maxlen=maxlen, time_origin=time_origin)
+
+    def trajectory(self, reverse=False):
+        """Iterate over the phase-space points in the path.
+
+        Parameters
+        ----------
+        reverse : boolean
+            If this is True, we iterate in the reverse direction.
+
+        Yields
+        ------
+        out : tuple
+            The phase-space points in the path.
+        """
+        if reverse:
+            for i in range(self.length - 1, -1, -1):
+                yield (self.order[i], self.traj[i][0], self.traj[i][1],
+                       self.energy[i])
+        else:
+            for i in range(self.length):
+                yield (self.order[i], self.traj[i][0], self.traj[i][1],
+                       self.energy[i])
+
+    def phasepoint(self, idx):
+        """Return a specific phase point.
+
+        Parameters
+        ----------
+        idx : int
+            Index for phase-pase point to return.
+
+        Returns
+        -------
+        out : tuple
+            A phase-space point in the path.
+        """
+        return (self.order[idx], self.traj[idx][0], self.traj[idx][1],
+                self.energy[idx])
+
+    def append(self, orderp, pos, vel, energy):
+        """Append a new phase point to the path.
+
+        We will here append a new phase-space point to the path.
+        The phase point is assumed to be given by positions and velocities
+        with a corresponding order parameter and energy.
+
+        Parameters
+        ----------
+        orderp : list of floats
+            This variable is the order parameter for the given point.
+            `orderp[0]` is the actual order parameter used in path sampling
+            methods while `orderp[1:]` can represent other order parameters
+            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+        pos : numpy.array
+            The positions of the particles,
+        vel: numpy.array
+            The velocities of the particles.
+        energy : dict
+            A dict with energy terms for the phase point.
+        """
+        if self.maxlen is None or self.length < self.maxlen:
+            self.traj.append([np.copy(pos), np.copy(vel)])
+            self.order.append(orderp)
+            self.energy.append(energy)
+            self.length += 1
+            self._update_orderp(orderp[0], self.length - 1)
+            return True
+        else:
+            msg = 'Path length exceeded! Could not append to path!'
+            logging.info(msg)
+            return False
+
+    def get_shooting_point(self, rgen):
+        """Return a shooting point from the path.
+
+        This will simply draw a shooting point from the path at
+        random. All points can be selected with equal probability with
+        the exception of the end points which are not considered.
+
+        Parameters
+        ----------
+        rgen : object like `RandomGenerator` from `random_gen`.
+            This object is used to draw a random integer.
+
+        Returns
+        -------
+        phasepoint : tuple
+            `phasepoint[0]` is the order parameter (as a tuple) and the two
+            next items are the positions and velocities.
+        idx : int
+            The shooting point index.
+        """
+        idx = rgen.random_integers(1, self.length - 2)
+        return self.order[idx], self.traj[idx][0], self.traj[idx][1], idx
