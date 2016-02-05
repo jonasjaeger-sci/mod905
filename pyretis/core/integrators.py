@@ -23,7 +23,6 @@ from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.path import Path
 from pyretis.core.particlefunctions import calculate_thermo
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -138,17 +137,24 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def generate_path(self, system, interfaces, order_function,
-                      maxlen=None, reverse=False, path=None):
+    def propagate(self, path, system, interfaces, order_function,
+                  reverse=False):
         """Generate a path by integrating until a specific criterion is met.
 
         This function will generate a path by calling the function specifying
         the integration step repeatedly. The integration is carried out until
         the order parameter has passed the specified interfaces or if we have
         integrated for more than a specified maximum number of steps.
+        The given system defines the initial state and the system is reset
+        to it's initial state when this method is done.
 
         Parameters
         ----------
+        path : object like `Path` from `pyretis.core.Path`.
+            This is the path we use to fill in phase-space point. We are here
+            not returning a new path - this since we want to delegte the
+            creation of the path (type) to the method that is running
+            generate path.
         system : object like `System` from `pyretis.core.system`.
             The system object gives the initial state for the integration.
             The initial state is stored and the system is reset to the initial
@@ -159,22 +165,13 @@ class Integrator(object):
             This object is callable and takes the `System` as it's argument
             and returns a tuple where the first item is equal to the order
             parameter.
-        maxlen : integer
-            The maximum length of the path.
         reverse : boolean
             If True, the system will be propagated backwards in time.
-        path : object like `Path` from `pyretis.core.Path`.
-            A path can be specified if we want to append the generated path
-            rather than creating a new one.
         """
+        status = 'Generating path...'
         success = False
         initial_system = system.particles.get_phase_point()
         left, _, right = interfaces
-        if path is None:
-            path = Path(maxlen=maxlen)
-            status = 'Empty path'
-        else:
-            status = 'Appending to old path'
         while True:
             orderp = order_function(system)
             add = path.append(orderp,
@@ -203,7 +200,7 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
-        return path, success, status
+        return success, status
 
     def __call__(self, system):
         """To allow calling `Integrator(system)`.

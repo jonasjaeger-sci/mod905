@@ -308,10 +308,10 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back, success_back, _ = integrator.generate_path(system, interfaces,
-                                                          order_function,
-                                                          maxlen=maxlenb,
-                                                          reverse=True)
+    path_back = Path(maxlen=maxlenb)
+    success_back, _ = integrator.propagate(path_back, system, interfaces,
+                                           order_function, reverse=True)
+
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
     if not success_back:
@@ -322,21 +322,20 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         if path_back.length == tis_settings['maxlength'] - 1:
             trial_path.status = 'BTX'  # exceeds maximum memory length
         return accept, trial_path, trial_path.status
-    # backward seems OK so far, check if the ending point is correct:
+    # Backward seems OK so far, check if the ending point is correct:
     if path_back.get_end_point(left, right) != tis_settings['start_cond']:
-        # backward trajectory end at wrong interface
+        # Nope, backward trajectory end at wrong interface
         accept, trial_path.status = False, 'BWI'
         trial_path += path_back  # just store path for analysis
         return accept, trial_path, trial_path.status
-    # everything seems fine, propagate forward
+    # Everything seems fine, propagate forward
     maxlenf = maxlen - path_back.length + 1
-    path_forw, success_forw, _ = integrator.generate_path(system, interfaces,
-                                                          order_function,
-                                                          maxlen=maxlenf,
-                                                          reverse=False)
+    path_forw = Path(maxlen=maxlenf)
+    success_forw, _ = integrator.propagate(path_forw, system, interfaces,
+                                           order_function, reverse=False)
     path_forw.time_origin = time_shoot
-    # now, the forward could have failed by exceeding maxlenf
-    # however, it could also fail when we paste together so that
+    # Mow, the forward could have failed by exceeding `maxlenf`.
+    # However, it could also fail when we paste together so that
     # the length is larger than the allowed maximum, we paste first
     # and ask later:
     trial_path = paste_paths(path_back, path_forw, overlap=True,
@@ -404,20 +403,18 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # current system.particles).
     # We then propagate current phase point forward:
     maxlen = tis_settings['maxlength']
-    path_forw, success, msg = integrator.generate_path(system, interfaces,
-                                                       order_function,
-                                                       maxlen=maxlen,
-                                                       reverse=False)
+    path_forw = Path(maxlen=maxlen)
+    success, msg = integrator.propagate(path_forw, system, interfaces,
+                                        order_function, reverse=False)
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
         raise ValueError('Forward path not successful.', msg)
     # And the previous phase point backward:
     system.particles.set_phase_point(previous)
-    path_back, success, msg = integrator.generate_path(system, interfaces,
-                                                       order_function,
-                                                       maxlen=maxlen,
-                                                       reverse=True)
+    path_back = Path(maxlen=maxlen)
+    success, msg = integrator.propagate(path_back, system, interfaces,
+                                        order_function, reverse=True)
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
