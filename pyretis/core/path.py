@@ -15,8 +15,6 @@ Important functions defined here:
 
 - paste_paths: Function for joining two paths, one is in a backward time
   direction and the other is in the forward time direction.
-
-- reverse_path: Function for reversing a path.
 """
 import logging
 import numpy as np
@@ -24,7 +22,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['Path', 'paste_paths', 'reverse_path']
+__all__ = ['Path', 'paste_paths']
 
 # the following defines a human-readable form of the possible path status:
 _STATUS = {'ACC': 'The path has been accepted',
@@ -110,40 +108,6 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             msg = 'Truncated path at: {}'.format(new_path.length)
             logging.warning(msg)
             return new_path
-    return new_path
-
-
-def reverse_path(path, order_func=None):
-    """Reverse a path and return the reverse path as a new `Path` object.
-
-    This will simply reverse a path and return the reversed path as a new
-    `Path` object. An `order_func` can be specified here if we have to
-    recalculate the order parameter - this is only done if the `order_func` is
-    actually given.
-
-    Parameters
-    ----------
-    path : object like `Path`
-        This is the path we wish to reverse
-    order_func : function, optional
-        In case the order parameter should be re-calculated for the reverse
-        path, the function order_func can be specified to do this.
-    """
-    new_path = Path(maxlen=path.maxlen)
-    for phasepoint in path.trajectory(reverse=True):
-        pos = phasepoint[1]
-        vel = phasepoint[2]
-        energy = phasepoint[3]
-        if vel is not None:
-            vel *= -1
-        if order_func and pos is not None:
-            orderp = order_func(pos, vel)
-        else:
-            orderp = phasepoint[0]
-        app = new_path.append(orderp, pos, vel, energy)
-        if not app:
-            msg = 'Could not reverse path'
-            logging.error(msg)
     return new_path
 
 
@@ -556,6 +520,39 @@ class PathBase(object):
                 logging.warning(msg)
                 return self
         return self
+
+    def reverse_path(self, order_func=None):
+        """Reverse a path and return the reverse path as a new path object.
+
+        This will simply reverse a path and return the reversed path as a new
+        `Path` object. An `order_func` can be specified here if we have to
+        recalculate the order parameter. But that will probably only
+        happen if we are crazy.
+
+        Parameters
+        ----------
+        order_func : function, optional
+            In case the order parameter should be re-calculated for the reverse
+            path, the function order_func can be specified to do this.
+        """
+        new_path = self.__class__(maxlen=self.maxlen,
+                                  time_origin=self.time_origin)
+        for phasepoint in self.trajectory(reverse=True):
+            pos = phasepoint[1]
+            vel = phasepoint[2]
+            energy = phasepoint[3]
+            if vel is not None:
+                vel *= -1
+            if order_func and pos is not None:
+                orderp = order_func(pos, vel)
+            else:
+                orderp = phasepoint[0]
+            app = new_path.append(orderp, pos, vel, energy)
+            if not app:
+                msg = 'Could not reverse path'
+                logging.error(msg)
+                return None
+        return new_path
 
     def __str__(self):
         """Return a simple string representation of the Path."""

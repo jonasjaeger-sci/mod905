@@ -23,7 +23,7 @@ References
 from __future__ import absolute_import
 import logging
 import numpy as np
-from pyretis.core.path import Path, paste_paths, reverse_path
+from pyretis.core.path import Path, paste_paths#, reverse_path
 from pyretis.core.montecarlo import metropolis_accept_reject
 from pyretis.core.particlefunctions import calculate_kinetic_energy
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -207,7 +207,7 @@ def _time_reversal(path, interfaces, start_condition):
         Status of the path, this is one of the strings defined in
         `pyretis.core.path._STATUS`.
     """
-    new_path = reverse_path(path)
+    new_path = path.reverse_path()
     start, _, _, _ = new_path.check_interfaces(interfaces)
     # explicitly set how this was generated
     new_path.generated = ('tr', 0, 0, 0)
@@ -444,7 +444,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
     if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
         msgtxt = 'Initial path is in the wrong direction: Reversing it!'
         logger.info(msgtxt)
-        initial_path = reverse_path(initial_path)
+        initial_path = initial_path.reverse_path()
         initial_path.status = 'ACC'
     elif end == start:  # case 2
         msgtxt = ('Initial path start & end at wrong interface.' +
