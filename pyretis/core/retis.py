@@ -31,8 +31,8 @@ References
 from __future__ import print_function
 import logging
 import numpy as np
-from pyretis.core.tis import make_tis_step_ensemble, propagate
-from pyretis.core.path import Path, reverse_path
+from pyretis.core.tis import make_tis_step_ensemble
+from pyretis.core.path import Path
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -428,15 +428,16 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
-    path0 = propagate(system, ensemble0.interfaces, order_function,
-                      integrator, maxlen=maxlen-1, reverse=True)[0]
+    path0 = Path(maxlen=maxlen-1)  # Path init must be generalized
+    integrator.propagate(path0, system, ensemble0.interfaces,
+                         order_function, reverse=True)
     # Reverse this path:
-    path0 = reverse_path(path0)
+    path0 = path0.reverse_path()
     # and add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.phasepoint(1))
     # 2) Generate path for [0^+] from [0^-]:
     # We begin by creating a path with just the SECOND LAST point from [0^-]
-    path1 = Path(maxlen=maxlen)
+    path1 = Path(maxlen=maxlen)  # Path init must be generalized
     path1.append(*ensemble0.last_path.phasepoint(-2))
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
@@ -445,8 +446,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # propagate forward, note that the maxlen is there set to
     # maxlength - 1 since we already have one point in the path
-    propagate(system, ensemble1.interfaces, order_function,
-              integrator, maxlen=maxlen-1, reverse=False, path=path1)
+    integrator.propagate(path1, system, ensemble1.interfaces,
+                         order_function, reverse=False)
     # update status, etc
     status = 'ACC'  # we are optimistic and hope that this is the default
     path0.set_move('s+')
