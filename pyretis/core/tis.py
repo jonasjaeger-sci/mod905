@@ -23,7 +23,7 @@ References
 from __future__ import absolute_import
 import logging
 import numpy as np
-from pyretis.core.path import Path, paste_paths#, reverse_path
+from pyretis.core.path import Path, paste_paths
 from pyretis.core.montecarlo import metropolis_accept_reject
 from pyretis.core.particlefunctions import calculate_kinetic_energy
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -264,12 +264,12 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         Status of the path, this is one of the strings defined in
         `pyretis.core.path._STATUS`.
     """
-    accept, trial_path = False, Path()  # return values
+    accept, trial_path = False, Path(rgen)  # return values
     # trial_path is just an empty path for now
     # Select the shooting point from path at random.
     # We do not include the end point as these are out of bounds - i.e. they
     # have crossed the interface. See also the documentation for RETIS.
-    orderp, pos, vel, idx = path.get_shooting_point(rgen)
+    orderp, pos, vel, idx = path.get_shooting_point()
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
@@ -308,7 +308,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back = Path(maxlen=maxlenb)
+    path_back = Path(rgen, maxlen=maxlenb)
     success_back, _ = integrator.propagate(path_back, system, interfaces,
                                            order_function, reverse=True)
 
@@ -330,12 +330,12 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         return accept, trial_path, trial_path.status
     # Everything seems fine, propagate forward
     maxlenf = maxlen - path_back.length + 1
-    path_forw = Path(maxlen=maxlenf)
+    path_forw = Path(rgen, maxlen=maxlenf)
     success_forw, _ = integrator.propagate(path_forw, system, interfaces,
                                            order_function, reverse=False)
     path_forw.time_origin = time_shoot
-    # Mow, the forward could have failed by exceeding `maxlenf`.
-    # However, it could also fail when we paste together so that
+    # Now, the forward could have failed by exceeding `maxlenf`,
+    # however, it could also fail when we paste together so that
     # the length is larger than the allowed maximum, we paste first
     # and ask later:
     trial_path = paste_paths(path_back, path_forw, overlap=True,
@@ -403,7 +403,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
     # current system.particles).
     # We then propagate current phase point forward:
     maxlen = tis_settings['maxlength']
-    path_forw = Path(maxlen=maxlen)
+    path_forw = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_forw, system, interfaces,
                                         order_function, reverse=False)
     if not success:
@@ -412,7 +412,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
         raise ValueError('Forward path not successful.', msg)
     # And the previous phase point backward:
     system.particles.set_phase_point(previous)
-    path_back = Path(maxlen=maxlen)
+    path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, interfaces,
                                         order_function, reverse=True)
     if not success:

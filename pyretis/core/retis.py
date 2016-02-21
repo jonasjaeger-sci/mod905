@@ -32,7 +32,6 @@ from __future__ import print_function
 import logging
 import numpy as np
 from pyretis.core.tis import make_tis_step_ensemble
-from pyretis.core.path import Path
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -428,7 +427,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
-    path0 = Path(maxlen=maxlen-1)  # Path init must be generalized
+    path0 = ensemble1.last_path.empty_path(maxlen=maxlen-1)
     integrator.propagate(path0, system, ensemble0.interfaces,
                          order_function, reverse=True)
     # Reverse this path:
@@ -437,7 +436,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     path0.append(*ensemble1.last_path.phasepoint(1))
     # 2) Generate path for [0^+] from [0^-]:
     # We begin by creating a path with just the SECOND LAST point from [0^-]
-    path1 = Path(maxlen=maxlen)  # Path init must be generalized
+    path1 = path0.empty_path(maxlen=maxlen)
     path1.append(*ensemble0.last_path.phasepoint(-2))
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
