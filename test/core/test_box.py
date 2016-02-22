@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import logging
 import unittest
 from pyretis.core.box import Box
+logging.disable(logging.CRITICAL)
 
 
 class BoxTest(unittest.TestCase):

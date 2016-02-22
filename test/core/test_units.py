@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 import unittest
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions,
                                 read_conversions,
                                 CONVERT, UNITS)
+logging.disable(logging.CRITICAL)
 
 
 class UnitsTest(unittest.TestCase):
