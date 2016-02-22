@@ -431,7 +431,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     integrator.propagate(path0, system, ensemble0.interfaces,
                          order_function, reverse=True)
     # Reverse this path:
-    path0 = path0.reverse_path()
+    path0 = path0.reverse()
     # and add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.phasepoint(1))
     # 2) Generate path for [0^+] from [0^-]:

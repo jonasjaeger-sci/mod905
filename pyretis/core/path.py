@@ -527,7 +527,7 @@ class PathBase(object):
                 return self
         return self
 
-    def reverse_path(self, order_func=None):
+    def reverse(self, order_func=None):
         """Reverse a path and return the reverse path as a new path object.
 
         This will simply reverse a path and return the reversed path as a new
@@ -885,10 +885,10 @@ class ReservoirPath(PathBase):
         return self.__class__(self.rgen, maxlen=maxlen, time_origin=time_origin,
                               res_length=res_length)
 
-    def reverse_path(self, order_func=None):
+    def reverse(self, order_func=None):
         """Reverse the path with addinional handling for the reservoir.
 
-        This method will call `BasePath.reverse_path()` but will also do
+        This method will call `BasePath.reverse()` but will also do
         some extra reverse handling since we here have to reverse indices in
         the reservoir of shooting points.
 
@@ -903,7 +903,7 @@ class ReservoirPath(PathBase):
         path : object like `BasePath`
             This is basically a copy of `self`, just reversed.
         """
-        path = super(ReservoirPath, self).reverse_path(order_func=order_func)
+        path = super(ReservoirPath, self).reverse(order_func=order_func)
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]
