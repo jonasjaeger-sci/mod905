@@ -907,4 +907,5 @@ class ReservoirPath(PathBase):
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]
-            path.reservoir.append(idx, np.copy(point[1]), np.copy(point[2]))
+            path.reservoir.append((idx, np.copy(point[1]), np.copy(point[2])))
+        return path
