@@ -252,6 +252,11 @@ class CrossWriter(Writer):
         -------
         out : tuple of ints
             out is (step number, interface number and direction).
+
+        Note
+        ----
+        The interface will be subtracted '1' in the analysis. This is just
+        for backwards compatibility with the old fortran code.
         """
         linessplit = line.strip().split()
         try:
