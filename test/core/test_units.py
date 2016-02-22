@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import unittest
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions,
@@ -117,7 +118,9 @@ class UnitsTest(unittest.TestCase):
                                mass=(1.0, 'kg'), charge_unit=(100, 'e')))
 
     def test_read_from_file(self):
-        conv = read_conversions(filename='units_input.txt',
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        filename = os.path.join(dirname, 'units_input.txt')
+        conv = read_conversions(filename=filename,
                                 select_units='test_system')
         self.assertAlmostEqual(conv['charge']['C', 'test_system'],
                                1.23450, 12)
