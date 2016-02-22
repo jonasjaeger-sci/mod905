@@ -69,8 +69,10 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     try:
         unit_cell = UNIT_CELL[lattice.lower()]
     except KeyError:
-        msgtxt = 'Unknown lattice "{}" requested!'.format(lattice)
-        raise ValueError(msgtxt)
+        msgtxt = ['Unknown lattice "{}" requested!'.format(lattice)]
+        msgtxt += ['Input lattice should '
+                   'be a string in {}'.format(UNIT_CELL.keys())]
+        raise ValueError('\n'.join(msgtxt))
     except AttributeError:
         msgtxt = ('Input lattice should '
                   'be a string in {}'.format(UNIT_CELL.keys()))
@@ -82,24 +84,13 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     if lcon is None:
         msgtxt = 'Could not determine lattice constant!'
         raise ValueError(msgtxt)
+    if len(repeat) < ndim:
+        msgtxt = 'To few "repeat" values given: Expected {} but got {}.'
+        raise ValueError(msgtxt.format(ndim, len(repeat)))
     positions = []
-    if ndim == 2:
-        nrx = repeat[0]
-        nry = repeat[1]
-        for i in itertools.product(range(nrx), range(nry)):
-            pos = lcon * (np.array(i) + unit_cell)
-            positions.extend(pos)
-        size = [[0.0, i * lcon] for i in (nrx, nry)]
-    elif ndim == 3:
-        nrx = repeat[0]
-        nry = repeat[1]
-        nrz = repeat[2]
-        for i in itertools.product(range(nrx), range(nry), range(nrz)):
-            pos = lcon * (np.array(i) + unit_cell)
-            positions.extend(pos)
-        size = [[0.0, i * lcon] for i in (nrx, nry, nrz)]
-    else:
-        msgtxt = 'Can not create lattices with dimensionality "{}".'
-        raise ValueError(msgtxt.format(ndim))
+    for i in itertools.product(*[range(nri) for nri in repeat[:ndim]]):
+        pos = lcon * (np.array(i) + unit_cell)
+        positions.extend(pos)
+    size = [[0.0, i * lcon] for i in repeat[:ndim]]
     positions = np.array(positions)
     return positions, size
