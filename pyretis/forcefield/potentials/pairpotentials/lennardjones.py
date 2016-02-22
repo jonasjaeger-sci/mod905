@@ -177,9 +177,9 @@ class PairLennardJonesCut(PotentialFunction):
             if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0/rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * ((self._lj3[itype, jtype] * r6inv -
+                v_pot += (r6inv * (self._lj3[itype, jtype] * r6inv -
                                    self._lj4[itype, jtype]) -
-                                  self._offset[itype, jtype])
+                          self._offset[itype, jtype])
         return v_pot
 
     def force(self, particles, box):
@@ -261,9 +261,9 @@ class PairLennardJonesCut(PotentialFunction):
             if rsq < self._rcut2[itype, jtype]:
                 r2inv = 1.0 / rsq
                 r6inv = r2inv**3
-                v_pot += r6inv * ((self._lj3[itype, jtype] * r6inv -
+                v_pot += (r6inv * (self._lj3[itype, jtype] * r6inv -
                                    self._lj4[itype, jtype]) -
-                                  self._offset[itype, jtype])
+                          self._offset[itype, jtype])
                 forcelj = r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
                                            self._lj2[itype, jtype])
                 forceij = forcelj * delta
