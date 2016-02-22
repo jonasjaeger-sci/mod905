@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Test the tools in pyretis.tools."""
 import logging
 import unittest
 import numpy as np
@@ -7,6 +8,7 @@ logging.disable(logging.CRITICAL)
 
 
 class LatticeTest(unittest.TestCase):
+    """Test the lattice generation in pyretis.tools.lattice."""
 
     def test_lattice_generation(self):
         """Test that we can generate all lattices."""
@@ -63,7 +65,7 @@ class LatticeTest(unittest.TestCase):
             self.assertTrue(np.allclose(np.array(size_g), size[key],
                                         atol=1.0e-8))
 
-    def test_generate_without_lcon_and_dens(self):
+    def test_generate_no_lcon_or_dens(self):
         """Test if the generate lattice methods fails when it should."""
         # Test if we feed it some unknown lattice:
         args = ['undefined lattice', None]

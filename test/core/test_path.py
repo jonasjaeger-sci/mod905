@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Test functionality for the path classes."""
 import logging
 import unittest
 import numpy as np
@@ -8,12 +9,13 @@ logging.disable(logging.CRITICAL)
 
 
 class PathTest(unittest.TestCase):
+    """Run the tests for the path classes."""
 
     def test_path_reverse(self):
         """Test if we reverse correctly for class Path."""
         rgen = RandomGenerator(seed=0)
         path = Path(rgen)
-        for i in range(50):
+        for _ in range(50):
             path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
         path_rev = path.reverse()
         for original, rev in zip(path.trajectory(reverse=True),
@@ -24,7 +26,7 @@ class PathTest(unittest.TestCase):
         """Test if we reverse correctly for class ReservoirPath."""
         rgen = RandomGenerator(seed=0)
         path = ReservoirPath(rgen, res_length=3)
-        for i in range(100):
+        for _ in range(100):
             path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
         path_rev = path.reverse()
         for original, rev in zip(path.trajectory(reverse=True),
@@ -56,10 +58,10 @@ class PathTest(unittest.TestCase):
     def test_empty_path_creation(self):
         """Test that empty paths are created with correct type/settings."""
         rgen = RandomGenerator(seed=0)
-        MAXLEN = 10
-        path = Path(rgen, maxlen=MAXLEN)
-        path_rev = ReservoirPath(rgen, maxlen=MAXLEN, res_length=2)
-        for _ in range(MAXLEN + 5):
+        maxlen = 10
+        path = Path(rgen, maxlen=maxlen)
+        path_rev = ReservoirPath(rgen, maxlen=maxlen, res_length=2)
+        for _ in range(maxlen + 5):
             path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
             path_rev.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
 

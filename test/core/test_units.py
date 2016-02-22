@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""Test the functionality of units from pyretis.core.
+
+We also do some test to check the correctness of values.
+"""
 import logging
 import os
 import unittest
@@ -10,6 +14,7 @@ logging.disable(logging.CRITICAL)
 
 
 class UnitsTest(unittest.TestCase):
+    """Run the tests of methods from pyretis.core.units."""
 
     def test_create_lennard_jones_units(self):
         """Test that we create correct Lennard-Jones units."""

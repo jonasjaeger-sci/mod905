@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Test the Box class from pyretis.core"""
 import logging
 import unittest
 from pyretis.core.box import Box
@@ -6,6 +7,7 @@ logging.disable(logging.CRITICAL)
 
 
 class BoxTest(unittest.TestCase):
+    """Run the tests for the Box() class."""
 
     def test_create_empty_box(self):
         """Test the creation of boxes with no arguments."""
@@ -14,7 +16,7 @@ class BoxTest(unittest.TestCase):
         self.assertEqual(box.length, [float('inf')])
         self.assertEqual(box.periodic, [False])
 
-    def test_create_without_periodic_settings(self):
+    def test_create_missing_periodic(self):
         """Test default behavior of creation without periodic arguments."""
         box = Box(size=[10, 10, 10], periodic=None)
         self.assertEqual(box.periodic, [True, True, True])
