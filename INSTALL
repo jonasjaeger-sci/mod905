@@ -2,6 +2,8 @@
 Installing the pyretis library
 ==============================
 
+0. Install the required packages listed in the file requirements.txt
+
 1. Place the pyretis library somewhere you can access it, to 
    `/some/dir/pyretis`
 
