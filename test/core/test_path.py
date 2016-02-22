@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 import unittest
 import numpy as np
 from pyretis.core.path import Path, ReservoirPath
 from pyretis.core.random_gen import RandomGenerator
+
+
+logging.disable(logging.CRITICAL)
 
 
 class PathTest(unittest.TestCase):
@@ -16,11 +20,6 @@ class PathTest(unittest.TestCase):
         for original, rev in zip(path.trajectory(reverse=True),
                                  path_rev.trajectory()):
             self.assertAlmostEqual(original[0][0], rev[0][0])
-        shoot = path.get_shooting_point()
-        idx = shoot[-1]
-        point = path.phasepoint(idx)
-        point_rev = path_rev.phasepoint(idx)
-        self.assertNotAlmostEqual(point[0][0], point_rev[0][0])
 
     def test_reservoir_path_reverse(self):
         rgen = RandomGenerator(seed=0)
@@ -78,4 +77,4 @@ class PathTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    unittest.main()
