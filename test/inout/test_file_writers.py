@@ -8,7 +8,9 @@ import unittest
 import numpy as np
 import tempfile
 import itertools
-from pyretis.inout.writers import EnergyWriter, OrderWriter, CrossWriter
+from pyretis.inout.writers.writers import (EnergyWriter, OrderWriter,
+                                           CrossWriter)
+from pyretis.inout.writers.tablewriter import ThermoTable
 logging.disable(logging.CRITICAL)
 
 
@@ -93,6 +95,26 @@ class WriterTest(unittest.TestCase):
                     self.assertEqual(data1[1], data2[1] + 1)
                     self.assertEqual(data1[2], data2[2])
 
+
+class TableWritersTest(unittest.TestCase):
+    """Test that table writers work as intended."""
+
+    def test_thermo_table(self):
+        """Test the thermo table."""
+        table = ThermoTable()
+        data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
+                    etot=3.456, press=1.011e9)
+        line = '       100        1.2345        5432.1         2.222         3.456     1.011e+09'
+        for lines in table.generate_output(100, data):
+            self.assertMultiLineEqual(lines, line)
+            break
+        data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
+                    etot=3.456, press=101.11111111)
+        line = '       100        1.2345        5432.1         2.222         3.456       101.111'
+        for lines in table.generate_output(100, data):
+            self.assertMultiLineEqual(lines, line)
+            break
+        
 
 if __name__ == '__main__':
     unittest.main()
