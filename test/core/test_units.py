@@ -120,6 +120,7 @@ class UnitsTest(unittest.TestCase):
                                mass=(1.0, 'kg'), charge_unit=(100, 'e')))
 
     def test_read_from_file(self):
+        """Test that we can read units from a input file."""
         dirname = os.path.dirname(os.path.abspath(__file__))
         filename = os.path.join(dirname, 'units_input.txt')
         conv = read_conversions(filename=filename,

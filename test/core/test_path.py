@@ -10,6 +10,7 @@ logging.disable(logging.CRITICAL)
 class PathTest(unittest.TestCase):
 
     def test_path_reverse(self):
+        """Test if we reverse correctly for class Path."""
         rgen = RandomGenerator(seed=0)
         path = Path(rgen)
         for i in range(50):
@@ -20,6 +21,7 @@ class PathTest(unittest.TestCase):
             self.assertAlmostEqual(original[0][0], rev[0][0])
 
     def test_reservoir_path_reverse(self):
+        """Test if we reverse correctly for class ReservoirPath."""
         rgen = RandomGenerator(seed=0)
         path = ReservoirPath(rgen, res_length=3)
         for i in range(100):
@@ -41,6 +43,7 @@ class PathTest(unittest.TestCase):
         self.assertIs(shoot, None)
 
     def test_path_exceed_maxlen(self):
+        """Test that we stop adding points if we exceed the path max-length."""
         rgen = RandomGenerator(seed=0)
         path = Path(rgen, maxlen=10)
         for _ in range(path.maxlen):
@@ -51,6 +54,7 @@ class PathTest(unittest.TestCase):
             self.assertFalse(add)
 
     def test_empty_path_creation(self):
+        """Test that empty paths are created with correct type/settings."""
         rgen = RandomGenerator(seed=0)
         MAXLEN = 10
         path = Path(rgen, maxlen=MAXLEN)
