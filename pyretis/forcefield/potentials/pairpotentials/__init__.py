@@ -22,3 +22,4 @@ Important classes and functions defined here:
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
 from .wca import DoubleWellWCA
+from .pairpotential import generate_pair_interactions
