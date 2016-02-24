@@ -54,8 +54,9 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     lcon : float
         The lattice constant.
     density : float, optional
-        A desired density. If this is given, `lcon` is calculated. Note that
-        density will be interpreted as given in internal units.
+        A desired density. If this is given, `lcon` is calculated.
+        Note that density will be interpreted as given in internal
+        units.
     repeat : list of integers
         `repeat[i]` is the number of repetitions in the `i` direction.
 
@@ -64,15 +65,16 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     positions : numpy.array
         The lattice positions.
     size : list of floats
-        The corresponding size(s), can be used to define a simulation box.
+        The corresponding size(s), can be used to define a simulation
+        box.
     """
     try:
         unit_cell = UNIT_CELL[lattice.lower()]
     except KeyError:
-        msgtxt = ['Unknown lattice "{}" requested!'.format(lattice)]
-        msgtxt += ['Input lattice should '
-                   'be a string in {}'.format(UNIT_CELL.keys())]
-        raise ValueError('\n'.join(msgtxt))
+        msg = ['Unknown lattice "{}" requested!'.format(lattice)]
+        msg += ['Input lattice should '
+                'be a string in {}'.format(UNIT_CELL.keys())]
+        raise ValueError('\n'.join(msg))
     except AttributeError:
         msgtxt = ('Input lattice should '
                   'be a string in {}'.format(UNIT_CELL.keys()))

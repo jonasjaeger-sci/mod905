@@ -9,7 +9,8 @@ Package structure
 
 Modules:
 
-- lattice.py: Defines tools for setting up and generating lattice points.
+- lattice.py: Defines tools for setting up and generating lattice
+  points.
 
 Important classes and functions:
 
