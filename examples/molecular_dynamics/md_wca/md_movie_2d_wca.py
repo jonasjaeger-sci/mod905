@@ -4,6 +4,7 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import numpy as np
 from pyretis.core import System, Box
 from pyretis.inout.settings import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
@@ -17,8 +18,6 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
-# other imports
-import numpy as np
 # simulation settings:
 settings = {'task': 'md-nve',
             'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
@@ -31,12 +30,12 @@ settings = {'task': 'md-nve',
 create_conversion_factors(settings['units'])
 # set up potential function(s) and force field:
 wca = PairLennardJonesCutnp(dim=2)
-wca_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  'B': {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
+wca_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
+                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
                   'mixing': 'geometric'}
 
 dwca = DoubleWellWCA(dim=2)
-dwca_parameters = {'types': [('B', 'B')], 'rzero': 1.0 * (2.0**(1.0/6.0)),
+dwca_parameters = {'types': [(1, 1)], 'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 6.0, 'width': 0.25}
 
 forcefield = ForceField(potential=[wca, dwca], params=[wca_parameters,
@@ -55,9 +54,9 @@ ljsystem = System(temperature=settings['temperature'],
 BIDX = [7, 8]
 for i, lattice_pos in enumerate(lattice):
     if i in BIDX:
-        ljsystem.add_particle(name='B', pos=lattice_pos, mass=1.0, ptype='B')
+        ljsystem.add_particle(name='B', pos=lattice_pos, mass=1.0, ptype=1)
     else:
-        ljsystem.add_particle(name='A', pos=lattice_pos, mass=1.0, ptype='A')
+        ljsystem.add_particle(name='A', pos=lattice_pos, mass=1.0, ptype=0)
 npart = ljsystem.particles.npart
 print('Added {:d} particles to a simple square lattice'.format(npart))
 npart = float(npart)
@@ -161,8 +160,8 @@ def plot_dwca_potential():
     fakesize = np.array([[0.0, 10.0], [0.0, 10.0]])
     fakebox = Box(fakesize)
     fakesys = System(units='lj', box=fakebox)
-    fakesys.add_particle(name='B', pos=np.zeros(2), ptype='B')
-    fakesys.add_particle(name='B', pos=np.zeros(2), ptype='B')
+    fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
+    fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     for ri in rpos:
         fakesys.particles.pos[-1] = np.array([ri, 0.0])
         potdwca.append(dwca.potential(fakesys.particles, fakebox))
@@ -338,7 +337,7 @@ def update(frame, system, output_tasks):
     """
     pos = box.pbc_wrap(system.particles.pos)
     patches = []
-    for ci, pi, itype in zip(circles, pos, system.particles.ptype):
+    for ci, pi, itype in zip(circles, pos, system.particles.name):
         ci.center = np.array([pi[0], pi[1]]) * SIGMA
         ci.set_color(PCOLOR[itype])
         ci.set_visible(True)

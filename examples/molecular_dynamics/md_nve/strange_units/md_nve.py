@@ -11,8 +11,8 @@ from pyretis.core.units import generate_system_conversions
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
-from pyretis.inout import (get_predefined_table, FileIO,
-                           create_output)
+from pyretis.inout.writers import ThermoTable, FileIO
+from pyretis.inout import create_output
 from pyretis.tools import generate_lattice
 import numpy as np
 # for plotting:
@@ -45,7 +45,7 @@ print('mass: {}'.format(mass))
 print('timestep: {}'.format(timestep))
 print('temperature: {}'.format(temperature))
 
-LJPARAMETERS = {'Ar': {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5},
+LJPARAMETERS = {0: {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5},
                 'mixing': 'geometric'}
 POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 
@@ -71,7 +71,7 @@ print(ljsystem.get_boltzmann())
 ljsystem.forcefield = ForceField(potential=[POTENTIAL],
                                  params=[LJPARAMETERS])
 for pos in lattice:
-    ljsystem.add_particle(name='Ar', pos=pos, mass=mass, ptype='Ar')
+    ljsystem.add_particle(name='Ar', pos=pos, mass=mass, ptype=0)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 
@@ -83,9 +83,8 @@ if 'generate-vel' in settings:
 simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
-table = get_predefined_table('energies')
-thermo_file = FileIO('thermo.txt', 'table',
-                     header={'text': table.header})
+table = ThermoTable()
+thermo_file = FileIO('thermo.txt', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]
@@ -93,12 +92,13 @@ output_tasks = [task for task in create_output(settings)]
 
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    table_row = table.write(stepno, result['thermo'])
-    thermo_file.write_line(table_row)
+    for lines in table.generate_output(stepno, result['thermo']):
+        thermo_file.write(lines)
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
     for task in output_tasks:
         task.output(result)
+
 # the rest is now just plotting:
 # as an example, do some plotting:
 mpl_set_style()  # load pyretis style

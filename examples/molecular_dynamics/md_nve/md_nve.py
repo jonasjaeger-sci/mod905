@@ -20,7 +20,7 @@ from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
 create_conversion_factors('lj')
-LJPARAMETERS = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
+LJPARAMETERS = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
 
 # simulation settings:
@@ -41,7 +41,7 @@ ljsystem = System(temperature=2.0, units='lj', box=box)
 ljsystem.forcefield = ForceField(potential=[POTENTIAL],
                                  params=[LJPARAMETERS])
 for pos in lattice:
-    ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype='Ar')
+    ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 

@@ -130,7 +130,7 @@ def initial_positions_lattice(settings):
         a box.
     """
     pos_settings = settings['particles-position']
-    ptype = settings.get('particles-type', ['Ar'])
+    ptype = settings.get('particles-type', [0])
     pname = settings.get('particles-names', ['Ar'])
     pmass = settings.get('particles-mass', {})
 
@@ -242,7 +242,7 @@ def initial_positions_file(settings):
     ptype = settings.get('particles-type', None)
     pname = settings.get('particles-names', None)
     pmass = settings.get('particles-mass', {})
-
+    ptypes = {}  # To automatically set particle types based on name.
     snapshot, convert = _get_snapshot_from_file(pos_settings,
                                                 settings['units'])
     vel_read = False
@@ -263,21 +263,22 @@ def initial_positions_file(settings):
             vel_read = True
         # Get particle type from the atom names or for input list:
         if ptype is None:
-            particle_type = atomname
+            if atomname not in ptypes:
+                ptypes[atomname] = len(ptypes)
+            particle_type = ptypes[atomname]
         else:
             particle_type = list_get(ptype, i)
         if pname is None:
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        particle_type = particle_type.lower()
         particle_name = particle_name.lower()
         # infer mass from the input masses, or try to get it
         # from the periodic table
         try:
-            particle_mass = pmass[particle_type]
+            particle_mass = pmass[particle_name]
         except KeyError:
-            particle_mass = _guess_particle_mass(i + 1, particle_type,
+            particle_mass = _guess_particle_mass(i + 1, particle_name,
                                                  settings['units'])
         particles.add_particle(pos,
                                vel, np.zeros_like(pos),

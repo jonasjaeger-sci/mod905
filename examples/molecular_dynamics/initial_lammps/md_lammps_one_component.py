@@ -26,7 +26,7 @@ box = Box(size)
 ljsystem = System(box=box, units='lj')
 
 ljpot = PairLennardJonesCutnp(shift=False)
-lj_param = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+lj_param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
             'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot],
                         params=[lj_param])
@@ -37,7 +37,7 @@ dirname = 'input_data'
 pos = np.loadtxt(os.path.join(dirname, 'initial_pos.txt.gz'))
 vel = np.loadtxt(os.path.join(dirname, 'initial_vel.txt.gz'))
 for xyzi, veli in zip(pos, vel):
-    ljsystem.add_particle(name='Ar', pos=xyzi, vel=veli, mass=1.0, ptype='Ar')
+    ljsystem.add_particle(name='Ar', pos=xyzi, vel=veli, mass=1.0, ptype=0)
 npart = float(ljsystem.particles.npart)
 print('Initiated system with {} particles'.format(int(npart)))
 ljsystem.potential_and_force()

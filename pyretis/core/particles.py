@@ -34,12 +34,12 @@ class Particles(object):
         Forces on the particles.
     mass : numpy.array
         Masses of the particles.
-    imass : np.array
+    imass : numpy.array
         Inverse masses, `1.0 / self.mass`.
     name : list of strings
         A name for the particle. This may be used as short text
         describing the particle.
-    ptype : list of strings
+    ptype : numpy.array of integers
         A type for the particle. Particles with identical `ptype` are
         of the same kind.
     dim : int
@@ -140,7 +140,7 @@ class Particles(object):
             logging.warning(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
-                     name='?', ptype='?'):
+                     name='?', ptype=0):
         """Add a particle to the system.
 
         Parameters
@@ -155,7 +155,7 @@ class Particles(object):
             The mass of the particle.
         name : string, optional.
             The name of the particle.
-        ptype : string, optional.
+        ptype : integer, optional.
             The particle type.
 
         Returns
@@ -166,7 +166,7 @@ class Particles(object):
         """
         if self.npart == 0:
             self.name = [name]
-            self.ptype = [ptype]
+            self.ptype = np.array(ptype, dtype=np.int16)
             self.pos = pos
             self.vel = vel
             self.force = force
@@ -174,7 +174,7 @@ class Particles(object):
             self.imass = np.array([1.0/mass])
         else:
             self.name.append(name)
-            self.ptype.append(ptype)
+            self.ptype = np.append(self.ptype, ptype)
             self.pos = np.vstack([self.pos, pos])
             self.vel = np.vstack([self.vel, vel])
             self.force = np.vstack([self.force, force])

@@ -27,9 +27,9 @@ box = Box(size)
 ljsystem = System(box=box, units='lj')
 
 ljpot = PairLennardJonesCutnp(shift=True)
-lj_parameters = {'A': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 'B': {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
-                 'C': {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
+lj_parameters = {1: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+                 2: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
+                 3: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
                  'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
 
@@ -47,7 +47,7 @@ npart = 0.0
 for xyzi, veli, idxi in zip(pos, vel, idx):
     itype = int(idxi)
     ljsystem.add_particle(name=names[itype], pos=xyzi, vel=veli,
-                          mass=masses[itype], ptype=names[itype])
+                          mass=masses[itype], ptype=itype)
     if not names[itype] in natoms:
         natoms[names[itype]] = 0
     natoms[names[itype]] += 1

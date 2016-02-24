@@ -167,7 +167,7 @@ class System(object):
         return 1.0 / (temperature * CONSTANTS['kB'][self.units])
 
     def add_particle(self, pos, vel=None, force=None,
-                     mass=1.0, name='?', ptype='?'):
+                     mass=1.0, name='?', ptype=0):
         """Add a particle to the system.
 
         Parameters
@@ -180,11 +180,11 @@ class System(object):
         force : numpy.array, optional.
             Force on the particle. If not given np.zeros will be used.
         mass : float, optional.
-            Mass of the particle, default is 1.0
+            Mass of the particle, default is 1.0.
         name : string, optional.
-            Name of the particle, default is '?'
-        ptype : string, optional. Particle type.
-            Particle type, default is '?'
+            Name of the particle, default is '?'.
+        ptype : integer, optional. Particle type.
+            Particle type, default is 0.
 
         Returns
         -------

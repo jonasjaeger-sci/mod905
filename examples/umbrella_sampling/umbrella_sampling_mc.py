@@ -41,7 +41,7 @@ umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:
-settings = {'type': 'umbrellawindow',
+settings = {'task': 'umbrellawindow',
             'rgen': RandomGenerator(seed=RANDSEED),
             'mincycle': 10000,
             'maxdx': 0.1}

@@ -81,7 +81,7 @@ class DoubleWellWCA(PotentialFunction):
         ----------
         parameters : dict
             The new parameters, they are assume to be dicts on the form
-            {'types': set(('A','A')), 'rzero': 1.0, 'width': 0.25,
+            {'types': set((0,0)), 'rzero': 1.0, 'width': 0.25,
             'height': 6.0}
         """
         for key in parameters:

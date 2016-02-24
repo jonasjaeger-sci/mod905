@@ -5,6 +5,7 @@ In this example we animate the output.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import numpy as np
 # pyretis imports:
 from pyretis.core import System, Box
 from pyretis.inout.settings import create_simulation
@@ -18,8 +19,6 @@ from pyretis.inout import create_output
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
-# other imports:
-import numpy as np
 
 
 # set up simulation settings:
@@ -36,7 +35,7 @@ SIGMA = CONVERT['length']['lj', 'A']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
 # set up potential function(s) and force field:
 ljpot = PairLennardJonesCutnp(dim=2, shift=True)
-ljparams = {'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
             'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[ljparams])
 
@@ -52,7 +51,7 @@ ljsystem = System(temperature=settings['temperature'],
                   units=settings['units'], box=box)
 # add particles:
 for i, lattice_pos in enumerate(lattice):
-    ljsystem.add_particle(name='Ar', pos=lattice_pos, mass=1.0, ptype='Ar')
+    ljsystem.add_particle(name='Ar', pos=lattice_pos, mass=1.0, ptype=0)
 
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'
