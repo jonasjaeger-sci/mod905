@@ -4,8 +4,8 @@ r"""This module defines natural constants and unit conversions.
 This module defines some natural constants and conversions between units
 which can be used by the pyretis program.
 The :ref:`natural constants <natural-constants>` are mainly used for
-conversions but it is also used to define the Boltzmann constant which is used
-by simulations in pyretis.
+conversions but it is also used to define the Boltzmann constant which
+is used by simulations in pyretis.
 The :ref:`unit conversions <unit-conversions>` are mainly useful for the
 pyretis input and output.
 
@@ -13,17 +13,19 @@ All numerical values are from the National Institute of Standards and
 Technology and can be accessed through a web interface
 http://physics.nist.gov/constants or in plain text [NIST]_.
 
-Internally, all computations are carried out in units which are defined by
-a length scale, an energy scale and a mass scale. This means that the time
-scale is given by these choice. Typically will the input to pyretis be in a
-more human-readable form (e.g. femtoseconds) which is converted to the internal
-units when pyretis is setting up a new simulation.
+Internally, all computations are carried out in units which are defined
+by a length scale, an energy scale and a mass scale. This means that
+the time scale is given by these choice. Typically will the input to
+pyretis be in a more human-readable form (e.g. femtoseconds) which is
+converted to the internal units when pyretis is setting up a new
+simulation.
 
-Charges are typically given (in the input) in units of the electron charge.
-The internal unit for charge is not yet implemented, but one choice here is
-to include the factor :math:`\frac{1}{\sqrt{4\pi\varepsilon_0}}`. An internal
-calculation of :math:`q_1 q_2` will then include coulombs constant in the
-correct units.
+Charges are typically given (in the input) in units of the electron
+charge. The internal unit for charge is not yet implemented, but one
+choice here is to include the
+factor :math:`\frac{1}{\sqrt{4\pi\varepsilon_0}}`. An internal
+calculation of :math:`q_1 q_2` will then include coulombs constant in
+the correct units.
 
 The different sets of unit systems are described below in
 the section on :ref:`unit systems <unit-conversions-systems>`.
@@ -34,8 +36,8 @@ the section on :ref:`unit systems <unit-conversions-systems>`.
 Natural constants
 ~~~~~~~~~~~~~~~~~
 The keys for `CONSTANTS` defines the natural constant and its units,
-for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in units
-of Joule per Kelvin. The currently defined natural constants are
+for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in
+units of Joule per Kelvin. The currently defined natural constants are
 
 - ``kB`` : The Boltzmann constant [KB]_.
 
@@ -55,10 +57,10 @@ of Joule per Kelvin. The currently defined natural constants are
 
 Unit conversions
 ~~~~~~~~~~~~~~~~
-For defining the different unit conversions a simple set of base conversions
-are defined. These represent some common units that are convenient for input
-and output. For each dimension [#]_ we define some units and the conversion
-between these. The base units are:
+For defining the different unit conversions a simple set of base
+conversions are defined. These represent some common units that are
+convenient for input and output. For each dimension [#]_ we define some
+units and the conversion between these. The base units are:
 
 - Charge
 
@@ -136,18 +138,20 @@ The following system of units are defined for pyretis:
 
 - ``au``: Atomic units [ATOMUNITS]_.
 
-- ``electron``: A system of units similar to the [LAMMPS]_ unit electron.
+- ``electron``: A system of units similar to the [LAMMPS]_ unit
+  electron.
 
 - ``si``: A system of units similar to the [LAMMPS]_ unit si.
 
-- ``gromacs``: A system of units similar to the units used by [GROMACS]_.
+- ``gromacs``: A system of units similar to the units used
+  by [GROMACS]_.
 
 
-The defining units for the Lennard-Jones units (``lj``) are typically based
-on the Lennard-Jones parameters for one of the components, e.g.
+The defining units for the Lennard-Jones units (``lj``) are typically
+based on the Lennard-Jones parameters for one of the components, e.g.
 :math:`\varepsilon`, :math:`\sigma` and the atomic mass
-of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining units for
-the other systems are given in the table below:
+of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining
+units for the other systems are given in the table below:
 
 
 .. table:: Defining units for energy systems
@@ -171,11 +175,12 @@ the other systems are given in the table below:
 
 The input units for the different energy systems are given in the table
 below. For the ``lj`` system all input units are in reduced quantities.
-Further, all system of units expect an input temperature in Kelvin (``K``)
-and all systems, with the exception of ``si``, expects a charge in units of
-electron charges. The ``si`` system uses here Coulomb as it's unit for charge.
-The time unit ``at`` given below for ``au`` is the atomic time unit which is
-not explicitly shown here, but it's implicitly given by the energy, length
+Further, all system of units expect an input temperature in Kelvin
+(``K``) and all systems, with the exception of ``si``, expects a
+charge in units of electron charges. The ``si`` system uses here
+Coulomb as it's unit for charge. The time unit ``at`` given below
+for ``au`` is the atomic time unit which is not explicitly shown
+here, but it's implicitly given by the energy, length
 and mass unit (``at`` is approximately 2.41888433e-17 s).
 
 
@@ -200,9 +205,10 @@ and mass unit (``at`` is approximately 2.41888433e-17 s).
 
 .. rubric:: Footnotes
 
-.. [#] Note that 'dimension' here is, strictly speaking, not a true dimension,
-       for instance we define conversions for the dimension `velocity` which
-       in reality is composed of the dimensions `length` and `time`.
+.. [#] Note that 'dimension' here is, strictly speaking, not a true
+       dimension, for instance we define conversions for the dimension
+       `velocity` which in reality is composed of the dimensions
+       `length` and `time`.
 
 
 References
@@ -304,13 +310,13 @@ factors for velocities."""
 
 CONVERT = {key: {} for key in DIMENSIONS}
 """A dictionary with conversion factors. It is used to convert between
-different units, e.g. `CONVERT['length']['bohr', 'nm]` will convert from the
-length unit `bohr` to the length unit `nm`."""
+different units, e.g. `CONVERT['length']['bohr', 'nm]` will convert
+from the length unit `bohr` to the length unit `nm`."""
 
 UNITS = {key: {} for key in DIMENSIONS}
-"""A dictionary of sets. Each set defines the known base unit for a dimension,
-i.e. `UNITS['length']` is the set with known base units for the length:
-`UNITS['length'] = {'A', 'nm', 'bohr', 'm'}`"""
+"""A dictionary of sets. Each set defines the known base unit for a
+dimension, i.e. `UNITS['length']` is the set with known base units for
+the length: `UNITS['length'] = {'A', 'nm', 'bohr', 'm'}`"""
 
 # Define a few units and some base conversions:
 UNITS['length'] = {'A', 'nm', 'bohr', 'm'}
@@ -405,8 +411,8 @@ UNIT_SYSTEMS['gromacs'] = {'length': (1.0, 'nm'),
 def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
     """Helper function that will add a specific conversion and it's inverse.
 
-    This function is mainly here to ensure that we don't forget to add the
-    inverse conversions.
+    This function is mainly here to ensure that we don't forget to add
+    the inverse conversions.
 
     Parameters
     ----------
@@ -463,19 +469,20 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     unit : string
         This is a label for the unit
     distance : tuple
-        This is the distance unit. The form is assumed to be `(value, unit)`
-        where unit is one of the known distance units, 'nm', 'A', 'm'.
+        This is the distance unit. The form is assumed to be
+        `(value, unit)` where unit is one of the known distance
+        units, 'nm', 'A', 'm'.
     energy : tuple
-        This is the energy unit. The form is assumed to be `(value, unit)`
-        where unit is one of the known energy units, 'J', 'kcal', 'kcal/mol',
-        'kb'.
+        This is the energy unit. The form is assumed to be
+        `(value, unit)` where unit is one of the known energy
+        units, 'J', 'kcal', 'kcal/mol', 'kb'.
     mass : tuple
         This is the mass unit. The form is assumed to be `(value, unit)`
         where unit is one of the known mass units, 'g/mol', 'kg', 'g'.
     charge_unit : string, optional
-        This selects the base charge. It can be 'C' or 'e' for Coulomb or
-        the electron charge. This will determine how we treat Coulomb's
-        constant.
+        This selects the base charge. It can be 'C' or 'e' for Coulomb
+        or the electron charge. This will determine how we treat
+        Coulomb's constant.
     """
     CONVERT['length'][unit, distance[1]] = distance[0]
     CONVERT['mass'][unit, mass[1]] = mass[0]
@@ -562,8 +569,8 @@ def generate_inverse(conversions):
 def bfs_convert(conversions, unit_from, unit_to):
     """Generate unit conversion between the provided units.
 
-    The unit conversion can be obtained given that a "path" between these
-    units exist. This path is obtained by a Breadth-first search.
+    The unit conversion can be obtained given that a "path" between
+    these units exist. This path is obtained by a Breadth-first search.
 
     Parameters
     ----------
@@ -581,9 +588,9 @@ def bfs_convert(conversions, unit_from, unit_to):
     out[1] : float
         The conversion factor.
     out[2] : list of tuples
-        The 'path' between the units, i.e. the traversal from `unit_from` to
-        `unit_to`. `out[2][i]` gives the `(unit_from, unit_to)` tuple for step
-        `i` in the conversion.
+        The 'path' between the units, i.e. the traversal from
+        `unit_from` to `unit_to`. `out[2][i]` gives the
+        `(unit_from, unit_to)` tuple for step `i` in the conversion.
     """
     if unit_from == unit_to:
         return (unit_from, unit_to), 1.0, None
@@ -620,9 +627,9 @@ def bfs_convert(conversions, unit_from, unit_to):
 def convert_bases(dimension):
     """Create all conversions between base units.
 
-    This function will generate all conversions between base units defined in
-    a `UNITS[dimension]` dictionary. It assumes that one of the bases have
-    been used to defined conversions to all other bases.
+    This function will generate all conversions between base units
+    defined in a `UNITS[dimension]` dictionary. It assumes that one of
+    the bases have been used to defined conversions to all other bases.
 
     Parameters
     ----------
@@ -671,14 +678,16 @@ def generate_system_conversions(system1, system2):
 def print_table(unit, system=False):
     """Print out tables with conversion factors.
 
-    This is a table in rst format which is useful for displaying conversions.
+    This is a table in rst format which is useful for displaying
+    conversions.
 
     Parameters
     ----------
     unit : string
         The unit we would like to print out conversions for.
     system : boolean
-        Determines if we print out information for system conversions or not.
+        Determines if we print out information for system conversions
+        or not.
 
     Returns
     -------
@@ -728,8 +737,9 @@ def print_table(unit, system=False):
 def write_conversions(filename='units.txt'):
     """This function will print out the information in CONVERT.
 
-    This function is intended for creating a big list of conversion factors
-    that can be included in this script for defining unit conversions.
+    This function is intended for creating a big list of conversion
+    factors that can be included in this script for defining unit
+    conversions.
 
     Parameters
     ----------
@@ -760,9 +770,9 @@ def read_conversions(filename='units.txt', select_units=None):
     filename : string, optional
         The file to load units from.
     select_units : string, optional
-        If `select_units` is different from None, it can be used to pick out
-        only conversions for a specific system of units, e.g. 'real' or
-        'gromacs', ... etc.
+        If `select_units` is different from None, it can be used to
+        pick out only conversions for a specific system of units,
+        e.g. 'real' or 'gromacs', ... etc.
 
     Returns
     -------
@@ -803,8 +813,9 @@ def _check_input_unit(unit, dim, input_unit):
         The dimension we are looking at, typically 'length', 'mass' or
         'energy'.
     input_unit : tuple
-        This is the input unit on form (value, string) where the value is
-        the numerical value and the string the unit, e.g. `(1.0, nm)`.
+        This is the input unit on form (value, string) where the value
+        is the numerical value and the string the unit,
+        e.g. `(1.0, nm)`.
 
     Returns
     -------
@@ -847,14 +858,17 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
     unit : string
         A name for the system of units
     length : tuple, optional
-        This is the length unit given as (float, string) where the float is
-        the numerical value and the string the unit, e.g. `(1.0, nm)`.
+        This is the length unit given as (float, string) where the
+        float is the numerical value and the string the unit,
+        e.g. `(1.0, nm)`.
     energy : tuple, optional
-        This is the energy unit given as (float, string) where the float is
-        the numerical value and the string the unit, e.g. `(1.0, eV)`.
+        This is the energy unit given as (float, string) where the
+        float is the numerical value and the string the unit,
+        e.g. `(1.0, eV)`.
     mass : tuple, optional
-        This is the mass unit given as (float, string) where the float is
-        the numerical value and the string the unit, e.g. `(1.0, g/mol)`.
+        This is the mass unit given as (float, string) where the
+        float is the numerical value and the string the unit,
+        e.g. `(1.0, g/mol)`.
     charge_unit : string
         This is the unit of charge given as a string, e.g. 'e' or 'C'.
 

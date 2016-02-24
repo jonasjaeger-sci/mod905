@@ -26,11 +26,12 @@ class Box(object):
     """Box(object).
 
     This class defines a simple simulation box. The box will handle
-    periodic boundaries if needed. A non-periodic dummy-box can be created
-    using `Box(periodic=[False, ...])` which may be useful for setting the
-    dimensionality for a simulation. Otherwise, a box will typically be
-    created with a size, `Box(size=[...])`.  Periodicity can be explicitly
-    set and the default behavior is periodic in all dimensions.
+    periodic boundaries if needed. A non-periodic dummy-box can be
+    created using `Box(periodic=[False, ...])` which may be useful for
+    setting the dimensionality for a simulation. Otherwise, a box will
+    typically be created with a size, `Box(size=[...])`.
+    Periodicity can be explicitly set and the default behavior is for
+    the box is to be periodic in all dimensions.
 
     Attributes
     ----------
@@ -54,11 +55,13 @@ class Box(object):
         size : list.
             The size of the box, can be given with `size[i] = length_i`
             which defines the box-length in dimension `i`. The box will
-            then be assumed to have `size[i] = [0, length_i]`. Alternatively
-            the boundaries can be defined explicitly: `size[i] = [low, high]`.
+            then be assumed to have `size[i] = [0, length_i]`.
+            Alternatively the boundaries can be defined explicitly:
+            `size[i] = [low, high]`.
         periodic : list, optional.
-            `periodic[i]` is `True` if periodic boundaries will be applied in
-            dimension `i`. Default is `True` for each dimension in size.
+            `periodic[i]` is `True` if periodic boundaries will be
+            applied in dimension `i`. Default is `True` for each
+            dimension in `size`.
         """
         self.length = []
         self.periodic = []
@@ -118,9 +121,9 @@ class Box(object):
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.
 
-        For the given positions, this function will apply periodic boundary
-        conditions to one dimension only. This can be useful for instance
-        in connection with order parameters.
+        For the given positions, this function will apply periodic
+        boundary conditions to one dimension only. This can be useful
+        for instance in connection with order parameters.
 
         Parameters
         ----------

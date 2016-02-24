@@ -57,7 +57,8 @@ class UmbrellaWindowSimulation(Simulation):
     umbrella : list = [float, float]
         The umbrella window.
     overlap : float
-        The positions that must be crossed before the simulation is done.
+        The positions that must be crossed before the simulation is
+        done.
     startcycle : int
         The current simulation cycle.
     mincycle : int
@@ -83,7 +84,8 @@ class UmbrellaWindowSimulation(Simulation):
         rgen : object like `pyretis.core.random_gen.RandomGenerator`
             Object to use for random number generation.
         maxdx : float
-            Defines the maximum movement allowed in the Monte Carlo moves.
+            Defines the maximum movement allowed in the Monte Carlo
+            moves.
         mincycle : int, optional.
             The *MINIMUM* number of cycles to perform. Note that in the
             base `Simulation` class this is the *MAXIMUM* number of
@@ -121,7 +123,7 @@ class UmbrellaWindowSimulation(Simulation):
                 np.all(self.system.particles.pos > self.overlap))
 
     def __str__(self):
-        """Just a small function to return some info about the simulation."""
+        """Return some info about the simulation as a string."""
         msg = ['Umbrella window simulation']
         msg += ['Umbrella: {}, Overlap: {}.'.format(self.umbrella,
                                                     self.overlap)]

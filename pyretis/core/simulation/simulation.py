@@ -26,14 +26,15 @@ class Simulation(object):
         This dictionary stores information about the number of cycles.
         The keywords are:
 
-        * `end`: Represents the cycle number where the simulation should end.
+        * `end`: Represents the cycle number where the simulation
+          should end.
         * `step`: The current cycle number.
         * `start`: The cycle number we started at.
         * `stepno`: The number of cycles we have performed to arrive at
           cycle number given by `cycle['step']`.
 
-        Note that `cycle['stepno']` might be different from `cycle['step']`
-        since `cycle['start']` might be != 0.
+        Note that `cycle['stepno']` might be different from
+        `cycle['step']` since `cycle['start']` might be != 0.
     task : list of objects like `SimulationTask` from `.simulation_task`
         This is the list of simulation tasks to execute.
     first_step : boolean
@@ -52,9 +53,9 @@ class Simulation(object):
             restarting.
         endcycle : int, optional.
             This number represents the cycle number where the simulation
-            should end. It some simulations (e.g. MD) this would be the number
-            of steps to perform, in other simulations this could be the
-            minimum or maximum number of cycles to perform
+            should end. It some simulations (e.g. MD) this would be the
+            number of steps to perform, in other simulations this could
+            be the minimum or maximum number of cycles to perform.
         """
         self.cycle = {'step': startcycle, 'end': endcycle,
                       'start': startcycle, 'stepno': 0}
@@ -81,13 +82,14 @@ class Simulation(object):
     def is_finished(self):
         """Determine if the simulation is finished.
 
-        In this object, the simulation is done if the current step number
-        is larger than the end cycle. Note that the number of steps
-        performed is dependent of the value of self.cycle['start'].
+        In this object, the simulation is done if the current step
+        number is larger than the end cycle. Note that the number of
+        steps performed is dependent of the value of
+        `self.cycle['start']`.
 
         Returns
         -------
-        out : True if simulation is finished, false otherwise.
+        out : True if simulation is finished, False otherwise.
         """
         return self.cycle['step'] >= self.cycle['end']
 
@@ -99,16 +101,17 @@ class Simulation(object):
         Returns
         -------
         out : dict
-            This dictionary contains the results of the defined tasks. it is
-            obtained as the return value from `self.execute_tasks()`.
+            This dictionary contains the results of the defined tasks.
+            It is obtained as the return value from
+            `self.execute_tasks()`.
 
         Note
         ----
         This function will have 'side effects' and update/change
-        the state of other attached variables such as the system or other
-        variables that are not explicitly shown. This is intended. In order
-        to see what actually is happening when running `step()`, investigate
-        the tasks defined in `self.task`.
+        the state of other attached variables such as the system or
+        other variables that are not explicitly shown. This is intended.
+        In order to see what actually is happening when running
+        `step()`, investigate the tasks defined in `self.task`.
         """
         if not self.first_step:
             self.cycle['step'] += 1
@@ -141,40 +144,42 @@ class Simulation(object):
     def add_task(self, task, position=None):
         """Add a new simulation task.
 
-        A task can still be added manually by simply appending to `self.task`.
-        This function will however do some checks so that the task added can
-        be executed.
+        A task can still be added manually by simply appending to
+        `self.task`. This function will however do some checks so that
+        the task added can be executed.
 
         Parameters
         ----------
         task : dict
             A dict defining the task. A task is represented by a
-            object of type `SimulationTask` from `.simulation_task` with some
-            additional settings on how to store the output and when to execute
-            the task. Note that the actual execution of the task in controlled
-            in the object. The keywords are:
+            object of type `SimulationTask` from `.simulation_task`
+            with some additional settings on how to store the output
+            and when to execute the task. Note that the actual
+            execution of the task in controlled in the object.
+            The keywords are:
 
             * `func`: A function to execute.
-            * `args` which stores the arguments for the function
-            * `kwargs` which store the keyword arguments for the function
-            * `when` which stores when the task should be executed
-            * `first` which is a boolean which determines if the task should
-              be executed on the initial step, i.e. before the full simulation
-              starts
-            * `result` which is used to label the result. This is used for
-              output.
+            * `args` which stores the arguments for the function.
+            * `kwargs` which store the keyword arguments for the
+              function.
+            * `when` which stores when the task should be executed.
+            * `first` which is a boolean which determines if the task
+              should be executed on the initial step, i.e. before the
+              full simulation starts.
+            * `result` which is used to label the result. This is used
+              for output.
         position : int
             Can be used to placed the task at a specific position.
 
         Note
         ----
-        `SimulationTask` will do some tests on the consistency of the keys
-        'func', 'args' and 'kwargs'. If this is not consistent, it will
-        throw an AssertionError.
+        `SimulationTask` will do some tests on the consistency of the
+        keys 'func', 'args' and 'kwargs'. If this is not consistent,
+        it will raise an AssertionError.
 
         See Also
         --------
-        `SimulationTask` object in `pyretis.core.simulation.simulation_task`.
+        `SimulationTask` object in `.simulation_task`.
         """
         try:
             # create task in an explicit way - use 'get'.
@@ -202,10 +207,10 @@ class Simulation(object):
 
         Note
         ----
-        This function will simply run the tasks. In general this is probably
-        too generic for the simulation you want. It is perhaps best to
-        modify the `run` function of your simulation object to tailor the
-        simulation.
+        This function will simply run the tasks. In general this is
+        probably too generic for the simulation you want. It is perhaps
+        best to modify the `run` function of your simulation object to
+        tailor your simulation.
 
         Parameters
         ----------

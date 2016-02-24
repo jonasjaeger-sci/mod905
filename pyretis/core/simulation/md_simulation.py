@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """Definitions of simulation objects for molecular dynamics simulations.
 
-This module contains definitions of classes for performing molecular dynamics
-simulations.
+This module contains definitions of classes for performing molecular
+dynamics simulations.
 
 Important classes and functions defined here:
 
-- SimulationNVE: Definition of a simple NVE simulation. The integrator used
-  for this simulation must have dynamics equal to 'NVE'.
+- SimulationNVE: Definition of a simple NVE simulation. The integrator
+  used for this simulation must have dynamics equal to 'NVE'.
 
-- SimulationMDFlux: Definition of a simulation for determining the initial
-  flux. This is used for calculating rates in TIS simulations.
+- SimulationMDFlux: Definition of a simulation for determining the
+  initial flux. This is used for calculating rates in TIS simulations.
 """
 from __future__ import absolute_import
 import logging
@@ -43,7 +43,8 @@ class SimulationNVE(Simulation):
         """Initialization of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
-        simulation, such as the integration and thermodynamics calculation(s).
+        simulation, such as the integration and thermodynamics
+        calculation(s).
 
         Parameters
         ----------
@@ -108,7 +109,8 @@ class SimulationMDFlux(Simulation):
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
-        These floats defines the interfaces used in the crossing calculation.
+        These floats defines the interfaces used in the crossing
+        calculation.
     order_function : function or object
         The defines how the order parameter should be calculated.
         This is either a function or a object like `OrderParameter` from
@@ -135,10 +137,10 @@ class SimulationMDFlux(Simulation):
             These defines the interfaces for which we will check the
             crossing(s).
         order_function : function or object like `OrderParameter`
-            This function is used to calculate the order parameter. It is
-            assumed to be called with ``order_function(system)`` and to return
-            at least two values where the first one should be the
-            order parameter.
+            This function is used to calculate the order parameter.
+            It is assumed to be called with ``order_function(system)``
+            and to return at least two values where the first one
+            should be the order parameter.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
@@ -164,8 +166,8 @@ class SimulationMDFlux(Simulation):
     def step(self):
         """Run a simulation step.
 
-        Rather than using the tasks for the more general simulation, we here
-        just executing what we need.
+        Rather than using the tasks for the more general simulation, we
+        here just executing what we need.
 
         Returns
         -------

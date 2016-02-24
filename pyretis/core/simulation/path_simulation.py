@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Definitions of simulation objects for path sampling simulations.
 
-This module defines simulations for performing path sampling simulations.
+This module defines simulations for performing path sampling
+simulations.
 
 Important classes and functions defined here:
 
@@ -33,16 +34,17 @@ class SimulationTIS(Simulation):
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
-        These floats defines the interfaces used in the crossing calculation.
+        These floats defines the interfaces used in the crossing
+        calculation.
     orderparameter : function or object
         The defines how the order parameter should be calculated.
         This is either a function or a object like `OrderParameter` from
         `pyretis.core.orderparameter`.
-        It is assumed that the order_function can be called with a object like
-        `pyretis.core.system.System` as a parameter.
+        It is assumed that the order_function can be called with an
+        object like `pyretis.core.system.System` as a parameter.
     tis_settings : dict
-        This dict contain specific settings for the TIS simulation (shooting
-        moves etc.).
+        This dict contain specific settings for the TIS simulation
+        (shooting moves etc.).
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
         This is a random generator used for the generation of paths.
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
@@ -92,8 +94,8 @@ class SimulationTIS(Simulation):
     def _initialize_path(self):
         """Initialize the path for the TIS simulation.
 
-        It will select the initialization method based on the setting given
-        in `self.tis_settings['initial_path']`.
+        It will select the initialization method based on the setting
+        given in `self.tis_settings['initial_path']`.
         """
         path = None
         if self.tis_settings['initial_path'] == 'kick':
@@ -110,10 +112,10 @@ class SimulationTIS(Simulation):
     def step(self):
         """Perform a simulation step.
 
-        Rather than using the tasks for the more general simulation, we here
-        just execute what we need. Since we are integrating and checking the
-        crossing at every step, these tasks are not in the self.tasks list.
-        Other tasks are handled by this list.
+        Rather than using the tasks for the more general simulation, we
+        here just execute what we need. Since we are integrating and
+        checking the crossing at every step, these tasks are not in
+        the `self.tasks` list. Other tasks are handled by this list.
 
         Returns
         -------

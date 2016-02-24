@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Module for Monte Carlo Algorithms and other "random" functions.
 
-In this module, Monte Carlo Algorithms are defined. Note that some derived
-or "random" functions are also defined in the TIS module.
+In this module, Monte Carlo Algorithms are defined. Note that some
+derived or "random" functions are also defined in the TIS module.
 """
 from __future__ import absolute_import
 import numpy as np
@@ -50,7 +50,7 @@ def accept_reject_displace(rgen, system, trial):
 
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):
-    """Accept or reject a momenta change based on a change in kinetic energy.
+    """Accept/reject momenta change based on a change in kinetic energy.
 
     Parameters
     ----------
@@ -62,8 +62,8 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
     dke : float
         The change in kinetic energy.
     aimless : boolean
-        This variable can be used to override the acceptance rule and if it's
-        True, all changes will be accepted.
+        This variable can be used to override the acceptance rule and
+        if it's True, all changes will be accepted.
 
     Returns
     -------
@@ -77,7 +77,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
 
 def metropolis_accept_reject(rgen, system, deltae):
-    """Accept or reject a change of energy according to the metropolis rule.
+    """Accept/reject a energy change according to the metropolis rule.
 
     FIXME: Check if metropolis really is a good name here.
 
@@ -128,14 +128,14 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
     maxdx : float, optional
         The maximum displacement (default is 0.1).
     idx : int, optional.
-        Index of particle to displace. If `idx` is not given, the particle
-        is chosen randomly.
+        Index of particle to displace. If `idx` is not given, the
+        particle is chosen randomly.
 
     Returns
     -------
     out : boolean
-        The outcome of applying the function `accept_reject` to the system
-        and trial position.
+        The outcome of applying the function `accept_reject` to the
+        system and trial position.
     """
     if idx is None:
         idx = rgen.random_integers(0, system.particles.npart - 1)

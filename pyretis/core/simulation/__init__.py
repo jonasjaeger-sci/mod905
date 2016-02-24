@@ -16,12 +16,13 @@ Modules:
 - md_simulation.py: Defines simulation classes for molecular dynamics
   simulations.
 
-- mc_simulation.py: Define simulation classes for Monte Carlo simulations.
+- mc_simulation.py: Define simulation classes for Monte Carlo
+  simulations.
 
 - path_simulation.py: Defines simulation classes for path simulations.
 
-- simulation.py: Defines the Simulation class which is the base object for
-  simulations.
+- simulation.py: Defines the Simulation class which is the base object
+  for simulations.
 
 - simulation_task.py: Defines classes for handling of simulation tasks.
 

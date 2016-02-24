@@ -39,27 +39,29 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
 
     This function will run `make_tis_step` for the given path_ensemble.
     It will handle adding of the path. This function is intended for
-    convenience when working with path ensembles. If we are using the path
-    ensemble ``[0^-]`` then the start condition should be 'R' for right.
+    convenience when working with path ensembles. If we are using the
+    path ensemble ``[0^-]`` then the start condition should be 'R' for
+    right.
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like `PathEnsemble` from `.path`.
         This is the path ensemble to perform the TIS step for.
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     tis_settings : dict
-        This dictionary contain the TIS settings. Here we set the setting
-        for the starting condition (`'start_cond'`) according to the given
-        path ensemble. The other `tis_settings` are just passed on.
+        This dictionary contain the TIS settings. Here we set the
+        setting for the starting condition (`'start_cond'`) according to
+        the given path ensemble. The other `tis_settings` are just
+        passed on.
     cycle : int
         The current cycle number
 
@@ -67,7 +69,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like `Path` from `pyretis.core.path`
+    out[1] : object like `Path` from `.path`.
         The generated path.
     out[2] : string
         The status of the path
@@ -88,32 +90,32 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
                            integrator, rgen, tis_settings, cycle=0):
     """This function will run the initiate for a given ensemble.
 
-    This function is intended for convenience. It should handle and call all
-    the possible initiation methods.
+    This function is intended for convenience. It should handle and
+    call all the possible initiation methods.
 
     Parameters
     ----------
-    path_ensemble : object like `pyretis.core.path.PathEnsemble`
+    path_ensemble : object like `.pathensemble.PathEnsemble`.
         The path ensemble to create an initial path for.
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     tis_settings : dict
-        This dictionary contain the TIS settings. Here we set the setting
-        for the starting condition (`'start_cond'`) according to the given
-        path ensemble. We are also using the keyword `initial_path` to
-        determine how the initial path should be initiated.
-        The other `tis_settings` are just passed on.
+        This dictionary contain the TIS settings. Here we set the
+        setting for the starting condition (`'start_cond'`) according
+        to the given path ensemble. We are also using the keyword
+        `initial_path` to determine how the initial path should be
+        initiated. The other `tis_settings` are just passed on.
     cycle : integer, optional
-        The cycle number we are initiating at, typically this will be 0 which
-        is the default value.
+        The cycle number we are initiating at, typically this will be 0
+        which is the default value.
     """
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
     initial_path = None
@@ -135,39 +137,40 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
                   tis_settings):
     """Perform a TIS step and generate a new path/trajectory.
 
-    The new path will be generated from an existing one, either by performing
-    a time-reversal move or by shooting. T(h)is is determined randomly by
-    drawing a random number from a uniform distribution.
+    The new path will be generated from an existing one, either by
+    performing a time-reversal move or by shooting. T(h)is is determined
+    randomly by drawing a random number from a uniform distribution.
 
     Parameters
     ----------
-    path : object like `Path` from `pyretis.core.path`
+    path : object like `Path` from `.path`.
         This is the input path which will be used for generating a
         new path.
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
     order_function : function
-        This function takes the system as it's argument and returns float(s)
-        which is equal to the order parameter(s).
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns
+        float(s) which is equal to the order parameter(s).
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        Random number generator used to determine what TIS move to perform.
+    rgen : object like `RandomGenerator` from `.random_gen`.
+        Random number generator used to determine what TIS move to
+        perform.
     tis_settings : dict
         This dictionary contain the settings for the TIS method. Here we
         explicitly use:
 
-        * `freq`: float, the frequency of how often we should do time reversal
-          moves.
+        * `freq`: float, the frequency of how often we should do time
+          reversal moves.
 
     Returns
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like `Path` from `pyretis.core.path`
+    out[1] : object like `Path` from `.path`.
         The generated path.
     out[2] : string
         The status of the path
@@ -189,8 +192,9 @@ def _time_reversal(path, interfaces, start_condition):
 
     Parameters
     ----------
-    path : object like `Path` from `pyretis.core.path`
-        This is the input path which will be used for generating a new path.
+    path : object like `Path` from `.path`.
+        This is the input path which will be used for generating a
+        new path.
     interfaces : list/tuple of floats
         These are the interface positions on form [left, middle, right]
     start_condition : string
@@ -202,10 +206,10 @@ def _time_reversal(path, interfaces, start_condition):
         True if the path can be accepted
     out[1] : object like `Path` or `None`
         Returns the generated path if something was generated
-        `Path` is defined in `pyretis.core.path`.
+        `Path` is defined in `.path`.
     out[2] : string
         Status of the path, this is one of the strings defined in
-        `pyretis.core.path._STATUS`.
+        `.path._STATUS`.
     """
     new_path = path.reverse()
     start, _, _, _ = new_path.check_interfaces(interfaces)
@@ -225,24 +229,26 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
            tis_settings):
     """Perform a shooting-move.
 
-    This function will perform the shooting move from a randomly selected
-    time-slice.
+    This function will perform the shooting move from a randomly
+    selected time-slice.
 
     Parameters
     ----------
-    path : object like `Path` from `pyretis.core.path`
-        This is the input path which will be used for generating a new path.
-    system : object like `System` from `pyretis.core.system`
+    path : object like `Path` from `.path`.
+        This is the input path which will be used for generating a
+        new path.
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
     interfaces : list/tuple of floats
-        These are the interface positions on form `[left, middle, right]`.
+        These are the interface positions on form
+        `[left, middle, right]`.
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         The integrator is used to propagate a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     tis_settings : dict
         This contains the settings for TIS. Keys used here:
@@ -250,7 +256,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         * `aimless`: boolean, is the shooting aimless or not?
         * `allowmaxlength`: boolean, should paths be allowed to reach
           maximum length?
-        * `start_cond`: string, starting condition, 'L'eft or 'R'ight
+        * `start_cond`: string, starting condition, 'L'eft or 'R'ight.
         * `maxlength`: integer, maximum allowed length of paths.
 
     Returns
@@ -259,10 +265,10 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
         True if the path can be accepted
     out[1] : object like `Path` or `None`
         Returns the generated path if something was generated.
-        `Path` is defined in `pyretis.core.path`.
+        `Path` is defined in `.path`.
     out[2] : string
         Status of the path, this is one of the strings defined in
-        `pyretis.core.path._STATUS`.
+        `.path._STATUS`.
     """
     accept, trial_path = False, Path(rgen)  # return values
     # trial_path is just an empty path for now
@@ -366,22 +372,24 @@ def generate_initial_path_kick(system, interfaces, order_function,
     The point before and after kicking are stored, so when the
     middle interface is crossed we have two points we can integrate
     forward and backward in time. This function is intended for use with
-    TIS. For use with RETIS one should set the appropriate `tis_settings`
-    so that the starting conditions are fine (i.e. for the [0^-] ensemble
-    it might be different for the other ensembles).
+    TIS. For use with RETIS one should set the appropriate
+    `tis_settings` so that the starting conditions are fine (i.e. for
+    the [0^-] ensemble it might be different for the other ensembles).
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`
-        This is the system that contains the particles we are investigating
+    system : object like `System` from `.system`.
+        This is the system that contains the particles we are
+        investigating.
     interfaces : list of floats
-        These are the interface positions on form [left, middle, right]
+        These are the interface positions on form
+        `[left, middle, right]`.
     order_function : function
         This is a function that calculates the order parameter for a
         system.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+    integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
@@ -393,7 +401,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
 
     Returns
     -------
-    out : object of type `Path` from `pyretis.core.path`
+    out : object of type `Path` from `.path`.
         This is the generated initial path
     """
     previous, _ = _kick_across_middle(system, order_function, integrator,
@@ -464,14 +472,15 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`
-        This is the system that contains the particles we are investigating
+    system : object like `System` from `.system`.
+        This is the system that contains the particles we are
+        investigating
     order_function : function
         This is a function that calculates the order parameter for a
         system.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+    integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     middle : float
         This is the value for the middle interface.
@@ -480,18 +489,19 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     -------
     out[0] : dict
         This dict contains the phase-point just before the interface.
-        It is obtained by calling the `get_phase_point()` of the particles
-        object.
+        It is obtained by calling the `get_phase_point()` of the
+        particles object.
     out[1] : dict.
         This dict contains the phase-point just after the interface.
-        It is obtained by calling the `get_phase_point()` of the particles
-        object.
+        It is obtained by calling the `get_phase_point()` of the
+        particles object.
 
     Note
     ----
     This function will update the system state so that the
-    `system.particles.get_phase_point() == out[1]`. This is more convenient
-    for the following usage in the `generate_initial_path_kick` function.
+    `system.particles.get_phase_point() == out[1]`. This is more
+    convenient for the following usage in the
+    `generate_initial_path_kick` function.
     """
     # first we search for crossing with the middle interface
     # this is done by sequentially kicking the initial phase point
@@ -526,14 +536,14 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
 
     Parameters
     ----------
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     sigma_v : numpy.array
-        These values can be used to set a standard deviation (one for each
-        particle) for the generated velocities.
+        These values can be used to set a standard deviation (one for
+        each particle) for the generated velocities.
     aimless : boolean, optional
         Determines if we should do aimless shooting or not.
     momentum : boolean, optional
@@ -568,37 +578,40 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
                      integrator, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
-    The fix is performed by making TIS moves and this function is intended
-    to be used in a initialization.
+    The fix is performed by making TIS moves and this function is
+    intended to be used in a initialization.
 
     Parameters
     ----------
-    initial_path : object like `Path` from `pyretis.core.path`
+    initial_path : object like `Path` from `.path`.
         This is the initial path to fix. It starts & ends at the
         wrong interface.
-    system : object like `System` from `pyretis.core.system`
-        This is the system that contains the particles we are investigating
+    system : object like `System` from `.system`.
+        This is the system that contains the particles we are
+        investigating
     interfaces : list of floats
-        These are the interface positions on form [left, middle, right]
+        These are the interface positions on form
+        `[left, middle, right]`.
     order_function : function
         This is a function that calculates the order parameter for a
         system.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+    integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     tis_settings : dict
         Settings for TIS method, here we explicitly use:
 
         * `start_cond`: string which defines the start condition.
-        * `maxlength`: integer which give the maximum allowed path length.
+        * `maxlength`: integer which give the maximum allowed path
+          length.
 
-        Note that we here explicitly set some local TIS settings for use in
-        the `make_tis_step` function.
+        Note that we here explicitly set some local TIS settings for
+        use in the `make_tis_step` function.
 
     Returns
     -------
-    out : object of type `Path` from `pyretis.core.path`
+    out : object of type `Path` from `.path`.
         The amended path.
     """
     left, middle, right = interfaces

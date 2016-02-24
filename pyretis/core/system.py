@@ -31,7 +31,8 @@ class System(object):
 
         * `set`: The set temperature, ``T``, (if any).
         * `beta`: The derived property ``1.0/(k_B*T)``.
-        * `dof`: Information about the degrees of freedom for the system.
+        * `dof`: Information about the degrees of freedom for the
+          system.
     v_pot : float
         the potential energy of the system
     particles : object like `pyretis.core.particles.Particles`
@@ -41,8 +42,8 @@ class System(object):
         Defines the force field to use and implements the actual force
         and potential calculation.
     units : string
-        Units to use for the system/simulation. Should match the defined units
-        in `pyretis.core.units`.
+        Units to use for the system/simulation. Should match the defined
+        units in `pyretis.core.units`.
     """
 
     def __init__(self, units='eV/K', box=None, temperature=None):
@@ -76,7 +77,7 @@ class System(object):
         self.forcefield = None
 
     def adjust_dof(self, dof):
-        """Adjust the (number of) degrees of freedom to neglect in the system.
+        """Adjust the degrees of freedom to neglect in the system.
 
         Parameters
         ----------
@@ -174,7 +175,8 @@ class System(object):
         pos : numpy.array,
             Position of the particle.
         vel : numpy.array, optional.
-            Velocity of the particle. If not given np.zeros will be used.
+            Velocity of the particle. If not given numpy.zeros will be
+            used.
         force : numpy.array, optional.
             Force on the particle. If not given np.zeros will be used.
         mass : float, optional.
@@ -203,10 +205,11 @@ class System(object):
         Returns
         -------
         out[1] : numpy.array.
-            Forces on the particles. Note that `self.particles.force` will
-            also be updated.
+            Forces on the particles. Note that `self.particles.force`
+            will also be updated.
         out[2] : float.
-            The virial. Note that `self.particles.virial` will be updated.
+            The virial. Note that `self.particles.virial` will be
+            updated.
         """
         force, virial = self._evaluate_potential_force(what='force')
         self.particles.force = force
@@ -239,7 +242,8 @@ class System(object):
             Forces on the particles. Note that self.particles.force will
             also be updated.
         out[3] : float.
-            The virial. Note that `self.particles.virial` will also be updated.
+            The virial. Note that `self.particles.virial` will also be
+            updated.
         """
         v_pot, force, virial = self._evaluate_potential_force(what='both')
         self.v_pot = v_pot
@@ -288,8 +292,8 @@ class System(object):
 
         Note
         ----
-        This function will not update `self.v_pot` but it will just return
-        it's value for the (possibly given) configuration.
+        This function will not update `self.v_pot` but it will just
+        return it's value for the (possibly given) configuration.
         The function `self.potential` can be used to update `self.v_pot`.
         """
         return self._evaluate_potential_force(what='potential', **kwargs)
@@ -327,12 +331,12 @@ class System(object):
         ----------
         what : string
             This selects what we are to evaluate. 'potential' selects
-            the potential energy only, 'force' selects the force only and
-            anything else will give both.
+            the potential energy only, 'force' selects the force only
+            and anything else will give both.
         kwargs : dict
-            This dictionary can be used to override position, name, types,
-            particles and/or box. Default values are taken from `self.box` or
-            `self.particles`.
+            This dictionary can be used to override position, name,
+            types, particles and/or box. Default values are taken from
+            `self.box` or `self.particles`.
         """
         args = {'pos': kwargs.get('pos', self.particles.pos),
                 'name': kwargs.get('name', self.particles.name),
@@ -358,7 +362,7 @@ class System(object):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        rgen : object like `RandomGenerator` from `.random_gen`.
             This is the random generator which handles the drawing of
             velocities. If not given, a `RandomGenerator` object will
             be created with a given `seed` (see below).
@@ -374,7 +378,8 @@ class System(object):
         Returns
         -------
         out : None
-            Does not return anything, but updates `system.particles.vel`.
+            Does not return anything, but updates
+            `system.particles.vel`.
         """
         if rgen is None:
             rgen = RandomGenerator(seed=seed)
@@ -395,8 +400,9 @@ class System(object):
         """Calculate the temperature of the system.
 
         It is included here for convenience since the degrees of freedom
-        are easily accessible and it's a very common calculation to perform,
-        even though it might be cleaner to include it as a particle function.
+        are easily accessible and it's a very common calculation to
+        perform, even though it might be cleaner to include it as a
+        particle function.
 
         Returns
         -------

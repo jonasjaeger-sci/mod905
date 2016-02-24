@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """This module contains functions for RETIS.
 
-This module defines functions that are needed to perform Replica Exchange
-Transition Interface Sampling (RETIS). The algorithms implemented here and
-the description of RETIS was first described by van Erp [RETIS]_.
+This module defines functions that are needed to perform Replica
+Exchange Transition Interface Sampling (RETIS). The algorithms
+implemented here and the description of RETIS was first described by
+van Erp [RETIS]_.
 
 
 Important functions defined here:
 
 - make_retis_step : Function to select and execute the RETIS move.
 
-- retis_tis_moves : Function to execute the TIS steps in the RETIS algorithm.
+- retis_tis_moves : Function to execute the TIS steps in the RETIS
+  algorithm.
 
-- retis_moves : Function to perform RETIS swapping moves - it selects what
-  scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
+- retis_moves : Function to perform RETIS swapping moves - it selects
+  what scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
   ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
 
 - retis_swap : The function that actually swaps two path ensembles.
@@ -57,23 +59,23 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
-        The current cycle number
+        The current cycle number.
 
     Returns
     -------
@@ -96,25 +98,25 @@ def _relative_shoots_select(ensembles, rgen, relative):
     """Randomly select the ensemble for 'relative' shooting moves.
 
     Here we select the ensemble to do the shooting in based on relative
-    probabilities. We draw a random number in [0, 1] which is used to select
-    the ensemble
+    probabilities. We draw a random number in [0, 1] which is used to
+    select the ensemble.
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`.
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     relative : list of floats
-        These are the relative probabilities for the ensembles. We assume
-        here that these numbers are normalized.
+        These are the relative probabilities for the ensembles. We
+        assume here that these numbers are normalized.
 
     Returns
     -------
     out[0] : integer
         The index of the path ensemble to shoot in.
-    out[1] : object like `PathEnsemble` from `pyretis.core.path`.
+    out[1] : object like `PathEnsemble` from `.path`.
         The selected path ensemble for shooting.
     """
     freq = rgen.rand()
@@ -139,8 +141,8 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
 
     This function will execute the TIS steps in the RETIS method. These
     differ slightly from the regular TIS moves since we have two options
-    on how to perform them. These two options are controlled by the given
-    `settings`:
+    on how to perform them. These two options are controlled by the
+    given `settings`:
 
     1) If `relative_shoots` is given in the input settings, then we will
        pick at random what ensemble we will perform TIS on. For all the
@@ -150,25 +152,25 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
        a) Do a 'null move' in all other ensembles.
        b) Do nothing for all other ensembles.
 
-       Performing the null move in an ensemble will simply just accept the
-       previously accepted path in that ensemble again.
+       Performing the null move in an ensemble will simply just accept
+       the previously accepted path in that ensemble again.
 
     2) If `relative_shoots` is not given in the input settings, then we
        will perform TIS moves for all path ensembles.
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -218,31 +220,34 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
     """Perform RETIS moves on the given ensembles.
 
     This function will perform RETIS moves on the given ensembles.
-    First we have to strategies based on `settings['retis']['swapsimul']`:
+    First we have two strategies based on
+    `settings['retis']['swapsimul']`:
 
-    1) If `settings['retis']['swapsimul']` is True we will perform several
-       swaps, either ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
-       ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``. Which one of these two swap
-       options we use is determined randomly and they have equal probability.
+    1) If `settings['retis']['swapsimul']` is True we will perform
+       several swaps, either ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...``
+       or ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``. Which one of these
+       two swap options we use is determined randomly and they have
+       equal probability.
 
-    2) If `settings['retis']['swapsimul']` is False we will just perform one
-       swap for randomly chosen ensembles, i.e. we pick a random ensemble
-       and try to swap with the ensemble to the right. Here we may also
-       perform null moves if the `settings['retis']['nullmove']` specifies so.
+    2) If `settings['retis']['swapsimul']` is False we will just
+       perform one swap for randomly chosen ensembles, i.e. we pick a
+       random ensemble and try to swap with the ensemble to the right.
+       Here we may also perform null moves if the
+       `settings['retis']['nullmove']` specifies so.
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`
         System is used here since we need access to the temperature
         and to the particle list
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like `RandomGenerator` from `.random_gen`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -299,31 +304,31 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
                settings, cycle):
     """Perform a RETIS swapping move for two ensembles.
 
-    The RETIS swapping move will attempt to swap accepted paths between two
-    ensembles in the hope that path from [i^+] is an acceptable path for
-    [(i+1)^+] as well. We have two cases:
+    The RETIS swapping move will attempt to swap accepted paths between
+    two ensembles in the hope that path from [i^+] is an acceptable path
+    for [(i+1)^+] as well. We have two cases:
 
-    1) If we try to swap between [0^-] and [0^+] we need to integrate the
-       equations of motion.
-    2) Otherwise we can just swap and accept if the path from [i^+] is an
-       acceptable path for [(i+1)^+]. The path from [(i+1)^+] is always
-       acceptable for [i^+] (by construction).
+    1) If we try to swap between [0^-] and [0^+] we need to integrate
+       the equations of motion.
+    2) Otherwise we can just swap and accept if the path from [i^+] is
+       an acceptable path for [(i+1)^+]. The path from [(i+1)^+] is
+       always acceptable for [i^+] (by construction).
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`.
         This is a list of the ensembles we are using in the RETIS method
     idx : integer
         Definition of what path ensembles to swap. We will swap
         `ensembles[idx]` with `ensembles[idx+1]`. If `idx == 0` we have
         case 1) defined above.
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -368,44 +373,46 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
                     settings, cycle):
     """The retis swapping move for ``[0^-] <-> [0^+]`` swaps.
 
-    The retis swapping move for ensembles [0^-] and [0^+] requires some extra
-    integration. Here we are generating new paths for [0^-] and [0^+] in
-    the following way:
+    The retis swapping move for ensembles [0^-] and [0^+] requires some
+    extra integration. Here we are generating new paths for [0^-] and
+    [0^+] in the following way:
 
-    1) For [0^-] we take the initial point in [0^+] and integrate backward in
-       time. This is merged with the second point in [0^+] to give the final
-       path. The initial point in [0^+] starts to the left of the interface
-       and the second point is on the right side - i.e. the path will cross
-       the interface at the end points. If we let the last point in [0^+] be
-       called ``A_0`` and the second last point ``B``, and we let
-       ``A_1, A_2, ...`` be the points on the backward trajectory generated
-       from ``A_0`` then the final path will be made up of the points
-       ``[..., A_2, A_1, A_0, B]``. Here, ``B`` will be on the right side of
-       the interface and the first point of the path will also be on the right
-       side.
+    1) For [0^-] we take the initial point in [0^+] and integrate
+       backward in time. This is merged with the second point in [0^+]
+       to give the final path. The initial point in [0^+] starts to the
+       left of the interface and the second point is on the right
+       side - i.e. the path will cross the interface at the end points.
+       If we let the last point in [0^+] be called ``A_0`` and the
+       second last point ``B``, and we let ``A_1, A_2, ...`` be the
+       points on the backward trajectory generated from ``A_0`` then
+       the final path will be made up of the points
+       ``[..., A_2, A_1, A_0, B]``. Here, ``B`` will be on the right
+       side of the interface and the first point of the path will also
+       be on the right side.
 
-    2) For [0^+] we take the last point of [0^-] and use that as an initial
-       point to generate a new trajectory for [0^+] by integration forward
-       in time. We also include the second last point of the [0^-] trajectory
-       which is on the left side of the interface.
-       We let the second last point be ``B`` (this is on the left side of
-       the interface), the last point ``A_0`` and the points generated
-       from ``A_0`` we denote by ``A_1, A_2, ...``. Then the resulting path
-       will be ``[B, A_0, A_1, A_2, ...]``. Here, ``B`` will be on the left
-       side of the interface and the last point of the path will also be on
-       the left side of the interface.
+    2) For [0^+] we take the last point of [0^-] and use that as an
+       initial point to generate a new trajectory for [0^+] by
+       integration forward in time. We also include the second last
+       point of the [0^-] trajectory which is on the left side of the
+       interface. We let the second last point be ``B`` (this is on the
+       left side of the interface), the last point ``A_0`` and the
+       points generated from ``A_0`` we denote by ``A_1, A_2, ...``.
+       Then the resulting path will be ``[B, A_0, A_1, A_2, ...]``.
+       Here, ``B`` will be on the left side of the interface and the
+       last point of the path will also be on the left side of the
+       interface.
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `pyretis.core.path`
+    ensembles : list of objects like `PathEnsemble` from `.path`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `pyretis.core.system`
+    system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
     order_function : function
-        This function takes the system as it's argument and returns a float
-        which is equal to the order parameter.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+        This function takes the system as it's argument and returns a
+        float which is equal to the order parameter.
+    integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -469,7 +476,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
 def null_move(path_ensemble, cycle):
     """Perform a null move for an path ensemble.
 
-    The null move simply consist of accepting the last accepted path again.
+    The null move simply consist of accepting the last accepted path
+    again.
 
     Parameters
     ----------
@@ -481,8 +489,8 @@ def null_move(path_ensemble, cycle):
     Returns
     -------
     out : string
-        The status, which here will be 'ACC' since we just accept the last
-        accepted path.
+        The status, which here will be 'ACC' since we just accept the
+        last accepted path.
     """
     msg = 'Null move for {}'.format(path_ensemble.ensemble)
     logging.info(msg)

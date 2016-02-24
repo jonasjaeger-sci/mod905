@@ -3,8 +3,8 @@
 
 The order parameters are assumed to all be completely determined
 by the system properties and they will all return at least two
-values - the order parameter and the rate of change in the order parameter
-(i.e. the velocity).
+values - the order parameter and the rate of change in the order
+parameter (i.e. its velocity).
 
 Important classes defined here:
 
@@ -72,10 +72,10 @@ class OrderParameter(object):
         Parameters
         ----------
         system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically only
-            `system.particles.pos` and/or `system.particles.vel` will be
-            used. In some cases system.forcefield can also be used to include
-            specific energies for the order parameter.
+            This object is used for the actual calculation, typically
+            only `system.particles.pos` and/or `system.particles.vel`
+            will be used. In some cases system.forcefield can also be
+            used to include specific energies for the order parameter.
 
         Returns
         -------
@@ -85,15 +85,15 @@ class OrderParameter(object):
         pass
 
     def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter and return it.
+        """Calculate the time derivative of the order parameter.
 
         Parameters
         ----------
         system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically only
-            `system.particles.pos` and/or `system.particles.vel` will be
-            used. In some cases system.forcefield can also be used to include
-            specific energies for the order parameter.
+            This object is used for the actual calculation, typically
+            only `system.particles.pos` and/or `system.particles.vel`
+            will be used. In some cases system.forcefield can also be
+            used to include specific energies for the order parameter.
 
         Returns
         -------
@@ -139,15 +139,15 @@ class OrderParameter(object):
     def add_orderparameter(self, func):
         """Add an extra order parameter to calculate.
 
-        The given function should accept a `pyretis.core.system.System` object
-        as parameter.
+        The given function should accept an object like
+        `pyretis.core.system.System` as parameter.
 
         Parameters
         ----------
         func : function
-            Extra function for calculation of an extra order parameter. It
-            is assumed to accept only a `pyretis.core.system.System` object
-            as its parameter.
+            Extra function for calculation of an extra order parameter.
+            It is assumed to accept only a `pyretis.core.system.System`
+            object as its parameter.
         """
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
@@ -196,8 +196,8 @@ class OrderParameterPosition(OrderParameter):
             This select what dimension we should consider,
             it should equal 'x', 'y' or 'z'.
         periodic : boolean, optional
-            This determines if periodic boundary conditions should be applied
-            to the position.
+            This determines if periodic boundary conditions should be
+            applied to the position.
         """
         description = 'Position of particle {} (dim: {})'.format(index, dim)
         super(OrderParameterPosition, self).__init__(name, desc=description)
@@ -220,10 +220,10 @@ class OrderParameterPosition(OrderParameter):
         Parameters
         ----------
         system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically only
-            `system.particles.pos` and/or `system.particles.vel` will be
-            used. In some cases `system.forcefield` can also be used to
-            include specific energies for the order parameter.
+            This object is used for the actual calculation, typically
+            only `system.particles.pos` and/or `system.particles.vel`
+            will be used. In some cases `system.forcefield` can also be
+            used to include specific energies for the order parameter.
 
         Returns
         -------
@@ -305,10 +305,10 @@ class OrderParameterParse(OrderParameter):
         Parameters
         ----------
         system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically only
-            `system.particles.pos` and/or `system.particles.vel` will be
-            used. In some cases `system.forcefield` can also be used to
-            include specific energies for the order parameter.
+            This object is used for the actual calculation, typically
+            only `system.particles.pos` and/or `system.particles.vel`
+            will be used. In some cases `system.forcefield` can also be
+            used to include specific energies for the order parameter.
 
         Returns
         -------
@@ -341,9 +341,9 @@ class OrderParameterParse(OrderParameter):
         Parameters
         ----------
         strfunc : string
-            Extra function for calculation of an extra order parameter. It
-            is assumed to accept a `pyretis.core.system.System` object as its
-            parameter.
+            Extra function for calculation of an extra order parameter.
+            It is assumed to accept a `pyretis.core.system.System`
+            object as its parameter.
         """
         func = StringFunctionParser(string_function=strfunc)
         if not callable(func):
@@ -356,7 +356,8 @@ class OrderParameterParse(OrderParameter):
 class StringFunctionParser(object):
     """Class StringFunctionParser(object).
 
-    This class defines a simple parser for user-defined order parameters.
+    This class defines a simple parser for user-defined order
+    parameters.
 
     It is based on fourFn.py, see:
     http://pyparsing.wikispaces.com/file/view/fourFn.py
@@ -364,12 +365,13 @@ class StringFunctionParser(object):
     Attributes
     ----------
     pars : object of type `Forward` from `pyparsing`
-        `Forward` is a subclass of `ParseElementEnhance` and is used here
-        for the actual parsing.
+        `Forward` is a subclass of `ParseElementEnhance` and is used
+        here for the actual parsing.
     operators : dict
         This dict defines the different operators that can be used.
     functs : dict
-        This dict defines the different scalar functions that can be used.
+        This dict defines the different scalar functions that can be
+        used.
     system_functs : set
         This set defines the different functions that will make use of
         the system object.
@@ -478,8 +480,8 @@ class StringFunctionParser(object):
     def push_uminus(self, toks):
         """Push to the expression stack.
 
-        `push_uminus` is similar to `push_first`, however `push_uminus` is
-        needed for handling expressions like `-x`.
+        `push_uminus` is similar to `push_first`, however `push_uminus`
+        is needed for handling expressions like `-x`.
 
         Parameters
         ----------

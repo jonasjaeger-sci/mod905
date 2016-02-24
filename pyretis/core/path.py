@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Classes and functions for paths.
 
-The classes and functions defined in this module are useful for representing
-paths.
+The classes and functions defined in this module are useful for
+representing paths.
 
 
 Important classes defined here:
@@ -46,8 +46,8 @@ _GENERATED = {'sh': 'Path was generated with a shooting move',
 def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     """Merge a backward with a forward path into a new path.
 
-    The resulting path is equal to the two paths stacked, in correct time.
-    Note that the ordering is important here so that:
+    The resulting path is equal to the two paths stacked, in correct
+    time. Note that the ordering is important here so that:
     ``paste_paths(path1, path2) != paste_paths(path2, path1)``.
 
     There are two things we need to take care of here:
@@ -63,20 +63,22 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     path_forw : object like `Path`.
         This is the forward trajectory.
     overlap : boolean, default is True.
-        If true, `path_back` and `path_forw` have a common starting-point,
-        that is, the first point in `path_forw` is identical to the first point
-        in `path_back`. In time-space this means that the first point in
-        `path_forw` is identical to the last point in path_back (the backward
-        and forward path started at the same location in space).
+        If true, `path_back` and `path_forw` have a common
+        starting-point, that is, the first point in `path_forw` is
+        identical to the first point in `path_back`. In time-space this
+        means that the first point in `path_forw` is identical to the
+        last point in path_back (the backward and forward path started
+        at the same location in space).
     maxlen : float, optional.
-        This is the maximum length for the new path. If it's not given, it will
-        just be set to the largest of the `maxlen` of the two given paths.
+        This is the maximum length for the new path. If it's not given,
+        it will just be set to the largest of the `maxlen` of the two
+        given paths.
 
     Note
     ----
-    Some information about the path will not be set here. This must be set
-    elsewhere. This includes how the path was generated (`path.generated`)
-    and the status of the path (`path.status`).
+    Some information about the path will not be set here. This must be
+    set elsewhere. This includes how the path was generated
+    (`path.generated`) and the status of the path (`path.status`).
     """
     if maxlen is None:
         if path_back.maxlen == path_forw.maxlen:
@@ -114,11 +116,11 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 def check_crossing(cycle, orderp, interfaces, leftside_prev):
     """Check if we have crossed an interface during the last step.
 
-    This function is useful for checking if an interface was crossed from
-    the previous step till the current one. This is for instance used in the
-    MD simulations for the initial flux.
-    If will use a variable to store the previous positions with respect to
-    the interfaces and check if interfaces were crossed here.
+    This function is useful for checking if an interface was crossed
+    from the previous step till the current one. This is for instance
+    used in the MD simulations for the initial flux.
+    If will use a variable to store the previous positions with respect
+    to the interfaces and check if interfaces were crossed here.
 
     Parameters
     ----------
@@ -138,9 +140,10 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
         These are the updated positions with respect to the interfaces.
     cross : list of tuples
         If a certain interface is crossed, a tuple will be added to this
-        list. The tuple is of form (cycle number, interface number, direction)
-        where direction is '-' for a crossing in the negative direction and
-        '+' for a crossing in the positive direction.
+        list. The tuple is of form
+        (cycle number, interface number, direction)
+        where direction is '-' for a crossing in the negative direction
+        and '+' for a crossing in the positive direction.
     """
     cross = []
     if leftside_prev is None:
@@ -160,11 +163,11 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
 class PathBase(object):
     """PathBase(object) - base class for representation of paths.
 
-    This class represents a path. A path consist of a series of consecutive
-    snapshots (the trajectory) with the corresponding order parameter.
-    We are going to assume that we always store the order parameter as a
-    function of the time. For the other properties, the different sub-classes
-    might not store all the intformation.
+    This class represents a path. A path consist of a series of
+    consecutive snapshots (the trajectory) with the corresponding order
+    parameter. We are going to assume that we always store the order
+    parameter as a function of the time. For the other properties, the
+    different sub-classes might not store all the intformation.
 
     Attributes
     ----------
@@ -174,27 +177,29 @@ class PathBase(object):
         This contains information on how the path was generated.
         `generated[0]` : string, as defined in the variable `_GENERATED`
         `generated[1:]` : additional information:
-        For ``generated[0] == 'sh'`` the additional information is the index
-        of the shooting point on the old path, the new path and the
-        corresponding order parameter.
+        For ``generated[0] == 'sh'`` the additional information is the
+        index of the shooting point on the old path, the new path and
+        the corresponding order parameter.
     maxlen : int
-        This is the maximum path length. Some algorithms requires this to
-        be set. Others don't, which is indicated by setting `maxlen` equal to
-        None.
+        This is the maximum path length. Some algorithms requires this
+        to be set. Others don't, which is indicated by setting `maxlen`
+        equal to None.
     order : list of floats
         The order parameters as function of time.
     ordermin : tuple
         This is the (current) minimum order parameter for the path.
-        `ordermin[0]` is the value, `ordermin[1]` is the index in `self.path`.
+        `ordermin[0]` is the value, `ordermin[1]` is the index in
+        `self.path`.
     ordermax : tuple
         This is the (current) maximum order parameter for the path.
-        `ordermax[0]` is the value, `ordermax[1]` is the index in `self.path`.
+        `ordermax[0]` is the value, `ordermax[1]` is the index in
+        `self.path`.
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`.
-        This is the random generator that will be used for the path-methods
-        that required random numbers.
+        This is the random generator that will be used for the
+        paths that required random numbers.
     time_origin : int
-        This is the location of the phase point `path[0]` relative to its
-        parent. This might be useful for plotting.
+        This is the location of the phase point `path[0]` relative to
+        its parent. This might be useful for plotting.
     traj : list of numpy.arrays
         `traj[0]` are the positions as function of time.
         `traj[1]` are the velocities as function of time.
@@ -232,9 +237,9 @@ class PathBase(object):
     def _update_orderp(self, orderp, idx):
         """Update current min/max order parameter.
 
-        Update the min/max order parameter given a new order parameter. It
-        will just check if the given order parameter is larger or smaller than
-        the current ones.
+        Update the min/max order parameter given a new order parameter.
+        It will just check if the given order parameter is larger or
+        smaller than the current ones.
 
         Parameters
         -----------
@@ -253,16 +258,18 @@ class PathBase(object):
 
         Update the minimum and maximum order parameter on the path and
         return them. This function will explicitly loop over the path,
-        check all phase-space points and find the minimum and maximum order
-        parameter. This is useful if the path was read directly without
-        calling `append`.
+        check all phase-space points and find the minimum and maximum
+        order parameter. This is useful if the path was read directly
+        without calling `append`.
 
         Returns
         -------
         out[0] : list
-            This is the minimum order parameter, tuple with (value, index)
+            This is the minimum order parameter, tuple with
+            (value, index)
         out[1] : list
-            This is the maximum order parameter, tuple with (value, index)
+            This is the maximum order parameter, tuple with
+            (value, index)
         """
         ordermin = None
         ordermax = None
@@ -283,9 +290,9 @@ class PathBase(object):
     def check_interfaces(self, interfaces):
         """Check current status of the path.
 
-        Get the current status of the path with respect to the `interfaces`.
-        This is intended to determine if we have crossed certain interfaces or
-        not.
+        Get the current status of the path with respect to the
+        `interfaces`. This is intended to determine if we have crossed
+        certain interfaces or not.
 
         Parameters
         ----------
@@ -296,11 +303,11 @@ class PathBase(object):
         Returns
         -------
         out[0] : str, 'L' or 'R' or None
-            Start condition: did the trajectory start at the left ('L') or
-            right (R) interface.
+            Start condition: did the trajectory start at the left ('L')
+            or right ('R') interface.
         out[1] : str, 'L' or 'R' or None
-            Ending condition: did the trajectory end at the left ('L') or
-            right ('R') interface or None of them.
+            Ending condition: did the trajectory end at the left ('L')
+            or right ('R') interface or None of them.
         out[2] str, 'M' or '*'
             'M' if middle interface is crossed, '*' otherwise.
         out[3] : list of boolean
@@ -321,8 +328,8 @@ class PathBase(object):
     def get_end_point(self, left, right):
         """Return the end point of the path as a string.
 
-        The end point is either to the left of the `left` interface or to
-        the right of the `right` interface, or somewhere in between.
+        The end point is either to the left of the `left` interface or
+        to the right of the `right` interface, or somewhere in between.
 
         Parameters
         ----------
@@ -349,8 +356,8 @@ class PathBase(object):
     def get_start_point(self, left, right):
         """Return the start point of the path as a string.
 
-        The start point is either to the left of the `left` interface or to
-        the right of the `right` interface.
+        The start point is either to the left of the `left` interface or
+        to the right of the `right` interface.
 
         Parameters
         ----------
@@ -385,8 +392,8 @@ class PathBase(object):
         Returns
         -------
         phasepoint : tuple
-            `phasepoint[0]` is the order parameter (as a tuple) and the two
-            next items are the positions and velocities.
+            `phasepoint[0]` is the order parameter (as a tuple) and the
+            two next items are the positions and velocities.
         idx : int
             The shooting point index.
         """
@@ -429,9 +436,10 @@ class PathBase(object):
         ----------
         orderp : list of floats
             This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path sampling
-            methods while `orderp[1:]` can represent other order parameters
-            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+            `orderp[0]` is the actual order parameter used in path
+            sampling methods while `orderp[1:]` can represent other
+            order parameters for instance is `orderp[1]` typically the
+            velocity of `orderp[0]`.
         pos : numpy.array
             The positions of the particles,
         vel: numpy.array
@@ -444,7 +452,8 @@ class PathBase(object):
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
 
-        This information can (and is typically) stored in a `PathEnsemble`.
+        This information can (and is typically) stored in a
+        `PathEnsemble`.
 
         Parameters
         ----------
@@ -475,8 +484,8 @@ class PathBase(object):
         """Update the path move.
 
         The path move is a short string that represent how the path
-        was generated. It should preferably match one of the moves defined
-        in `_GENERATED`
+        was generated. It should preferably match one of the moves
+        defined in `_GENERATED`
 
         Parameters
         ----------
@@ -492,15 +501,15 @@ class PathBase(object):
     def success(self, detect):
         """Check if the path is successful.
 
-        The check is based on the maximum order parameter and the value of
-        `detect`. It is successful if the maximum order parameter is greater
-        than `detect`.
+        The check is based on the maximum order parameter and the value
+        of `detect`. It is successful if the maximum order parameter is
+        greater than `detect`.
 
         Parameters
         ----------
         detect : float
-            The value for which the path is successful, i.e. the "detect"
-            interface.
+            The value for which the path is successful, i.e. the
+            "detect" interface.
         """
         return self.ordermax[0] > detect
 
@@ -528,18 +537,19 @@ class PathBase(object):
         return self
 
     def reverse(self, order_func=None):
-        """Reverse a path and return the reverse path as a new path object.
+        """Reverse a path and return the reverse path as a new path.
 
-        This will simply reverse a path and return the reversed path as a new
-        `Path` object. An `order_func` can be specified here if we have to
-        recalculate the order parameter. But that will probably only
-        happen if we are crazy.
+        This will simply reverse a path and return the reversed path as
+        a new `Path` object. An `order_func` can be specified here if
+        we have to recalculate the order parameter. But that will
+        probably only happen if we are crazy.
 
         Parameters
         ----------
         order_func : function, optional
-            In case the order parameter should be re-calculated for the reverse
-            path, the function order_func can be specified to do this.
+            In case the order parameter should be re-calculated for the
+            reverse path, the function `order_func` can be specified to
+            do this.
 
         Returns
         -------
@@ -584,8 +594,8 @@ class PathBase(object):
 
         This function is intended to spawn child paths that share some
         propertis and also some characteristics of the current path.
-        The idea here is that a path of a certain class should only be able
-        to create paths of the same class.
+        The idea here is that a path of a certain class should only be
+        able to create paths of the same class.
 
         Returns
         -------
@@ -598,9 +608,10 @@ class PathBase(object):
 class Path(PathBase):
     """Path(PathBase) - representation of paths.
 
-    This class represents a path. A path consist of a series of consecutive
-    snapshots (the trajectory) with the corresponding order parameter. Here
-    we store all information for all phase points on the path.
+    This class represents a path. A path consist of a series of
+    consecutive snapshots (the trajectory) with the corresponding
+    order parameter. Here we store all information for all phase points
+    on the path.
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
@@ -617,7 +628,8 @@ class Path(PathBase):
             This can be used to store the shooting point of a parent
             trajectory.
         """
-        super(Path, self).__init__(rgen, maxlen=maxlen, time_origin=time_origin)
+        super(Path, self).__init__(rgen, maxlen=maxlen,
+                                   time_origin=time_origin)
 
     def trajectory(self, reverse=False):
         """Iterate over the phase-space points in the path.
@@ -661,16 +673,17 @@ class Path(PathBase):
         """Append a new phase point to the path.
 
         We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and velocities
-        with a corresponding order parameter and energy.
+        The phase point is assumed to be given by positions and
+        velocities with a corresponding order parameter and energy.
 
         Parameters
         ----------
         orderp : list of floats
             This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path sampling
-            methods while `orderp[1:]` can represent other order parameters
-            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+            `orderp[0]` is the actual order parameter used in path
+            sampling methods while `orderp[1:]` can represent other
+            order parameters for instance is `orderp[1]` typically the
+            velocity of `orderp[0]`.
         pos : numpy.array
             The positions of the particles,
         vel: numpy.array
@@ -700,8 +713,8 @@ class Path(PathBase):
         Returns
         -------
         phasepoint : tuple
-            `phasepoint[0]` is the order parameter (as a tuple) and the two
-            next items are the positions and velocities.
+            `phasepoint[0]` is the order parameter (as a tuple) and the
+            two next items are the positions and velocities.
         idx : int
             The shooting point index.
         """
@@ -725,9 +738,11 @@ class Path(PathBase):
 class ReservoirPath(PathBase):
     """ReservoirPath(PathBase) - representation of paths.
 
-    This class represents a path. A path consist of a series of consecutive
-    snapshots (the trajectory) with the corresponding order parameter. Here
-    we store all information for all phase points on the path.
+    This class represents a path. A path consist of a series of
+    consecutive snapshots (the trajectory) with the corresponding order
+    parameter. Here we store phase points for only a small subset of the
+    points in the path and maintain a reservoir of shooting points that
+    are picked with the correct probability.
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0, res_length=10):
@@ -790,16 +805,17 @@ class ReservoirPath(PathBase):
         """Append a new phase point to the path.
 
         We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and velocities
-        with a corresponding order parameter and energy.
+        The phase point is assumed to be given by positions and
+        velocities with a corresponding order parameter and energy.
 
         Parameters
         ----------
         orderp : list of floats
             This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path sampling
-            methods while `orderp[1:]` can represent other order parameters
-            for instance is `orderp[1]` typically the velocity of `orderp[0]`.
+            `orderp[0]` is the actual order parameter used in path
+            sampling methods while `orderp[1:]` can represent other
+            order parameters for instance is `orderp[1]` typically the
+            velocity of `orderp[0]`.
         pos : numpy.array
             The positions of the particles,
         vel: numpy.array
@@ -833,8 +849,8 @@ class ReservoirPath(PathBase):
         Returns
         -------
         phasepoint : tuple
-            `phasepoint[0]` is the order parameter (as a tuple) and the two
-            next items are the positions and velocities.
+            `phasepoint[0]` is the order parameter (as a tuple) and the
+            two next items are the positions and velocities.
         idx : int
             The shooting point index.
         """
@@ -882,21 +898,23 @@ class ReservoirPath(PathBase):
         maxlen = kwargs.get('maxlen', self.maxlen)
         time_origin = kwargs.get('time_origin', self.time_origin)
         res_length = kwargs.get('res_length', self.res_length)
-        return self.__class__(self.rgen, maxlen=maxlen, time_origin=time_origin,
+        return self.__class__(self.rgen, maxlen=maxlen,
+                              time_origin=time_origin,
                               res_length=res_length)
 
     def reverse(self, order_func=None):
         """Reverse the path with addinional handling for the reservoir.
 
         This method will call `BasePath.reverse()` but will also do
-        some extra reverse handling since we here have to reverse indices in
-        the reservoir of shooting points.
+        some extra reverse handling since we here have to reverse
+        indices in the reservoir of shooting points.
 
         Parameters
         ----------
         order_func : function, optional
-            In case the order parameter should be re-calculated for the reverse
-            path, the function order_func can be specified to do this.
+            In case the order parameter should be re-calculated for the
+            reverse path, the function `order_func` can be specified to
+            do this.
 
         Returns
         -------

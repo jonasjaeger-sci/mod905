@@ -26,8 +26,8 @@ def _check_args(function, given_args=None, given_kwargs=None):
     Returns
     -------
     out : boolean
-        False if there is some inconsistencies, the calling of the function
-        will probably fail. True otherwise.
+        False if there is some inconsistencies, i.e. when the calling
+        of the given `function` will probably fail. True otherwise.
     """
     arguments = inspect.getargspec(function)
     if not arguments.defaults:
@@ -72,8 +72,8 @@ def execute_now(step, when):
     Parameters
     ----------
     step : dict of ints
-        Keys are 'step' (current cycle number), 'start' cycle number at start
-        'stepno' the number of cycles we have performed so far.
+        Keys are 'step' (current cycle number), 'start' cycle number at
+        start 'stepno' the number of cycles we have performed so far.
     when : dict
         This dict determines when the function should be executed.
 
@@ -99,10 +99,10 @@ def execute_now(step, when):
 class SimulationTask(object):
     """Class SimulationTask(object) - Representation of simulation tasks.
 
-    This class defines a task object. A task is executed at specific points,
-    at regular intervals etc. in a simulation. A task will typically provide
-    a result, but it does not need to. I can simply just alter the state of
-    the passed argument(s).
+    This class defines a task object. A task is executed at specific
+    points, at regular intervals etc. in a simulation. A task will
+    typically provide a result, but it does not need to. I can simply
+    just alter the state of the passed argument(s).
 
     Attributes
     ----------
@@ -161,8 +161,11 @@ class SimulationTask(object):
         Parameters
         ----------
         step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at
-            start and 'stepno' the number of cycles we have performed so far.
+            The keys are:
+
+            * 'step': the current cycle number.
+            * 'start': the cycle number at the start.
+            * 'stepno': the number of cycles we have performed so far.
 
         Returns
         -------
@@ -222,8 +225,11 @@ class SimulationTask(object):
         Parameters
         ----------
         step : dict of ints
-            Keys are 'step' (current cycle number), 'start' cycle number at
-            start and 'stepno' the number of cycles we have performed so far.
+            The keys are:
+
+            * 'step': the current cycle number.
+            * 'start': the cycle number at the start.
+            * 'stepno': the number of cycles we have performed so far.
 
         Returns
         -------

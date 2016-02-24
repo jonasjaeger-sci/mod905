@@ -6,14 +6,14 @@ kinetic temperature, pressure etc.
 
 Important functions defined here:
 
-- calculate_linear_momentum: Calculates the linear momentum of a collection
-  of particles
+- calculate_linear_momentum: Calculates the linear momentum of a
+  collection of particles
 
 - calculate_kinetic_energy_tensor: Return the kinetic energy tensor for
   a selection of particles.
 
-- atomic_kinetic_energy_tensor: Return the kinetic energy tensor for each
-  atom in a selection of particles
+- atomic_kinetic_energy_tensor: Return the kinetic energy tensor for
+  each atom in a selection of particles
 
 - calculate_kinetic_energy: Return the kinetic energy of a collection of
   particles
@@ -21,20 +21,21 @@ Important functions defined here:
 - calculate_kinetic_temperature: Return the kinetic temperature of a
   collection of particles.
 
-- reset_momentum: Set linear momentum (for a selection of particles) to zero.
+- reset_momentum: Set linear momentum (for a selection of particles) to
+  zero.
 
 - calculate_pressure_from_temp: Return the scalar pressure using the
   temperature and the virial.
 
-- calculate_scalar_pressure: Return the scalar pressure (from the trace of
-  the pressure tensor).
+- calculate_scalar_pressure: Return the scalar pressure (from the trace
+  of the pressure tensor).
 
 - calculate_pressure_tensor: Return the pressure tensor, obtained from
   the virial and the kinetic energy tensor.
 
-- calculate_thermo: Calculate and return several 'thermodynamic' properties
-  as the potential, kinetic and total energies per particle, the temperature,
-  the pressure and the  momentum.
+- calculate_thermo: Calculate and return several 'thermodynamic'
+  properties as the potential, kinetic and total energies per particle,
+  the temperature, the pressure and the momentum.
 
 """
 import numpy as np
@@ -119,8 +120,8 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
         (`len(selection)`, `dim`, `dim`) where `dim` is the number of
         dimensions used in the velocities. `kin[i]` contains the kinetic
         energy tensor formed by the outer product of `mol[selection][i]`
-        and `vel[selection][i]`. The sum of the tensor should equal the output
-        from `calculate_kinetic_energy_tensor`.
+        and `vel[selection][i]`. The sum of the tensor should equal the
+        output from `calculate_kinetic_energy_tensor`.
     """
     if selection is None:
         vel, mass = particles.vel, particles.mass
@@ -144,8 +145,8 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
     kin_tensor : numpy.array
-        If kinetic_tensor is not given, the kinetic energy tensor will be
-        calculated.
+        If kinetic_tensor is not given, the kinetic energy tensor will
+        be calculated.
 
     Returns
     -------
@@ -227,7 +228,8 @@ def reset_momentum(particles, selection=None, dim=None):
     Returns
     -------
     out : None
-        Returns `None` and modifies velocities of the selected particles.
+        Returns `None` and modifies velocities of the selected
+        particles.
 
     """
     if selection is None:
@@ -314,8 +316,8 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
     Returns
     -------
     out : float
-        The scalar pressure, averaged over the diagonal components of the
-        pressure tensor.
+        The scalar pressure, averaged over the diagonal components of
+        the pressure tensor.
     """
     if press_tensor is None:
         press_tensor = calculate_pressure_tensor(particles, volume,
@@ -337,8 +339,8 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `box.calculate_volume()`.
     kin_tensor : numpy.array
-        The kinetic energy tensor. If `kin_tensor` is not given, it will be
-        calculated here.
+        The kinetic energy tensor. If `kin_tensor` is not given, it will
+        be calculated here.
 
     Returns
     -------
@@ -367,13 +369,14 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
         `dof` is the degrees of freedom, typically provided with
         a `system.temperature['dof']`.
     dim : float
-        The dimensionality of, typically provided with a `system.get_dim()`.
+        The dimensionality of, typically provided with a
+        `system.get_dim()`.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `system.box.calculate_volume()`.
     vpot : float
-        The potential energy of the particles. It can typically be obtained
-        by from `system.v_pot`.
+        The potential energy of the particles. It can typically be
+        obtained by from `system.v_pot`.
 
     Returns
     -------

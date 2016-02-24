@@ -22,17 +22,17 @@ class RandomGenerator(object):
     """RandomGenerator(object) - A random number generator.
 
     This class that defines a random number generator. It will use
-    `numpy.random.RandomState` for the actual generation, and we refer to
-    the numpy documentation [1]_. Here we could inherit from RandomState
-    but here we do not wish (?) to inherit from an old-style class. That is
-    the cause of some small functions here that will actually just call
-    the corresponding function from `RandomState`.
+    `numpy.random.RandomState` for the actual generation, and we refer
+    to the numpy documentation [1]_. Here we could inherit from
+    RandomState but here we do not wish (?) to inherit from an old-style
+    class. That is the cause of some small functions here that will
+    actually just call the corresponding function from `RandomState`.
 
     Attributes
     ----------
     rgen : object like `RandomState`
-        This is a container for the Mersenne Twister pseudo-random number
-        generator as implemented in numpy [#]_.
+        This is a container for the Mersenne Twister pseudo-random
+        number generator as implemented in numpy [#]_.
 
     References
     ----------
@@ -54,7 +54,7 @@ class RandomGenerator(object):
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
-        """Call `self.rgen.rand()`, see the description of this function.
+        """Draw random numbers in [0, 1).
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class RandomGenerator(object):
         return self.rgen.rand(shape)
 
     def random_integers(self, low, high):
-        """Draw random integers using `self.rgen.random_integers(low, high)`.
+        """Draw random integers in [low, high].
 
         Parameters
         ----------
@@ -86,7 +86,7 @@ class RandomGenerator(object):
         return self.rgen.random_integers(low, high)
 
     def normal(self, loc=0.0, scale=1.0, size=None):
-        """Run `self.rgen.normal` & return values from a normal distribution.
+        """Return values from a normal distribution.
 
         Parameters
         ----------
@@ -95,8 +95,8 @@ class RandomGenerator(object):
         scale : float, optional
             The standard deviation of the distribution
         size : int, tuple of ints, optional
-            Output shape, i.e. how many values to generate. Default is None
-            which is just a single value.
+            Output shape, i.e. how many values to generate. Default is
+            None which is just a single value.
 
         Returns
         -------
@@ -110,9 +110,9 @@ class RandomGenerator(object):
 
         This is an attempt on speeding up the call of
         `RandomState.multivariate_normal` if we need to call it over and
-        over again. Such repeated calling will do a SVD repeatedly, which
-        is wasteful. In this function, this transform can be supplied and it
-        is only estimated if it's not explicitly given.
+        over again. Such repeated calling will do a SVD repeatedly,
+        which is wasteful. In this function, this transform can be
+        supplied and it is only estimated if it's not explicitly given.
 
         Parameters
         ----------
@@ -146,17 +146,17 @@ class RandomGenerator(object):
                                        dof, selection=None, momentum=True):
         """Generate velocities from a Maxwell distribution.
 
-        The velocities are drawn to match a given temperature and this function
-        can be applied to a sub-set of the particles.
+        The velocities are drawn to match a given temperature and this
+        function can be applied to a sub-set of the particles.
 
         The generation is done in three steps:
 
-        1) We generate velocities from a standard normal distribution
+        1) We generate velocities from a standard normal distribution.
 
-        2) We scale the velocity of particle `i` with ``1.0/sqrt(mass_i)`` and
-           reset the momentum
+        2) We scale the velocity of particle `i` with
+           ``1.0/sqrt(mass_i)`` and reset the momentum.
 
-        3) We scale the velocities to the set temperature
+        3) We scale the velocities to the set temperature.
 
         Parameters
         ----------
@@ -165,8 +165,8 @@ class RandomGenerator(object):
         boltzmann : float
             The Boltzmann factor in correct units.
         temperature : float
-            The desired temperature. Typically, system.temperature['set']
-            will be used here.
+            The desired temperature.
+            Typically, `system.temperature['set']` will be used here.
         dof : list of floats, optional
             dof is the degrees of freedom to subtract. It's shape should
             be equal to the number of dimensions.
@@ -179,7 +179,8 @@ class RandomGenerator(object):
         Returns
         -------
         out : None
-            Returns `None` but modifies velocities of the selected particles.
+            Returns `None` but modifies velocities of the selected
+            particles.
         """
         if selection is None:
             vel, imass = particles.vel, particles.imass
@@ -221,29 +222,30 @@ class RandomGenerator(object):
 class ReservoirSampler(object):
     """ReservoirSampler - A class for reservoir sampling.
 
-    The reservoir sampler will maintains a list of `k` items drawn randomly
-    from a set of `N > k` items. The list is created and maintained so that
-    we only need to store `k`items This is useful when `N` is very large or
-    when storing all `N` items require a lot of memory. The algorithm is
-    described by Knuth [#]_ but here we do a variation, so that each item
-    may be picked several times.
+    The reservoir sampler will maintains a list of `k` items drawn
+    randomly from a set of `N > k` items. The list is created and
+    maintained so that we only need to store `k`items This is useful
+    when `N` is very large or when storing all `N` items require a lot
+    of memory. The algorithm is described by Knuth [#]_ but here we do
+    a variation, so that each item may be picked several times.
 
 
     Attributes
     ----------
     rgen : object like `RandomState`
-        This is a container for the Mersenne Twister pseudo-random number
-        generator as implemented in numpy, see the documentation of
-        `RandomGenerator`.
+        This is a container for the Mersenne Twister pseudo-random
+        number generator as implemented in numpy, see the documentation
+        of `RandomGenerator`.
     items : integer
         The number of items seen so far, i.e. the current `N`.
     reservoir : list
         The items we have stored.
     length : integer
-        The maximum number of items to store in the reservoir (i.e. `k`).
+        The maximum number of items to store in the reservoir
+        (i.e. `k`).
     returnidx : integer
-        This is the index of the item to return if we are requesting items
-        from the reservoir.
+        This is the index of the item to return if we are requesting
+        items from the reservoir.
 
     References
     ----------
