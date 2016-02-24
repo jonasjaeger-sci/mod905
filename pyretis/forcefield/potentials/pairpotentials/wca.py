@@ -32,14 +32,16 @@ class DoubleWellWCA(PotentialFunction):
 
         * `height`: A float describing the "height" of the potential.
 
-        * `height4`: A float equal to ``4.0 * height`` (for convenience).
+        * `height4`: A float equal to ``4.0 * height``.
+          (This variable is just included for convenience).
 
         * `rzero`: A float defining the two minimums. One is located at
           ``rzero``, the other at ``rzero+2*width``.
 
-        * `types`: A set defining what kind of particle pairs to consider
-          for this interaction. If `types` is not set (i.e. equal to None),
-          it will be assumed to apply to **ALL** particles.
+        * `types`: A set defining what kind of particle pairs to
+          consider for this interaction. If `types` is not set (i.e.
+          equal to None), it will be assumed to apply to **ALL**
+          particles.
 
         * `width`: A float describing the "width" of the potential.
 
@@ -114,8 +116,8 @@ class DoubleWellWCA(PotentialFunction):
     def min_max(self):
         """Return the minima & maximum of the `DoubleWellWCA` potential.
 
-        The minima are located at ``rzero`` & ``rzero + 2*width``. The maximum
-        is located at ``rzero + width``.
+        The minima are located at ``rzero`` & ``rzero + 2*width``.
+        The maximum is located at ``rzero + width``.
 
         Returns
         -------
@@ -211,11 +213,11 @@ class DoubleWellWCA(PotentialFunction):
         out[0] : float
             The potential energy as a float.
         out[1] : numpy.array
-            The force as a numpy.array of the same shape as the positions
-            in `particles.pos`.
+            The force as a numpy.array of the same shape as the
+            positions in `particles.pos`.
         out[2] : numpy.array
-            The virial, as a symmetric matrix with dimensions (dim, dim) where
-            dim is given by the box.
+            The virial, as a symmetric matrix with dimensions (dim, dim)
+            where dim is given by the box.
         """
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))

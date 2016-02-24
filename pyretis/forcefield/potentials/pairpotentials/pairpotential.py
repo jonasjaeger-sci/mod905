@@ -13,7 +13,8 @@ __all__ = ['mixing_parameters', 'generate_pair_interactions']
 def _check_pair_parameters(parameters):
     """This will just check that the required parameters are given.
 
-    If the parameters are not given, we will just set them do default values.
+    If the parameters are not given, we will just set them do default
+    values.
 
     Parameters
     ----------
@@ -100,8 +101,8 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
                       mixing='geometric'):
     r"""Define the so-called mixing rules.
 
-    These mixing rules are used for some force fields when generating cross
-    interactions. The known mixing rules are:
+    These mixing rules are used for some force fields when generating
+    cross interactions. The known mixing rules are:
 
     1. Geometric:
 

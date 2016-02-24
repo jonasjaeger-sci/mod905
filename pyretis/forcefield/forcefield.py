@@ -69,7 +69,8 @@ class ForceField(object):
         Returns
         -------
         out : None
-            Returns `None` and updates `self.potential` and `self.params`.
+            Returns `None` and updates `self.potential` and
+            `self.params`.
         """
         if potential is None:
             msg = ('Trying to add empty potential to force field.\n'
@@ -135,8 +136,8 @@ class ForceField(object):
         Returns
         -------
         out : None
-            Returns `None` but will update parameters of the selected potential
-            and modify the corresponding `self.params`.
+            Returns `None` but will update parameters of the selected
+            potential and modify the corresponding `self.params`.
         """
         if potential in self.potential:
             potential.params = params
@@ -150,8 +151,8 @@ class ForceField(object):
         Parameters
         ----------
         kwargs : dict
-            Variables needed to evaluate the forces.
-            Typically this is the positions and the particle names/types.
+            Variables needed to evaluate the forces. Typically this is
+            the positions and the particle names/types.
 
         Returns
         -------
@@ -183,8 +184,8 @@ class ForceField(object):
         Parameters
         ----------
         kwargs : dict
-            Variables needed to evaluate the potential.
-            Typically this is the positions and the particle names/types.
+            Variables needed to evaluate the potential. Typically this
+            is the positions and the particle names/types.
 
         Returns
         -------
@@ -214,7 +215,8 @@ class ForceField(object):
         ----------
         kwargs : dict
             Variables needed to evaluate the potential and force.
-            Typically this is the positions and the particle names/types.
+            Typically this is the positions and the particle
+            names/types.
 
         Returns
         -------
@@ -227,10 +229,10 @@ class ForceField(object):
 
         Note
         ----
-        In this function each potential function picks out the variable that
-        it needs. This means that this function will be passed too many
-        parameters. One solution might be to just pass the system to the
-        potential, with additional optional arguments on what to
+        In this function each potential function picks out the variable
+        that it needs. This means that this function will be passed too
+        many parameters. One solution might be to just pass the system
+        to the potential, with additional optional arguments on what to
         override (override is here useful when calculating the energies
         in Monte Carlo moves - i.e. to use the trial positions).
         """
@@ -253,14 +255,14 @@ class ForceField(object):
     def __str__(self):
         """A string representation of the force field.
 
-        The string representation is built using the string descriptions of
-        the potential functions.
+        The string representation is built using the string
+        descriptions of the potential functions.
 
         Returns
         -------
         out : string
-            Description of force field and the potential functions included
-            in the force field.
+            Description of force field and the potential functions
+            included in the force field.
         """
         msg = ['Force field: {}'.format(self.desc)]
         if len(self.potential) < 1:

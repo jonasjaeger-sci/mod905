@@ -21,10 +21,11 @@ class DoubleWell(PotentialFunction):
 
        V_\text{pot} = a x^4 - b (x - c)^2
 
-    where :math:`x` is the position and :math:`a`, :math:`b` and :math:`c` are
-    parameters for the potential. These parameters are stored as attributes of
-    the class. Typically, both :math:`a` and :math:`b` are positive quantities
-    however, we do not explicitly check that here.
+    where :math:`x` is the position and :math:`a`, :math:`b`
+    and :math:`c` are parameters for the potential. These parameters
+    are stored as attributes of the class. Typically, both :math:`a`
+    and :math:`b` are positive quantities however, we do not explicitly
+    check that here.
 
     Attributes
     ----------
@@ -74,7 +75,7 @@ class DoubleWell(PotentialFunction):
         return v_pot.sum()
 
     def force(self, pos):
-        """Evaluate the force for the one-dimensional double well potential.
+        """Evaluate forces for the 1D double well potential.
 
         Parameters
         ----------
@@ -106,10 +107,10 @@ class DoubleWell(PotentialFunction):
         out[0] : float
             The potential energy as a float.
         out[1] : numpy.array
-            The force as a numpy.array of the same shape as the positions
-            in particles.pos.
+            The force as a numpy.array of the same shape as the
+            positions in `particles.pos`.
         out[2] : numpy.array
-            The virial, currently not implemented for this potential
+            The virial, currently not implemented for this potential.
         """
         dist = pos - self._params['c']
         pos3 = pos**3
@@ -155,7 +156,7 @@ class RectangularWell(PotentialFunction):
         desc : string, optional.
             Description of the force field.
         params : dict
-            The parameters for this potential (left, right, largenumber).
+            The parameters for this potential.
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
         self._params = {'left': left, 'right': right,

@@ -10,11 +10,12 @@ Package structure
 
 Modules:
 
-- forcefield.py: Defines the forcefield object (``ForceField``) which can be
-  used to represent a generic force field.
+- forcefield.py: Defines the forcefield object (``ForceField``) which
+  can be used to represent a generic force field.
 
 - potential.py: Defines the generic potential function object
-  (`PotentialFunction`) which is sub-classed in other potential functions.
+  (`PotentialFunction`) which is sub-classed in other potential
+  functions.
 
 Sub-packages:
 

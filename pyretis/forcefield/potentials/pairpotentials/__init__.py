@@ -17,8 +17,8 @@ Important classes and functions defined here:
 
 - PairLennardJonesCut: A class defining a Lennard-Jones potential
 
-- DoubleWellWCA: This class defines a n-dimensional Double Well potential for
-  a pair of particles.
+- DoubleWellWCA: This class defines a n-dimensional Double Well
+  potential for a pair of particles.
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
 from .wca import DoubleWellWCA

@@ -17,30 +17,31 @@ __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 class PairLennardJonesCut(PotentialFunction):
     r"""class PairLennardJonesCut(PotentialFunction).
 
-    This class implements as simple Lennard-Jones 6-12 potential which employs
-    a simple cut-off and can be shifted. The potential energy
-    (:math:`V_\text{pot}`) is defined in the usual way for an interacting pair
-    of particles a distance :math:`r` apart,
+    This class implements as simple Lennard-Jones 6-12 potential which
+    employs a simple cut-off and can be shifted. The potential energy
+    (:math:`V_\text{pot}`) is defined in the usual way for an
+    interacting pair of particles a distance :math:`r` apart,
 
     .. math::
 
        V_\text{pot} = 4 \varepsilon \left( x^{12} - x^{6} \right),
 
-    where :math:`x = \sigma/r` and :math:`\varepsilon` and :math:`\sigma` are
-    the potential parameters. The parameters are stored as attributes of the
-    potential and we store one set for each kind of pair interaction.
-    Parameters can be generated with a specific mixing rule by the force
-    field.
+    where :math:`x = \sigma/r` and :math:`\varepsilon`
+    and :math:`\sigma` are the potential parameters. The parameters are
+    stored as attributes of the potential and we store one set for each
+    kind of pair interaction. Parameters can be generated with a
+    specific mixing rule by the force field.
 
-    This implementation is in pure python (yes we are double looping) and it
-    is slow. It should not be used for production, please consider the numpy
-    aware `PairLennardJonesCutnp` which is somewhat better.
+    This implementation is in pure python (yes we are double looping!)
+    and it is slow. It should not be used for production, please
+    consider the numpy aware `PairLennardJonesCutnp` which is somewhat
+    better.
 
     Attributes
     ----------
     params : dict
-        The parameters for the potential. This dict is assumed to contain
-        parameters for pairs, i.e. for interactions.
+        The parameters for the potential. This dict is assumed to
+        contain parameters for pairs, i.e. for interactions.
     _lj1 : dict
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
@@ -94,8 +95,8 @@ class PairLennardJonesCut(PotentialFunction):
     def params(self, parameters):
         """Update all parameters.
 
-        Here, we generate pair interactions, since that is what this potential
-        actually is using.
+        Here, we generate pair interactions, since that is what this
+        potential actually is using.
 
         Parameters
         ----------
@@ -232,23 +233,22 @@ class PairLennardJonesCut(PotentialFunction):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a whole.
-        It is not calculated as a virial per atom. The virial per atom might
-        be useful to obtain a local pressure or stress, however this needs
-        some consideration. Perhaps it's best to fully implement this as a
-        method of planes or something similar. Some commented lines below are
-        included to show how a per-atom virial can be obtained.
+        Currently, the virial is only calculated for the particles as a
+        whole. It is not calculated as a virial per atom. The virial
+        per atom might be useful to obtain a local pressure or stress,
+        however this needs some consideration. Perhaps it's best to
+        fully implement this as a method of planes or something similar.
 
         Returns
         -------
         out[0] : float
             The potential energy as a float.
         out[1] : numpy.array
-            The force as a numpy.array of the same shape as the positions
-            in `particles.pos`.
+            The force as a numpy.array of the same shape as the
+            positions in `particles.pos`.
         out[2] : numpy.array
-            The virial, as a symmetric matrix with dimensions (dim, dim) where
-            dim is given by the box.
+            The virial, as a symmetric matrix with dimensions
+            (dim, dim) where dim is given by the box/system dimensions.
         """
         v_pot = 0.0
         forces = np.zeros(particles.pos.shape)
@@ -276,10 +276,10 @@ class PairLennardJonesCut(PotentialFunction):
 class PairLennardJonesCutnp(PairLennardJonesCut):
     """class PairLennardJonesCutnp(PairLennardJonesCut).
 
-    A Lennard-Jones 6-12 potential with a simple cut-off which can be shifted.
-    `PairLennardJonesCutnp` uses numpy for calculations, i.e. most operations
-    are recast as numpy.array operations. Otherwise it is similar to
-    `PairLennardJonesCut`.
+    A Lennard-Jones 6-12 potential with a simple cut-off which can be
+    shifted. `PairLennardJonesCutnp` uses numpy for calculations, i.e.
+    most operations are recast as numpy.array operations. Otherwise it
+    is similar to `PairLennardJonesCut`.
 
     Attributes
     ----------
@@ -311,15 +311,15 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
     def _generate_tables_for_numpy(self, particles):
         """Generate tables for interactions for use with numpy.
 
-        This is a helper function since we are using numpy. It will create
-        matrices for the Lennard-Jones parameters (`lj1`, `lj2`, `lj3`, `lj4`)
-        the cut-offs and the offset. This makes it possible to do slices when
-        calculating the energy. That is, instead of looping over particles
-        explicitly in python, we can calculate interaction energies using
-        numpy array operations.
-        Of course, this is not viable for a very large system, then one would
-        do something else like C or Fortran or a more clever division of the
-        work.
+        This is a helper function since we are using numpy. It will
+        create matrices for the Lennard-Jones parameters
+        (`lj1`, `lj2`, `lj3`, `lj4`) the cut-offs and the offset. This
+        makes it possible to do slices when calculating the energy.
+        That is, instead of looping over particles explicitly in
+        python, we can calculate interaction energies using
+        numpy array operations. Of course, this is not viable for a
+        very large system, then one would do something else like C or
+        Fortran or a more clever division of the work.
 
         Parameters
         ----------
@@ -409,11 +409,11 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         Returns
         -------
         out[0] : numpy.array
-            The force as a numpy.array of the same shape as the positions
-            in particles.pos.
+            The force as a numpy.array of the same shape as the
+            positions in particles.pos.
         out[1] : numpy.array
-            The virial, as a symmetric matrix with dimensions (dim, dim) where
-            dim is given by the box.
+            The virial, as a symmetric matrix with dimensions (dim, dim)
+            where dim is given by the box.
         """
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
@@ -447,23 +447,22 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a whole.
-        It is not calculated as a virial per atom. The virial per atom might
-        be useful to obtain a local pressure or stress, however this needs
-        some consideration. Perhaps it's best to fully implement this as a
-        method of planes or something similar. Some commented lines below are
-        included to show how a per-atom virial can be obtained.
+        Currently, the virial is only calculated for the particles as a
+        whole. It is not calculated as a virial per atom. The virial per
+        atom might be useful to obtain a local pressure or stress,
+        however this needs some consideration. Perhaps it's best to
+        fully implement this as a method of planes or something similar.
 
         Returns
         -------
         out[0] : float
             The potential energy as a float.
         out[1] : numpy.array
-            The force as a numpy.array of the same shape as the positions
-            in particles.pos.
+            The force as a numpy.array of the same shape as the
+            positions in `particles.pos`.
         out[2] : numpy.array
-            The virial, as a symmetric matrix with dimensions (dim, dim) where
-            dim is given by the box.
+            The virial, as a symmetric matrix with dimensions (dim, dim)
+            where dim is given by the box.
         """
         pot = 0.0
         forces = np.zeros(particles.pos.shape)
