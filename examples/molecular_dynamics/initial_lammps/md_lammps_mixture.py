@@ -27,9 +27,9 @@ box = Box(size)
 ljsystem = System(box=box, units='lj')
 
 ljpot = PairLennardJonesCutnp(shift=True)
-lj_parameters = {1: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 2: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
-                 3: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
+lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+                 1: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
+                 2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
                  'mixing': 'geometric'}
 forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
 
@@ -40,12 +40,12 @@ dirname = 'input_data'
 pos = np.loadtxt(os.path.join(dirname, 'initial_pos_mixture.txt.gz'))
 vel = np.loadtxt(os.path.join(dirname, 'initial_vel_mixture.txt.gz'))
 idx = np.loadtxt(os.path.join(dirname, 'atom_types_mixture.txt.gz'))
-names = {1: 'A', 2: 'B', 3: 'C'}
-masses = {1: 1.0, 2: 1.0, 3: 1.5}
+names = {0: 'A', 1: 'B', 2: 'C'}
+masses = {0: 1.0, 1: 1.0, 2: 1.5}
 natoms = {}
 npart = 0.0
 for xyzi, veli, idxi in zip(pos, vel, idx):
-    itype = int(idxi)
+    itype = int(idxi) - 1
     ljsystem.add_particle(name=names[itype], pos=xyzi, vel=veli,
                           mass=masses[itype], ptype=itype)
     if not names[itype] in natoms:
