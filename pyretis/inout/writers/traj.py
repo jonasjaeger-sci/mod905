@@ -15,7 +15,8 @@ Important functions defined here:
 
 - read_xyz_file: A function for reading snapshots from a xyz file.
 
-- read_gromacs_file: A function for reading snapshots from a gromacs GRO file.
+- read_gromacs_file: A function for reading snapshots from a gromacs
+  GRO file.
 """
 import logging
 import numpy as np
@@ -38,8 +39,8 @@ __all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
 def _adjust_coordinate(coord):
     """Function to adjust the dimensionality of coordinates.
 
-    A lot of the different formats expects us to have 3 dimensional data.
-    This function just adds dummy dimensions equal to zero.
+    A lot of the different formats expects us to have 3 dimensional
+    data. This function just adds dummy dimensions equal to zero.
 
     Parameters
     ----------
@@ -71,14 +72,16 @@ def _adjust_coordinate(coord):
 class TrajXYZ(Writer):
     u"""TrajXYZ(Writer) - A class for XYZ files.
 
-    This class handles writing of a system to a file in a simple xyz format.
+    This class handles writing of a system to a file in a simple xyz
+    format.
 
     Attributes
     ----------
     atomnames : list
         These are the atom names used for the output.
     convert_pos : float
-        Defines the conversion of positions from internal units to Ångström.
+        Defines the conversion of positions from internal units to
+        Ångström.
     frame : integer
         The number of frames written.
     """
@@ -139,10 +142,10 @@ class TrajXYZ(Writer):
     def generate_output(self, system, header=None):
         """Write a configuration in xyz-format.
 
-        This is a function for writing a configuration in xyz-format. It is
-        similar to `write_frame` and it's meant for convenience: atom names
-        will not have to be specified and we are using the `system` to access
-        (the positions of) the particles.
+        This is a function for writing a configuration in xyz-format.
+        It is similar to `write_frame` and it's meant for convenience:
+        atom names will not have to be specified and we are using
+        the `system` to access (the positions of) the particles.
 
         Parameters
         ----------
@@ -188,8 +191,8 @@ class TrajXYZ(Writer):
 class TrajGRO(Writer):
     """TrajGRO(Writer) - A class for gromacs GRO files.
 
-    This class handles writing of a system to a file using the gromacs format.
-    The gromacs format is described in the GROMACS manual [#]_.
+    This class handles writing of a system to a file using the gromacs
+    format. The gromacs format is described in the GROMACS manual [#]_.
 
     Attributes
     ----------
@@ -198,7 +201,8 @@ class TrajGRO(Writer):
     convert_pos : float
         Defines the conversion of positions from internal units to `nm`.
     convert_vel : float
-        Defines the conversion of velocities from internal units to `nm/ps`.
+        Defines the conversion of velocities from internal units to
+        `nm/ps`.
     frame : integer
         The number of frames written.
 
@@ -229,9 +233,9 @@ class TrajGRO(Writer):
     def gro_format(self, pos, vel, box, **kwargs):
         """Format positions, box and velocities according to the GRO format.
 
-        This method will generate a list of strings which is the GRO format
-        representation of a configuration. Note that velicities do not have
-        to be written (i.e. `vel = None`).
+        This method will generate a list of strings which is the GRO
+        format representation of a configuration. Note that velicities
+        do not have to be written (i.e. `vel = None`).
 
         Parameters
         ----------
@@ -300,10 +304,10 @@ class TrajGRO(Writer):
     def generate_output(self, system, header=None, write_vel=False):
         """Write a configuration in gromacs format.
 
-        This is a function for writing a configuration in GRO-format. It is
-        similar to `write_frame` and it's meant for convenience: atom names
-        will not have to be specified and we are using a `system` to access
-        the positions and velocities.
+        This is a function for writing a configuration in GRO-format.
+        It is similar to `write_frame` and it's meant for convenience:
+        atom names will not have to be specified and we are using a
+        `system` object to access the positions and velocities.
 
         Parameters
         ----------
@@ -381,8 +385,8 @@ class TrajGRO(Writer):
 def read_gromacs_file(filename):
     """A function for reading gromacs GRO files.
 
-    This function will read a gromacs file and yield the different snapshots
-    found in the file.
+    This function will read a gromacs file and yield the different
+    snapshots found in the file.
 
     Parameters
     ----------

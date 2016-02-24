@@ -59,8 +59,8 @@ def create_plotter(plot_settings):
 
     The input plot settings is assumed to be a dictionary which we use
     for creating the plotter. In case the plot settings is not given, we
-    just return None. We are here assuming that they are not given simply
-    because we do not want to create a plotter.
+    just return None. We are here assuming that they are not given
+    simply because we do not want to create a plotter.
 
     Parameters
     ----------

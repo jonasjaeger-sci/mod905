@@ -21,10 +21,10 @@ __all__ = ['FileIO']
 class FileIO(object):
     """FileIO(object) - A generic file writer class.
 
-    This class defines a simple object for writing to files. Formatting etc.
-    is handled by objects like `Writers` from `pyretis.inout.writers.writers`,
-    The `FileIO` class handle the creation/opening of the file with
-    backup/overwriting etc.
+    This class defines a simple object for writing to files.
+    Formatting etc. is handled by objects like `Writers` from
+    `pyretis.inout.writers.writers`, The `FileIO` class handle the
+    creation/opening of the file with backup/overwriting etc.
 
     Attributes
     ----------
@@ -49,8 +49,8 @@ class FileIO(object):
             The is used to control how we do backup.
         header = string, optional
             This is a header we write to the file as the first line.
-            Typically this gives some meta information about the contents
-            in the file.
+            Typically this gives some meta information about the
+            contents in the file.
         """
         self.filename = filename
         self.fileh = None
@@ -117,8 +117,8 @@ class FileIO(object):
         towrite : string
             The string to output to the file.
         end : string
-            Appended to `towrite` when writing, can be used to print a new
-            line after the input `towrite`
+            Appended to `towrite` when writing, can be used to print a
+            new line after the input `towrite`.
 
         Returns
         -------
@@ -157,8 +157,8 @@ class FileIO(object):
         """Close a file in case the object is deleted.
 
         This function will just close the file in case the program
-        crashes or exits in some other way. It is used here as it's not so
-        nice to add a with statement to the main script running the
+        crashes or exits in some other way. It is used here as it's not
+        so nice to add a with statement to the main script running the
         simulation.
         """
         if self.fileh is not None and not self.fileh.closed:

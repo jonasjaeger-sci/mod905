@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """This file contains common functions for the input/output.
 
-It contains some functions that is used when generating reports, typically
-to format tables and numbers.
+It contains some functions that is used when generating reports,
+typically to format tables and numbers.
 
 Important functions defined here:
 
-- create_backup: A function to handle the creation of backups of old files.
+- create_backup: A function to handle the creation of backups of old
+  files.
 
 - apply_format: Apply a format string to a given value.
 
@@ -88,8 +89,8 @@ def create_backup(outputfile):
 
     Note
     ----
-    No warning is issued here. This is just in case the `msg` returned here
-    will be part of some more elaborate message.
+    No warning is issued here. This is just in case the `msg` returned
+    here will be part of some more elaborate message.
     """
     filename = '{}'.format(outputfile)
     fileid = 0
@@ -108,11 +109,11 @@ def apply_format(value, fmt):
 
     Here we check the formatting of a float. We are *forcing* a
     *maximum length* on the resulting string. This is to avoid problems
-    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a length
-    8 > 7. The intended use of this function is to avoid such problems when we
-    are formatting numbers for tables. Here it is done by switching to an
-    exponential notation. But note however that this will have implications
-    for how many decimal places we can show.
+    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a
+    length 8 > 7. The intended use of this function is to avoid such
+    problems when we are formatting numbers for tables. Here it is done
+    by switching to an exponential notation. But note however that this
+    will have implications for how many decimal places we can show.
 
     Parameters
     ----------
@@ -123,10 +124,10 @@ def apply_format(value, fmt):
 
     Note
     ----
-    This function converts numbers to have a fixed length. In some cases this
-    may reduce the number of significant digits. Remember to also output your
-    numbers without this format in case a specific number of significant
-    digits is important!
+    This function converts numbers to have a fixed length. In some
+    cases this may reduce the number of significant digits. Remember
+    to also output your numbers without this format in case a specific
+    number of significant digits is important!
     """
     maxlen = fmt.split(':')[1].split('.')[0]
     align = ''
@@ -168,9 +169,10 @@ def _remove_extension(filename):
 def remove_extensions(list_of_files):
     """Remove extensions for a list of files.
 
-    This will strip out extensions for all the files in a given iterable.
-    Here, the iterable might be a simple list which contains dictionaries or
-    it can be a dictionary. How we to the loop will depend on this.
+    This will strip out extensions for all the files in a given
+    iterable. Here, the iterable might be a simple list which contains
+    dictionaries or it can be a dictionary. How we to the loop will
+    depend on this.
 
     Parameters
     ----------
@@ -185,8 +187,8 @@ def remove_extensions(list_of_files):
     Note
     ----
     If, for some reason, list_of_files is a list and the items are just
-    integers, the TypeError will not be raised. This is pretty unlikely and
-    we therefore do not check for this.
+    integers, the TypeError will not be raised. This is pretty unlikely
+    and we therefore do not check for this.
     """
     # we assume that list_of_files is a simple dict
     try:
@@ -206,8 +208,9 @@ def make_dirs(dirname):
     """Create directories for path simulations.
 
     This function will create a folder using a specified path.
-    If the path already exist and if it's a directory, we will do nothing.
-    If the path exist and is a file we will raise an `OSError` exception here.
+    If the path already exist and if it's a directory, we will do
+    nothing. If the path exist and is a file we will raise an
+    `OSError` exception here.
 
     Parameters
     ----------
@@ -217,7 +220,8 @@ def make_dirs(dirname):
     Returns
     -------
     out : string
-        A string with some info on what this function did. Intended for output.
+        A string with some info on what this function did. Intended for
+        output.
     """
     try:
         os.makedirs(dirname)
@@ -237,8 +241,8 @@ def make_dirs(dirname):
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     """A function to simplify path names for file/directory names.
 
-    Here, we are basically translating ensemble names to more friendly names
-    for directories and files that is:
+    Here, we are basically translating ensemble names to more friendly
+    names for directories and files that is:
 
     - ``[0^-]`` returns ``000``,
     - ``[0^+]`` returns ``001``,
@@ -278,10 +282,10 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
 def name_file(name, extension, path=None):
     """Return a file name by joining a name and an file extension.
 
-    This function is used to create file names. It will use `os.extsep` to
-    create the file names and `os.path.join` to add a path name if the `path`
-    is given. The returned file name fill be of form (example for posix):
-    ``path/name.extension``.
+    This function is used to create file names. It will use
+    `os.extsep` to create the file names and `os.path.join` to add a
+    path name if the `path` is given. The returned file name fill be of
+    form (example for posix): ``path/name.extension``.
 
     Parameters
     ----------

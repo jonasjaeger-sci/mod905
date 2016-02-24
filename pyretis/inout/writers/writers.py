@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Module for handling input and output of data.
 
-The input and output of data are handled by writers who are responsible for
-turning raw data from pyretis into an output (in some form). Note that the
-writers are not responsible for actually writing the output to the screen
-or to a files - this is done by an output task.
+The input and output of data are handled by writers who are responsible
+for turning raw data from pyretis into an output (in some form).
+Note that the writers are not responsible for actually writing the
+output to the screen or to files - this is done by an output task.
 
 Important classes defined here:
 
@@ -73,12 +73,12 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     """Open a file and try to read as many lines as possible.
 
     This function will read a file using the given `line_parser`.
-    If the given `line_parser` fails at a line in the file, `read_some_lines`
-    will stop here.
+    If the given `line_parser` fails at a line in the file,
+    `read_some_lines` will stop here.
 
-    This function will read data in blocks and yield a block when a new block
-    is found. A special string (`block_label`) is assumed to identify the
-    start of blocks.
+    This function will read data in blocks and yield a block when a new
+    block is found. A special string (`block_label`) is assumed to
+    identify the start of blocks.
 
     Parameters
     ----------
@@ -132,10 +132,11 @@ class Writer(object):
     Attributes
     ----------
     file_type : string
-        A string which identifies the file type which the writer can support.
+        A string which identifies the file type which the writer can
+        support.
     header : string
-        A header (or table heading) that gives information about the output
-        data.
+        A header (or table heading) that gives information about the
+        output data.
     """
 
     def __init__(self, file_type, header=None):
@@ -182,9 +183,9 @@ class Writer(object):
     def load(self, filename):
         """Load entire blocks from the cross file into memory.
 
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis.
+        In the future, a more intelligent way of handling files like
+        this may be in order, but for now the entire file is read as
+        it's very convenient for the subsequent analysis.
 
         Parameters
         ----------
@@ -199,10 +200,11 @@ class Writer(object):
 
         Note
         ----
-        The main reason for not making this a class method (as `line_parser`)
-        is that certain writers may need to convert the output to internal
-        units from some specified units. The specified units may also change
-        between instances of these classes.
+        The main reason for not making this a class method
+        (as `line_parser`) is that certain writers may need to convert
+        the output to internal units from some specified units.
+        The specified units may also change between instances of
+        these classes.
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
             data_dict = {'comment': blocks['comment'],
@@ -217,17 +219,17 @@ class Writer(object):
 class CrossWriter(Writer):
     """CrossWriter(Writer) - A class for crossing data.
 
-    This class handles writing/reading of crossing data. The format for the
-    crossing file is in three columns:
+    This class handles writing/reading of crossing data. The format for
+    the crossing file is three columns:
 
     1) First column is the step number (an integer).
 
     2) Second column is the interface number (an integer). These are
        numbered from 1 (_NOT_ from 0).
 
-    3) The direction we are moving in - `+` for the positive direction or
-       `-` for the negative direction. Internally this is converted to an
-       integer (`+1` or `-1`)
+    3) The direction we are moving in - `+` for the positive direction
+       or `-` for the negative direction. Internally this is converted
+       to an integer (`+1` or `-1`).
     """
     # format for crossing files:
     CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
@@ -255,8 +257,9 @@ class CrossWriter(Writer):
 
         Note
         ----
-        The interface will be subtracted '1' in the analysis. This is just
-        for backwards compatibility with the old fortran code.
+        The interface will be subtracted '1' in the analysis.
+        This is just for backwards compatibility with the old Fortran
+        code.
         """
         linessplit = line.strip().split()
         try:
@@ -269,7 +272,8 @@ class CrossWriter(Writer):
     def generate_output(self, step, cross):
         """Generate output data to be written to a file or screen.
 
-        It will just write a space separated file without fancy formatting.
+        It will just write a space separated file without fancy
+        formatting.
 
         Parameters
         ----------
@@ -290,14 +294,14 @@ class CrossWriter(Writer):
 
         See Also
         --------
-        `check_crossing` in `pyretis.core.path` for definition of the tuples
-        in `cross`.
+        `check_crossing` in `pyretis.core.path` for definition of the
+        tuples in `cross`.
 
         Note
         ----
-        We add 1 to the interface number here. This is for compatibility with
-        the old Fortran code where the interfaces are numbered 1, 2, ...
-        rather than 0, 1, ... .
+        We add 1 to the interface number here. This is for
+        compatibility with the old Fortran code where the interfaces
+        are numbered 1, 2, ... rather than 0, 1, ... .
         """
         msgtxt = 'Generating crossing data at step: {}'.format(step)
         logger.debug(msgtxt)
@@ -308,8 +312,8 @@ class CrossWriter(Writer):
 class EnergyWriter(Writer):
     """EnergyWriter(Writer) - Handle energy data for pyretis.
 
-    This class handles writing/reading of energy data. The data is written in
-    7 columns:
+    This class handles writing/reading of energy data.
+    The data is written in 7 columns:
 
     1) Time, i.e. the step number.
 
@@ -338,10 +342,10 @@ class EnergyWriter(Writer):
     def load(self, filename):
         """Load entire energy blocks into memory.
 
-        (Quote of the day: 'memory is cheap, function calls are expensive'.)
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis.
+        (Quote of the day: 'memory is cheap, function calls are
+        expensive'.) In the future, a more intelligent way of handling
+        files like this may be in order, but for now the entire file is
+        read as it's very convenient for the subsequent analysis.
 
         Parameters
         ----------
@@ -416,8 +420,8 @@ class OrderWriter(Writer):
     8) ...
 
     And so on, that is, columns 2, 4, 6, ... are order parameters, while
-    columns 3, 5, 7, ... are the corresponding velocities. The first column
-    is always just the time (or step/cycle number).
+    columns 3, 5, 7, ... are the corresponding velocities. The first
+    column is always just the time (or step/cycle number).
     """
     # format for order files, note that we don't know how many parameters
     # we need to write yet.
@@ -431,14 +435,15 @@ class OrderWriter(Writer):
     def load(self, filename):
         """Load entire order parameter blocks into memory.
 
-        In the future, a more intelligent way of handling files like this
-        may be in order, but for now the entire file is read as it's very
-        convenient for the subsequent analysis. In case blocks are found in
-        the file, they will be yielded, this is just to reduce the memory
-        usage.
-        The format is `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
-        where the actual meaning of `orderp1` `orderp2` and the following
-        order parameters are left to be defined by the user.
+        In the future, a more intelligent way of handling files like
+        this may be in order, but for now the entire file is read as
+        it's very convenient for the subsequent analysis. In case
+        blocks are found in the file, they will be yielded, this is
+        just to reduce the memory usage.
+        The format is:
+        `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
+        where the actual meaning of `orderp1` `orderp2` and the
+        following order parameters are left to be defined by the user.
 
         Parameters
         ----------

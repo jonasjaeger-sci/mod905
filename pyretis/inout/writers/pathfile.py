@@ -7,12 +7,13 @@ Important classes defined here:
 
 - PathEnsembleWriter: Writing/reading of path ensemble data.
 
-- PathEnsembleFile : Reading of path ensemble data. Mainly used for analysis.
+- PathEnsembleFile : Reading of path ensemble data. Mainly used for
+  analysis.
 
 """
 import logging
 # pyretis imports:
-from pyretis.core.path import Path
+from pyretis.core.path import PathBase
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
 
@@ -40,10 +41,10 @@ def _line_to_path_object(line):
     ----
     TODO: This function is considered for deletion - is it going to be
     useful or are we always going to create path data (rather than Path
-    objects) when we read files? It might be useful in the future for restart
-    files.
+    objects) when we read files? It might be useful in the future for
+    restart files.
     """
-    path = Path()
+    path = PathBase(None)
     data = line.split()
     path.ordermin = (float(data[9]), 0)
     path.ordermax = (float(data[10]), -1)
@@ -61,10 +62,10 @@ class PathEnsembleWriter(Writer):
 
     This class handles writing/reading of path ensemble data to a file.
 
-    In the future, this should be made smarter, for instance could path data
-    be read in portions, or the full path file could be read if it's small
-    enough to fit in the memory. A line-by-line analysis as it is right now
-    might not be the most efficient way.
+    In the future, this should be made smarter, for instance could path
+    data be read in portions, or the full path file could be read if
+    it's small enough to fit in the memory. A line-by-line analysis as
+    it is right now might not be the most efficient way.
 
     Attributes
     ----------
@@ -90,8 +91,9 @@ class PathEnsembleWriter(Writer):
         Parameters
         ----------
         ensemble : str
-            This is a string representation of the path ensemble. Typically
-            something like '0-', '0+', '1', '2', ..., '001' and so on.
+            This is a string representation of the path ensemble.
+            Typically something like '0-', '0+', '1', '2', ..., '001'
+            and so on.
         interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
@@ -113,9 +115,10 @@ class PathEnsembleWriter(Writer):
     def line_parser(line):
         """Convert a text line to simplified representation of a path.
 
-        This is used to parse a file with path data. It will not create real
-        `pyretis.core.path.Path` objects but only a dict with information about
-        this path. This dict can be used to build up a path ensemble.
+        This is used to parse a file with path data. It will not
+        create a real `pyretis.core.path.Path` objects but only a dict
+        with information about this path. This dict can be used to
+        build up a path ensemble.
 
         Parameters
         ----------
@@ -180,8 +183,8 @@ class PathEnsembleWriter(Writer):
     def generate_output(self, cycle, path_ensemble, path=None):
         """Generate the output for the path ensemble writer
 
-        If the path is not explicitly given, the latest path from the path
-        ensemble will be written.
+        If the path is not explicitly given, the latest path from the
+        path ensemble will be written.
 
         Parameters
         ----------
@@ -232,10 +235,10 @@ class PathEnsembleWriter(Writer):
 class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
     """Class PathEnsembleFile(PathEnsemble, PathEnsembleWriter)
 
-    This class is intended to mimic the `PathEnsemble` class but using files.
-    It overloads the `get_paths()` from the PathEnsemble so that the analysis
-    can be run on this object in the same way that it is run on a
-    `PathEnsemble` object.
+    This class is intended to mimic the `PathEnsemble` class but
+    using files. It overloads the `get_paths()` from the PathEnsemble
+    so that the analysis can be run on this object in the same way
+    that it is run on a `PathEnsemble` object.
 
     Attributes
     ----------
@@ -258,9 +261,10 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
         """Read a file and return a pure `PathEnsemble` object.
 
         This will read an entire file and return a path ensemble object.
-        Note that this might not be the fastest way of using the path ensemble
-        file and that this can require a lot of memory. For analysis
-        purposes, this object also supports a on-line analysis.
+        Note that this might not be the fastest way of using the path
+        ensemble file and that this can require a lot of memory.
+        For analysis purposes, this object also supports a on-line
+        analysis.
 
         Returns
         -------

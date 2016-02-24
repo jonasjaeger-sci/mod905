@@ -2,7 +2,8 @@
 """General functions for generating reports.
 
 This module contains some general functions for report generation. These
-functions are used by the specific report generators to format the reports.
+functions are used by the specific report generators to format the
+reports.
 
 Important functions defined here:
 
@@ -78,9 +79,10 @@ def _rst_to_html(rst):
 def get_template(output, report_type, template=None):
     """Return the template to use for a specified output format.
 
-    The output is one of the defined output types, for instance 'rst' for
-    restrucutred text or 'latex' for latex. Different report types will have
-    different templates and the report types must also be specified here.
+    The output is one of the defined output types, for instance 'rst'
+    for restrucutred text or 'latex' for latex. Different report types
+    will have different templates and the report types must also be
+    specified here.
 
     Parameters
     ----------
@@ -88,8 +90,8 @@ def get_template(output, report_type, template=None):
         This string selects the output format for the template, i.e.,
         rst, html, latex, tex.
     template : string, optional
-        The full path to the template to use. If not given/found, the defaults
-        in _TEMPLATES will be used.
+        The full path to the template to use. If not given/found, the
+        defaults in _TEMPLATES will be used.
     report_type : string
         This is the type of report we are doing, e.g. TIS or MD.
 
@@ -119,10 +121,11 @@ def get_template(output, report_type, template=None):
 def render_report(report, output, template, path):
     """This will render a report using a template and jinja2.
 
-    The report is given as a dictionary which is used to fill in a template
-    with jinja2. The template is given as string (a file name) with a path
-    to the template. The output can also be specified here and this is only
-    use to convert to HTML if that is the desired output.
+    The report is given as a dictionary which is used to fill in a
+    template with jinja2. The template is given as string
+    (a file name) with a path to the template. The output can also be
+    specified here and this is only use to convert to HTML if that is
+    the desired output.
 
     Parameters
     ----------
@@ -130,8 +133,8 @@ def render_report(report, output, template, path):
         This dict contains the data to be reported. It is assumed that
         this dict matches the specified template.
     output : string
-        This is the desired output format. Here it's used only for generating
-        HTML as this is done via rst.
+        This is the desired output format. Here it's used only for
+        generating HTML as this is done via rst.
     template : string
         This is the template to use (the file name).
     path :  string
@@ -146,8 +149,8 @@ def render_report(report, output, template, path):
 
     Note
     ----
-    The parameters `template` and `path` are typically obtained by a call to
-    `get_template`.
+    The parameters `template` and `path` are typically obtained by a
+    call to `get_template`.
     """
     env = jinja2.Environment(block_start_string='@{%',
                              block_end_string='%}@',
@@ -175,16 +178,17 @@ def generate_report(report_type, analysis, output, template=None):
     output : string
         Output format for the report.
     template : string, optional
-        The full path to the template to use. If not given/found, the defaults
-        in _TEMPLATES will be used. This is handled by `get_template`.
+        The full path to the template to use. If not given/found, the
+        defaults in _TEMPLATES will be used. This is handled by
+        `get_template`.
 
     Returns
     -------
     out[0] : string
         This is the generated report in the desired format
     out[1] : string
-        This is an extension which can be used when writing the report to a
-        file.
+        This is an extension which can be used when writing the report
+        to a file.
     """
     report = {'version': VERSION,
               'program': PROGRAM_NAME,

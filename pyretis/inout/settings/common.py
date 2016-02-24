@@ -3,10 +3,11 @@
 
 Important functions defined here:
 
-- check_settings: Check that required simulation settings are actually given.
+- check_settings: Check that required simulation settings are actually
+  given.
 
-- import_from : A function to dynamically import functions/classes etc. from
-  user specified modules.
+- import_from : A function to dynamically import functions/classes
+  etc. from user specified modules.
 """
 import importlib
 import logging
@@ -20,9 +21,10 @@ __all__ = ['check_settings', 'import_from', 'initiate_instance']
 def import_from(module_name, function_name):
     """Function to import a function/class from a module.
 
-    This function will dynamically import a specified function/object from a
-    module and return it. If the module can not be imported or if we can't
-    find the function/class in the module we will raise exceptions.
+    This function will dynamically import a specified function/object
+    from a module and return it. If the module can not be imported or
+    if we can't find the function/class in the module we will raise
+    exceptions.
 
     Parameters
     ----------
@@ -53,42 +55,42 @@ def import_from(module_name, function_name):
         raise ValueError(msg)
 
 
-def initiate_instance(the_class, args=None, kwargs=None):
-    """Function to initiate an instance of a class with optional arguments.
+def initiate_instance(klass, args=None, kwargs=None):
+    """Function to initiate a class with optional arguments.
 
     Parameters
     ----------
-    the_class : class
+    klass : class
         The class to initiate.
     args : list, optional
-        Positional arguments to `the_class.__init__()`.
+        Positional arguments to `klass.__init__()`.
     kwargs : dict, optional
-        The keyword arguments to `the_class.__init__()`
+        The keyword arguments to `klass.__init__()`
 
     Returns
     -------
-    out : instance of `the_class`
+    out : instance of `klass`
         Here, we just return the initiated instance of the given class.
     """
     if args is None:
         if kwargs is None:
-            msg = 'Initiated {} without arguments.'.format(the_class)
+            msg = 'Initiated {} without arguments.'.format(klass)
             logger.info(msg)
-            return the_class()
+            return klass()
         else:
-            msg = 'Initiated {} with keyword arguments.'.format(the_class)
+            msg = 'Initiated {} with keyword arguments.'.format(klass)
             logger.info(msg)
-            return the_class(**kwargs)
+            return klass(**kwargs)
     else:
         if kwargs is None:
-            msg = 'Initiated {}  with positional arguments.'.format(the_class)
+            msg = 'Initiated {}  with positional arguments.'.format(klass)
             logger.info(msg)
-            return the_class(*args)
+            return klass(*args)
         else:
             msg = 'Initiated {} with positional and keyword arguments.'
-            msg = msg.format(the_class)
+            msg = msg.format(klass)
             logger.info(msg)
-            return the_class(*args, **kwargs)
+            return klass(*args, **kwargs)
 
 
 def check_settings(settings, required):
@@ -97,9 +99,9 @@ def check_settings(settings, required):
     This function will look for required settings in the given
     `settings`. If one or more keys from the given `required` list of
     strings are not found, this function will return False. Otherwise
-    if will return True. Typically, and exception should be raised if False
-    is returned, this is handled outside the function in case someone wants to
-    add some magic handling of missing settings.
+    if will return True. Typically, and exception should be raised if
+    False is returned, this is handled outside the function in case
+    someone wants to add some magic handling of missing settings.
 
     Parameters
     ----------

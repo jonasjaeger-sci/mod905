@@ -9,8 +9,8 @@ the output from a pyretis simulation.
 
 Modules:
 
-- writers.py: Module for defining the base writer and some simple derived
-  writers (for crossing data, energy and order parameter data).
+- writers.py: Module for defining the base writer and some simple
+  derived writers (for crossing data, energy and order parameter data).
 
 - pathfile.py: Module for handling path data and path-ensemble data.
 
@@ -18,7 +18,8 @@ Modules:
 
 Important functions:
 
-- get_file_object: Opens a file for reading given a file type and file name.
+- get_file_object: Opens a file for reading given a file type and file
+  name.
 
 - read_xyz_file: Read snapshots from a xyz file.
 
@@ -77,10 +78,11 @@ _CLASS_MAP = {'cross': {'class': CrossWriter},
 def get_file_object(file_type):
     """Return a file object which can be used for loading files.
 
-    This is a convenience function to return an instance of a `Writer` or
-    derived classes so that we are ready to read data from that file. Usage is
-    intended to be in cases when we just want to open a file easily. The
-    returned object can then be used to read the file using `load(filename)`.
+    This is a convenience function to return an instance of a `Writer`
+    or derived classes so that we are ready to read data from that file.
+    Usage is intended to be in cases when we just want to open a file
+    easily. The returned object can then be used to read the file
+    using `load(filename)`.
 
     Parameters
     ----------

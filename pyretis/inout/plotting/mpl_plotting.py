@@ -8,8 +8,8 @@ Important classes and functions defined here:
 
 - MplPlotter: A class for plotting with matplotlib.
 
-- mpl_set_style: A function for setting the style for the plots, typically
-  used here to load the *pyretis style*.
+- mpl_set_style: A function for setting the style for the plots,
+  typically used here to load the *pyretis style*.
 
 """
 # TODO: See if the plotting functions mpl_* can be moved into the object.
@@ -56,9 +56,10 @@ class MplPlotter(Plotter):
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which conveniently can be called in
-    different analysis output function. The `MplPlotter` will use matplotlib
-    and it can be used to create other plotters based on other tools, for
-    instance gnuplot or Veusz, visvis or your favorite plotting tool.
+    different analysis output function. The `MplPlotter` will use
+    matplotlib and it can be used to create other plotters based on
+    other tools, for instance gnuplot or Veusz, visvis or *your*
+    favorite plotting tool.
 
     Attributes
     ----------
@@ -71,8 +72,8 @@ class MplPlotter(Plotter):
     def __init__(self, out_fmt, backup=False, style=None):
         """Initiate the plotting object.
 
-        Here we only define the style and check if the requested file format
-        is something that we actually can handle.
+        Here we only define the style and check if the requested file
+        format is something that we actually can handle.
 
         Parameters
         ----------
@@ -106,15 +107,15 @@ class MplPlotter(Plotter):
     def _print_figures_to_file(self, canvas):
         """Function to save figures as files.
 
-        This function will save figures to files. It will append a file format
-        extension to the files when writing.
+        This function will save figures to files. It will append a file
+        format extension to the files when writing.
 
         Parameters
         ----------
         canvas : dict of objects like `FigureCanvas` from `matplotlib`.
-            `canvas[key]` is assumed to define a figure which we will save to
-            a file with a file name defined by `key` and the extension defined
-            by `self.out_fmt`.
+            `canvas[key]` is assumed to define a figure which we will
+            save to a file with a file name defined by `key` and the
+            extension defined by `self.out_fmt`.
 
         Returns
         -------
@@ -153,7 +154,8 @@ class MplPlotter(Plotter):
     def plot_energy(self, results, energies, sim_settings=None):
         """Function to plot energy results using `mpl_plot_energy`.
 
-        The parameters for this method is described in `mpl_plot_energy`.
+        The parameters for this method is described in
+        `mpl_plot_energy`.
 
         Returns
         -------
@@ -166,7 +168,8 @@ class MplPlotter(Plotter):
     def plot_orderp(self, results, orderdata):
         """Function to plot order parameter using `mpl_plot_orderp`.
 
-        The parameters for this method is described in `mpl_plot_orderp`.
+        The parameters for this method is described in
+        `mpl_plot_orderp`.
 
         Returns
         -------
@@ -192,7 +195,8 @@ class MplPlotter(Plotter):
     def plot_total_probability(self, path_ensembles, detect, matched):
         """Function to plot matched probabilities with `mpl_plot_matched`
 
-        The parameters for this method is described in `mpl_plot_matched`.
+        The parameters for this method is described in
+        `mpl_plot_matched`.
 
         Returns
         -------
@@ -241,8 +245,8 @@ def mpl_set_style(style='pyretis'):
 
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
-    'grayscale' (i.e. one of the styles in `matplotlib.style.available`) or
-    as a file (full path is needed). The default pyretis style
+    'grayscale' (i.e. one of the styles in `matplotlib.style.available`)
+    or as a file (full path is needed). The default pyretis style
     is stored in `_MPL_STYLE_FILE` and can be selected with 'pyretis'.
     Style equal to None is just the default matplotlib style.
 
@@ -349,8 +353,8 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
     low : int, optional
         Lower index to start plotting. `low` can be negative.
     high : int, optional
-        Index where to end the plotting, this index is not plotted. `high`
-        is assumed to always be > 0 or None.
+        Index where to end the plotting, this index is not plotted.
+        `high` is assumed to always be > 0 or None.
     color : string, optional
         A string representing the color to use.
 
@@ -437,9 +441,9 @@ def mpl_simple_plot(series, fig_settings=None):
 def mpl_linecollection_gradient(axs, series):
     """Plot a line with a color gradient along the line.
 
-    The line is split into segments and each segment is colored according to
-    it's "location" along the line. By "location" we here mean the order of
-    the segments.
+    The line is split into segments and each segment is colored
+    according to it's "location" along the line. By "location" we here
+    mean the order of the segments.
 
     Parameters
     ----------
@@ -470,13 +474,13 @@ def mpl_linecollection_gradient(axs, series):
 def mpl_chunks_gradient(axs, series, chunksize=20000):
     """Plot a line gradient in chunks.
 
-    Here we will plot a line in chunks and color each chunk with one color.
-    This function can be used as an alternative to
-    `mpl_linecollection_gradient` when the number of points to plot is very
-    large. Typically the chunk size here will be small compared to the size
-    of the data to be plotted, so that each chunk, if plotted
-    with `mpl_linecollection_gradient`, would have approximately the same
-    color anyway.
+    Here we will plot a line in chunks and color each chunk with one
+    color. This function can be used as an alternative to
+    `mpl_linecollection_gradient` when the number of points to plot is
+    very large. Typically the chunk size here will be small compared to
+    the size of the data to be plotted, so that each chunk, if plotted
+    with `mpl_linecollection_gradient`, would have approximately the
+    same color anyway.
 
     Parameters
     ---------
@@ -485,8 +489,8 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     series : dict
         Represents the data to be plotted.
     chunksize : int
-        This is the maximum size (number of points) we will try to plot in
-        one go.
+        This is the maximum size (number of points) we will try to plot
+        in one go.
 
     Returns
     -------
@@ -578,7 +582,8 @@ def mpl_line_gradient(series, fig_settings):
 def mpl_error_plot(series, fig_settings):
     """Plot series with error values.
 
-    This will plot a series with error values displayed as a filled region.
+    This will plot a series with error values displayed as a filled
+    region.
 
     Parameters
     ----------
@@ -744,8 +749,8 @@ def mpl_plot_orderp(results, orderdata):
     Parameters
     ----------
     results : dict
-        Each item in `results` contains the results for the corresponding
-        order parameter.
+        Each item in `results` contains the results for the
+        corresponding order parameter.
     orderdata : list of numpy.arrays
         This is the raw-data for the order parameter analysis
 
@@ -758,10 +763,10 @@ def mpl_plot_orderp(results, orderdata):
     ----
     We are here only outputting results for the first order parameter.
     I.e. other order parameters or velocities are not written here. This
-    will be changed when the structure of the output order parameter file
-    has been fixed. Also note that, if present, the first order parameter
-    will be plotted against the second one - i.e. the second one will be
-    assumed to represent the velocity here.
+    will be changed when the structure of the output order parameter
+    file has been fixed. Also note that, if present, the first order
+    parameter will be plotted against the second one - i.e. the second
+    one will be assumed to represent the velocity here.
     """
     canvas = {}
     time = orderdata[0]
@@ -815,20 +820,21 @@ def mpl_plot_energy(results, energies, sim_settings=None):
     Parameters
     ----------
     results : dict
-        Each item in `results` contains the results for the corresponding
-        energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
-        'ham', 'temp', 'elec'
+        Each item in `results` contains the results for the
+        corresponding energy. It is assumed to contains the keys
+        'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
     energies : dict of numpy.arrays
-        This is the raw-data for the energy analysis
+        This is the raw-data for the energy analysis.
     sim_settings : dict, optional
         This is the simulation settings which are useful for creating
         theoretical plots of distributions. It is assumed to contain
         the following keys:
 
-        * `npart`: The number of particles in the simulation
-        * `dim`: Number of dimensions used in the simulation
+        * `npart`: The number of particles in the simulation.
+        * `dim`: Number of dimensions used in the simulation.
         * `beta`: The beta factor :math:`\beta = \frac{1}{k_B T}` where
-          :math:`k_B` is the Boltzmann constant and :math:`T` the temperature.
+          :math:`k_B` is the Boltzmann constant and :math:`T` the
+          temperature.
         * `temperature`: The temperature of the system.
 
     Returns
@@ -923,8 +929,8 @@ def mpl_plot_flux(results):
     Returns
     -------
     out[0] : list of dicts
-        The output figures created by this function for running averages.
-        `out[0][i]['name']` is the name of the figure and
+        The output figures created by this function for running
+        averages. `out[0][i]['name']` is the name of the figure and
         `out[0][i]['canvas']` is the corresponding canvas object.
     out[1] : list of dicts
         The output figures created by this function for block errors.
@@ -965,7 +971,8 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     """Plot matched probabilities using matplotlib.
 
     This function will plot the matched probabilities for the different
-    ensembles and also make a plot with just the over-all matched probability.
+    ensembles and also make a plot with just the over-all matched
+    probability.
 
     Parameters
     ----------
@@ -974,8 +981,9 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
-        This dict contains the results from the matching of the probabilities.
-        `matched['overall-prob']` and `matched['matched-prob']` are used here.
+        This dict contains the results from the matching of the
+        probabilities. `matched['overall-prob']` and
+        `matched['matched-prob']` are used here.
 
     Returns
     -------

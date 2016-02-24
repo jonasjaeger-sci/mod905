@@ -63,9 +63,10 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 def list_get(input_list, index):
     """Function to get an item from a list that handles out-of bounds errors.
 
-    This function is intended to be used when we are picking items from a list
-    and possibly we want a number of items which is larger than the number
-    of items in the list. Here, we then just return the last element
+    This function is intended to be used when we are picking items from
+    a list and possibly we want a number of items which is larger than
+    the number of items in the list. Here, we then just return the last
+    element.
 
     Parameters
     ----------
@@ -90,8 +91,8 @@ def _guess_particle_mass(particle_no, particle_type, unit):
     particle_type : string
         Used to identify the particle
     unit : string
-        The system of units. This is used in case we try to get the mass from
-        the periodic table where the units are in `g/mol`.
+        The system of units. This is used in case we try to get the
+        mass from the periodic table where the units are in `g/mol`.
     """
     msg = ['Mass not specified for particle no. {}!'.format(particle_no)]
     msg += ['Will guess from particle type: {}'.format(particle_type)]
@@ -125,7 +126,8 @@ def initial_positions_lattice(settings):
     particles : object like `Particles` from `pyretis.core.particles`
         The particles we created.
     size : list of floats
-        A size for the region we created. This can be used to create a box.
+        A size for the region we created. This can be used to create
+        a box.
     """
     pos_settings = settings['particles-position']
     ptype = settings.get('particles-type', ['Ar'])
@@ -153,8 +155,8 @@ def initial_positions_lattice(settings):
     msg = ['Initiated {} particles on lattice "{}".'.format(particles.npart,
                                                             lattice_type)]
     msg += ['Lattice is {}D.'.format(ndim)]
-    msg = '\n'.join(msg)
-    logger.info(msg)
+    msgtxt = '\n'.join(msg)
+    logger.info(msgtxt)
     return particles, size
 
 
@@ -173,9 +175,10 @@ def _get_snapshot_from_file(pos_settings, units):
     Returns
     -------
     snapshot : dict
-        The snapshot we found in the file. It will at least have the keys with
-        the positions ('x', 'y', 'z') and atom name 'atomnames'. It may have
-        information about velocities ('vx', 'vy', 'vz') and the box ('box').
+        The snapshot we found in the file. It will at least have the
+        keys with the positions ('x', 'y', 'z') and atom name
+        'atomnames'. It may have information about velocities
+        ('vx', 'vy', 'vz') and the box ('box').
     convert : dict
         Dictionary with conversion factors to internal units.
     """
@@ -229,7 +232,8 @@ def initial_positions_file(settings):
     particles : object like `Particles` from `pyretis.core.particles`
         The particles we created.
     size : list of floats
-        A size for the region we created. This can be used to create a box.
+        A size for the region we created. This can be used to create
+        a box.
     vel_read : boolean
         True if we read velocities from the input file.
     """
@@ -308,8 +312,9 @@ def create_initial_positions(settings):
         The size associated with the particles. Can be used to create a
         box.
     out[2] : boolean
-        True if we have read/created velocities different from just zeros.
-        This is only True if we have read from a file with velocities.
+        True if we have read/created velocities different from just
+        zeros. This is only True if we have read from a file with
+        velocities.
     """
     msg = 'Settings used for initial potisions:\n{}'
     debugtxt = msg.format(settings['particles-position'])
@@ -410,8 +415,8 @@ def create_velocities(system, settings, vel):
 def create_system(settings):
     """Function that will set up a system from settings.
 
-    In order to set up the system, there are several things we might need to
-    do:
+    In order to set up the system, there are several things we might
+    need to do:
 
     1. Set the initial positions.
 

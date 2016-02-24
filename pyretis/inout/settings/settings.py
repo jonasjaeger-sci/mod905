@@ -295,7 +295,8 @@ def _group_keyword_settings(setting, special=None):
     """Group keyword settings into a 'kwargs' key.
 
     This method will take in a setting as a dict and grop keys into
-    a kwargs key. The keys which are given in the input special is ignored.
+    a kwargs key. The keys which are given in the input special is
+    ignored.
 
     Parameters
     ----------
@@ -325,9 +326,9 @@ def _group_keyword_settings(setting, special=None):
 def _convert_potential_parameters(settings):
     """Convert the potential parameters to the internal structure.
 
-    The potential parameters are a special case for the parameters, since it
-    matters for which potential they are defined, they need to be inserted at
-    the right place. This is handled by this function.
+    The potential parameters are a special case for the parameters,
+    since it matters for which potential they are defined, they need to
+    be inserted at the right place. This is handled here.
 
     Parameters
     ----------

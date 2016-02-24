@@ -15,7 +15,8 @@ Important functions and classes defined here:
 
 - txt_path_output: For writing the output from a path simulation.
 
-- txt_matched_probability: For writing output with matched probabilities.
+- txt_matched_probability: For writing output with matched
+  probabilities.
 """
 import logging
 import numpy as np
@@ -41,8 +42,8 @@ def txt_block_error(outputfile, title, error, backup=False):
     outputfile : string
         This is the name of the output file to create.
     title : string
-        This is a identifier/title to add to the header, e.g. 'Ensemble: 001',
-        'Kinetic energy', etc.
+        This is a identifier/title to add to the header, e.g.
+        'Ensemble: 001', 'Kinetic energy', etc.
     error : list
         This is the result from the error analysis.
     backup : boolean, optional
@@ -86,8 +87,8 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
     results : dict
         This is the dict with the results from the flux analysis.
     out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        the file will be written in compressed gzip format.
+        This is the desired format to use for the graphs. If 'gz' is
+        specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -124,13 +125,13 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     Parameters
     ----------
     results : dict
-        Each item in `results` contains the results for the corresponding
-        order parameter.
+        Each item in `results` contains the results for the
+        corresponding order parameter.
     orderdata : list of numpy.arrays
         This is the raw-data for the order parameter analysis
     out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        the file will be written in compressed gzip format.
+        This is the desired format to use for the graphs. If 'gz' is
+        specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -143,10 +144,10 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     ----
     We are here only outputting results for the first order parameter.
     I.e. other order parameters or velocities are not written here. This
-    will be changed when the structure of the output order parameter file
-    has been fixed. Also note that, if present, the first order parameter
-    will be plotted against the second one - i.e. the second one will be
-    assumed to represent the velocity here.
+    will be changed when the structure of the output order parameter
+    file has been fixed. Also note that, if present, the first order
+    parameter will be plotted against the second one - i.e. the second
+    one will be assumed to represent the velocity here.
     """
     outfiles = {}
     for key in ORDERFILES:
@@ -181,14 +182,14 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     Parameters
     ----------
     results : dict
-        Each item in `results` contains the results for the corresponding
-        energy. It is assumed to contains the keys 'vpot', 'ekin', 'etot',
-        'ham', 'temp', 'elec'
+        Each item in `results` contains the results for the
+        corresponding energy. It is assumed to contains the keys
+        'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
     energies : numpy.array
-        This is the raw-data for the energy analysis
+        This is the raw-data for the energy analysis.
     out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        the file will be written in compressed gzip format.
+        This is the desired format to use for the graphs. If 'gz' is
+        specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -278,8 +279,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     idetect : float
         This is the interface used for the detection in the analysis.
     out_fmt : string, optional
-        This is the desired format to use for the graphs. If 'gz' is specified,
-        the file will be written in compressed gzip format.
+        This is the desired format to use for the graphs. If 'gz' is
+        specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
 
@@ -329,11 +330,11 @@ def txt_matched_probability(path_ensembles, detect, matched,
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
-        This dict contains the results from the matching of the probabilities.
-        We make use of `matched['overall-prob']` and `matched['matched-prob']`
-        here.
+        This dict contains the results from the matching of the
+        probabilities. We make use of `matched['overall-prob']` and
+        `matched['matched-prob']` here.
     out_fmt : string
-        Determines the output format for the text file. If 'gz' is used, a
+        Determines the output format for the text file. If 'gz' is used,
         the file will be written in compressed gzip format.
     backup : boolean
         If `backup` is False, we will overwrite files, otherwise we will

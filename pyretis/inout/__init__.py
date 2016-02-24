@@ -24,7 +24,8 @@ Sub-packages:
 Modules:
 
 - common.py: Common functions and variables for the input/output. These
-  functions are mainly intended for internal use and are not imported here.
+  functions are mainly intended for internal use and are not imported
+  here.
 
 - __init__.py: Imports from the other modules.
 
@@ -32,14 +33,16 @@ Modules:
 
 Important classes and functions:
 
-- CrossWriter, EnergyWriter, OrderWriter: Classes for writing crossing data
-  (for initial the flux), energy data and order parameter data.
+- CrossWriter, EnergyWriter, OrderWriter: Classes for writing crossing
+  data (for initial the flux), energy data and order parameter data.
 
 - PathEnsembleWriter: Class for writing path ensemble data.
 
-- generate_report: A function to generate reports from analysis output(s).
+- generate_report: A function to generate reports from analysis
+  output(s).
 
-- create_output_task: A function to create output tasks for a simulation.
+- create_output_task: A function to create output tasks for a
+  simulation.
 
 - TxtTable: A function to write create text based tables.
 """

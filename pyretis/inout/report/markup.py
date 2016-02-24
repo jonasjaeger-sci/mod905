@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Some common functions for generating simple tables and numbers.
 
-This module contains some common functions for the generation of reports.
-The functions defined here are typically used to format numbers and generate
-tables for the reports.
+This module contains some common functions for the generation of
+reports. The functions defined here are typically used to format
+numbers and generate tables for the reports.
 
 Important functions defined here:
 
@@ -11,7 +11,8 @@ Important functions defined here:
 
 - generate_latex_table: Generate latex code for a table.
 
-- latexify_number: Change exponential notation into something nicer for latex.
+- latexify_number: Change exponential notation into something nicer
+  for latex.
 
 - mathexify_number: Change exponential notation into something nicer for
   reStructuredText.
@@ -33,7 +34,8 @@ def generate_rst_table(table, title, headings):
     Parameters
     ----------
     table : list of lists
-        `table[i][j]` is the contents of column `j` of row `i` of the table.
+        `table[i][j]` is the contents of column `j` of row `i` of the
+        table.
     title : string
         The header/title for the table.
     headings : list of strings
@@ -75,16 +77,18 @@ def generate_rst_table(table, title, headings):
 def generate_latex_table(table, title, headings, fixnum=None):
     r"""Generate latex code for a table.
 
-    This function will generate latex code for a table. The table is given with
-    a title, headings for the columns and the contents of the table. For latex
-    we might wish to make some numbers more pretty by removing exponential
-    notation: i.e. ``1.e-10`` can be replaced by ``1.0 \times 10^{-10}``
-    (which should render like :math:`1.0 \times 10^{-10}`).
+    This function will generate latex code for a table. The table is
+    given with a title, headings for the columns and the contents of
+    the table. For latex we might wish to make some numbers more pretty
+    by removing exponential notation: i.e. ``1.e-10`` can be replaced
+    by ``1.0 \times 10^{-10}`` (which should render like
+    :math:`1.0 \times 10^{-10}`).
 
     Parameters
     ----------
     table : list of lists
-        `table[i][j]` is the contents of column `j` of row `i` of the table.
+        `table[i][j]` is the contents of column `j` of row `i` of the
+        table.
     title : string
         The header/title for the table.
     headings : list of strings
@@ -117,8 +121,8 @@ def latexify_number(str_float):
     r"""Change exponential notation into something nicer for latex.
 
     This will change exponential notation, e.g ``1.2e-03``, into
-    ``1.2 \times 10^{-3}`` for latex output which should be rendered like
-    :math:`1.2 \times 10^{-3}`.
+    ``1.2 \times 10^{-3}`` for latex output which should be rendered
+    like :math:`1.2 \times 10^{-3}`.
 
     Parameters
     ----------
@@ -140,8 +144,8 @@ def latexify_number(str_float):
 def mathexify_number(str_float):
     r"""Change exponential notation into something nicer for reStructuredText.
 
-    This will just call `latexify_number` and put it into a math directive for
-    reStructuredText.
+    This will just call `latexify_number` and put it into a math
+    directive for reStructuredText.
 
     Parameters
     ----------

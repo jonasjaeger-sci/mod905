@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This module handles creation of force fields from simulation settings
 
-For the force field we will need to load potential functions. For the potential
-functions we can to two things:
+For the force field we will need to load potential functions.
+For the potential functions we can to two things:
 
 1. We use one of the predefined potential functions.
 

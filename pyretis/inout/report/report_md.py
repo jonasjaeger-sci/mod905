@@ -65,7 +65,8 @@ def _table_md_efficiency(results, fmt='rst'):
         These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
@@ -124,7 +125,8 @@ def _table_md_flux_cycles(results, fmt='rst'):
         These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
@@ -161,7 +163,8 @@ def _table_md_flux(results, fmt='rst'):
         These are the results obtained in the `analyse_flux` function in
         the analysis package.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------

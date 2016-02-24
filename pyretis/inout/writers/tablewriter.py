@@ -2,8 +2,8 @@
 """A module defining a generic writer for tables.
 
 The tables are defined with a set of variables (`keys`) and some rules
-for formatting. The table writer is similar to the other writer but can be
-made more generic and is more suited for creating output that will be
+for formatting. The table writer is similar to the other writer but can
+be made more generic and is more suited for creating output that will be
 displayed on screen.
 
 Important classes defined here:
@@ -42,8 +42,8 @@ def _fill_list(the_list, length, fillvalue=None):
     length : int
         The required length.
     fillvalue : optional
-        The value to insert. If None is given the last item in the list is
-        repeated.
+        The value to insert. If None is given the last item in the list
+        is repeated.
     """
     if fillvalue is None:
         fillvalue = the_list[-1]
@@ -54,7 +54,8 @@ def _fill_list(the_list, length, fillvalue=None):
 class TxtTable(Writer):
     """TxtTable(Writer) - A class for generating table output.
 
-    This class handles writing/reading of output data to a table-like format.
+    This class handles writing/reading of output data to a table-like
+    format.
 
     Attributes
     ----------
@@ -73,25 +74,28 @@ class TxtTable(Writer):
         Parameters
         ----------
         variables : list of strings
-            These are the variables we will use in the table. If not header is
-            specified, then we will create one using these variables.
+            These are the variables we will use in the table. If the
+            header is not specified, then we will create one using
+            these variables.
         title : string
             A title for the table.
         kwargs : dict
             Additional settings for the writer. This may contain:
 
             * width : list of ints
-                The (maximum) width of the columns. If the number of items in
-                this list is smaller than the number of variables, we simply
-                repeat the last width for the number of times we need.
+                The (maximum) width of the columns. If the number of
+                items in this list is smaller than the number of
+                variables, we simply repeat the last width for the
+                number of times we need.
             * labels : list of strings
                 Table headers to use for the columns.
             * spacing : integer
                 The separation between columns. Default value is 1.
             * row_fmt : list of strings
-                The format to apply to the columns. If the number of items in
-                this list is smaller than the number of variables, we simply
-                repeat the last width for the number of times we need.
+                The format to apply to the columns. If the number of
+                items in this list is smaller than the number of
+                variables, we simply repeat the last width for the
+                number of times we need.
         """
         spacing = kwargs.get('spacing', 1)
         header = {'spacing': spacing,
@@ -127,10 +131,11 @@ class TxtTable(Writer):
         Parameters
         ----------
         step : int
-            This is the current step number or a cycle number in a simulation.
+            This is the current step number or a cycle number in a
+            simulation.
         row : dict
-            A dictionary that hopefully contains the variables we want to
-            output.
+            A dictionary that hopefully contains the variables we want
+            to output.
 
         Yields
         ------
@@ -157,10 +162,10 @@ class TxtTable(Writer):
 class PathTable(TxtTable):
     """PathTable(object) - Special table for path ensembles.
 
-    This object will return a table of text with a header and with formatted
-    rows for a path ensemble. The table rows will contain data from the
-    `PathEnsemble.nstats` variable. This table is just meant as output to the
-    screen during a path ensemble simulation.
+    This object will return a table of text with a header and with
+    formatted rows for a path ensemble. The table rows will contain
+    data from the `PathEnsemble.nstats` variable. This table is just
+    meant as output to the screen during a path ensemble simulation.
 
     Attributes
     ----------
@@ -181,13 +186,15 @@ class PathTable(TxtTable):
     def generate_output(self, step, path_ensemble):
         """Generate the output for the PathTable.
 
-        Here we overload the `generate_output` function in `TxtTable` in order
-        to write path ensemble statistics to the (presumably) screen.
+        Here we overload the `generate_output` function in `TxtTable`
+        in order to write path ensemble statistics to (presumably)
+        the screen.
 
         Parameters
         ----------
         step : int
-            This is the current step number or a cycle number in a simulation.
+            This is the current step number or a cycle number in a
+            simulation.
         path_ensemble : object like `pyretis.core.path.PathEnsemble`
             This is the path ensemble to output for.
 
@@ -210,9 +217,10 @@ class PathTable(TxtTable):
 class ThermoTable(TxtTable):
     """Class ThermoTable(TxtTable) - Special table for energy output.
 
-    This object will return a table of text with a header and with formatted
-    rows for energy output. Typical use is in MD simulation where we want
-    to display energies at different steps in the simulations.
+    This object will return a table of text with a header and with
+    formatted rows for energy output. Typical use is in MD simulation
+    where we want to display energies at different steps in the
+    simulations.
 
     Attributes
     ----------

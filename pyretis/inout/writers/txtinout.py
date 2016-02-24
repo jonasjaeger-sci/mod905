@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Functions and classes for text based output and input.
 
-This file contains some functions and classes that handle output and input
-of 'table-based' output. Typically the data created here will be written
-to the screen during the simulation or as a simple column output.
+This file contains some functions and classes that handle output and
+input of 'table-based' output. Typically the data created here will be
+written to the screen during the simulation or as a simple column
+output.
 
 Important classes and functions defined here:
 
@@ -23,9 +24,10 @@ __all__ = ['txt_save_columns']
 def txt_save_columns(outputfile, header, variables, backup=False):
     """Save variables to a text file using `numpy.savetxt`.
 
-    Note that the variables are assumed to be numpy.arrays of equal shape
-    and that the output file may also be a compressed file in gzip format
-    (this is selected by letting the output file name end with '.gz').
+    Note that the variables are assumed to be numpy.arrays of equal
+    shape and that the output file may also be a compressed file in
+    gzip format (this is selected by letting the output file name
+    end with '.gz').
 
     Parameters
     ----------

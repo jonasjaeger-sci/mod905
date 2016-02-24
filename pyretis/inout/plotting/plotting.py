@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Definition of the base class for the plotter.
 
-This module just defines a base class for plotters. This is just to ensure
-that all plotters at least implements some functions and that we can make use
-of them.
+This module just defines a base class for plotters. This is just to
+ensure that all plotters at least implements some functions and that we
+can make use of them.
 
 Important classes defined here:
 
@@ -18,9 +18,9 @@ class Plotter(object):
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which conveniently can be called in
-    different analysis output function. This plotter does not implement any
-    functions, it's just here to make sure that the derived plotters implement
-    these functions.
+    different analysis output function. This plotter does not implement
+    any functions, it's just here to make sure that the derived plotters
+    implement these functions.
 
     Attributes
     ----------
@@ -41,10 +41,7 @@ class Plotter(object):
             A name for the plotter.
         """
         self.plotter_type = plotter_type
-        if backup in (True, 'yes', 'True'):
-            self.backup = True
-        else:
-            self.backup = False
+        self.backup = backup in (True, 'yes', 'True')
 
     def plot_flux(self, results):
         """Function that plots flux results."""

@@ -133,9 +133,9 @@ class OutputTask(object):
 
     This class will handle a output task for a simulation. The
     output task may be something that should print to the screen or
-    a file. This object is a general class for output tasks and the specific
-    writers for file and screen are implemented in the `OutputTaskFile` and
-    `OutputTaskScreen` tasks.
+    a file. This object is a general class for output tasks and the
+    specific writers for file and screen are implemented in the
+    `OutputTaskFile` and `OutputTaskScreen` tasks.
 
     Attributes
     ----------
@@ -149,8 +149,8 @@ class OutputTask(object):
     when : dict
         Determines if the task should be executed.
     extra : dict
-        This dictionary contains some extra parameters that can be passed
-        to the writers.
+        This dictionary contains some extra parameters that can be
+        passed to the writers.
     """
     target = 'undefined'
 
@@ -165,22 +165,26 @@ class OutputTask(object):
         result : string
             This string defines the result we are going to output.
         writer : object like `Writer` from `pyretis.inout.writers`
-            This object will handle formatting of the actual result which can
-            be printed to the screen or to a file.
+            This object will handle formatting of the actual result
+            which can be printed to the screen or to a file.
         kwargs : dict
-            This dictionary contains some extra parameters that can be passed
-            to the writers. The following keywords are currently used:
+            This dictionary contains some extra parameters that can be
+            passed to the writers.
+            The following keywords are currently used:
 
-            * `when`: dict. Determines if and when the task should be executed.
-              Example: `{'every': 10}` will be executed at every 10th step.
-            * `header`: string. Some objects will have a header written each
-              time the we use the write routine. This is for instance used in
-              the trajectory writer to display the current step for a written
-              frame. The given `header` is assumed to contain one '{}' field
-              so that we can insert the current step number.
-            * `extra`: dict. Contains extra settings for the writer. For the
-              trajectory writer this setting can be used to turn on writing
-              of velocities, i.e. `kwargs['extra'] = {'write_vel': True}`.
+            * `when`: dict. Determines if and when the task should be
+              executed. Example: `{'every': 10}` will be executed at
+              every 10th step.
+            * `header`: string. Some objects will have a header written
+              each time the we use the write routine. This is for
+              instance used in the trajectory writer to display the
+              current step for a written frame. The given `header` is
+              assumed to contain one '{}' field so that we can insert
+              the current step number.
+            * `extra`: dict. Contains extra settings for the writer.
+              For the trajectory writer this setting can be used to
+              turn on writing of velocities, i.e.
+              `kwargs['extra'] = {'write_vel': True}`.
         """
         self.name = name
         self.result = result
@@ -232,11 +236,11 @@ class OutputTask(object):
         """Output a task given results from a simulation.
 
         This will output the task using the result found in the
-        `simulation_result` which should be the dictionary returned from a
-        simulation object (e.g. object like `Simulation` from
-        `pyretis.core.simulation.simulation`) after a step. For trajectories,
-        we expect that `simulation_result` contain the key `traj` so we can
-        pass it to the trajectory writer.
+        `simulation_result` which should be the dictionary returned
+        from a simulation object (e.g. object like `Simulation` from
+        `pyretis.core.simulation.simulation`) after a step.
+        For trajectories, we expect that `simulation_result` contain
+        the key `traj` so we can pass it to the trajectory writer.
 
         Parameters
         ----------
@@ -301,12 +305,13 @@ class OutputTaskScreen(OutputTask):
     when : dict
         Determines if the task should be executed.
     header : string
-        Some objects will have a specific header written each time we use
-        the write routine. This is for instance used in the trajectory writer
-        to display the current step for a written frame.
+        Some objects will have a specific header written each time we
+        use the write routine. This is for instance used in the
+        trajectory writer to display the current step for a written
+        frame.
     extra : dict
-        This dictionary contains some extra parameters that can be passed
-        to the writers.
+        This dictionary contains some extra parameters that can be
+        passed to the writers.
     """
     target = 'screen'
 
@@ -369,12 +374,13 @@ class OutputTaskFile(OutputTask):
     when : dict
         Determines if the task should be executed.
     header : string
-        Some objects will have a specific header written each time we use
-        the write routine. This is for instance used in the trajectory writer
-        to display the current step for a written frame.
+        Some objects will have a specific header written each time we
+        use the write routine. This is for instance used in the
+        trajectory writer to display the current step for a written
+        frame.
     extra : dict
-        This dictionary contains some extra parameters that can be passed
-        to the writers.
+        This dictionary contains some extra parameters that can be
+        passed to the writers.
     """
     target = 'file'
 
@@ -393,19 +399,23 @@ class OutputTaskFile(OutputTask):
         filename : string
             The path/filename to write to.
         kwargs : dict
-            This dictionary contains some extra parameters that can be passed
-            to the writers. The following keywords are currently used:
+            This dictionary contains some extra parameters that can be
+            passed to the writers.
+            The following keywords are currently used:
 
-            * `when`: dict. Determines if and when the task should be executed.
-              Example: `{'every': 10}` will be executed at every 10th step.
-            * `header`: string. Some objects will have a header written each
-              time the we use the write routine. This is for instance used in
-              the trajectory writer to display the current step for a written
-              frame. The given `header` is assumed to contain one '{}' field
-              so that we can insert the current step number.
-            * `extra`: dict. Contains extra settings for the writer. For the
-              trajectory writer this setting can be used to turn on writing
-              of velocities, i.e. `kwargs['extra'] = {'write_vel': True}`.
+            * `when`: dict. Determines if and when the task should be
+              executed. Example: `{'every': 10}` will be executed at
+              every 10th step.
+            * `header`: string. Some objects will have a header written
+              each time the we use the write routine. This is for
+              instance used in the trajectory writer to display the
+              current step for a written frame. The given `header` is
+              assumed to contain one '{}' field so that we can insert
+              the current step number.
+            * `extra`: dict. Contains extra settings for the writer.
+              For the trajectory writer this setting can be used to turn
+              on writing of velocities, i.e.
+              `kwargs['extra'] = {'write_vel': True}`.
             * `oldfile` : string. Determines if we should
               overwrite/backup/append to old files.
         """
@@ -460,8 +470,8 @@ class OutputTaskFile(OutputTask):
 def check_user_output_task(task, def_tasks):
     """Add a user-specified output task.
 
-    This method will check the user specified settings for an output task
-    and check if it can be added or not.
+    This method will check the user specified settings for an output
+    task and check if it can be added or not.
 
     Parameters
     ----------
@@ -475,8 +485,8 @@ def check_user_output_task(task, def_tasks):
     out[0] : boolean
         True if the task can be added.
     out[1] : list of strings
-        If a task can not be added, this list will contain some information
-        on why not.
+        If a task can not be added, this list will contain some
+        information on why not.
     """
     msg = []
     add = True

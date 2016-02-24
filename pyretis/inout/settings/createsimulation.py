@@ -2,7 +2,8 @@
 """This module handles creation of simulations from settings.
 
 The different simulations re defined as objects which inherits from
-the base Simulation object defined in `pyretis.core.simulation.simulation`.
+the base Simulation object defined in
+`pyretis.core.simulation.simulation`.
 
 Important classes and functions:
 
@@ -49,10 +50,11 @@ def create_simulation(settings, system):
 
     This function will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
-    task. It will here check what kind of simulation we are to perform and
-    then call the appropriate function for setting that type of simulation up.
-    The rationale here is that different families of functions may handle the
-    settings and especially "missing" settings differently.
+    task. It will here check what kind of simulation we are to perform
+    and then call the appropriate function for setting that type of
+    simulation up. The rationale here is that different families of
+    functions may handle the settings and especially "missing" settings
+    differently.
 
     Parameters
     ----------
@@ -71,8 +73,8 @@ def create_simulation(settings, system):
     try:
         family = _KNOWN_SIMULATIONS[sim_type]
     except KeyError:
-        msg = 'Unknown simulation task {} requested'.format(sim_type)
-        raise ValueError(msg)
+        msgtxt = 'Unknown simulation task {} requested'.format(sim_type)
+        raise ValueError(msgtxt)
     if family == 'md':
         simulation = create_md_simulation(settings, system, sim_type)
     elif family == 'mc':
@@ -80,8 +82,8 @@ def create_simulation(settings, system):
     elif family == 'path':
         simulation = create_path_simulation(settings, system, sim_type)
     else:
-        msg = 'Unknown simulation task {}'.format(sim_type)
-        raise ValueError(msg)
+        msgtxt = 'Unknown simulation task {}'.format(sim_type)
+        raise ValueError(msgtxt)
     msg = ['Created simulation:']
     msg += ['{}'.format(simulation)]
     msgtxt = '\n'.join(msg)
@@ -93,7 +95,8 @@ def create_mc_simulation(settings, system, sim_type):
     """Create a MC simulation from the given settings.
 
     This is a helper function that will do some checks and set up one
-    of the MC simulations defined in this module based on the given settings.
+    of the MC simulations defined in this module based on the given
+    settings.
 
     Parameters
     ----------
@@ -102,9 +105,10 @@ def create_mc_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the task we are to set up a simulation for. Note that
-        the task is also given in `settings['task']`. It is given here since
-        we typically call this function after checking the task.
+        This defines the task we are to set up a simulation for. Note
+        that the task is also given in `settings['task']`. It is given
+        here since we typically call this function after checking the
+        task.
 
     Returns
     -------
@@ -116,8 +120,8 @@ def create_mc_simulation(settings, system, sim_type):
     We are duplicating code here - the checking of required settings is
     identical to the checking in other simulation creators, for instance
     the `create_path_simulation` in `pyretis.core.simulation.path_simulation`.
-    This is just in case someone wants to add some magic that amends missing
-    settings.
+    This is just in case someone wants to add some magic that amends
+    missing settings.
     """
     simulation = None
     required, not_found = check_settings(settings, _REQUIRED[sim_type])
@@ -154,8 +158,9 @@ def create_mc_simulation(settings, system, sim_type):
 def create_md_simulation(settings, system, sim_type):
     """Create a MD simulation from the given settings.
 
-    This is a helper function that will do some checks and set up one of the
-    MD simulations defined in this module based on the given settings.
+    This is a helper function that will do some checks and set up one
+    of the MD simulations defined in this module based on the given
+    settings.
 
     Parameters
     ----------
@@ -164,9 +169,10 @@ def create_md_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the task we are to set up a simulation for. Note that
-        the task is also given in `settings['task']`. It is given here since
-        we typically call this function after checking the task.
+        This defines the task we are to set up a simulation for.
+        Note that the task is also given in `settings['task']`.
+        It is given here since we typically call this function after
+        checking the task.
 
     Returns
     -------
@@ -206,8 +212,9 @@ def create_md_simulation(settings, system, sim_type):
 def create_path_simulation(settings, system, sim_type):
     """Create a path simulation from the given settings.
 
-    This is a helper function that will do some checks and set up one of the
-    path simulations defined in this module based on the given settings.
+    This is a helper function that will do some checks and set up one
+    of the path simulations defined in this module based on the given
+    settings.
 
     Parameters
     ----------
@@ -216,9 +223,10 @@ def create_path_simulation(settings, system, sim_type):
     system : object like `System` from `pyretis.core.system`
         This is the system for which the simulation will run.
     sim_type : string
-        This defines the task we are to set up a simulation for. Note that
-        the task is also given in `settings['task']`. It is given here since
-        we typically call this function after checking the task.
+        This defines the task we are to set up a simulation for.
+        Note that the task is also given in `settings['task']`.
+        It is given here since we typically call this function after
+        checking the task.
 
     Returns
     -------
@@ -230,8 +238,8 @@ def create_path_simulation(settings, system, sim_type):
     We are duplicating code here - the checking of required settings is
     identical to the checking in other simulation creators, for instance
     the `create_md_simulation` in `pyretis.core.simulation.md_simulation`.
-    This is just in case someone wants to add some magic that amends missing
-    settings.
+    This is just in case someone wants to add some magic that amends
+    missing settings.
     """
     simulation = None
     required, not_found = check_settings(settings, _REQUIRED[sim_type])

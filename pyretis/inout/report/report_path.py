@@ -5,7 +5,8 @@ The reports are useful for displaying results from the analysis.
 
 Important functions defined here:
 
-- generate_report_tis_path: Generate a report for a single TIS simulation.
+- generate_report_tis_path: Generate a report for a single TIS
+  simulation.
 
 - generate_report_tis: Generate a report for the over-all results from a
   TIS simulation.
@@ -25,12 +26,13 @@ def generate_report_tis_path(analysis, output='rst'):
     Parameters
     ----------
     analysis : dict
-        This is the output (and some input) for the analysis. The keys are:
+        This is the output (and some input) for the analysis.
+        The keys are:
 
-        * `tis-fig`: list of corresponding figures (to 'tis')
-        * `detect`: locations of the interfaces used for detection
-        * `ensemble`: The name of the path ensemble we are reporting results
-          for.
+        * `tis-fig`: list of corresponding figures (to 'tis').
+        * `detect`: locations of the interfaces used for detection.
+        * `ensemble`: The name of the path ensemble we are reporting
+          results for.
         * `interfaces`: list with the interfaces used for this path
           ensemble.
     output : string, optional
@@ -82,14 +84,14 @@ def generate_report_tis(analysis, output='rst'):
         we make use of are:
 
         * `tis`: list of dicts with the results from analysing the path
-          ensembles. `analysis['tis'][i]` contains the analysys results for
-          path ensemble no. `i`.
-        * `tis-fig`: list of corresponding figures (to 'tis')
-        * `matched`: results from the matching of probability
-        * `matched-fig`: the figure corresponding to 'matched'
-        * `detect`: locations of the interfaces used for detection
-        * `ensembles`: list of strings with the names of the path ensembles
-          we are reporting results for.
+          ensembles. `analysis['tis'][i]` contains the analysis results
+          for path ensemble no. `i`.
+        * `tis-fig`: list of corresponding figures (to 'tis').
+        * `matched`: results from the matching of probability.
+        * `matched-fig`: the figure corresponding to 'matched'.
+        * `detect`: locations of the interfaces used for detection.
+        * `ensembles`: list of strings with the names of the path
+          ensembles we are reporting results for.
         * `interfaces`: list of lists which give the interfaces for the
           different ensembles.
     output : string, optional
@@ -159,7 +161,8 @@ def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
     detect : list of floats
         These are the detect interfaces used in the analysis.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
@@ -203,7 +206,8 @@ def _table_probability(path_ensembles, results, fmt='rst'):
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
@@ -246,7 +250,8 @@ def _table_path(path_ensembles, results, fmt='rst'):
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
@@ -291,7 +296,8 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
-        Determines if we create reStructuredText ('rst') or latex ('tex').
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
 
     Returns
     -------
