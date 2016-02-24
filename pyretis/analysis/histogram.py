@@ -67,9 +67,9 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
 def histogram_and_avg(data, bins, density=True):
     """Create histogram an return bins, midpoints and simple statistics.
 
-    The simple statistics includes the mean value and the standard deviation.
-    The return structure is useful for plotting routines. The midpoints
-    returned are the midpoints of the bins.
+    The simple statistics includes the mean value and the standard
+    deviation. The return structure is useful for plotting routines.
+    The midpoints returned are the midpoints of the bins.
 
     Parameters
     ----------
@@ -87,8 +87,8 @@ def histogram_and_avg(data, bins, density=True):
     out[1] : numpy.array
         The mid points for the bins.
     out[2] : tuple of floats
-        These are some simple statistics, out[2][0] is the average
-        out[2][1] is the standard deviation.
+        These are some simple statistics, `out[2][0]` is the average
+        `out[2][1]` is the standard deviation.
 
     See Also
     --------
@@ -120,8 +120,8 @@ def histogram_and_avg(data, bins, density=True):
 def _match_histograms(histo1, histo2, bin_x, overlap):
     """Function to match two histograms.
 
-    The matching is done so that the integral of the overlapping regions of
-    the two histograms are equal.
+    The matching is done so that the integral of the overlapping regions
+    of the two histograms are equal.
 
     Parameters
     ----------
@@ -131,8 +131,8 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
         The second histogram, this is the histogram that will be scaled.
     bin_x : numpy.array
         This is the bin mid-points of the histograms. Note that we
-        assume here that `histo1` and `histo2` are obtained using the same
-        number of bins and limits.
+        assume here that `histo1` and `histo2` are obtained using the
+        same number of bins and limits.
     overlap : object like list (or tuple or numpy.array).
         This is the overlapping region.
 
@@ -163,7 +163,7 @@ def match_all_histograms(histograms, umbrellas):
     histograms : list of numpy.arrays
         The histograms to match.
     umbrellas : list of lists
-        The umbrellas used in the computation.
+        The umbrella windows used in the computation.
 
     Returns
     -------

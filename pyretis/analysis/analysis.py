@@ -64,22 +64,23 @@ def block_error(data, maxblock=None, blockskip=1):
     This function will estimate the standard deviation in the input
     data by performing a block analysis. The number of blocks
     to consider can be specified or it will be taken as the
-    half of the length of the input data. Averages and variance is calculated
-    using a on-the-fly algorithm [1]_.
+    half of the length of the input data. Averages and variance are
+    calculated using a on-the-fly algorithm [1]_.
 
     Parameters
     ----------
     data : numpy.array (or iterable with data points)
         The data to analyse.
     maxblock : int, optional
-        Can be used to set the maximum length of the blocks to consider.
-        Note that the `maxbloc` will never be set longer than half
-        the length in data.
+        Can be used to set the maximum length of the blocks to
+        consider. Note that the `maxbloc` will never be set longer
+        than half the length in data.
     blockskip : int, optional
         This can be used to skip certain block lengths, i.e.
         `blockskip = 1` will consider all blocks up to `maxblock`, while
-        `blockskip = n` will consider every n'th block up to `maxblock`, i.e.
-        it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`, etc.
+        `blockskip = n` will consider every n'th block up to `maxblock`,
+        i.e. it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`,
+        and so on.
 
     Returns
     -------
@@ -90,7 +91,8 @@ def block_error(data, maxblock=None, blockskip=1):
     block_err : numpy.array
         Estimate of errors as function of block length.
     block_err_avg : float
-        Average of the error estimate for blocks with ``length > maxblock//2``.
+        Average of the error estimate using blocks where
+        ``length > maxblock//2``.
 
     References
     ----------
@@ -134,7 +136,10 @@ def block_error(data, maxblock=None, blockskip=1):
 
 
 def block_error_corr(data, maxblock=None, blockskip=1):
-    """Run block error analysis, obtain relative errors & correlation length.
+    """Run block error analysis on the given data.
+
+    This will run the block error analysis and return relative
+    errors and the correlation length.
 
     Parameters
     ----------
@@ -145,8 +150,9 @@ def block_error_corr(data, maxblock=None, blockskip=1):
     blockskip : int, optional
         This can be used to skip certain block lengths, i.e.
         `blockskip = 1` will consider all blocks up to `maxblock`, while
-        `blockskip = n` will consider every n'th block up to `maxblock`, i.e.
-        it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`, etc.
+        `blockskip = n` will consider every n'th block up to `maxblock`,
+        i.e. it will use block lengths equal to `1`, `1 + n`, `1 + 2*n`,
+        and so on.
 
     Returns
     -------
@@ -213,14 +219,14 @@ def mean_square_displacement(data, ndt=None):
         This numpy.array contain the data as a function of time.
     ndt : int, optional
         This parameter is the number of time origins. I.e. points up to
-        ndt will be used as time origins. If not specified the size of the
-        input ``data // 5`` will be used.
+        ndt will be used as time origins. If not specified the value of
+        the input ``data.size // 5`` will be used.
 
     Returns
     -------
     msd : numpy.array, 2D
-        First column is the mean squared displacement and the second column is
-        the corresponding standard deviation.
+        First column is the mean squared displacement and the second
+        column is the corresponding standard deviation.
     """
     length = data.size
     if ndt is None:

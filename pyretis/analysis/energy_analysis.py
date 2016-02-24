@@ -10,9 +10,9 @@ __all__ = ['analyse_energies']
 def analyse_energies(energies, settings):
     """Run the energy analysis on several energy types.
 
-    The function will run the energy analysis on several energy types and
-    collect the energies into a structure which is convenient for plotting
-    them.
+    The function will run the energy analysis on several energy types
+    and collect the energies into a structure which is convenient for
+    plotting the results.
 
     Parameters
     ----------
@@ -24,8 +24,8 @@ def analyse_energies(energies, settings):
     Returns
     -------
     results : dict
-        For each energy key `results[key]` contains the result from the energy
-        analysis.
+        For each energy key `results[key]` contains the result from the
+        energy analysis.
 
     See Also
     --------

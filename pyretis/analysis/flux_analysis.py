@@ -12,14 +12,15 @@ __all__ = ['analyse_flux']
 def analyse_flux(fluxdata, settings, simulation_settings):
     """Run the analysis on the given flux data.
 
-    This will run the flux analysis and collect the results into a structure
-    which is convenient for plotting and reporting the results.
+    This will run the flux analysis and collect the results into a
+    structure which is convenient for plotting and reporting the
+    results.
 
     Parameters
     ----------
     fluxdata : list of tuples of integers
-        The contents of this array is the data obtained from a MD simulation
-        for the fluxes.
+        The contents of this array is the data obtained from a MD
+        simulation for the fluxes.
     settings : dict
         This dict contains the settings for the analysis.
     simulation_settings : dict
@@ -29,8 +30,8 @@ def analyse_flux(fluxdata, settings, simulation_settings):
     Returns
     -------
     results : dict
-        This dict contains the results from the flux analysis. See the keys
-        defined below.
+        This dict contains the results from the flux analysis.
+        The keys are defined in the `results` variable.
     """
     end_step = simulation_settings['endcycle']
     time_step = simulation_settings['integrator']['timestep']
@@ -90,8 +91,8 @@ def _effective_crossings(fluxdata, nint, end_step):
     Parameters
     ----------
     fluxdata : list of tuples of ints
-        The contents of this array is the data obtained from a MD simulation
-        for the fluxes.
+        The contents of this array is the data obtained from a
+        ``md-flux`` simulation.
     nint : int
         The number of interfaces used.
     end_step : int
@@ -100,20 +101,25 @@ def _effective_crossings(fluxdata, nint, end_step):
     Returns
     -------
     eff_cross : list of lists
-        `eff_cross[i]` is the effective crossings times for interface `i`.
+        `eff_cross[i]` is the effective crossings times for
+        interface `i`.
     ncross : list of ints
         `ncross[i]` is the number of crossings for interface `i`.
     neffcross : list of ints
-        `neffcross[i]` is the number of effective crossings for interface `i`.
+        `neffcross[i]` is the number of effective crossings for
+        interface `i`.
     time_in_state : dict
-        The time spent in the different states which are labelled with the
-        keys 'A', 'B', 'OA', 'OB' where 'O' is taken to mean overall state.
+        The time spent in the different states which are labelled with
+        the keys 'A', 'B', 'OA', 'OB'. 'O' is taken to mean the
+        'overall' state.
 
     Note
     ----
-    We do here `intf - 1`. This is just to be compatible with the old Fortran
-    code where the interfaces are numberes 1, 2, 3 rather than 0, 1, 2.
-    If this is to be changed in the future the `-1` can just be removed.
+    We do here `intf - 1`. This is just to be compatible with the old
+    Fortran code where the interfaces are numbered 1, 2, 3 rather than
+    0, 1, 2. If this is to be changed in the future the `-1` can just
+    be removed. Such a change will also require changes to the writer
+    for flux data!
     """
     # First line is used to determine if we start in B or A
     overallstate_a = not (fluxdata[0][1] == 2 and fluxdata[0][2] < 0)

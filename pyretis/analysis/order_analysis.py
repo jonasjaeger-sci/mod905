@@ -24,8 +24,8 @@ def analyse_orderp(orderdata, settings):
     Returns
     -------
     results : numpy.array
-        For each order parameter `key`, `results[key]` contains the result
-        from the analysis.
+        For each order parameter `key`, `results[key]` contains the
+        result from the analysis.
 
     See Also
     --------
@@ -33,9 +33,10 @@ def analyse_orderp(orderdata, settings):
 
     Note
     ----
-    We here (and in the subsequent plotting) make certain assumptions about
-    the structure, i.e. the positions are assumed to have a specific meaning.
-    (column zero is the time, column one the order parameter etc...)
+    We here (and in the plotting routines) make certain assumptions
+    about the structure, i.e. the positions are assumed to have a
+    specific meaning: column zero is the time, column one the order
+    parameter and so on.
     """
     results = []
     for i, data in enumerate(orderdata):

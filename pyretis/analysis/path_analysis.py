@@ -23,8 +23,8 @@ def _get_successful(path_ensemble, idetect):
     rejected and the `PathEnsemble.get_accepted()` is used here to
     iterate over accepted paths. Successful paths are defined as paths
     which are able to reach the interface specified with `idetect`. For
-    each accepted path, this function will give a value of `1` if the path
-    was successful and `0` otherwise.
+    each accepted path, this function will give a value of `1` if the
+    path was successful and `0` otherwise.
 
     Parameters
     ----------
@@ -65,15 +65,16 @@ def _running_pcross(path_ensemble, idetect, data=None):
         or not.
     data : numpy.array
         This is the data created by `_get_successful(path_ensemble)`
-        If this function has been executed, the result can be re-used here
-        by specifying data. If not, it will be generated.
+        If this function has been executed, the result can be re-used
+        here by specifying data. If not, it will be generated.
 
     Returns
     -------
     out[0] : numpy.array
         The running average of the crossing probability
     out[1] : numpy.array
-        The original data, can be used further in other analysis functions.
+        The original data, can be further put to use in the other
+        analysis functions.
 
     See Also
     --------
@@ -89,8 +90,8 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
     The crossing probability is here obtained as a function of the order
     parameter. The actual calculation is performed by
-    `_pcross_lambda_cumulative` and this function is just a wrapper in order to
-    handle input objects like `pyretis.core.path.PathEnsemble`.
+    `_pcross_lambda_cumulative` and this function is just a wrapper in
+    order to handle input objects like `pyretis.core.path.PathEnsemble`.
 
     Parameters
     ----------
@@ -135,7 +136,7 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
 def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
                               weights=None):
-    """Calculate crossing probability as a function of the order parameter.
+    """Obtain crossing probability as a function of the order parameter.
 
     It will do the actual calculation of the crossing probability as
     a function of order parameter. It is split off from `pcross_lambda`
@@ -154,8 +155,8 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         This is the number of grid points.
     weights : numpy.array, optional
         The weight of each order parameter. This is used in order to
-        count a specific order parameter more than once. If not given, the
-        values in `orderparam` will be weighted equally.
+        count a specific order parameter more than once. If not given,
+        the values in `orderparam` will be weighted equally.
     """
     lamb = np.linspace(ordermin, ordermax, ngrid)
     pcross = np.zeros(ngrid)
@@ -190,18 +191,21 @@ def _get_path_distribution(path_ensemble, bins=1000):
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we will analyse.
     bins : int, optional
-        The number of bins to use for the histograms for the distribution.
+        The number of bins to use for the histograms for the
+        distribution.
 
     Returns
     -------
     out[0] : list, [numpy.array, numpy.array, tuple]
-        Result for accepted paths (distribution). `out[0][0]` is the histogram
-        and out[0][1] are the mid points for bins. `out[0][2]` is a tuple with
-        the average and standard deviation for the length.
+        Result for accepted paths (distribution). `out[0][0]` is the
+        histogram and `out[0][1]` are the mid points for bins.
+        `out[0][2]` is a tuple with the average and standard deviation
+        for the length.
     out[1] : list, [numpy.array, numpy.array, tuple]
-        Result for all paths (distribution). `out[1][0]` is the histogram and
-        out[1][1] are the mid points for bins. `out[1][2]` is a tuple with the
-        average and standard deviation for the length.
+        Result for all paths (distribution). `out[1][0]` is the
+        histogram and `out[1][1]` are the mid points for bins.
+        `out[1][2]` is a tuple with the average and standard deviation
+        for the length.
 
     See Also
     --------
@@ -224,14 +228,16 @@ def _get_path_distribution(path_ensemble, bins=1000):
 def _get_path_length(path):
     """Return the path length for different moves.
 
-    Different moves may have a different way of obtaining the path length.
-    (Example time-reversal vs. shooting move).
+    Different moves may have a different way of obtaining the path
+    length. (Example: time-reversal vs. shooting move).
 
     Parameters
     ----------
     path : dict
-        This is the dict containing the information about the path, typically
-        obtained by a `for path in path_ensemble.get_paths():`.
+        This is the dict containing the information about the path.
+        It can typically be obtained by iterating over the path
+        ensemble object, e.g. with a
+        `for path in path_ensemble.get_paths():`.
 
     Returns
     -------
@@ -263,19 +269,21 @@ def _shoot_analysis(path_ensemble, bins=1000):
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is the path ensemble we will analyse.
     bins : int, optional
-        The number of bins to use for the histograms for the distribution.
+        The number of bins to use for the histograms for the
+        distribution.
 
     Returns
     -------
     out[0] : dict
-        For each possible status ('ACC, 'BWI', etc) this dict will contain
-        a histogram as returned by the histogram function.
-        It will also contain a 'REJ' key which is the concatenation of all
-        rejected and a 'ALL' key which is simply all the values.
+        For each possible status ('ACC, 'BWI', etc) this dict will
+        contain a histogram as returned by the histogram function.
+        It will also contain a 'REJ' key which is the concatenation
+        of all rejections and a 'ALL' key which is simply all the
+        values.
     out[1] : dict
-        For each possible status ('ACC, 'BWI', etc) this dict will contain
-        the scale factors for the histograms. The scale factors are obtained
-        by dividing with the 'ALL' value.
+        For each possible status ('ACC, 'BWI', etc) this dict will
+        contain the scale factors for the histograms. The scale
+        factors are obtained by dividing with the 'ALL' value.
 
     See Also
     --------
@@ -334,14 +342,14 @@ def _create_shoot_histograms(shoot_stats, bins):
     Returns
     -------
     out[0] : dict
-        For each possible status ('ACC, 'BWI', etc) this dict will contain
-        a histogram as returned by the histogram function.
-        It will also contain a 'REJ' key which is the concatenation of all
-        rejected and a 'ALL' key which is simply all the values.
+        For each possible status ('ACC, 'BWI', etc) this dict will
+        contain a histogram as returned by the histogram function.
+        It will also contain a 'REJ' key which is the concatenation of
+        all rejections and a 'ALL' key which is simply all the values.
     out[1] : dict
-        For each possible status ('ACC, 'BWI', etc) this dict will contain
-        the scale factors for the histograms. The scale factors are obtained
-        by dividing with the 'ALL' value.
+        For each possible status ('ACC, 'BWI', etc) this dict will
+        contain the scale factors for the histograms. The scale factors
+        are obtained by dividing with the 'ALL' value.
 
     See Also
     --------
@@ -363,25 +371,25 @@ def _create_shoot_histograms(shoot_stats, bins):
 def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     """Analyse a path ensemble object.
 
-    This function will make use of the different analysis functions and analyse
-    a path ensemble. It will also output the results using the specified
-    output object. This analysis function assumes that the given path ensemble
-    is an object like `pyretis.core.path.PathEnsemble` and that this path
-    ensemble contains all the paths that are needed.
+    This function will make use of the different analysis functions and
+    analyse a path ensemble. This analysis function assumes that the
+    given path ensemble is an object like
+    `pyretis.core.path.PathEnsemble` and that this path ensemble
+    contains all the paths that are needed.
 
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         The path ensemble to analyse.
     settings : dict
-        This dictionary contains settings for the analysis. Here we make use
-        of the keys:
+        This dictionary contains settings for the analysis.
+        Here we make use of the keys:
 
-        * `ngrid`: The number of grid points for calculating the crossing
-          probability as a function of the order parameter.
+        * `ngrid`: The number of grid points for calculating the
+          crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
-          analysis. Note that this will maximum be equal the half the length
-          of the data, see `block_error` in `.analysis`.
+          analysis. Note that this will maximum be equal the half the
+          length of the data, see `block_error` in `.analysis`.
         * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
           to `maxblock`, i.e. it will use block lengths equal to `1`,
@@ -393,8 +401,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     Returns
     -------
     out : dict
-        This dictionary contains the main results for the analysis which
-        can be used for plotting or other kinds of output.
+        This dictionary contains the main results for the analysis
+        which can be used for plotting or other kinds of output.
 
     See Also
     --------
@@ -448,27 +456,27 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
 def analyse_path_ensemble(path_ensemble, settings, idetect):
     """Analyse a path ensemble.
 
-    This function will make use of the different analysis functions and analyse
-    a path ensemble. It will also output the results using the specified
-    output object. This function is more general than the
-    `analyse_path_ensemble_object` function in that it should work on both
-    `PathEnsemble` and `PathEnsembleFile` objects. The running average is
-    updated on-the-fly, see Wikipedia for details [wikimov]_.
+    This function will make use of the different analysis functions and
+    analyse a path ensemble. This function is more general than the
+    `analyse_path_ensemble_object` function in that it should work on
+    both `PathEnsemble` and `PathEnsembleFile` objects. The running
+    average is updated on-the-fly, see Wikipedia for
+    details [wikimov]_.
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile` from
-        `pyretis.core.path and `pyretis.inout.pathfile`. This is the path
-        ensemble to analyse.
+    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
+        from `pyretis.core.path and `pyretis.inout.pathfile`.
+        This is the path ensemble to analyse.
     settings : dict
-        This dictionary contains settings for the analysis. We make use of the
-        following keys:
+        This dictionary contains settings for the analysis.
+        We make use of the following keys:
 
-        * `ngrid`: The number of grid points for calculating the crossing
-          probability as a function of the order parameter.
+        * `ngrid`: The number of grid points for calculating the
+          crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
-          analysis. Note that this will maximum be equal the half the length
-          of the data, see `block_error` in `.analysis`.
+          analysis. Note that this will maximum be equal the half the
+          length of the data, see `block_error` in `.analysis`.
         * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
           to `maxblock`, i.e. it will use block lengths equal to `1`,
@@ -569,7 +577,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
 def match_probabilities(path_results, detect):
     """Match probabilities from several path ensembles.
 
-    It will also calculate efficiencies and error for the matched probability.
+    It will also calculate efficiencies and error for the matched
+    probability.
 
     Parameters
     ----------
