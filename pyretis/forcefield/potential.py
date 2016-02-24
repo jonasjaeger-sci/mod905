@@ -22,10 +22,9 @@ class PotentialFunction(object):
         Short description of the potential.
     dim : int
         Represents the spatial dimensionality of the potential.
-    _params : dict
-        Contains the parameters.
-    params : descriptor object.
-        The parameters, property variant of `_params`.
+    params : dict
+        Contains the parameters. This dict defines on initiation what
+        parameters the potential will handle and store.
     """
 
     def __init__(self, dim=1, desc=''):
@@ -40,29 +39,18 @@ class PotentialFunction(object):
         """
         self.dim = dim
         self.desc = desc
-        self._params = {}
+        self.params = {}
 
-    @property
-    def params(self):
-        """Return the parameters as a dict"""
-        return self._params
-
-    @params.setter
-    def params(self, parameters):
+    def set_parameters(self, parameters):
         """Update all parameters. Input is assumed to be a dict."""
         for key in parameters:
-            if key in self._params:
-                self._params[key] = parameters[key]
+            if key in self.params:
+                self.params[key] = parameters[key]
             else:
                 msg = 'Could not find "{}" in parameters. Ignoring!'
                 msg = msg.format(key)
                 logger.warning(msg)
         self.check_parameters()
-
-    @params.deleter
-    def params(self):
-        """Delete all parameters."""
-        del self._params
 
     def check_parameters(self):
         """Check on the consistency of the parameters.
@@ -74,7 +62,7 @@ class PotentialFunction(object):
         out : boolean
             True if the check(s) pass.
         """
-        if len(self._params) == 0:
+        if len(self.params) == 0:
             logger.warning('No parameters are set for the potential')
             return False
         return True
@@ -83,6 +71,6 @@ class PotentialFunction(object):
         """Return the string description of the potential."""
         msg = ['Potential: {}'.format(self.desc)]
         strinfo = '{}: {}'
-        for key in sorted(self._params):
-            msg.append(strinfo.format(key, self._params[key]))
+        for key in sorted(self.params):
+            msg.append(strinfo.format(key, self.params[key]))
         return '\n'.join(msg)

@@ -55,7 +55,7 @@ class DoubleWell(PotentialFunction):
             Description of the force field.
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
-        self._params = {'a': a, 'b': b, 'c': c}
+        self.params = {'a': a, 'b': b, 'c': c}
 
     def potential(self, pos):
         """Evaluate the potential for the one-dimensional double well.
@@ -70,8 +70,8 @@ class DoubleWell(PotentialFunction):
         out : float
             The potential energy.
         """
-        v_pot = (self._params['a'] * pos**4 -
-                 self._params['b'] * (pos - self._params['c'])**2)
+        v_pot = (self.params['a'] * pos**4 -
+                 self.params['b'] * (pos - self.params['c'])**2)
         return v_pot.sum()
 
     def force(self, pos):
@@ -89,8 +89,8 @@ class DoubleWell(PotentialFunction):
         out[1] : numpy.array
             The virial, currently not implemented for this potential
         """
-        forces = (-4.0*(self._params['a'] * pos**3) +
-                  2.0*(self._params['b'] * (pos - self._params['c'])))
+        forces = (-4.0*(self.params['a'] * pos**3) +
+                  2.0*(self.params['b'] * (pos - self.params['c'])))
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
@@ -112,11 +112,11 @@ class DoubleWell(PotentialFunction):
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
         """
-        dist = pos - self._params['c']
+        dist = pos - self.params['c']
         pos3 = pos**3
-        v_pot = self._params['a'] * pos3 * pos - self._params['b'] * dist**2
-        forces = (-4.0 * (self._params['a'] * pos3) +
-                  2.0 * (self._params['b'] * dist))
+        v_pot = self.params['a'] * pos3 * pos - self.params['b'] * dist**2
+        forces = (-4.0 * (self.params['a'] * pos3) +
+                  2.0 * (self.params['b'] * dist))
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return v_pot.sum(), forces, virial
 
@@ -159,8 +159,8 @@ class RectangularWell(PotentialFunction):
             The parameters for this potential.
         """
         super(RectangularWell, self).__init__(dim=1, desc=desc)
-        self._params = {'left': left, 'right': right,
-                        'largenumber': largenumber}
+        self.params = {'left': left, 'right': right,
+                       'largenumber': largenumber}
         self.check_parameters()
 
     def check_parameters(self):
@@ -171,7 +171,7 @@ class RectangularWell(PotentialFunction):
         out : None
             Returns `None` but might give a warning.
         """
-        if self._params['left'] >= self._params['right']:
+        if self.params['left'] >= self.params['right']:
             msg = 'Setting left >= right in RectangularWell potential!'
             logger.warning(msg)
 
@@ -188,9 +188,9 @@ class RectangularWell(PotentialFunction):
         out : float
             The potential energy.
         """
-        left = self._params['left']
-        right = self._params['right']
-        largenumber = self._params['largenumber']
+        left = self.params['left']
+        right = self.params['right']
+        largenumber = self.params['largenumber']
         v_pot = np.where(np.logical_and(pos > left, pos < right),
                          0.0, largenumber)
         return v_pot.sum()

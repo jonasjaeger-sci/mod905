@@ -60,21 +60,15 @@ class DoubleWellWCA(PotentialFunction):
             Description of the force field.
         """
         super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
-        self._params = {'height': 0.0,
-                        'height4': 0.0,
-                        'rwidth': 0.0,
-                        'rzero': 0.0,
-                        'types': [],
-                        'width': 0.0,
-                        'width2': 0.0}
+        self.params = {'height': 0.0,
+                       'height4': 0.0,
+                       'rwidth': 0.0,
+                       'rzero': 0.0,
+                       'types': [],
+                       'width': 0.0,
+                       'width2': 0.0}
 
-    @property
-    def params(self):
-        """Return the parameter dictionary."""
-        return self._params
-
-    @params.setter
-    def params(self, parameters):
+    def set_parameters(self, parameters):
         """Add new potential parameters to the potential.
 
         Parameters
@@ -85,16 +79,16 @@ class DoubleWellWCA(PotentialFunction):
             'height': 6.0}
         """
         for key in parameters:
-            if key in self._params:
-                self._params[key] = parameters[key]
+            if key in self.params:
+                self.params[key] = parameters[key]
             else:
                 msg = 'Unknown parameter {} - ignored!'.format(key)
                 logging.warning(msg)
-        if self._params['types'] is not None:
-            self._params['types'] = set(self._params['types'])
-        self._params['width2'] = self._params['width']**2
-        self._params['rwidth'] = self._params['rzero'] + self._params['width']
-        self._params['height4'] = 4.0 * self._params['height']
+        if self.params['types'] is not None:
+            self.params['types'] = set(self.params['types'])
+        self.params['width2'] = self.params['width']**2
+        self.params['rwidth'] = self.params['rzero'] + self.params['width']
+        self.params['height4'] = 4.0 * self.params['height']
 
     def _activate(self, itype, jtype):
         """Determine if we should calculate a interaction or not.
@@ -106,12 +100,12 @@ class DoubleWellWCA(PotentialFunction):
         jtype : string
             Particle type for particle j
         """
-        if self._params['types'] is None:
+        if self.params['types'] is None:
             return True
         else:
             pair1, pair2 = (itype, jtype), (jtype, itype)
-            return (pair1 in self._params['types'] or
-                    pair2 in self._params['types'])
+            return (pair1 in self.params['types'] or
+                    pair2 in self.params['types'])
 
     def min_max(self):
         """Return the minima & maximum of the `DoubleWellWCA` potential.
@@ -128,8 +122,8 @@ class DoubleWellWCA(PotentialFunction):
         out[2] : float
             Maximum, located at: ``rzero + width``.
         """
-        rzero = self._params['rzero']
-        width = self._params['width']
+        rzero = self.params['rzero']
+        width = self.params['width']
         return rzero, rzero + 2.0 * width, rzero + width
 
     def potential(self, particles, box):
@@ -147,9 +141,9 @@ class DoubleWellWCA(PotentialFunction):
         The potential energy as a float.
         """
         v_pot = 0.0
-        rwidth = self._params['rwidth']
-        width2 = self._params['width2']
-        height = self._params['height']
+        rwidth = self.params['rwidth']
+        width2 = self.params['width2']
+        height = self.params['height']
         for pair in particles.pairs():
             i, j, itype, jtype = pair
             if self._activate(itype, jtype):
@@ -178,9 +172,9 @@ class DoubleWellWCA(PotentialFunction):
         """
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
-        rwidth = self._params['rwidth']
-        width2 = self._params['width2']
-        height4 = self._params['height4']
+        rwidth = self.params['rwidth']
+        width2 = self.params['width2']
+        height4 = self.params['height4']
         for pair in particles.pairs():
             i, j, itype, jtype = pair
             if self._activate(itype, jtype):
@@ -222,10 +216,10 @@ class DoubleWellWCA(PotentialFunction):
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
         v_pot = 0.0
-        rwidth = self._params['rwidth']
-        width2 = self._params['width2']
-        height = self._params['height']
-        height4 = self._params['height4']
+        rwidth = self.params['rwidth']
+        width2 = self.params['width2']
+        height = self.params['height']
+        height4 = self.params['height4']
         for pair in particles.pairs():
             i, j, itype, jtype = pair
             if self._activate(itype, jtype):

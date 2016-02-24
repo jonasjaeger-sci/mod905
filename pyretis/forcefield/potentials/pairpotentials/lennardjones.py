@@ -84,15 +84,9 @@ class PairLennardJonesCut(PotentialFunction):
         self._lj4 = {}
         self._rcut2 = {}
         self._offset = {}
-        self._params = {}
+        self.params = {}
 
-    @property
-    def params(self):
-        """Return the parameters as a dict."""
-        return self._params
-
-    @params.setter
-    def params(self, parameters):
+    def set_parameters(self, parameters):
         """Update all parameters.
 
         Here, we generate pair interactions, since that is what this
@@ -103,7 +97,7 @@ class PairLennardJonesCut(PotentialFunction):
         parameters : dict
             The input base parameters
         """
-        self._params = {}
+        self.params = {}
         pair_param = generate_pair_interactions(parameters)
         for pair in pair_param:
             eps_ij = pair_param[pair]['epsilon']
@@ -122,12 +116,7 @@ class PairLennardJonesCut(PotentialFunction):
                 except ZeroDivisionError:
                     vcut = 0.0
             self._offset[pair] = vcut
-            self._params[pair] = pair_param[pair]
-
-    @params.deleter
-    def params(self):
-        """Delete all parameters."""
-        del self._params
+            self.params[pair] = pair_param[pair]
 
     def __str__(self):
         """Generate a string with the potential parameters.
@@ -147,9 +136,9 @@ class PairLennardJonesCut(PotentialFunction):
         strparam.append('Pair parameters:')
         strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
                                          'cut-off'))
-        for pair in sorted(self._params):
-            eps_ij = self._params[pair]['epsilon']
-            sig_ij = self._params[pair]['sigma']
+        for pair in sorted(self.params):
+            eps_ij = self.params[pair]['epsilon']
+            sig_ij = self.params[pair]['sigma']
             rcut = np.sqrt(self._rcut2[pair])
             stri = '{}-{}'.format(*pair)
             strparam.append(atmformat2.format(stri, eps_ij, sig_ij, rcut))
@@ -280,12 +269,6 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
     shifted. `PairLennardJonesCutnp` uses numpy for calculations, i.e.
     most operations are recast as numpy.array operations. Otherwise it
     is similar to `PairLennardJonesCut`.
-
-    Attributes
-    ----------
-    matrix_np : dict
-        This dict contains numpy matrix versions of the Lennard-Jones
-        parameters.
     """
 
     def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
@@ -300,61 +283,6 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         """
         super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
                                                     shift=shift)
-        self.matrix_np = {'lj1': [], 'lj2': [], 'lj3': [], 'lj4': [],
-                          'rcut2': [], 'offset': []}
-
-    def _reset_matrix_np(self):
-        """Reset `self.matrix_np`."""
-        for key in self.matrix_np:
-            self.matrix_np[key] = []
-
-    def _generate_tables_for_numpy(self, particles):
-        """Generate tables for interactions for use with numpy.
-
-        This is a helper function since we are using numpy. It will
-        create matrices for the Lennard-Jones parameters
-        (`lj1`, `lj2`, `lj3`, `lj4`) the cut-offs and the offset. This
-        makes it possible to do slices when calculating the energy.
-        That is, instead of looping over particles explicitly in
-        python, we can calculate interaction energies using
-        numpy array operations. Of course, this is not viable for a
-        very large system, then one would do something else like C or
-        Fortran or a more clever division of the work.
-
-        Parameters
-        ----------
-        particles : object
-            The particle list.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but updates `self.matrix_np` if required.
-        """
-        npart = particles.npart
-        update = False
-        try:  # this will only check for correct size
-            update = len(self.matrix_np['lj1'][0]) != (npart - 1)
-        except IndexError:
-            update = True
-        if update:
-            self._reset_matrix_np()
-            for i, itype in enumerate(particles.ptype):
-                rcut2, lj1, lj2, lj3, lj4 = [], [], [], [], []
-                offset = []
-                for jtype in particles.ptype[i+1:]:
-                    rcut2.append(self._rcut2[itype, jtype])
-                    lj1.append(self._lj1[itype, jtype])
-                    lj2.append(self._lj2[itype, jtype])
-                    lj3.append(self._lj3[itype, jtype])
-                    lj4.append(self._lj4[itype, jtype])
-                    offset.append(self._offset[itype, jtype])
-                self.matrix_np['rcut2'].append(np.array(rcut2))
-                self.matrix_np['lj1'].append(np.array(lj1))
-                self.matrix_np['lj2'].append(np.array(lj2))
-                self.matrix_np['lj3'].append(np.array(lj3))
-                self.matrix_np['lj4'].append(np.array(lj4))
-                self.matrix_np['offset'].append(np.array(offset))
 
     def potential(self, particles, box):
         """Calculate the potential energy for the Lennard-Jones interaction.
@@ -375,17 +303,17 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         # the particle list may implement a list which we can
         # loop over. This could be some kind of fancy neighborlist
         # here, we ignore this and loop over all pairs using numpy.
-        self._generate_tables_for_numpy(particles)
         for i, particle_i in enumerate(particles.pos[:-1]):
-            delta = box.pbc_dist_matrix(particle_i - particles.pos[i+1:])
+            itype = particles.ptype[i]
+            delta = particle_i - particles.pos[i+1:]
+            delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
-            lj3 = self.matrix_np['lj3'][i][k]
-            lj4 = self.matrix_np['lj4'][i][k]
-            offset = self.matrix_np['offset'][i][k]
-            r2inv = 1.0 / rsq[k]
-            r6inv = r2inv**3
-            pot += np.sum((r6inv * (lj3 * r6inv - lj4) - offset))
+            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
+                                           itype))[0]
+            if len(k) > 0:
+                jtype = particles.ptype[k+i+1]
+                r6inv = 1.0 / rsq[k]**3
+                pot += np.sum(self.pot_term(self, r6inv, jtype, itype))
         return pot
 
     def force(self, particles, box):
@@ -417,20 +345,22 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         """
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
-        self._generate_tables_for_numpy(particles)
         for i, particle_i in enumerate(particles.pos[:-1]):
-            delta = box.pbc_dist_matrix(particle_i - particles.pos[i+1:])
+            itype = particles.ptype[i]
+            delta = particle_i - particles.pos[i+1:]
+            delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
-            lj1 = self.matrix_np['lj1'][i][k]
-            lj2 = self.matrix_np['lj2'][i][k]
-            r2inv = 1.0 / rsq[k]
-            r6inv = r2inv**3
-            forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-            forceij = np.einsum('i,ij->ij', forcelj, delta[k])
-            forces[i] += np.sum(forceij, axis=0)
-            forces[k+i+1] -= forceij
-            virial += np.einsum('ij,ik->jk', forceij, delta[k])
+            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
+                                           itype))[0]
+            if len(k) > 0:
+                r2inv = 1.0 / rsq[k]
+                r6inv = r2inv**3
+                forcelj = self.force_term(self, r2inv, r6inv,
+                                          particles.ptyle[k+i+1], itype)
+                forceij = np.einsum('i,ij->ij', forcelj, delta[k])
+                forces[i] += np.sum(forceij, axis=0)
+                forces[k+i+1] -= forceij
+                virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return forces, virial
 
     def potential_and_force(self, particles, box):
@@ -467,23 +397,39 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         pot = 0.0
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
-        self._generate_tables_for_numpy(particles)
         for i, particle_i in enumerate(particles.pos[:-1]):
+            itype = particles.ptype[i]
             delta = particle_i - particles.pos[i+1:]
             delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(rsq < self.matrix_np['rcut2'][i])[0]
-            lj1 = self.matrix_np['lj1'][i][k]
-            lj2 = self.matrix_np['lj2'][i][k]
-            lj3 = self.matrix_np['lj3'][i][k]
-            lj4 = self.matrix_np['lj4'][i][k]
-            offset = self.matrix_np['offset'][i][k]
-            r2inv = 1.0 / rsq[k]
-            r6inv = r2inv**3
-            pot += np.sum((r6inv * (lj3 * r6inv - lj4)) - offset)
-            forcelj = r2inv * r6inv * (lj1 * r6inv - lj2)
-            forceij = np.einsum('i,ij->ij', forcelj, delta[k])
-            forces[i] += np.sum(forceij, axis=0)
-            forces[k+i+1] -= forceij
-            virial += np.einsum('ij,ik->jk', forceij, delta[k])
+            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
+                                           itype))[0]
+            if len(k) > 0:
+                jtype = particles.ptype[k+i+1]
+                r2inv = 1.0 / rsq[k]
+                r6inv = r2inv**3
+                pot += np.sum(self.pot_term(self, r6inv, jtype, itype))
+                forcelj = self.force_term(self, r2inv, r6inv, jtype, itype)
+                forceij = np.einsum('i,ij->ij', forcelj, delta[k])
+                forces[i] += np.sum(forceij, axis=0)
+                forces[k+i+1] -= forceij
+                virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return pot, forces, virial
+
+    @np.vectorize
+    def pot_term(self, r6inv, jtype, itype):
+        """Lennard Jones potential term."""
+        return (r6inv * (self._lj3[itype, jtype] * r6inv -
+                         self._lj4[itype, jtype]) -
+                self._offset[itype, jtype])
+
+    @np.vectorize
+    def force_term(self, r2inv, r6inv, jtype, itype):
+        """Lennard Jones force term."""
+        return (r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
+                                 self._lj2[itype, jtype]))
+
+    @np.vectorize
+    def check_cutoff(self, rsq, jtype, itype):
+        """Check if we are close than the cut-off."""
+        return rsq < self._rcut2[itype, jtype]

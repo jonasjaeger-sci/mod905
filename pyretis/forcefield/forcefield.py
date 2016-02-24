@@ -94,7 +94,7 @@ class ForceField(object):
         self.arguments['pot-and-force'].append(arg_pot_force)
         self.potential.append(potential)
         if parameters is not None:
-            potential.params = parameters
+            potential.set_parameters(parameters)
         self.params.append(parameters)
 
     def remove_potential(self, potential):
