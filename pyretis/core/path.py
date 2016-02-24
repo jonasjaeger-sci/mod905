@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['Path', 'paste_paths']
+__all__ = ['PathBase', 'Path', 'ReservoirPath', 'paste_paths']
 
 # the following defines a human-readable form of the possible path status:
 _STATUS = {'ACC': 'The path has been accepted',
@@ -553,7 +553,7 @@ class PathBase(object):
 
         Returns
         -------
-        new_path : object like `BasePath`
+        new_path : object like `PathBase`
             This is basically a copy of `self`, just reversed.
         """
         new_path = self.empty_path()
@@ -599,7 +599,7 @@ class PathBase(object):
 
         Returns
         -------
-        out : object like `BasePath`.
+        out : object like `PathBase`.
             A new empty path.
         """
         raise NotImplementedError
@@ -726,7 +726,7 @@ class Path(PathBase):
 
         Returns
         -------
-        out : object like `BasePath`.
+        out : object like `PathBase`.
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -892,7 +892,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        out : object like `BasePath`.
+        out : object like `PathBase`.
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -905,7 +905,7 @@ class ReservoirPath(PathBase):
     def reverse(self, order_func=None):
         """Reverse the path with addinional handling for the reservoir.
 
-        This method will call `BasePath.reverse()` but will also do
+        This method will call `PathBase.reverse()` but will also do
         some extra reverse handling since we here have to reverse
         indices in the reservoir of shooting points.
 
@@ -918,7 +918,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        path : object like `BasePath`
+        path : object like `PathBase`.
             This is basically a copy of `self`, just reversed.
         """
         path = super(ReservoirPath, self).reverse(order_func=order_func)
