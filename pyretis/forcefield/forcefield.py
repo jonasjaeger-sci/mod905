@@ -141,7 +141,7 @@ class ForceField(object):
             potential and modify the corresponding `self.params`.
         """
         if potential in self.potential:
-            potential.params = params
+            potential.set_parameters(params)
             self.params[self.potential.index(potential)] = params
         else:
             logger.warning('Unknow potential. Will not update!')

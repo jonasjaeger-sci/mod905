@@ -127,7 +127,8 @@ for i, (traj, ener) in enumerate(zip(trajectory, energy)):
     ax_hist.set_ylabel('# counts')
     ax_hist.set_xlim(lim)
     ax_hist.set_ylim(0.0, 1.0)
-    hist, bins, bin_mid = histogram(None, bins=bins, limits=histlim)
+    # create empty histogram to get bins etc.:
+    hist, bins, bin_mid = histogram([0], bins=bins, limits=histlim)
     db = bin_mid[1] - bin_mid[0]
     rects = ax_hist.bar(bin_mid - 0.5 * db, hist, db, color=colors[i],
                         alpha=0.5)

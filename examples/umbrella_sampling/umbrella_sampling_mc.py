@@ -54,7 +54,7 @@ msg = '\nRunning umbrella no: {} of {}. Location: {}'
 for i, umbrella in enumerate(umbrellas):
     print(msg.format(i + 1, n_umb, umbrella))
     # Move rectangular potential to correct place:
-    potential_rw.params = {'left': umbrella[0], 'right': umbrella[1]}
+    potential_rw.set_parameters({'left': umbrella[0], 'right': umbrella[1]})
     mysystem.potential()  # recalculate potential energy
     settings['umbrella'] = umbrella
     #calculate position we must cross for this window:
