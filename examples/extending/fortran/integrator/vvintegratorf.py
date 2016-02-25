@@ -3,12 +3,17 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import logging
-# pyretis imports
-from pyretis.core.integrators import Integrator
-from vvintegrator import vvintegrator
-
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+# pyretis imports
+from pyretis.core.integrators import Integrator
+try:
+    from vvintegrator import vvintegrator
+except ImportError:
+    MSG = ('Could not import external Fortran library.'
+           '\nPlease compile with "make"!')
+    logger.critical(MSG)
+    raise ImportError(MSG)
 
 
 __all__ = ['VelocityVerletF']

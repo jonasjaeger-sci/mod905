@@ -4,13 +4,19 @@ from __future__ import absolute_import
 from __future__ import print_function
 import logging
 import numpy as np
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 # pyretis imports
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import generate_pair_interactions
-from ljfortran import ljfortran
+try:
+    from ljfortran import ljfortran
+except ImportError:
+    MSG = ('Could not import external Fortran library.'
+           '\nPlease compile with "make"!')
+    logger.critical(MSG)
+    raise ImportError(MSG)
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
-logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PairLennardJonesCutF']
