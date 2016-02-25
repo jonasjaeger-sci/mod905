@@ -1,8 +1,8 @@
 tests:
-	python3 -m unittest discover -v -s test
+	python3 -m unittest discover -v -s pyretis/test
 
 tests-silent:
-	python3 -m unittest discover -s test
+	python3 -m unittest discover -s pyretis/test
 
 clean:
 	find -name \*.pyc -delete
