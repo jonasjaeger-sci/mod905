@@ -128,7 +128,8 @@ class PairLennardJonesCut(PotentialFunction):
         out : string
             Table with the parameters of all interactions.
         """
-        strparam = ['Potential parameters, Lennard-Jones:']
+        strparam = [self.desc]
+        strparam += ['Potential parameters, Lennard-Jones:']
         useshift = 'yes' if self.shift else 'no'
         strparam.append('Shift potential: {}'.format(useshift))
         atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
@@ -271,7 +272,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
     is similar to `PairLennardJonesCut`.
     """
 
-    def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
+    def __init__(self, dim=3, shift=True,
+                 desc='Lennard-Jones pair potential (numpy)'):
         """Initiate the Lennard-Jones potential.
 
         Parameters
@@ -308,12 +310,13 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             delta = particle_i - particles.pos[i+1:]
             delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
-                                           itype))[0]
+            k = np.where(_check_cutoff(self._rcut2, rsq,
+                                       particles.ptype[i+1:],
+                                       itype))[0]
             if len(k) > 0:
-                jtype = particles.ptype[k+i+1]
                 r6inv = 1.0 / rsq[k]**3
-                pot += np.sum(self.pot_term(self, r6inv, jtype, itype))
+                pot += np.sum(_pot_term(self._lj3, self._lj4, self._offset,
+                                        r6inv, particles.ptype[k+i+1], itype))
         return pot
 
     def force(self, particles, box):
@@ -350,13 +353,14 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             delta = particle_i - particles.pos[i+1:]
             delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
-                                           itype))[0]
+            k = np.where(_check_cutoff(self._rcut2, rsq,
+                                       particles.ptype[i+1:],
+                                       itype))[0]
             if len(k) > 0:
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3
-                forcelj = self.force_term(self, r2inv, r6inv,
-                                          particles.ptyle[k+i+1], itype)
+                forcelj = _force_term(self._lj1, self._lj2, r2inv, r6inv,
+                                      particles.ptype[k+i+1], itype)
                 forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 forces[i] += np.sum(forceij, axis=0)
                 forces[k+i+1] -= forceij
@@ -402,34 +406,39 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             delta = particle_i - particles.pos[i+1:]
             delta = box.pbc_dist_matrix(delta)
             rsq = np.einsum('ij, ij->i', delta, delta)
-            k = np.where(self.check_cutoff(self, rsq, particles.ptype[i+1:],
-                                           itype))[0]
+            k = np.where(_check_cutoff(self._rcut2, rsq,
+                                       particles.ptype[i+1:],
+                                       itype))[0]
             if len(k) > 0:
                 jtype = particles.ptype[k+i+1]
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3
-                pot += np.sum(self.pot_term(self, r6inv, jtype, itype))
-                forcelj = self.force_term(self, r2inv, r6inv, jtype, itype)
+                pot += np.sum(_pot_term(self._lj3, self._lj4, self._offset,
+                                        r6inv, jtype, itype))
+                forcelj = _force_term(self._lj1, self._lj2, r2inv, r6inv,
+                                      jtype, itype)
                 forceij = np.einsum('i,ij->ij', forcelj, delta[k])
                 forces[i] += np.sum(forceij, axis=0)
                 forces[k+i+1] -= forceij
                 virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return pot, forces, virial
 
-    @np.vectorize
-    def pot_term(self, r6inv, jtype, itype):
-        """Lennard Jones potential term."""
-        return (r6inv * (self._lj3[itype, jtype] * r6inv -
-                         self._lj4[itype, jtype]) -
-                self._offset[itype, jtype])
 
-    @np.vectorize
-    def force_term(self, r2inv, r6inv, jtype, itype):
-        """Lennard Jones force term."""
-        return (r2inv * r6inv * (self._lj1[itype, jtype] * r6inv -
-                                 self._lj2[itype, jtype]))
+@np.vectorize
+def _pot_term(lj3, lj4, offset, r6inv, jtype, itype):
+    """Lennard Jones potential term."""
+    return (r6inv * (lj3[itype, jtype] * r6inv - lj4[itype, jtype]) -
+            offset[itype, jtype])
 
-    @np.vectorize
-    def check_cutoff(self, rsq, jtype, itype):
-        """Check if we are close than the cut-off."""
-        return rsq < self._rcut2[itype, jtype]
+
+@np.vectorize
+def _force_term(lj1, lj2, r2inv, r6inv, jtype, itype):
+    """Lennard Jones force term."""
+    return r2inv * r6inv * (lj1[itype, jtype] * r6inv -
+                            lj2[itype, jtype])
+
+
+@np.vectorize
+def _check_cutoff(rcut2, rsq, jtype, itype):
+    """Check if we are close than the cut-off."""
+    return rsq < rcut2[itype, jtype]

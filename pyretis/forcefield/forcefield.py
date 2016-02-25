@@ -31,7 +31,8 @@ class ForceField(object):
         `inspect.getargspec(potential.force)`.
     """
 
-    def __init__(self, desc='No description', potential=None, params=None):
+    def __init__(self, desc='Generic force field', potential=None,
+                 params=None):
         """Initiate the force field object.
 
         Parameters
@@ -271,4 +272,21 @@ class ForceField(object):
             msg.append('Potential functions:')
             for i, pot in enumerate(self.potential):
                 msg.append('{}: {}'.format(i + 1, pot))
+        return '\n'.join(msg)
+
+    def print_potentials(self):
+        """Print information on potentials in the force field.
+
+        This is intended as a lighter alternative to `self.__str__`
+        which can be verbose. This function will not actually do the
+        printing, but it returns a string which can be printed.
+
+        Returns
+        -------
+        out : string
+            Description of the potential functions in this force field.
+        """
+        msg = ['Force field: {}'.format(self.desc)]
+        for i, pot in enumerate(self.potential):
+            msg.append('\t{}: {}'.format(i + 1, pot.desc))
         return '\n'.join(msg)
