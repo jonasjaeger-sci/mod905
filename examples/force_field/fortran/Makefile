@@ -10,4 +10,6 @@ ${MODULE}.so: ${MODULE}.f90
 
 
 clean:
-	rm  *.so
+	find -name \*.so -delete
+	find -name \*.pyc -delete
+	find -name __pycache__ -delete

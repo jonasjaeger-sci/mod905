@@ -42,19 +42,31 @@ def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
     # Calculate with Fortran:
     potentialF = PairLennardJonesCutF(dim=3, shift=True)
-    system.forcefield = ForceField(potential=[potentialF],
-                                   params=[parameters])
+    forcefieldF = ForceField(potential=[potentialF],
+                             params=[parameters],
+                             desc='Python + Fortran')
+    system.forcefield = forcefieldF
+    print('Evaluating with: {}'.format(forcefieldF.print_potentials()))
     vpotF, forcesF, virialF = system.potential_and_force()
+    vpotF /= float(system.particles.npart)
     # Calculate with pure python implementation:
     potential = PairLennardJonesCut(dim=3, shift=True)
-    system.forcefield = ForceField(potential=[potential],
-                                   params=[parameters])
+    forcefield = ForceField(potential=[potential],
+                            params=[parameters],
+                            desc='Python (vanilla)')
+    system.forcefield = forcefield
+    print('Evaluating with: {}'.format(forcefield.print_potentials()))
     vpot, forces, virial = system.potential_and_force()
+    vpot /= float(system.particles.npart)
     # Calculate with numpy python implementation:
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
-    system.forcefield = ForceField(potential=[potentialnp],
-                                   params=[parameters])
+    forcefieldnp = ForceField(potential=[potentialnp],
+                              params=[parameters],
+                              desc='Python (Numpy)')
+    system.forcefield = forcefieldnp
+    print('Evaluating with: {}'.format(forcefieldnp.print_potentials()))
     vpotnp, forcesnp, virialnp = system.potential_and_force()
+    vpotnp /= float(system.particles.npart)
     return ((vpot, forces, virial),
             (vpotnp, forcesnp, virialnp),
             (vpotF, forcesF, virialF))
@@ -65,10 +77,14 @@ class LennardJonesTest(unittest.TestCase):
 
     def test_ljfortran(self):
         """Test one-component system."""
-        print('Testing for one-component system')
+        print('\nTesting for a one-component system')
         system = set_up_initial_state()
-        param1 = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
-        result = run_calculations(system, param1)
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
+        maxcut = 0.5 * min(system.box.length)
+        for key in param:
+            if 'rcut' in param[key]:
+                self.assertGreaterEqual(maxcut, param[key]['rcut'])
+        result = run_calculations(system, param)
         keys = ['python', 'python-numpy', 'fortran']
         for i, keyi in enumerate(keys[:-1]):
             for j, key2 in enumerate(keys[i+1:]):
@@ -85,17 +101,22 @@ class LennardJonesTest(unittest.TestCase):
 
     def test_ljfortran_mix(self):
         """Test for mixture."""
-        print('Testing for two-component mixture')
+        print('\nTesting for a two-component mixture')
         system = set_up_initial_state()
-        param1 = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                  1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5}}
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5},
+                 'mixing': 'geometric'}
         idx = [i for i in range(system.particles.npart)]
-        idx2 = np.random.choice(idx, size=int(system.particles.npart*0.25),
+        idx2 = np.random.choice(idx, size=int(system.particles.npart * 0.5),
                                 replace=False)
+        maxcut = 0.5 * min(system.box.length)
+        for key in param:
+            if 'rcut' in param[key]:
+                self.assertGreaterEqual(maxcut, param[key]['rcut'])
         print('Mutating {} particles'.format(len(idx2)))
         for i in idx2:
             system.particles.ptype[i] = 1
-        result = run_calculations(system, param1)
+        result = run_calculations(system, param)
         keys = ['python', 'python-numpy', 'fortran']
         for i, keyi in enumerate(keys[:-1]):
             for j, key2 in enumerate(keys[i+1:]):
@@ -109,5 +130,49 @@ class LennardJonesTest(unittest.TestCase):
                 self.assertAlmostEqual(result[i][0], result[i+j+1][0], 7)
                 vdiff = np.abs(result[i][0] - result[i+j+1][0])
                 print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
+
+    def test_ljfortran_multi_mix(self):
+        """Test for multi-mixture."""
+        ncomp = np.random.random_integers(3, high=10)
+        print('\nTesting for a {}-component mixture'.format(ncomp))
+        system = set_up_initial_state()
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+                 'mixing': 'geometric'}
+        maxcut = 0.5 * min(system.box.length)
+        self.assertGreaterEqual(maxcut, param[0]['rcut'])
+
+        idx = np.array([i for i in range(system.particles.npart)],
+                       dtype=np.int32)
+        np.random.shuffle(idx)
+        for i, idx2 in enumerate(np.array_split(idx, ncomp)):
+            system.particles.ptype[idx2] = i
+            if i not in param:
+                param[i] = {'sigma': np.random.uniform(low=0.5, high=1.5),
+                            'epsilon': np.random.uniform(low=0.5, high=1.5),
+                            'rcut': np.random.uniform(low=2.0, high=maxcut)}
+        natoms = {}
+        for i in range(system.particles.npart):
+            ptype = system.particles.ptype[i]
+            if not ptype in natoms:
+                natoms[ptype] = 0
+            natoms[ptype] += 1
+        for atom in natoms:
+            print('{} atoms of type {}'.format(natoms[atom], atom))
+        result = run_calculations(system, param)
+        keys = ['python', 'python-numpy', 'fortran']
+        for i, keyi in enumerate(keys[:-1]):
+            for j, key2 in enumerate(keys[i+1:]):
+                print('\nCompare {} and {}'.format(keyi, key2))
+                force = np.allclose(result[i][1], result[i+j+1][1])
+                print(' -> Forces close: {}'.format(force))
+                self.assertTrue(force)
+                virial = np.allclose(result[i][2], result[i+j+1][2])
+                print(' -> Virial close: {}'.format(virial))
+                self.assertTrue(virial)
+                self.assertAlmostEqual(result[i][0], result[i+j+1][0], 7)
+                vdiff = np.abs(result[i][0] - result[i+j+1][0])
+                print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
+
+
 if __name__ == '__main__':
     unittest.main()

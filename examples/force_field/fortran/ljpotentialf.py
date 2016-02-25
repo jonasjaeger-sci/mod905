@@ -5,7 +5,7 @@ from __future__ import print_function
 import logging
 import numpy as np
 # pyretis imports
-from pyretis.forcefield.potential import PotentialFunction
+from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import generate_pair_interactions
 from ljfortran import ljfortran
 
@@ -16,8 +16,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PairLennardJonesCutF']
 
 
-class PairLennardJonesCutF(PotentialFunction):
-    r"""class PairLennardJonesCutF(PotentialFunction).
+class PairLennardJonesCutF(PairLennardJonesCut):
+    r"""class PairLennardJonesCutF(PairLennardJonesCut).
 
     This class implements as simple Lennard-Jones 6-12 potential which
     employs a simple cut-off and can be shifted. The potential energy
@@ -39,31 +39,32 @@ class PairLennardJonesCutF(PotentialFunction):
     params : dict
         The parameters for the potential. This dict is assumed to
         contain parameters for pairs, i.e. for interactions.
-    _lj1 : dict
+    _lj1 : numpy.array
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``48.0 * epsilon * sigma**12``
-    _lj2 : dict
+    _lj2 : numpy.array
         Lennard-Jones parameters used for calculation of the force.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``24.0 * epsilon * sigma**6``
-    _lj3 : dict
+    _lj3 : numpy.array
         Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**12``
-    _lj4 : dict
+    _lj4 : numpy.array
         Lennard-Jones parameters used for calculation of the potential.
         Keys are the pairs (particle types) that may interact.
         Calculated as: ``4.0 * epsilon * sigma**6``
-    _offset : dict
+    _offset : numpy.array
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cutoff.
-    _rcut2 : dict
+    _rcut2 : numpy.array
         Squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
     """
 
-    def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
+    def __init__(self, dim=3, shift=True,
+                 desc='Lennard-Jones pair potential (fortran)'):
         """Initiate the Lennard-Jones potential.
 
         Parameters
@@ -74,14 +75,6 @@ class PairLennardJonesCutF(PotentialFunction):
             Determines if the potential should be shifted or not.
         """
         super(PairLennardJonesCutF, self).__init__(dim=dim, desc=desc)
-        self.shift = shift
-        self._lj1 = None
-        self._lj2 = None
-        self._lj3 = None
-        self._lj4 = None
-        self._rcut2 = None
-        self._offset = None
-        self._params = {}
         self.ntype = 0
 
     def set_parameters(self, parameters):
@@ -95,7 +88,7 @@ class PairLennardJonesCutF(PotentialFunction):
         parameters : dict
             The input base parameters
         """
-        self._params = {}
+        self.params = {}
         pair_param = generate_pair_interactions(parameters)
         self.ntype = max(int(np.sqrt(len(pair_param))), 2)
         self._lj1 = np.zeros((self.ntype, self.ntype))
@@ -121,33 +114,7 @@ class PairLennardJonesCutF(PotentialFunction):
                 except ZeroDivisionError:
                     vcut = 0.0
             self._offset[pair] = vcut
-            self._params[pair] = pair_param[pair]
-
-    def __str__(self):
-        """Generate a string with the potential parameters.
-
-        It will generate a string with both pair and atom parameters.
-
-        Returns
-        -------
-        out : string
-            Table with the parameters of all interactions.
-        """
-        strparam = ['Potential parameters, Lennard-Jones:']
-        useshift = 'yes' if self.shift else 'no'
-        strparam.append('Shift potential: {}'.format(useshift))
-        atmformat = '{0:12s} {1:>9s} {2:>9s} {3:>9s}'
-        atmformat2 = '{0:12s} {1:>9.4f} {2:>9.4f} {3:>9.4f}'
-        strparam.append('Pair parameters:')
-        strparam.append(atmformat.format('Atom/pair', 'epsilon', 'sigma',
-                                         'cut-off'))
-        for pair in sorted(self._params):
-            eps_ij = self._params[pair]['epsilon']
-            sig_ij = self._params[pair]['sigma']
-            rcut = np.sqrt(self._rcut2[pair])
-            stri = '{}-{}'.format(*pair)
-            strparam.append(atmformat2.format(stri, eps_ij, sig_ij, rcut))
-        return '\n'.join(strparam)
+            self.params[pair] = pair_param[pair]
 
     def potential(self, particles, box):
         """Calculate the potential energy for the Lennard-Jones interaction.
@@ -163,12 +130,11 @@ class PairLennardJonesCutF(PotentialFunction):
         -------
         The potential energy as a float.
         """
-        npart = len(particles.pos)
         boxlength = [length for length in box.length]
-        print(self._rcut2)
         v_pot = ljfortran.potential(particles.pos, boxlength,
                                     self._lj3, self._lj4, self._rcut2,
-                                    self._offset, particles.ptype, npart,
+                                    self._offset, particles.ptype,
+                                    particles.npart,
                                     box.dim, self.ntype)
         return v_pot
 
@@ -190,11 +156,11 @@ class PairLennardJonesCutF(PotentialFunction):
         The force as a numpy.array of the same shape as the positions
         in `particles.pos`.
         """
-        npart = len(particles.pos)
         boxlength = [length for length in box.length]
         forces, virial = ljfortran.force(particles.pos, boxlength,
                                          self._lj1, self._lj2, self._rcut2,
-                                         particles.ptype, npart,
+                                         particles.ptype,
+                                         particles.npart,
                                          box.dim, self.ntype)
         return forces, virial
 
@@ -229,7 +195,6 @@ class PairLennardJonesCutF(PotentialFunction):
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
         """
-        npart = len(particles.pos)
         boxlength = [length for length in box.length]
         forces, virial, vpot = ljfortran.potential_and_force(particles.pos,
                                                              boxlength,
@@ -240,7 +205,7 @@ class PairLennardJonesCutF(PotentialFunction):
                                                              self._offset,
                                                              self._rcut2,
                                                              particles.ptype,
-                                                             npart,
+                                                             particles.npart,
                                                              box.dim,
                                                              self.ntype)
         return vpot, forces, virial

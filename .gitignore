@@ -19,6 +19,35 @@
 *.out
 *.toc
 
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
 # for readthedocs:
 _build
 _static
@@ -45,3 +74,7 @@ examples/tis/1D-double-well/md_flux/traj.gro
 examples/tis/1D-double-well/md_flux/*.png
 examples/tis/1D-double-well/md_flux/*.txt.gz
 examples/tis/1D-double-well/md_flux/report
+# fortran force field
+examples/force_field/fortran/energy.dat*
+examples/force_field/fortran/thermo.txt*
+examples/force_field/fortran/traj.gro*

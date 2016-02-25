@@ -33,7 +33,9 @@ def set_up_simulation():
     forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
     ljsystem.forcefield = forcefield
     # read initial position and velocity:
-    dirname = '../../molecular_dynamics/initial_lammps/input_data'
+    dirname = 'molecular_dynamics/initial_lammps/input_data'
+    dirname = os.path.join(os.pardir, dirname)
+    dirname = os.path.join(os.pardir, dirname)
     pos = np.loadtxt(os.path.join(dirname, 'initial_pos_mixture.txt.gz'))
     vel = np.loadtxt(os.path.join(dirname, 'initial_vel_mixture.txt.gz'))
     idx = np.loadtxt(os.path.join(dirname, 'atom_types_mixture.txt.gz'))
@@ -91,37 +93,45 @@ def run_simulation(simulationLAMMPS, ljsystem):
 class LennardJonesTest(unittest.TestCase):
     """Run the tests for the Fortran potential class."""
 
-    def test_ljfortran(self):
-        """Test the creation of boxes with no arguments."""
+    def setUp(self):
+        """Run the simulation and get the outputs."""
         simulationLAMMPS, ljsystem = set_up_simulation()
         thermo_output = run_simulation(simulationLAMMPS, ljsystem)
-        dirname = '../../molecular_dynamics/initial_lammps/output_data'
-        d = np.loadtxt(os.path.join(dirname, 'lammps-output_mixture.txt.gz'))
-        n = min(len(thermo_output['vpot']), len(d[:, 0]))
+        dirname = 'molecular_dynamics/initial_lammps/output_data'
+        dirname = os.path.join(os.pardir, dirname)
+        dirname = os.path.join(os.pardir, dirname)
+        lmp_out = os.path.join(dirname, 'lammps-output_mixture.txt.gz')
+        lmp_data = np.loadtxt(lmp_out)
+        self.thermo_output = thermo_output
+        self.lmp_data = lmp_data
+
+    def test_ljfortran(self):
+        """Test the creation of boxes with no arguments."""
+        n = min(len(self.thermo_output['vpot']), len(self.lmp_data[:, 0]))
         print('Comparing with LAMMPS')
         lammps_idx = [1, 2, 3, 4, 5]
         pyretis_key = ['temp', 'press', 'vpot', 'ekin', 'etot']
         TOL = 1.0e-4
         for i, key in zip(lammps_idx, pyretis_key):
-            lammps = d[:n, i]
-            pyretis = thermo_output[key][:n]
+            lammps = self.lmp_data[:n, i]
+            pyretis = self.thermo_output[key][:n]
             rmse = np.linalg.norm(pyretis - lammps) / np.sqrt(len(lammps))
-            print('\nComparing: {}'.format(key))
+            print('\nComparing: {}'.format(key.title()))
             close = np.allclose(lammps, pyretis, atol=TOL)
-            print(' -> All values equal with tol. {}: {}'.format(TOL, close))
+            print(' -> Values equal with tol. {}: {}'.format(TOL, close))
             print(' -> Root mean squared error: {}'.format(rmse))
             self.assertTrue(close)
             self.assertGreater(TOL, rmse)
+
         presslab = ['pxx', 'pyy', 'pzz', 'pxy', 'pxz', 'pyz']
         pressindex = [(0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2)]
         for i, (pi, idx) in enumerate(zip(presslab, pressindex)):
-            lammps = d[:n, i+6]
-            pyretis = thermo_output['press-tens'][:n, idx[0], idx[1]]
+            lammps = self.lmp_data[:n, i+6]
+            pyretis = self.thermo_output['press-tens'][:n, idx[0], idx[1]]
             rmse = np.linalg.norm(pyretis - lammps) / np.sqrt(len(lammps))
-            print('\nComparing: {}'.format(pi))
+            print('\nComparing: {}'.format(pi.title()))
             close = np.allclose(lammps, pyretis, atol=TOL)
-            print(' -> All values equal with tolerance {}: {}'.format(TOL,
-                                                                      close))
+            print(' -> Values equal with tol. {}: {}'.format(TOL, close))
             print(' -> Root mean squared error: {}'.format(rmse))
             self.assertTrue(close)
             self.assertGreater(TOL, rmse)
