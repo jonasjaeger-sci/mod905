@@ -10,12 +10,12 @@ the `description for gitlab <https://gitlab.com/gitlab-org/gitlab-ce/blob/master
 
 Before contributing,
 please read the short guidelines given below
-for :ref:`reporting bugs and issues <contribute-bugs>`
-and for :ref:`requesting new features <contribute-new-features>`.
-Some information on the preferred coding style is 
-also given :ref:`below <contribute-style>`.
+for reporting issues_,
+and for requesting new features_.
+Some information on the preferred coding style_ is 
+also given below.
 
-.. _contribute-bugs:
+.. _issues:
 
 Bugs and issues
 ---------------
@@ -61,7 +61,7 @@ template:
 If you wish to fix the bug yourself, please follow the approach described for
 :ref:`merge requests <developer-guide-merge-requests>` below.
 
-.. _contribute-new-features:
+.. _features:
 
 New features
 ------------
@@ -127,7 +127,7 @@ After submitting a merge request the code will be reviewed [#]_ by (another)
 member of the pyretis team.
 
 
-.. _contribute-style:
+.. _style:
 
 Style guidelines
 ----------------
