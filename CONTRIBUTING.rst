@@ -58,8 +58,7 @@ template:
     If you can, link to the line of code that might be responsible for 
     the problem.
 
-If you wish to fix the bug yourself, please follow the approach described for
-:ref:`merge requests <developer-guide-merge-requests>` below.
+If you wish to fix the bug yourself, please follow the approach described below.
 
 .. _features:
 
@@ -73,7 +72,7 @@ If you do not have rights to add the ``feature proposal`` label, you can ask one
 of the core members of the pyretis project to add it for you.
 
 You can also implement the changes you want yourself as 
-:ref:`described below <developer-guide-merge-requests>`.
+a merge request.
 We cannot promise that we will automatically
 include your work in pyretis but we are happy to have active users
 and we will consider your contribution.
@@ -81,7 +80,7 @@ So, when you are finished with your work please make a merge request.
 
 
 Merge requests
---------------
+..............
 
 The general approach for making your bug-fix or new feature available
 in the pyretis project is as follows:
