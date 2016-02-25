@@ -14,42 +14,36 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['parse_settings_file', 'write_settings_file']
 
-KEYSPLIT = ';'
-KEYWORDS = {'integrator': {'type': 'dict'},
-            'orderparameter': {'type': 'dict', 'sub-type': {'args'},
-                               'special': {'args', 'class', 'module'}},
-            'endcycle': {'type': 'number'},
-            'task': {'type': 'string'},
-            'units': {'type': 'string', 'default': 'lj'},
-            'units-base': {'type': 'dict',
-                           'sub-type': {'mass', 'length', 'energy'},
-                           'default': {}},
-            'ensemble': {'type': 'string'},
-            'interfaces': {'type': 'list'},
-            'output-dir': {'type': 'string'},
-            'box': {'type': 'dict'},
-            'particles-position': {'type': 'dict'},
-            'particles-velocity': {'type': 'dict'},
-            'particles-mass': {'type': 'dict'},
-            'particles-type': {'type': 'list'},
-            'dimensions': {'type': 'number'},
-            'temperature': {'type': 'number'},
-            'tis': {'type': 'dict'},
-            'output-add': {'type': 'dict', 'append': True},
-            'output-modify': {'type': 'dict', 'append': True},
-            'potentials': {'type': 'dict', 'append': True,
-                           'sub-type': {'args'},
-                           'special': {'args', 'class', 'module'}},
-            'potential-parameters': {'type': 'dict', 'append': True,
-                                     'special': {'potential'}},
-            'forcefield': {'type': 'dict'}}
+
+KEYWORDS = {'integrator': {'default': None},
+            'orderparameter': {'default': None},
+            'endcycle': {'default': None},
+            'task': {'default': None},
+            'units': {'default': 'lj'},
+            'units-base': {'default': None},
+            'ensemble': {'default': None},
+            'interfaces': {'default': None},
+            'output-dir': {'default': None},
+            'box': {'default': None},
+            'particles-position': {'default': None},
+            'particles-velocity': {'default': None},
+            'particles-mass': {'default': None},
+            'particles-type': {'default': None},
+            'dimensions': {'default': 3},
+            'temperature': {'default': None},
+            'tis': {'default': None},
+            'output-add': {'default': None},
+            'output-modify': {'default': None},
+            'potentials': {'default': None},
+            'potential-parameters': {'default': None},
+            'forcefield': {'default': None}}
 
 
 def look_for_keyword(line):
     """Function to look for a keyword in a string.
 
     A string is assumed to define a keyword if the keyword appears as
-    the first word in the string, enclosed in ':'.
+    the first word in the string, ending with a '='.
 
     Parameters
     ----------
@@ -59,17 +53,18 @@ def look_for_keyword(line):
     Returns
     -------
     out[0] : string
-        The matched keyword, note that this can be any case.
+        The matched keyword, note that this can be any case. And it
+        may also contain spaces. It contains the '=' seperator also.
     out[1] : string
         A lower-case version of `out[0]`.
     out[2] : boolean
         `True` if the keyword is one of the known keywords.
     """
 
-    key = re.match(r':(.*?):', line)
+    key = re.match(r'(.*?)=', line)
     if key:
-        keyword = key.group(1)
-        keywordl = keyword.strip().lower()
+        keyword = ''.join([key.group(1), '='])
+        keywordl = key.group(1).strip().lower()
         return keyword, keywordl, keywordl in KEYWORDS
     else:
         return None, None, False
@@ -93,63 +88,13 @@ def parse_primitive(text):
     parsed = None
     success = False
     try:
-        parsed = ast.literal_eval(text)
+        parsed = ast.literal_eval(text.strip())
         success = True
     except SyntaxError:
-        parsed = text
+        parsed = text.strip()
         success = True
     except ValueError:
-        parsed = text
-        success = True
-    return parsed, success
-
-
-def parse_type(key_type, str_setting, keyword=None):
-    """Parse a specific setting based on type.
-
-    Parameters
-    ----------
-    key_type : string
-        Identifies the type for the setting to parse.
-    str_setting : string
-        The actual string to parse with the keyword *REMOVED*.
-    keyword : string, optional
-        The current keyword for which we are parsing.
-
-    Returns
-    -------
-    out[0] : string, dict, list, boolean, etc.
-        The parsed setting.
-    out[1] : boolean
-        True if we managed to parse the setting, False otherwise.
-    """
-    parsed = None
-    success = False
-    if key_type in {'string', 'number', 'boolean', 'list'}:
-        parsed, success = parse_primitive(str_setting)
-    #elif key_type == 'list':
-    #    parsed, success = parse_primitive('[{}]'.format(str_setting))
-    elif key_type == 'dict':
-        parsed = {}
-        sub_types = KEYWORDS[keyword].get('sub-type', [])
-        for opti in str_setting.split(';'):
-            key, _, val = opti.strip().partition(' ')
-            key = key.strip().lower()
-            val = val.strip()
-            if len(key) < 1 or len(val) < 1:
-                msg = 'Ignoring empty value: {} = {}'.format(key, val)
-                logger.warning(msg)
-                continue
-            if key in sub_types:
-                parsed[key] = []
-                for vali in val.split():
-                    parsi, successi = parse_primitive(vali)
-                    if successi:
-                        parsed[key].append(parsi)
-                    else:
-                        parsed[key].append(None)
-            else:
-                parsed[key], success = parse_primitive(val)
+        parsed = text.strip()
         success = True
     return parsed, success
 
@@ -172,49 +117,37 @@ def parse_settings_file(filename):
     """
     settings = {}
     current_keyword = None
-    keyword_split = False
     to_parse = []
     with open(filename, 'r') as fileh:
         for lines in fileh:
             to_read, _, _ = lines.strip().partition('#')
             if not to_read:
                 if current_keyword is not None:
-                    parse_and_add(' '.join(to_parse), current_keyword,
+                    # empty line or comment or something else -> parse!
+                    parse_setting(''.join(to_parse), current_keyword,
                                   settings)
                     current_keyword = None
-                    keyword_split = False
                     to_parse = []
                 continue
-            _, keyword, found_keyword = look_for_keyword(to_read)
+            match, keyword, found_keyword = look_for_keyword(to_read)
             if found_keyword:
                 if current_keyword is not None:
-                    parse_and_add(' '.join(to_parse), current_keyword,
+                    # found new keyword, parse for the previous one!
+                    parse_setting(''.join(to_parse), current_keyword,
                                   settings)
-                keyword_split = to_read.endswith(';')
-                to_parse = []
-                if not keyword_split:
-                    # just parse this line
-                    parse_and_add(to_read, keyword, settings)
-                    current_keyword = None
-                else:
-                    current_keyword = keyword
-            if keyword_split:
-                to_parse.append(to_read)
-                keyword_split = to_read.endswith(';')
-                if not keyword_split:
-                    # parse things
-                    parse_and_add(' '.join(to_parse), current_keyword,
-                                  settings)
-                    current_keyword = None
-                    to_parse = []
+                current_keyword = keyword
+                to_parse = [to_read[len(match):]]
+            else:
+                if current_keyword is not None:
+                    to_parse.append(to_read)
     if current_keyword is not None:
-        parse_and_add(' '.join(to_parse), current_keyword, settings)
-    _convert_potential_parameters(settings)
+        # reached end of file, parse for the last setting!
+        parse_setting(''.join(to_parse), current_keyword, settings)
     add_default_settings(settings)
     return settings
 
 
-def parse_and_add(text, keyword, settings):
+def parse_setting(text, keyword, settings):
     """Method that will parse a string and try to add the settings.
 
     Parameters
@@ -222,41 +155,24 @@ def parse_and_add(text, keyword, settings):
     text : string
        The text to parse.
     keyword : string
-        The keyword we are trying to parse data for.
+        The keyword we are trying to read settings for.
     settings : dict
-        Where to store the text.
+        The dict to store settings in.
 
     Returns
     -------
-    N/A but updates the input dictionary `settings`.
+    out : boolean
+        True if we managed to parse the setting, False otherwise.
     """
-    try:
-        str_setting = text.split(' ', 1)[1].strip()
-    except IndexError:
-        return None, False
-    key_type = KEYWORDS[keyword]['type']
-    parsed, success = parse_type(key_type, str_setting, keyword)
-    special = KEYWORDS[keyword].get('special', None)
-    if special is not None:
-        _group_keyword_settings(parsed, special=special)
+    parsed, success = parse_primitive(text.strip())
     if success:
-        append = KEYWORDS[keyword].get('append', False)
-        if append:  # maybe to be removed?
-            try:
-                settings[keyword].append(parsed)
-            except KeyError:
-                settings[keyword] = [parsed]
-        else:
-            if keyword in settings:
-                msg = 'Updating already defined setting {}: {}'
-                msgtxt = msg.format(keyword, settings[keyword])
-                logger.warning(msgtxt)
-            settings[keyword] = parsed
+        settings[keyword] = parsed
     else:
-        msg = 'Could not understand setting "{}"'
-        msgtxt = msg.format(text)
-        logger.warning(msgtxt)
-    return settings
+        msg = ['Could not parse setting for keyword {}'.format(keyword)]
+        msg += ['Input setting: {}'.format(text.strip())]
+        msgtxt = '\n'.join(msg)
+        logger.critical(msgtxt)
+    return success
 
 
 def write_settings_file(settings, outfile, path=None):
@@ -284,75 +200,13 @@ def write_settings_file(settings, outfile, path=None):
         filename = outfile
     with open(filename, 'w') as fileh:
         for key in settings:
+            if settings[key] is None:
+                continue
             leng = len(key) + 3
             pretty = pprint.pformat(settings[key], width=79-leng)
             pretty = pretty.replace('\n', '\n' + ' ' * leng)
             dump = '{} = {}\n'.format(key, pretty)
             fileh.write(dump)
-
-
-def _group_keyword_settings(setting, special=None):
-    """Group keyword settings into a 'kwargs' key.
-
-    This method will take in a setting as a dict and grop keys into
-    a kwargs key. The keys which are given in the input special is
-    ignored.
-
-    Parameters
-    ----------
-    setting : dict
-        The setting for which we want to group keyword arguments.
-    special : dict/set
-        The keys we will not include in the grouping.
-
-    Returns
-    -------
-    None but alters the input setting.
-    """
-    if special is None:
-        special = {}
-    to_pop = []
-    kwargs = {}
-    for key in setting:
-        if key not in special:
-            to_pop.append(key)
-    for key in to_pop:
-        val = setting.pop(key)
-        kwargs[key] = val
-    if len(kwargs) > 0:
-        setting['kwargs'] = kwargs
-
-
-def _convert_potential_parameters(settings):
-    """Convert the potential parameters to the internal structure.
-
-    The potential parameters are a special case for the parameters,
-    since it matters for which potential they are defined, they need to
-    be inserted at the right place. This is handled here.
-
-    Parameters
-    ----------
-    settings : dict
-        The dictionary with all simulation settings
-
-    Returns
-    -------
-    None, but will update `settings['potential-parameters']`.
-    """
-    if 'potentials' in settings:
-        pot_params = [None for _ in settings['potentials']]
-        if 'potential-parameters' in settings:
-            for param in settings['potential-parameters']:
-                potid = param['potential']
-                try:
-                    if pot_params[potid] is None:
-                        pot_params[potid] = {}
-                    for key in param['kwargs']:
-                        pot_params[potid][key] = param['kwargs'][key]
-                except IndexError:
-                    msgtxt = 'Could not add parameters: {}'.format(param)
-                    logger.warning(msgtxt)
-        settings['potential-parameters'] = pot_params
 
 
 def add_default_settings(settings):
