@@ -32,7 +32,7 @@ __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
            'create_integrator']
 
 
-def create_integrator(settings, simulation_type):
+def create_integrator(settings):
     """Create an integrator according to the given integrator settings.
 
     This function is included as a convenient way of setting up and
@@ -42,9 +42,6 @@ def create_integrator(settings, simulation_type):
     ----------
     settings : dict
         This defines how we set up and select the integrator.
-    simulation_type : string
-        This string is used in case we need to select a default
-        integrator.
 
     Returns
     -------
@@ -52,32 +49,26 @@ def create_integrator(settings, simulation_type):
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    if not settings:
-        # select a default, this is probably not what the user really
-        # wants.
-        if simulation_type == 'nve':
-            return VelocityVerlet(0.002)
-        else:
-            msg = 'No default integrator for {}'.format(simulation_type)
-            logging.warning(msg)
-            return None
-    else:
+    try:
         name = settings['name'].lower()
-        # Avoiding getatttr on purpose:
-        if name == 'velocityverlet':
-            return VelocityVerlet(settings['timestep'])
-        elif name == 'verlet':
-            return Verlet(settings['timestep'])
-        elif name == 'langevin':
-            return Langevin(settings['timestep'],
-                            settings['gamma'],
-                            rgen=settings.get('rgen', None),
-                            seed=settings.get('seed', 0),
-                            high_friction=settings['high-friction'])
-        else:
-            msg = 'Unknown integrator {}'.format(settings['name'])
-            logging.warning(msg)
-            return None
+    except KeyError:
+        msg = 'No integrator name given. No integrator created!'
+        logging.critical(msg)
+        return None
+    if name == 'velocityverlet':
+        return VelocityVerlet(settings['timestep'])
+    elif name == 'verlet':
+        return Verlet(settings['timestep'])
+    elif name == 'langevin':
+        return Langevin(settings['timestep'],
+                        settings['gamma'],
+                        rgen=settings.get('rgen', None),
+                        seed=settings.get('seed', 0),
+                        high_friction=settings['high-friction'])
+    else:
+        msg = 'Unknown integrator {}'.format(settings['name'])
+        logging.critical(msg)
+        return None
 
 
 class Integrator(object):

@@ -13,7 +13,7 @@ Important classes and functions:
 from __future__ import absolute_import
 import logging
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.integrators import create_integrator
+from pyretis.inout.settings.createintegrator import create_integrator
 from pyretis.inout.settings.common import check_settings
 from pyretis.inout.settings.createorderparameter import create_orderparameter
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
@@ -193,12 +193,12 @@ def create_md_simulation(settings, system, sim_type):
         logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'md-nve':
-        intg = create_integrator(settings.get('integrator'), sim_type)
+        intg = create_integrator(settings)
         simulation = SimulationNVE(system, intg,
                                    endcycle=settings['endcycle'],
                                    startcycle=settings.get('startcycle', 0))
     elif sim_type == 'md-flux':
-        intg = create_integrator(settings.get('integrator'), sim_type)
+        intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
         simulation = SimulationMDFlux(system, intg, settings['interfaces'],
                                       orderp, endcycle=settings['endcycle'],
@@ -248,7 +248,7 @@ def create_path_simulation(settings, system, sim_type):
         logger.critical(msg)
         raise ValueError('Please update settings!')
     if sim_type == 'tis':
-        intg = create_integrator(settings['integrator'], sim_type)
+        intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
         simulation = SimulationTIS(system, intg, orderp, settings,
                                    endcycle=settings['endcycle'],
