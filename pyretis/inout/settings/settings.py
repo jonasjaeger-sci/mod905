@@ -339,18 +339,20 @@ def _convert_potential_parameters(settings):
     -------
     None, but will update `settings['potential-parameters']`.
     """
-    pot_params = [None for _ in settings['potentials']]
-    for param in settings['potential-parameters']:
-        potid = param['potential']
-        try:
-            if pot_params[potid] is None:
-                pot_params[potid] = {}
-            for key in param['kwargs']:
-                pot_params[potid][key] = param['kwargs'][key]
-        except IndexError:
-            msgtxt = 'Could not add parameters: {}'.format(param)
-            logger.warning(msgtxt)
-    settings['potential-parameters'] = pot_params
+    if 'potentials' in settings:
+        pot_params = [None for _ in settings['potentials']]
+        if 'potential-parameters' in settings:
+            for param in settings['potential-parameters']:
+                potid = param['potential']
+                try:
+                    if pot_params[potid] is None:
+                        pot_params[potid] = {}
+                    for key in param['kwargs']:
+                        pot_params[potid][key] = param['kwargs'][key]
+                except IndexError:
+                    msgtxt = 'Could not add parameters: {}'.format(param)
+                    logger.warning(msgtxt)
+        settings['potential-parameters'] = pot_params
 
 
 def add_default_settings(settings):
