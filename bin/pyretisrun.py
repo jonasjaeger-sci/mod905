@@ -7,7 +7,7 @@ running simulations from an input script.
 
 Usage is:
 
-run_pyretis -i inputfile.txt
+pyretisrun -i inputfile.txt
 """
 # pylint: disable=C0103
 from __future__ import print_function, absolute_import

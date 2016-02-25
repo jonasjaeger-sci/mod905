@@ -73,4 +73,5 @@ setup(name='pyretis',
       packages=find_packages(exclude=['docs']),
       install_requires=['numpy>=1.6.0', 'scipy>=0.13.3',
                         'matplotlib>=1.1', 'jinja2>=2.7.2',
-                        'docutils>=0.11'])
+                        'docutils>=0.11'],
+      scripts=['bin/pyretisrun.py'])
