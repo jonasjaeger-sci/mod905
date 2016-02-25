@@ -34,8 +34,8 @@ def set_up_simulation():
     ljsystem.forcefield = forcefield
     # read initial position and velocity:
     dirname = 'molecular_dynamics/initial_lammps/input_data'
-    dirname = os.path.join(os.pardir, dirname)
-    dirname = os.path.join(os.pardir, dirname)
+    for _ in range(3):
+        dirname = os.path.join(os.pardir, dirname)
     pos = np.loadtxt(os.path.join(dirname, 'initial_pos_mixture.txt.gz'))
     vel = np.loadtxt(os.path.join(dirname, 'initial_vel_mixture.txt.gz'))
     idx = np.loadtxt(os.path.join(dirname, 'atom_types_mixture.txt.gz'))
@@ -98,8 +98,8 @@ class LennardJonesTest(unittest.TestCase):
         simulationLAMMPS, ljsystem = set_up_simulation()
         thermo_output = run_simulation(simulationLAMMPS, ljsystem)
         dirname = 'molecular_dynamics/initial_lammps/output_data'
-        dirname = os.path.join(os.pardir, dirname)
-        dirname = os.path.join(os.pardir, dirname)
+        for _ in range(3):
+            dirname = os.path.join(os.pardir, dirname)
         lmp_out = os.path.join(dirname, 'lammps-output_mixture.txt.gz')
         lmp_data = np.loadtxt(lmp_out)
         self.thermo_output = thermo_output
