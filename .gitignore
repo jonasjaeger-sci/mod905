@@ -78,3 +78,7 @@ examples/tis/1D-double-well/md_flux/report
 examples/force_field/fortran/energy.dat*
 examples/force_field/fortran/thermo.txt*
 examples/force_field/fortran/traj.gro*
+# fortran integrator
+examples/integrators/fortran/energy.dat*
+examples/integrators/fortran/thermo.txt*
+examples/integrators/fortran/traj.gro*
