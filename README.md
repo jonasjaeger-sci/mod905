@@ -1,6 +1,4 @@
 pyretis
-=========
+=======
 
-This is the development branch for pyretis.
-
-
+pyretis is a library for running rare event simulations.
