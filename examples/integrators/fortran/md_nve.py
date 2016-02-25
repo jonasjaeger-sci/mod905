@@ -16,10 +16,8 @@ from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout import create_output
 from pyretis.tools import generate_lattice
-from pyretis.core.simulation import SimulationTask
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
-from vvintegratorf import VelocityVerletF
 # define potential function(s) and force field:
 create_conversion_factors('lj')
 LJPARAMETERS = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
@@ -28,7 +26,8 @@ POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
 # simulation settings:
 settings = {'task': 'md-nve',
             'units': 'lj',
-            'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
+            'integrator': {'class': 'VelocityVerletF', 'args': [0.002],
+                           'module': 'vvintegratorf'},
             'endcycle': 1000,
             'output-modify': [{'name': 'traj', 'when': {'every': 1},
                                'filename': 'traj.gro'}],
@@ -53,11 +52,6 @@ if 'generate-vel' in settings:
     print(msg.format(ljsystem.calculate_temperature()))
 
 simulation_nve = create_simulation(settings, ljsystem)
-integrator = VelocityVerletF(0.002)
-simulation_nve.integrator = integrator
-task_integrate = SimulationTask(integrator.integration_step, args=[ljsystem])
-simulation_nve.task[0] = task_integrate
-
 
 # set up extra output:
 table = ThermoTable()
