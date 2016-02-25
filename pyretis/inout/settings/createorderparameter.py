@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module handles creation of order parameters from simulation settings.
+"""This module handles creation of order parameters from settings.
 
 For the order parameters we have two options:
 
@@ -9,8 +9,8 @@ For the order parameters we have two options:
 
 Important classes and functions:
 
-- create_simulation: A function to create a simulation object from
-  a dictionary of given settings.
+- create_orderparameter: A function to create an order parameter object
+  from a dictionary of given settings.
 """
 from __future__ import absolute_import
 import logging
