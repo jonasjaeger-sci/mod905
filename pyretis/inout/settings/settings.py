@@ -87,6 +87,10 @@ def parse_primitive(text):
     """
     parsed = None
     success = False
+    # do a simple cleanup for dicts to remove trailing text if any
+    if '}' in text:
+        tmp1, tmp2, _ = text.partition('}')
+        text = ''.join([tmp1, tmp2])
     try:
         parsed = ast.literal_eval(text.strip())
         success = True
@@ -99,7 +103,7 @@ def parse_primitive(text):
     return parsed, success
 
 
-def parse_settings_file(filename):
+def parse_settings_file(filename, add_default=True):
     """Parse settings from a file name.
 
     Here, we read the file line-by-line and check if the current line
@@ -109,6 +113,33 @@ def parse_settings_file(filename):
     ----------
     filename : string
         The file to parse.
+    add_default : boolean
+        If True, we will add default settings as well for keywords
+        not found in the input.
+
+    Returns
+    -------
+    out : dict
+        A dictionary with settings for pyretis.
+    """
+    with open(filename, 'r') as fileh:
+        settings = parse_settings(fileh, add_default=add_default)
+    return settings
+
+
+def parse_settings(input_text, add_default=True):
+    """Parse settings from a list of strings.
+
+    Here, we read the file line-by-line and check if the current line
+    contains a keyword, if so, we parse that keyword.
+
+    Parameters
+    ----------
+    input_text : iterable (e.g. list of strings)
+        The input to parse.
+    add_default : boolean
+        If True, we will add default settings as well for keywords
+        not found in the input.
 
     Returns
     -------
@@ -118,32 +149,32 @@ def parse_settings_file(filename):
     settings = {}
     current_keyword = None
     to_parse = []
-    with open(filename, 'r') as fileh:
-        for lines in fileh:
-            to_read, _, _ = lines.strip().partition('#')
-            if not to_read:
-                if current_keyword is not None:
-                    # empty line or comment or something else -> parse!
-                    parse_setting(''.join(to_parse), current_keyword,
-                                  settings)
-                    current_keyword = None
-                    to_parse = []
-                continue
-            match, keyword, found_keyword = look_for_keyword(to_read)
-            if found_keyword:
-                if current_keyword is not None:
-                    # found new keyword, parse for the previous one!
-                    parse_setting(''.join(to_parse), current_keyword,
-                                  settings)
-                current_keyword = keyword
-                to_parse = [to_read[len(match):]]
-            else:
-                if current_keyword is not None:
-                    to_parse.append(to_read)
+    for lines in input_text:
+        to_read, _, _ = lines.strip().partition('#')
+        if not to_read:
+            if current_keyword is not None:
+                # empty line or comment or something else -> parse!
+                parse_setting(''.join(to_parse), current_keyword,
+                              settings)
+                current_keyword = None
+                to_parse = []
+            continue
+        match, keyword, found_keyword = look_for_keyword(to_read)
+        if found_keyword:
+            if current_keyword is not None:
+                # found new keyword, parse for the previous one!
+                parse_setting(''.join(to_parse), current_keyword,
+                              settings)
+            current_keyword = keyword
+            to_parse = [to_read[len(match):]]
+        else:
+            if current_keyword is not None:
+                to_parse.append(to_read)
     if current_keyword is not None:
         # reached end of file, parse for the last setting!
         parse_setting(''.join(to_parse), current_keyword, settings)
-    add_default_settings(settings)
+    if add_default:
+        add_default_settings(settings)
     return settings
 
 
@@ -175,6 +206,29 @@ def parse_setting(text, keyword, settings):
     return success
 
 
+def settings_to_text(settings):
+    """Turn the given settings into text usable for an output file.
+
+    Parameters
+    ----------
+    settings : dict
+        The dictionary to write
+
+    Yields
+    ------
+    out : strings
+        The strings representing the settings.
+    """
+    for key in settings:
+        if settings[key] is None:
+            continue
+        leng = len(key) + 3
+        pretty = pprint.pformat(settings[key], width=79-leng)
+        pretty = pretty.replace('\n', '\n' + ' ' * leng)
+        dump = '{} = {}\n'.format(key, pretty)
+        yield dump
+
+
 def write_settings_file(settings, outfile, path=None):
     """Write simulation settings to an output file.
 
@@ -199,13 +253,7 @@ def write_settings_file(settings, outfile, path=None):
     else:
         filename = outfile
     with open(filename, 'w') as fileh:
-        for key in settings:
-            if settings[key] is None:
-                continue
-            leng = len(key) + 3
-            pretty = pprint.pformat(settings[key], width=79-leng)
-            pretty = pretty.replace('\n', '\n' + ' ' * leng)
-            dump = '{} = {}\n'.format(key, pretty)
+        for dump in settings_to_text(settings):
             fileh.write(dump)
 
 
