@@ -24,7 +24,7 @@ __all__ = ['create_orderparameter']
 
 
 def create_orderparameter(settings):
-    """Function to create simulations from settings.
+    """Function to create order parameters from settings.
 
     Parameters
     ----------
