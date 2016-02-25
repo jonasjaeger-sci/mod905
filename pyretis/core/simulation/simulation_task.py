@@ -237,3 +237,14 @@ class SimulationTask(object):
             The result of `self.execute(step)`.
         """
         return self.execute(step)
+
+    def __str__(self):
+        """Output info about the task."""
+        msg = ['Simulation task:']
+        msg += [' -> Function name: {}'.format(self.function.__name__)]
+        msg += [' -> Function args: {}'.format(self.args)]
+        msg += [' -> Function kwargs: {}'.format(self.kwargs)]
+        msg += [' -> Execute when: {}'.format(self.when)]
+        msg += [' -> Execute at first: {}'.format(self.first)]
+        msg += [' -> Result: {}'.format(self._result)]
+        return '\n'.join(msg)
