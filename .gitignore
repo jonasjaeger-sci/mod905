@@ -48,10 +48,16 @@
 *.out
 *.app
 
-# for readthedocs:
-_build
-_static
-_templates
+# setup.py working directory
+build
+# setup.py dist directory
+dist
+# Egg metadata
+*.egg-info
+# for sphinx
+docs/_build
+docs/_static
+docs/_templates
 
 # for examples:
 # md wca: energy and trajectory
