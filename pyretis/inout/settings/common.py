@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['check_settings', 'import_from', 'initiate_instance']
+__all__ = ['check_settings', 'import_from', 'initiate_instance',
+           'create_orderparameter', 'create_integrator']
 
 
 def import_from(module_name, function_name):
