@@ -87,10 +87,9 @@ def parse_primitive(text):
     """
     parsed = None
     success = False
-    # do a simple cleanup for dicts to remove trailing text if any
-    if '}' in text:
-        tmp1, tmp2, _ = text.partition('}')
-        text = ''.join([tmp1, tmp2])
+    idx = text.rfind('}')
+    if idx != -1:
+        text = text[:idx+1]
     try:
         parsed = ast.literal_eval(text.strip())
         success = True
