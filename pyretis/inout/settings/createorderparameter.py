@@ -49,7 +49,7 @@ def create_orderparameter(settings):
     except KeyError:
         msg = 'No order parameter class specified!'
         logger.critical(msg)
-        return None
+        raise ValueError(msg)
     if module is None:
         orderparameter = import_from('pyretis.core.orderparameter', orderclass)
     else:
@@ -64,11 +64,13 @@ def create_orderparameter(settings):
             if not orderc:
                 msg = 'Could not find method {}.{}'.format(orderclass,
                                                            function)
+                logger.critical(msg)
                 raise ValueError(msg)
             else:
                 if not callable(orderc):
                     msg = 'Method {}.{} is not callable!'.format(orderclass,
                                                                  function)
+                    logger.critical(msg)
                     raise ValueError(msg)
     return initiate_instance(orderparameter, args=orderp.get('args', None),
                              kwargs=orderp.get('kwargs', None))

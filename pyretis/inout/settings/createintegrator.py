@@ -38,40 +38,43 @@ def create_integrator(settings):
         This object represents the integrator.
     """
     try:
-        orderp = settings['integrator']
+        inter_settings = settings['integrator']
     except KeyError:
         msg = 'No integrator settings found!'
         logger.critical(msg)
         return None
-    module = orderp.get('module', None)
+    module = inter_settings.get('module', None)
     if module is None:
         # assume that we want to load from the predefined ones:
-        integrator = integrators.create_integrator(settings['integrator'])
+        integrator = integrators.create_integrator(inter_settings)
         return integrator
     else:
         # Here we assume we are to load from a file.
         # It would be nice to ditch python 2 and just do this:
         # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        orderclass = None
+        interclass = None
         try:
-            orderclass = orderp['class']
+            interclass = inter_settings['class']
         except KeyError:
             msg = 'No integrator class specified!'
             logger.critical(msg)
-            return None
+            raise ValueError(msg)
         module = os.path.splitext(module)[0]
-        integrator = import_from(module, orderclass)
+        integrator = import_from(module, interclass)
         # run some checks:
         for function in ['integration_step']:
-            orderc = getattr(integrator, function, None)
-            if not orderc:
-                msg = 'Could not find method {}.{}'.format(orderclass,
+            interc = getattr(integrator, function, None)
+            if not interc:
+                msg = 'Could not find method {}.{}'.format(interclass,
                                                            function)
+                logger.critical(msg)
                 raise ValueError(msg)
             else:
-                if not callable(orderc):
-                    msg = 'Method {}.{} is not callable!'.format(orderclass,
+                if not callable(interc):
+                    msg = 'Method {}.{} is not callable!'.format(interclass,
                                                                  function)
+                    logger.critical(msg)
                     raise ValueError(msg)
-        return initiate_instance(integrator, args=orderp.get('args', None),
-                                 kwargs=orderp.get('kwargs', None))
+        return initiate_instance(integrator,
+                                 args=inter_settings.get('args', None),
+                                 kwargs=inter_settings.get('kwargs', None))

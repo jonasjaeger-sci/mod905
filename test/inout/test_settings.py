@@ -8,6 +8,7 @@ import os
 import logging
 import tempfile
 import unittest
+from pyretis.inout.settings.createintegrator import create_integrator
 from pyretis.inout.settings.settings import parse_settings_file
 from pyretis.inout.settings.settings import parse_settings
 from pyretis.inout.settings.settings import settings_to_text
@@ -119,6 +120,60 @@ class KeywordTest(unittest.TestCase):
             temp.flush()
             settings_read = parse_settings_file(temp.name, add_default=False)
         self.assertEqual(settings_read, correct)
+
+    def test_load_external_integrator(self):
+        """Test that we can load external python modules for integrators."""
+        data = """integrator = {'class': 'FooIntegrator',
+                                'module': 'foointegrator',
+                                'args': [0.5],
+                                'kwargs': {'parameter': 100}}"""
+        correct = {'integrator': {'class': 'FooIntegrator',
+                                  'module': 'foointegrator',
+                                  'args': [0.5],
+                                  'kwargs': {'parameter': 100}}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        foointegrator = create_integrator(settings)
+        self.assertEqual(foointegrator.delta_t,
+                         correct['integrator']['args'][0])
+        self.assertEqual(foointegrator.parameter,
+                         correct['integrator']['kwargs']['parameter'])
+    
+    def test_fail_external_integrator(self):
+        """Test that external loads fail in a predicable way."""
+        data = """integrator = {'class': 'BarIntegrator',
+                                'module': 'foointegrator',}"""
+        correct = {'integrator': {'class': 'BarIntegrator',
+                                  'module': 'foointegrator'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_integrator, *args)
+        # test for another integrator that defines a self.integration_step,
+        # on __init__
+        data = """integrator = {'class': 'BazIntegrator',
+                                'module': 'foointegrator',}"""
+        correct = {'integrator': {'class': 'BazIntegrator',
+                                  'module': 'foointegrator'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_integrator, *args)
+        # test for a case where we forgot to input the 'class'
+        data = "integrator = {'module': 'dummy'}"
+        correct = {'integrator': {'module': 'dummy'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_integrator, *args)
+        # test for a case where we can't find the module:
+        data = "integrator = {'module': 'dummy', 'class': 'dummy'}"
+        correct = {'integrator': {'module': 'dummy', 'class': 'dummy'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_integrator, *args)
+
 
 
 if __name__ == '__main__':
