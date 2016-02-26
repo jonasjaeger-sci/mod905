@@ -82,7 +82,7 @@ class OrderParameter(object):
         out : float
             The order parameter.
         """
-        pass
+        raise NotImplementedError
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.
@@ -100,7 +100,7 @@ class OrderParameter(object):
         out : float
             The velocity of the order parameter.
         """
-        pass
+        raise NotImplementedError
 
     def __call__(self, system):
         """Conveniently call `calculate` and `calculate_velocity`.
@@ -148,12 +148,19 @@ class OrderParameter(object):
             Extra function for calculation of an extra order parameter.
             It is assumed to accept only a `pyretis.core.system.System`
             object as its parameter.
+
+        Returns
+        -------
+        out : boolean
+            Return True if we added the function, False otherwise.
         """
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
             logging.warning(msg)
             return False
-        self.extra.append(func)
+        else:
+            self.extra.append(func)
+            return True
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""
