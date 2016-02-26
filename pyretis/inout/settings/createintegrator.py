@@ -44,6 +44,13 @@ def create_integrator(settings):
         logger.critical(msg)
         return None
     module = inter_settings.get('module', None)
+    interclass = None
+    try:
+        interclass = inter_settings['class']
+    except KeyError:
+        msg = 'No integrator class specified!'
+        logger.critical(msg)
+        raise ValueError(msg)
     if module is None:
         # assume that we want to load from the predefined ones:
         integrator = integrator_factory(inter_settings)
@@ -52,13 +59,6 @@ def create_integrator(settings):
         # Here we assume we are to load from a file.
         # It would be nice to ditch python 2 and just do this:
         # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        interclass = None
-        try:
-            interclass = inter_settings['class']
-        except KeyError:
-            msg = 'No integrator class specified!'
-            logger.critical(msg)
-            raise ValueError(msg)
         module = os.path.splitext(module)[0]
         integrator = import_from(module, interclass)
         # run some checks:
