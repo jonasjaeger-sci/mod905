@@ -26,7 +26,48 @@ from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse']
+__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse',
+           'create_orderparameter']
+
+
+def create_orderparameter(settings):
+    """Create order parameters according to the given settings.
+
+    This function is included as a convenient way of setting up and
+    selecting the order parameter.
+
+    Parameters
+    ----------
+    settings : dict
+        This defines how we set up and select the order parameter.
+
+    Returns
+    -------
+    out[0] : object
+        This object represents the orderparameter and will be one of the
+        classes defined in `pyretis.core.orderparameter`.
+    """
+    try:
+        klass = settings['class'].lower()
+    except KeyError:
+        msg = 'No order parameter class given. No order parameter created!'
+        logging.critical(msg)
+        return None
+    if klass == 'orderparameter':
+        return OrderParameter(settings['name'])
+    elif klass == 'orderparameterposition':
+        return OrderParameterPosition(settings['name'],
+                                      settings['index'],
+                                      dim=settings.get('dim', 'x'),
+                                      periodic=settings.get('periodic', False))
+    elif klass == 'orderparameterparse':
+        return OrderParameterParse(settings['name'],
+                                   settings['orderp'],
+                                   settings['ordervel'])
+    else:
+        msg = 'Unknown order parameter: {}'.format(settings['class'])
+        logging.critical(msg)
+        return None
 
 
 class OrderParameter(object):
