@@ -131,7 +131,7 @@ def initial_positions_lattice(settings):
     """
     pos_settings = settings['particles-position']
     ptype = settings.get('particles-type', [0])
-    pname = settings.get('particles-names', ['Ar'])
+    pname = settings.get('particles-name', ['Ar'])
     pmass = settings.get('particles-mass', {})
 
     lattice_type = pos_settings['generate'].lower()
@@ -240,7 +240,7 @@ def initial_positions_file(settings):
     ndim = settings.get('dimensions', 3)
     pos_settings = settings['particles-position']
     ptype = settings.get('particles-type', None)
-    pname = settings.get('particles-names', None)
+    pname = settings.get('particles-name', None)
     pmass = settings.get('particles-mass', {})
     ptypes = {}  # To automatically set particle types based on name.
     snapshot, convert = _get_snapshot_from_file(pos_settings,
