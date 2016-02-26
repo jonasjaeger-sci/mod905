@@ -3,7 +3,7 @@
 from pyretis.core.integrators import Integrator
 
 
-__all__ = ['FooIntegrator']
+__all__ = []
 
 
 class FooIntegrator(Integrator):
