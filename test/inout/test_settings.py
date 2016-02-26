@@ -9,6 +9,7 @@ import logging
 import tempfile
 import unittest
 from pyretis.inout.settings.createintegrator import create_integrator
+from pyretis.inout.settings.createorderparameter import create_orderparameter
 from pyretis.inout.settings.settings import parse_settings_file
 from pyretis.inout.settings.settings import parse_settings
 from pyretis.inout.settings.settings import settings_to_text
@@ -25,7 +26,7 @@ class KeywordTest(unittest.TestCase):
         settings = parse_settings_file(inputfile)
         correct_settings = {'units': 'lj',
                             'task': 'md-nve',
-                            'integrator': {'name': 'velocityverlet',
+                            'integrator': {'class': 'velocityverlet',
                                            'timestep': 0.002},
                             'endcycle': 100,
                             'temperature': 2.0,
@@ -66,40 +67,40 @@ class KeywordTest(unittest.TestCase):
         teststr = []
         correct = []
         # simple test:
-        teststr.append("""integrator = {'name': 'velocityverlet',
+        teststr.append("""integrator = {'class': 'velocityverlet',
                                         'timestep': 0.002}""")
         correct.append({'integrator': {'timestep': 0.002,
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
         # test with comment
-        teststr.append("""integrator = {'name': 'velocityverlet', # comment
+        teststr.append("""integrator = {'class': 'velocityverlet', # comment
                                         'timestep': 0.002}""")
         correct.append({'integrator': {'timestep': 0.002,
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
         # test with quotes
-        teststr.append("""integrator = {'name': 'velocityverlet', # comment
+        teststr.append("""integrator = {'class': 'velocityverlet', # comment
                                         'timestep': "0.002"}""")
         correct.append({'integrator': {'timestep': '0.002',
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
         # test format
         teststr.append("""integrator = {
-                                        'name': 'velocityverlet',
+                                        'class': 'velocityverlet',
                                         'timestep': "0.002"}
                                         """)
         correct.append({'integrator': {'timestep': '0.002',
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
         # test format
         teststr.append("""integrator =
                            {
-                                        'name': 'velocityverlet',
+                                        'class': 'velocityverlet',
                                         'timestep': "0.002"}""")
         correct.append({'integrator': {'timestep': '0.002',
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
         # test with junk:
-        teststr.append("""integrator = {'name': 'velocityverlet',
+        teststr.append("""integrator = {'class': 'velocityverlet',
                                         'timestep': 0.002}and here is some junk
                                         more junk""")
         correct.append({'integrator': {'timestep': 0.002,
-                                       'name': 'velocityverlet'}})
+                                       'class': 'velocityverlet'}})
 
         for tst, corr in zip(teststr, correct):
             setting = parse_settings(tst.split('\n'), add_default=False)
@@ -108,11 +109,11 @@ class KeywordTest(unittest.TestCase):
     def test_write_and_read(self):
         """Test that we can parse some data, write it and read it."""
         data = """task = 'md-nve'
-                  integrator = {'name': 'velocityverlet', 'timestep': 0.002}
+                  integrator = {'class': 'velocityverlet', 'timestep': 0.002}
                   endcycle = 100
                   temperature = 2.0"""
         settings = parse_settings(data.split('\n'), add_default=False)
-        correct = {'integrator': {'timestep': 0.002, 'name': 'velocityverlet'},
+        correct = {'integrator': {'timestep': 0.002, 'class': 'velocityverlet'},
                    'temperature': 2.0, 'task': 'md-nve', 'endcycle': 100}
         with tempfile.NamedTemporaryFile() as temp:
             for dump in settings_to_text(settings):
@@ -174,6 +175,57 @@ class KeywordTest(unittest.TestCase):
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
 
+    def test_load_external_orderparameter(self):
+        """Test loading of external order parameter."""
+        data = """orderparameter = {'class': 'FooOrderParameter',
+                                    'module': 'fooorderparameter',
+                                    'args': ['Dummy']}"""
+        correct = {'orderparameter': {'class': 'FooOrderParameter',
+                                      'module': 'fooorderparameter',
+                                      'args': ['Dummy']}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        orderp = create_orderparameter(settings)
+        self.assertEqual(orderp.name,
+                         correct['orderparameter']['args'][0])
+        # check if we can add extra order parameter here:
+        def extra_function(args):
+            return args
+        added = orderp.add_orderparameter(extra_function)
+        self.assertTrue(added)
+        self.assertIs(orderp.extra[0], extra_function)
+        # check that we can't add something that's not callable
+        added = orderp.add_orderparameter('dummy')
+        self.assertFalse(added)
+    
+    def test_fail_external_orderparameter(self):
+        """Test that loading external order parameters fails.""" 
+        data = """orderparameter = {'class': 'BarOrderParameter',
+                                    'module': 'fooorderparameter'}"""
+        correct = {'orderparameter': {'class': 'BarOrderParameter',
+                                      'module': 'fooorderparameter'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_orderparameter, *args)
+        data = """orderparameter = {'class': 'BazOrderParameter',
+                                    'module': 'fooorderparameter'}"""
+        correct = {'orderparameter': {'class': 'BazOrderParameter',
+                                      'module': 'fooorderparameter'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_orderparameter, *args)
+
+    def test_create_orderparameter(self):
+        """Test that we can create internal order parameters."""
+        data = """orderparameter = {'class': 'OrderParameter',
+                                    'name': 'test'}"""
+        correct = {'orderparameter': {'class': 'OrderParameter',
+                                      'name': 'test'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        orderp = create_orderparameter(settings)
 
 
 if __name__ == '__main__':
