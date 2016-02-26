@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Example of using a integration routine implemented in Fortran."""
+"""Dummy integrator for tests."""
 from pyretis.core.integrators import Integrator
 
 
