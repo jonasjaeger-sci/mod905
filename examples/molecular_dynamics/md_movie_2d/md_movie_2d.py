@@ -23,7 +23,7 @@ import matplotlib as mpl
 
 # set up simulation settings:
 settings = {'task': 'md-nve',
-            'integrator': {'name': 'velocityverlet', 'timestep': 0.0025},
+            'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 950,
             'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
             'units': 'lj',

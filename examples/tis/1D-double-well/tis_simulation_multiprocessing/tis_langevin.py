@@ -16,7 +16,7 @@ from pyretis.inout import create_output
 
 
 simulation_settings = {'task': 'TIS',
-                       'integrator': {'name': 'Langevin', 'timestep': 0.002,
+                       'integrator': {'class': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 10,
                                       'high-friction': False},
                        'endcycle': 20000,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         path_file = os.path.join(ensemble, 'path.dat')
         ensemble_file = os.path.join(ensemble, 'pathensemble.dat')
         settings = {'task': 'TIS',
-                    'integrator': {'name': 'Langevin', 'timestep': 0.002,
+                    'integrator': {'class': 'Langevin', 'timestep': 0.002,
                                    'gamma': 0.3, 'seed': 10,
                                    'high-friction': False},
                     'endcycle': 20000,

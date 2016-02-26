@@ -26,7 +26,7 @@ from pyretis.inout.settings.settings import write_settings_file
 
 print('MD flux simulation!')
 simulation_settings = {'task': 'md-flux',
-                       'integrator': {'name': 'Langevin', 'timestep': 0.002,
+                       'integrator': {'class': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
                        'endcycle': 10000000,

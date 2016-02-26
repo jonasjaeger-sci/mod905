@@ -52,7 +52,7 @@ POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
 # simulation settings:
 settings = {'task': 'md-nve',
             'units': UNIT,
-            'integrator': {'name': 'velocityverlet',
+            'integrator': {'class': 'velocityverlet',
                            'timestep': timestep},
             'endcycle': 1000,
             'output-modify': [{'name': 'traj', 'when': {'every': 1},

@@ -43,7 +43,7 @@ def simple_template_write(template, variables, outfile, path=None):
     return None
 
 simulation_settings = {'task': 'TIS',
-                       'integrator': {'name': 'Langevin', 'timestep': 0.002,
+                       'integrator': {'class': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
                        'endcycle': 100000,

@@ -50,23 +50,23 @@ def create_integrator(settings):
         classes defined in `pyretis.core.integrators`.
     """
     try:
-        name = settings['name'].lower()
+        klass = settings['class'].lower()
     except KeyError:
-        msg = 'No integrator name given. No integrator created!'
+        msg = 'No integrator class given. No integrator created!'
         logging.critical(msg)
         return None
-    if name == 'velocityverlet':
+    if klass == 'velocityverlet':
         return VelocityVerlet(settings['timestep'])
-    elif name == 'verlet':
+    elif klass == 'verlet':
         return Verlet(settings['timestep'])
-    elif name == 'langevin':
+    elif klass == 'langevin':
         return Langevin(settings['timestep'],
                         settings['gamma'],
                         rgen=settings.get('rgen', None),
                         seed=settings.get('seed', 0),
                         high_friction=settings['high-friction'])
     else:
-        msg = 'Unknown integrator {}'.format(settings['name'])
+        msg = 'Unknown integrator {}'.format(settings['class'])
         logging.critical(msg)
         return None
 

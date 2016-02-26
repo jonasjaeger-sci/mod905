@@ -26,7 +26,7 @@ POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
 # simulation settings:
 settings = {'task': 'md-nve',
             'units': 'lj',
-            'integrator': {'name': 'velocityverlet', 'timestep': 0.002},
+            'integrator': {'class': 'velocityverlet', 'timestep': 0.002},
             'endcycle': 1000,
             'output-modify': [{'name': 'traj', 'when': {'every': 1},
                                'filename': 'traj.gro'}],
