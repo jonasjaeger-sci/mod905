@@ -84,3 +84,26 @@ examples/tis/1D-double-well/md_flux/report
 examples/extending/fortran/*/energy.dat*
 examples/extending/fortran/*/thermo.txt*
 examples/extending/fortran/*/traj.gro*
+# tis examples
+examples/tis/1D-double-well/md_flux/cross.dat*
+examples/tis/1D-double-well/md_flux/energy.dat*
+examples/tis/1D-double-well/md_flux/order.dat*
+examples/tis/1D-double-well/tis_simulation_multiprocessing/pathensemble.dat*
+examples/tis/1D-double-well/tis_simulation/001
+examples/tis/1D-double-well/tis_simulation/002
+examples/tis/1D-double-well/tis_simulation/003
+examples/tis/1D-double-well/tis_simulation/004
+examples/tis/1D-double-well/tis_simulation/005
+examples/tis/1D-double-well/tis_simulation/006
+examples/tis/1D-double-well/tis_simulation/007
+examples/tis/1D-double-well/tis_simulation_serial/001
+examples/tis/1D-double-well/tis_simulation_serial/002
+examples/tis/1D-double-well/tis_simulation_serial/003
+examples/tis/1D-double-well/tis_simulation_serial/004
+examples/tis/1D-double-well/tis_simulation_serial/005
+examples/tis/1D-double-well/tis_simulation_serial/006
+examples/tis/1D-double-well/tis_simulation_serial/007
+# md units
+examples/molecular_dynamics/md_nve/strange_units/energy.dat*
+examples/molecular_dynamics/md_nve/strange_units/thermo.txt*
+examples/molecular_dynamics/md_nve/strange_units/traj.gro*
