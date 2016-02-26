@@ -113,7 +113,8 @@ class KeywordTest(unittest.TestCase):
                   endcycle = 100
                   temperature = 2.0"""
         settings = parse_settings(data.split('\n'), add_default=False)
-        correct = {'integrator': {'timestep': 0.002, 'class': 'velocityverlet'},
+        correct = {'integrator': {'timestep': 0.002,
+                                  'class': 'velocityverlet'},
                    'temperature': 2.0, 'task': 'md-nve', 'endcycle': 100}
         with tempfile.NamedTemporaryFile() as temp:
             for dump in settings_to_text(settings):
@@ -139,7 +140,7 @@ class KeywordTest(unittest.TestCase):
                          correct['integrator']['args'][0])
         self.assertEqual(foointegrator.parameter,
                          correct['integrator']['kwargs']['parameter'])
-    
+
     def test_fail_external_integrator(self):
         """Test that external loads fail in a predicable way."""
         data = """integrator = {'class': 'BarIntegrator',
@@ -175,7 +176,7 @@ class KeywordTest(unittest.TestCase):
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
 
-    def test_load_external_orderparameter(self):
+    def test_load_orderparameter(self):
         """Test loading of external order parameter."""
         data = """orderparameter = {'class': 'FooOrderParameter',
                                     'module': 'fooorderparameter',
@@ -188,8 +189,9 @@ class KeywordTest(unittest.TestCase):
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
                          correct['orderparameter']['args'][0])
-        # check if we can add extra order parameter here:
+
         def extra_function(args):
+            """Dummy function for testing."""
             return args
         added = orderp.add_orderparameter(extra_function)
         self.assertTrue(added)
@@ -197,9 +199,9 @@ class KeywordTest(unittest.TestCase):
         # check that we can't add something that's not callable
         added = orderp.add_orderparameter('dummy')
         self.assertFalse(added)
-    
-    def test_fail_external_orderparameter(self):
-        """Test that loading external order parameters fails.""" 
+
+    def test_fail_orderparameter(self):
+        """Test that loading external order parameters fails."""
         data = """orderparameter = {'class': 'BarOrderParameter',
                                     'module': 'fooorderparameter'}"""
         correct = {'orderparameter': {'class': 'BarOrderParameter',
@@ -223,6 +225,45 @@ class KeywordTest(unittest.TestCase):
                                     'name': 'test'}"""
         correct = {'orderparameter': {'class': 'OrderParameter',
                                       'name': 'test'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        orderp = create_orderparameter(settings)
+        self.assertEqual(orderp.name, correct['orderparameter']['name'])
+
+        data = """orderparameter = {'class': 'OrderParameterPosition',
+                                    'name': 'Position', 'index': 0,
+                                    'dim': 'x', 'periodic': False}"""
+        correct = {'orderparameter': {'class': 'OrderParameterPosition',
+                                      'name': 'Position', 'index': 0,
+                                      'dim': 'x', 'periodic': False}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        orderp = create_orderparameter(settings)
+        self.assertEqual(orderp.name, correct['orderparameter']['name'])
+        self.assertEqual(orderp.index, correct['orderparameter']['index'])
+        self.assertEqual(orderp.dim, 0)
+        self.assertEqual(orderp.periodic,
+                         correct['orderparameter']['periodic'])
+
+        data = """orderparameter = {'class': 'OrderParameterParse',
+                                    'name': 'Position', 'orderp': 'sin(x[0])',
+                                    'ordervel': 'cos(x[0])'}"""
+        correct = {'orderparameter': {'class': 'OrderParameterParse',
+                                      'name': 'Position',
+                                      'orderp': 'sin(x[0])',
+                                      'ordervel': 'cos(x[0])'}}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        orderp = create_orderparameter(settings)
+
+        data = """orderparameter = {'class': 'OrderParameterParse',
+                                    'name': 'Position',
+                                    'orderp': 'sin(pbc_x(x[0]))',
+                                    'ordervel': 'cos(x[0])'}"""
+        correct = {'orderparameter': {'class': 'OrderParameterParse',
+                                      'name': 'Position',
+                                      'orderp': 'sin(pbc_x(x[0]))',
+                                      'ordervel': 'cos(x[0])'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
         orderp = create_orderparameter(settings)
