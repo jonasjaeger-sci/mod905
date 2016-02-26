@@ -16,6 +16,7 @@ from __future__ import absolute_import
 import logging
 import os
 from pyretis.inout.settings.common import import_from, initiate_instance
+from pyretis.core.orderparameter import order_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -51,7 +52,8 @@ def create_orderparameter(settings):
         logger.critical(msg)
         raise ValueError(msg)
     if module is None:
-        orderparameter = import_from('pyretis.core.orderparameter', orderclass)
+        orderparameter = order_factory(orderp)
+        return orderparameter
     else:
         # Here we assume we are to load from a file.
         # It would be nice to ditch python 2 and just do this:
@@ -72,5 +74,6 @@ def create_orderparameter(settings):
                                                                  function)
                     logger.critical(msg)
                     raise ValueError(msg)
-    return initiate_instance(orderparameter, args=orderp.get('args', None),
-                             kwargs=orderp.get('kwargs', None))
+        return initiate_instance(orderparameter,
+                                 args=orderp.get('args', None),
+                                 kwargs=orderp.get('kwargs', None))
