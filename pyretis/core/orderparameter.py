@@ -15,6 +15,10 @@ Important classes defined here:
 
 - OrderParameterParse: A class for order parameters which can be parsed
   from a input string.
+
+Important functions defined here:
+
+- order_factory: A method to create order parameters from settings.
 """
 from __future__ import division  # for StringFunctionParser
 import logging
