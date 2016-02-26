@@ -9,7 +9,7 @@ Important functions defined here:
 - import_from : A function to dynamically import functions/classes
   etc. from user specified modules.
 """
-import importlib
+import imp
 import logging
 import os
 from pyretis.core.integrators import integrator_factory
@@ -22,7 +22,7 @@ __all__ = ['check_settings', 'import_from', 'initiate_instance',
            'create_orderparameter', 'create_integrator']
 
 
-def import_from(module_name, function_name):
+def import_from(module_path, function_name):
     """Function to import a function/class from a module.
 
     This function will dynamically import a specified function/object
@@ -32,8 +32,8 @@ def import_from(module_name, function_name):
 
     Parameters
     ----------
-    module_name : string
-        The name of the module to load from.
+    module_path : string
+        The path/filename to load from.
     function_name : string
         The name of the function/class to load.
 
@@ -43,18 +43,20 @@ def import_from(module_name, function_name):
         The thing we managed to import.
     """
     try:
-        module = importlib.import_module(module_name)
+        module_name = os.path.basename(module_path)
+        module_name = os.path.splitext(module_name)[0]
+        module = imp.load_source(module_name, module_path)
         msg = 'Imported module: {}'.format(module)
         logger.info(msg)
         try:
             return getattr(module, function_name)
         except AttributeError:
             msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                           module_name)
+                                                           module_path)
             logger.critical(msg)
             raise ValueError(msg)
     except ImportError:
-        msg = 'Could not import module: {}'.format(module_name)
+        msg = 'Could not import module: {}'.format(module_path)
         logger.critical(msg)
         raise ValueError(msg)
 
@@ -172,7 +174,7 @@ def create_external(settings, key, factory, required_methods):
         # Here we assume we are to load from a file.
         # It would be nice to ditch python 2 and just do this:
         # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        module = os.path.splitext(module)[0]
+        #module = os.path.splitext(module)[0]
         obj = import_from(module, klass)
         # run some checks:
         for function in required_methods:
