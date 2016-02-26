@@ -27,10 +27,10 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse',
-           'create_orderparameter']
+           'order_factory']
 
 
-def create_orderparameter(settings):
+def order_factory(settings):
     """Create order parameters according to the given settings.
 
     This function is included as a convenient way of setting up and
