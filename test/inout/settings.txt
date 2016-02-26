@@ -10,7 +10,7 @@ units='lj'
 units= 'lj'
 units     = 'lj'
 task = 'md-nve'
-integrator = {'name': 'velocityverlet', 'timestep': 0.002}
+integrator = {'class': 'velocityverlet', 'timestep': 0.002}
 endcycle = 100
 
 
