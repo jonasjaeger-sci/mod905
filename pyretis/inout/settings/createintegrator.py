@@ -16,7 +16,7 @@ from __future__ import absolute_import
 import logging
 import os
 from pyretis.inout.settings.common import import_from, initiate_instance
-import pyretis.core.integrators as integrators
+from pyretis.core.integrators import integrator_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -46,7 +46,7 @@ def create_integrator(settings):
     module = inter_settings.get('module', None)
     if module is None:
         # assume that we want to load from the predefined ones:
-        integrator = integrators.create_integrator(inter_settings)
+        integrator = integrator_factory(inter_settings)
         return integrator
     else:
         # Here we assume we are to load from a file.

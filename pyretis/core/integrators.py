@@ -16,7 +16,7 @@ Important classes defined here:
 
 Important functions defined here:
 
-- create_integrator: A function to set up and create an integrator from
+- integrator_factory: A function to set up and create an integrator from
   simulation settings.
 """
 from __future__ import absolute_import
@@ -29,10 +29,10 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
-           'create_integrator']
+           'integrator_factory']
 
 
-def create_integrator(settings):
+def integrator_factory(settings):
     """Create an integrator according to the given integrator settings.
 
     This function is included as a convenient way of setting up and
