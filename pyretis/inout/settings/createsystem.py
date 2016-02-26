@@ -142,15 +142,16 @@ def initial_positions_lattice(settings):
     particles = Particles(dim=ndim)
     for i, pos in enumerate(lattice):
         particle_type = list_get(ptype, i)
+        particle_name = list_get(pname, i)
         # infer mass from the input masses, or try to get it
         # from the periodic table
         try:
-            particle_mass = pmass[particle_type]
+            particle_mass = pmass[particle_name]
         except KeyError:
-            particle_mass = _guess_particle_mass(i + 1, particle_type,
+            particle_mass = _guess_particle_mass(i + 1, particle_name,
                                                  settings['units'])
         particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
-                               mass=particle_mass, name=list_get(pname, i),
+                               mass=particle_mass, name=particle_name,
                                ptype=particle_type)
     msg = ['Initiated {} particles on lattice "{}".'.format(particles.npart,
                                                             lattice_type)]
