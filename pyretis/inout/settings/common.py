@@ -11,6 +11,9 @@ Important functions defined here:
 """
 import importlib
 import logging
+import os
+from pyretis.core.integrators import integrator_factory
+from pyretis.core.orderparameter import order_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -125,3 +128,99 @@ def check_settings(settings, required):
             result = False
             not_found.append(setting)
     return result, not_found
+
+
+def create_external(settings, key, factory, required_methods):
+    """Function to create order parameters from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    key : string
+        The setting we are creating for.
+    factory : callable
+        A method to call that can handle the creation of internal
+        objects for us.
+    required_methods : list of strings
+        The methods we need to have if creating an object from external
+        files.
+
+    Returns
+    -------
+    out : object
+        This object represents the class we are requesting here.
+    """
+    try:
+        key_settings = settings[key]
+    except KeyError:
+        msg = 'No {} settings found!'.format(key)
+        logger.critical(msg)
+        return None
+    module = key_settings.get('module', None)
+    klass = None
+    try:
+        klass = key_settings['class']
+    except KeyError:
+        msg = 'No {} "class" specified!'.format(key)
+        logger.critical(msg)
+        raise ValueError(msg)
+    if module is None:
+        return factory(key_settings)
+    else:
+        # Here we assume we are to load from a file.
+        # It would be nice to ditch python 2 and just do this:
+        # importlib.machinery.SourceFileLoader('module','/path/module.py')
+        module = os.path.splitext(module)[0]
+        obj = import_from(module, klass)
+        # run some checks:
+        for function in required_methods:
+            objfunc = getattr(obj, function, None)
+            if not objfunc:
+                msg = 'Could not find method {}.{}'.format(klass,
+                                                           function)
+                logger.critical(msg)
+                raise ValueError(msg)
+            else:
+                if not callable(objfunc):
+                    msg = 'Method {}.{} is not callable!'.format(klass,
+                                                                 function)
+                    logger.critical(msg)
+                    raise ValueError(msg)
+        return initiate_instance(obj,
+                                 args=key_settings.get('args', None),
+                                 kwargs=key_settings.get('kwargs', None))
+
+
+def create_orderparameter(settings):
+    """Function to create order parameters from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+
+    Returns
+    -------
+    out : object like `OrderParameter` from `pyretis.core.orderparameter`.
+        This object represents the order parameter.
+    """
+    return create_external(settings, 'orderparameter', order_factory,
+                           ['calculate', 'calculate_velocity'])
+
+
+def create_integrator(settings):
+    """Function to create simulations from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+
+    Returns
+    -------
+    out : object like `Integrator` from `pyretis.core.integrators`.
+        This object represents the integrator.
+    """
+    return create_external(settings, 'integrator', integrator_factory,
+                           ['integration_step'])

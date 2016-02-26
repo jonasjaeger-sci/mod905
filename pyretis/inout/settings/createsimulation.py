@@ -13,9 +13,8 @@ Important classes and functions:
 from __future__ import absolute_import
 import logging
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.inout.settings.createintegrator import create_integrator
-from pyretis.inout.settings.common import check_settings
-from pyretis.inout.settings.createorderparameter import create_orderparameter
+from pyretis.inout.settings.common import (check_settings, create_integrator,
+                                           create_orderparameter)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)

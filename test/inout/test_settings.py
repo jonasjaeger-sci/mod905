@@ -8,8 +8,8 @@ import os
 import logging
 import tempfile
 import unittest
-from pyretis.inout.settings.createintegrator import create_integrator
-from pyretis.inout.settings.createorderparameter import create_orderparameter
+from pyretis.inout.settings.common import create_integrator
+from pyretis.inout.settings.common import create_orderparameter
 from pyretis.inout.settings.settings import parse_settings_file
 from pyretis.inout.settings.settings import parse_settings
 from pyretis.inout.settings.settings import settings_to_text

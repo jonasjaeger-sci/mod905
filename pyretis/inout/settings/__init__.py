@@ -9,6 +9,5 @@ from __future__ import absolute_import
 from .settings import parse_settings_file, write_settings_file
 from .createsystem import create_system
 from .createsimulation import create_simulation
-from .createorderparameter import create_orderparameter
 from .createoutput import create_output
 from .createforcefield import create_force_field
