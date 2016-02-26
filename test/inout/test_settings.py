@@ -4,6 +4,7 @@
 Here we test that we understand the input file and that fail in
 a predictable way.
 """
+from __future__ import absolute_import
 import os
 import logging
 import tempfile
@@ -13,10 +14,12 @@ from pyretis.inout.settings.common import create_orderparameter
 from pyretis.inout.settings.settings import parse_settings_file
 from pyretis.inout.settings.settings import parse_settings
 from pyretis.inout.settings.settings import settings_to_text
+from pyretis.inout.settings.createsystem import initial_positions_lattice
+from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
 
 
-class KeywordTest(unittest.TestCase):
+class KeywordParsing(unittest.TestCase):
     """Test the parsing of input settings."""
 
     def test_parse_file(self):
@@ -123,6 +126,9 @@ class KeywordTest(unittest.TestCase):
             settings_read = parse_settings_file(temp.name, add_default=False)
         self.assertEqual(settings_read, correct)
 
+
+class KeywordIntegrator(unittest.TestCase):
+    """Test the parsing of input settings for integrators."""
     def test_load_external_integrator(self):
         """Test that we can load external python modules for integrators."""
         data = """integrator = {'class': 'FooIntegrator',
@@ -135,6 +141,9 @@ class KeywordTest(unittest.TestCase):
                                   'kwargs': {'parameter': 100}}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['integrator']['module'] = os.path.join(here,
+                                                        'foointegrator.py')
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
                          correct['integrator']['args'][0])
@@ -149,8 +158,12 @@ class KeywordTest(unittest.TestCase):
                                   'module': 'foointegrator'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['integrator']['module'] = os.path.join(here,
+                                                        'foointegrator.py')
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
+        
         # test for another integrator that defines a self.integration_step,
         # on __init__
         data = """integrator = {'class': 'BazIntegrator',
@@ -159,8 +172,12 @@ class KeywordTest(unittest.TestCase):
                                   'module': 'foointegrator'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['integrator']['module'] = os.path.join(here,
+                                                        'foointegrator.py')
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
+        
         # test for a case where we forgot to input the 'class'
         data = "integrator = {'module': 'dummy'}"
         correct = {'integrator': {'module': 'dummy'}}
@@ -173,8 +190,15 @@ class KeywordTest(unittest.TestCase):
         correct = {'integrator': {'module': 'dummy', 'class': 'dummy'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['integrator']['module'] = os.path.join(here,
+                                                        'foointegrator.py')
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
+
+
+class KeywordOrderPrameter(unittest.TestCase):
+    """Test creation of order parameters."""
 
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
@@ -186,6 +210,9 @@ class KeywordTest(unittest.TestCase):
                                       'args': ['Dummy']}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['orderparameter']['module'] = os.path.join(here,
+                                                        'fooorderparameter.py')
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
                          correct['orderparameter']['args'][0])
@@ -209,6 +236,9 @@ class KeywordTest(unittest.TestCase):
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
         args = [settings]
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['orderparameter']['module'] = os.path.join(here,
+                                                        'fooorderparameter.py')
         self.assertRaises(ValueError, create_orderparameter, *args)
         data = """orderparameter = {'class': 'BazOrderParameter',
                                     'module': 'fooorderparameter'}"""
@@ -217,6 +247,9 @@ class KeywordTest(unittest.TestCase):
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
         args = [settings]
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['orderparameter']['module'] = os.path.join(here,
+                                                        'fooorderparameter.py')
         self.assertRaises(ValueError, create_orderparameter, *args)
 
     def test_create_orderparameter(self):
@@ -267,6 +300,79 @@ class KeywordTest(unittest.TestCase):
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
         orderp = create_orderparameter(settings)
+
+
+class KeywordParticles(unittest.TestCase):
+    """Test initialization of particles."""
+
+    def test_lattice(self):
+        """Test initialization on a lattice."""
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [6, 6, 6],
+                                        'lcon': 1.0}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [6, 6, 6],
+                                          'lcon': 1.0},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        create_conversion_factors(settings['units'])
+        particles, size = initial_positions_lattice(settings)
+        self.assertEqual(size, [[0.0, 6.0], [0.0, 6.0], [0.0, 6.0]])
+        self.assertEqual(particles.npart, 4 * 6 * 6 * 6)
+        self.assertAlmostEqual(particles.mass[0][0], 1.0)
+        self.assertAlmostEqual(particles.imass[0][0], 1.0)
+        for i in range(particles.npart):
+            self.assertEqual(particles.name[i], 'Ar')
+
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'lcon': 1.0}
+                  particles-type = [0, 1]
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'lcon': 1.0},
+                   'particles-type': [0, 1],
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        particles, size = initial_positions_lattice(settings)
+        for i in range(particles.npart):
+            self.assertEqual(particles.name[i], 'Ar')
+        for i in range(particles.npart):
+            if i == 0:
+                self.assertEqual(particles.ptype[i], 0)
+            else:
+                self.assertEqual(particles.ptype[i], 1)
+        
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'lcon': 1.0}
+                  particles-type = [0, 1]
+                  particles-name = ['Ar', 'Kr']
+                  particles-mass = {'Ar': 1.0}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'lcon': 1.0},
+                   'particles-type': [0, 1],
+                   'particles-name': ['Ar', 'Kr'],
+                   'particles-mass': {'Ar': 1.0},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        particles, size = initial_positions_lattice(settings)
+        for i in range(particles.npart):
+            if i == 0:
+                self.assertEqual(particles.ptype[i], 0)
+                self.assertEqual(particles.name[i], 'Ar')
+                self.assertAlmostEqual(particles.mass[i][0], 1.0)
+            else:
+                self.assertEqual(particles.ptype[i], 1)
+                self.assertEqual(particles.name[i], 'Kr')
+                self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
 
 
 if __name__ == '__main__':
