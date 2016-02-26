@@ -4,33 +4,33 @@ Molecular dynamics example settings
 Simulation settings
 -------------------
 
-:units: lj
-:task: md-nve
-:integrator: name velocityverlet; timestep 0.002
-:endcycle: 100
+units = lj
+task = md-nve
+integrator = {'class': 'velocityverlet', 'timestep': 0.002}
+endcycle = 100
 
 
 System settings
 ---------------
 
-:temperature: 2.0
+temperature = 2.0
 
-:particles-position: file initial.gro
+particles-position = {'file': 'initial.gro'}
 
-:particles-velocity: generate maxwell;
-                     set-temperature 2.0;
-                     momentum True;
-                     seed 0
+particles-velocity = {'generate': 'maxwell',
+                      'set-temperature': 2.0,
+                      'momentum: True,
+                      'seed': 0}
 
-:particle-mass: Ar 1.0
+particle-mass = {'Ar': 1.0}
 
 
 Force field settings
 --------------------
 
-:forcefield: desc Lennard Jones test
-:potentials: class PairLennardJonesCutnp;
-             shift True
+forcefield = {'desc': 'Lennard Jones test'}
+potentials = {'class': 'PairLennardJonesCutnp',
+              'shift': True}
 
-:potential-parameters: potential 0;
-                       Ar {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
+potential-parameters: {'potential': 0,
+                       'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
