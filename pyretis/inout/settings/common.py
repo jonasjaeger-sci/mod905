@@ -9,6 +9,8 @@ Important functions defined here:
 - import_from : A function to dynamically import functions/classes
   etc. from user specified modules.
 """
+import sys
+import importlib
 import imp
 import logging
 import os
@@ -41,11 +43,29 @@ def import_from(module_path, function_name):
     -------
     out : object
         The thing we managed to import.
+
+    Note
+    ----
+    Here we need to handle different versions of python. This is due
+    to the ``imp`` module being deprecated and and the same time
+    ``importlib`` is changing between versions 3.4 and 3.5 [#]_.
+
+    References
+    ----------
+    .. [#] http://bugs.python.org/issue21436
     """
     try:
+        # sad news, imp is deprecated for python 3.5
+        # we need to check if we are using python3.5 or earlier
         module_name = os.path.basename(module_path)
         module_name = os.path.splitext(module_name)[0]
-        module = imp.load_source(module_name, module_path)
+        if sys.version_info < (3, 5):
+            module = imp.load_source(module_name, module_path)
+        else:
+            spec = importlib.util.spec_from_file_location(module_name, # pylint: disable=no-member
+                                                          module_path)
+            module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
+            spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
         logger.info(msg)
         try:
@@ -171,11 +191,19 @@ def create_external(settings, key, factory, required_methods):
     if module is None:
         return factory(key_settings)
     else:
-        # Here we assume we are to load from a file.
-        # It would be nice to ditch python 2 and just do this:
-        # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        #module = os.path.splitext(module)[0]
-        obj = import_from(module, klass)
+        # Here we assume we are to load from a file. Before we import
+        # we need to check that the path is ok or if we should include
+        # the 'exe-path' from settings.
+        # 1) Check if we can find the module:
+        if os.path.isfile(module):
+            obj = import_from(module, klass)
+        else:
+            if 'exe-path' in settings:
+                module = os.path.join(settings['exe-path'], module)
+                obj = import_from(module, klass)
+            else:
+                msg = 'Could not find module "{}" for {}!'.format(module, key)
+                raise ValueError(msg)
         # run some checks:
         for function in required_methods:
             objfunc = getattr(obj, function, None)

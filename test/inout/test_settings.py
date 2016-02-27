@@ -132,18 +132,20 @@ class KeywordIntegrator(unittest.TestCase):
     def test_load_external_integrator(self):
         """Test that we can load external python modules for integrators."""
         data = """integrator = {'class': 'FooIntegrator',
-                                'module': 'foointegrator',
+                                'module': 'foointegrator.py',
                                 'args': [0.5],
                                 'kwargs': {'parameter': 100}}"""
         correct = {'integrator': {'class': 'FooIntegrator',
-                                  'module': 'foointegrator',
+                                  'module': 'foointegrator.py',
                                   'args': [0.5],
                                   'kwargs': {'parameter': 100}}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        # Here we add the exe-path key to the settings to tell
+        # pyretis where we are executing from. This is to locate the
+        # script we want to run.
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['integrator']['module'] = os.path.join(here,
-                                                        'foointegrator.py')
+        settings['exe-path'] = here
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
                          correct['integrator']['args'][0])
@@ -153,32 +155,30 @@ class KeywordIntegrator(unittest.TestCase):
     def test_fail_external_integrator(self):
         """Test that external loads fail in a predicable way."""
         data = """integrator = {'class': 'BarIntegrator',
-                                'module': 'foointegrator',}"""
+                                'module': 'foointegrator.py',}"""
         correct = {'integrator': {'class': 'BarIntegrator',
-                                  'module': 'foointegrator'}}
+                                  'module': 'foointegrator.py'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        # Here we add the exe-path key to the settings to tell
+        # pyretis where we are executing from. This is to locate the
+        # script we want to run.
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['integrator']['module'] = os.path.join(here,
-                                                        'foointegrator.py')
+        settings['exe-path'] = here
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
-        
-        # test for another integrator that defines a self.integration_step,
+        # Test for another integrator that defines a self.integration_step,
         # on __init__
         data = """integrator = {'class': 'BazIntegrator',
-                                'module': 'foointegrator',}"""
+                                'module': 'foointegrator.py',}"""
         correct = {'integrator': {'class': 'BazIntegrator',
-                                  'module': 'foointegrator'}}
+                                  'module': 'foointegrator.py'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['integrator']['module'] = os.path.join(here,
-                                                        'foointegrator.py')
+        settings['exe-path'] = here
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
-        
-        # test for a case where we forgot to input the 'class'
+        # Test for a case where we forgot to input the 'class'
         data = "integrator = {'module': 'dummy'}"
         correct = {'integrator': {'module': 'dummy'}}
         settings = parse_settings(data.split('\n'), add_default=False)
@@ -190,9 +190,6 @@ class KeywordIntegrator(unittest.TestCase):
         correct = {'integrator': {'module': 'dummy', 'class': 'dummy'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['integrator']['module'] = os.path.join(here,
-                                                        'foointegrator.py')
         args = [settings]
         self.assertRaises(ValueError, create_integrator, *args)
 
@@ -203,16 +200,18 @@ class KeywordOrderPrameter(unittest.TestCase):
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
         data = """orderparameter = {'class': 'FooOrderParameter',
-                                    'module': 'fooorderparameter',
+                                    'module': 'fooorderparameter.py',
                                     'args': ['Dummy']}"""
         correct = {'orderparameter': {'class': 'FooOrderParameter',
-                                      'module': 'fooorderparameter',
+                                      'module': 'fooorderparameter.py',
                                       'args': ['Dummy']}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        # Here we add the exe-path key to the settings to tell
+        # pyretis where we are executing from. This is to locate the
+        # script we want to run.
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['orderparameter']['module'] = os.path.join(here,
-                                                        'fooorderparameter.py')
+        settings['exe-path'] = here
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
                          correct['orderparameter']['args'][0])
@@ -230,26 +229,26 @@ class KeywordOrderPrameter(unittest.TestCase):
     def test_fail_orderparameter(self):
         """Test that loading external order parameters fails."""
         data = """orderparameter = {'class': 'BarOrderParameter',
-                                    'module': 'fooorderparameter'}"""
+                                    'module': 'fooorderparameter.py'}"""
         correct = {'orderparameter': {'class': 'BarOrderParameter',
-                                      'module': 'fooorderparameter'}}
+                                      'module': 'fooorderparameter.py'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        args = [settings]
+        # Here we add the exe-path key to the settings to tell
+        # pyretis where we are executing from. This is to locate the
+        # script we want to run.
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['orderparameter']['module'] = os.path.join(here,
-                                                        'fooorderparameter.py')
+        settings['exe-path'] = here
+        args = [settings]
         self.assertRaises(ValueError, create_orderparameter, *args)
         data = """orderparameter = {'class': 'BazOrderParameter',
-                                    'module': 'fooorderparameter'}"""
+                                    'module': 'fooorderparameter.py'}"""
         correct = {'orderparameter': {'class': 'BazOrderParameter',
-                                      'module': 'fooorderparameter'}}
+                                      'module': 'fooorderparameter.py'}}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        settings['exe-path'] = here
         args = [settings]
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['orderparameter']['module'] = os.path.join(here,
-                                                        'fooorderparameter.py')
         self.assertRaises(ValueError, create_orderparameter, *args)
 
     def test_create_orderparameter(self):
@@ -346,7 +345,8 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 0)
             else:
                 self.assertEqual(particles.ptype[i], 1)
-        
+        # Test that we can create different particles and that the
+        # mass is correctly set.
         data = """particles-position = {'generate': 'fcc',
                                         'repeat': [3, 3, 3],
                                         'lcon': 1.0}
