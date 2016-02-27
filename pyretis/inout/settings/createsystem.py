@@ -327,6 +327,11 @@ def create_initial_positions(settings):
         particles, size = initial_positions_lattice(settings)
         return particles, size, False
     elif 'file' in settings['particles-position']:
+        # First check if we need to add a path to the file:
+        filename = settings['particles-position']['file']
+        if not os.path.isfile(filename) and 'exe-path' in settings:
+            filename = os.path.join(settings['exe-path'], filename)
+            settings['particles-position']['file'] = filename
         particles, size, vel = initial_positions_file(settings)
         return particles, size, vel
     else:
