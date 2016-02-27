@@ -27,7 +27,7 @@ POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
 settings = {'task': 'md-nve',
             'units': 'lj',
             'integrator': {'class': 'VelocityVerletF', 'args': [0.002],
-                           'module': 'vvintegratorf'},
+                           'module': 'vvintegratorf.py'},
             'endcycle': 1000,
             'output-modify': [{'name': 'traj', 'when': {'every': 1},
                                'filename': 'traj.gro'}],

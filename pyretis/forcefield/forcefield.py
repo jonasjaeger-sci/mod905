@@ -2,6 +2,7 @@
 """This file contains a class for a generic force field."""
 import logging
 import inspect
+import sys
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -78,18 +79,7 @@ class ForceField(object):
                    'This was ignored -- please check your settings.')
             logger.warning(msg)
             return None
-        try:
-            arg_force = inspect.getargspec(potential.force)
-        except AttributeError:
-            arg_force = None
-        try:
-            arg_pot = inspect.getargspec(potential.potential)
-        except AttributeError:
-            arg_pot = None
-        try:
-            arg_pot_force = inspect.getargspec(potential.potential_and_force)
-        except AttributeError:
-            arg_pot_force = None
+        arg_force, arg_pot, arg_pot_force = inspect_potential(potential)
         self.arguments['force'].append(arg_force)
         self.arguments['potential'].append(arg_pot)
         self.arguments['pot-and-force'].append(arg_pot_force)
@@ -169,7 +159,7 @@ class ForceField(object):
         force = None
         virial = None
         for pot, argu in zip(self.potential, self.arguments['force']):
-            var = argu.args
+            var = argu['args']
             args = [kwargs[vari] for vari in var if vari != 'self']
             if force is None or virial is None:
                 force, virial = pot.force(*args)
@@ -199,9 +189,7 @@ class ForceField(object):
         """
         v_pot = None
         for pot, argu in zip(self.potential, self.arguments['potential']):
-            # arguments = inspect.getargspec(pot.potential)
-            var = argu.args
-            #args = [kwargs[vari] for vari in var if vari is not 'self']
+            var = argu['args']
             args = [kwargs[vari] for vari in var if vari != 'self']
             if v_pot is None:
                 v_pot = pot.potential(*args)
@@ -241,7 +229,7 @@ class ForceField(object):
         force = None
         virial = None
         for pot, argu in zip(self.potential, self.arguments['pot-and-force']):
-            var = argu.args
+            var = argu['args']
             #args = [kwargs[vari] for vari in var if vari is not 'self']
             args = [kwargs[vari] for vari in var if vari != 'self']
             if v_pot is None or force is None or virial is None:
@@ -290,3 +278,64 @@ class ForceField(object):
         for i, pot in enumerate(self.potential):
             msg.append('\t{}: {}'.format(i + 1, pot.desc))
         return '\n'.join(msg)
+
+
+def inspect_potential(potential):
+    """A method to figure out arguments for a given function.
+
+    This method is used when adding potential functions to the force
+    field in order for the force field to figure out how these should
+    be executed. Here we need to distinguish between python versions
+    since the ``inspect.getargspec`` is deprecated for python3.5 and
+    later.
+
+    Parameters
+    ----------
+    potential : object like `PotentialFunction`
+        The potential to inspect
+
+    Returns
+    -------
+    out[0] : dict
+        The arguments for calling `potential.force` if any.
+    out[1] : dict
+        The arguments for calling `potential.potential` if any.
+    out[2] : dict
+        The arguments for calling `potential.potential_and_force`
+        if any.
+    """
+    args = {}
+    for funcname in ['force', 'potential', 'potential_and_force']:
+        args[funcname] = None
+        function = getattr(potential, funcname, None)
+        if function is not None:
+            args[funcname] = _inspect_potential_function(function)
+    return args['force'], args['potential'], args['potential_and_force']
+
+
+def _inspect_potential_function(function):
+    """Helper method for `inspect_potential`
+
+    This function will do the actual inspection.
+
+    Parameters
+    ----------
+    function : callable
+        The function to inspect.
+
+    Returns
+    -------
+    argsdict : dict
+        The arguments for calling `function` if any.
+    """
+    argsdict = {'args': []}
+    if sys.version_info > (3, 5):
+        args = inspect.signature(function)  # pylint: disable=no-member
+        for arg in args.parameters:
+            argsdict['args'].append(arg)
+        return argsdict
+    else:
+        args = inspect.getargspec(function)
+        if args.args is not None:
+            argsdict['args'] = [arg for arg in args.args]
+        return argsdict
