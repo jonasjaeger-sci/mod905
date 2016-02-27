@@ -1,0 +1,7 @@
+5
+Example with tagging one particle.
+Ar    0.0  0.0  0.0
+Ar    0.5  0.5  0.5
+Ar    0.5  0.5  0.0
+Kr    0.5  0.0  0.5
+Kr2   0.0  0.5  0.5

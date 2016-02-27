@@ -150,7 +150,7 @@ class KeywordIntegrator(unittest.TestCase):
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
                          correct['integrator']['args'][0])
-        self.assertEqual(foointegrator.parameter,
+        self.assertEqual(foointegrator.parameter,  # pylint: disable=no-member
                          correct['integrator']['kwargs']['parameter'])
 
     def test_fail_external_integrator(self):
@@ -374,7 +374,7 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 1)
                 self.assertEqual(particles.name[i], 'Kr')
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
-    
+
     def test_file_xyz(self):
         """Test initialization from a XYZ file."""
         data = """particles-position = {'file': 'config.xyz'}
@@ -383,32 +383,29 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        units = settings['units']
-        create_conversion_factors(units)
+        create_conversion_factors(settings['units'])
         # Add path to the file for this test:
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['exe-path'] = here
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
-        pos = particles.pos * CONVERT['length'][units, 'A']
+        pos = particles.pos * CONVERT['length'][settings['units'], 'A']
         correct_pos = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5],
                                 [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
                                 [0.0, 0.5, 0.5]])
         self.assertTrue(np.allclose(pos, correct_pos))
-        correct_ptype = [0, 1, 2, 2, 2]
-        pequal = all([ptype == ctype for ptype, ctype in zip(particles.ptype,
-                                                             correct_ptype)])
-        correct_name = ['Ba', 'Hf', 'O', 'O', 'O']
-        nequal = all([namei == namej for namei, namej in zip(particles.name,
-                                                             correct_name)])
+        pequal = all([i == j for i, j in zip(particles.ptype,
+                                             [0, 1, 2, 2, 2])])
+        self.assertTrue(pequal)
+        nequal = all([i == j for i, j in zip(particles.name,
+                                             ['Ba', 'Hf', 'O', 'O', 'O'])])
         self.assertTrue(nequal)
         masses = []
-        for mass in particles.mass:
-            masses.append(mass[0] * CONVERT['mass'][units, 'g/mol'])
-        correct_mass = [137.327, 178.49, 15.9994, 15.9994, 15.9994]
-        self.assertTrue(np.allclose(masses, correct_mass))
-    
+        for i in particles.mass:
+            masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
+        self.assertTrue(np.allclose(masses, [137.327, 178.49, 15.9994,
+                                             15.9994, 15.9994]))
+
     def test_file_gro(self):
         """Test initialization from a GRO file."""
         data = """particles-position = {'file': 'config.gro'}
@@ -417,43 +414,70 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'real'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        units = settings['units']
-        create_conversion_factors(units)
+        create_conversion_factors(settings['units'])
         # Add path to the file for this test:
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['exe-path'] = here
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
-        correct_size = [20.0, 20.0, 20.0]
-        self.assertTrue(np.allclose(size, correct_size))
+        self.assertTrue(np.allclose(size, [20., 20., 20.]))
         #self.assertIsNone(size)
-        pos = particles.pos * CONVERT['length'][units, 'A']
+        pos = particles.pos * CONVERT['length'][settings['units'], 'A']
         correct_pos = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5],
                                 [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
                                 [0.0, 0.5, 0.5]])
-        print(pos.shape)
-        print(correct_pos.shape)
         self.assertTrue(np.allclose(pos, correct_pos))
-        correct_ptype = [0, 1, 2, 2, 2]
-        pequal = all([ptype == ctype for ptype, ctype in zip(particles.ptype,
-                                                             correct_ptype)])
-        correct_name = ['Ba', 'Hf', 'O', 'O', 'O']
-        nequal = all([namei == namej for namei, namej in zip(particles.name,
-                                                             correct_name)])
+        pequal = all([i == j for i, j in zip(particles.ptype,
+                                             [0, 1, 2, 2, 2])])
+        self.assertTrue(pequal)
+        nequal = all([i == j for i, j in zip(particles.name,
+                                             ['Ba', 'Hf', 'O', 'O', 'O'])])
         self.assertTrue(nequal)
         masses = []
-        for mass in particles.mass:
-            masses.append(mass[0] * CONVERT['mass'][units, 'g/mol'])
-        correct_mass = [137.327, 178.49, 15.9994, 15.9994, 15.9994]
-        self.assertTrue(np.allclose(masses, correct_mass))
+        for i in particles.mass:
+            masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
+        self.assertTrue(np.allclose(masses, [137.327, 178.49, 15.9994,
+                                             15.9994, 15.9994]))
         vel = []
-        for veli in particles.vel:
-            vel.append(veli * CONVERT['velocity'][units, 'nm/ps'])
+        for i in particles.vel:
+            vel.append(i * CONVERT['velocity'][settings['units'], 'nm/ps'])
         vel = np.array(vel)
-        correct_vel = np.array([[1.0,  1.0,  1.0], [-1.0, -1.0, -1.0],
-                                [2.0,  0.0, -2.0], [-2.0,  1.0,  2.0],
-                                [0.0, -1.0,  0.0]])
+        correct_vel = np.array([[1.0, 1.0, 1.0], [-1.0, -1.0, -1.0],
+                                [2.0, 0.0, -2.0], [-2.0, 1.0, 2.0],
+                                [0.0, -1.0, 0.0]])
         self.assertTrue(np.allclose(vel, correct_vel))
+
+    def test_file_xyztab(self):
+        """Test initialization from a XYZ file with mass dict."""
+        data = """particles-position = {'file': 'configtag.xyz'}
+                  particles-type = [0, 0, 0, 1, 1]
+                  particles-mass = {'Ar': 1., 'Kr': 2.09767698,
+                                    'Kr2': 2.09767698}
+                  units = lj"""
+        correct = {'particles-position': {'file': 'configtag.xyz'},
+                   'particles-type': [0, 0, 0, 1, 1],
+                   'particles-mass': {'Ar': 1., 'Kr': 2.09767698,
+                                      'Kr2': 2.09767698},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        create_conversion_factors(settings['units'])
+        # Add path to the file for this test:
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        particles, size, vel_read = create_initial_positions(settings)
+        self.assertFalse(vel_read)
+        self.assertIsNone(size)
+        pequal = all([i == j for i, j in zip(particles.ptype,
+                                             [0, 0, 0, 1, 1])])
+        self.assertTrue(pequal)
+        nequal = all([i == j for i, j in zip(particles.name,
+                                             ['Ar', 'Ar', 'Ar',
+                                              'Kr', 'Kr2'])])
+        self.assertTrue(nequal)
+        masses = []
+        for i in particles.mass:
+            masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
+        self.assertTrue(np.allclose(masses, [39.948, 39.948, 39.948,
+                                             83.798, 83.798]))
 
 
 if __name__ == '__main__':
