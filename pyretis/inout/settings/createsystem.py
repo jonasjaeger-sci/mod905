@@ -273,7 +273,7 @@ def initial_positions_file(settings):
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        particle_name = particle_name.lower()
+        #particle_name = particle_name.lower()
         # infer mass from the input masses, or try to get it
         # from the periodic table
         try:

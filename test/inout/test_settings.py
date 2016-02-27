@@ -9,13 +9,14 @@ import os
 import logging
 import tempfile
 import unittest
+import numpy as np
 from pyretis.inout.settings.common import create_integrator
 from pyretis.inout.settings.common import create_orderparameter
 from pyretis.inout.settings.settings import parse_settings_file
 from pyretis.inout.settings.settings import parse_settings
 from pyretis.inout.settings.settings import settings_to_text
-from pyretis.inout.settings.createsystem import initial_positions_lattice
-from pyretis.core.units import create_conversion_factors
+from pyretis.inout.settings.createsystem import create_initial_positions
+from pyretis.core.units import create_conversion_factors, CONVERT
 logging.disable(logging.CRITICAL)
 
 
@@ -317,7 +318,7 @@ class KeywordParticles(unittest.TestCase):
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
         create_conversion_factors(settings['units'])
-        particles, size = initial_positions_lattice(settings)
+        particles, size, _ = create_initial_positions(settings)
         self.assertEqual(size, [[0.0, 6.0], [0.0, 6.0], [0.0, 6.0]])
         self.assertEqual(particles.npart, 4 * 6 * 6 * 6)
         self.assertAlmostEqual(particles.mass[0][0], 1.0)
@@ -337,7 +338,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size = initial_positions_lattice(settings)
+        particles, size, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
         for i in range(particles.npart):
@@ -363,7 +364,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size = initial_positions_lattice(settings)
+        particles, size, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             if i == 0:
                 self.assertEqual(particles.ptype[i], 0)
@@ -373,6 +374,39 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 1)
                 self.assertEqual(particles.name[i], 'Kr')
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
+    
+    def test_file_xyz(self):
+        """Test initialization from a XYZ file."""
+        data = """particles-position = {'file': 'config.xyz'}
+                  units = lj"""
+        correct = {'particles-position': {'file': 'config.xyz'},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        create_conversion_factors(settings['units'])
+        # Add path to the file for this test:
+        here = os.path.abspath(os.path.dirname(__file__))
+        settings['exe-path'] = here
+        particles, size, vel_read = create_initial_positions(settings)
+        self.assertFalse(vel_read)
+        self.assertIsNone(size)
+        pos = particles.pos * CONVERT['length']['lj', 'A']
+        correct_pos = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5],
+                                [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
+                                [0.0, 0.5, 0.5]])
+        self.assertTrue(np.allclose(pos, correct_pos))
+        correct_ptype = [0, 1, 2, 2, 2]
+        pequal = all([ptype == ctype for ptype, ctype in zip(particles.ptype,
+                                                             correct_ptype)])
+        correct_name = ['Ba', 'Hf', 'O', 'O', 'O']
+        nequal = all([namei == namej for namei, namej in zip(particles.name,
+                                                             correct_name)])
+        self.assertTrue(nequal)
+        masses = []
+        for mass in particles.mass:
+            masses.append(mass[0] * CONVERT['mass']['lj', 'g/mol'])
+        correct_mass = [137.327, 178.49, 15.9994, 15.9994, 15.9994]
+        self.assertTrue(np.allclose(masses, correct_mass))
 
 
 if __name__ == '__main__':
