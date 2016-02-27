@@ -1,7 +1,13 @@
 tests:
-	python3 -m unittest discover -v -s test
+	python -m unittest discover -v -s test
 
 tests-silent:
+	python -m unittest discover -s test
+
+tests3:
+	python3 -m unittest discover -v -s test
+
+tests-silent3:
 	python3 -m unittest discover -s test
 
 tests2:
