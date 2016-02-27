@@ -107,7 +107,7 @@ class ForceField(object):
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
             self.arguments['force'].pop(idx)
-            self.arguments['pot'].pop(idx)
+            self.arguments['potential'].pop(idx)
             self.arguments['pot-and-force'].pop(idx)
             return potrm, paramrm
         else:
