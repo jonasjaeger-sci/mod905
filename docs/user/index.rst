@@ -1,8 +1,8 @@
-.. _users-guide-index:
+.. _user-guide-index:
 
-#############
-User's Guide
-#############
+##########
+User Guide
+##########
 
 .. htmlonly::
 
@@ -14,3 +14,9 @@ User's Guide
 
     intro.rst
     getting-started.rst
+    input.rst
+    units.rst
+    intro-api.rst
+    Reference list for keywords <keywords/keywords.rst>
+    errors.rst
+
