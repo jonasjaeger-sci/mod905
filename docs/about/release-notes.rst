@@ -25,7 +25,7 @@ You can determine your currently installed version using ``pip freeze``:
 Version history
 ===============
 
-0.0.1 (28-01-2015)
+0.1.0 (01-01-2016)
 ------------------
 
 -  First public release
