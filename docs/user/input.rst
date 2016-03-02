@@ -24,17 +24,19 @@ Structure of the input file
 ---------------------------
 
 The input file consist of keywords with corredponding values.
-A keyword is identified with by being enclosed by ``:``, example:
+The syntax for setting keywords is ``keyword = setting``,
+for example:
 
 .. code-block:: python
 
    task = md-nve
 
-   integrator = {'name': 'velocityverlet', 'timestep': 0.002}
+   integrator = {'class': 'velocityverlet', 'timestep': 0.002}
 
 
 Other than keywords, the format of the input file is relatively free.
-You can for instance order things as you prefer and the input is case insensitive:
+You can for instance order things as you prefer and the input
+is case insensitive:
 
 .. code-block:: python
 
@@ -86,7 +88,8 @@ description of the usage of the keywords with several examples.
         task = md-nve
 
     Note that the different tasks require setting of different keywords as
-    described in the detailed description of the :ref:`task keyword <user-keywords-task>`.
+    described in the detailed description of
+    the :ref:`task keyword <user-keywords-task>`.
 
 * integrator
     Specify which integrator we should use and sets parameters for the
@@ -96,7 +99,7 @@ description of the usage of the keywords with several examples.
 
     .. code-block:: python
 
-        integrator = {'name': 'Langevin',
+        integrator = {'class': 'Langevin',
                       'timestep': 0.002,
                       'gamma': 0.3,
                       'seed': 0,
@@ -123,4 +126,14 @@ The pyretis keywords are:
 Default settings
 ----------------
 
-This is the default input settings:
+In case a keyword is not specified and the selected task requires the use
+of that keyword, a default value is used. These default settings
+are as follows:
+
+* units
+    The default system of units is ``lj``:
+
+    .. code-block:: python
+
+        units = lj
+
