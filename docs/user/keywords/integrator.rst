@@ -7,9 +7,10 @@ The integrator is responsible for integrating Newton's
 equations of motion numerically in pyretis.
 
 The integrator is specified by providing a ``class`` for the integrator
-and a ``timestep``. Some integrators might require additional settings
+and a ``timestep`` and these two settings specify the type of integrator
+to use and it's time step in *internal units*.
+Some integrators might require additional settings
 as discussed below.
-
 
 Integrator setting example:
 
@@ -27,6 +28,14 @@ are:
 * :ref:`Velocity Verlet <user-keywords-integrator-velocity-verlet>`
 
 which are described in detail below.
+
+In addition, it is possible to extend pyretis with user defined
+integrators written in for instance python, fortran or c.
+Such integrators can be requested by
+specifying some additional keywords as described in detail
+in the section 
+on :ref:`user defined integrators <user-keywords-integrator-user-defined>`
+
 
 .. _user-keywords-integrator-langevin:
 
@@ -131,6 +140,40 @@ class ``VelocityVerlet`` and the time step:
 * ``class``: Selects the integrator (``VelocityVerlet``).
 
 * ``timestep``: Integration time step.
+
+
+.. _user-keywords-integrator-user-defined:
+
+User defined integrators
+........................
+
+User defined integrators are specified in python modules that
+pyretis can load. 
+
+.. code-block:: python
+
+    integrator: {'class': 'VelocityVerletF',  # select integrator
+                 'args': [0.002],  # arguments for the integrator
+                 'module': 'vvintegratorf.py'}  # module defining integrator
+
+**Required settings:**
+
+* ``class``: selects the integrator. Note that this is case sensitive
+  in this case.
+
+* ``module``: specify the external module where the class specified with
+  ``class`` is given. This module must be placed in the same folder as
+  you are running pyretis in or you must specify the full path to the module.
+
+* ``args``: Ppositional arguments that we need to supply to the user defined
+  integrator.
+
+
+**Optional settings:**
+
+* ``kwargs``: keyword arguments that we need to supply to the user defined
+  integrator.
+
 
 References
 ~~~~~~~~~~

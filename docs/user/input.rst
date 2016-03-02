@@ -46,6 +46,9 @@ is case insensitive:
     UNITS = lj
     tAsK = md-nve
 
+There are some important exceptions to the case sensitiveness: When
+referring to files and python class names case will in general matter!
+
 You can also add other text and comments to structure the input file:
 
 .. code-block:: python
