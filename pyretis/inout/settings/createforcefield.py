@@ -15,8 +15,7 @@ Important classes and functions:
 """
 from __future__ import absolute_import
 import logging
-import os
-from pyretis.inout.settings.common import import_from, initiate_instance
+from pyretis.inout.settings.common import create_potential
 from pyretis.forcefield import ForceField
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -43,62 +42,16 @@ def create_potentials(settings):
     """
     potentials = settings.get('potentials', [])
     out = []
-    for pot_settings in potentials:
-        potential_function = create_potential(pot_settings)
+    for i, pot_settings in enumerate(potentials):
+        key = 'potential-{}'.format(i)
+        pot_settings_key = {key: pot_settings}
+        potential_function = create_potential(pot_settings_key, key)
         if potential_function is None:
             msg = 'The following potential settings were ignored!\n{}'
             msgtxt = msg.format(pot_settings)
             logger.warning(msgtxt)
         out.append(potential_function)
     return out
-
-
-def create_potential(settings):
-    """Function to create simulations from settings.
-
-    Parameters
-    ----------
-    settings : dict
-        This dictionary contains the settings for a single potential.
-
-    Returns
-    -------
-    out : object like `PotentialFunction` from `pyretis.forcefield.potential`.
-        This object represents the potential function.
-    """
-    module = settings.get('module', None)
-    pot_class = None
-    try:
-        pot_class = settings['class']
-    except KeyError:
-        msg = 'No potential function class specified!'
-        logger.critical(msg)
-        return None
-    if module is None:
-        potential = import_from('pyretis.forcefield.potentials',
-                                pot_class)
-    else:
-        # Here we assume we are to load from a file.
-        # It would be nice to ditch python 2 and just do this:
-        # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        module = os.path.splitext(module)[0]
-        potential = import_from(module, pot_class)
-        # run some checks:
-        for function in ['force', 'potential', 'potential_and_force']:
-            functionc = getattr(potential, function, None)
-            if not functionc:
-                msg = 'Could not find method {}.{}'.format(pot_class,
-                                                           function)
-                logger.error(msg)
-                raise ValueError(msg)
-            else:
-                if not callable(functionc):
-                    msg = 'Method {}.{} is not callable!'.format(pot_class,
-                                                                 function)
-                    logger.error(msg)
-                    raise ValueError(msg)
-    return initiate_instance(potential, args=settings.get('args', None),
-                             kwargs=settings.get('kwargs', None))
 
 
 def create_force_field(settings):

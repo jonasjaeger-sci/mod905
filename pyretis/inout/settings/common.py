@@ -16,12 +16,14 @@ import logging
 import os
 from pyretis.core.integrators import integrator_factory
 from pyretis.core.orderparameter import order_factory
+from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['check_settings', 'import_from', 'initiate_instance',
-           'create_orderparameter', 'create_integrator']
+           'create_orderparameter', 'create_integrator',
+           'create_potential']
 
 
 def import_from(module_path, function_name):
@@ -241,7 +243,7 @@ def create_orderparameter(settings):
 
 
 def create_integrator(settings):
-    """Function to create simulations from settings.
+    """Function to create an integrator from settings.
 
     Parameters
     ----------
@@ -255,3 +257,20 @@ def create_integrator(settings):
     """
     return create_external(settings, 'integrator', integrator_factory,
                            ['integration_step'])
+
+
+def create_potential(settings, key):
+    """Function to create a potential from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+
+    Returns
+    -------
+    out : object like `PotentialFunction` from `pyretis.forcefield`.
+        This object represents the order parameter.
+    """
+    return create_external(settings, key, potential_factory,
+                           ['force', 'potential', 'potential_and_force'])

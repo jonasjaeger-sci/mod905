@@ -10,13 +10,15 @@ import logging
 import tempfile
 import unittest
 import numpy as np
-from pyretis.inout.settings.common import create_integrator
-from pyretis.inout.settings.common import create_orderparameter
-from pyretis.inout.settings.settings import parse_settings_file
-from pyretis.inout.settings.settings import parse_settings
-from pyretis.inout.settings.settings import settings_to_text
+from pyretis.inout.settings.common import (create_integrator,
+                                           create_orderparameter)
+from pyretis.inout.settings.createforcefield import create_potentials
+from pyretis.inout.settings.settings import (parse_settings_file,
+                                             parse_settings,
+                                             settings_to_text)
 from pyretis.inout.settings.createsystem import create_initial_positions
 from pyretis.core.units import create_conversion_factors, CONVERT
+from pyretis.forcefield.potentials import PairLennardJonesCut
 logging.disable(logging.CRITICAL)
 
 
@@ -522,6 +524,7 @@ class KeywordParticles(unittest.TestCase):
         self.assertTrue(np.allclose(masses, [39.948, 39.948, 39.948,
                                              83.798, 83.798]))
 
+
 class Keywordforcefield(unittest.TestCase):
     """Test initialization of force fields."""
 
@@ -540,6 +543,20 @@ class Keywordforcefield(unittest.TestCase):
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
 
+    def test_potential(self):
+        """Test creation of potentials."""
+        data = """potentials = [{'class': 'PairLennardJonesCut',
+                                 'shift': True}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}}]"""
+        correct = {'potentials': [{'class': 'PairLennardJonesCut',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        potentials = create_potentials(settings)
+        self.assertIsInstance(potentials[0], PairLennardJonesCut)
 
 
 if __name__ == '__main__':
