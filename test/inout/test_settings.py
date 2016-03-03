@@ -326,6 +326,8 @@ class KeywordParticles(unittest.TestCase):
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
 
+    def test_lattice_type(self):
+        """Test initialization on a lattice with types."""
         data = """particles-position = {'generate': 'fcc',
                                         'repeat': [3, 3, 3],
                                         'lcon': 1.0}
@@ -338,7 +340,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size, _ = create_initial_positions(settings)
+        particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
         for i in range(particles.npart):
@@ -346,8 +348,53 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 0)
             else:
                 self.assertEqual(particles.ptype[i], 1)
-        # Test that we can create different particles and that the
-        # mass is correctly set.
+
+    def test_lattice_dens(self):
+        """Test initialization on a lattice with density set."""
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'density': 0.9}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'density': 0.9},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        particles, size, _ = create_initial_positions(settings)
+        correct_size = []
+        lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
+        for _ in settings['particles-position']['repeat']:
+            correct_size.append([0.0, lcon])
+        self.assertTrue(np.allclose(size, correct_size))
+        for i in range(particles.npart):
+            self.assertEqual(particles.name[i], 'Ar')
+            self.assertEqual(particles.ptype[i], 0)
+
+    def test_lattice_dens_lcon(self):
+        """Test initialization on a lattice with density and lcon set."""
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'density': 0.9,
+                                        'lcon': 1000.}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'density': 0.9,
+                                          'lcon': 1000.},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        _, size, _ = create_initial_positions(settings)
+        correct_size = []
+        # `lcon` should be replaced by density:
+        lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
+        for _ in settings['particles-position']['repeat']:
+            correct_size.append([0.0, lcon])
+        self.assertTrue(np.allclose(size, correct_size))
+
+    def test_lattice_and_mass(self):
+        """Test initialization on a lattice and setting of masses/types."""
         data = """particles-position = {'generate': 'fcc',
                                         'repeat': [3, 3, 3],
                                         'lcon': 1.0}
@@ -364,7 +411,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size, _ = create_initial_positions(settings)
+        particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             if i == 0:
                 self.assertEqual(particles.ptype[i], 0)
@@ -426,12 +473,14 @@ class KeywordParticles(unittest.TestCase):
                                 [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
                                 [0.0, 0.5, 0.5]])
         self.assertTrue(np.allclose(pos, correct_pos))
-        pequal = all([i == j for i, j in zip(particles.ptype,
+
+        testeq = all([i == j for i, j in zip(particles.ptype,
                                              [0, 1, 2, 2, 2])])
-        self.assertTrue(pequal)
-        nequal = all([i == j for i, j in zip(particles.name,
+        self.assertTrue(testeq)
+
+        testeq = all([i == j for i, j in zip(particles.name,
                                              ['Ba', 'Hf', 'O', 'O', 'O'])])
-        self.assertTrue(nequal)
+        self.assertTrue(testeq)
         masses = []
         for i in particles.mass:
             masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
