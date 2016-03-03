@@ -24,16 +24,16 @@ more freedom in defining, running and interacting with the simulation.
 We show below a short example of the two approaches for running a simple
 rate calculation.
 
-Hello world!
-------------
+Transition state interface sampling in a 1D-potential
+-----------------------------------------------------
 
-A simple hello world example
+This is a short example showing how we can use transition state
+interface sampling to caclulate a rate constant.
+
 
 More examples
 -------------
 
-These are included in the pyretis/examples directory. More information
-on the :ref:`example page(s) <examples-index>`.
-
-There is also a :ref:`short introduction <pyretis-for-the-impatient>` for
-the eager users.
+These are included in the pyretis/examples directory please
+see the :ref:`example page(s) <examples-index>` for
+a complete description.

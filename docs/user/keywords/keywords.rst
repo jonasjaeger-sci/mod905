@@ -13,6 +13,11 @@ dimensions
 temperature
 tis
 output
+particles-position    
+particles-velocity
+particles-mass
+particles-name
+particles-type
 potentials
 potential-parameters
 forcefield
