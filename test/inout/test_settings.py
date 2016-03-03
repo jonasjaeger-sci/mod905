@@ -99,12 +99,6 @@ class KeywordParsing(unittest.TestCase):
                                         'timestep': "0.002"}""")
         correct.append({'integrator': {'timestep': '0.002',
                                        'class': 'velocityverlet'}})
-        # test with junk:
-        teststr.append("""integrator = {'class': 'velocityverlet',
-                                        'timestep': 0.002}and here is some junk
-                                        more junk""")
-        correct.append({'integrator': {'timestep': 0.002,
-                                       'class': 'velocityverlet'}})
 
         for tst, corr in zip(teststr, correct):
             setting = parse_settings(tst.split('\n'), add_default=False)
@@ -527,6 +521,25 @@ class KeywordParticles(unittest.TestCase):
             masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
         self.assertTrue(np.allclose(masses, [39.948, 39.948, 39.948,
                                              83.798, 83.798]))
+
+class Keywordforcefield(unittest.TestCase):
+    """Test initialization of force fields."""
+
+    def test_forcefield(self):
+        """Test initialization of a simple force field."""
+        data = """forcefield = {'desc': 'My first force field'}
+                   potentials = [{'class': 'PairLennardJonesCutnp',
+                                  'shift': True}]
+                   potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                'rcut': 2.5}}]"""
+        correct = {'forcefield': {'desc': 'My first force field'},
+                   'potentials': [{'class': 'PairLennardJonesCutnp',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+
 
 
 if __name__ == '__main__':
