@@ -86,6 +86,10 @@ simulation. The initial positions can be:
 
    * ``'file'`` which specifies the file to open.
 
+   If the specified file is a gromacs GRO file, pyretis will also attempt to
+   read velocities from the file. These can be used rather than generating
+   velocities with ``particles-velocity``.
+
    .. NOTE::
       The specified file name will typically be case sensitive.
 
