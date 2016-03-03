@@ -29,8 +29,6 @@ Force field settings
 --------------------
 
 forcefield = {'desc': 'Lennard Jones test'}
-potentials = {'class': 'PairLennardJonesCutnp',
-              'shift': True}
+potentials = [{'class': 'PairLennardJonesCutnp', 'shift': True}]
 
-potential-parameters: {'potential': 0,
-                       'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
+potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}]
