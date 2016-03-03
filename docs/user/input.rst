@@ -14,11 +14,11 @@ be evoked by running
 
 .. code-block:: bash
 
-    $ pyretis -i <input>
+    $ pyretisrun -i <input>
 
 
 Which will run your simulation, create the requested output and
-write a simulation log both to the screen and to a file  pyretis.log.
+write a simulation log both to the screen and to a file ``pyretis.log``.
 
 Structure of the input file
 ---------------------------
@@ -36,7 +36,7 @@ for example:
 
 Other than keywords, the format of the input file is relatively free.
 You can for instance order things as you prefer and the input
-is case insensitive:
+is in general case insensitive:
 
 .. code-block:: python
 
