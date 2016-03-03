@@ -12,13 +12,18 @@ import unittest
 import numpy as np
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter)
-from pyretis.inout.settings.createforcefield import create_potentials
+from pyretis.inout.settings.createforcefield import (create_potentials,
+                                                     create_force_field)
 from pyretis.inout.settings.settings import (parse_settings_file,
                                              parse_settings,
                                              settings_to_text)
 from pyretis.inout.settings.createsystem import create_initial_positions
 from pyretis.core.units import create_conversion_factors, CONVERT
-from pyretis.forcefield.potentials import PairLennardJonesCut
+from pyretis.forcefield.potentials import (PairLennardJonesCut,
+                                           PairLennardJonesCutnp,
+                                           DoubleWellWCA,
+                                           DoubleWell,
+                                           RectangularWell)
 logging.disable(logging.CRITICAL)
 
 
@@ -542,9 +547,11 @@ class Keywordforcefield(unittest.TestCase):
                                                  'rcut': 2.5}}]}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
+        forcefield = create_force_field(settings)
+        self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
 
-    def test_potential(self):
-        """Test creation of potentials."""
+    def test_potential_parse(self):
+        """Test creation of potentials while parsing input."""
         data = """potentials = [{'class': 'PairLennardJonesCut',
                                  'shift': True}]
                   potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
@@ -557,6 +564,26 @@ class Keywordforcefield(unittest.TestCase):
         self.assertEqual(settings, correct)
         potentials = create_potentials(settings)
         self.assertIsInstance(potentials[0], PairLennardJonesCut)
+        # test that we can assign parameters
+        for pot, params in zip(potentials, settings['potential-parameters']):
+            pot.set_parameters(params)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['epsilon'], 1.0)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['sigma'], 1.0)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['rcut'], 2.5)
+
+    def test_potential_create(self):
+        """Test that we can create all potentials."""
+        all_potentials = [('PairLennardJonesCut', PairLennardJonesCut),
+                          ('PairLennardJonesCutnp', PairLennardJonesCutnp),
+                          ('DoubleWellWCA', DoubleWellWCA),
+                          ('DoubleWell', DoubleWell),
+                          ('RectangularWell', RectangularWell)]
+        settings = {'potentials': []}
+        for pot in all_potentials:
+            settings['potentials'].append({'class': pot[0]})
+        potentials = create_potentials(settings)
+        for pot, pot_input in zip(potentials, all_potentials):
+            self.assertIsInstance(pot, pot_input[1])
 
 
 if __name__ == '__main__':
