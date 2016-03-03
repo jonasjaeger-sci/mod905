@@ -585,6 +585,25 @@ class Keywordforcefield(unittest.TestCase):
         for pot, pot_input in zip(potentials, all_potentials):
             self.assertIsInstance(pot, pot_input[1])
 
+    def test_extpotential_parse(self):
+        """Test creation of potentials while parsing input from externals."""
+        data = """potentials = [{'class': 'FooPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{'a': 2.0}]"""
+        correct = {'potentials': [{'class': 'FooPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{'a': 2.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        # add path for testing:
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        potentials = create_potentials(settings)
+        # import is placed here to avoid errors on reloading, when
+        # dynamically loading it from the settings.
+        from foopotential import FooPotential
+        self.assertIs(type(potentials[0]), FooPotential)
+        self.assertIsInstance(potentials[0], FooPotential)
+
 
 if __name__ == '__main__':
     unittest.main()

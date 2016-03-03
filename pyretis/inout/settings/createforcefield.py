@@ -44,8 +44,8 @@ def create_potentials(settings):
     out = []
     for i, pot_settings in enumerate(potentials):
         key = 'potential-{}'.format(i)
-        pot_settings_key = {key: pot_settings}
-        potential_function = create_potential(pot_settings_key, key)
+        settings[key] = pot_settings  # TODO: REMOVE THIS!
+        potential_function = create_potential(settings, key)
         if potential_function is None:
             msg = 'The following potential settings were ignored!\n{}'
             msgtxt = msg.format(pot_settings)
