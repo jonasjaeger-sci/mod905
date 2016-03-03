@@ -88,9 +88,6 @@ def parse_primitive(text):
     """
     parsed = None
     success = False
-    idx = text.rfind('}')
-    if idx != -1:
-        text = text[:idx+1]
     try:
         parsed = ast.literal_eval(text.strip())
         success = True
