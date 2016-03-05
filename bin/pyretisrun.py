@@ -136,7 +136,7 @@ if __name__ == '__main__':
     settings = parse_settings_file(localfile)
     create_conversion_factors(settings['units'], **settings['units-base'])
 
-    print('# Creating systems from settings.')
+    print('# Creating system from settings.')
     system = create_system(settings)
     system.forcefield = create_force_field(settings)
     print('# Creating simulation from settings.')
