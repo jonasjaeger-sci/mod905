@@ -70,7 +70,7 @@ def create_force_field(settings):
     out : object like `ForceField` from `pyretis.forcefield.forcefield`.
         This object represents the force field.
     """
-    ffsettings = settings.get('forcefield', None)
+    ffsettings = settings.get('forcefield', {'desc': 'pyretis force field'})
     try:
         desc = ffsettings['desc']
     except KeyError:
