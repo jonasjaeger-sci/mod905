@@ -17,7 +17,7 @@ class FooIntegrator(Integrator):
 
     def integration_step(self, system):
         """Perform the integration step."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class BarIntegrator(object):
