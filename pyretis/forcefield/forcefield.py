@@ -43,8 +43,8 @@ class ForceField(object):
         potential : list, optional.
             Potential functions that the force field is built up from.
         params : list, optional
-            Parameters for the potential(s).
-
+            Parameters for the potential(s). If too few parameters are
+            given, we will just assume a `None`.
         """
         self.desc = desc
         self.potential = []
@@ -55,7 +55,14 @@ class ForceField(object):
                 for pot in potential:
                     self.add_potential(pot)
             else:
-                for pot, param in zip(potential, params):
+                for i, pot in enumerate(potential):
+                    try:
+                        param = params[i]
+                    except IndexError:
+                        param = None
+                        msg = 'No parameters given for potential no. {} ({})'
+                        msgtxt = msg.format(i, pot)
+                        logger.warning(msgtxt)
                     self.add_potential(pot, parameters=param)
 
     def add_potential(self, potential, parameters=None):

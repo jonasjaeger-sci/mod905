@@ -24,6 +24,7 @@ from pyretis.forcefield.potentials import (PairLennardJonesCut,
                                            DoubleWellWCA,
                                            DoubleWell,
                                            RectangularWell)
+from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 
 
@@ -585,7 +586,7 @@ class Keywordforcefield(unittest.TestCase):
         for pot, pot_input in zip(potentials, all_potentials):
             self.assertIsInstance(pot, pot_input[1])
 
-    def test_extpotential_parse(self):
+    def test_ext_potential(self):
         """Test creation of potentials while parsing input from externals."""
         data = """potentials = [{'class': 'FooPotential',
                                  'module': 'foopotential.py'}]
@@ -598,11 +599,61 @@ class Keywordforcefield(unittest.TestCase):
         # add path for testing:
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         potentials = create_potentials(settings)
-        # import is placed here to avoid errors on reloading, when
-        # dynamically loading it from the settings.
-        #from foopotential import FooPotential
-        #self.assertIs(type(potentials[0]), FooPotential)
-        #self.assertIsInstance(potentials[0], FooPotential)
+        self.assertIsInstance(potentials[0], PotentialFunction)
+        self.assertAlmostEqual(potentials[0].params['a'], 0.0)
+        for pot, pot_param in zip(potentials,
+                                  settings['potential-parameters']):
+            pot.set_parameters(pot_param)
+        self.assertAlmostEqual(potentials[0].params['a'], 2.0)
+
+    def test_ext_potentialfail(self):
+        """Test failure of external potential creation."""
+        data = """potentials = [{'class': 'BarPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{'a': 2.0}]"""
+        correct = {'potentials': [{'class': 'BarPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{'a': 2.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        args = [settings]
+        self.assertRaises(ValueError, create_potentials, *args)
+
+    def test_complicated_input(self):
+        """Test that we can read 'complex' force field input."""
+        data = """forcefield = {'desc': 'My force field mix'}
+                  potentials = [{'class': 'PairLennardJonesCutnp',
+                                 'shift': True},
+                                {'class': 'DoubleWellWCA'},
+                                {'class': 'FooPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}},
+                                          {'types': [(0, 0)],
+                                           'rzero': 1.122462048309373,
+                                           'height': 6.0, 'width': 0.25},
+                                          {'a': 10.0}]"""
+        correct = {'forcefield': {'desc': 'My force field mix'},
+                   'potentials': [{'class': 'PairLennardJonesCutnp',
+                                   'shift': True},
+                                  {'class': 'DoubleWellWCA'},
+                                  {'class': 'FooPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}},
+                                            {'types': [(0, 0)],
+                                             'rzero': 1.0 * (2.0**(1.0/6.0)),
+                                             'height': 6.0, 'width': 0.25},
+                                            {'a': 10.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        forcefield = create_force_field(settings)
+        self.assertEqual(len(forcefield.potential), 3)
+        self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
+        self.assertIsInstance(forcefield.potential[1], DoubleWellWCA)
+        self.assertIsInstance(forcefield.potential[2], PotentialFunction)
 
 
 if __name__ == '__main__':
