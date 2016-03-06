@@ -423,7 +423,7 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 1)
                 self.assertEqual(particles.name[i], 'Kr')
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
-    
+
     def test_inconsistent_dimlattice(self):
         """Test initialization on a lattice with inconsistent dims."""
         data = """particles-position = {'generate': 'sq',
@@ -588,6 +588,23 @@ class Keywordforcefield(unittest.TestCase):
         self.assertAlmostEqual(potentials[0].params[(0, 0)]['epsilon'], 1.0)
         self.assertAlmostEqual(potentials[0].params[(0, 0)]['sigma'], 1.0)
         self.assertAlmostEqual(potentials[0].params[(0, 0)]['rcut'], 2.5)
+
+    def test_potential_inconsitentdim(self):
+        """Test creation of potentials with inconsistent dims."""
+        data = """potentials = [{'class': 'PairLennardJonesCut',
+                                 'shift': True}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}}]
+                  dimensions = 2"""
+        correct = {'potentials': [{'class': 'PairLennardJonesCut',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}],
+                   'dimensions': 2}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_potentials, *args)
 
     def test_potential_create(self):
         """Test that we can create all potentials."""

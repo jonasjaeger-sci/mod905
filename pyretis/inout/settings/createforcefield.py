@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 """This module handles creation of force fields from simulation settings
 
-For the force field we will need to load potential functions.
-For the potential functions we can to two things:
-
-1. We use one of the predefined potential functions.
-
-2. We read from a given python module.
-
 Important classes and functions:
 
-- create_potential: A function to create a simulation object from
+- create_potentials: A function to create a potentials from
   a dictionary of given settings.
 """
 from __future__ import absolute_import
@@ -41,15 +34,22 @@ def create_potentials(settings):
         A list of potential functions.
     """
     potentials = settings.get('potentials', [])
+    ndim = settings.get('dimensions', None)
     out = []
     for i, pot_settings in enumerate(potentials):
-        key = 'potential-{}'.format(i)
-        settings[key] = pot_settings  # TODO: REMOVE THIS!
-        potential_function = create_potential(settings, key)
+        potential_function = create_potential(settings, pot_settings)
         if potential_function is None:
             msg = 'The following potential settings were ignored!\n{}'
             msgtxt = msg.format(pot_settings)
             logger.warning(msgtxt)
+        pdim = getattr(potential_function, 'dim', None)
+        if pdim is not None and ndim is not None:
+            if ndim != pdim:
+                msg = ('Inconsistent dimensions in potential!'
+                       '\nSettings gives: {}D, potential {} is {}D')
+                msgtxt = msg.format(ndim, i, pdim)
+                logger.error(msgtxt)
+                raise ValueError(msgtxt)
         out.append(potential_function)
     return out
 

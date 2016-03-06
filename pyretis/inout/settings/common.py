@@ -155,7 +155,8 @@ def check_settings(settings, required):
     return result, not_found
 
 
-def create_external(settings, key, factory, required_methods):
+def create_external(settings, key, factory, required_methods,
+                    key_settings=None):
     """Function to create order parameters from settings.
 
     Parameters
@@ -170,18 +171,28 @@ def create_external(settings, key, factory, required_methods):
     required_methods : list of strings
         The methods we need to have if creating an object from external
         files.
+    key_settings : dict
+        This dictionary contains the settings for specific key we
+        are processing. If this is not given, we will try to obtain
+        these settings by `settings[key]`. The reason why we make it
+        possible to pass these as settings is in case we are processing
+        a key which does not give a simple setting, but a list of settings.
+        It that case `settings[key]` will give a list to process. That list
+        is iterated somewhere else and `key_settings` can then be used to
+        process these elements.
 
     Returns
     -------
     out : object
         This object represents the class we are requesting here.
     """
-    try:
-        key_settings = settings[key]
-    except KeyError:
-        msg = 'No {} settings found!'.format(key)
-        logger.critical(msg)
-        return None
+    if key_settings is None:
+        try:
+            key_settings = settings[key]
+        except KeyError:
+            msg = 'No {} settings found!'.format(key)
+            logger.critical(msg)
+            return None
     module = key_settings.get('module', None)
     klass = None
     try:
@@ -259,18 +270,21 @@ def create_integrator(settings):
                            ['integration_step'])
 
 
-def create_potential(settings, key):
+def create_potential(settings, key_settings):
     """Function to create a potential from settings.
 
     Parameters
     ----------
     settings : dict
         This dictionary contains the settings for the simulation.
+    key_settings : dict
+        Settings for the potential we are creating.
 
     Returns
     -------
     out : object like `PotentialFunction` from `pyretis.forcefield`.
         This object represents the order parameter.
     """
-    return create_external(settings, key, potential_factory,
-                           ['force', 'potential', 'potential_and_force'])
+    return create_external(settings, 'potentials', potential_factory,
+                           ['force', 'potential', 'potential_and_force'],
+                           key_settings=key_settings)
