@@ -138,7 +138,16 @@ def initial_positions_lattice(settings):
     lattice, size = generate_lattice(lattice_type, pos_settings['repeat'],
                                      lcon=pos_settings.get('lcon', None),
                                      density=pos_settings.get('density', None))
-    ndim = settings.get('dimensions', len(size))
+    ndim = settings.get('dimensions', None)
+    if ndim is None:
+        ndim = len(size)
+    else:
+        if ndim != len(size):
+            msg = ['Inconsistent dimensions: settings gives {}D'.format(ndim),
+                   'Generated lattice is {}D!'.format(len(size))]
+            msgtxt = '\n'.join(msg)
+            logger.error(msgtxt)
+            raise ValueError(msgtxt)
     particles = Particles(dim=ndim)
     for i, pos in enumerate(lattice):
         particle_type = list_get(ptype, i)

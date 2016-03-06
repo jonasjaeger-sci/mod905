@@ -423,6 +423,23 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 1)
                 self.assertEqual(particles.name[i], 'Kr')
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
+    
+    def test_inconsistent_dimlattice(self):
+        """Test initialization on a lattice with inconsistent dims."""
+        data = """particles-position = {'generate': 'sq',
+                                        'repeat': [6, 6],
+                                        'lcon': 1.0}
+                  dimensions = 3
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'sq',
+                                          'repeat': [6, 6],
+                                          'lcon': 1.0},
+                   'dimensions': 3,
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_initial_positions, *args)
 
     def test_file_xyz(self):
         """Test initialization from a XYZ file."""
