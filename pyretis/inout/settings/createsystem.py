@@ -341,7 +341,7 @@ def create_initial_positions(settings):
         raise ValueError(msgtxt)
 
 
-def create_box(settings, size):
+def create_box(settings, size, dim=3):
     """Function that will try to set up a box from settings.
 
     Parameters
@@ -351,6 +351,9 @@ def create_box(settings, size):
     size : list of floats
         If no box settings are given, we can still create a box,
         inferred from the positions of the particles.
+    dim : integer
+        Number of dimensions for the box. This is used only as a last
+        resort when no information about the box is given.
 
     Returns
     -------
@@ -365,11 +368,20 @@ def create_box(settings, size):
         debugtxt = 'Settings used:\n{}'.format(settings['box'])
         logger.debug(debugtxt)
     else:
-        box = Box(size=size)
-        msgtxt = msg.format('from initial positions', box)
-        logger.info(msgtxt)
-        msgwarn = 'The box was assumed periodic in ALL directions.'
-        logger.warning(msgwarn)
+        if size is not None:
+            box = Box(size=size)
+            msgtxt = msg.format('from initial positions', box)
+            logger.info(msgtxt)
+            msgwarn = 'The box was assumed periodic in ALL directions.'
+            logger.warning(msgwarn)
+        else:
+            box = Box(periodic=[False]*dim)
+            msgtxt = msg.format('without specifications', box)
+            logger.info(msgtxt)
+            msgwarn = ('The box was assumed non-periodic in ALL directions.'
+                       '\nIf positions were read from an xyz-file, this is'
+                       '\nprobably not what you want.')
+            logger.warning(msgwarn)
     return box
 
 
@@ -442,7 +454,7 @@ def create_system(settings):
         The system object we create here.
     """
     particles, size, vel = create_initial_positions(settings)
-    box = create_box(settings, size)
+    box = create_box(settings, size, dim=particles.dim)
     system = System(temperature=settings.get('temperature', None),
                     units=settings['units'], box=box)
     system.particles = particles
