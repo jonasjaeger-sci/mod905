@@ -265,7 +265,20 @@ def add_default_settings(settings):
     Returns
     -------
     None, but will update `settings` with default values.
+
+    Note
+    ----
+    For many cases the default values can depend on what we want do
+    to. For instance if we are reading particles from an input file,
+    then the default particle type is not used but read from the
+    file and assigned automatically. When generating on a lattice,
+    we do not have information on the particles types and in this case,
+    the default is used. This means that we can't set a uniform default
+    in this case. That is why we ignore all defaults here when the
+    default is `None`
     """
     for key in KEYWORDS:
-        if 'default' in KEYWORDS[key] and key not in settings:
-            settings[key] = KEYWORDS[key]['default']
+        if key not in settings:
+            default = KEYWORDS.get('default', None)
+            if default is not None:
+                settings[key] = default

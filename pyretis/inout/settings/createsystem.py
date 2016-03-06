@@ -52,7 +52,7 @@ PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
                   'Th': 232.0377, 'Pa': 231.03588, 'U': 238.02891}
 
 
-# variable that defines some information for reading input files:
+# Variable that defines some information for reading input files:
 # TODO: Move this to the place where the file readers are defined?
 READFILE = {'xyz': {'reader': read_xyz_file,
                     'units': {'length': 'A', 'velocity': 'A/fs'}},
@@ -262,7 +262,7 @@ def initial_positions_file(settings):
         else:
             vel = np.array(vel) * convert['velocity']
             vel_read = True
-        # Get particle type from the atom names or for input list:
+        # Get particle type from the atom names or from input list:
         if ptype is None:
             if atomname not in ptypes:
                 ptypes[atomname] = len(ptypes)
@@ -273,9 +273,8 @@ def initial_positions_file(settings):
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        #particle_name = particle_name.lower()
-        # infer mass from the input masses, or try to get it
-        # from the periodic table
+        # Infer mass from the input masses, or try to get it
+        # from the periodic table:
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
