@@ -46,6 +46,10 @@ _TEMPLATES = {'rst': 'report_{}.rst',
               'latex': 'report_{}.tex',
               'tex': 'report_{}.tex',
               'txt': 'report_{}.txt'}
+
+_TEMPLATE_NAMES = {'md-flux': 'mdflux',
+                   'tis': 'tis',
+                   'tis-path': 'tis_path'}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -106,7 +110,8 @@ def get_template(output, report_type, template=None):
         # Use default template, this is located in the templates dir:
         path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(path, 'templates')
-        template = _TEMPLATES[output].format(report_type.lower())
+        ltype = report_type.lower()
+        template = _TEMPLATES[output].format(_TEMPLATE_NAMES[ltype])
         path_to_template = os.path.join(path, template)
         if not os.path.isfile(path_to_template):
             msg = 'Could not locate template "{}"!'.format(path_to_template)
