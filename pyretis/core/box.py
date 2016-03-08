@@ -37,9 +37,12 @@ class Box(object):
     ----------
     size : list
         `size[i] = [low, high]` are the box boundaries in dimension `i`.
-    length : list
+    length : numpy array (1D)
         `length[i]` = length of box in dimension `i`, equals
         `size[i][1] - size[i][0]`.
+    ilength : numpy array (1D)
+        This is just the inverse box lengths, equal to `1.0/length`.
+        This variable is just used for convenience.
     periodic : list
         `periodic[i] = True` if periodic boundaries are to be used in
         dimension `i`, `False` otherwise.
@@ -106,6 +109,7 @@ class Box(object):
         self.low = np.array(self.low)
         self.high = np.array(self.high)
         self.length = np.array(self.length)
+        self.ilength = 1.0 / self.length
         self.dim = len(self.length)
 
     def calculate_volume(self):
@@ -134,10 +138,11 @@ class Box(object):
         """
         if self.periodic[dim]:
             low, length = self.low[dim], self.length[dim]
+            ilength = self.ilength[dim]
             relpos = pos - low
             delta = relpos
             if relpos < 0.0 or relpos >= length:
-                delta = relpos - np.floor(relpos/length) * length
+                delta = relpos - np.floor(relpos * ilength) * length
             return delta + low
         else:
             return pos
@@ -210,9 +215,10 @@ class Box(object):
             if periodic:
                 low = self.low[i]
                 length = self.length[i]
+                ilength = self.ilength[i]
                 relpos = pos[:, i] - low
                 delta = np.where(np.logical_or(relpos < 0.0, relpos >= length),
-                                 relpos - np.floor(relpos/length) * length,
+                                 relpos - np.floor(relpos * ilength) * length,
                                  relpos)
                 pbcpos[:, i] = delta + low
             else:
@@ -233,13 +239,14 @@ class Box(object):
             The pbc-wrapped distances.
         """
         pbcdist = distance
-        for i, (periodic, length) in enumerate(zip(self.periodic,
-                                                   self.length)):
+        for i, (periodic, length, ilength) in enumerate(zip(self.periodic,
+                                                            self.length,
+                                                            self.ilength)):
             if periodic:
                 dist = pbcdist[:, i]
                 high = 0.5 * length
                 k = np.where(np.abs(dist) >= high)[0]
-                dist[k] -= np.rint(dist[k]/length) * length
+                dist[k] -= np.rint(dist[k] * ilength) * length
         return pbcdist
 
     def pbc_dist_coordinate(self, distance):
@@ -260,10 +267,12 @@ class Box(object):
             The periodic-boundary wrapped distance vector.
         """
         pbcdist = np.zeros(distance.shape)
-        for i, (periodic, length) in enumerate(zip(self.periodic,
-                                                   self.length)):
+        for i, (periodic, length, ilength) in enumerate(zip(self.periodic,
+                                                            self.length,
+                                                            self.ilength)):
             if periodic and np.abs(distance[i]) > 0.5*length:
-                pbcdist[i] = distance[i] - np.rint(distance[i]/length)*length
+                pbcdist[i] = (distance[i] -
+                              np.rint(distance[i] * ilength) * length)
             else:
                 pbcdist[i] = distance[i]
         return pbcdist
