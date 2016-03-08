@@ -13,3 +13,9 @@ clean:
 	find -name \*.so -delete
 	find -name \*.pyc -delete
 	find -name __pycache__ -delete
+
+veryclean:
+	${MAKE} clean
+	find -name \*energy.dat* -delete
+	find -name \*thermo.txt* -delete
+	find -name \*traj.gro* -delete

@@ -136,8 +136,8 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         -------
         The potential energy as a float.
         """
-        boxlength = [length for length in box.length]
-        v_pot = ljfortran.potential(particles.pos, boxlength,
+        v_pot = ljfortran.potential(particles.pos,
+                                    box.length, box.ilength,
                                     self._lj3, self._lj4, self._rcut2,
                                     self._offset, particles.ptype,
                                     particles.npart,
@@ -162,8 +162,8 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         The force as a numpy.array of the same shape as the positions
         in `particles.pos`.
         """
-        boxlength = [length for length in box.length]
-        forces, virial = ljfortran.force(particles.pos, boxlength,
+        forces, virial = ljfortran.force(particles.pos,
+                                         box.length, box.ilength,
                                          self._lj1, self._lj2, self._rcut2,
                                          particles.ptype,
                                          particles.npart,
@@ -201,9 +201,9 @@ class PairLennardJonesCutF(PairLennardJonesCut):
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
         """
-        boxlength = [length for length in box.length]
         forces, virial, vpot = ljfortran.potential_and_force(particles.pos,
-                                                             boxlength,
+                                                             box.length,
+                                                             box.ilength,
                                                              self._lj1,
                                                              self._lj2,
                                                              self._lj3,
