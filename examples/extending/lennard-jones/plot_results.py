@@ -29,9 +29,10 @@ results = {'c': 'c/timings.txt',
            'c (python3)': 'c-python3/timings.txt',
            'fortran': 'fortran/timings.txt',
            'fortran (pointer)': 'fortran-pointer/timings.txt',
-           'numpy': 'timings-numpy.txt'}
+           'numpy': 'timings-numpy.txt',
+           'pure python': 'timings-python.txt'}
 
-markers = ['o', 'v', '^', 's', '*', 'x', 'p', 'h', '+']
+markers = ['o', 'v', '^', 's', '*', 'p', 'h', 'x', '+']
 
 data = {}
 for key in results:
@@ -44,8 +45,7 @@ for i, key in enumerate(data):
     npart, avg, std = result[:, 0], result[:, 2], result[:, 3]
     ax1.errorbar(npart, avg, yerr=std, label=key, lw=3, markersize=9,
                  marker=markers[i], alpha=0.9)
-ax1.legend(ncol=2)
-
+ax1.legend(ncol=2, loc='center right')
 ax1.set_xlabel('System size')
 ax1.set_ylabel('Time')
 fig.tight_layout()
@@ -61,7 +61,7 @@ for i, key in enumerate(data):
     avg_n = avg[:nmin] / norm_avg[:nmin]
     ax2.plot(npart, avg_n, lw=3, label=key, markersize=9, alpha=0.9,
              marker=markers[i])
-ax2.legend(ncol=2)
+ax2.legend(ncol=2, loc='best',  bbox_to_anchor=(0.3,0.7))
 ax2.set_yscale('log')
 ax2.set_xlabel('System size')
 ax2.set_ylabel('Time relative to python+c')
