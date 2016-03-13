@@ -138,8 +138,8 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         """
         v_pot = ljfortran.potential(particles.pos,
                                     box.length, box.ilength,
-                                    self._lj3, self._lj4, self._rcut2,
-                                    self._offset, particles.ptype,
+                                    self._lj3, self._lj4, self._offset,
+                                    self._rcut2, particles.ptype,
                                     particles.npart,
                                     box.dim, self.ntype)
         return v_pot

@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the Lennard Jones potential.
+"""Time the Fortran implementation of the Lennard-Jones potential.
 
-This test is comparing the three versions of the Lennard Jones
-potential:
-
-1) The pure python implementation
-
-2) The numpy python implementation
-
-3) The Fortran implementation.
+This timing is simply done by evaluating the Leannrd-Jones forces
+(and potential) for different system sizes.
 """
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
-from pyretis.forcefield.potentials import PairLennardJonesCut
-from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.tools import generate_lattice
 from ljpotentialf import PairLennardJonesCutF
 import timeit
@@ -53,37 +45,30 @@ def test_function(function, particles, box, repeat=3, number=5):
     wrapped = test_wrapper(function, particles, box)
     res = timeit.repeat(wrapped, repeat=repeat, number=number)
     best = min(res) / float(number)
+    avg = np.average([resi / float(number) for resi in res])
+    std = np.std([resi / float(number) for resi in res])
     print('Best: {}'.format(best))
-    print('Average: {} +- {}'.format(np.average(res) / float(number),
-                                     np.std(res) / float(number)))
-    return best
+    print('Average: {} +- {}'.format(avg, std))
+    return best, avg, std
 
 
 if __name__ == '__main__':
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                   'mixing': 'geometric'}
     # set up potentials:
-    potential = PairLennardJonesCut(dim=3, shift=True)
+    potential = PairLennardJonesCutF(dim=3, shift=True)
     potential.set_parameters(parameters)
 
-    potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
-    potentialnp.set_parameters(parameters)
+    results = []
 
-    potentialf = PairLennardJonesCutF(dim=3, shift=True)
-    potentialf.set_parameters(parameters)
-
-    for i in range(3,11):
-        # generate a fcc lattice:
+    for i in range(3,16):
         system = set_up_initial_state(nlattice=i)
-        print('Testing pure python...')
+        npart = system.particles.npart
+        print('Testing fortran implementation')
         time1 = test_function(potential.potential_and_force,
                               system.particles, system.box,
                               number=10, repeat=3)
-        print('Testing python/numpy')
-        time2 = test_function(potentialnp.potential_and_force,
-                              system.particles, system.box,
-                              number=10, repeat=3)
-        print('Testing python/fortran')
-        time3 = test_function(potentialf.potential_and_force,
-                              system.particles, system.box,
-                              number=10, repeat=3)
+        results.append((npart, time1[0], time1[1], time1[2]))
+    results = np.array(results)
+    np.savetxt('timings.txt', results, fmt='%i %.9e %.9e %.9e',
+               header='N best avg std')

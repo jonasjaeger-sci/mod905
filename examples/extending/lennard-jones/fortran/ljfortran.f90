@@ -33,7 +33,7 @@ do i=1,d
 end do
 end function apply_pbc_dist
 
-subroutine potential(pos, box, ibox, lj3, lj4, rcut2, offset, ptype, n, d, p, vpot) 
+subroutine potential(pos, box, ibox, lj3, lj4, offset, rcut2, ptype, n, d, p, vpot) 
 ! Function to evaluate the Lennard-Jones potential
 !
 ! Parameters
