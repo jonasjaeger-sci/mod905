@@ -61,14 +61,13 @@ if __name__ == '__main__':
 
     results = []
 
-    for i in range(3,16):
+    for i in range(3, 16):
         system = set_up_initial_state(nlattice=i)
-        npart = system.particles.npart
         print('Testing fortran implementation')
         time1 = test_function(potential.potential_and_force,
                               system.particles, system.box,
                               number=10, repeat=3)
-        results.append((npart, time1[0], time1[1], time1[2]))
+        results.append((system.particles.npart, time1[0], time1[1], time1[2]))
     results = np.array(results)
     np.savetxt('timings.txt', results, fmt='%i %.9e %.9e %.9e',
                header='N best avg std')
