@@ -43,8 +43,8 @@ def run_calculations(system, parameters):
     # Calculate with C:
     potential_ext = PairLennardJonesCutC(dim=3, shift=True)
     forceField_ext = ForceField(potential=[potential_ext],
-                             params=[parameters],
-                             desc='Python + C')
+                                params=[parameters],
+                                desc='Python + C')
     system.forcefield = forceField_ext
     print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
     vpot_ext, forces_ext, virial_ext = system.potential_and_force()
