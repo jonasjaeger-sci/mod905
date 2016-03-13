@@ -2,7 +2,6 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
-//#include <stdio.h>  // printf
 
 // Forward function declaration.
 static PyObject *potential(PyObject *self, PyObject *args); 
