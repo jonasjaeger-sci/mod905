@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+"""Example of using a integration routine implemented in Fortran."""
+from __future__ import absolute_import
+from __future__ import print_function
+import logging
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+# pyretis imports
+from pyretis.core.integrators import Integrator
+try:
+    import vvintegrator
+except ImportError:
+    MSG = ('Could not import external C library.'
+           '\nPlease compile with: "python setup.py build_ext --inplace"')
+    logger.critical(MSG)
+    raise ImportError(MSG)
+
+
+__all__ = ['VelocityVerletC']
+
+
+class VelocityVerletC(Integrator):
+    """VelocityVerletC(Integrator).
+
+    This class defines the Velocity Verlet integrator.
+
+    Attributes
+    ----------
+    delta_t : float
+        The time step.
+    half_delta_t : float
+        Half of timestep
+    desc : string
+        Description of the integrator.
+    """
+
+    def __init__(self, delta_t,
+                 desc='The velocity verlet integrator (Fortran)'):
+        """Initiate the Velocity Verlet integrator.
+
+        Parameters
+        ----------
+        delta_t : float
+            The time step.
+        desc : string
+            Description of the integrator.
+        """
+        super(VelocityVerletC, self).__init__(delta_t, desc=desc,
+                                              dynamics='NVE')
+        self.half_delta_t = self.delta_t * 0.5
+
+    def integration_step(self, system):
+        """Velocity Verlet integration, one time step.
+
+        Parameters
+        ----------
+        system : object like `System` from `pyretis.core.system`
+            The system to integrate/act on. Assumed to have a particle
+            list in `system.particles`.
+
+        Returns
+        -------
+        out : None
+            Does not return anything, but alters the state of the given
+            `system`.
+        """
+        particles = system.particles
+        vvintegrator.step1(particles.pos,
+                           particles.vel,
+                           particles.force,
+                           particles.imass,
+                           self.delta_t,
+                           self.half_delta_t,
+                           particles.npart,
+                           particles.dim)
+        system.potential_and_force()
+        vvintegrator.step2(particles.vel,
+                           particles.force,
+                           particles.imass,
+                           self.half_delta_t,
+                           particles.npart,
+                           particles.dim)
+        return None
