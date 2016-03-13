@@ -57,10 +57,10 @@ def import_from(module_path, function_name):
     .. [#] http://bugs.python.org/issue21436
     """
     try:
-        # sad news, imp is deprecated for python 3.5
-        # we need to check if we are using python3.5 or earlier
         module_name = os.path.basename(module_path)
         module_name = os.path.splitext(module_name)[0]
+        # imp is deprecated for python 3.5 -> we need to check if we are
+        # using python3.5 or earlier:
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
