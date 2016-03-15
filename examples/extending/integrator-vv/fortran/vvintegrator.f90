@@ -19,9 +19,9 @@ double precision, dimension(n, d), intent(out) :: dvel, dpos
 integer :: i
 dvel = 0.0D0
 dpos = 0.0D0
-do i=1,n
-    dvel(i,:) = vel(i,:) + half_delta_t * force(i,:) * imass(i)
-    dpos(i,:) = pos(i,:) + delta_t * dvel(i,:)
+do i=1,d
+    dvel(:,i) = vel(:,i) + half_delta_t * force(:,i) * imass(:)
+    dpos(:,i) = pos(:,i) + delta_t * dvel(:,i)
 end do
 end subroutine step1
 
@@ -35,8 +35,8 @@ double precision, intent(in) :: half_delta_t
 double precision, dimension(n, d), intent(out) :: dvel
 integer :: i
 dvel = 0.0D0
-do i=1,n
-    dvel(i,:) = vel(i,:) + half_delta_t * force(i,:) * imass(i)
+do i=1,d
+    dvel(:,i) = vel(:,i) + half_delta_t * force(:,i) * imass(:)
 end do
 end subroutine step2
 
