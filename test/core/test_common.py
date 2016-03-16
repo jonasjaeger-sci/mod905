@@ -3,6 +3,7 @@
 import logging
 import unittest
 import sys
+import os
 from pyretis.core.common import inspect_function
 logging.disable(logging.CRITICAL)
 
@@ -41,7 +42,10 @@ class InspectTest(unittest.TestCase):
                     'keywords': ['kwargs']}]
         if sys.version_info >= (3, 0):
             # extra python3 tests:
+            here = os.path.abspath(os.path.dirname(__file__))
+            sys.path.insert(0, here)
             from common_python3 import function5, function6, function7
+            del sys.path[0]
             functions.append(function5)
             correct.append({'args': ['arg1', 'arg2'],
                             'kwargs': ['arg3', 'arg4'],
