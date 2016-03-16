@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+"""Definition of some common methods that might be useful.
+
+Important methods defined here:
+
+- inspect_function : A method to obtain information about arguments,
+  keyword arguments for functions.
+"""
+import logging
+import inspect
+import sys
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
+
+def _arg_kind(arg):
+    """Helper function to determine kind for a given argument.
+
+    This method will help `inspect_function` to determine the correct
+    kind for arguments when using python3.
+
+    Parameters
+    ----------
+    arg : object like inspect.Parameter
+        The argument we will determine the type of.
+
+    Returns
+    -------
+    out : string
+        A string we use for determine the kind.
+    """
+    kind = None
+    if arg.kind == arg.POSITIONAL_OR_KEYWORD:
+        if arg.default is arg.empty:
+            kind = 'args'
+        else:
+            kind = 'kwargs'
+    elif arg.kind == arg.VAR_POSITIONAL:
+        kind = 'varargs'
+    elif arg.kind == arg.VAR_KEYWORD:
+        kind = 'keywords'
+    elif arg.kind == arg.KEYWORD_ONLY:
+        # we treat these as keyword arguments:
+        kind = 'kwargs'
+    return kind
+
+
+def inspect_function(function):
+    """Method returning arguments/kwargs of a given function.
+
+    This method is intended for usage where we are checking that we can
+    call certain function. This method will return arguments and
+    keyword arguments a function expects. This method may be fragile -
+    we assume here that we are not really interested in *args and
+    **kwargs and we do not look for more information about these here.
+
+    Parameters
+    ----------
+    function : A callable function.
+        The function to analyse.
+
+    Returns
+    -------
+    out : dict
+        A dict with the arguments, the following keys are defined:
+
+        * `args` : list of the positional arguments
+        * `kwargs` : list of keyword arguments
+        * `varargs` : list of arguments on form *args
+        * `keywords` : list of arguments on form **kwargs
+    """
+    out = {'args': [], 'kwargs': [],
+           'varargs': [], 'keywords': []}
+    if sys.version_info > (3, 3):
+        arguments = inspect.signature(function)  # pylint: disable=no-member
+        for arg in arguments.parameters.values():
+            kind = _arg_kind(arg)
+            if kind is not None:
+                out[kind].append(arg.name)
+            else:
+                msg = 'Unknow variable kind "{}" for "{}"'.format(arg.kind,
+                                                                  arg.name)
+                logger.critical(msg)
+        return out
+    else:
+        arguments = inspect.getargspec(function)
+        if not arguments.defaults:
+            out['args'] = [arg for arg in arguments.args]
+        else:
+            defaults = arguments.args[-len(arguments.defaults):]
+            for arg in arguments.args:
+                if arg not in defaults:
+                    out['args'].append(arg)
+                else:
+                    out['kwargs'].append(arg)
+        if arguments.varargs is not None:
+            out['varargs'] = [arguments.varargs]
+        if arguments.keywords is not None:
+            out['keywords'] = [arguments.keywords]
+        return out
