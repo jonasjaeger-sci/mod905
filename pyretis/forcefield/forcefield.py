@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for a generic force field."""
 import logging
-import inspect
-import sys
+from pyretis.core.common import inspect_function
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -316,33 +315,5 @@ def inspect_potential(potential):
         args[funcname] = None
         function = getattr(potential, funcname, None)
         if function is not None:
-            args[funcname] = _inspect_potential_function(function)
+            args[funcname] = inspect_function(function)
     return args['force'], args['potential'], args['potential_and_force']
-
-
-def _inspect_potential_function(function):
-    """Helper method for `inspect_potential`
-
-    This function will do the actual inspection.
-
-    Parameters
-    ----------
-    function : callable
-        The function to inspect.
-
-    Returns
-    -------
-    argsdict : dict
-        The arguments for calling `function` if any.
-    """
-    argsdict = {'args': []}
-    if sys.version_info > (3, 5):
-        args = inspect.signature(function)  # pylint: disable=no-member
-        for arg in args.parameters:
-            argsdict['args'].append(arg)
-        return argsdict
-    else:
-        args = inspect.getargspec(function)
-        if args.args is not None:
-            argsdict['args'] = [arg for arg in args.args]
-        return argsdict

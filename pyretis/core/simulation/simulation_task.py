@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Definition of a class for tasks."""
 from __future__ import print_function
-import inspect
 import logging
+from pyretis.core.common import inspect_function
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -29,15 +29,9 @@ def _check_args(function, given_args=None, given_kwargs=None):
         False if there is some inconsistencies, i.e. when the calling
         of the given `function` will probably fail. True otherwise.
     """
-    arguments = inspect.getargspec(function)
-    if not arguments.defaults:
-        args = arguments.args
-        defaults = None
-    else:
-        defaults = arguments.args[-len(arguments.defaults):]
-        args = [arg for arg in arguments.args if arg not in defaults]
-    # remove self from args, this is passed implicitly to objects
-    args = [arg for arg in args if arg is not 'self']
+    arguments = inspect_function(function)
+    args = [arg for arg in arguments['args'] if arg is not 'self']
+    defaults = [arg for arg in arguments['kwargs']]
     # first test, do we give correct number of required arguments?
     if given_args is not None:
         given = len(given_args)
