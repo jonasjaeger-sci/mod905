@@ -285,12 +285,15 @@ class OrderParameterPosition(OrderParameter):
         out : float
             The order parameter.
         """
-        pos = system.particles.pos[self.index]
+        particles = system.particles
+        if particles.npart == 1:  # ignore self.index
+            pos = particles.pos
+        else:
+            pos = particles.pos[self.index]
         if self.periodic:
-            box = system.box
-            pos = box.pbc_wrap(pos)
+            pos = system.box.pbc_wrap(pos)
         if system.get_dim() == 1:
-            return pos
+            return pos[0]
         else:
             return pos[self.dim]
 
@@ -309,9 +312,13 @@ class OrderParameterPosition(OrderParameter):
         out : float
             The velocity of the order parameter
         """
-        vel = system.particles.vel[self.index]
+        particles = system.particles
+        if particles.npart == 1:  # ignore self.index
+            vel = particles.vel
+        else:
+            vel = particles.vel[self.index]
         if system.get_dim() == 1:
-            return vel
+            return vel[0]
         else:
             return vel[self.dim]
 
