@@ -3,7 +3,8 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core.orderparameter import OrderParameterPosition
+from pyretis.core.orderparameter import (OrderParameterPosition,
+                                         OrderParameterDistance)
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
@@ -122,6 +123,57 @@ class OrderPositionTest(unittest.TestCase):
                     pos = system.particles.pos[0]
                     lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
                     self.assertAlmostEqual(lmb, lmb_correct)
+
+
+class OrderDistanceTest(unittest.TestCase):
+    """Run the tests for the OrderParameterDistance class."""
+
+    def test_two_particles(self):
+        """Test the distance order parameter without pbc."""
+        orderp = OrderParameterDistance('Positional order parameter', (0, 1),
+                                        periodic=False)
+        # Test for a one-particle system:
+        for ndim in [1, 2, 3]:
+            box = Box(periodic=[False]*ndim)
+            system = System(temperature=1.0, units='lj', box=box)
+            for _ in range(2):
+                pos = np.random.random(box.dim)
+                vel = np.random.random(box.dim)
+                system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                                    ptype=0)
+            lmb = orderp.calculate(system)
+            delta = system.particles.pos[1] - system.particles.pos[0]
+            lmb_correct = np.sqrt(np.dot(delta, delta))
+            self.assertEqual(lmb, lmb_correct)
+            delta_v = system.particles.vel[1] - system.particles.vel[0]
+            lmb_vel = orderp.calculate_velocity(system)
+            lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
+            self.assertEqual(lmb_vel, lmb_vel_correct)
+
+    def test_two_pbcparticles(self):
+        """Test the distance order parameter with pbc."""
+        orderp = OrderParameterDistance('Positional order parameter', (0, 1),
+                                        periodic=True)
+        # Test for a one-particle system:
+        for disp in [0.0, 1.5, -1.5, 100., -100.]:
+            for ndim in [1, 2, 3]:
+                size = [[0.0, 1.0] for _ in range(ndim)]
+                box = Box(size, periodic=[True]*ndim)
+                system = System(temperature=1.0, units='lj', box=box)
+                for _ in range(2):
+                    pos = np.random.random(box.dim) + np.ones(box.dim)*disp
+                    vel = np.random.random(box.dim)
+                    system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                                        ptype=0)
+                lmb = orderp.calculate(system)
+                delta = box.pbc_dist_coordinate(system.particles.pos[1] -
+                                                system.particles.pos[0])
+                lmb_correct = np.sqrt(np.dot(delta, delta))
+                self.assertEqual(lmb, lmb_correct)
+                delta_v = system.particles.vel[1] - system.particles.vel[0]
+                lmb_vel = orderp.calculate_velocity(system)
+                lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
+                self.assertEqual(lmb_vel, lmb_vel_correct)
 
 
 if __name__ == '__main__':
