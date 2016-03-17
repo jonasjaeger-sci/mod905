@@ -24,11 +24,10 @@ class OrderPositionTest(unittest.TestCase):
             for ndim in [1, 2, 3]:
                 box = Box(periodic=[False]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
-                for _ in range(1):
-                    pos = np.random.random(box.dim)
-                    vel = np.random.random(box.dim)
-                    system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
-                                        ptype=0)
+                pos = np.random.random(box.dim)
+                vel = np.random.random(box.dim)
+                system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                                    ptype=0)
                 if idim > ndim-1 and ndim != 1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
                     self.assertRaises(IndexError, orderp.calculate_velocity,
@@ -77,6 +76,52 @@ class OrderPositionTest(unittest.TestCase):
                         lmb_vel_correct = system.particles.vel[0, idim]
                     self.assertAlmostEqual(lmb, lmb_correct)
                     self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
+
+    def test_one_particle_pbc(self):
+        """Test that pbc boundaries are applied when asked for."""
+        create_conversion_factors('lj')
+        dim_map = {'x': 0, 'y': 1, 'z': 2}
+        for disp in [0.0, 1.5, -1.5, 100., -100.]:
+            for ndim in [1, 2, 3]:
+                size = [[0.0, 1.0] for _ in range(ndim)]
+                box = Box(size, periodic=[True]*ndim)
+                system = System(temperature=1.0, units='lj', box=box)
+                pos = np.random.random(box.dim) * np.ones(box.dim)*disp
+                vel = np.random.random(box.dim)
+                system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                                    ptype=0)
+                for xdim in ['x', 'y', 'z'][:ndim]:
+                    orderp = OrderParameterPosition('Positional order param',
+                                                    0, dim=xdim,
+                                                    periodic=True)
+                    lmb = orderp.calculate(system)
+                    idim = dim_map[xdim]
+                    lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
+                    self.assertAlmostEqual(lmb, lmb_correct)
+
+    def test_multiple_particle_pbc(self):
+        """Test that pbc boundaries are applied when asked for."""
+        create_conversion_factors('lj')
+        dim_map = {'x': 0, 'y': 1, 'z': 2}
+        for disp in [0.0, 1.5, -1.5, 100., -100.]:
+            for ndim in [1, 2, 3]:
+                size = [[0.0, 1.0] for _ in range(ndim)]
+                box = Box(size, periodic=[True]*ndim)
+                system = System(temperature=1.0, units='lj', box=box)
+                for _ in range(10):
+                    pos = np.random.random(box.dim) * np.ones(box.dim)*disp
+                    vel = np.random.random(box.dim)
+                    system.add_particle(name='Ar', pos=pos, vel=vel,
+                                        mass=1.0, ptype=0)
+                for xdim in ['x', 'y', 'z'][:ndim]:
+                    orderp = OrderParameterPosition('Positional order param',
+                                                    0, dim=xdim,
+                                                    periodic=True)
+                    lmb = orderp.calculate(system)
+                    idim = dim_map[xdim]
+                    pos = system.particles.pos[0]
+                    lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
+                    self.assertAlmostEqual(lmb, lmb_correct)
 
 
 if __name__ == '__main__':

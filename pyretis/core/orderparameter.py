@@ -290,12 +290,14 @@ class OrderParameterPosition(OrderParameter):
             pos = particles.pos
         else:
             pos = particles.pos[self.index]
-        if self.periodic:
-            pos = system.box.pbc_wrap(pos)
         if system.get_dim() == 1:
-            return pos[0]
+            lmb = pos[0]
         else:
-            return pos[self.dim]
+            lmb = pos[self.dim]
+        if self.periodic:
+            return system.box.pbc_coordinate_dim(lmb, self.dim)
+        else:
+            return lmb
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.
