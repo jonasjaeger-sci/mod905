@@ -3,8 +3,11 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core.orderparameter import (OrderParameterPosition,
-                                         OrderParameterDistance)
+from pyretis.core.orderparameter import (OrderParameter,
+                                         OrderParameterPosition,
+                                         OrderParameterDistance,
+                                         OrderParameterParse,
+                                         order_factory)
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
@@ -175,6 +178,28 @@ class OrderDistanceTest(unittest.TestCase):
                 lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
                 self.assertEqual(lmb_vel, lmb_vel_correct)
 
+
+class OrderFactoryTest(unittest.TestCase):
+    """Test the order factory."""
+
+    def test_factory(self):
+        """Test that we can create order parameters with the factory."""
+        test_settings = [{'class': 'orderparameter', 'name': 'Test'},
+                         {'class': 'OrderPARAMetEr', 'name': 'Test'},
+                         {'class': 'orderparameterposition', 'name': 'Test',
+                          'index': 0, 'dim': 'x', 'periodic': False},
+                         {'class': 'orderparameterdistance', 'name': 'Test',
+                          'index': (0, 1), 'periodic': True},
+                         {'class': 'OrderParameterParse', 'name': 'Test',
+                          'orderp': 'sin(x[0])', 'ordervel': 'cos(x[0])'}]
+        correct_class = [OrderParameter,
+                         OrderParameter,
+                         OrderParameterPosition,
+                         OrderParameterDistance,
+                         OrderParameterParse]
+        for setting, correct in zip(test_settings, correct_class):
+            orderp = order_factory(setting)
+            self.assertIsInstance(orderp, correct)
 
 if __name__ == '__main__':
     unittest.main()
