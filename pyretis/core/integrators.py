@@ -56,8 +56,8 @@ def integrator_factory(settings):
                                  'args': ['timestep']},
                       'langevin': {'cls': Langevin,
                                    'args': ['timestep', 'gamma'],
-                                   'kwargs': {'rgen': None, 'seed': 0,
-                                              'high-friction': False}}}
+                                   'kwargs': {'rgen', 'seed',
+                                              'high-friction'}}}
     return generic_factory(settings, integrator_map, name='integrator')
 
 

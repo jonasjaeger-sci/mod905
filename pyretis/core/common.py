@@ -190,7 +190,12 @@ def generic_factory(settings, object_map, name='generic'):
 
     input_kwargs = {}
     for kwarg in kwargs:
-        input_kwargs[kwarg] = settings.get(kwarg, kwargs[kwarg])
+        if kwarg in settings:
+            input_kwargs[kwarg] = settings[kwarg]
+        else:
+            # Here we could do something, but we just assume that we
+            # now should use the default defined by the class.
+            pass
 
     if len(input_args) == 0:
         input_args = None

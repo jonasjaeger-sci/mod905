@@ -7,6 +7,7 @@ class. For now, this is a transition module. Don't count on it
 being present in the future!
 """
 import logging
+from pyretis.core.common import generic_factory
 from pyretis.forcefield.potentials import (PairLennardJonesCut,
                                            PairLennardJonesCutnp,
                                            DoubleWellWCA,
@@ -19,22 +20,32 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['potential_factory']
 
 
-_CLASS_MAP = {'pairlennardjonescut': PairLennardJonesCut,
-              'doublewell': DoubleWell,
-              'rectangularwell': RectangularWell,
-              'pairlennardjonescutnp': PairLennardJonesCutnp,
-              'doublewellwca': DoubleWellWCA}
-
-
 def potential_factory(settings):
-    """Return a potential based in input settings."""
-    klass_name = settings['class'].lower()
-    klass = _CLASS_MAP[klass_name]
-    args = {}
-    for key in settings:
-        if key == 'class':
-            pass
-        else:
-            args[key] = settings[key]
-    potential = klass(**args)
-    return potential
+    """Create a potential according to the given integrator settings.
+
+    This function is included as a convenient way of setting up and
+    selecting a potential function.
+
+    Parameters
+    ----------
+    settings : dict
+        This defines how we set up and select the potential.
+
+    Returns
+    -------
+    out[0] : object like `PotentialFunction`.
+        This object represents the potential.
+    """
+    potential_map = {'doublewell': {'cls': DoubleWell,
+                                    'kwargs': {'a', 'b', 'c', 'desc'}},
+                     'rectangularwell': {'cls': RectangularWell,
+                                         'kwargs': {'left', 'right', 'desc'}},
+                     'pairlennardjonescut': {'cls': PairLennardJonesCut,
+                                             'kwargs': {'dim', 'shift',
+                                                        'desc'}},
+                     'pairlennardjonescutnp': {'cls': PairLennardJonesCutnp,
+                                               'kwargs': {'dim', 'shift',
+                                                          'desc'}},
+                     'doublewellwca': {'cls': DoubleWellWCA,
+                                       'kwargs': {'dim', 'desc'}}}
+    return generic_factory(settings, potential_map, name='potential')

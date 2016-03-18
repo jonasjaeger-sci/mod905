@@ -56,11 +56,10 @@ def order_factory(settings):
                                       'args': ['name']},
                    'orderparameterposition': {'cls': OrderParameterPosition,
                                               'args': ['name', 'index'],
-                                              'kwargs': {'dim': 'x',
-                                                         'periodic': False}},
+                                              'kwargs': {'dim', 'periodic'}},
                    'orderparameterdistance': {'cls': OrderParameterDistance,
                                               'args': ['name', 'index'],
-                                              'kwargs': {'periodic': False}},
+                                              'kwargs': {'periodic'}},
                    'orderparameterparse': {'cls': OrderParameterParse,
                                            'args': ['name', 'orderp',
                                                     'ordervel']}}
