@@ -22,6 +22,7 @@ Important functions defined here:
 from __future__ import absolute_import
 import logging
 import numpy as np
+from pyretis.core.common import generic_factory
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.particlefunctions import calculate_thermo
 
@@ -49,26 +50,15 @@ def integrator_factory(settings):
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    try:
-        klass = settings['class'].lower()
-    except KeyError:
-        msg = 'No integrator class given. No integrator created!'
-        logging.critical(msg)
-        return None
-    if klass == 'velocityverlet':
-        return VelocityVerlet(settings['timestep'])
-    elif klass == 'verlet':
-        return Verlet(settings['timestep'])
-    elif klass == 'langevin':
-        return Langevin(settings['timestep'],
-                        settings['gamma'],
-                        rgen=settings.get('rgen', None),
-                        seed=settings.get('seed', 0),
-                        high_friction=settings['high-friction'])
-    else:
-        msg = 'Unknown integrator {}'.format(settings['class'])
-        logging.critical(msg)
-        return None
+    integrator_map = {'velocityverlet': {'cls': VelocityVerlet,
+                                         'args': ['timestep']},
+                      'verlet': {'cls': Verlet,
+                                 'args': ['timestep']},
+                      'langevin': {'cls': Langevin,
+                                   'args': ['timestep', 'gamma'],
+                                   'kwargs': {'rgen': None, 'seed': 0,
+                                              'high-friction': False}}}
+    return generic_factory(settings, integrator_map, name='integrator')
 
 
 class Integrator(object):
