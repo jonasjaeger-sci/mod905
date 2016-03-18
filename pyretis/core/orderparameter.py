@@ -24,6 +24,7 @@ from __future__ import division  # for StringFunctionParser
 import logging
 import operator
 import numpy as np
+from pyretis.core.common import generic_factory
 # imports for StringFunctionParser:
 from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
                        Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
@@ -51,30 +52,19 @@ def order_factory(settings):
         This object represents the orderparameter and will be one of the
         classes defined in `pyretis.core.orderparameter`.
     """
-    try:
-        klass = settings['class'].lower()
-    except KeyError:
-        msg = 'No order parameter class given. No order parameter created!'
-        logging.critical(msg)
-        return None
-    if klass == 'orderparameter':
-        return OrderParameter(settings['name'])
-    elif klass == 'orderparameterposition':
-        return OrderParameterPosition(settings['name'],
-                                      settings['index'],
-                                      dim=settings.get('dim', 'x'),
-                                      periodic=settings.get('periodic', False))
-    elif klass == 'orderparameterdistance':
-        return OrderParameterDistance(settings['name'], settings['index'],
-                                      periodic=settings.get('periodic', True))
-    elif klass == 'orderparameterparse':
-        return OrderParameterParse(settings['name'],
-                                   settings['orderp'],
-                                   settings['ordervel'])
-    else:
-        msg = 'Unknown order parameter: {}'.format(settings['class'])
-        logging.critical(msg)
-        return None
+    factory_map = {'orderparameter': {'cls': OrderParameter,
+                                      'args': ['name']},
+                   'orderparameterposition': {'cls': OrderParameterPosition,
+                                              'args': ['name', 'index'],
+                                              'kwargs': {'dim': 'x',
+                                                         'periodic': False}},
+                   'orderparameterdistance': {'cls': OrderParameterDistance,
+                                              'args': ['name', 'index'],
+                                              'kwargs': {'periodic': False}},
+                   'orderparameterparse': {'cls': OrderParameterParse,
+                                           'args': ['name', 'orderp',
+                                                    'ordervel']}}
+    return generic_factory(settings, factory_map, name='order parameter')
 
 
 class OrderParameter(object):

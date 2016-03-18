@@ -136,3 +136,64 @@ def initiate_instance(klass, args=None, kwargs=None):
             msg = msg.format(klass)
             logger.info(msg)
             return klass(*args, **kwargs)
+
+
+def generic_factory(settings, object_map, name='generic'):
+    """Create instances of classes based on settings.
+
+    This method is intended as a semi-generic factory for creating
+    instances of different objects based on simulation input settings.
+    The input settings defines what classes should be created and
+    the object_map defines a mapping between settings and the
+    class.
+
+    Parameters
+    ----------
+    settings : dict
+        This defines how we set up and select the order parameter.
+    object_map : dict
+        Definitions on how to initiate the different classes.
+    name : string
+        Short name for the object type. Only used for error messages.
+
+    Returns
+    -------
+    out : instance of a class
+        The created object, in case we were successful. Otherwise we return
+        none.
+    """
+    try:
+        klass = settings['class'].lower()
+    except KeyError:
+        msg = ('No class given for {}'
+               ' -- could not create object!').format(name)
+        logging.critical(msg)
+        return None
+    if not klass in object_map:
+        msg = ('Could not create unknown class "{}"'
+               ' for {}').format(settings['class'], name)
+        logging.critical(msg)
+        return None
+    cls = object_map[klass].get('cls')
+    args = object_map[klass].get('args', [])
+    kwargs = object_map[klass].get('kwargs', {})
+
+    input_args = []
+    for arg in args:
+        if not arg in settings:
+            msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
+                                                                      klass)
+            logging.critical(msg)
+            return None
+        else:
+            input_args.append(settings[arg])
+
+    input_kwargs = {}
+    for kwarg in kwargs:
+        input_kwargs[kwarg] = settings.get(kwarg, kwargs[kwarg])
+
+    if len(input_args) == 0:
+        input_args = None
+    if len(input_kwargs) == 0:
+        input_kwargs = None
+    return initiate_instance(cls, input_args, input_kwargs)
