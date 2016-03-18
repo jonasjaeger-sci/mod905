@@ -14,6 +14,7 @@ import importlib
 import imp
 import logging
 import os
+from pyretis.core.common import initiate_instance
 from pyretis.core.integrators import integrator_factory
 from pyretis.core.orderparameter import order_factory
 from pyretis.forcefield.factory import potential_factory
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['check_settings', 'import_from', 'initiate_instance',
+__all__ = ['check_settings', 'import_from',
            'create_orderparameter', 'create_integrator',
            'create_potential']
 
@@ -81,44 +82,6 @@ def import_from(module_path, function_name):
         msg = 'Could not import module: {}'.format(module_path)
         logger.critical(msg)
         raise ValueError(msg)
-
-
-def initiate_instance(klass, args=None, kwargs=None):
-    """Function to initiate a class with optional arguments.
-
-    Parameters
-    ----------
-    klass : class
-        The class to initiate.
-    args : list, optional
-        Positional arguments to `klass.__init__()`.
-    kwargs : dict, optional
-        The keyword arguments to `klass.__init__()`
-
-    Returns
-    -------
-    out : instance of `klass`
-        Here, we just return the initiated instance of the given class.
-    """
-    if args is None:
-        if kwargs is None:
-            msg = 'Initiated {} without arguments.'.format(klass)
-            logger.info(msg)
-            return klass()
-        else:
-            msg = 'Initiated {} with keyword arguments.'.format(klass)
-            logger.info(msg)
-            return klass(**kwargs)
-    else:
-        if kwargs is None:
-            msg = 'Initiated {}  with positional arguments.'.format(klass)
-            logger.info(msg)
-            return klass(*args)
-        else:
-            msg = 'Initiated {} with positional and keyword arguments.'
-            msg = msg.format(klass)
-            logger.info(msg)
-            return klass(*args, **kwargs)
 
 
 def check_settings(settings, required):

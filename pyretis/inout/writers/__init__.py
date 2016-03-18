@@ -57,7 +57,7 @@ from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import CrossWriter, EnergyWriter, OrderWriter
-from pyretis.inout.settings.common import initiate_instance
+from pyretis.core.common import initiate_instance
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
