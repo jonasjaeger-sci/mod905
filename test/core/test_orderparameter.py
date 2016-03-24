@@ -147,11 +147,11 @@ class OrderDistanceTest(unittest.TestCase):
             lmb = orderp.calculate(system)
             delta = system.particles.pos[1] - system.particles.pos[0]
             lmb_correct = np.sqrt(np.dot(delta, delta))
-            self.assertEqual(lmb, lmb_correct)
+            self.assertAlmostEqual(lmb, lmb_correct)
             delta_v = system.particles.vel[1] - system.particles.vel[0]
             lmb_vel = orderp.calculate_velocity(system)
             lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
-            self.assertEqual(lmb_vel, lmb_vel_correct)
+            self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
     def test_two_pbcparticles(self):
         """Test the distance order parameter with pbc."""
@@ -172,11 +172,11 @@ class OrderDistanceTest(unittest.TestCase):
                 delta = box.pbc_dist_coordinate(system.particles.pos[1] -
                                                 system.particles.pos[0])
                 lmb_correct = np.sqrt(np.dot(delta, delta))
-                self.assertEqual(lmb, lmb_correct)
+                self.assertAlmostEqual(lmb, lmb_correct)
                 delta_v = system.particles.vel[1] - system.particles.vel[0]
                 lmb_vel = orderp.calculate_velocity(system)
                 lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
-                self.assertEqual(lmb_vel, lmb_vel_correct)
+                self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
 
 class OrderFactoryTest(unittest.TestCase):
