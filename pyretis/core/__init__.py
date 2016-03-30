@@ -93,5 +93,4 @@ from .particles import Particles
 from .path import Path
 from .pathensemble import PathEnsemble
 from .random_gen import RandomGenerator
-from .orderparameter import (OrderParameter, OrderParameterPosition,
-                             OrderParameterParse)
+from .orderparameter import OrderParameter, OrderParameterPosition

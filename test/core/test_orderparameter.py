@@ -6,7 +6,6 @@ import numpy as np
 from pyretis.core.orderparameter import (OrderParameter,
                                          OrderParameterPosition,
                                          OrderParameterDistance,
-                                         OrderParameterParse,
                                          order_factory)
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
@@ -189,14 +188,11 @@ class OrderFactoryTest(unittest.TestCase):
                          {'class': 'orderparameterposition', 'name': 'Test',
                           'index': 0, 'dim': 'x', 'periodic': False},
                          {'class': 'orderparameterdistance', 'name': 'Test',
-                          'index': (0, 1), 'periodic': True},
-                         {'class': 'OrderParameterParse', 'name': 'Test',
-                          'orderp': 'sin(x[0])', 'ordervel': 'cos(x[0])'}]
+                          'index': (0, 1), 'periodic': True}]
         correct_class = [OrderParameter,
                          OrderParameter,
                          OrderParameterPosition,
-                         OrderParameterDistance,
-                         OrderParameterParse]
+                         OrderParameterDistance]
         for setting, correct in zip(test_settings, correct_class):
             orderp = order_factory(setting)
             self.assertIsInstance(orderp, correct)
