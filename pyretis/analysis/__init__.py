@@ -7,57 +7,64 @@ package is in post-processing of the results from a simulation (or
 several simulations).
 
 Package structure
-~~~~~~~~~~~~~~~~~
+-----------------
 
-Modules:
+Modules
+~~~~~~~
 
-- __init__.py: Imports from the other modules. The function to
-  analyse results from MD flux simulations is defined here since it will
-  make use of analysis tools from `energy_analysis.py` and
-  `order_analysis.py`.
+__init__.py
+    This file, imports from the other modules. The function to analyse
+    results from MD flux simulations is defined here since it will
+    make use of analysis tools from `energy_analysis.py` and
+    `order_analysis.py`.
 
-- analysis.py: Defines functions for numerical analysis.
+analysis.py
+    General functions for numerical analysis.
 
-- energy_analysis.py: Defines functions useful for analysing the
-  energy output.
+energy_analysis.py
+    Defines functions useful for analysing the energy output.
 
-- histogram.py: Defines functions useful for generating histograms.
+histogram.py
+    Defines functions useful for generating histograms.
 
-- order_analysis.py: Defines functions useful for analysis of order
-  parameters.
+order_analysis.py
+    Defines functions useful for analysis of order parameters.
 
-- path_analysis.py: Defines functions for analysis of path ensembles.
+path_analysis.py
+    Defines functions for analysis of path ensembles.
 
-Important functions defined in this module:
+Important functions defined in this sub-package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- analyse_energies: Analyse energy data from a simulation.
-  It will calculate a running average, a distribution and do a block
-  error analysis.
+analyse_energies
+    Analyse energy data from a simulation. It will calculate a running
+    average, a distribution and do a block error analysis.
 
-- analyse_flux: Analyse flux data from a MD flux simulation.
-  It will calculate a running average, a distribution and do a block
-  error analysis.
+analyse_flux
+    Analyse flux data from a MD flux simulation. It will calculate a
+    running average, a distribution and do a block error analysis.
 
-- analyse_orderp: Analyse order parameter data.
-  It will calculate a running average, a distribution and do a block
-  error analysis. In addition if will analyse the mean square
-  displacement (if requested).
+analyse_orderp
+    Analyse order parameter data. It will calculate a running average,
+    a distribution and do a block error analysis. In addition if will
+    analyse the mean square displacement (if requested).
 
-- analyse_path_ensemble: Analyse the results from a single path
-  ensemble. It will calculate a running average of the probabilities,
-  a crossing probability, perform an block error analysis, analyse
-  lengths of paths, type of Monte Carlo moves and calculate an
-  efficiency.
+analyse_path_ensemble:
+    Analyse the results from a single path ensemble. It will calculate
+    a running average of the probabilities, a crossing probability,
+    perform an block error analysis, analyse lengths of paths,
+    type of Monte Carlo moves and calculate an efficiency.
 
-- match_probabilities: Function to match probabilities from several
-  path simulations. Useful for obtaining the overall crossing
-  probability.
+match_probabilities
+    Function to match probabilities from several path simulations.
+    Useful for obtaining the overall crossing probability.
 
-- histogram: Generates histogram, basically a wrapper around numpy's
-  ``histogram``.
+histogram
+    Generates histogram, basically a wrapper around
+    numpy's ``histogram``.
 
-- match_all_histograms: Function to match histograms from
-  umbrella simulations.
+match_all_histograms
+    Function to match histograms from umbrella simulations.
 """
 from .analysis import running_average, block_error, block_error_corr
 from .energy_analysis import analyse_energies
