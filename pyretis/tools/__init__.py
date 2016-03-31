@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tools for creating simulations.
+"""Tools which can help with setting up simulations.
 
 This package defines some simple tools which may be useful for
 creating simulations.
