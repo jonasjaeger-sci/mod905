@@ -33,8 +33,8 @@ order_analysis.py
 path_analysis.py
     Defines functions for analysis of path ensembles.
 
-Important functions defined in this sub-package
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Important methods defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 analyse_energies
     Analyse energy data from a simulation. It will calculate a running

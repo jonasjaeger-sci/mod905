@@ -5,20 +5,30 @@ This package defines different pair potentials for use with internal
 calculation in pyretis.
 
 Package structure
-~~~~~~~~~~~~~~~~~
+-----------------
 
-Modules:
+Modules
+~~~~~~~
 
-- lennardjones.py: Potential functions for Lennard-Jones interactions.
+lennardjones.py
+    Potential functions for Lennard-Jones interactions.
 
-- wca.py: Potential functions for WCA-type interactions.
+wca.py
+    Potential functions for WCA-type interactions.
 
-Important classes and functions defined here:
+Important classes defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- PairLennardJonesCut: A class defining a Lennard-Jones potential
+PairLennardJonesCut
+    A class defining a Lennard-Jones potential.
 
-- DoubleWellWCA: This class defines a n-dimensional Double Well
-  potential for a pair of particles.
+PairLennardJonesCutnp
+    A class defining a Lennard-Jones potential using numpy for the
+    evaluation.
+
+DoubleWellWCA
+    This class defines a n-dimensional Double Well potential for a
+    pair of particles.
 """
 from .lennardjones import PairLennardJonesCut, PairLennardJonesCutnp
 from .wca import DoubleWellWCA

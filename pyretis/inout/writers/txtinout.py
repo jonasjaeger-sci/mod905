@@ -6,10 +6,11 @@ input of 'table-based' output. Typically the data created here will be
 written to the screen during the simulation or as a simple column
 output.
 
-Important classes and functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- txt_save_columns: Writing a simple column-based output using numpy.
-
+txt_save_columns
+    For writing a simple column-based output using numpy.
 """
 import logging
 import numpy as np

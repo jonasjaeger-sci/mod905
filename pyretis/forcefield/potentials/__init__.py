@@ -6,28 +6,36 @@ can be used to create force fields.
 
 
 Package structure
-~~~~~~~~~~~~~~~~~
+-----------------
 
-Modules:
+Modules
+~~~~~~~
 
-- potentials.py: This module defines some simple potential functions.
+potentials.py
+    This module defines some simple potential functions.
 
-Sub-packages:
+Sub-packages
+~~~~~~~~~~~~
 
-- pairpotentials: This package defines different pair interactions,
-  for instance the Lennard-Jones 6-12 simple cut potential.
+pairpotentials
+    This package defines different pair interactions, for instance the
+    Lennard-Jones 6-12 simple cut potential.
 
-Important classes defined in this module:
+Important classes defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- DoubleWell: A double well potential
+DoubleWell
+    A double well potential
 
-- RectangularWell: A rectangular well potential -- useful as a
-  bias potential.
+RectangularWell
+    A rectangular well potential -- useful as a bias potential.
 
-- PairLennardJonesCut/PairLennardJonesCutnp: The Lennard-Jones
-  potential.
+PairLennardJonesCut and PairLennardJonesCutnp
+    The Lennard-Jones potential. Two different potential, one in
+    pure python, the other is making use of numpy.
 
-- DoubleWellWCA: A n-dimensional Double Well potential.
+DoubleWellWCA
+    A n-dimensional Double Well potential.
 """
 from .potentials import DoubleWell, RectangularWell
 from .pairpotentials import (PairLennardJonesCut, PairLennardJonesCutnp,

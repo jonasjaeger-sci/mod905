@@ -4,19 +4,23 @@
 This file contains functions and classes that handle text files for the
 analysis input/output.
 
-Important functions and classes defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- txt_energy_output: For writing the output from a energy analysis.
+txt_energy_output
+    For writing the output from a energy analysis.
 
-- txt_flux_output: For writing the output from a flux-analysis.
+txt_flux_output
+    For writing the output from a flux-analysis.
 
-- txt_orderp_output: For writing the output from a order parameter
-  analysis.
+txt_orderp_output
+    For writing the output from a order parameter analysis.
 
-- txt_path_output: For writing the output from a path simulation.
+txt_path_output
+    For writing the output from a path simulation.
 
-- txt_matched_probability: For writing output with matched
-  probabilities.
+txt_matched_probability
+    For writing output with matched probabilities.
 """
 import logging
 import numpy as np

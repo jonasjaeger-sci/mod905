@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Functions that will output results from the analysis functions.
+"""Methods that will output results from the analysis functions.
 
-The functions defined here will also run the analysis and output
+The Methods defined here will also run the analysis and output
 according to given settings.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- run_md_flux_analysis: Functions to run the MD flux analysis on a set
-  of files. It will plot the results and generate a MD-flux report.
+run_md_flux_analysis
+    Methods to run the MD flux analysis on a set of files. It will
+    plot the results and generate a MD-flux report.
 
-- analyse_file: Function to analyse a file. For example, it can be used
-  as
+analyse_file
+    Method to analyse a file. For example, it can be used as
 
-  >>> from pyretis.inout.analysisio import analyse_file
-  >>> analyse_func = analyse_file('cross', 'cross.dat')
-  >>> out, fig, txt = analyse_func(analysis_settings, simulation_settings)
+    >>> from pyretis.inout.analysisio import analyse_file
+    >>> analyse_func = analyse_file('cross', 'cross.dat')
+    >>> out, fig, txt = analyse_func(analysis_settings, simulation_settings)
 
-  It wraps around the different analysis functions which can be called by
+    It wraps around the different analysis methods which can be called
+    by
 
-  >>> from pyretis.inout.analysisio import analyse_and_output_cross
-  >>> out, fig, txt = analyse_and_output_cross(analysis_settings,
-                                               simulation_settings, rawdata)
+    >>> from pyretis.inout.analysisio import analyse_and_output_cross
+    >>> out, fig, txt = analyse_and_output_cross(analysis_settings,
+                                                 simulation_settings, rawdata)
 """
 from __future__ import absolute_import
 import logging

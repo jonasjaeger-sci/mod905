@@ -3,17 +3,44 @@
 
 Specifically it defines colors, color schemes and a function
 for selecting a plotter.
+
 Here we also hard-code some color schemes which may be useful for
-the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
-from the seaborn project [deep]_ and the husl color scheme [husl]_.
+the plotting:
 
-Important functions defined here:
+* the colorblind 10 scheme [cb10]_,
 
-- create_plotter: Function to create a plotter.
+* the deep color scheme from the seaborn project [deep]_ and
+
+* the husl color scheme [husl]_.
+
+Package structure
+-----------------
+
+Modules
+~~~~~~~
+
+__init__.py
+    This file, handles imports for pyretis and defines some colors
+    and the method for creating a plotter.
+
+mpl_plotting.py
+    Methods for generating plots using matplotlib.
+
+plotting.py
+    Definition of a generic base class for the plotter(s).
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+create_plotter
+    Method to create a plotter.
 
 Folders
+~~~~~~~
 
-- styles: This folder contains style files for matplotlib.
+styles
+    This folder contains style files for matplotlib which are used by
+    pyretis.
 
 References
 ~~~~~~~~~~

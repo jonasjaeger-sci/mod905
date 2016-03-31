@@ -26,8 +26,8 @@ potentials
     Definition of potential functions for force fields.
 
 
-Important classes defined in this module
-----------------------------------------
+Important classes defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ForceField
     A class representing a general force field.

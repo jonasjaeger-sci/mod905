@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """This module handles creation of simulations from settings.
 
-The different simulations re defined as objects which inherits from
-the base Simulation object defined in
-`pyretis.core.simulation.simulation`.
+The different simulations are defined as objects which inherits from the
+base Simulation object defined in `pyretis.core.simulation.simulation`.
 
-Important classes and functions:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_simulation: A function to create a simulation object from
-  a dictionary of given settings.
+create_simulation
+    Method for creating a simulation object from settings.
 """
 from __future__ import absolute_import
 import logging

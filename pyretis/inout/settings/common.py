@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-"""This module defines common functions for the settings handling.
+"""This module defines common methods for the settings handling.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- check_settings: Check that required simulation settings are actually
-  given.
+check_settings
+    Check that required simulation settings are actually given.
 
-- import_from : A function to dynamically import functions/classes
-  etc. from user specified modules.
+import_from
+    A function to dynamically import functions/classes etc. from user
+    specified modules.
 """
 import sys
 import importlib

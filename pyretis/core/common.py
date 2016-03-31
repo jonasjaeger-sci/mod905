@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Definition of some common methods that might be useful.
 
-Important methods defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- inspect_function : A method to obtain information about arguments,
-  keyword arguments for functions.
+inspect_function
+    A method to obtain information about arguments, keyword arguments
+    for functions.
 """
 import logging
 import inspect

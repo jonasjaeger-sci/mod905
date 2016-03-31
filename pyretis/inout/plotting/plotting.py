@@ -5,9 +5,11 @@ This module just defines a base class for plotters. This is just to
 ensure that all plotters at least implements some functions and that we
 can make use of them.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Plotter: A generic class for creating plots
+Plotter
+    A generic class for creating plots.
 """
 
 __all__ = ['Plotter']

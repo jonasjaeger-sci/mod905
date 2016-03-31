@@ -4,13 +4,16 @@
 This module contains definitions of classes for performing molecular
 dynamics simulations.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- SimulationNVE: Definition of a simple NVE simulation. The integrator
-  used for this simulation must have dynamics equal to 'NVE'.
+SimulationNVE
+    Definition of a simple NVE simulation. The integrator
+    used for this simulation must have dynamics equal to NVE.
 
-- SimulationMDFlux: Definition of a simulation for determining the
-  initial flux. This is used for calculating rates in TIS simulations.
+SimulationMDFlux
+    Definition of a simulation for determining the initial flux.
+    This is used for calculating rates in TIS simulations.
 """
 from __future__ import absolute_import
 import logging

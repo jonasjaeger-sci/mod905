@@ -6,9 +6,11 @@ for turning raw data from pyretis into an output (in some form).
 Note that the writers are not responsible for actually writing the
 output to the screen or to files - this is done by an output task.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Writer: A generic class for the writers.
+Writer
+    A generic class for the writers.
 """
 import logging
 import numpy as np

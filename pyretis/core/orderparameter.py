@@ -6,16 +6,20 @@ by the system properties and they will all return at least two
 values - the order parameter and the rate of change in the order
 parameter (i.e. its velocity).
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- OrderParameter: Base class for the order parameters.
+OrderParameter
+    Base class for the order parameters.
 
-- OrderParameterPosition: A class for a simple position dependent order
-  parameter.
+OrderParameterPosition
+    A class for a simple position dependent order parameter.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- order_factory: A method to create order parameters from settings.
+order_factory
+    A method to create order parameters from settings.
 """
 import logging
 import numpy as np

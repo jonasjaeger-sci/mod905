@@ -5,18 +5,23 @@ This module defines some classes for writing out trajectory data.
 Here we define a class for a simple xyz-format and a class for writing
 in a gromacs format.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- TrajXYZ: Writing of coordinates to a file in a xyz format.
+TrajXYZ
+    Writing of coordinates to a file in a xyz format.
 
-- TrajGRO: Writing of a coordinates to a file in a gromacs format.
+TrajGRO
+    Writing of a coordinates to a file in a gromacs format.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- read_xyz_file: A function for reading snapshots from a xyz file.
+read_xyz_file
+    A function for reading snapshots from a xyz file.
 
-- read_gromacs_file: A function for reading snapshots from a gromacs
-  GRO file.
+read_gromacs_file
+    A function for reading snapshots from a gromacs GRO file.
 """
 import logging
 import numpy as np

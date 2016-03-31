@@ -4,14 +4,17 @@
 This module defines functions and classes for handling the output from
 simulations.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_output: Function that sets up output tasks from a dictionary of
-  settings.
+create_output
+    Function that sets up output tasks from a dictionary of settings.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- OutputTask: A class for handling output tasks.
+OutputTask
+    A class for handling output tasks.
 """
 from __future__ import print_function
 import logging

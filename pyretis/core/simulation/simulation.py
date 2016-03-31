@@ -4,9 +4,11 @@
 This module defines the generic simulation object. This is the base
 class for all other simulations.
 
-Important classes and functions defined here
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Simulation: Object defining a generic simulation.
+Simulation
+    Object defining a generic simulation.
 """
 from __future__ import absolute_import
 import logging

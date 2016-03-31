@@ -3,13 +3,14 @@
 
 This module defines classes for writing path ensemble data.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- PathEnsembleWriter: Writing/reading of path ensemble data.
+PathEnsembleWriter
+    Writing/reading of path ensemble data.
 
-- PathEnsembleFile : Reading of path ensemble data. Mainly used for
-  analysis.
-
+PathEnsembleFile
+    Reading of path ensemble data. Mainly used for analysis.
 """
 import logging
 # pyretis imports:

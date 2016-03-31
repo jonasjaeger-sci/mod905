@@ -5,16 +5,21 @@ The classes and functions defined in this module are useful for
 representing paths.
 
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- PathBase: A base class for paths.
+PathBase
+    A base class for paths.
 
-- Path: Class for a generic path that stores all possible information.
+Path
+    Class for a generic path that stores all possible information.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- paste_paths: Function for joining two paths, one is in a backward time
-  direction and the other is in the forward time direction.
+paste_paths
+    Function for joining two paths, one is in a backward time
+    direction and the other is in the forward time direction.
 """
 import logging
 import numpy as np

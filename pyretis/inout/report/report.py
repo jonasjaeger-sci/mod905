@@ -5,14 +5,17 @@ This module contains some general functions for report generation. These
 functions are used by the specific report generators to format the
 reports.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- get_template: Returns the template for a specific output format and
-  report type
+get_template
+    Returns the template for a specific output format and report type.
 
-- render_report: Render a report using a template and jinja2
+render_report
+    Render a report using a template and jinja2.
 
-- generate_report: Generate a specific report from analysis output.
+generate_report
+    Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
 import logging

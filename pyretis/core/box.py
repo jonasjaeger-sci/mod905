@@ -4,12 +4,14 @@
 The simulation box handles the periodic boundaries if needed.
 It is typically referenced via the `system`, i.e. as `system.box`.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Box: Class for a simulation box.
+Box
+    Class for a simulation box.
 
 Examples
---------
+~~~~~~~~
 >>> from pyretis.core.box import Box
 
 >>> box = Box(size=[10, 10, 10], periodic=[True, False, True])

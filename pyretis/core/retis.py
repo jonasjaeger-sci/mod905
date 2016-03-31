@@ -7,21 +7,26 @@ implemented here and the description of RETIS was first described by
 van Erp [RETIS]_.
 
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- make_retis_step : Function to select and execute the RETIS move.
+make_retis_step
+    Function to select and execute the RETIS move.
 
-- retis_tis_moves : Function to execute the TIS steps in the RETIS
-  algorithm.
+retis_tis_moves
+    Function to execute the TIS steps in the RETIS algorithm.
 
-- retis_moves : Function to perform RETIS swapping moves - it selects
-  what scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
-  ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
+retis_moves
+    Function to perform RETIS swapping moves - it selects what scheme
+    to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
+    ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
 
-- retis_swap : The function that actually swaps two path ensembles.
+retis_swap
+    The function that actually swaps two path ensembles.
 
-- retis_swap_zero : The function that performs the swapping for the
-  ``[0^-] <-> [0^+]`` swap.
+retis_swap_zero
+    The function that performs the swapping for the
+    ``[0^-] <-> [0^+]`` swap.
 
 References
 ~~~~~~~~~~

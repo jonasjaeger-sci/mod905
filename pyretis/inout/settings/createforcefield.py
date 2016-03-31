@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """This module handles creation of force fields from simulation settings
 
-Important classes and functions:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_potentials: A function to create a potentials from
-  a dictionary of given settings.
+create_potentials
+    Method for creating potentials from a dictionary of settings.
 """
 from __future__ import absolute_import
 import logging

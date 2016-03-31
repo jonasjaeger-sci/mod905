@@ -4,9 +4,11 @@
 This module defines simulations for performing path sampling
 simulations.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- SimulationTIS: Definition of a TIS simulation.
+SimulationTIS
+    Definition of a TIS simulation.
 """
 from __future__ import absolute_import
 import numpy as np

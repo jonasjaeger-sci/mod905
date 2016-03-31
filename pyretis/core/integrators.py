@@ -4,20 +4,27 @@
 These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Integrator: The base class for integrators
+Integrator
+    The base class for integrators
 
-- Verlet: A Verlet integrator
+Verlet
+    A Verlet integrator
 
-- VelocityVerlet: A Velocity Verlet integrator
+VelocityVerlet
+    A Velocity Verlet integrator
 
-- Langevin: A Langevin integrator
+Langevin
+    A Langevin integrator
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- integrator_factory: A function to set up and create an integrator from
-  simulation settings.
+integrator_factory
+    Method for setting up and creating an integrator from
+    simulation settings.
 """
 from __future__ import absolute_import
 import logging

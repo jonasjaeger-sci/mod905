@@ -4,16 +4,18 @@
 The classes and functions defined in this module are useful for
 representing path ensembles.
 
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Important classes defined here:
+PathEnsemble
+    Class for defining path ensembles.
 
-- PathEnsemble: Class for defining path ensembles.
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-Important functions defined here:
-
-- create_path_ensembles: Function for creating a set of `PathEnsemble`
-  objects given locations of interfaces defining the path ensembles.
+create_path_ensembles
+    Method for creating a set of `PathEnsemble` objects from given
+    interfaces.
 """
 import logging
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

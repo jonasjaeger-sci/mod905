@@ -4,16 +4,20 @@
 It contains some functions that is used when generating reports,
 typically to format tables and numbers.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_backup: A function to handle the creation of backups of old
-  files.
+apply_format
+    Apply a format string to a given value.
 
-- apply_format: Apply a format string to a given value.
+create_backup
+    A function to handle the creation of backups of old files.
 
-- remove_extensions: Remove extensions for a list of files.
+make_dirs
+    Create directories (for path simulation).
 
-- make_dirs: Create directories (for path simulation).
+remove_extensions
+    Remove extensions for a list of files.
 """
 from __future__ import absolute_import
 import errno

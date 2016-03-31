@@ -3,13 +3,14 @@
 
 The reports are useful for displaying results from the analysis.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- generate_report_tis_path: Generate a report for a single TIS
-  simulation.
+generate_report_tis_path
+    Generate a report for a single TIS simulation.
 
-- generate_report_tis: Generate a report for the over-all results from a
-  TIS simulation.
+generate_report_tis
+    Generate a report for the over-all results from a TIS simulation.
 """
 from __future__ import absolute_import
 from pyretis.inout.report.markup import (generate_rst_table,
