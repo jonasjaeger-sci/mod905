@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from codecs import open as openc
 import os
-import re
 from setuptools import setup, find_packages
+import subprocess
 
 
 def get_long_description():
@@ -32,21 +32,111 @@ def get_long_description():
     return long_description
 
 
-def find_version(*file_paths):
-    """Look for the version in __init__.py of pyretis."""
-    here = os.path.abspath(os.path.dirname(__file__))
-    dirname = os.path.join(here, *file_paths)
-    with openc(dirname, encoding='utf-8') as fileinit:
-        version_file = fileinit.read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError('Unable to find version string.')
+# For setting version. This is copied from Numpy's setup.py.
+MAJOR = 0
+MINOR = 10
+MICRO = 0
+ISRELEASED = False
+VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
+VERSION_FILE = os.path.join('pyretis', 'version.py')
+VERSION_TXT = '''# -*- coding: utf-8 -*-
+"""Version information for pyretis.
 
+This file is generated from pyretis setup.py
+"""
+short_version = '{0:s}'
+version = '{0:s}'
+full_version = '{1:s}'
+git_revision = '{2:s}'
+release = {3:}
+
+if not release:
+    version = full_version
+'''
+
+
+def get_git_version():
+    """Method to obtain the git revision as a string.
+
+    This method is taken from Numpy's setup.py
+
+    Returns
+    -------
+    git_revision : string
+        The git revision, it the git revision could not be determined,
+        a 'Unknown' will be returned.
+    """
+    git_revision = 'Unknown'
+    try:
+        env = {}
+        for key in ('SYSTEMROOT', 'PATH'):
+            val = os.environ.get(key)
+            if val is not None:
+                env[key] = val
+        # LANGUAGE is used on win32
+        env['LANGUAGE'] = 'C'
+        env['LANG'] = 'C'
+        env['LC_ALL'] = 'C'
+        out = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
+                               stdout=subprocess.PIPE,
+                               env=env).communicate()[0]
+        git_revision = out.strip().decode('ascii')
+    except OSError:
+        git_revision = 'Unknown'
+
+    return git_revision
+
+
+def get_version_info():
+    """Return the version number for pyretis.
+
+    This method is taken from Numpy's setup.py.
+
+    Returns
+    -------
+    full_version : string
+        The full version string for this release.
+    git_revision : string
+        The git revision number.
+    """
+    if os.path.exists('.git'):
+        git_revision = get_git_version()
+    elif os.path.exists(VERSION_FILE):
+        try:
+            from pyretis.version import git_revision
+        except ImportError:
+            raise ImportError('Unable to import git_revision. Try removing '
+                              'pyretis/version.py and the build directory '
+                              'before building.')
+    else:
+        git_revision = 'Unknown'
+    if not ISRELEASED:
+        full_version = ''.join([VERSION, '.dev0+', git_revision[:7]])
+    else:
+        full_version = VERSION
+    return full_version, git_revision
+
+
+def write_version_py():
+    """Create a file with the version info for pyretis.
+
+    This method is taken from Numpy's setup.py.
+    """
+    full_version, git_revision = get_version_info()
+    version_txt = VERSION_TXT.format(VERSION, full_version,
+                                     git_revision, ISRELEASED)
+    with open(VERSION_FILE, 'wt') as vfile:
+        try:  # will work in python 3
+            vfile.write(version_txt)
+        except UnicodeEncodeError:  # for python 2
+            vfile.write(version_txt.encode('utf-8'))
+    return full_version
+
+
+FULL_VERSION = write_version_py()
 
 setup(name='pyretis',
-      version=find_version('pyretis', '__init__.py'),
+      version=FULL_VERSION,
       description='A simulation package for rare events',
       long_description=get_long_description(),
       url='http://www.pyretis.org',
@@ -70,7 +160,9 @@ setup(name='pyretis',
                    'Topic :: Scientific/Engineering :: Physics'],
       keywords='simulation TIS RETIS',
       packages=find_packages(exclude=['docs']),
-      install_requires=['numpy>=1.6.0', 'scipy>=0.13.3',
-                        'matplotlib>=1.1', 'jinja2>=2.7.2',
+      install_requires=['numpy>=1.6.0',
+                        'scipy>=0.13.3',
+                        'matplotlib>=1.1',
+                        'jinja2>=2.7.2',
                         'docutils>=0.11'],
       scripts=['bin/pyretisrun.py'])

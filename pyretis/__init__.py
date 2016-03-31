@@ -52,8 +52,7 @@ from . import core
 from . import forcefield
 from . import analysis
 from . import tools
-__version__ = '0.1.0'
-__version_details__ = 'pre-release'
+from .version import version as __version__
 __program_name__ = 'pyretis'
 __url__ = 'http://www.pyretis.org'
 __git_url__ = 'https://gitlab.com/andersle/pyretis'
