@@ -175,6 +175,7 @@ if __name__ == '__main__':
                 task.output(result)
     except Exception as error:
         logger.error(error.args[0])
+        logger.error('Execution failed! Will exit now.')
         raise
     finally:
         bye_bye_world()
