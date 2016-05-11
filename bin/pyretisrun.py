@@ -15,6 +15,7 @@ import argparse
 import datetime
 import logging
 import os
+import sys
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
@@ -25,6 +26,9 @@ from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.settings import (create_system, create_force_field,
                                     create_simulation)
 from pyretis.inout import create_output
+
+
+DATEFORMAT = '%H:%M:%S %d.%m.%Y'
 
 
 class MultiLineFormatter(logging.Formatter):
@@ -67,34 +71,43 @@ def hello_world(infile, basedir, logfile):
     logfile : string
         The output log file
     """
-    timestart = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
+    timestart = datetime.datetime.now().strftime(DATEFORMAT)
     msg = ['# Running {} version {}'.format(NAME, VERSION)]
     msg += ['# Start of execution: {}'.format(timestart)]
     msg += ['# Running in directory: {}'.format(basedir)]
     msg += ['# Input file: {}'.format(infile)]
     msg += ['# Log file: {}'.format(logfile)]
-    printtxt = '\n'.join(msg)
-    print(printtxt)
-    logtxt = printtxt.replace('# ', '').strip()
-    logger.info(logtxt)
+    for message in msg:
+        msgtxt = message.replace('# ', '').strip()
+        logger.info(msgtxt)
+    if sys.version_info < (3, 0):
+        pyversion = sys.version.split()[0]
+        warntxt = ('You are running Python {}!'
+                   '\nPlease upgrade to Python 3.'
+                   '\nPython 2.X support will be dropped in the near future!')
+        warntxt = warntxt.format(pyversion)
+        logger.warning(warntxt)
+        if sys.version_info < (2.7):
+            msgtxt = ('Your version of Python is NOT supported by {}!'
+                      '\nPlease upgrade!')
+            msgtxt = msgtxt.format(NAME)
+            raise ValueError(msgtxt)
 
 
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
-    timeend = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
+    timeend = datetime.datetime.now().strftime(DATEFORMAT)
     msg = ['# End of {} execution: {}'.format(NAME, timeend)]
-    txt = '# Please cite: {}'
-    indent = len(txt) - 5
+    references = ['{} references:'.format(NAME)]
     for line in CITE.split('\n'):
         if line:
-            txt = txt.format(line)
-            msg.append(txt)
-            txt = '# ' + ' ' * indent + ' {}'
+            references.append(' {}'.format(line))
+    reftxt = ['\n'.join(references)]
+    msg += reftxt
     msg += ['# Visit us at: {}'.format(URL)]
-    printtxt = '\n'.join(msg)
-    print(printtxt)
-    logtxt = printtxt.replace('# ', '').strip()
-    logger.info(logtxt)
+    for message in msg:
+        msgtxt = message.replace('# ', '')
+        logger.info(msgtxt)
 
 
 if __name__ == '__main__':
@@ -111,44 +124,57 @@ if __name__ == '__main__':
     args_dict = vars(parser.parse_args())
 
     inputfile = args_dict['input']
-    if not os.path.isfile(inputfile):
-        raise ValueError('{} is not a file'.format(inputfile))
     basepath = os.path.dirname(inputfile)
     localfile = os.path.basename(inputfile)
-    os.chdir(basepath)
-
+    if os.path.isdir(basepath):
+        os.chdir(basepath)
+    else:
+        basepath = os.getcwd()
+    # set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
+    # log to console:
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
+    formatter = MultiLineFormatter('[%(levelname)s]: %(message)s')
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    # log to a file:
     fileh = logging.FileHandler(args_dict['log'], mode='w')
     fileh.setLevel(logging.DEBUG)
-    formatter = MultiLineFormatter('[%(levelname)s]: %(message)s')
     formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
-    console.setFormatter(formatter)
     fileh.setFormatter(formatter_file)
     logger.addHandler(fileh)
-    logger.addHandler(console)
 
-    hello_world(localfile, basepath, args_dict['log'])
+    try:
+        hello_world(localfile, basepath, args_dict['log'])
+        if not os.path.isfile(inputfile):
+            errtxt = ('No simulation input:'
+                      ' {} is not a file!'.format(inputfile))
+            raise ValueError(errtxt)
 
-    print('# Reading input settings.')
-    settings = parse_settings_file(localfile)
-    create_conversion_factors(settings['units'], **settings['units-base'])
+        logger.info('Reading input settings.')
+        settings = parse_settings_file(localfile)
+        create_conversion_factors(settings['units'], **settings['units-base'])
 
-    print('# Creating system from settings.')
-    system = create_system(settings)
-    system.forcefield = create_force_field(settings)
-    print('# Creating simulation from settings.')
-    simulation = create_simulation(settings, system)
-    print('# Creating output tasks from settings.')
-    output_tasks = [task for task in create_output(settings)]
+        logger.info('Creating system from settings.')
+        system = create_system(settings)
+        system.forcefield = create_force_field(settings)
 
-    print('# Running simulation.')
-    logger.info('Running simulation')
-    for result in simulation.run():
-        #stepno = result['cycle']['stepno']
-        #result['thermo']['stepno'] = stepno
-        for task in output_tasks:
-            task.output(result)
-    bye_bye_world()
+        logger.info('Creating simulation from settings.')
+        simulation = create_simulation(settings, system)
+
+        logger.info('Creating output tasks from settings.')
+        output_tasks = [task for task in create_output(settings)]
+
+        logger.info('Running simulation.')
+        for result in simulation.run():
+            #stepno = result['cycle']['stepno']
+            #result['thermo']['stepno'] = stepno
+            for task in output_tasks:
+                task.output(result)
+    except Exception as error:
+        logger.error(error.args[0])
+        raise
+    finally:
+        bye_bye_world()
