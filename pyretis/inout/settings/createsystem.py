@@ -414,7 +414,7 @@ def create_velocities(system, settings, vel):
     """
     vel_settings = settings.get('particles-velocity', {})
     if vel:
-        msg = 'Velocities already set corresponds to a temperature: {}'
+        msg = 'Velocities read from file (temperature: {}).'
         msg = msg.format(system.calculate_temperature())
         logger.info(msg)
     if 'generate' in vel_settings:
