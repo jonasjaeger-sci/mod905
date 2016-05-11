@@ -72,8 +72,10 @@ def hello_world(infile, basedir, logfile):
         The output log file
     """
     timestart = datetime.datetime.now().strftime(DATEFORMAT)
-    msg = ['# Running {} version {}'.format(NAME, VERSION)]
-    msg += ['# Start of execution: {}'.format(timestart)]
+    msg = ['# Start of execution: {}'.format(timestart)]
+    pyversion = sys.version.split()[0]
+    msg += ['# Running {} version {} with Python {}'.format(NAME, VERSION,
+                                                            pyversion)]
     msg += ['# Running in directory: {}'.format(basedir)]
     msg += ['# Input file: {}'.format(infile)]
     msg += ['# Log file: {}'.format(logfile)]
@@ -81,9 +83,7 @@ def hello_world(infile, basedir, logfile):
         msgtxt = message.replace('# ', '').strip()
         logger.info(msgtxt)
     if sys.version_info < (3, 0):
-        pyversion = sys.version.split()[0]
-        warntxt = ('You are running Python {}!'
-                   '\nPlease upgrade to Python 3.'
+        warntxt = ('Please upgrade to Python 3.'
                    '\nPython 2.X support will be dropped in the near future!')
         warntxt = warntxt.format(pyversion)
         logger.warning(warntxt)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
             #result['thermo']['stepno'] = stepno
             for task in output_tasks:
                 task.output(result)
-    except Exception as error:
+    except Exception as error:  # Exceptions should subclass BaseException.
         logger.error(error.args[0])
         logger.error('Execution failed! Will exit now.')
         raise
