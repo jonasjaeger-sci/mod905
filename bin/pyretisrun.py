@@ -59,14 +59,14 @@ class MultiLineFormatterDebug(logging.Formatter):
         return out
 
 
-def hello_world(infile, basedir, logfile):
+def hello_world(infile, rundir, logfile):
     """Method to print out a standard greeting for pyretis.
 
     Parameters
     ----------
     infile : string
         String showing the location of the input file.
-    basedir : string
+    rundir : string
         String showing the location we are running in.
     logfile : string
         The output log file
@@ -76,7 +76,7 @@ def hello_world(infile, basedir, logfile):
     pyversion = sys.version.split()[0]
     msg += ['# Running {} version {} with Python {}'.format(NAME, VERSION,
                                                             pyversion)]
-    msg += ['# Running in directory: {}'.format(basedir)]
+    msg += ['# Running in directory: {}'.format(rundir)]
     msg += ['# Input file: {}'.format(infile)]
     msg += ['# Log file: {}'.format(logfile)]
     for message in msg:
@@ -124,11 +124,10 @@ if __name__ == '__main__':
     args_dict = vars(parser.parse_args())
 
     inputfile = args_dict['input']
+    runpath = os.getcwd()
     basepath = os.path.dirname(inputfile)
     localfile = os.path.basename(inputfile)
-    if os.path.isdir(basepath):
-        os.chdir(basepath)
-    else:
+    if not os.path.isdir(basepath):
         basepath = os.getcwd()
     # set up for logging:
     logger = logging.getLogger('')
@@ -147,14 +146,14 @@ if __name__ == '__main__':
     logger.addHandler(fileh)
 
     try:
-        hello_world(localfile, basepath, args_dict['log'])
+        hello_world(inputfile, basepath, args_dict['log'])
         if not os.path.isfile(inputfile):
             errtxt = ('No simulation input:'
                       ' {} is not a file!'.format(inputfile))
             raise ValueError(errtxt)
 
         logger.info('Reading input settings.')
-        settings = parse_settings_file(localfile)
+        settings = parse_settings_file(inputfile)
         create_conversion_factors(settings['units'], **settings['units-base'])
 
         logger.info('Creating system from settings.')
