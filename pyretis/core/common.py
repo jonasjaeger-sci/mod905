@@ -122,21 +122,21 @@ def initiate_instance(klass, args=None, kwargs=None):
     if args is None:
         if kwargs is None:
             msg = 'Initiated {} without arguments.'.format(klass)
-            logger.info(msg)
+            logger.debug(msg)
             return klass()
         else:
             msg = 'Initiated {} with keyword arguments.'.format(klass)
-            logger.info(msg)
+            logger.debug(msg)
             return klass(**kwargs)
     else:
         if kwargs is None:
             msg = 'Initiated {}  with positional arguments.'.format(klass)
-            logger.info(msg)
+            logger.debug(msg)
             return klass(*args)
         else:
             msg = 'Initiated {} with positional and keyword arguments.'
             msg = msg.format(klass)
-            logger.info(msg)
+            logger.debug(msg)
             return klass(*args, **kwargs)
 
 
