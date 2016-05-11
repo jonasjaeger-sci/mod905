@@ -34,7 +34,9 @@ from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_tis,
                                               generate_report_tis_path)
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 
 __all__ = ['get_template', 'render_report', 'generate_report']
 
@@ -205,7 +207,7 @@ def generate_report(report_type, analysis, output, template=None):
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
         msg = msg.format(output, report_type)
-        logging.warning(msg)
+        logger.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
     generated = None

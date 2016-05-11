@@ -24,7 +24,8 @@ order_factory
 import logging
 import numpy as np
 from pyretis.core.common import generic_factory
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['OrderParameter', 'OrderParameterPosition',
@@ -186,7 +187,7 @@ class OrderParameter(object):
         """
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
-            logging.warning(msg)
+            logger.warning(msg)
             return False
         else:
             self.extra.append(func)
@@ -245,7 +246,7 @@ class OrderParameterPosition(OrderParameter):
             self.dim = dims[dim]
         except KeyError:
             msg = 'Unknown dimension {} requested'.format(dim)
-            logging.critical(msg)
+            logger.critical(msg)
             raise
 
     def calculate(self, system):

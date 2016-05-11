@@ -24,7 +24,8 @@ import errno
 import os
 import re
 import logging
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_backup', 'apply_format', 'remove_extensions',
@@ -278,7 +279,7 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     else:
         msg = ['Could not get direction for ensemble {}.'.format(ensemble),
                'We assume "+", note that this might overwrite files']
-        logging.warning('\n'.join(msg))
+        logger.warning('\n'.join(msg))
         ens += 1
     return fmt.format(ens)
 

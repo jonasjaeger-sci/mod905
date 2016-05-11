@@ -169,12 +169,12 @@ def generic_factory(settings, object_map, name='generic'):
     except KeyError:
         msg = ('No class given for {}'
                ' -- could not create object!').format(name)
-        logging.critical(msg)
+        logger.critical(msg)
         return None
     if not klass in object_map:
         msg = ('Could not create unknown class "{}"'
                ' for {}').format(settings['class'], name)
-        logging.critical(msg)
+        logger.critical(msg)
         return None
     cls = object_map[klass].get('cls')
     args = object_map[klass].get('args', [])
@@ -185,7 +185,7 @@ def generic_factory(settings, object_map, name='generic'):
         if not arg in settings:
             msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
                                                                       klass)
-            logging.critical(msg)
+            logger.critical(msg)
             return None
         else:
             input_args.append(settings[arg])

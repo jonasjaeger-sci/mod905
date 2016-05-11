@@ -138,7 +138,7 @@ class System(object):
             return self.box.dim
         except AttributeError:
             msg = 'Box dimensions are not set. Setting dimensions to "1"'
-            logging.warning(msg)
+            logger.warning(msg)
             return 1
 
     def calculate_beta(self, temperature=None):
@@ -396,7 +396,7 @@ class System(object):
         else:
             msg = 'Distribution "{}" not defined! Velocities not set!'
             msg = msg.format(distribution)
-            logging.error(msg)
+            logger.error(msg)
 
     def calculate_temperature(self):
         """Calculate the temperature of the system.

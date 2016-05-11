@@ -18,7 +18,8 @@ Examples
 """
 import logging
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Box']
@@ -76,7 +77,7 @@ class Box(object):
             if periodic is None:  # Assume 1D non-periodic box
                 size = [[-float('inf'), float('inf')]]
                 periodic = [False]
-                logging.info('Assuming a 1D non-periodic box!')
+                logger.warning('Assuming a 1D non-periodic box!')
             else:
                 # this might seem strange, but it's probably something
                 # that is done if we just need a dummy box.

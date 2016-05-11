@@ -13,7 +13,8 @@ Simulation
 from __future__ import absolute_import
 import logging
 from .simulation_task import SimulationTask
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Simulation']
@@ -198,7 +199,7 @@ class Simulation(object):
             return True
         except AssertionError:
             msg = 'Could not add task: {}'.format(task)
-            logging.warning(msg)
+            logger.warning(msg)
             return False
 
     def run(self, output=None):

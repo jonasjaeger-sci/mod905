@@ -9,7 +9,8 @@ import logging
 import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr
 from pyretis.analysis.histogram import histogram, histogram_and_avg
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
@@ -257,7 +258,7 @@ def _get_path_length(path):
         return 0
     else:
         msg = 'Ignored unknown mc move: {}'.format(move)
-        logging.warning(msg)
+        logger.warning(msg)
         return None
 
 
@@ -415,7 +416,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
                         'correspond to the number of paths seen by the path',
                         'ensemble! Consider re-running the analysis using',
                         'the path ensemble file!'])
-        logging.warning(msg)
+        logger.warning(msg)
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,
                                   ngrid=settings['ngrid'])
@@ -427,7 +428,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
         result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
     except KeyError:
         msg = 'Could not obtain cycle number! Will assume (1, 2, ..., len(p))'
-        logging.warning(msg)
+        logger.warning(msg)
         result['cycle'] = np.arange(len(prun))
     # next, the error analysis:
     result['blockerror'] = block_error_corr(pdata,

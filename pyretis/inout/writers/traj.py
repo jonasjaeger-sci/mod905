@@ -538,7 +538,7 @@ def write_xyz_file(filename, pos, names=None, header=None):
             fileh.write('{}\n'.format(header))
         if names is None:
             for posi in pos:
-                logging.warning('No atom name given. Using "X"')
+                logger.warning('No atom name given. Using "X"')
                 out = _XYZ_FMT.format('X', posi[0], posi[1], posi[2])
                 fileh.write(out)
         else:

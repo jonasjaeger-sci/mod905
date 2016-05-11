@@ -44,7 +44,7 @@ def txt_save_columns(outputfile, header, variables, backup=False):
     if backup:
         msg = create_backup(outputfile)
         if msg:
-            logging.warning(msg)
+            logger.warning(msg)
     nvar = len(variables)
     mat = np.zeros((len(variables[0]), nvar))
     for i, vari in enumerate(variables):

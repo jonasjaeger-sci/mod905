@@ -95,7 +95,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             # pasting!
             maxlen = max(path_back.maxlen, path_forw.maxlen)
             msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
-            logging.warning(msg)
+            logger.warning(msg)
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = path_back.empty_path(maxlen=maxlen, time_origin=time_origin)
     for phasepoint in path_back.trajectory(reverse=True):
@@ -103,7 +103,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         if not app:
             msg = 'Truncated while pasting backwards at: {}'
             msg = msg.format(new_path.length)
-            logging.warning(msg)
+            logger.warning(msg)
             return new_path
     first = True
     for phasepoint in path_forw.trajectory():
@@ -113,7 +113,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         app = new_path.append(*phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(new_path.length)
-            logging.warning(msg)
+            logger.warning(msg)
             return new_path
     return new_path
 
@@ -319,7 +319,7 @@ class PathBase(object):
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
         if self.length < 1:
-            logging.warning('Path is empty!')
+            logger.warning('Path is empty!')
             return None, None, None, None
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
@@ -537,7 +537,7 @@ class PathBase(object):
             app = self.append(*phasepoint)
             if not app:
                 msg = 'Truncated path while +=: {}'.format(self.length)
-                logging.warning(msg)
+                logger.warning(msg)
                 return self
         return self
 
@@ -575,7 +575,7 @@ class PathBase(object):
             app = new_path.append(orderp, pos, vel, energy)
             if not app:
                 msg = 'Could not reverse path'
-                logging.error(msg)
+                logger.error(msg)
                 return None
         return new_path
 
@@ -705,7 +705,7 @@ class Path(PathBase):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logging.info(msg)
+            logger.info(msg)
             return False
 
     def get_shooting_point(self):
@@ -838,7 +838,7 @@ class ReservoirPath(PathBase):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logging.info(msg)
+            logger.info(msg)
             return False
 
     def get_shooting_point(self):

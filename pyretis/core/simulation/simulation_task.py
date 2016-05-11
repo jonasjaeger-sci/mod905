@@ -3,7 +3,8 @@
 from __future__ import print_function
 import logging
 from pyretis.core.common import inspect_function
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
@@ -39,7 +40,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         given = 0
     if len(args) != given:
         msgtxt = 'Wrong number of arguments given'
-        logging.warning(msgtxt)
+        logger.warning(msgtxt)
         return False
     # Check kwargs but only check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
@@ -51,11 +52,11 @@ def _check_args(function, given_args=None, given_kwargs=None):
                 msg = ['Task Keyword arguments: {}'.format(defaults)]
                 msg += ['Unexpected keyword argument: {}'.format(extra)]
                 msgtxt = '\n'.join(msg)
-                logging.warning(msgtxt)
+                logger.warning(msgtxt)
                 return False
         else:
             msgtxt = 'Unexpected keyword argument!'
-            logging.warning(msgtxt)
+            logger.warning(msgtxt)
             return False
     return True
 

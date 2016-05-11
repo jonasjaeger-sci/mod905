@@ -32,8 +32,8 @@ import numpy as np
 from pyretis.core.common import generic_factory
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.particlefunctions import calculate_thermo
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
@@ -432,6 +432,10 @@ class Langevin(Integrator):
         self.gamma = gamma
         self.high_friction = high_friction
         if rgen is None:
+            msg = ['Langevin Integrator: Initiated new random generator']
+            msg += ['Seed was set to: {}'.format(seed)]
+            msgtxt = '\n'.join(msg)
+            logger.debug(msgtxt)
             self.rgen = RandomGenerator(seed=seed)
         else:
             self.rgen = rgen

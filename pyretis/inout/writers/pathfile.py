@@ -17,7 +17,6 @@ import logging
 from pyretis.core.path import PathBase
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
-
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -175,10 +174,10 @@ class PathEnsembleWriter(Writer):
                         yield path_data
         except IOError as error:
             msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-            logging.critical(msg)
+            logger.critical(msg)
         except Exception as error:
             msg = 'Error: {}'.format(error)
-            logging.critical(msg)
+            logger.critical(msg)
             raise
 
     def generate_output(self, cycle, path_ensemble, path=None):

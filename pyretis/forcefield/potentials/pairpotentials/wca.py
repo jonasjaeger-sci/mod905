@@ -4,7 +4,8 @@ from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['DoubleWellWCA']
@@ -83,7 +84,7 @@ class DoubleWellWCA(PotentialFunction):
                 self.params[key] = parameters[key]
             else:
                 msg = 'Unknown parameter {} - ignored!'.format(key)
-                logging.warning(msg)
+                logger.warning(msg)
         if self.params['types'] is not None:
             self.params['types'] = set(self.params['types'])
         self.params['width2'] = self.params['width']**2

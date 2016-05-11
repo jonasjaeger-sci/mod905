@@ -7,7 +7,8 @@ the particles in the simulations.
 """
 import logging
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Particles']
@@ -137,7 +138,7 @@ class Particles(object):
             self.force = np.copy(phasepoint['force'])
         except KeyError:
             msg = 'Setting particle pos & vel without setting forces'
-            logging.warning(msg)
+            logger.warning(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):

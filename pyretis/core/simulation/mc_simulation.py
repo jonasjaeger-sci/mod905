@@ -13,11 +13,9 @@ UmbrellaWindowSimulation
     umbrella simulation.
 """
 from __future__ import absolute_import
-import logging
 import numpy as np
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
-logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['UmbrellaWindowSimulation']

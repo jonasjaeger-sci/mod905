@@ -126,7 +126,7 @@ class PathEnsemble(object):
             msg += ['Note that this might influence the analysis if']
             msg += ['you run it using this path ensemble object.']
             msg += ['(Hint: Use the path ensemble file for the analysis.)']
-            logging.warning('\n'.join(msg))
+            logger.warning('\n'.join(msg))
             self.paths = []
         # update statistics:
         if path is None:

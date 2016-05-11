@@ -37,7 +37,8 @@ from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_orderp_output,
                                                   txt_path_output)
 from pyretis.inout.report import generate_report, write_report
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['run_md_flux_analysis', 'analyse_file']
@@ -207,7 +208,7 @@ def analyse_file(file_type, file_name):
                        'Are you sure you are running the correct analysis',
                        'with correct input?']
                 msgtxt = '\n'.join(msg).format(fileobj.filename)
-                logging.warning(msgtxt)
+                logger.warning(msgtxt)
                 break
         return function(analysis_settings, simulation_settings,
                         first_block['data'], plotter=plotter, txt=txt)
@@ -287,7 +288,7 @@ def check_output(function):
         txt = analysis_settings.get('txt-output', None)
         if plotter is None and txt is None:
             msg = 'No output selected. Skipping analysis!'
-            logging.warning(msg)
+            logger.warning(msg)
             return None, None, None
         if txt is not None:  # just make sure we specify the things we need:
             try:
@@ -369,7 +370,7 @@ def analyse_and_output_orderp(analysis_settings, simulation_settings, rawdata,
         List with the text files created (if any).
     """
     if 'units' in simulation_settings:
-        logging.warning('Change of units is not implemented yet!')
+        logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     result = analyse_orderp(rawdata, analysis_settings)
     if plotter is not None:
@@ -453,7 +454,7 @@ def analyse_and_output_path(analysis_settings, simulation_settings,
         List with the text files created (if any).
     """
     if 'units' in simulation_settings:
-        logging.warning('Change of units is not implemented yet!')
+        logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     idetect = path_ensemble.detect
     if idetect is None:
