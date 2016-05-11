@@ -5,7 +5,7 @@
 This script is a part of the pyretis library and can be used for
 running simulations from an input script.
 
-Usage is:
+Typical usage is:
 
 pyretisrun -i inputfile.txt
 """
@@ -26,9 +26,30 @@ from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.settings import (create_system, create_force_field,
                                     create_simulation)
 from pyretis.inout import create_output
+# Other libraries:
+from tqdm import tqdm  # for a nice progress bar
 
 
-DATEFORMAT = '%H:%M:%S %d.%m.%Y'
+DATEFORMAT = '%d.%m.%Y %H:%M:%S'
+USE_TQDM = True
+
+
+def print_to_screen(txt):
+    """Method to print output to standard out.
+
+    This method is included to mirror the `MultiLineFormatter` used
+    for the logging. The reason for not using just the console output
+    is since we just want the console output to report on errors and
+    possible problems (warnings etc.)
+
+    Parameters
+    ----------
+    txt : string
+        The text to write to the screen
+    """
+    out = '# {}'.format(txt)
+    out = out.replace('\n', '\n# ')
+    print(out)
 
 
 class MultiLineFormatter(logging.Formatter):
@@ -72,16 +93,13 @@ def hello_world(infile, rundir, logfile):
         The output log file
     """
     timestart = datetime.datetime.now().strftime(DATEFORMAT)
-    msg = ['# Start of execution: {}'.format(timestart)]
     pyversion = sys.version.split()[0]
-    msg += ['# Running {} version {} with Python {}'.format(NAME, VERSION,
-                                                            pyversion)]
-    msg += ['# Running in directory: {}'.format(rundir)]
-    msg += ['# Input file: {}'.format(infile)]
-    msg += ['# Log file: {}'.format(logfile)]
+    msg = ['{}'.format(timestart)]
+    msg += ['{} version {} (Python version: {})'.format(NAME, VERSION,
+                                                        pyversion)]
     for message in msg:
-        msgtxt = message.replace('# ', '').strip()
-        logger.info(msgtxt)
+        logger.info(message)
+        print_to_screen(message)
     if sys.version_info < (3, 0):
         warntxt = ('Please upgrade to Python 3.'
                    '\nPython 2.X support will be dropped in the near future!')
@@ -92,22 +110,31 @@ def hello_world(infile, rundir, logfile):
                       '\nPlease upgrade!')
             msgtxt = msgtxt.format(NAME)
             raise ValueError(msgtxt)
+    msg = ['Running in directory: {}'.format(rundir)]
+    msg += ['Input file: {}'.format(infile)]
+    msg += ['Log file: {}'.format(logfile)]
+    for message in msg:
+        logger.info(message)
+        print_to_screen(message)
 
 
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
     timeend = datetime.datetime.now().strftime(DATEFORMAT)
-    msg = ['# End of {} execution: {}'.format(NAME, timeend)]
+    msgtxt = 'End of {} execution: {}'.format(NAME, timeend)
+    logger.info(msgtxt)
+    print_to_screen(msgtxt)
+    # display some references:
     references = ['{} references:'.format(NAME)]
     for line in CITE.split('\n'):
         if line:
-            references.append(' {}'.format(line))
-    reftxt = ['\n'.join(references)]
-    msg += reftxt
-    msg += ['# Visit us at: {}'.format(URL)]
-    for message in msg:
-        msgtxt = message.replace('# ', '')
-        logger.info(msgtxt)
+            references.append(line)
+    reftxt = '\n'.join(references)
+    logger.info(reftxt)
+    print_to_screen(reftxt)
+    urltxt = 'Visit us at: {}'.format(URL)
+    logger.info(urltxt)
+    print_to_screen(urltxt)
 
 
 if __name__ == '__main__':
@@ -132,9 +159,9 @@ if __name__ == '__main__':
     # set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
-    # log to console:
+    # log to screen:
     console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
+    console.setLevel(logging.WARNING)
     formatter = MultiLineFormatter('[%(levelname)s]: %(message)s')
     console.setFormatter(formatter)
     logger.addHandler(console)
@@ -151,30 +178,44 @@ if __name__ == '__main__':
             errtxt = ('No simulation input:'
                       ' {} is not a file!'.format(inputfile))
             raise ValueError(errtxt)
-
         logger.info('Reading input settings.')
+        print_to_screen('Reading input settings.')
         settings = parse_settings_file(inputfile)
+        # Add to exe-path:
+        settings['exe-path'] = runpath
         create_conversion_factors(settings['units'], **settings['units-base'])
 
-        logger.info('Creating system from settings.')
+        print_to_screen('Creating system from settings.')
         system = create_system(settings)
         system.forcefield = create_force_field(settings)
 
-        logger.info('Creating simulation from settings.')
+        print_to_screen('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
 
-        logger.info('Creating output tasks from settings.')
+        print_to_screen('Creating output tasks from settings.')
         output_tasks = [task for task in create_output(settings)]
 
         logger.info('Running simulation.')
-        for result in simulation.run():
-            #stepno = result['cycle']['stepno']
-            #result['thermo']['stepno'] = stepno
-            for task in output_tasks:
-                task.output(result)
+        print_to_screen('Running simulation!')
+        print_to_screen(79*('-'))
+        if USE_TQDM:
+            for result in tqdm(simulation.run(), total=settings['endcycle']):
+                #for result in simulation.run():
+                    #stepno = result['cycle']['stepno']
+                    #result['thermo']['stepno'] = stepno
+                for task in output_tasks:
+                    if task.target != 'screen':
+                        task.output(result)
+        else:
+            for result in simulation.run():
+                for task in output_tasks:
+                    task.output(result)
     except Exception as error:  # Exceptions should subclass BaseException.
-        logger.error(error.args[0])
+        logger.error(error)
         logger.error('Execution failed! Will exit now.')
+        print_to_screen(error)
+        print_to_screen('Execution failed! Will exit now.')
         raise
     finally:
+        print_to_screen(79*('-'))
         bye_bye_world()
