@@ -20,7 +20,7 @@ KEYWORDS = {'integrator': {'default': None},
             'endcycle': {'default': None},
             'task': {'default': None},
             'units': {'default': 'lj'},
-            'units-base': {'default': None},
+            'units-base': {'default': {}},
             'ensemble': {'default': None},
             'interfaces': {'default': None},
             'output-dir': {'default': None},
@@ -279,6 +279,6 @@ def add_default_settings(settings):
     """
     for key in KEYWORDS:
         if key not in settings:
-            default = KEYWORDS.get('default', None)
+            default = KEYWORDS[key].get('default', None)
             if default is not None:
                 settings[key] = default
