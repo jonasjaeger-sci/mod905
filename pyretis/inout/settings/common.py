@@ -72,7 +72,7 @@ def import_from(module_path, function_name):
             module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
             spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
-        logger.info(msg)
+        logger.debug(msg)
         try:
             return getattr(module, function_name)
         except AttributeError:
