@@ -559,7 +559,7 @@ def create_output(settings):
         for taski in task_list:
             if task['name'] == taski['name']:
                 msgtxt = 'Updating task "{}"'.format(task['name'])
-                logger.info(msgtxt)
+                logger.debug(msgtxt)
                 taski.update(task)
                 match = True
                 break
@@ -573,7 +573,7 @@ def create_output(settings):
             out_task = OutputTask.factory_create(task, settings)
             if out_task is not None:
                 msgtxt = 'Output task created: {}'.format(out_task)
-                logger.info(msgtxt)
+                logger.debug(msgtxt)
                 yield out_task
 
 
