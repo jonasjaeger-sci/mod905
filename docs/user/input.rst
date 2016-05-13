@@ -34,8 +34,8 @@ for example:
    integrator = {'class': 'velocityverlet', 'timestep': 0.002}
 
 
-Other than keywords, the format of the input file is relatively free.
-You can for instance order things as you prefer and the input
+The format of the input file is relatively free,
+you can for instance order things as you prefer and the input
 is in general case insensitive:
 
 .. code-block:: python
@@ -46,10 +46,10 @@ is in general case insensitive:
     UNITS = lj
     tAsK = md-nve
 
-There are some important exceptions to the case sensitiveness: When
-referring to files and python class names case will in general matter!
+There are two cases where the case matters: when referring to files 
+or python class names, case will in general matter!
 
-You can also add other text and comments to structure the input file:
+You can also add text and comments to structure the input file:
 
 .. code-block:: python
 
@@ -64,13 +64,17 @@ You can also add other text and comments to structure the input file:
     temperature = 1.0
 
 
-The most important input settings
----------------------------------
+Common input settings
+---------------------
 
-This is a short list of the most important settings. For the
-complete list, please consult the section listing 
-:ref:`all keywords <user-keywords>` which also gives a more complete
-description of the usage of the keywords with several examples.
+This is a short list of the most important settings. These
+keywords are the ones that you will probably use most often.
+For the complete list of all keywords, please consult the section
+listing :ref:`all keywords <user-keywords>` which also gives a more
+complete description of the usage of the keywords with several
+examples.
+
+The most common settings are:
 
 * units
     Specify the units to use.
@@ -141,4 +145,3 @@ are as follows:
     .. code-block:: python
 
         units = lj
-

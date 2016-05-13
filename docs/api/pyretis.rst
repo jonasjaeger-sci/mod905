@@ -42,7 +42,7 @@ The pyretis library can be imported by:
     import pyretis
     print(pyretis.__version__)
 
-However it is more common to import specific functions and classes from
+Or you can just import specific functions and classes from
 the subpackages:
 
 .. code-block:: python

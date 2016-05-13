@@ -13,6 +13,7 @@ Subpackages
 -----------
 
 .. toctree::
+    :maxdepth: 2
 
     pyretis.core.simulation
 
