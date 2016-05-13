@@ -75,11 +75,6 @@ pyretis.core.orderparameter module
     :undoc-members:
     :show-inheritance:
 
-.. autoclass:: StringFunctionParser
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. _api-core-particlefunctions:
 
 pyretis.core.particlefunctions module
