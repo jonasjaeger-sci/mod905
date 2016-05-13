@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for a generic force field."""
 import logging
-import inspect
-import sys
+from pyretis.core.common import inspect_function
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -43,8 +42,8 @@ class ForceField(object):
         potential : list, optional.
             Potential functions that the force field is built up from.
         params : list, optional
-            Parameters for the potential(s).
-
+            Parameters for the potential(s). If too few parameters are
+            given, we will just assume a `None`.
         """
         self.desc = desc
         self.potential = []
@@ -55,7 +54,14 @@ class ForceField(object):
                 for pot in potential:
                     self.add_potential(pot)
             else:
-                for pot, param in zip(potential, params):
+                for i, pot in enumerate(potential):
+                    try:
+                        param = params[i]
+                    except IndexError:
+                        param = None
+                        msg = 'No parameters given for potential no. {} ({})'
+                        msgtxt = msg.format(i, pot)
+                        logger.warning(msgtxt)
                     self.add_potential(pot, parameters=param)
 
     def add_potential(self, potential, parameters=None):
@@ -309,33 +315,5 @@ def inspect_potential(potential):
         args[funcname] = None
         function = getattr(potential, funcname, None)
         if function is not None:
-            args[funcname] = _inspect_potential_function(function)
+            args[funcname] = inspect_function(function)
     return args['force'], args['potential'], args['potential_and_force']
-
-
-def _inspect_potential_function(function):
-    """Helper method for `inspect_potential`
-
-    This function will do the actual inspection.
-
-    Parameters
-    ----------
-    function : callable
-        The function to inspect.
-
-    Returns
-    -------
-    argsdict : dict
-        The arguments for calling `function` if any.
-    """
-    argsdict = {'args': []}
-    if sys.version_info > (3, 5):
-        args = inspect.signature(function)  # pylint: disable=no-member
-        for arg in args.parameters:
-            argsdict['args'].append(arg)
-        return argsdict
-    else:
-        args = inspect.getargspec(function)
-        if args.args is not None:
-            argsdict['args'] = [arg for arg in args.args]
-        return argsdict

@@ -4,14 +4,15 @@
 This module defines the functions needed to perform TIS simulations.
 The algorithms are implemented as described by van Erp et al. [TIS]_.
 
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Important functions defined here:
+make_tis_step
+    Function that will perform a single TIS step.
 
-- make_tis_step: Function that will perform a single TIS step.
-
-- generate_initial_path_kick: Function for generating an initial path by
-  repeatedly kicking a phase point.
-
+generate_initial_path_kick
+    Function for generating an initial path by repeatedly kicking a
+    phase point.
 
 References
 ~~~~~~~~~~

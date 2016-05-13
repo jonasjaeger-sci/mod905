@@ -4,14 +4,17 @@
 This module defines functions and classes for handling the output from
 simulations.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_output: Function that sets up output tasks from a dictionary of
-  settings.
+create_output
+    Function that sets up output tasks from a dictionary of settings.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- OutputTask: A class for handling output tasks.
+OutputTask
+    A class for handling output tasks.
 """
 from __future__ import print_function
 import logging
@@ -78,9 +81,8 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                                'name': 'cross',
                                'when': {'every': 1},
                                'filename': 'cross.dat'},
-                              {'type': 'traj',
+                              {'type': 'traj-gro',
                                'name': 'traj',
-                               'format': 'gro',
                                'when': {'every': 10},
                                'filename': 'traj.gro',
                                'header': 'MDFLUX simulation. Step: {}'},
@@ -557,7 +559,7 @@ def create_output(settings):
         for taski in task_list:
             if task['name'] == taski['name']:
                 msgtxt = 'Updating task "{}"'.format(task['name'])
-                logger.info(msgtxt)
+                logger.debug(msgtxt)
                 taski.update(task)
                 match = True
                 break
@@ -571,7 +573,7 @@ def create_output(settings):
             out_task = OutputTask.factory_create(task, settings)
             if out_task is not None:
                 msgtxt = 'Output task created: {}'.format(out_task)
-                logger.info(msgtxt)
+                logger.debug(msgtxt)
                 yield out_task
 
 

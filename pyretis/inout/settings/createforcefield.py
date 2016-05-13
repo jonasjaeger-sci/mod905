@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
 """This module handles creation of force fields from simulation settings
 
-For the force field we will need to load potential functions.
-For the potential functions we can to two things:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. We use one of the predefined potential functions.
-
-2. We read from a given python module.
-
-Important classes and functions:
-
-- create_potential: A function to create a simulation object from
-  a dictionary of given settings.
+create_potentials
+    Method for creating potentials from a dictionary of settings.
 """
 from __future__ import absolute_import
 import logging
-import os
-from pyretis.inout.settings.common import import_from, initiate_instance
+from pyretis.inout.settings.common import create_potential
 from pyretis.forcefield import ForceField
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -42,63 +35,24 @@ def create_potentials(settings):
         A list of potential functions.
     """
     potentials = settings.get('potentials', [])
+    ndim = settings.get('dimensions', None)
     out = []
-    for pot_settings in potentials:
-        potential_function = create_potential(pot_settings)
+    for i, pot_settings in enumerate(potentials):
+        potential_function = create_potential(settings, pot_settings)
         if potential_function is None:
             msg = 'The following potential settings were ignored!\n{}'
             msgtxt = msg.format(pot_settings)
             logger.warning(msgtxt)
+        pdim = getattr(potential_function, 'dim', None)
+        if pdim is not None and ndim is not None:
+            if ndim != pdim:
+                msg = ('Inconsistent dimensions in potential!'
+                       '\nSettings gives: {}D, potential {} is {}D')
+                msgtxt = msg.format(ndim, i, pdim)
+                logger.error(msgtxt)
+                raise ValueError(msgtxt)
         out.append(potential_function)
     return out
-
-
-def create_potential(settings):
-    """Function to create simulations from settings.
-
-    Parameters
-    ----------
-    settings : dict
-        This dictionary contains the settings for a single potential.
-
-    Returns
-    -------
-    out : object like `PotentialFunction` from `pyretis.forcefield.potential`.
-        This object represents the potential function.
-    """
-    module = settings.get('module', None)
-    pot_class = None
-    try:
-        pot_class = settings['class']
-    except KeyError:
-        msg = 'No potential function class specified!'
-        logger.critical(msg)
-        return None
-    if module is None:
-        potential = import_from('pyretis.forcefield.potentials',
-                                pot_class)
-    else:
-        # Here we assume we are to load from a file.
-        # It would be nice to ditch python 2 and just do this:
-        # importlib.machinery.SourceFileLoader('module','/path/module.py')
-        module = os.path.splitext(module)[0]
-        potential = import_from(module, pot_class)
-        # run some checks:
-        for function in ['force', 'potential', 'potential_and_force']:
-            functionc = getattr(potential, function, None)
-            if not functionc:
-                msg = 'Could not find method {}.{}'.format(pot_class,
-                                                           function)
-                logger.error(msg)
-                raise ValueError(msg)
-            else:
-                if not callable(functionc):
-                    msg = 'Method {}.{} is not callable!'.format(pot_class,
-                                                                 function)
-                    logger.error(msg)
-                    raise ValueError(msg)
-    return initiate_instance(potential, args=settings.get('args', None),
-                             kwargs=settings.get('kwargs', None))
 
 
 def create_force_field(settings):
@@ -117,7 +71,7 @@ def create_force_field(settings):
     out : object like `ForceField` from `pyretis.forcefield.forcefield`.
         This object represents the force field.
     """
-    ffsettings = settings.get('forcefield', None)
+    ffsettings = settings.get('forcefield', {'desc': 'pyretis force field'})
     try:
         desc = ffsettings['desc']
     except KeyError:

@@ -7,21 +7,26 @@ implemented here and the description of RETIS was first described by
 van Erp [RETIS]_.
 
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- make_retis_step : Function to select and execute the RETIS move.
+make_retis_step
+    Function to select and execute the RETIS move.
 
-- retis_tis_moves : Function to execute the TIS steps in the RETIS
-  algorithm.
+retis_tis_moves
+    Function to execute the TIS steps in the RETIS algorithm.
 
-- retis_moves : Function to perform RETIS swapping moves - it selects
-  what scheme to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
-  ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
+retis_moves
+    Function to perform RETIS swapping moves - it selects what scheme
+    to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
+    ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
 
-- retis_swap : The function that actually swaps two path ensembles.
+retis_swap
+    The function that actually swaps two path ensembles.
 
-- retis_swap_zero : The function that performs the swapping for the
-  ``[0^-] <-> [0^+]`` swap.
+retis_swap_zero
+    The function that performs the swapping for the
+    ``[0^-] <-> [0^+]`` swap.
 
 References
 ~~~~~~~~~~
@@ -34,7 +39,8 @@ from __future__ import print_function
 import logging
 import numpy as np
 from pyretis.core.tis import make_tis_step_ensemble
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['make_retis_step']
@@ -85,11 +91,11 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
-        logging.info('Will execute RETIS moves')
+        logger.debug('Will execute RETIS moves')
         return retis_moves(ensembles, system, order_function, integrator,
                            rgen, settings, cycle)
     else:
-        logging.info('Will execute TIS moves')
+        logger.debug('Will execute TIS moves')
         return retis_tis_moves(ensembles, system, order_function, integrator,
                                rgen, settings, cycle)
 
@@ -342,7 +348,7 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     """
     msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
                                           ensembles[idx+1].ensemble)
-    logging.info(msg)
+    logger.debug(msg)
     status = None
     if idx == 0:
         return retis_swap_zero(ensembles, system, order_function, integrator,
@@ -358,12 +364,12 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         path1, path2 = path2, path1
         if cross[1]:  # accept the swap
             status = 'ACC'
-            logging.info('Swap was accepted.')
+            logger.debug('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
         else:  # reject:
             status = 'NCR'
-            logging.info('Swap was rejected.')
+            logger.debug('Swap was rejected.')
         ensemble1.add_path_data(path1, status, cycle=cycle)
         ensemble2.add_path_data(path2, status, cycle=cycle)
         return status
@@ -463,11 +469,11 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'
-        logging.info('Rejecting path in [0^-], BTX')
+        logger.debug('Rejecting path in [0^-], BTX')
     if path1.status == 'FTX':
         path0.status = 'FTX'
         status = 'FTX'
-        logging.info('Rejecting path in [0^+], FTX')
+        logger.debug('Rejecting path in [0^+], FTX')
     ensemble0.add_path_data(path0, status, cycle=cycle)
     ensemble1.add_path_data(path1, status, cycle=cycle)
     return status
@@ -493,7 +499,7 @@ def null_move(path_ensemble, cycle):
         last accepted path.
     """
     msg = 'Null move for {}'.format(path_ensemble.ensemble)
-    logging.info(msg)
+    logger.debug(msg)
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)

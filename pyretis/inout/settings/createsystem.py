@@ -52,7 +52,7 @@ PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
                   'Th': 232.0377, 'Pa': 231.03588, 'U': 238.02891}
 
 
-# variable that defines some information for reading input files:
+# Variable that defines some information for reading input files:
 # TODO: Move this to the place where the file readers are defined?
 READFILE = {'xyz': {'reader': read_xyz_file,
                     'units': {'length': 'A', 'velocity': 'A/fs'}},
@@ -138,7 +138,16 @@ def initial_positions_lattice(settings):
     lattice, size = generate_lattice(lattice_type, pos_settings['repeat'],
                                      lcon=pos_settings.get('lcon', None),
                                      density=pos_settings.get('density', None))
-    ndim = settings.get('dimensions', len(size))
+    ndim = settings.get('dimensions', None)
+    if ndim is None:
+        ndim = len(size)
+    else:
+        if ndim != len(size):
+            msg = ['Inconsistent dimensions: settings gives {}D'.format(ndim),
+                   'Generated lattice is {}D!'.format(len(size))]
+            msgtxt = '\n'.join(msg)
+            logger.error(msgtxt)
+            raise ValueError(msgtxt)
     particles = Particles(dim=ndim)
     for i, pos in enumerate(lattice):
         particle_type = list_get(ptype, i)
@@ -262,7 +271,7 @@ def initial_positions_file(settings):
         else:
             vel = np.array(vel) * convert['velocity']
             vel_read = True
-        # Get particle type from the atom names or for input list:
+        # Get particle type from the atom names or from input list:
         if ptype is None:
             if atomname not in ptypes:
                 ptypes[atomname] = len(ptypes)
@@ -273,9 +282,8 @@ def initial_positions_file(settings):
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        #particle_name = particle_name.lower()
-        # infer mass from the input masses, or try to get it
-        # from the periodic table
+        # Infer mass from the input masses, or try to get it
+        # from the periodic table:
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
@@ -341,7 +349,7 @@ def create_initial_positions(settings):
         raise ValueError(msgtxt)
 
 
-def create_box(settings, size):
+def create_box(settings, size, dim=3):
     """Function that will try to set up a box from settings.
 
     Parameters
@@ -351,6 +359,9 @@ def create_box(settings, size):
     size : list of floats
         If no box settings are given, we can still create a box,
         inferred from the positions of the particles.
+    dim : integer
+        Number of dimensions for the box. This is used only as a last
+        resort when no information about the box is given.
 
     Returns
     -------
@@ -365,11 +376,20 @@ def create_box(settings, size):
         debugtxt = 'Settings used:\n{}'.format(settings['box'])
         logger.debug(debugtxt)
     else:
-        box = Box(size=size)
-        msgtxt = msg.format('from initial positions', box)
-        logger.info(msgtxt)
-        msgwarn = 'The box was assumed periodic in ALL directions.'
-        logger.warning(msgwarn)
+        if size is not None:
+            box = Box(size=size)
+            msgtxt = msg.format('from initial positions', box)
+            logger.info(msgtxt)
+            msgwarn = 'The box was assumed periodic in ALL directions.'
+            logger.warning(msgwarn)
+        else:
+            box = Box(periodic=[False]*dim)
+            msgtxt = msg.format('without specifications', box)
+            logger.info(msgtxt)
+            msgwarn = ('The box was assumed non-periodic in ALL directions.'
+                       '\nIf positions were read from an xyz-file, this is'
+                       '\nprobably not what you want.')
+            logger.warning(msgwarn)
     return box
 
 
@@ -394,7 +414,7 @@ def create_velocities(system, settings, vel):
     """
     vel_settings = settings.get('particles-velocity', {})
     if vel:
-        msg = 'Velocities already set corresponds to a temperature: {}'
+        msg = 'Velocities read from file (temperature: {}).'
         msg = msg.format(system.calculate_temperature())
         logger.info(msg)
     if 'generate' in vel_settings:
@@ -442,7 +462,7 @@ def create_system(settings):
         The system object we create here.
     """
     particles, size, vel = create_initial_positions(settings)
-    box = create_box(settings, size)
+    box = create_box(settings, size, dim=particles.dim)
     system = System(temperature=settings.get('temperature', None),
                     units=settings['units'], box=box)
     system.particles = particles

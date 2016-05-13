@@ -13,11 +13,11 @@ and the temperature.
 """
 # pylint: disable=C0103
 from __future__ import print_function
+import filecmp
+import numpy as np
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
 from pyretis.inout.writers.traj import read_gromacs_file
-import filecmp
-import numpy as np
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 from matplotlib import pyplot as plt
@@ -86,37 +86,43 @@ if __name__ == '__main__':
     fig1 = plt.figure(figsize=(12, 6))
     gs = gridspec.GridSpec(2, 2)
     ax1 = fig1.add_subplot(gs[:, 0])
-    ax1.plot(ljunits[:, 0], ljunits[:, 2], label='Potential - lj',
+    ljlab = '"lj"'
+    unilab = '"{}"'.format(UNIT)
+    ax1.plot([], [], label='Potential', lw=0, alpha=0)
+    ax1.plot([], [], label='Kinetic', lw=0, alpha=0)
+    ax1.plot([], [], label='Total', lw=0, alpha=0)
+
+    ax1.plot(ljunits[:, 0], ljunits[:, 2], label=ljlab,
              ls='-', lw=7, alpha=0.7, color='darkblue')
-    ax1.plot(ljunits[:, 0], ljunits[:, 3], label='Kinetic - lj',
+    ax1.plot(ljunits[:, 0], ljunits[:, 3], label=ljlab,
              ls='-', lw=7, alpha=0.8, color='darkgreen')
-    ax1.plot(ljunits[:, 0], ljunits[:, 4], label='Total - lj',
+    ax1.plot(ljunits[:, 0], ljunits[:, 4], label=ljlab,
              ls='-', lw=7, alpha=0.8, color='orange')
-    ax1.plot(other_units[:, 0], other_units[:, 2], label=UNIT,
+    ax1.plot(other_units[:, 0], other_units[:, 2], label=unilab,
              ls='--', lw=3, alpha=0.8, color='magenta')
-    ax1.plot(other_units[:, 0], other_units[:, 3], label=UNIT,
+    ax1.plot(other_units[:, 0], other_units[:, 3], label=unilab,
              ls='--', lw=3, alpha=0.8, color='0.1')
-    ax1.plot(other_units[:, 0], other_units[:, 4], label=UNIT,
+    ax1.plot(other_units[:, 0], other_units[:, 4], label=unilab,
              ls='--', lw=3, alpha=0.8, color='red')
     ax1.set_xlabel('Step no.')
     ax1.set_ylabel('Energy per particle')
-    ax1.legend(loc='center left', prop={'size': 'small'}, ncol=2)
+    leg = ax1.legend(loc='center left', prop={'size': 'small'}, ncol=3)
 
     ax2 = fig1.add_subplot(gs[0, 1])
-    ax2.plot(ljunits[:, 0], ljunits[:, 1], label='lj',
+    ax2.plot(ljunits[:, 0], ljunits[:, 1], label=ljlab,
              ls='-', lw=7, alpha=0.9)
-    ax2.plot(other_units[:, 0], other_units[:, 1], label=UNIT,
+    ax2.plot(other_units[:, 0], other_units[:, 1], label=unilab,
              ls='--', lw=3, alpha=0.8, color='0.2')
     ax2.set_ylabel('Temperature')
     ax2.legend(loc='upper right', prop={'size': 'small'})
     ax3 = fig1.add_subplot(gs[1, 1])
-    ax3.plot(ljunits[:, 0], ljunits[:, 5], label='lj',
+    ax3.plot(ljunits[:, 0], ljunits[:, 5], label=ljlab,
              ls='-', lw=7, alpha=0.9)
-    ax3.plot(other_units[:, 0], other_units[:, 5], label=UNIT,
+    ax3.plot(other_units[:, 0], other_units[:, 5], label=unilab,
              ls='--', lw=3, alpha=0.8, color='0.2')
     ax3.set_xlabel('Step no.')
     ax3.set_ylabel('Pressure')
     ax3.legend(loc='lower right', prop={'size': 'small'})
     fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95,
-                         left=0.12, wspace=0.3)
+                         left=0.08, wspace=0.2)
     plt.show()

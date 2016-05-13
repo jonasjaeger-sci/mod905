@@ -7,125 +7,110 @@ In this example we animate the output.
 from __future__ import print_function
 import numpy as np
 # pyretis imports:
-from pyretis.core import System, Box
-from pyretis.inout.settings import create_simulation
 from pyretis.core.units import CONVERT, create_conversion_factors
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import PairLennardJonesCutnp
-from pyretis.tools import generate_lattice
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout import create_output
+from pyretis.inout.settings import (create_force_field, create_system,
+                                    create_output, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
 
-
-# set up simulation settings:
+ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
+            'mixing': 'geometric'}
+# Define simulation settings:
 settings = {'task': 'md-nve',
+            'dimensions': 2,
             'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
             'endcycle': 950,
             'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
             'units': 'lj',
             'temperature': 1.0,
-            'generate-vel': {'seed': 0, 'momentum': True,
-                             'distribution': 'maxwell'}}
+            'potentials': [{'class': 'PairLennardJonesCutnp', 'dim': 2,
+                            'shift': True}],
+            'potential-parameters': [ljparams],
+            'particles-position': {'file': 'initial.xyz'},
+            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
+                                   'seed': 0},
+            'box': {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
+                    'periodic': [True, True]}}
 create_conversion_factors(settings['units'])
 SIGMA = CONVERT['length']['lj', 'A']
 ECONV = CONVERT['energy']['lj', 'kcal/mol']
-# set up potential function(s) and force field:
-ljpot = PairLennardJonesCutnp(dim=2, shift=True)
-ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-            'mixing': 'geometric'}
-forcefield = ForceField(potential=[ljpot], params=[ljparams])
-
-# generate system:
-lattice, size = generate_lattice('sq', repeat=[3, 3], lcon=SIGMA/2.9)
-box = Box(size)
-# center lattice on box:
-lattice -= np.average(lattice, axis=0) - 0.5 * box.length
-# remove the center point of the lattice:
-lattice = [lattice_pos for i, lattice_pos in enumerate(lattice) if i != 4]
-# create system
-ljsystem = System(temperature=settings['temperature'],
-                  units=settings['units'], box=box)
-# add particles:
-for i, lattice_pos in enumerate(lattice):
-    ljsystem.add_particle(name='Ar', pos=lattice_pos, mass=1.0, ptype=0)
-
+print('# Creating system from settings.')
+ljsystem = create_system(settings)
+ljsystem.forcefield = create_force_field(settings)
+ljsystem.particles.pos -= (np.average(ljsystem.particles.pos, axis=0) -
+                           0.5 * ljsystem.box.length)  # center in box
+print('# Creating simulation from settings.')
+simulation_nve = create_simulation(settings, ljsystem)
+print('# Creating output tasks from settings.')
+outputs = [task for task in create_output(settings)]
+size = ljsystem.box.size
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'
 print(msg.format(npart))
 npart = float(npart)
 
-# generate velocities:
-if 'generate-vel' in settings:
-    ljsystem.generate_velocities(**settings['generate-vel'])
-    msg = 'Generated temperatures with average: {}'
-    print(msg.format(ljsystem.calculate_temperature()))
-
-# attach the force field:
-ljsystem.forcefield = forcefield
-
-# create simulation :-)
-simulation_nve = create_simulation(settings, ljsystem)
-# create some outputs:
-outputs = [task for task in create_output(settings)]
-# We will in this example animate on the fly. We will then have to do some
-# extra set up. The actual simulation is carried out by calling
-# `simulation_nve.step()` in the `update` function which is executed by
-# the animation.FuncAnimation() call. In effect animation.FuncAnimation will
-# run the simulation one step, update the plot and display it and continue
-# this loop until the simulation is done.
+# We will in this example animate on the fly.
+# We will then have to do some extra set up. The actual simulation is
+# carried out by calling `simulation_nve.step()` in the `update`
+# function which is executed by the animation.FuncAnimation() call.
+# In effect animation.FuncAnimation will run the simulation one step,
+# update the plot and display it and continue this loop until the
+# simulation is done.
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][ljsystem.units, 'fs'])
 timeendfs = settings['endcycle'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
-
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
 # This adds the first axis. Here we will plot the
 # particles with velocity and force vectors.
-ax = fig.add_subplot(121)
-ax.set_xlim((size[0] + np.array([-0.5, 0.5])) * SIGMA)
-ax.set_ylim((size[1] + np.array([-0.5, 0.5])) * SIGMA)
-ax.set_aspect('equal', 'datalim')
-ax.set_xlabel(u'x / Å')
-ax.set_ylabel(u'y / Å')
-ax.set_xticks([size[0][0] * SIGMA, size[0][1] * SIGMA])
-ax.set_yticks([size[1][0] * SIGMA, size[1][1] * SIGMA])
-ax.xaxis.labelpad = -5
-ax.yaxis.labelpad = -5
+ax1 = fig.add_subplot(121)
+ax1.set_xlim((size[0] + np.array([-0.5, 0.5])) * SIGMA)
+ax1.set_ylim((size[1] + np.array([-0.5, 0.5])) * SIGMA)
+ax1.set_aspect('equal', 'datalim')
+ax1.set_xlabel(u'x / Å')
+ax1.set_ylabel(u'y / Å')
+ax1.set_xticks([size[0][0] * SIGMA, size[0][1] * SIGMA])
+ax1.set_yticks([size[1][0] * SIGMA, size[1][1] * SIGMA])
+ax1.xaxis.labelpad = -5
+ax1.yaxis.labelpad = -5
 
-pos0 = box.pbc_wrap(ljsystem.particles.pos)
-# set up circles to represent the particles:
+pos0 = ljsystem.box.pbc_wrap(ljsystem.particles.pos)
+# Set up circles to represent the particles:
 circles = []
 for _ in range(int(npart)):
     circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5,
                               color='blue'))
     circles[-1].set_visible(False)
-    ax.add_patch(circles[-1])
-# add arrows for the forces and velocities:
+    ax1.add_patch(circles[-1])
+# Add arrows for the forces and velocities:
 force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
                          color=COLORS['almost_black'], zorder=4)
 vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
                        color=COLOR_SCHEME['colorblind_10'][1], zorder=4)
-# also add arrows for a "legend":
+# Also add arrows for a "legend":
 plt.quiverkey(force_arrow, 3, -3.5, 9, 'Forces', coordinates='data',
               color=COLORS['almost_black'], fontproperties={'size': 'large'})
 plt.quiverkey(vel_arrow, 9, -3.5, 9, 'Velocities', coordinates='data',
               color=COLOR_SCHEME['colorblind_10'][1],
               fontproperties={'size': 'large'})
-# this will draw the lines representing the box boundaries:
-ax.axhline(y=size[1][0] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
-ax.axhline(y=size[1][1] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
-ax.axvline(x=size[0][0] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
-ax.axvline(x=size[0][1] * SIGMA, lw=2, ls=':', color=COLORS['almost_black'])
-# add second axis for plotting the energies
+# Draw the lines representing the box boundaries:
+ax1.axhline(y=size[1][0] * SIGMA, lw=4, ls=':', alpha=0.5,
+            color=COLORS['almost_black'])
+ax1.axhline(y=size[1][1] * SIGMA, lw=4, ls=':', alpha=0.5,
+            color=COLORS['almost_black'])
+ax1.axvline(x=size[0][0] * SIGMA, lw=4, ls=':', alpha=0.5,
+            color=COLORS['almost_black'])
+ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
+            color=COLORS['almost_black'])
+# Add second axis for plotting the energies
 ax2 = fig.add_subplot(122)
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.6, 0.6)
+ax2.set_ylim(-0.25, 0.25)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
@@ -136,7 +121,7 @@ linekin, = ax2.plot([], [], lw=4, ls='-', color=COLOR_SCHEME['deep'][1],
 linetot, = ax2.plot([], [], lw=4, ls='-', color=COLORS['almost_black'],
                     alpha=0.8, label='Total')
 ax2.legend(loc='lower left', ncol=2, frameon=False)
-plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.15)
+plt.subplots_adjust(left=0.08, right=0.97, top=0.95, bottom=0.15)
 
 
 def get_max_vector(vectors):
@@ -182,15 +167,15 @@ def get_velocity_force_arrows(forces, vels):
         The y-component of the velocities, normalized.
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
-    FU, FV, VU, VV = [], [], [], []
+    forceu, forcev, velu, velv = [], [], [], []
     for fi, vi in zip(forces, vels):
         fj = 10.0 * fi / fmax
         vj = 10.0 * vi / vmax
-        FU.append(fj[0])
-        FV.append(fj[1])
-        VU.append(vj[0])
-        VV.append(vj[1])
-    return FU, FV, VU, VV
+        forceu.append(fj[0])
+        forcev.append(fj[1])
+        velu.append(vj[0])
+        velv.append(vj[1])
+    return forceu, forcev, velu, velv
 
 
 def update(frame, sim, output_tasks):
@@ -223,14 +208,14 @@ def update(frame, sim, output_tasks):
         ci.set_visible(True)
         patches.append(ci)
     # update the force and velocity vectors:
-    FU, FV, VU, VV = get_velocity_force_arrows(particles.force,
-                                               particles.vel)
+    forceu, forcev, velu, velv = get_velocity_force_arrows(particles.force,
+                                                           particles.vel)
     force_arrow.set_offsets(pos * SIGMA)
-    force_arrow.set_UVC(FU, FV)
+    force_arrow.set_UVC(forceu, forcev)
     force_arrow.set_visible(True)
     patches.append(force_arrow)
     vel_arrow.set_offsets(pos * SIGMA)
-    vel_arrow.set_UVC(VU, VV)
+    vel_arrow.set_UVC(velu, velv)
     vel_arrow.set_visible(True)
     patches.append(vel_arrow)
 

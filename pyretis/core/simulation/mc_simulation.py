@@ -4,18 +4,18 @@
 This module defines some classes and functions for performing
 Monte Carlo simulations.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- UmbrellaWindowSimulation: Defines a simulation for performing umbrella
-  window simulations. Several umbrella window simulations can be joined
-  to perform a umbrella simulation.
+UmbrellaWindowSimulation
+    Defines a simulation for performing umbrella window simulations.
+    Several umbrella window simulations can be joined to perform a
+    umbrella simulation.
 """
 from __future__ import absolute_import
-import logging
 import numpy as np
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
-logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['UmbrellaWindowSimulation']

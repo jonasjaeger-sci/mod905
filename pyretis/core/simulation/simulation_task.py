@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Definition of a class for tasks."""
 from __future__ import print_function
-import inspect
 import logging
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+from pyretis.core.common import inspect_function
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 def _check_args(function, given_args=None, given_kwargs=None):
@@ -29,15 +30,9 @@ def _check_args(function, given_args=None, given_kwargs=None):
         False if there is some inconsistencies, i.e. when the calling
         of the given `function` will probably fail. True otherwise.
     """
-    arguments = inspect.getargspec(function)
-    if not arguments.defaults:
-        args = arguments.args
-        defaults = None
-    else:
-        defaults = arguments.args[-len(arguments.defaults):]
-        args = [arg for arg in arguments.args if arg not in defaults]
-    # remove self from args, this is passed implicitly to objects
-    args = [arg for arg in args if arg is not 'self']
+    arguments = inspect_function(function)
+    args = [arg for arg in arguments['args'] if arg is not 'self']
+    defaults = [arg for arg in arguments['kwargs']]
     # first test, do we give correct number of required arguments?
     if given_args is not None:
         given = len(given_args)
@@ -45,7 +40,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         given = 0
     if len(args) != given:
         msgtxt = 'Wrong number of arguments given'
-        logging.warning(msgtxt)
+        logger.warning(msgtxt)
         return False
     # Check kwargs but only check in case some kwargs are given here.
     # If they are not given, we assume that the user knows what's happening
@@ -57,11 +52,11 @@ def _check_args(function, given_args=None, given_kwargs=None):
                 msg = ['Task Keyword arguments: {}'.format(defaults)]
                 msg += ['Unexpected keyword argument: {}'.format(extra)]
                 msgtxt = '\n'.join(msg)
-                logging.warning(msgtxt)
+                logger.warning(msgtxt)
                 return False
         else:
             msgtxt = 'Unexpected keyword argument!'
-            logging.warning(msgtxt)
+            logger.warning(msgtxt)
             return False
     return True
 

@@ -5,81 +5,71 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
-from pyretis.core import Box, System
+import numpy as np
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.core.units import generate_system_conversions
-from pyretis.inout.settings import create_simulation
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import PairLennardJonesCutnp
+from pyretis.inout.settings import (create_simulation, create_system,
+                                    create_force_field)
 from pyretis.inout.writers import ThermoTable, FileIO
 from pyretis.inout import create_output
-from pyretis.tools import generate_lattice
-import numpy as np
 # for plotting:
+from pyretis.inout.plotting import mpl_set_style
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from pyretis.inout.plotting import mpl_set_style
 # define potential function(s) and force field:
 UNIT = 'lj'
 with open('unit.txt', 'r') as fileh:
     for lines in fileh:
         UNIT = lines.strip()
+# Create conversions:
+create_conversion_factors('lj')
+create_conversion_factors(UNIT)
+generate_system_conversions('lj', UNIT)
+# Convert input for the simulation:
 epsilon = 0.238066991253  # in kcal/mol
 sigma = 0.3405  # in nm
 mass = 39.948  # in g/mol
 timestep = 0.002  # in lj units
 temperature = 2.0  # in lj units
-create_conversion_factors('lj')
-create_conversion_factors(UNIT)
-generate_system_conversions('lj', UNIT)
-# convert:
 epsilon = epsilon * CONVERT['energy']['kcal/mol', UNIT]
 sigma = sigma * CONVERT['length']['nm', UNIT]
 mass = mass * CONVERT['mass']['g/mol', UNIT]
 timestep = timestep * CONVERT['time']['lj', UNIT]
 temperature = temperature * CONVERT['temperature']['lj', UNIT]
-print('Values in units {}'.format(UNIT))
-print('epsilon: {}'.format(epsilon))
-print('sigma: {}'.format(sigma))
-print('mass: {}'.format(mass))
-print('timestep: {}'.format(timestep))
-print('temperature: {}'.format(temperature))
+density = 0.9 / sigma**3
 
-LJPARAMETERS = {0: {'sigma': sigma, 'epsilon': epsilon, 'factor': 2.5},
-                'mixing': 'geometric'}
-POTENTIAL = PairLennardJonesCutnp(shift=True)  # use a shifted LJ potential
-
+print('# Values in units "{}"'.format(UNIT))
+print('# Epsilon: {}'.format(epsilon))
+print('# Sigma: {}'.format(sigma))
+print('# Mass: {}'.format(mass))
+print('# Timestep: {}'.format(timestep))
+print('# Temperature: {}'.format(temperature))
+print('# Particle density: {}'.format(density))
 # simulation settings:
 settings = {'task': 'md-nve',
+            'temperature': temperature,
             'units': UNIT,
             'integrator': {'class': 'velocityverlet',
                            'timestep': timestep},
             'endcycle': 1000,
             'output-modify': [{'name': 'traj', 'when': {'every': 1},
                                'filename': 'traj.gro'}],
-            'generate-vel': {'seed': 0, 'momentum': True,
-                             'distribution': 'maxwell'}}
-
+            'potentials': [{'class': 'PairLennardJonesCutnp', 'shift': True,
+                            'dim': 3}],
+            'potential-parameters': [{0: {'sigma': sigma, 'epsilon': epsilon,
+                                          'factor': 2.5}}],
+            'particles-position': {'generate': 'fcc', 'repeat': [3, 3, 3],
+                                   'density': density},
+            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
+                                   'seed': 0},
+            'particles-mass': {'Ar': mass}}
 
 # set up a lattice and create a box
-lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-lattice = lattice * sigma
-size = [[dim[0] * sigma, dim[1] * sigma] for dim in size]
-box = Box(size, periodic=[True, True, True])
-ljsystem = System(temperature=temperature, units=UNIT, box=box)
-print(ljsystem.get_boltzmann())
-ljsystem.forcefield = ForceField(potential=[POTENTIAL],
-                                 params=[LJPARAMETERS])
-for pos in lattice:
-    ljsystem.add_particle(name='Ar', pos=pos, mass=mass, ptype=0)
-msg = 'Created fcc grid with {} atoms.'
+print('# Creating system from settings.')
+ljsystem = create_system(settings)
+ljsystem.forcefield = create_force_field(settings)
+msg = '# Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
-
-if 'generate-vel' in settings:
-    ljsystem.generate_velocities(**settings['generate-vel'])
-    msg = 'Generated temperatures with average: {}'
-    print(msg.format(ljsystem.calculate_temperature()))
-
 simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
@@ -99,8 +89,8 @@ for result in simulation_nve.run():
     for task in output_tasks:
         task.output(result)
 
-# the rest is now just plotting:
-# as an example, do some plotting:
+# The rest is now just plotting.
+# Just replot what we did with "normal" units:
 mpl_set_style()  # load pyretis style
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]

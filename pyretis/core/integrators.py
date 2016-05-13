@@ -4,28 +4,36 @@
 These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Integrator: The base class for integrators
+Integrator
+    The base class for integrators
 
-- Verlet: A Verlet integrator
+Verlet
+    A Verlet integrator
 
-- VelocityVerlet: A Velocity Verlet integrator
+VelocityVerlet
+    A Velocity Verlet integrator
 
-- Langevin: A Langevin integrator
+Langevin
+    A Langevin integrator
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- integrator_factory: A function to set up and create an integrator from
-  simulation settings.
+integrator_factory
+    Method for setting up and creating an integrator from
+    simulation settings.
 """
 from __future__ import absolute_import
 import logging
 import numpy as np
+from pyretis.core.common import generic_factory
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.particlefunctions import calculate_thermo
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
@@ -49,26 +57,15 @@ def integrator_factory(settings):
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    try:
-        klass = settings['class'].lower()
-    except KeyError:
-        msg = 'No integrator class given. No integrator created!'
-        logging.critical(msg)
-        return None
-    if klass == 'velocityverlet':
-        return VelocityVerlet(settings['timestep'])
-    elif klass == 'verlet':
-        return Verlet(settings['timestep'])
-    elif klass == 'langevin':
-        return Langevin(settings['timestep'],
-                        settings['gamma'],
-                        rgen=settings.get('rgen', None),
-                        seed=settings.get('seed', 0),
-                        high_friction=settings['high-friction'])
-    else:
-        msg = 'Unknown integrator {}'.format(settings['class'])
-        logging.critical(msg)
-        return None
+    integrator_map = {'velocityverlet': {'cls': VelocityVerlet,
+                                         'args': ['timestep']},
+                      'verlet': {'cls': Verlet,
+                                 'args': ['timestep']},
+                      'langevin': {'cls': Langevin,
+                                   'args': ['timestep', 'gamma'],
+                                   'kwargs': {'rgen', 'seed',
+                                              'high-friction'}}}
+    return generic_factory(settings, integrator_map, name='integrator')
 
 
 class Integrator(object):
@@ -435,6 +432,10 @@ class Langevin(Integrator):
         self.gamma = gamma
         self.high_friction = high_friction
         if rgen is None:
+            msg = ['Langevin Integrator: Initiated new random generator']
+            msg += ['Seed was set to: {}'.format(seed)]
+            msgtxt = '\n'.join(msg)
+            logger.debug(msgtxt)
             self.rgen = RandomGenerator(seed=seed)
         else:
             self.rgen = rgen

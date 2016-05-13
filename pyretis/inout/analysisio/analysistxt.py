@@ -4,19 +4,23 @@
 This file contains functions and classes that handle text files for the
 analysis input/output.
 
-Important functions and classes defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- txt_energy_output: For writing the output from a energy analysis.
+txt_energy_output
+    For writing the output from a energy analysis.
 
-- txt_flux_output: For writing the output from a flux-analysis.
+txt_flux_output
+    For writing the output from a flux-analysis.
 
-- txt_orderp_output: For writing the output from a order parameter
-  analysis.
+txt_orderp_output
+    For writing the output from a order parameter analysis.
 
-- txt_path_output: For writing the output from a path simulation.
+txt_path_output
+    For writing the output from a path simulation.
 
-- txt_matched_probability: For writing output with matched
-  probabilities.
+txt_matched_probability
+    For writing output with matched probabilities.
 """
 import logging
 import numpy as np
@@ -26,7 +30,9 @@ from pyretis.inout.common import (create_backup, simplify_ensemble_name,
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 from pyretis.inout.writers.txtinout import txt_save_columns
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 
 
 __all__ = ['txt_energy_output', 'txt_flux_output',
@@ -352,7 +358,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
     if backup:
         msg = create_backup(output['match'])
         if msg:
-            logging.warning(msg)
+            logger.warning(msg)
     with open(output['match'], 'w') as fhandle:
         for prob, ens, idet in zip(matched['matched-prob'],
                                    path_ensembles, detect):

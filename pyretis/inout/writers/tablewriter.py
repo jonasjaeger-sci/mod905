@@ -6,8 +6,18 @@ for formatting. The table writer is similar to the other writer but can
 be made more generic and is more suited for creating output that will be
 displayed on screen.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+TxtTable
+    A class for generating table output.
+
+PathTable
+    A class for table-like output from path simulations.
+
+ThermoTable
+    A class for thermodynamic output, useful for output from
+    MD-simulations.
 """
 import logging
 # pyretis imports:

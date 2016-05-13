@@ -5,14 +5,17 @@ This module contains some general functions for report generation. These
 functions are used by the specific report generators to format the
 reports.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- get_template: Returns the template for a specific output format and
-  report type
+get_template
+    Returns the template for a specific output format and report type.
 
-- render_report: Render a report using a template and jinja2
+render_report
+    Render a report using a template and jinja2.
 
-- generate_report: Generate a specific report from analysis output.
+generate_report
+    Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
 import logging
@@ -31,7 +34,9 @@ from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_tis,
                                               generate_report_tis_path)
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 
 __all__ = ['get_template', 'render_report', 'generate_report']
 
@@ -46,6 +51,10 @@ _TEMPLATES = {'rst': 'report_{}.rst',
               'latex': 'report_{}.tex',
               'tex': 'report_{}.tex',
               'txt': 'report_{}.txt'}
+
+_TEMPLATE_NAMES = {'md-flux': 'mdflux',
+                   'tis': 'tis',
+                   'tis-path': 'tis_path'}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -106,7 +115,8 @@ def get_template(output, report_type, template=None):
         # Use default template, this is located in the templates dir:
         path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(path, 'templates')
-        template = _TEMPLATES[output].format(report_type.lower())
+        ltype = report_type.lower()
+        template = _TEMPLATES[output].format(_TEMPLATE_NAMES[ltype])
         path_to_template = os.path.join(path, template)
         if not os.path.isfile(path_to_template):
             msg = 'Could not locate template "{}"!'.format(path_to_template)
@@ -197,7 +207,7 @@ def generate_report(report_type, analysis, output, template=None):
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
         msg = msg.format(output, report_type)
-        logging.warning(msg)
+        logger.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
     generated = None

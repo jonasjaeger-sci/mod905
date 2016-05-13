@@ -9,42 +9,58 @@ can be combined into reports, which are handled by the report module.
 Package structure
 ~~~~~~~~~~~~~~~~~
 
-Sub-packages:
+Modules
+~~~~~~~
 
-- analysisio: Handles the input and output needed for analysis.
+common.py
+    Common functions and variables for the input/output. These
+    functions are mainly intended for internal use and are not imported
+    here.
 
-- plotting: Handles plotting. It defines simple things like colors etc.
-  for plotting. It also defines functions which can be used for specific
-  plotting by the analysis and report tools.
+__init__.py
+    Imports from the other modules.
 
-- settings: Handle input and output settings
+txtinout.py
+    Defines functions for text-based output.
 
-- writers: Handle formatting and presentation of text based output.
+Sub-packages
+~~~~~~~~~~~~
 
-Modules:
+analysisio
+    Handles the input and output needed for analysis.
 
-- common.py: Common functions and variables for the input/output. These
-  functions are mainly intended for internal use and are not imported
-  here.
+plotting
+    Handles plotting. It defines simple things like colors etc.
+    for plotting. It also defines functions which can be used for
+    specific plotting by the analysis and report tools.
 
-- __init__.py: Imports from the other modules.
+settings
+    Handle input and output settings.
 
-- txtinout.py: Defines functions for text-based output.
+writers
+    Handle formatting and presentation of text based output.
 
-Important classes and functions:
+Important classes defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- CrossWriter, EnergyWriter, OrderWriter: Classes for writing crossing
-  data (for initial the flux), energy data and order parameter data.
+CrossWriter, EnergyWriter, OrderWriter
+    Classes for writing crossing data (for initial the flux), energy
+    data and order parameter data.
 
-- PathEnsembleWriter: Class for writing path ensemble data.
+PathEnsembleWriter
+    Class for writing path ensemble data.
 
-- generate_report: A function to generate reports from analysis
-  output(s).
+TxtTable
+    Class for writing/create text based tables.
 
-- create_output_task: A function to create output tasks for a
-  simulation.
+Important methods defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- TxtTable: A function to write create text based tables.
+create_output_task
+    A function to create output tasks for a simulation.
+
+generate_report
+    A function to generate reports from analysis output(s).
 """
 from __future__ import absolute_import
 from .report import generate_report

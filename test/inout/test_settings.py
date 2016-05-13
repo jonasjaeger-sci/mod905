@@ -10,13 +10,21 @@ import logging
 import tempfile
 import unittest
 import numpy as np
-from pyretis.inout.settings.common import create_integrator
-from pyretis.inout.settings.common import create_orderparameter
-from pyretis.inout.settings.settings import parse_settings_file
-from pyretis.inout.settings.settings import parse_settings
-from pyretis.inout.settings.settings import settings_to_text
+from pyretis.inout.settings.common import (create_integrator,
+                                           create_orderparameter)
+from pyretis.inout.settings.createforcefield import (create_potentials,
+                                                     create_force_field)
+from pyretis.inout.settings.settings import (parse_settings_file,
+                                             parse_settings,
+                                             settings_to_text)
 from pyretis.inout.settings.createsystem import create_initial_positions
 from pyretis.core.units import create_conversion_factors, CONVERT
+from pyretis.forcefield.potentials import (PairLennardJonesCut,
+                                           PairLennardJonesCutnp,
+                                           DoubleWellWCA,
+                                           DoubleWell,
+                                           RectangularWell)
+from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 
 
@@ -98,12 +106,6 @@ class KeywordParsing(unittest.TestCase):
                                         'class': 'velocityverlet',
                                         'timestep': "0.002"}""")
         correct.append({'integrator': {'timestep': '0.002',
-                                       'class': 'velocityverlet'}})
-        # test with junk:
-        teststr.append("""integrator = {'class': 'velocityverlet',
-                                        'timestep': 0.002}and here is some junk
-                                        more junk""")
-        correct.append({'integrator': {'timestep': 0.002,
                                        'class': 'velocityverlet'}})
 
         for tst, corr in zip(teststr, correct):
@@ -326,6 +328,8 @@ class KeywordParticles(unittest.TestCase):
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
 
+    def test_lattice_type(self):
+        """Test initialization on a lattice with types."""
         data = """particles-position = {'generate': 'fcc',
                                         'repeat': [3, 3, 3],
                                         'lcon': 1.0}
@@ -338,7 +342,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size, _ = create_initial_positions(settings)
+        particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
         for i in range(particles.npart):
@@ -346,8 +350,53 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 0)
             else:
                 self.assertEqual(particles.ptype[i], 1)
-        # Test that we can create different particles and that the
-        # mass is correctly set.
+
+    def test_lattice_dens(self):
+        """Test initialization on a lattice with density set."""
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'density': 0.9}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'density': 0.9},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        particles, size, _ = create_initial_positions(settings)
+        correct_size = []
+        lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
+        for _ in settings['particles-position']['repeat']:
+            correct_size.append([0.0, lcon])
+        self.assertTrue(np.allclose(size, correct_size))
+        for i in range(particles.npart):
+            self.assertEqual(particles.name[i], 'Ar')
+            self.assertEqual(particles.ptype[i], 0)
+
+    def test_lattice_dens_lcon(self):
+        """Test initialization on a lattice with density and lcon set."""
+        data = """particles-position = {'generate': 'fcc',
+                                        'repeat': [3, 3, 3],
+                                        'density': 0.9,
+                                        'lcon': 1000.}
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'fcc',
+                                          'repeat': [3, 3, 3],
+                                          'density': 0.9,
+                                          'lcon': 1000.},
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        _, size, _ = create_initial_positions(settings)
+        correct_size = []
+        # `lcon` should be replaced by density:
+        lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
+        for _ in settings['particles-position']['repeat']:
+            correct_size.append([0.0, lcon])
+        self.assertTrue(np.allclose(size, correct_size))
+
+    def test_lattice_and_mass(self):
+        """Test initialization on a lattice and setting of masses/types."""
         data = """particles-position = {'generate': 'fcc',
                                         'repeat': [3, 3, 3],
                                         'lcon': 1.0}
@@ -364,7 +413,7 @@ class KeywordParticles(unittest.TestCase):
                    'units': 'lj'}
         settings = parse_settings(data.split('\n'), add_default=False)
         self.assertEqual(settings, correct)
-        particles, size, _ = create_initial_positions(settings)
+        particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             if i == 0:
                 self.assertEqual(particles.ptype[i], 0)
@@ -374,6 +423,23 @@ class KeywordParticles(unittest.TestCase):
                 self.assertEqual(particles.ptype[i], 1)
                 self.assertEqual(particles.name[i], 'Kr')
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
+
+    def test_inconsistent_dimlattice(self):
+        """Test initialization on a lattice with inconsistent dims."""
+        data = """particles-position = {'generate': 'sq',
+                                        'repeat': [6, 6],
+                                        'lcon': 1.0}
+                  dimensions = 3
+                  units = lj"""
+        correct = {'particles-position': {'generate': 'sq',
+                                          'repeat': [6, 6],
+                                          'lcon': 1.0},
+                   'dimensions': 3,
+                   'units': 'lj'}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_initial_positions, *args)
 
     def test_file_xyz(self):
         """Test initialization from a XYZ file."""
@@ -426,12 +492,14 @@ class KeywordParticles(unittest.TestCase):
                                 [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
                                 [0.0, 0.5, 0.5]])
         self.assertTrue(np.allclose(pos, correct_pos))
-        pequal = all([i == j for i, j in zip(particles.ptype,
+
+        testeq = all([i == j for i, j in zip(particles.ptype,
                                              [0, 1, 2, 2, 2])])
-        self.assertTrue(pequal)
-        nequal = all([i == j for i, j in zip(particles.name,
+        self.assertTrue(testeq)
+
+        testeq = all([i == j for i, j in zip(particles.name,
                                              ['Ba', 'Hf', 'O', 'O', 'O'])])
-        self.assertTrue(nequal)
+        self.assertTrue(testeq)
         masses = []
         for i in particles.mass:
             masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
@@ -478,6 +546,148 @@ class KeywordParticles(unittest.TestCase):
             masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
         self.assertTrue(np.allclose(masses, [39.948, 39.948, 39.948,
                                              83.798, 83.798]))
+
+
+class Keywordforcefield(unittest.TestCase):
+    """Test initialization of force fields."""
+
+    def test_forcefield(self):
+        """Test initialization of a simple force field."""
+        data = """forcefield = {'desc': 'My first force field'}
+                   potentials = [{'class': 'PairLennardJonesCutnp',
+                                  'shift': True}]
+                   potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                'rcut': 2.5}}]"""
+        correct = {'forcefield': {'desc': 'My first force field'},
+                   'potentials': [{'class': 'PairLennardJonesCutnp',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        forcefield = create_force_field(settings)
+        self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
+
+    def test_potential_parse(self):
+        """Test creation of potentials while parsing input."""
+        data = """potentials = [{'class': 'PairLennardJonesCut',
+                                 'shift': True}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}}]"""
+        correct = {'potentials': [{'class': 'PairLennardJonesCut',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        potentials = create_potentials(settings)
+        self.assertIsInstance(potentials[0], PairLennardJonesCut)
+        # test that we can assign parameters
+        for pot, params in zip(potentials, settings['potential-parameters']):
+            pot.set_parameters(params)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['epsilon'], 1.0)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['sigma'], 1.0)
+        self.assertAlmostEqual(potentials[0].params[(0, 0)]['rcut'], 2.5)
+
+    def test_potential_inconsitentdim(self):
+        """Test creation of potentials with inconsistent dims."""
+        data = """potentials = [{'class': 'PairLennardJonesCut',
+                                 'shift': True}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}}]
+                  dimensions = 2"""
+        correct = {'potentials': [{'class': 'PairLennardJonesCut',
+                                   'shift': True}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}}],
+                   'dimensions': 2}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        args = [settings]
+        self.assertRaises(ValueError, create_potentials, *args)
+
+    def test_potential_create(self):
+        """Test that we can create all potentials."""
+        all_potentials = [('PairLennardJonesCut', PairLennardJonesCut),
+                          ('PairLennardJonesCutnp', PairLennardJonesCutnp),
+                          ('DoubleWellWCA', DoubleWellWCA),
+                          ('DoubleWell', DoubleWell),
+                          ('RectangularWell', RectangularWell)]
+        settings = {'potentials': []}
+        for pot in all_potentials:
+            settings['potentials'].append({'class': pot[0]})
+        potentials = create_potentials(settings)
+        for pot, pot_input in zip(potentials, all_potentials):
+            self.assertIsInstance(pot, pot_input[1])
+
+    def test_ext_potential(self):
+        """Test creation of potentials while parsing input from externals."""
+        data = """potentials = [{'class': 'FooPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{'a': 2.0}]"""
+        correct = {'potentials': [{'class': 'FooPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{'a': 2.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        # add path for testing:
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        potentials = create_potentials(settings)
+        self.assertIsInstance(potentials[0], PotentialFunction)
+        self.assertAlmostEqual(potentials[0].params['a'], 0.0)
+        for pot, pot_param in zip(potentials,
+                                  settings['potential-parameters']):
+            pot.set_parameters(pot_param)
+        self.assertAlmostEqual(potentials[0].params['a'], 2.0)
+
+    def test_ext_potentialfail(self):
+        """Test failure of external potential creation."""
+        data = """potentials = [{'class': 'BarPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{'a': 2.0}]"""
+        correct = {'potentials': [{'class': 'BarPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{'a': 2.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        args = [settings]
+        self.assertRaises(ValueError, create_potentials, *args)
+
+    def test_complicated_input(self):
+        """Test that we can read 'complex' force field input."""
+        data = """forcefield = {'desc': 'My force field mix'}
+                  potentials = [{'class': 'PairLennardJonesCutnp',
+                                 'shift': True},
+                                {'class': 'DoubleWellWCA'},
+                                {'class': 'FooPotential',
+                                 'module': 'foopotential.py'}]
+                  potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                               'rcut': 2.5}},
+                                          {'types': [(0, 0)],
+                                           'rzero': 1.122462048309373,
+                                           'height': 6.0, 'width': 0.25},
+                                          {'a': 10.0}]"""
+        correct = {'forcefield': {'desc': 'My force field mix'},
+                   'potentials': [{'class': 'PairLennardJonesCutnp',
+                                   'shift': True},
+                                  {'class': 'DoubleWellWCA'},
+                                  {'class': 'FooPotential',
+                                   'module': 'foopotential.py'}],
+                   'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
+                                                 'rcut': 2.5}},
+                                            {'types': [(0, 0)],
+                                             'rzero': 1.0 * (2.0**(1.0/6.0)),
+                                             'height': 6.0, 'width': 0.25},
+                                            {'a': 10.0}]}
+        settings = parse_settings(data.split('\n'), add_default=False)
+        self.assertEqual(settings, correct)
+        settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        forcefield = create_force_field(settings)
+        self.assertEqual(len(forcefield.potential), 3)
+        self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
+        self.assertIsInstance(forcefield.potential[1], DoubleWellWCA)
+        self.assertIsInstance(forcefield.potential[2], PotentialFunction)
 
 
 if __name__ == '__main__':

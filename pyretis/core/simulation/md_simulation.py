@@ -4,20 +4,24 @@
 This module contains definitions of classes for performing molecular
 dynamics simulations.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- SimulationNVE: Definition of a simple NVE simulation. The integrator
-  used for this simulation must have dynamics equal to 'NVE'.
+SimulationNVE
+    Definition of a simple NVE simulation. The integrator
+    used for this simulation must have dynamics equal to NVE.
 
-- SimulationMDFlux: Definition of a simulation for determining the
-  initial flux. This is used for calculating rates in TIS simulations.
+SimulationMDFlux
+    Definition of a simulation for determining the initial flux.
+    This is used for calculating rates in TIS simulations.
 """
 from __future__ import absolute_import
 import logging
 from pyretis.core.simulation.simulation import Simulation
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['SimulationNVE', 'SimulationMDFlux']
@@ -68,7 +72,7 @@ class SimulationNVE(Simulation):
         if self.integrator.dynamics.lower() != 'nve':
             msg = 'Inconsistent integrator {} for NVE dynamics!'
             msg = msg.format(integrator.desc)
-            logging.warning(msg)
+            logger.warning(msg)
         task_integrate = {'func': self.integrator.integration_step,
                           'args': [self.system]}
         task_thermo = {'func': calculate_thermo,

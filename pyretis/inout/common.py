@@ -4,23 +4,28 @@
 It contains some functions that is used when generating reports,
 typically to format tables and numbers.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- create_backup: A function to handle the creation of backups of old
-  files.
+apply_format
+    Apply a format string to a given value.
 
-- apply_format: Apply a format string to a given value.
+create_backup
+    A function to handle the creation of backups of old files.
 
-- remove_extensions: Remove extensions for a list of files.
+make_dirs
+    Create directories (for path simulation).
 
-- make_dirs: Create directories (for path simulation).
+remove_extensions
+    Remove extensions for a list of files.
 """
 from __future__ import absolute_import
 import errno
 import os
 import re
 import logging
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_backup', 'apply_format', 'remove_extensions',
@@ -274,7 +279,7 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     else:
         msg = ['Could not get direction for ensemble {}.'.format(ensemble),
                'We assume "+", note that this might overwrite files']
-        logging.warning('\n'.join(msg))
+        logger.warning('\n'.join(msg))
         ens += 1
     return fmt.format(ens)
 

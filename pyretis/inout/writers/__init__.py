@@ -6,47 +6,67 @@ The writers also have some additional functionality and can be used to
 load data written by pyretis as well. This is used when analysing
 the output from a pyretis simulation.
 
+Package structure
+-----------------
 
-Modules:
+Modules
+~~~~~~~
 
-- writers.py: Module for defining the base writer and some simple
-  derived writers (for crossing data, energy and order parameter data).
+writers.py
+    Module for defining the base writer and some simple derived writers
+    (for crossing data, energy and order parameter data).
 
-- pathfile.py: Module for handling path data and path-ensemble data.
+pathfile.py
+    Module for handling path data and path-ensemble data.
 
-- traj.py: Module for handling writing of trajectory data.
+traj.py
+    Module for handling writing of trajectory data.
 
-Important functions:
+Important methods defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- get_file_object: Opens a file for reading given a file type and file
-  name.
+get_file_object
+    Opens a file for reading given a file type and file name.
 
-- read_xyz_file: Read snapshots from a xyz file.
+read_xyz_file
+    Read snapshots from a xyz file.
 
-- read_gro_file: Read snapshots from a gromacs GRO file.
+read_gro_file
+    Read snapshots from a gromacs GRO file.
 
-Important classes:
+Important classes defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- CrossWriter: A writer of crossing data.
+CrossWriter
+    A writer of crossing data.
 
-- EnergyWriter: A writer of energy data
+EnergyWriter
+    A writer of energy data
 
-- OrderWriter: A writer of order parameter data.
+OrderWriter
+    A writer of order parameter data.
 
-- PathEnsembleWriter: A writer of path ensemble data.
+PathEnsembleWriter
+    A writer of path ensemble data.
 
-- PathEnsembleFile: A class which represent path ensembles in files.
-  This class is useful for the analysis.
+PathEnsembleFile
+    A class which represent path ensembles in files. This class is
+    intended for use in an analysis.
 
-- TrajXYZ: A writer of trajectories in xyz-format.
+TrajXYZ
+    A writer of trajectories in xyz-format.
 
-- TrajGRO: A writer of trajectories in GROMACS gro-format.
+TrajGRO
+    A writer of trajectories in GROMACS gro-format.
 
-- TxtTable: A generic table writer.
+TxtTable
+    A generic table writer.
 
-- ThermoTable: A specific table writer for energy output.
+ThermoTable
+    A specific table writer for energy output.
 
-- PathTable: A specific table writer for path results.
+PathTable
+    A specific table writer for path results.
 """
 from __future__ import absolute_import
 import logging
@@ -57,7 +77,7 @@ from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import CrossWriter, EnergyWriter, OrderWriter
-from pyretis.inout.settings.common import initiate_instance
+from pyretis.core.common import initiate_instance
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())

@@ -1,27 +1,32 @@
 # -*- coding: utf-8 -*-
-"""This module defines common functions for the settings handling.
+"""This module defines common methods for the settings handling.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- check_settings: Check that required simulation settings are actually
-  given.
+check_settings
+    Check that required simulation settings are actually given.
 
-- import_from : A function to dynamically import functions/classes
-  etc. from user specified modules.
+import_from
+    A function to dynamically import functions/classes etc. from user
+    specified modules.
 """
 import sys
 import importlib
 import imp
 import logging
 import os
+from pyretis.core.common import initiate_instance
 from pyretis.core.integrators import integrator_factory
 from pyretis.core.orderparameter import order_factory
+from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['check_settings', 'import_from', 'initiate_instance',
-           'create_orderparameter', 'create_integrator']
+__all__ = ['check_settings', 'import_from',
+           'create_orderparameter', 'create_integrator',
+           'create_potential']
 
 
 def import_from(module_path, function_name):
@@ -55,10 +60,10 @@ def import_from(module_path, function_name):
     .. [#] http://bugs.python.org/issue21436
     """
     try:
-        # sad news, imp is deprecated for python 3.5
-        # we need to check if we are using python3.5 or earlier
         module_name = os.path.basename(module_path)
         module_name = os.path.splitext(module_name)[0]
+        # imp is deprecated for python 3.5 -> we need to check if we are
+        # using python3.5 or earlier:
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
@@ -67,7 +72,7 @@ def import_from(module_path, function_name):
             module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
             spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
-        logger.info(msg)
+        logger.debug(msg)
         try:
             return getattr(module, function_name)
         except AttributeError:
@@ -79,44 +84,6 @@ def import_from(module_path, function_name):
         msg = 'Could not import module: {}'.format(module_path)
         logger.critical(msg)
         raise ValueError(msg)
-
-
-def initiate_instance(klass, args=None, kwargs=None):
-    """Function to initiate a class with optional arguments.
-
-    Parameters
-    ----------
-    klass : class
-        The class to initiate.
-    args : list, optional
-        Positional arguments to `klass.__init__()`.
-    kwargs : dict, optional
-        The keyword arguments to `klass.__init__()`
-
-    Returns
-    -------
-    out : instance of `klass`
-        Here, we just return the initiated instance of the given class.
-    """
-    if args is None:
-        if kwargs is None:
-            msg = 'Initiated {} without arguments.'.format(klass)
-            logger.info(msg)
-            return klass()
-        else:
-            msg = 'Initiated {} with keyword arguments.'.format(klass)
-            logger.info(msg)
-            return klass(**kwargs)
-    else:
-        if kwargs is None:
-            msg = 'Initiated {}  with positional arguments.'.format(klass)
-            logger.info(msg)
-            return klass(*args)
-        else:
-            msg = 'Initiated {} with positional and keyword arguments.'
-            msg = msg.format(klass)
-            logger.info(msg)
-            return klass(*args, **kwargs)
 
 
 def check_settings(settings, required):
@@ -153,7 +120,8 @@ def check_settings(settings, required):
     return result, not_found
 
 
-def create_external(settings, key, factory, required_methods):
+def create_external(settings, key, factory, required_methods,
+                    key_settings=None):
     """Function to create order parameters from settings.
 
     Parameters
@@ -168,18 +136,28 @@ def create_external(settings, key, factory, required_methods):
     required_methods : list of strings
         The methods we need to have if creating an object from external
         files.
+    key_settings : dict
+        This dictionary contains the settings for specific key we
+        are processing. If this is not given, we will try to obtain
+        these settings by `settings[key]`. The reason why we make it
+        possible to pass these as settings is in case we are processing
+        a key which does not give a simple setting, but a list of settings.
+        It that case `settings[key]` will give a list to process. That list
+        is iterated somewhere else and `key_settings` can then be used to
+        process these elements.
 
     Returns
     -------
     out : object
         This object represents the class we are requesting here.
     """
-    try:
-        key_settings = settings[key]
-    except KeyError:
-        msg = 'No {} settings found!'.format(key)
-        logger.critical(msg)
-        return None
+    if key_settings is None:
+        try:
+            key_settings = settings[key]
+        except KeyError:
+            msg = 'No {} settings found!'.format(key)
+            logger.critical(msg)
+            return None
     module = key_settings.get('module', None)
     klass = None
     try:
@@ -241,7 +219,7 @@ def create_orderparameter(settings):
 
 
 def create_integrator(settings):
-    """Function to create simulations from settings.
+    """Function to create an integrator from settings.
 
     Parameters
     ----------
@@ -255,3 +233,23 @@ def create_integrator(settings):
     """
     return create_external(settings, 'integrator', integrator_factory,
                            ['integration_step'])
+
+
+def create_potential(settings, key_settings):
+    """Function to create a potential from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    key_settings : dict
+        Settings for the potential we are creating.
+
+    Returns
+    -------
+    out : object like `PotentialFunction` from `pyretis.forcefield`.
+        This object represents the order parameter.
+    """
+    return create_external(settings, 'potentials', potential_factory,
+                           ['force', 'potential', 'potential_and_force'],
+                           key_settings=key_settings)

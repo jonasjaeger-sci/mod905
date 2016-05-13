@@ -10,9 +10,11 @@ import numpy as np
 # from the pyretis package
 from pyretis.core.units import CONSTANTS
 from pyretis.core.particles import Particles
-from pyretis.core.particlefunctions import calculate_kinetic_temperature
+from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
+                                            calculate_kinetic_energy)
 from pyretis.core.random_gen import RandomGenerator
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['System']
@@ -136,7 +138,7 @@ class System(object):
             return self.box.dim
         except AttributeError:
             msg = 'Box dimensions are not set. Setting dimensions to "1"'
-            logging.warning(msg)
+            logger.warning(msg)
             return 1
 
     def calculate_beta(self, temperature=None):
@@ -394,7 +396,7 @@ class System(object):
         else:
             msg = 'Distribution "{}" not defined! Velocities not set!'
             msg = msg.format(distribution)
-            logging.error(msg)
+            logger.error(msg)
 
     def calculate_temperature(self):
         """Calculate the temperature of the system.
@@ -414,3 +416,25 @@ class System(object):
                                                    CONSTANTS['kB'][self.units],
                                                    dof=dof)
         return temp
+
+    def rescale_velocities(self, energy):
+        """Rescale the kinetic energy to a given total energy.
+
+        Parameters
+        ----------
+        energy : float
+            The desired energy.
+
+        Returns
+        -------
+        None, but updates the velocities of the particles.
+        """
+        vpot = self.potential()
+        ekin, _ = calculate_kinetic_energy(self.particles)
+        ekin_new = energy - vpot
+        if ekin_new < 0:
+            msg = 'Can not rescale velocities'
+            logger.warning(msg)
+        else:
+            alpha = np.sqrt(ekin_new / ekin)
+            self.particles.vel = self.particles.vel * alpha

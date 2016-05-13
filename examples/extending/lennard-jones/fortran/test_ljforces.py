@@ -41,14 +41,14 @@ def set_up_initial_state():
 def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
     # Calculate with Fortran:
-    potentialF = PairLennardJonesCutF(dim=3, shift=True)
-    forcefieldF = ForceField(potential=[potentialF],
-                             params=[parameters],
-                             desc='Python + Fortran')
-    system.forcefield = forcefieldF
-    print('Evaluating with: {}'.format(forcefieldF.print_potentials()))
-    vpotF, forcesF, virialF = system.potential_and_force()
-    vpotF /= float(system.particles.npart)
+    potential_ext = PairLennardJonesCutF(dim=3, shift=True)
+    forceField_ext = ForceField(potential=[potential_ext],
+                                params=[parameters],
+                                desc='Python + Fortran')
+    system.forcefield = forceField_ext
+    print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
+    vpot_ext, forces_ext, virial_ext = system.potential_and_force()
+    vpot_ext /= float(system.particles.npart)
     # Calculate with pure python implementation:
     potential = PairLennardJonesCut(dim=3, shift=True)
     forcefield = ForceField(potential=[potential],
@@ -69,13 +69,13 @@ def run_calculations(system, parameters):
     vpotnp /= float(system.particles.npart)
     return ((vpot, forces, virial),
             (vpotnp, forcesnp, virialnp),
-            (vpotF, forcesF, virialF))
+            (vpot_ext, forces_ext, virial_ext))
 
 
 class LennardJonesTest(unittest.TestCase):
     """Run the tests for the Fortran potential class."""
 
-    def test_ljfortran(self):
+    def test_lj(self):
         """Test one-component system."""
         print('\nTesting for a one-component system')
         system = set_up_initial_state()
@@ -99,7 +99,7 @@ class LennardJonesTest(unittest.TestCase):
                 vdiff = np.abs(result[i][0] - result[i+j+1][0])
                 print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
 
-    def test_ljfortran_mix(self):
+    def test_lj_mix(self):
         """Test for mixture."""
         print('\nTesting for a two-component mixture')
         system = set_up_initial_state()
@@ -131,7 +131,7 @@ class LennardJonesTest(unittest.TestCase):
                 vdiff = np.abs(result[i][0] - result[i+j+1][0])
                 print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
 
-    def test_ljfortran_multi_mix(self):
+    def test_lj_multi_mix(self):
         """Test for multi-mixture."""
         ncomp = np.random.random_integers(3, high=10)
         print('\nTesting for a {}-component mixture'.format(ncomp))

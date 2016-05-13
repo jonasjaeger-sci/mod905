@@ -4,13 +4,18 @@
 This module defines a class for using matplotlib and it also defines
 some standard plots that are used in the analysis.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- MplPlotter: A class for plotting with matplotlib.
+MplPlotter
+    A class for plotting with matplotlib.
 
-- mpl_set_style: A function for setting the style for the plots,
-  typically used here to load the *pyretis style*.
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+mpl_set_style
+    Method for setting the style for the plots, typically used here to
+    load the *pyretis style*.
 """
 # TODO: See if the plotting functions mpl_* can be moved into the object.
 import os

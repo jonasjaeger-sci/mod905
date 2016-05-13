@@ -5,9 +5,11 @@ This module defines a class that is useful for writing data
 to the disk. The typical usage in pyretis is to write the output from
 a `Writer` to a file.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- FileIO: A generic class for handling output to files.
+FileIO
+    A generic class for handling output to files.
 """
 import os
 import logging

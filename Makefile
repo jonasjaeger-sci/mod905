@@ -1,3 +1,14 @@
+.PHONY:	
+	    tests
+	    tests-silent
+	    tests3
+	    tests-silent3
+	    tests2
+	    tests-silent2
+	    clean
+	    upload-docs
+
+ 
 tests:
 	python -m unittest discover -v -s test
 
@@ -18,6 +29,9 @@ tests-silent2:
 
 clean:
 	find -name \*.pyc -delete
+	find -name \*.pyo -delete
 	find -name __pycache__ -delete
 	find -name \*.so -delete
 
+upload-docs:
+	scp -r docs/_build/html/* pyretisweb:WWW/

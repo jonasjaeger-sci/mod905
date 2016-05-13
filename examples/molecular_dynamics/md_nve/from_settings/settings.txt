@@ -7,7 +7,7 @@ Simulation settings
 units = lj
 task = md-nve
 integrator = {'class': 'velocityverlet', 'timestep': 0.002}
-endcycle = 100
+endcycle = 1000
 
 
 System settings
@@ -19,18 +19,16 @@ particles-position = {'file': 'initial.gro'}
 
 particles-velocity = {'generate': 'maxwell',
                       'set-temperature': 2.0,
-                      'momentum: True,
+                      'momentum': True,
                       'seed': 0}
 
-particle-mass = {'Ar': 1.0}
-
+particles-mass = {'Ar': 1.0}
+particles-name = ['Ar']
+particles-type = [0]
 
 Force field settings
 --------------------
 
 forcefield = {'desc': 'Lennard Jones test'}
-potentials = {'class': 'PairLennardJonesCutnp',
-              'shift': True}
-
-potential-parameters: {'potential': 0,
-                       'Ar': {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
+potentials = [{'class': 'PairLennardJonesCutnp', 'shift': True}]
+potential-parameters = [{0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}]

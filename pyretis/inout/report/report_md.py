@@ -3,9 +3,11 @@
 
 The reports are useful for displaying results from the analysis.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- generate_report_mdflux: Generate a report for a MD flux simulation.
+generate_report_mdflux
+    Generate a report for a MD flux simulation.
 """
 from __future__ import absolute_import
 from pyretis.inout.report.markup import (generate_rst_table,

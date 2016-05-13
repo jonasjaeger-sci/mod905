@@ -1,5 +1,6 @@
 # python:
 *.pyc
+*.pyo
 
 # OSX specific:
 .Python

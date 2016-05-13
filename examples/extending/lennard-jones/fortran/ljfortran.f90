@@ -9,35 +9,54 @@ public :: apply_pbc_dist
 
 contains
 
-function apply_pbc_dist(v, box, d)
-  ! function to apply periodic boundaries to 
-  ! a given vector
-  implicit none
-  integer, intent(in) :: d
-  double precision, dimension(d) :: apply_pbc_dist
-  double precision, dimension(d), intent(in) :: v, box
-  double precision :: half_boxl, box_length
-  integer :: i
-  apply_pbc_dist = 0.0D0
-  do i=1,d
-    box_length = box(i)
-    half_boxl = box_length * 0.5D0
-    apply_pbc_dist(i) = v(i)
-    do while (apply_pbc_dist(i) > half_boxl)
-        apply_pbc_dist(i) = apply_pbc_dist(i) - box_length
-    end do
-    do while (apply_pbc_dist(i) < -half_boxl)
-        apply_pbc_dist(i) = apply_pbc_dist(i) + box_length
-    end do
-  end do
+function apply_pbc_dist(v, box, ibox, d) result(dist)
+! Function to apply periodic boundaries to a given vector.
+!
+! Parameters
+! ----------
+! v : the distance vector to pbc-wrap
+! box : the box lengths
+! ibox : the inverse box lengths, ibox = 1.0 / box
+! d : dimensionality of the vectors
+!
+! Returns
+! -------
+! dist : the pbc-wrapped distance vector
+implicit none
+integer, intent(in) :: d
+double precision, dimension(d), intent(in) :: v, box, ibox
+double precision, dimension(d) :: dist
+integer :: i
+dist = 0.0D0
+do i=1,d
+    dist(i) = v(i) - nint(v(i) * ibox(i)) * box(i)
+end do
 end function apply_pbc_dist
 
-subroutine potential(pos, box, lj3, lj4, rcut2, offset, ptype, n, d, p, vpot) 
-! Subroutine to evaluate the potential
+subroutine potential(pos, box, ibox, lj3, lj4, offset, rcut2, ptype, n, d, p, vpot) 
+! Function to evaluate the Lennard-Jones potential
+!
+! Parameters
+! ----------
+! pos : positions of the particles
+! box : the box lengths
+! ibox : the inverse box lengths, ibox = 1.0 / box
+! lj3 : Lennard-Jones parameters, 4.0 * epsilonij * sigmaij**12
+! lj4 : Lennard-Jones parameters, 4.0 * epsilonij * sigmaij**6
+! rcut2 : Squared cut-offs
+! offset : Potential energy shift
+! ptype : identifier for the particle types
+! n : number of particles
+! d : dimensionality of the vectors
+! p : number of particle types
+!
+! Returns
+! -------
+! vpot : the potential energy
 implicit none
 integer, intent(in) :: n, d, p
 double precision, dimension(n, d), intent(in) :: pos
-double precision, dimension(d), intent(in) :: box
+double precision, dimension(d), intent(in) :: box, ibox
 double precision, dimension(p, p), intent(in) :: lj3, lj4, offset, rcut2
 integer, dimension(n), intent(in) :: ptype
 double precision, intent(out) :: vpot
@@ -51,7 +70,7 @@ do i=1,n-1
     do j=i+1,n
         posj = pos(j, :)
         jtype = ptype(j) + 1
-        rij = apply_pbc_dist(posi - posj, box, d)
+        rij = apply_pbc_dist(posi - posj, box, ibox, d)
         rsq = dot_product(rij, rij)
         if (rsq < rcut2(itype, jtype)) then
             r2inv = 1.0D0 / rsq
@@ -63,14 +82,32 @@ do i=1,n-1
 end do
 end subroutine potential
 
-subroutine force(pos, box, lj1, lj2, rcut2, ptype, n, d, p, forces, virial) 
-! Subroutine to evaluate the potential
+subroutine force(pos, box, ibox, lj1, lj2, rcut2, ptype, n, d, p, forces, virial) 
+! Function to evaluate the Lennard-Jones force
+!
+! Parameters
+! ----------
+! pos : positions of the particles
+! box : the box lengths
+! ibox : the inverse box lengths, ibox = 1.0 / box
+! lj1 : Lennard-Jones parameters, 48.0 * epsilonij * sigmaij**12
+! lj2 : Lennard-Jones parameters, 24.0 * epsilonij * sigmaij**6
+! rcut2 : Squared cut-offs
+! ptype : identifier for the particle types
+! n : number of particles
+! d : dimensionality of the vectors
+! p : number of particle types
+!
+! Returns
+! -------
+! forces : the Lennard-Jones forces on the particles
+! virial : the virial matrix
 implicit none
 integer, intent(in) :: n, d, p
 double precision, dimension(n, d), intent(out) :: forces
 double precision, dimension(d, d), intent(out) :: virial
 double precision, dimension(n, d), intent(in) :: pos
-double precision, dimension(d), intent(in) :: box
+double precision, dimension(d), intent(in) :: box, ibox
 double precision, dimension(p, p), intent(in) :: lj1, lj2, rcut2
 integer, dimension(n), intent(in) :: ptype
 double precision, dimension(d) :: posi, posj, rij, forceij
@@ -85,7 +122,7 @@ do i=1,n-1
     do j=i+1,n
         posj = pos(j, :)
         jtype = ptype(i) + 1
-        rij = apply_pbc_dist(posi - posj, box, d)
+        rij = apply_pbc_dist(posi - posj, box, ibox, d)
         rsq = dot_product(rij, rij)
         if (rsq < rcut2(itype, jtype)) then
             r2inv = 1.0D0 / rsq
@@ -105,15 +142,37 @@ do i=1,n-1
 end do
 end subroutine force
 
-subroutine potential_and_force(pos, box, lj1, lj2, lj3, lj4, offset, rcut2, ptype, n, d, p, forces, virial, vpot) 
-! Subroutine to evaluate the potential
+subroutine potential_and_force(pos, box, ibox, lj1, lj2, lj3, lj4, offset, rcut2, ptype, n, d, p, forces, virial, vpot) 
+! Function to evaluate the Lennard-Jones force and potential
+!
+! Parameters
+! ----------
+! pos : positions of the particles
+! box : the box lengths
+! ibox : the inverse box lengths, ibox = 1.0 / box
+! lj1 : Lennard-Jones parameters, 48.0 * epsilonij * sigmaij**12
+! lj2 : Lennard-Jones parameters, 24.0 * epsilonij * sigmaij**6
+! lj3 : Lennard-Jones parameters, 4.0 * epsilonij * sigmaij**12
+! lj4 : Lennard-Jones parameters, 4.0 * epsilonij * sigmaij**6
+! rcut2 : Squared cut-offs
+! offset : Potential energy shift
+! ptype : identifier for the particle types
+! n : number of particles
+! d : dimensionality of the vectors
+! p : number of particle types
+!
+! Returns
+! -------
+! vpot : the potential energy
+! forces : the Lennard-Jones forces on the particles
+! virial : the virial matrix
 implicit none
 integer, intent(in) :: n, d, p
 double precision, dimension(n, d), intent(out) :: forces
 double precision, dimension(d, d), intent(out) :: virial
 double precision, intent(out) :: vpot
 double precision, dimension(n, d), intent(in) :: pos
-double precision, dimension(d), intent(in) :: box
+double precision, dimension(d), intent(in) :: box, ibox
 double precision, dimension(p, p), intent(in) :: lj1, lj2, lj3, lj4, offset, rcut2
 integer, dimension(n), intent(in) :: ptype
 double precision, dimension(d) :: posi, posj, rij, forceij
@@ -129,7 +188,7 @@ do i=1,n-1
     do j=i+1,n
         posj = pos(j, :)
         jtype = ptype(j) + 1
-        rij = apply_pbc_dist(posi - posj, box, d)
+        rij = apply_pbc_dist(posi - posj, box, ibox, d)
         rsq = dot_product(rij, rij)
         if (rsq < rcut2(itype, jtype)) then
             r2inv = 1.0D0 / rsq

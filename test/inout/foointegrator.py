@@ -10,14 +10,14 @@ class FooIntegrator(Integrator):
     """FooIntegrator(Integrator) - Dummy integrator for tests."""
 
     def __init__(self, timestep, parameter=0.0,
-                 desc='Dummy test integrataor'):
+                 desc='Dummy test integrator'):
         super(FooIntegrator, self).__init__(timestep, desc=desc,
                                             dynamics=None)
         self.parameter = parameter
 
     def integration_step(self, system):
         """Perform the integration step."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class BarIntegrator(object):

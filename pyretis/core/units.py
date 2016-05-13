@@ -265,7 +265,8 @@ from __future__ import print_function
 import logging
 from collections import deque
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['generate_conversion_factors', 'generate_inverse',
@@ -790,7 +791,7 @@ def read_conversions(filename='units.txt', select_units=None):
             except ValueError:
                 msg = 'Skipping line "{}" in {}'.format(lines.strip(),
                                                         filename)
-                logging.warning(msg)
+                logger.warning(msg)
                 continue
             if dim not in convert:
                 convert[dim] = {}
