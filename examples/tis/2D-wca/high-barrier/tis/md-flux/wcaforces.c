@@ -8,7 +8,7 @@ static PyObject *potential2D(PyObject *self, PyObject *args);
 static PyObject *force2D(PyObject *self, PyObject *args); 
 static PyObject *force_and_pot2D(PyObject *self, PyObject *args); 
 
-// Boilerplate: function list.
+// Method table:
 static PyMethodDef methods[] = {
   { "potential2D", potential2D, METH_VARARGS, "Calculate potential energy."},
   { "force2D", force2D, METH_VARARGS, "Calculate force."},
@@ -16,12 +16,23 @@ static PyMethodDef methods[] = {
   { NULL, NULL, 0, NULL } /* Sentinel */
 };
 
-// Boilerplate: Module initialization.
-PyMODINIT_FUNC initwcaforces(void) {
-  (void) Py_InitModule("wcaforces", methods);
-  import_array();
-}
 
+// Module definition:
+static struct PyModuleDef forcemodule = {
+   PyModuleDef_HEAD_INIT,
+   "wcaforces", // name of module
+   "Calculate forces and potential for WCA example",
+    -1,
+   methods
+};
+
+
+// Boilerplate: Module initialization.
+PyMODINIT_FUNC PyInit_wcaforces(void) {
+  //(void) Py_InitModule("wcalambda", methods);
+  import_array();
+  return PyModule_Create(&forcemodule);
+}
 
 static inline npy_float64 pbc_dist(npy_float64 x,
                                    npy_float64 box,

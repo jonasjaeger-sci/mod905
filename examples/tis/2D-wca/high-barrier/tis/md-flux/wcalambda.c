@@ -1,4 +1,3 @@
-
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
@@ -8,17 +7,28 @@
 static PyObject *orderp(PyObject *self, PyObject *args); 
 static PyObject *orderv(PyObject *self, PyObject *args); 
 
-// Boilerplate: function list.
+// Method table:
 static PyMethodDef methods[] = {
   { "orderp", orderp, METH_VARARGS, "Calculate order parameter."},
   { "orderv", orderv, METH_VARARGS, "Calculate velocity in order parameter."},
   { NULL, NULL, 0, NULL } /* Sentinel */
 };
 
+// Module definition:
+static struct PyModuleDef lambdamodule = {
+   PyModuleDef_HEAD_INIT,
+   "wcalambda", // name of module
+   "Calculate order parameters for WCA example",
+    -1,
+   methods
+};
+
+
 // Boilerplate: Module initialization.
-PyMODINIT_FUNC initwcalambda(void) {
-  (void) Py_InitModule("wcalambda", methods);
+PyMODINIT_FUNC PyInit_wcalambda(void) {
+  //(void) Py_InitModule("wcalambda", methods);
   import_array();
+  return PyModule_Create(&lambdamodule);
 }
 
 
