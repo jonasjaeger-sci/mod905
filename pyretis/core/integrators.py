@@ -53,7 +53,7 @@ def integrator_factory(settings):
 
     Returns
     -------
-    out[0] : object
+    out : object like `Integrator`.
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """

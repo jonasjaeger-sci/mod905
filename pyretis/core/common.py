@@ -161,8 +161,8 @@ def generic_factory(settings, object_map, name='generic'):
     Returns
     -------
     out : instance of a class
-        The created object, in case we were successful. Otherwise we return
-        none.
+        The created object, in case we were successful. Otherwise we
+        return none.
     """
     try:
         klass = settings['class'].lower()
