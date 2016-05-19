@@ -13,7 +13,6 @@ SimulationTIS
 from __future__ import absolute_import
 import numpy as np
 from pyretis.core.simulation.simulation import Simulation
-from pyretis.core.pathensemble import PathEnsemble
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.tis import (generate_initial_path_kick,
                               make_tis_step_ensemble)
@@ -30,8 +29,6 @@ class SimulationTIS(Simulation):
 
     Attributes
     ----------
-    system : object like `System` from `pyretis.core.system`
-        This is the system the simulation will act on.
     integrator : object like `Integrator` from `pyretis.core.integrators`
         This is the integrator that is used to propagate the system
         in time.
@@ -44,17 +41,19 @@ class SimulationTIS(Simulation):
         `pyretis.core.orderparameter`.
         It is assumed that the order_function can be called with an
         object like `pyretis.core.system.System` as a parameter.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is used for storing results for the simulation.
+    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        This is a random generator used for the generation of paths.
+    system : object like `System` from `pyretis.core.system`
+        This is the system the simulation will act on.
     tis_settings : dict
         This dict contain specific settings for the TIS simulation
         (shooting moves etc.).
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
-        This is a random generator used for the generation of paths.
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is used for storing results for the simulation.
     """
 
-    def __init__(self, system, integrator, orderparameter, settings,
-                 endcycle=0, startcycle=0):
+    def __init__(self, system, integrator, orderparameter, path_ensemble,
+                 tis_settings, endcycle=0, startcycle=0):
         """Initialization of the TIS simulation.
 
         Parameters
@@ -64,17 +63,28 @@ class SimulationTIS(Simulation):
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
-        settings : dict
-            This dict contains the settings for the TIS simulation.
+        orderparameter : function or object like `OrderParameter`
+            This function is used to calculate the order parameter.
+            It is assumed to be called as ``orderparameter(system)``
+            and to return at least two values where the first one
+            is the scalar order parameter
+        path_ensemble : object like `PathEnsemble` from `pyretis.core.path`.
+            This is used for storing results for the simulation. It
+            is also used for defining the interfaces for this
+            simulation.
+        tis_settings : dict
+            This dict contains TIS specific settings, in particular we
+            expect that the following keys are defined:
         """
         super(SimulationTIS, self).__init__(endcycle=endcycle,
                                             startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
-        self.interfaces = settings['interfaces']
-        self.tis_settings = settings['tis']
         self.orderparameter = orderparameter
+        self.path_ensemble = path_ensemble
+        self.interfaces = path_ensemble.interfaces
+        self.tis_settings = tis_settings
         # check for shooting:
         if self.tis_settings['sigma_v'] < 0.0:
             self.tis_settings['aimless'] = True
@@ -84,14 +94,6 @@ class SimulationTIS(Simulation):
             self.tis_settings['aimless'] = False
         # create a random generator for TIS moves etc.:
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
-        try:
-            self.path_ensemble = settings['path-ensemble']
-        except KeyError:
-            # just create an empty path ensemble:
-            ensemble = settings.get('ensemble', '[0^+]')
-            detect = settings.get('detect', None)
-            self.path_ensemble = PathEnsemble(ensemble, self.interfaces,
-                                              detect=detect)
 
     def _initialize_path(self):
         """Initialize the path for the TIS simulation.
