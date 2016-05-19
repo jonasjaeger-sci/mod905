@@ -387,8 +387,7 @@ def create_box(settings, size, dim=3):
             msgtxt = msg.format('without specifications', box)
             logger.info(msgtxt)
             msgwarn = ('The box was assumed non-periodic in ALL directions.'
-                       '\nIf positions were read from an xyz-file, this is'
-                       '\nprobably not what you want.')
+                       '\nPlease check if this is as intented.')
             logger.warning(msgwarn)
     return box
 
