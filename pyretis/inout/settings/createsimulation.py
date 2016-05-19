@@ -200,8 +200,9 @@ def create_md_simulation(settings, system, sim_type):
     elif sim_type == 'md-flux':
         intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
-        simulation = SimulationMDFlux(system, intg, settings['interfaces'],
-                                      orderp, endcycle=settings['endcycle'],
+        simulation = SimulationMDFlux(system, intg, orderp,
+                                      settings['interfaces'],
+                                      endcycle=settings['endcycle'],
                                       startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
