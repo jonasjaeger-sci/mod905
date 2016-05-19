@@ -20,6 +20,7 @@ from pyretis.core.simulation.md_simulation import (SimulationNVE,
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.path_simulation import SimulationTIS
 from pyretis.core.pathensemble import create_path_ensembles
+from pyretis.inout.common import make_dirs
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter,
                                            check_settings)
@@ -160,9 +161,13 @@ def create_tis_simulations(settings, system):
         local_settings['output-dir'] = ensemble
         local_settings['task'] = 'tis-single'
         local_settings['detect'] = idetect
-        #tis_simulation = create_tis_simulations(local_settings, system)
-        print(local_settings)
-        print(system)
+        tis_simulation = create_tis_single_simulation(local_settings, system)
+        msg_dir = make_dirs(ensemble)
+        msgtxt = ('Creating directories:\n'
+                  '* {}'.format(msg_dir))
+        logger.info(msgtxt)
+        return tis_simulation
+        #print(local_settings)
 
 
 def create_simulation(settings, system):
