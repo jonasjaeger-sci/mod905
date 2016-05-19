@@ -40,7 +40,7 @@ class KeywordParsing(unittest.TestCase):
                             'task': 'md-nve',
                             'integrator': {'class': 'velocityverlet',
                                            'timestep': 0.002},
-                            'endcycle': 100,
+                            'steps': 100,
                             'temperature': 2.0,
                             'particles-position': {'file': 'initial.gro'},
                             'particles-velocity': {'generate': 'maxwell',
@@ -116,12 +116,12 @@ class KeywordParsing(unittest.TestCase):
         """Test that we can parse some data, write it and read it."""
         data = """task = 'md-nve'
                   integrator = {'class': 'velocityverlet', 'timestep': 0.002}
-                  endcycle = 100
+                  steps = 100
                   temperature = 2.0"""
         settings = parse_settings(data.split('\n'), add_default=False)
         correct = {'integrator': {'timestep': 0.002,
                                   'class': 'velocityverlet'},
-                   'temperature': 2.0, 'task': 'md-nve', 'endcycle': 100}
+                   'temperature': 2.0, 'task': 'md-nve', 'steps': 100}
         with tempfile.NamedTemporaryFile() as temp:
             for dump in settings_to_text(settings):
                 temp.write(dump.encode('utf-8'))

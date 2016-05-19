@@ -43,7 +43,7 @@ class SimulationNVE(Simulation):
         for it to be usable in this simulation.
     """
 
-    def __init__(self, system, integrator, endcycle=0, startcycle=0):
+    def __init__(self, system, integrator, steps=0, startcycle=0):
         """Initialization of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
@@ -57,14 +57,13 @@ class SimulationNVE(Simulation):
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
+        steps : int, optional.
+            The number of simulation steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end.
         """
-        super(SimulationNVE, self).__init__(endcycle=endcycle,
+        super(SimulationNVE, self).__init__(steps=steps,
                                             startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
@@ -127,7 +126,7 @@ class SimulationMDFlux(Simulation):
     """
 
     def __init__(self, system, integrator, orderparameter, interfaces,
-                 endcycle=0, startcycle=0):
+                 steps=0, startcycle=0):
         """Initialization of the MD-Flux simulation.
 
         Parameters
@@ -145,14 +144,13 @@ class SimulationMDFlux(Simulation):
             It is assumed to be called as ``orderparameter(system)``
             and to return at least two values where the first one
             is the scalar order parameter.
+        steps : int, optional.
+            The number of steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end.
         """
-        super(SimulationMDFlux, self).__init__(endcycle=endcycle,
+        super(SimulationMDFlux, self).__init__(steps=steps,
                                                startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.

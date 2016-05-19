@@ -38,10 +38,10 @@ _KNOWN_SIMULATIONS = {'md-nve': 'md',
 # Define required settings for known simulations:
 _REQUIRED = {'umbrellawindow': ['umbrella', 'over', 'rgen', 'seed',
                                 'maxdx', 'mincycle'],
-             'md-nve': ['endcycle', 'integrator'],
-             'md-flux': ['endcycle', 'integrator', 'interfaces',
+             'md-nve': ['steps', 'integrator'],
+             'md-flux': ['steps', 'integrator', 'interfaces',
                          'orderparameter'],
-             'tis': ['endcycle', 'tis', 'integrator', 'interfaces']}
+             'tis': ['steps', 'tis', 'integrator', 'interfaces']}
 
 
 def create_simulation(settings, system):
@@ -195,14 +195,14 @@ def create_md_simulation(settings, system, sim_type):
     if sim_type == 'md-nve':
         intg = create_integrator(settings)
         simulation = SimulationNVE(system, intg,
-                                   endcycle=settings['endcycle'],
+                                   steps=settings['steps'],
                                    startcycle=settings.get('startcycle', 0))
     elif sim_type == 'md-flux':
         intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
         simulation = SimulationMDFlux(system, intg, orderp,
                                       settings['interfaces'],
-                                      endcycle=settings['endcycle'],
+                                      steps=settings['steps'],
                                       startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
@@ -253,7 +253,7 @@ def create_path_simulation(settings, system, sim_type):
         intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
         simulation = SimulationTIS(system, intg, orderp, settings,
-                                   endcycle=settings['endcycle'],
+                                   steps=settings['steps'],
                                    startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown path simulation: {}'.format(sim_type)

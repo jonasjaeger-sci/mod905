@@ -94,7 +94,7 @@ class UmbrellaWindowSimulation(Simulation):
         startcycle : int, optional.
             The current simulation cycle, i.e. where we start.
         """
-        super(UmbrellaWindowSimulation, self).__init__(endcycle=mincycle,
+        super(UmbrellaWindowSimulation, self).__init__(steps=mincycle,
                                                        startcycle=startcycle)
         self.umbrella = umbrella
         self.overlap = overlap

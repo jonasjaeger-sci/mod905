@@ -133,7 +133,7 @@ class LennardJonesTest(unittest.TestCase):
 
     def test_lj_multi_mix(self):
         """Test for multi-mixture."""
-        ncomp = np.random.random_integers(3, high=10)
+        ncomp = np.random.randint(3, 11)
         print('\nTesting for a {}-component mixture'.format(ncomp))
         system = set_up_initial_state()
         param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},

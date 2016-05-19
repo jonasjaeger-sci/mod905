@@ -11,11 +11,14 @@ SimulationTIS
     Definition of a TIS simulation.
 """
 from __future__ import absolute_import
+import logging
 import numpy as np
 from pyretis.core.simulation.simulation import Simulation
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.tis import (generate_initial_path_kick,
                               make_tis_step_ensemble)
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['SimulationTIS']
@@ -53,7 +56,7 @@ class SimulationTIS(Simulation):
     """
 
     def __init__(self, system, integrator, orderparameter, path_ensemble,
-                 tis_settings, endcycle=0, startcycle=0):
+                 tis_settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
         Parameters
@@ -75,8 +78,25 @@ class SimulationTIS(Simulation):
         tis_settings : dict
             This dict contains TIS specific settings, in particular we
             expect that the following keys are defined:
+
+            * `aimless`: Determines if we should do aimless shooting
+              (True) or not (False).
+            * `sigma_v`: Values used for non-aimless shooting.
+            * `initial_path`: A string which defines the method used
+              for obtaining the initial path.
+            * `seed`: A integer seed for the random generator used for
+              the path ensemble we are simulating here.
+
+            Note that the `make_tis_step_ensemble` method will make
+            use of additional keys from `tis_settings`. Please see
+            this method for further details.
+        steps : int, optional.
+            The number of simulation steps to perform.
+        startcycle : int, optional.
+            The cycle we start the simulation on, can be useful if
+            restarting.
         """
-        super(SimulationTIS, self).__init__(endcycle=endcycle,
+        super(SimulationTIS, self).__init__(steps=steps,
                                             startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
@@ -110,7 +130,11 @@ class SimulationTIS(Simulation):
                                               self.rgen,
                                               self.tis_settings)
         else:
-            raise ValueError('Unknown initialization method requested!')
+            msg = ('Unknown initialization method ',
+                   "{}".format(self.tis_settings['initial_path']),
+                   ' requested!')
+            logger.error(msg)
+            raise ValueError(msg)
         return path
 
     def step(self):

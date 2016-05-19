@@ -22,7 +22,7 @@ ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
 settings = {'task': 'md-nve',
             'dimensions': 2,
             'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
-            'endcycle': 950,
+            'steps': 950,
             'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
             'units': 'lj',
             'temperature': 1.0,
@@ -61,7 +61,7 @@ npart = float(npart)
 # simulation is done.
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][ljsystem.units, 'fs'])
-timeendfs = settings['endcycle'] * timeunit
+timeendfs = settings['steps'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
@@ -269,7 +269,7 @@ def init():
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
+anim = animation.FuncAnimation(fig, update, frames=settings['steps']+1,
                                fargs=[simulation_nve, outputs],
                                repeat=False, interval=2, blit=True,
                                init_func=init)

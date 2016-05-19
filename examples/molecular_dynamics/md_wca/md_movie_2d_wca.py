@@ -26,7 +26,7 @@ DWCA_PARAMETERS = {'types': [(1, 1)], 'rzero': 1.0 * (2.0**(1.0/6.0)),
 # Give simulation settings:
 settings = {'task': 'md-nve',
             'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
-            'endcycle': 1100,
+            'steps': 1100,
             'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
             'particles-velocity': {'generate': 'maxwell', 'momentum': True,
                                    'seed': 0},
@@ -60,7 +60,7 @@ dwca = system.forcefield.potential[1]
 # some additional set-up for the animation
 timeunit = (settings['integrator']['timestep'] *
             CONVERT['time'][settings['units'], 'fs'])
-timeendfs = settings['endcycle'] * timeunit
+timeendfs = settings['steps'] * timeunit
 
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
 SIGMA = CONVERT['length'][settings['units'], 'A']
@@ -388,7 +388,7 @@ def update(frame, sys, output_tasks, sim):
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=settings['endcycle']+1,
+anim = animation.FuncAnimation(fig, update, frames=settings['steps']+1,
                                fargs=[system, outputs, simulation],
                                repeat=False, interval=2, blit=True,
                                init_func=init)

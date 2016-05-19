@@ -1,6 +1,6 @@
 settings = {'beta': 14.285714285714285,
             'dim': 1,
-            'endcycle': 10000000,
+            'steps': 10000000,
             'generate-vel': {'distribution': 'maxwell',
                              'momentum': False,
                              'seed': 0},

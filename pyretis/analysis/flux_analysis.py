@@ -33,7 +33,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
         This dict contains the results from the flux analysis.
         The keys are defined in the `results` variable.
     """
-    end_step = simulation_settings['endcycle']
+    end_step = simulation_settings['endcycle']  # TODO: CHECK IF THIS IS OK!
     time_step = simulation_settings['integrator']['timestep']
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings

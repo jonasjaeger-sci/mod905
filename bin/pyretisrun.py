@@ -199,7 +199,7 @@ if __name__ == '__main__':
         print_to_screen('Running simulation!')
         print_to_screen(79*('-'))
         if USE_TQDM:
-            for result in tqdm(simulation.run(), total=settings['endcycle']):
+            for result in tqdm(simulation.run(), total=settings['steps']):
                 #for result in simulation.run():
                     #stepno = result['cycle']['stepno']
                     #result['thermo']['stepno'] = stepno

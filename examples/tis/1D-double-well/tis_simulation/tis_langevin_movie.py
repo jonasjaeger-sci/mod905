@@ -25,7 +25,7 @@ simulation_settings = {'task': 'TIS',
                        'integrator': {'class': 'Langevin', 'timestep': 0.002,
                                       'gamma': 0.3, 'seed': 0,
                                       'high-friction': False},
-                       'endcycle': 250,
+                       'steps': 250,
                        'temperature': 0.07,
                        'interfaces': [-1.0, 0.0, 1.0],
                        'ensemble': '001',
@@ -265,7 +265,7 @@ def update(frame, simulation):
 
 
 anim = animation.FuncAnimation(fig, update,
-                               frames=simulation_settings['endcycle']+1,
+                               frames=simulation_settings['steps']+1,
                                fargs=[simulation_tis],
                                repeat=False,
                                interval=2,

@@ -17,7 +17,8 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 
 KEYWORDS = {'integrator': {'default': None},
             'orderparameter': {'default': None},
-            'endcycle': {'default': None},
+            'steps': {'default': 0},
+            'startcycle': {'default': 0},
             'task': {'default': None},
             'units': {'default': 'lj'},
             'units-base': {'default': {}},
