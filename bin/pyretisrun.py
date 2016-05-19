@@ -16,6 +16,8 @@ import datetime
 import logging
 import os
 import sys
+# Other libraries:
+from tqdm import tqdm  # for a nice progress bar
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
@@ -26,8 +28,6 @@ from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.settings import (create_system, create_force_field,
                                     create_simulation)
 from pyretis.inout import create_output
-# Other libraries:
-from tqdm import tqdm  # for a nice progress bar
 
 
 DATEFORMAT = '%d.%m.%Y %H:%M:%S'
@@ -125,14 +125,15 @@ def bye_bye_world():
     logger.info(msgtxt)
     print_to_screen(msgtxt)
     # display some references:
-    references = ['{} references:'.format(NAME)]
+    references = ['\n{} references:'.format(NAME)]
+    references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
             references.append(line)
     reftxt = '\n'.join(references)
     logger.info(reftxt)
     print_to_screen(reftxt)
-    urltxt = 'Visit us at: {}'.format(URL)
+    urltxt = '\n{}'.format(URL)
     logger.info(urltxt)
     print_to_screen(urltxt)
 
