@@ -115,13 +115,13 @@ class SimulationMDFlux(Simulation):
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    orderparemter : function or object
+    orderparemter : function or object.
         The defines how the order parameter should be calculated.
         This is either a function or a object like `OrderParameter`
         from `pyretis.core.orderparameter`. It is assumed that
         `orderparameter` can be called using a `System` object
         as the parameter.
-    leftside_prev : list of booleans
+    leftside_prev : list of booleans.
         These are used to store the previous positions with respect
         to the interfaces.
     """
@@ -132,17 +132,17 @@ class SimulationMDFlux(Simulation):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like `System` from `pyretis.core.system`.
             This is the system we are investigating
-        integrator : object like `Integrator` from `pyretis.core.integrators`
+        integrator : object like `Integrator` from `pyretis.core.integrators`.
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats.
             These defines the interfaces for which we will check the
             crossing(s).
-        orderparameter : function or object like `OrderParameter`
+        orderparameter : function or object like `OrderParameter`.
             This function is used to calculate the order parameter.
-            It is assumed to be called as: ``orderparameter(system)``
+            It is assumed to be called as ``orderparameter(system)``
             and to return at least two values where the first one
             is the scalar order parameter.
         startcycle : int, optional.
