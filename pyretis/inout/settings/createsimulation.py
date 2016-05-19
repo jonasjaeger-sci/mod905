@@ -73,6 +73,7 @@ def create_simulation(settings, system):
         family = _KNOWN_SIMULATIONS[sim_type]
     except KeyError:
         msgtxt = 'Unknown simulation task {} requested'.format(sim_type)
+        logger.error(msgtxt)
         raise ValueError(msgtxt)
     if family == 'md':
         simulation = create_md_simulation(settings, system, sim_type)
@@ -189,8 +190,8 @@ def create_md_simulation(settings, system, sim_type):
     required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
         msg = '{} settings not found: {}'.format(sim_type, not_found)
-        logger.critical(msg)
-        raise ValueError('Please update settings!')
+        logger.error(msg)
+        raise ValueError('Required simulation setting not found!')
     if sim_type == 'md-nve':
         intg = create_integrator(settings)
         simulation = SimulationNVE(system, intg,
@@ -204,6 +205,7 @@ def create_md_simulation(settings, system, sim_type):
                                       startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown MD simulation: {}'.format(sim_type)
+        logger.error(msg)
         raise ValueError(msg)
     return simulation
 
@@ -244,8 +246,8 @@ def create_path_simulation(settings, system, sim_type):
     required, not_found = check_settings(settings, _REQUIRED[sim_type])
     if not required:
         msg = '{} settings not found: {}'.format(sim_type, not_found)
-        logger.critical(msg)
-        raise ValueError('Please update settings!')
+        logger.error(msg)
+        raise ValueError('Required simulation setting not found!')
     if sim_type == 'tis':
         intg = create_integrator(settings)
         orderp = create_orderparameter(settings)
@@ -254,5 +256,6 @@ def create_path_simulation(settings, system, sim_type):
                                    startcycle=settings.get('startcycle', 0))
     else:
         msg = 'Unknown path simulation: {}'.format(sim_type)
+        logger.error(msg)
         raise ValueError(msg)
     return simulation
