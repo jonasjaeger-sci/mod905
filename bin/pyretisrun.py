@@ -24,8 +24,9 @@ from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.settings import (create_system, create_force_field,
+from pyretis.inout.settings import (parse_settings_file,
+                                    create_system,
+                                    create_force_field,
                                     create_simulation)
 from pyretis.inout import create_output
 
