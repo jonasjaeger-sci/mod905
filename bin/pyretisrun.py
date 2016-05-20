@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """pyretis
 
@@ -125,16 +125,18 @@ def bye_bye_world():
     logger.info(msgtxt)
     print_to_screen(msgtxt)
     # display some references:
-    references = ['\n{} references:'.format(NAME)]
+    references = ['{} references:'.format(NAME)]
     references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
             references.append(line)
     reftxt = '\n'.join(references)
     logger.info(reftxt)
+    print_to_screen('')
     print_to_screen(reftxt)
-    urltxt = '\n{}'.format(URL)
+    urltxt = '{}'.format(URL)
     logger.info(urltxt)
+    print_to_screen('')
     print_to_screen(urltxt)
 
 
