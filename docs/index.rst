@@ -13,9 +13,8 @@
   sampling <http://en.wikipedia.org/wiki/Transition_path_sampling#Transition_interface_sampling>`_
   and `replica exchange transition interface sampling <http://www.van-erp.org>`_.
 
-  
   pyretis is :ref:`open source <pyretis-license>`, designed to be easy to use
-  and simulations can be performed with a Python script and the :ref:`pyretis library <api-doc>`,
+  and simulations can be performed by using the :ref:`library <api-doc>`,
 
   .. code-block:: python
 

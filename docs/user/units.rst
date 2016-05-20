@@ -110,8 +110,9 @@ mass scale and energy scale:
 
 .. code-block:: python
 
-    :units: lj
-    :units-base: length 3.405 A; mass 39.948 g/mol; energy 119.8 kB
+    units = lj
+    units-base = {'length': (3.405, 'A'), 'mass': (39.948, 'g/mol'),
+                  'energy': (119.8, 'kB')}
 
 However, again note that this will only influence how we interpret input and output
 configurations -- all other output units for this system will still be in reduced
@@ -142,8 +143,6 @@ further described in the :ref:`next section <user-units-custom>`.
   +--------------+----------------+-------------+--------------------+
 
 
-
-
 .. _user-units-custom:
 
 Defining your own system of units
@@ -154,10 +153,12 @@ units keyword and defining the base units with ``:units-base:``:
 
 .. code-block:: python
 
-    :units: new-system
+    units = new-system
 
-    :units-base: length 1.0 bohr; mass 9.81e-31 kg; energy 1.0 kcal/mol;
-                 charge_unit e
+    units-base = {'length': (1.0, 'bohr'),
+                  'mass': (9.81e-31, 'kg'),
+                  'energy': (1.0, 'kcal/mol'),
+                  'charge_unit': 'e'}
 
 Note again that this will influence how the input parameters are
 interpreted and again note that input configuration files will be
@@ -168,7 +169,7 @@ The syntax for specifying a new scale for a dimension is of form
 
 .. code-block:: python
 
-    dimension value unit
+    'dimension': (value, unit)
 
 Where the ``value`` is a number defining the scale and ``unit`` a text string
 which defines the unit to use. For each dimension, pyretis defines a set of

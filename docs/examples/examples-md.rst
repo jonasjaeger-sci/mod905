@@ -18,7 +18,7 @@ Our goal is to obtain the pressure of the
 fluid at the given temperature and density.
 
 .. figure:: ../img/nve_md.png
-    :scale: 75 %
+    :class: img-responsive
     :alt: NVE simulation of a LJ fluid
     :align: center
 
