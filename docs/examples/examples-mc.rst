@@ -17,10 +17,12 @@ known, potential using umbrella sampling. The results we will obtain are
 shown in the figure below: the potential energy :math:`V(x)`
 and the probability density.
 
-.. image:: ../img/umbrella_sampling.png
-   :scale: 75 %
+.. figure:: ../img/umbrella_sampling.png
+   :class: img-responsive center-block
    :alt: Result from the umbrella sampling
    :align: center
+
+   Sample results for the potential energy and the probability density.
 
 We begin by importing the pyretis library:
 
