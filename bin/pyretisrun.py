@@ -147,11 +147,16 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-V', '--version', action='version',
                         version='{} {}'.format(NAME, VERSION))
-    parser.add_argument('-l', '--log',
-                        help='Specify log to write',
+    parser.add_argument('-f', '--log_file',
+                        help='Specify log file to write',
                         required=False,
                         default='{}.log'.format(NAME.lower()))
+    parser.add_argument('-l', '--log_level',
+                        help='Specify log level for log file',
+                        required=False,
+                        default='INFO')
     args_dict = vars(parser.parse_args())
+
 
     inputfile = args_dict['input']
     runpath = os.getcwd()
@@ -169,14 +174,16 @@ if __name__ == '__main__':
     console.setFormatter(formatter)
     logger.addHandler(console)
     # log to a file:
-    fileh = logging.FileHandler(args_dict['log'], mode='w')
-    fileh.setLevel(logging.DEBUG)
+    fileh = logging.FileHandler(args_dict['log_file'], mode='w')
+    log_level = getattr(logging, args_dict['log_level'].upper(),
+                        logging.INFO)
+    fileh.setLevel(log_level)
     formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
     fileh.setFormatter(formatter_file)
     logger.addHandler(fileh)
 
     try:
-        hello_world(inputfile, basepath, args_dict['log'])
+        hello_world(inputfile, basepath, args_dict['log_file'])
         if not os.path.isfile(inputfile):
             errtxt = ('No simulation input:'
                       ' {} is not a file!'.format(inputfile))
