@@ -1,28 +1,6 @@
 List of pyretis keywords
 ========================
 
-endcycle
-task
-ensemble
-interfaces
-generate-vel
-output-dir
-initial-pos
-initial-vel
-dimensions
-temperature
-tis
-output
-particles-position    
-particles-velocity
-particles-mass
-particles-name
-particles-type
-potentials
-potential-parameters
-forcefield
-
-
 .. toctree::
     :maxdepth: 1
 

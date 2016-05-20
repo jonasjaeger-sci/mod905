@@ -139,8 +139,10 @@ html_theme_options = {
     # Render the next and previous page links in navbar. (Default: true)
     'navbar_sidebarrel': False,
     'navbar_links': [#("About", "about/index"),
+                     ("Installing", "user/install"),
+                     ("Getting started", "user/getting-started"),
                      ("Examples", "examples/index"),
-                     ("Input keywords", "user/keywords/keywords"),
+                     ("Keyword reference", "user/keywords/keywords"),
                      #("API", "api/pyretis"),
                      #("Developer guide", "developer/index")],
                     ],
