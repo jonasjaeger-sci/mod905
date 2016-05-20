@@ -3,42 +3,36 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-*******************
-Welcome to pyretis!
-*******************
+.. container:: jumbotron
 
-.. image:: img/logo1.png
-   :scale: 50%
-.. image:: img/logo2.png
-   :scale: 50%
+  .. image:: img/logo3.png
+     :class: img-responsive
 
-pyretis is a molecular simulation library for **rare events** with
-emphasis on `transition interface
-sampling <http://en.wikipedia.org/wiki/Transition_path_sampling#Transition_interface_sampling>`_
-and `replica exchange transition interface
-sampling <http://www.van-erp.org>`_.
+  pyretis is a `Python <https://www.python.org>`_ library for **rare event molecular simulations**
+  with emphasis on methods based on `transition interface
+  sampling <http://en.wikipedia.org/wiki/Transition_path_sampling#Transition_interface_sampling>`_
+  and `replica exchange transition interface sampling <http://www.van-erp.org>`_.
 
-pyretis is :ref:`open source <pyretis-license>`, written in
-`python <https://www.python.org>`_ and simulations can either
-be executed using a high-level python script using
-the :ref:`pyretis library <api-doc>`,
+  
+  pyretis is :ref:`open source <pyretis-license>`, designed to be easy to use
+  and simulations can be performed with a Python script and the :ref:`pyretis library <api-doc>`,
 
-.. code-block:: python
+  .. code-block:: python
 
-  from pyretis.core import create_system, create_simulation
-  settings = {'task': 'md-nve',
-              # more settings...
-             }
-  system = create_system(settings)
-  simulation = create_simulation(settings, system)
-  for results in simulation.run():
-      print(results)  # print out calculated properties
+    from pyretis.core import create_system, create_simulation, create_force_field
+    settings = {'task': 'tis',
+                'interfaces': [-1.0, 0.0, 1.0],
+                # more settings...
+               }
+    system = create_system(settings)
+    system.forcefield = create_force_field(settings)
+    simulation = create_simulation(settings, system)
+    for results in simulation.run():
+        print(results)  # print out calculated properties
 
-
-or by using a simple text-based :ref:`input script <user-guide-input>`.
-
-The usage of pyretis is described in the :ref:`user guide <user-guide-index>`
-where you can learn how to use pyretis. 
+  or with a python flavored :ref:`input file <user-guide-input>`. The usage of pyretis is
+  described in the :ref:`user guide <user-guide-index>`
+  where you can learn how to use pyretis. 
 
 Installation
 ============
@@ -55,7 +49,7 @@ from `gitlab <https://gitlab.com/andersle/>`_,
 
 .. code-block:: bash
 
-    git clone git@gitlab.com:YYY/XXX
+    git clone git@gitlab.com:andersle/pyretis.git
 
 and sourced in your python path:
 
@@ -76,13 +70,16 @@ In order to run pyretis, the following python libraries are needed:
 
 * `Sphinx <http://sphinx-doc.org/>`_ (for building the documentation).
 
+* `tqdm <https://github.com/tqdm/tqdm/>`_
+
 These packages can be installed by:
 
 .. code-block:: bash
 
     pip install -r requirements.txt
 
-using the `requirements.txt` file in the source code directory.
+using the `requirements.txt <https://gitlab.com/andersle/pyretis/blob/master/requirements.txt>`_
+file in the source code directory.
 
 
 Contents

@@ -6,16 +6,16 @@ Getting started with pyretis
 How to use pyretis
 ------------------
 
-The pyretis library can be used in two ways:
+pyretis can be used in two ways:
 
-*  By simply using a text-based input which is parsed by the program and
+*  By using a text-based input file which is read by pyretis and
    used to set up and run the simulation. This approach and the syntax
    is explained in detail in the :ref:`input <user-guide-input>` description.
-*  By making use of the pyretis API to set up simulations by hand.
-   This approach and the API is descriped in detail in the
-   :ref:`introduction <user-guide-intro-api>` to the API section
+*  By making use of the pyretis library to set up simulations in a python script.
+   This approach and the library is described in detail in the
+   :ref:`introduction to the library <user-guide-intro-api>`
    and in the
-   :ref:`detailed <api-doc>` reference section.
+   :ref:`detailed reference section <api-doc>`.
 
 
 The first option is the simplest to use while the second option offers
@@ -28,7 +28,7 @@ Transition state interface sampling in a 1D-potential
 -----------------------------------------------------
 
 This is a short example showing how we can use transition state
-interface sampling to caclulate a rate constant.
+interface sampling to calculate a rate constant.
 
 
 More examples

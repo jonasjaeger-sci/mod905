@@ -29,12 +29,11 @@ import sphinx_bootstrap_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.napoleon', # api
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-]
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.napoleon', # api
+              'sphinx.ext.todo',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode']
 
 # Napoleon settings
 napoleon_numpy_docstring = True
@@ -48,7 +47,7 @@ napoleon_use_rtype = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# number figures please
+# Number figures please!
 numfig = True
 
 # The suffix(es) of source filenames.
@@ -170,23 +169,16 @@ html_theme_options = {
     # Options are "nav" (default), "footer" or anything else to exclude.
     'source_link_position': "nav",
     # Bootswatch (http://bootswatch.com/) theme.
-    'bootswatch_theme': "yeti",
+    'bootswatch_theme': "flatly",
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
     'bootstrap_version': "3",
 }
 
 
-
-
-
-
-# Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
-
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = 'pyretis'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -238,10 +230,10 @@ html_static_path = ['_static']
 #html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
+html_show_sphinx = True
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#html_show_copyright = True
+html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the

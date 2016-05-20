@@ -1,11 +1,12 @@
 
 .. _api-doc:
 
-###############
-The pyretis API
-###############
+###################
+The pyretis library
+###################
 
-This is the documentation for the pyretis API.
+This is the documentation for the pyretis library and usage
+of the application programming interface (API).
 An overview of the main classes and routines are
 given in the :ref:`introduction to the API <user-guide-intro-api>` in
 the :ref:`user guide <user-guide-index>`.
