@@ -8,6 +8,7 @@ User Guide
     :maxdepth: 2
 
     intro.rst
+    install.rst
     getting-started.rst
     input.rst
     application.rst

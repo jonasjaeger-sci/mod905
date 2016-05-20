@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. title:: Home
+
 .. container:: jumbotron
 
   .. image:: img/logo3.png
@@ -31,61 +33,12 @@
 
   or with a python flavored :ref:`input file <user-guide-input>`. The usage of pyretis is
   described in the :ref:`user guide <user-guide-index>`
-  where you can learn how to use pyretis. 
+  where you can learn how to use pyretis and how to :ref:`obtain it <user-guide-install>`.
 
-Installation
-============
-
-pyretis is currently in closed beta. When pyretis is
-released, the current version can be installed by pip:
-
-.. code-block:: bash
-
-    pip install pyretis
-
-The development version can be cloned
-from `gitlab <https://gitlab.com/andersle/>`_,
-
-.. code-block:: bash
-
-    git clone git@gitlab.com:andersle/pyretis.git
-
-and sourced in your python path:
-
-.. code-block:: bash
-
-    export PYTHONPATH=$PYTHONPATH:/some/dir/pyretis
-
-In order to run pyretis, the following python libraries are needed:
-
-* `SciPy <http://www.scipy.org/>`_, `NumPy <http://www.numpy.org/>`_,
-  and `matplotlib <http://matplotlib.org/>`_
-  (see also the information on
-  `installing the SciPy Stack <http://www.scipy.org/install.html>`_).
-
-* `Jinja2 <http://jinja.pocoo.org/docs/dev/>`_
-
-* `Docutils <http://docutils.sourceforge.net/>`_
-
-* `Sphinx <http://sphinx-doc.org/>`_ (for building the documentation).
-
-* `tqdm <https://github.com/tqdm/tqdm/>`_
-
-These packages can be installed by:
-
-.. code-block:: bash
-
-    pip install -r requirements.txt
-
-using the `requirements.txt <https://gitlab.com/andersle/pyretis/blob/master/requirements.txt>`_
-file in the source code directory.
-
-
-Contents
-========
 
 .. toctree::
     :maxdepth: 2
+    :hidden:
 
     about/index.rst
     user/index.rst
@@ -93,9 +46,3 @@ Contents
     examples/index.rst
     developer/index.rst
 
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

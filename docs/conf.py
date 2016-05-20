@@ -131,18 +131,19 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
-#html_theme_options = {
-    #'sticky_navigation': True # Set to False to disable the sticky nav while scrolling.
-#    'logo_only': True, # if we have a html_logo below, this shows /only/ the logo with no title text
-#}
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
     'navbar_title': "",
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Site",
     # Render the next and previous page links in navbar. (Default: true)
-    'navbar_sidebarrel': True,
+    'navbar_sidebarrel': False,
+    'navbar_links': [#("About", "about/index"),
+                     ("Examples", "examples/index"),
+                     ("Input keywords", "user/keywords/keywords"),
+                     #("API", "api/pyretis"),
+                     #("Developer guide", "developer/index")],
+                    ],
     # Render the current pages TOC in the navbar. (Default: true)
     'navbar_pagenav': True,
     # Tab name for the current pages TOC. (Default: "Page")
@@ -167,7 +168,7 @@ html_theme_options = {
     'navbar_fixed_top': "true",
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "nav",
+    'source_link_position': "footer",
     # Bootswatch (http://bootswatch.com/) theme.
     'bootswatch_theme': "flatly",
     # Choose Bootstrap version.
