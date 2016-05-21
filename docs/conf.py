@@ -19,7 +19,6 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
 
@@ -32,7 +31,8 @@ import sphinx_bootstrap_theme
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon', # api
               'sphinx.ext.todo',
-              'sphinx.ext.mathjax',
+              #'sphinx.ext.mathjax',
+              'sphinx.ext.pngmath',
               'sphinx.ext.viewcode']
 
 # Napoleon settings
@@ -142,14 +142,14 @@ html_theme_options = {
                      ("Installing", "user/install"),
                      ("Getting started", "user/getting-started"),
                      ("Examples", "examples/index"),
-                     ("Keyword reference", "user/keywords/keywords"),
+                     ("Keywords", "user/keywords/keywords"),
                      #("API", "api/pyretis"),
                      #("Developer guide", "developer/index")],
                     ],
     # Render the current pages TOC in the navbar. (Default: true)
     'navbar_pagenav': True,
     # Tab name for the current pages TOC. (Default: "Page")
-    'navbar_pagenav_name': "Contents",
+    'navbar_pagenav_name': "Page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': 2,
