@@ -30,8 +30,8 @@ Explicit use of the pyretis library
 
 
 
-Learning by doing -- pyretis examples
--------------------------------------
+Learning by doing — pyretis examples
+------------------------------------
 
 In addition to reading the documentation we have prepared
 several examples to highlight the usage and capabilities of pyretis.
