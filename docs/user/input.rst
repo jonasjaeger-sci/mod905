@@ -4,10 +4,9 @@ Running pyretis with input files
 ================================
 
 pyretis simulations can be set up and run with a simple input file.
-This input file defines a simulation by setting
-:ref:`keywords <user-keywords>`
-explicitly, while all undefined keywords will be
-given :ref:`default <input-default>` values.
+This input file defines a simulation by setting values for
+:ref:`keywords <user-keywords>`. All keywords that are not set
+will assume :ref:`default <input-default>` values.
 
 After the input script has been created, a pyretis simulation can
 be evoked by running
@@ -17,73 +16,126 @@ be evoked by running
     $ pyretisrun -i <input>
 
 
-Which will run your simulation, create the requested output and
-write a simulation log both to the screen and to a file ``pyretis.log``.
+Which will run your simulation and create the different 
+output file(s). For the full description of the usage
+of the ``pyretisrun`` application, please see the
+:ref:`pyretisrun documentation <user-guide-application>`.
+Here, we will discuss
+the :ref:`structure of the input file <user-guide-input-structure>` and
+some of the most :ref:`common input settings <user-guide-input-commonkey>`
+for :ref:`defining the system <user-guide-input-commonsys>`,
+:ref:`force field <user-guide-input-commonforce>`,
+:ref:`simulation <user-guide-input-commonsim>`
+and :ref:`output <user-guide-input-commonout>`.
+
+.. _user-guide-input-structure:
 
 Structure of the input file
 ---------------------------
 
-The input file consist of keywords with corredponding values.
-The syntax for setting keywords is ``keyword = setting``,
-for example:
+The structure of the input file can be summarized in three points:
 
-.. code-block:: python
+1. The input file consist of keywords with corredponding values.
+   The syntax for setting keywords is ``keyword = setting``,
+   for example:
 
-   task = md-nve
+   .. code-block:: python
 
-   integrator = {'class': 'velocityverlet', 'timestep': 0.002}
+      task = md-nve
+      integrator = {'class': 'velocityverlet', 'timestep': 0.002}
+
+   which  sets the two keywords :ref:`task <user-keywords-task>` and
+   :ref:`integrator <user-keywords-integrator>`.
+
+2. The format of the input file is relatively free,
+   you can for instance order things as you prefer and the input
+   is in general **case insensitive**:
+
+   .. code-block:: python
+
+       task = md-nve
+       units = lj
+       
+   which is identical to:
+
+   .. code-block:: python
+
+       UNITS = lj
+       tAsK = md-nve
+
+   Note that there are two important exceptions where the setting is
+   in fact **case sensitive**: when referring to files or python class names!
+
+3. You can also add text and comments to structure the input file:
+
+   .. code-block:: python
+
+       Simulation settings
+       -------------------
+       task = md-nve
+       units = lj
+
+       # More settings:
+
+       System settings
+       ---------------
+       temperature = 1.0
+
+   Comments are marked as starting with a ``'#'`` and all following text
+   will be ignored. This means that the setting:
+
+   .. code-block:: python
+
+       task = md-nve
+
+   is interpreted identical to the following:
+
+   .. code-block:: python
+
+       task = md-nve  # set up and run a md-nve simulation not TIS this time.
 
 
-The format of the input file is relatively free,
-you can for instance order things as you prefer and the input
-is in general case insensitive:
+.. _user-guide-input-commonkey:
 
-.. code-block:: python
+Some common pyretis keywords
+----------------------------
 
-    task = md-nve
-    units = lj
-    # is identical to:
-    UNITS = lj
-    tAsK = md-nve
+We give below an overview of the most common keywords used for defining
+rare event simulations for pyretis. For convenience we have grouped
+these settings into categories:
 
-There are two cases where the case matters: when referring to files 
-or python class names, case will in general matter!
+* :ref:`Keywords defining the system <user-guide-input-commonsys>`
 
-You can also add text and comments to structure the input file:
+* :ref:`Keywords defining the force field <user-guide-input-commonforce>`
 
-.. code-block:: python
+* :ref:`Keywords defining the output <user-guide-input-commonout>`
 
-    Simulation settings
-    -------------------
-    task = md-nve
-    units = lj
+* :ref:`Keywords defining the simulation <user-guide-input-commonsim>`
 
-    # More settings:
-    System settings
-    ---------------
-    temperature = 1.0
+For a complete description of all pyretis settings,
+please see the :ref:`keyword reference section <user-keywords>`.
 
 
-Common input settings
----------------------
+.. _user-guide-input-commonsys:
 
-This is a short list of the most important settings. These
-keywords are the ones that you will probably use most often.
-For the complete list of all keywords, please consult the section
-listing :ref:`all keywords <user-keywords>` which also gives a more
-complete description of the usage of the keywords with several
-examples.
+Settings defining the system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The most common settings are:
 
-* units
-    Specify the units to use.
+* :ref:`units <user-keywords-units>`:
+    Specify the units to use for the system (and by extension the simulation)
 
     Examples:
 
     .. code-block:: python
 
         units = lj  # Select Lennard-Jones units
+
+
+.. _user-guide-input-commonsim:
+
+Settings defining the simulations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * task
     Specify the kind of simulation to run.
@@ -112,23 +164,20 @@ The most common settings are:
                       'seed': 0,
                       'high-friction': False}
 
-.. _user-keywords:
 
-All pyretis keywords
---------------------
+.. _user-guide-input-commonforce:
 
-The pyretis keywords are:
+Settings defining the force field
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* :ref:`box <user-keywords-box>`: for setting up the simulation box
-* :ref:`integrator <user-keywords-integrator>`: for selecting the integration routine
-* :ref:`orderparameter <user-keywords-task>`: for selecting the order parameter
-* :ref:`particles-position <user-keywords-particles-position>`: for setting the initial particle positions
-* :ref:`particles-velocity <user-keywords-particles-velocity>`: for setting the initial particle velocities
-* :ref:`particles-mass <user-keywords-particles-mass>`: for setting the masses of the particles
-* :ref:`particles-name <user-keywords-particles-name>`: for setting the names of the particles
-* :ref:`particles-type <user-keywords-particles-type>`: for setting the types of the particles
-* :ref:`task <user-keywords-task>`: for selecting what kind of simulation to run
-* :ref:`units <user-keywords-units>`: for selecting units to use for input/output
+Test here.
+
+.. _user-guide-input-commonout:
+
+Settings defining the output
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test here.
 
 .. _input-default:
 

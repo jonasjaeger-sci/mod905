@@ -14,20 +14,19 @@ After :ref:`installing pyretis <user-guide-install>`, you
 can run simulations, either by using a **text-based input
 file** or by making **explicit use of the pyretis library**:
 
-The text based input file
-  Using the input file is the simplest approach. You will first have
-  to learn how to create this file and this is explained in
-  the :ref:`input description <user-guide-input>`.
+1. **The text based input file**:
+   Using the input file is the simplest approach. You will first have
+   to learn how to create this file and this is explained in
+   the :ref:`input description <user-guide-input>`.
 
-Explicit use of the pyretis library
-  The second option offers more freedom in defining, running
-  and interacting with the simulation. However, this approach requires
-  that you study how the pyretis library is structured and build up.
-  This is described in the 
-  :ref:`introduction to the library <user-guide-intro-api>`
-  and in the
-  :ref:`detailed reference section <api-doc>`.
-
+2. **Explicit use of the pyretis library**:
+   The second option offers more freedom in defining, running
+   and interacting with the simulation. However, this approach requires
+   that you study how the pyretis library is structured and build up.
+   This is described in the 
+   :ref:`introduction to the library <user-guide-intro-api>`
+   and in the
+   :ref:`detailed reference section <api-doc>`.
 
 
 Learning by doing — pyretis examples
