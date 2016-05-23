@@ -1,39 +1,85 @@
 .. _user-guide-getting-started:
 
+.. role:: header
+   :class: h4
+
+
 Getting started with pyretis
 ============================
 
-How to use pyretis
-------------------
-
-pyretis can be used in two ways:
-
-*  By using a text-based input file which is read by pyretis and
-   used to set up and run the simulation. This approach and the syntax
-   is explained in detail in the :ref:`input <user-guide-input>` description.
-*  By making use of the pyretis library to set up simulations in a python script.
-   This approach and the library is described in detail in the
-   :ref:`introduction to the library <user-guide-intro-api>`
-   and in the
-   :ref:`detailed reference section <api-doc>`.
-
-
-The first option is the simplest to use while the second option offers
-more freedom in defining, running and interacting with the simulation.
-
-We show below a short example of the two approaches for running a simple
-rate calculation.
-
-Transition state interface sampling in a 1D-potential
------------------------------------------------------
-
-This is a short example showing how we can use transition state
-interface sampling to calculate a rate constant.
-
-
-More examples
+Using pyretis
 -------------
 
-These are included in the pyretis/examples directory please
-see the :ref:`example page(s) <examples-index>` for
-a complete description.
+After :ref:`installing pyretis <user-guide-install>`, you
+can run simulations, either by using a **text-based input
+file** or by making **explicit use of the pyretis library**:
+
+The text based input file
+  Using the input file is the simplest approach. You will first have
+  to learn how to create this file and this is explained in
+  the :ref:`input description <user-guide-input>`.
+
+Explicit use of the pyretis library
+  The second option offers more freedom in defining, running
+  and interacting with the simulation. However, this approach requires
+  that you study how the pyretis library is structured and build up.
+  This is described in the 
+  :ref:`introduction to the library <user-guide-intro-api>`
+  and in the
+  :ref:`detailed reference section <api-doc>`.
+
+
+
+Learning by doing -- pyretis examples
+-------------------------------------
+
+In addition to reading the documentation we have prepared
+several examples to highlight the usage and capabilities of pyretis.
+The full list of examples can be found in 
+the :ref:`example section <examples-index>`.
+
+.. container:: row
+
+   .. container:: col-sm-6 col-md-3
+
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
+            :width: 100%
+            :class: img-rounded
+
+         .. container:: caption
+            
+            :header:`TIS`
+
+            This example is showing how to run a Transition Interface Sampling
+            simulation.
+
+   .. container:: col-sm-6 col-md-3
+      
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
+            :width: 100%
+            :class: img-rounded
+
+         .. container:: caption
+            
+            :header:`RETIS`
+
+            This example is using Replica Exchange Transition Interface Sampling
+            for calculating the rate of a simple reaction.
+
+   .. container:: col-sm-6 col-md-3
+      
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
+            :width: 100%
+            :class: img-rounded
+
+         .. container:: caption
+            
+            :header:`Custom order`
+
+            This example shows how custom order parameters can be created.
