@@ -141,7 +141,7 @@ html_theme_options = {
     'navbar_links': [#("About", "about/index"),
                      ("Installing", "user/install"),
                      ("Getting started", "user/getting-started"),
-                     ("Examples", "examples/index"),
+                     #("Examples", "examples/index"),
                      ("Keywords", "user/keywords/keywords"),
                      #("API", "api/pyretis"),
                      #("Developer guide", "developer/index")],

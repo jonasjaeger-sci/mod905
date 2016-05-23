@@ -10,7 +10,7 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.1"
    id="svg3003"
-   height="219.10721"
+   height="204.10721"
    width="609.9082"
    inkscape:version="0.91 r"
    sodipodi:docname="logo3.svg"
@@ -30,13 +30,13 @@
      inkscape:window-height="845"
      id="namedview16"
      showgrid="false"
-     fit-margin-top="25"
+     fit-margin-top="5"
      fit-margin-left="10"
      fit-margin-right="10"
-     fit-margin-bottom="25"
+     fit-margin-bottom="30"
      inkscape:zoom="0.9248359"
-     inkscape:cx="224.1014"
-     inkscape:cy="-39.211615"
+     inkscape:cx="65.154284"
+     inkscape:cy="-34.211612"
      inkscape:window-x="0"
      inkscape:window-y="30"
      inkscape:window-maximized="1"
@@ -88,27 +88,27 @@
   <text
      sodipodi:linespacing="125%"
      x="233.09424"
-     y="124.54457"
+     y="104.54457"
      id="text3113"
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:96.55252838px;line-height:125%;font-family:'Droid Sans';-inkscape-font-specification:'Droid Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"><tspan
        x="233.09424"
-       y="124.54457"
+       y="104.54457"
        id="tspan3115"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Droid Serif';-inkscape-font-specification:'Droid Serif'">pyretis</tspan></text>
   <text
      sodipodi:linespacing="125%"
      x="242.2234"
-     y="186.60973"
+     y="166.60973"
      id="text3117"
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:31.20903397px;line-height:125%;font-family:'Droid Sans';-inkscape-font-specification:'Droid Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"><tspan
        x="242.2234"
-       y="186.60973"
+       y="166.60973"
        id="tspan3119"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Droid Serif';-inkscape-font-specification:'Droid Serif'">— rare events in python</tspan></text>
   <g
-     transform="matrix(0.47158109,0,0,0.47163291,-39.363727,-112.36166)"
+     transform="matrix(0.47158109,0,0,0.47163291,-39.363727,-132.36166)"
      id="layer1-8"
      clip-path="url(#clipPath4606)">
     <image

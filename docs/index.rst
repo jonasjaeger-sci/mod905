@@ -16,7 +16,13 @@
   and `replica exchange transition interface sampling <http://www.van-erp.org>`_.
 
   pyretis is :ref:`open source <pyretis-license>`, designed to be easy to use
-  and simulations can be performed by using the :ref:`library <api-doc>`,
+  and can be interfaced with other simulation packages such as GROMACS or CP2K.
+
+  You can use the pyretis :ref:`library <api-doc>` to set up tailored
+  simulations or you can use a python flavored :ref:`input file <user-guide-input>`
+  to run different kinds of path sampling simulations. Please see the
+  :ref:`user guide <user-guide-index>` for information about the usage and
+  how to :ref:`obtain pyretis! <user-guide-install>`
 
   .. code-block:: python
 
@@ -30,10 +36,6 @@
     simulation = create_simulation(settings, system)
     for results in simulation.run():
         print(results)  # print out calculated properties
-
-  or with a python flavored :ref:`input file <user-guide-input>`. The usage of pyretis is
-  described in the :ref:`user guide <user-guide-index>`
-  where you can learn how to use pyretis and how to :ref:`obtain it <user-guide-install>`.
 
 
 .. toctree::
