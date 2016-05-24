@@ -4,6 +4,12 @@
 The class for particles is in reality a simplistic particle list which
 stores positions, velocities, masses etc. and is used for representing
 the particles in the simulations.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Particles (:py:class:`pyretis.core.particles.Particles`)
+    Class for a list of particles.
 """
 import logging
 import numpy as np

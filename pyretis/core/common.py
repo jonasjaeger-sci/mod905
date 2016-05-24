@@ -4,7 +4,7 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-inspect_function
+inspect_function (:py:func:`pyretis.core.common.inspect_function`)
     A method to obtain information about arguments, keyword arguments
     for functions.
 """

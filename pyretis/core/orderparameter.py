@@ -9,16 +9,16 @@ parameter (i.e. its velocity).
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OrderParameter
+OrderParameter (:py:class:`pyretis.core.orderparameter.OrderParameter`)
     Base class for the order parameters.
 
-OrderParameterPosition
+OrderParameterPosition (:py:class:`pyretis.core.orderparameter.OrderParameterPosition`)
     A class for a simple position dependent order parameter.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-order_factory
+order_factory (:py:func:`pyretus.core.orderparameter.order_factory`)
     A method to create order parameters from settings.
 """
 import logging

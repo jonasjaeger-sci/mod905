@@ -7,7 +7,7 @@ It is typically referenced via the `system`, i.e. as `system.box`.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box
+Box (:py:class:`pyretis.core.box.Box`)
     Class for a simulation box.
 
 Examples

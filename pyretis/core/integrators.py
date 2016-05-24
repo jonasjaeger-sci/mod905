@@ -7,22 +7,22 @@ Newtons equations of motion in time, the dynamics in molecular dynamics.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Integrator
+Integrator (:py:class:`pyretis.core.integrators.Integrator`)
     The base class for integrators
 
-Verlet
+Verlet (:py:class:`pyretis.core.integrators.Verlet`)
     A Verlet integrator
 
-VelocityVerlet
+VelocityVerlet (:py:class:`pyretis.core.integrators.VelocityVerlet`)
     A Velocity Verlet integrator
 
-Langevin
+Langevin (:py:class:`pyretis.core.integrators.Langevin`)
     A Langevin integrator
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-integrator_factory
+integrator_factory (:py:func:`pyretis.core.integrators.integrator_factory`)
     Method for setting up and creating an integrator from
     simulation settings.
 """
