@@ -15,24 +15,24 @@ The pyretis library contains methods and classes that handle
 the different aspects of a simulation. These are grouped
 into sub-modules:
 
-* :ref:`pyretis.core <user-guide-intro-api-core>` for setting up and running
+* :py:mod:`pyretis.core` for setting up and running
   simulations
 
-* :ref:`pyretis.forcefield <user-guide-intro-api-core>` for defining
+* :py:mod:`pyretis.forcefield` for defining
   force fields to use in simulations
 
-* :ref:`pyretis.analysis <user-guide-intro-api-analysis>` for analysing the
+* :py:mod:`pyretis.analysis` for analysing the
   output from simulations
 
-* :ref:`pyretis.inout <user-guide-intro-api-inout>` for handling the input
+* :py:mod:`pyretis.inout` for handling the input
   and output to pyretis
 
-* :ref:`pyretis.tools <user-guide-intro-api-tools>` for performing some simple
+* :py:mod:`pyretis.tools` for performing some simple
   tasks useful for setting up simulations.
 
 
 In the following sections, we will discuss these modules.
-Since the `pyretis.core` and `pyretis.forcefield` modules
+Since the :py:mod:`pyretis.core` and :py:mod:`pyretis.forcefield` modules
 naturally interact, they are described together.
 
 
@@ -46,12 +46,12 @@ The two main pyretis classes we will discuss here are the
 * `System` which defines the system  we are investigating. It will
   typically contain particles, a simulation box and a
   force field. The base class for the `System` is defined in
-  :ref:`pyretis.core.system <api-core-system>`.
+  :py:mod:`pyretis.core.system`.
 
 * `Simulation` which defines a simulation we can run. A simulation
   will typically act on a `System` and alter its state.
   The base class for the `Simulation` is defined in
-  :ref:`pyretis.core.simulation.simulation <api-core-simulation-simulation>`.
+  :py:mod:`pyretis.core.simulation.simulation`.
 
 In addition, we will consider the classes for
 :ref:`boxes <user-guide-intro-api-box>`,
@@ -88,15 +88,16 @@ We will not discuss the
 `Integrator` class shown
 in :numref:`figure %s <figure-relation-base-objects>` and we
 refer the interested user to the documentation
-for the :ref:`pyretis.core.integrators <api-core-integrators>` module.
+for the :py:mod:`pyretis.core.integrators` module.
 
 
 .. _user-guide-intro-api-box:
 
-`Box`
-~~~~~
+Box
+~~~
 
-The `Box` class simply defines a simulation box. It is useful in
+The ``Box`` class (:py:class:`pyretis.core.box.Box`)
+defines a simulation box. It is useful in
 simulations where we wish to have periodic boundaries. Typically,
 we do not interact much with the box beyond creating it.
 Boxes are created by passing a (optional) `size` which is a list
@@ -123,20 +124,21 @@ Some examples:
 
 .. _user-guide-intro-api-particles:
 
-`Particles`
-~~~~~~~~~~~
+Particles
+~~~~~~~~~
 
-The `Particles` class represents a collection of particles and in many
+The ``Particles`` class (:py:class:`pyretis.core.particles.Particles`) 
+represents a collection of particles and in many
 ways it can be viewed as a particle list. Again, this is a class we
 don't have to interact much with, typically we just have to populate the
 particle list with particles. Internally in pyretis, the particle
 list is one of the most important classes. The positions, velocities and
-forces are accessed through an instance of the `Particles` class using
-the class attributes `pos`, `vel` and `force`. One of the more useful
-methods of the `Particles` class for us now is the `add_particle` which
+forces are accessed through an instance of the ``Particles`` class using
+the class attributes ``pos``, ``vel`` and ``force``. One of the more useful
+methods of the ``Particles`` class for us now is the ``add_particle`` which
 we use add particles to the list.
-When we initiate an instance of `Particles`, we define the dimensionality
-using the `dim` keyword parameter.
+When we initiate an instance of ``Particles``, we define the dimensionality
+using the ``dim`` keyword parameter.
 
 .. code-block:: python
 
@@ -147,15 +149,15 @@ using the `dim` keyword parameter.
     pos = [0.0, 1.0, 0.0]
     vel = [0.0, 0.0, 0.0]
     force = [0.0, 0.0, 0.0]
-    part.add_particle(pos, vel, force, mass=1.0, name='Ar', ptype='A')
+    part.add_particle(pos, vel, force, mass=1.0, name='Ar', ptype=0)
     print(part.pos)
     pos = [1.0, 0.0, 0.0]
-    part.add_particle(pos, vel, force, mass=1.0, name='Ar', ptype='A')
+    part.add_particle(pos, vel, force, mass=1.0, name='Ar', ptype=0)
     print(part.pos)
 
-Here, we can add names to particles using the keyword `name` and we
-can also specify a particle type using `ptype`.
-The `name` can be used to identify ('tag')
+Here, we can add names to particles using the keyword ``name`` and we
+can also specify a particle type using ``ptype``.
+The ``name`` can be used to identify ('tag')
 specific particles.
 The particle type can
 be used to specify parameters for pair interactions which is computed
@@ -164,26 +166,27 @@ by the force field.
 
 .. _user-guide-intro-api-forcefield:
 
-`ForceField`
-~~~~~~~~~~~~
+ForceField
+~~~~~~~~~~
 
-The `ForceField` class is used to define force fields.
+The ``ForceField`` class (:py:class:`pyretis.forcefield.forcefield.ForceField`)
+is used to define force fields.
 A force field is just a list of functions (as possibly parameters)
 which can be used to obtain the force and potential energy.
 In general, the force field expect that its constituent potential functions
 actually supports calling **three** functions which means that the
 potential functions must be slightly more complex than just simple
 functions — they need to be classes. If we, for the sake of an example,
-let an instance of the `ForceField` class have a constituent potential
-function named `func`, then the `ForceField` assumes that it can invoke:
+let an instance of the ``ForceField`` class have a constituent potential
+function named ``func``, then the ``ForceField`` assumes that it can invoke:
 
-1. `func.potential()` to obtain the potential energy.
+1. ``func.potential()`` to obtain the potential energy.
 
-2. `func.force()` to obtain the forces and the virial.
+2. ``func.force()`` to obtain the forces and the virial.
 
-3. `func.potential_and_force()` to obtain the potential energy,
+3. ``func.potential_and_force()`` to obtain the potential energy,
    forces and the virial. Typically this can be done by just calling
-   `func.potential()` and `func.force()`.
+   ``func.potential()`` and ``func.force()``.
 
 Let's see an example of how we can set-up a potential function (or class)
 and add it to a force field. To make things simple here, we just implement
@@ -216,14 +219,14 @@ the functions in the potential class as static methods.
 In practice, it will be simpler to create the potential functions
 as new classes inheriting from the potential class which you can
 read about in the documentation of the
-:ref:`pyretis.forcefield.potential <api-forcefield-potential>` module and
+:py:mod:`pyretis.forcefield.potential` module and
 some examples can be found in the
-:ref:`pyretis.forcefield.potentials <api-forcefield-potentials>` package where
+:py:mod:`pyretis.forcefield.potentials` module where
 such derived classes are defined.
-The `params = None` is just needed since the `ForceField` class makes
+The ``params = None`` is just needed since the ``ForceField`` class makes
 certain assumptions on what attributes the potential should have (it
 assumes that the potentials we wish to use behaves like an
-instance of the `Potential` class).
+instance of the ``Potential`` class).
 
 Enough details, let us make a quick plot
 with `matplotlib <http://matplotlib.org/>`_ to see if things work as expected:
@@ -239,13 +242,13 @@ with `matplotlib <http://matplotlib.org/>`_ to see if things work as expected:
 
 .. _user-guide-intro-api-system:
 
-`System`
-~~~~~~~~
+System
+~~~~~~
 
-A `System` class defines the system we are investigating. It will
+A ``System`` class (:py:class:`pyretis.core.system.System`) 
+defines the system we are investigating. It will
 typically contain particles, a simulation box and a
-force field. The base class for the `System` is defined in
-:ref:`pyretis.core.system <api-core-system>`.
+force field.
 
 Example of creation:
 
@@ -254,19 +257,19 @@ Example of creation:
     from pyretis.core import System
     new_system = System(temperature=0.8, units='lj')
 
-This will create an empty system with a set temperature equal to `0.8` in
-`lj` units, where `lj` refers to Lennard-Jones units. It is also possible
+This will create an empty system with a set temperature equal to ``0.8`` in
+``lj`` units, where ``lj`` refers to Lennard-Jones units. It is also possible
 to specify a box here in case that it needed.
 
 
 .. _user-guide-intro-api-simulation:
 
-`Simulation`
-~~~~~~~~~~~~
-A `Simulation` class defines a simulation we can run. A simulation
-will typically act on a `System` and alter its state.
-The base class for the `Simulation` is defined in
-:ref:`pyretis.core.simulation.simulation <api-core-simulation-simulation>`.
+Simulation
+~~~~~~~~~~
+A ``Simulation`` class defines a simulation we can run. A simulation
+will typically act on a ``System`` and alter its state.
+The base class for the ``Simulation`` is defined in
+:py:mod:`pyretis.core.simulation.simulation`.
 
 Example of creation:
 

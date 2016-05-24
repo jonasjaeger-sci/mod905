@@ -22,14 +22,16 @@ This means
 that the Coulomb constant is implicitly contained within the charges in
 the internal computations.
 
-In pyretis, several different systems of units are defined and it is also
-possible to define your own units. The choice of units will dictate how
-certain input parameters are read and it will also select the output units.
+In pyretis, several different systems of units are defined and you may also
+define your own units. The choice of a system of units will define the units
+used for input parameters.
 The different systems of units defined in pyretis are described in the
 following :ref:`section <user-units-system>` and the creation of custom
 systems are :ref:`also described <user-units-custom>`.
-The units are also described in the pyretis API in the description
-of the module :ref:`pyretis.core.units <api-core-units>`.
+In the pyretis library, the units are defined in
+the :py:mod:`pyretis.core.units` module.
+
+CONSTANTS['kB']
 
 .. _user-units-system:
 
@@ -67,38 +69,41 @@ any of these units, e.g.
     units lj
 
 
-Setting the unit system will define the units used for the input.
-The different input units for the different systems are
-given in the :ref:`table of input units <table_unit_input>`.
-There is one notable exception:
+Setting the unit system will define the units used for input to
+pyretis. The units for the different systems are given in
+the :ref:`table of input units <table_unit_input>` below.
 
-    If the initial configuration is given as a file, the units in this file is
-    expected to natural units for the format of that tile (e.g. Ångström for xyz).
-    The coordinates will be converted internally to the length units used by
-    the selected system of units!
+If the initial configuration is given as a file (for instance
+in xyz format), then the system of units will be used to
+convert the configuration. That is, pyretis will assume that
+the configuration is given in the units specified by
+the file format
+(e.g. Ångström for positions in a xyz file).
+The coordinates read from initial configuration fill will be
+converted internally to the selected system of units.
 
 
 .. _table_unit_input:
 
-.. table:: Input units for energy systems
+.. table:: Input units for different systems
 
-  +--------------+----------+---------+---------------+----------+---------+
-  | Unit system  | Energy   | Length  | Mass          | Velocity | Time    |
-  +==============+==========+=========+===============+==========+=========+
-  | ``lj``       | reduced  | reduced | reduced       | reduced  | reduced |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``real``     | kcal/mol |  Å      | g/mol         | Å/fs     | fs      |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``gromacs``  | kJ/mol   | nm      | g/mol         | nm/ps    | ps      |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``metal``    | eV       |  Å      | g/mol         | Å/ps     | ps      |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``au``       | hartree  | bohr    | electron mass | bohr/at  | at      |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``electron`` | hartree  | bohr    | g/mol (amu)   | bohr/fs  | fs      |
-  +--------------+----------+---------+---------------+----------+---------+
-  | ``si``       | J        | m       | kg            | m/s      | s       |
-  +--------------+----------+---------+---------------+----------+---------+
+   +--------------+----------+---------+---------------+----------+---------+
+   | Unit system  | Energy   | Length  | Mass          | Velocity | Time    |
+   +==============+==========+=========+===============+==========+=========+
+   | ``lj``       | reduced  | reduced | reduced       | reduced  | reduced |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``real``     | kcal/mol |  Å      | g/mol         | Å/fs     | fs      |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``gromacs``  | kJ/mol   | nm      | g/mol         | nm/ps    | ps      |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``metal``    | eV       |  Å      | g/mol         | Å/ps     | ps      |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``au``       | hartree  | bohr    | electron mass | bohr/at  | at      |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``electron`` | hartree  | bohr    | g/mol (amu)   | bohr/fs  | fs      |
+   +--------------+----------+---------+---------------+----------+---------+
+   | ``si``       | J        | m       | kg            | m/s      | s       |
+   +--------------+----------+---------+---------------+----------+---------+
 
 For the ``lj`` system, the energy, length, mass, etc. are all
 given in reduced units. However, it still might be useful (for instance
@@ -115,7 +120,7 @@ mass scale and energy scale:
                   'energy': (119.8, 'kB')}
 
 However, again note that this will only influence how we interpret input and output
-configurations -- all other output units for this system will still be in reduced
+configurations:  all other output units for this system will still be in reduced
 Lennard-Jones units. The syntax for overriding and creating your own units are
 further described in the :ref:`next section <user-units-custom>`.
 
@@ -124,23 +129,23 @@ further described in the :ref:`next section <user-units-custom>`.
 
 .. table:: Defining units for energy systems
 
-  +--------------+----------------+-------------+--------------------+
-  | Unit system  | Energy unit    | Length unit | Mass unit          |
-  +==============+================+=============+====================+
-  | ``lj``       | 0.238 kcal/mol | 0.3405 nm   | 39.948 g/mol       |
-  +--------------+----------------+-------------+--------------------+
-  | ``real``     | 1 kcal/mol     | 1 Å         |  1 g/mol           |
-  +--------------+----------------+-------------+--------------------+
-  | ``gromacs``  | 1 kJ/mol       | 1 nm        | 1 g/mol            |
-  +--------------+----------------+-------------+--------------------+
-  | ``metal``    | 1 eV           | 1 Å         |  1 g/mol           |
-  +--------------+----------------+-------------+--------------------+
-  | ``au``       | 1 hartree      | 1 bohr      |  9.10938291e-31 kg |
-  +--------------+----------------+-------------+--------------------+
-  | ``electron`` | 1 hartree      | 1 bohr      | 1 g/mol            |
-  +--------------+----------------+-------------+--------------------+
-  | ``si``       | 1 J            | 1 m         | 1 kg               |
-  +--------------+----------------+-------------+--------------------+
+   +--------------+----------------+-------------+--------------------+
+   | Unit system  | Energy unit    | Length unit | Mass unit          |
+   +==============+================+=============+====================+
+   | ``lj``       | 0.238 kcal/mol | 0.3405 nm   | 39.948 g/mol       |
+   +--------------+----------------+-------------+--------------------+
+   | ``real``     | 1 kcal/mol     | 1 Å         |  1 g/mol           |
+   +--------------+----------------+-------------+--------------------+
+   | ``gromacs``  | 1 kJ/mol       | 1 nm        | 1 g/mol            |
+   +--------------+----------------+-------------+--------------------+
+   | ``metal``    | 1 eV           | 1 Å         |  1 g/mol           |
+   +--------------+----------------+-------------+--------------------+
+   | ``au``       | 1 hartree      | 1 bohr      |  9.10938291e-31 kg |
+   +--------------+----------------+-------------+--------------------+
+   | ``electron`` | 1 hartree      | 1 bohr      | 1 g/mol            |
+   +--------------+----------------+-------------+--------------------+
+   | ``si``       | 1 J            | 1 m         | 1 kg               |
+   +--------------+----------------+-------------+--------------------+
 
 
 .. _user-units-custom:
@@ -149,7 +154,7 @@ Defining your own system of units
 ---------------------------------
 Defining your own system of units is basically just a matter of choosing
 the energy, length and mass scales. Typically this is done by setting the
-units keyword and defining the base units with ``:units-base:``:
+units keyword and defining the base units with ``units-base``:
 
 .. code-block:: python
 
