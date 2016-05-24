@@ -7,6 +7,12 @@
 Getting started with pyretis
 ============================
 
+We are very happy that you are showing an interest in 
+pyretis! This section is intended as a short
+introduction to the usage of pyretis; a
+more extensive description can be found
+in the :ref:`full user guide <user-guide-index>`
+
 Using pyretis
 -------------
 
@@ -29,8 +35,8 @@ file** or by making **explicit use of the pyretis library**:
    :ref:`detailed reference section <api-doc>`.
 
 
-Learning by doing — pyretis examples
-------------------------------------
+pyretis examples
+----------------
 
 In addition to reading the documentation we have prepared
 several examples to highlight the usage and capabilities of pyretis.
