@@ -11,7 +11,7 @@ pyretis input and output.
 
 All numerical values are from the National Institute of Standards and
 Technology and can be accessed through a web interface
-http://physics.nist.gov/constants or in plain text [NIST]_.
+http://physics.nist.gov/constants or in plain text. [7]_
 
 Internally, all computations are carried out in units which are defined
 by a length scale, an energy scale and a mass scale. This means that
@@ -35,22 +35,22 @@ the section on :ref:`unit systems <unit-conversions-systems>`.
 
 Natural constants
 ~~~~~~~~~~~~~~~~~
-The keys for `CONSTANTS` defines the natural constant and its units,
-for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in
-units of Joule per Kelvin. The currently defined natural constants are
+The keys for ``CONSTANTS`` defines the natural constant and its units,
+for instance ``CONSTANTS['kB']['J/K']`` is the Boltzmann constants in
+units of Joule per Kelvin. The currently defined natural constants are:
 
-- ``kB`` : The Boltzmann constant [KB]_.
+- ``kB`` : The Boltzmann constant. [1]_
 
-- ``NA`` : The Avogadro constant [NA]_.
+- ``NA`` : The Avogadro constant. [2]_
 
-- ``e`` : The elementary charge [E]_.
+- ``e`` : The elementary charge. [3]_
 
-- ``c0`` : The velocity of light in vacuum [C0]_.
+- ``c0`` : The velocity of light in vacuum. [4]_
 
-- ``mu0``: Vacuum permeability [M0]_.
+- ``mu0``: Vacuum permeability. [5]_
 
 - ``e0``: Vacuum permittivity (or permittivity of free space or electric
-  constant) [E0]_.
+  constant). [6]_
 
 
 .. _unit-conversions:
@@ -59,16 +59,14 @@ Unit conversions
 ~~~~~~~~~~~~~~~~
 For defining the different unit conversions a simple set of base
 conversions are defined. These represent some common units that are
-convenient for input and output. For each dimension [#]_ we define some
+convenient for input and output. For each dimension [12]_ we define some
 units and the conversion between these. The base units are:
 
-- Charge
-
+Charge:
   * ``e``: Electron charge.
   * ``C``: Coulomb.
 
-- Energy
-
+Energy:
   * ``kcal``: Kilocalorie.
   * ``kcal/mol``: Kilocalorie per mol.
   * ``J``: Joule.
@@ -77,37 +75,31 @@ units and the conversion between these. The base units are:
   * ``eV``: Electronvolt.
   * ``hartree``: Hartree (atomic unit of energy).
 
-- Force
-
+Force:
   * ``N``: Newton.
   * ``pN``: Piconewton.
   * ``dyn``: Dyne.
 
-- Length
-
+Length:
   * ``A``: Ångström.
   * ``nm``: Nanometre.
   * ``bohr``: Bohr radius.
   * ``m``: Meter.
 
-- Mass
-
+Mass:
   * ``g/mol``: Grams per mol, numerically equal to the atomic mass unit.
   * ``g``: Gram.
   * ``kg``: Kilogram.
 
-- Pressure
-
+Pressure:
   * ``Pa``: Pascal.
   * ``bar``: Bar.
   * ``atm``: Atmosphere.
 
-- Temperature
-
+Temperature:
   * ``K``: Kelvin.
 
-- Time
-
+Time:
   * ``s``: Second.
   * ``ps``: Picosecond.
   * ``fs``: Femtosecond
@@ -115,8 +107,7 @@ units and the conversion between these. The base units are:
   * ``us``: Microsecond.
   * ``ms``: Millisecond.
 
-- Velocity
-
+Velocity:
   * ``m/s``: Meter per second.
   * ``nm/ps``: Nanometer per picosecond.
   * ``A/fs``: Ångström per femtosecond.
@@ -132,25 +123,25 @@ The following system of units are defined for pyretis:
 
 - ``lj``: A Lennard-Jones type of units.
 
-- ``real``: A system of units similar to the [LAMMPS]_ unit real.
+- ``real``: A system of units similar to the LAMMPS unit real. [8]_
 
-- ``metal``: A system of units similar to the [LAMMPS]_ unit metal.
+- ``metal``: A system of units similar to the LAMMPS unit metal. [8]_
 
-- ``au``: Atomic units [ATOMUNITS]_.
+- ``au``: Atomic units. [9]_
 
-- ``electron``: A system of units similar to the [LAMMPS]_ unit
-  electron.
+- ``electron``: A system of units similar to the LAMMPS unit
+  electron. [8]_
 
-- ``si``: A system of units similar to the [LAMMPS]_ unit si.
+- ``si``: A system of units similar to the LAMMPS unit si. [8]_
 
 - ``gromacs``: A system of units similar to the units used
-  by [GROMACS]_.
+  by GROMACS. [10]_
 
 
 The defining units for the Lennard-Jones units (``lj``) are typically
 based on the Lennard-Jones parameters for one of the components, e.g.
 :math:`\varepsilon`, :math:`\sigma` and the atomic mass
-of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining
+of argon (119.8 kB, 3.405 Å, 39.948 g/mol). [11]_ The defining
 units for the other systems are given in the table below:
 
 
@@ -203,41 +194,39 @@ and mass unit (``at`` is approximately 2.41888433e-17 s).
   +-------------+----------+--------+---------------+----------+------+
 
 
-.. rubric:: Footnotes
+References and footnotes
+------------------------
 
-.. [#] Note that 'dimension' here is, strictly speaking, not a true
-       dimension, for instance we define conversions for the dimension
-       `velocity` which in reality is composed of the dimensions
-       `length` and `time`.
+.. [1] https://en.wikipedia.org/wiki/Boltzmann_constant
 
+.. [2] https://en.wikipedia.org/wiki/Avogadro_constant
 
-References
-----------
+.. [3] https://en.wikipedia.org/wiki/Elementary_charge
 
-.. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
+.. [4] https://en.wikipedia.org/wiki/Speed_of_light
 
-.. [NA] https://en.wikipedia.org/wiki/Avogadro_constant
+.. [5] https://en.wikipedia.org/wiki/Vacuum_permeability
 
-.. [E] https://en.wikipedia.org/wiki/Elementary_charge
+.. [6] https://en.wikipedia.org/wiki/Vacuum_permittivity
 
-.. [C0] https://en.wikipedia.org/wiki/Speed_of_light
-
-.. [M0] https://en.wikipedia.org/wiki/Vacuum_permeability
-
-.. [E0] https://en.wikipedia.org/wiki/Vacuum_permittivity
-
-.. [NIST] National Institute of Standards and Technology,
+.. [7] National Institute of Standards and Technology,
    http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
-.. [LAMMPS] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
+.. [8] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
 
-.. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
+.. [9] https://en.wikipedia.org/wiki/Atomic_units
+
+.. [10] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
+   http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
+
+.. [11] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
    doi: http://dx.doi.org/10.1016/0021-9991
 
-.. [ATOMUNITS] https://en.wikipedia.org/wiki/Atomic_units
+.. [12] Note that 'dimension' here is, strictly speaking, not a true
+        dimension, for instance we define conversions for the dimension
+        `velocity` which in reality is composed of the dimensions
+        `length` and `time`.
 
-.. [GROMACS] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
-   http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
 
 Examples
 --------
