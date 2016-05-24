@@ -73,38 +73,38 @@ simulation
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box
+Box (:py:class:`pyretis.core.box.Box`)
     A class which defines the simulation box. This box will also
     handle the periodic boundaries.
 
-System
+System (:py:class:`pyretis.core.system.System`)
     A class which defines the system we are working with. This
     class contain a lot of information and is used to group the
     information into a structure which the simulations will make use
     of. Typically the system will contain a reference to a box,
     a list of particles and also a force field.
 
-Particles
+Particles (:py:class:`pyretis.core.particles.Particles`)
     A class defining a list of particles. This will contain the
     positions, velocities and forces for the particles.
 
-Path
+Path (:py:class:`pyretis.core.path.Path`)
     A class representing a path. The path contains snapshots with
     some additional information (energies and order parameters).
 
-PathEnsemble
+PathEnsemble (:py:class:`pyretis.core.pathensemble.Pathensemble`)
     A class representing a collection of paths. The path ensemble
     will not store the full trajectories of path, only a simplified
     representation of the paths.
 
-RandomGenerator
+RandomGenerator (:py:class:`pyretis.core.random_gen.RandomGenerator`)
     A class for generating random numbers.
 
-OrderParameter
+OrderParameter (:py:class:`pyretis.core.orderparameter.OrderParameter`)
     A general class for order parameters. Prototype for all other
     order parameters.
 
-Simulation
+Simulation (:py:mod:`pyretis.core.simulation`)
     A sub-package defining the simulations. There is also a
     class named ``Simulation`` which defines a generic simulation.
 """
