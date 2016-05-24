@@ -71,7 +71,7 @@ the description in the manual section
 
 
 References
-----------
+~~~~~~~~~~
 
 .. [1]  Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
    doi: http://dx.doi.org/10.1016/0021-9991

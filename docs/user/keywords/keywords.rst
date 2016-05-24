@@ -24,3 +24,4 @@ List of pyretis keywords
 * :ref:`particles-type <user-keywords-particles-type>`: for setting the types of the particles
 * :ref:`task <user-keywords-task>`: for selecting what kind of simulation to run
 * :ref:`units <user-keywords-units>`: for selecting units to use for input/output
+* :ref:`units-base <user-keywords-units-base>`: for defining custom unit systems
