@@ -46,45 +46,95 @@ the :ref:`example section <examples-index>`.
 .. container:: row
 
    .. container:: col-sm-6 col-md-3
+     
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/md-nve.png
+            :width: 100%
+            :class: img-responsive
+
+         .. container:: caption
+         
+            :header:`Molecular dynamics`
+
+            Interesting example no 4.
+
+
+   .. container:: col-sm-6 col-md-3
 
       .. container:: thumbnail
 
          .. image:: ../img/examples/thumbnails/tis-1d-pot.png
             :width: 100%
-            :class: img-rounded
+            :class: img-responsive
 
          .. container:: caption
-            
+           
             :header:`TIS`
 
             This example is showing how to run a Transition Interface Sampling
             simulation.
 
+
    .. container:: col-sm-6 col-md-3
-      
+     
       .. container:: thumbnail
 
-         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
+         .. image:: ../img/examples/thumbnails/placeholder.png
             :width: 100%
-            :class: img-rounded
+            :class: img-responsive
 
          .. container:: caption
-            
+         
             :header:`RETIS`
 
             This example is using Replica Exchange Transition Interface Sampling
             for calculating the rate of a simple reaction.
 
+
    .. container:: col-sm-6 col-md-3
-      
+
       .. container:: thumbnail
 
-         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
+         .. image:: ../img/examples/thumbnails/placeholder.png
             :width: 100%
-            :class: img-rounded
+            :class: img-responsive
 
          .. container:: caption
-            
+
             :header:`Custom order`
 
-            This example shows how custom order parameters can be created.
+            This example demonstrates how custom order parameters
+            can be added to pyretis. "Lorem ipsum dolor sit amet,
+            consectetur adipiscing elit, sed do"
+
+
+   .. container:: col-sm-6 col-md-3
+     
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/placeholder.png
+            :width: 100%
+            :class: img-responsive
+
+         .. container:: caption
+          
+            :header:`Custom order`
+
+            Interesting example no 4.
+
+ 
+   .. container:: col-sm-6 col-md-3
+     
+      .. container:: thumbnail
+
+         .. image:: ../img/examples/thumbnails/placeholder.png
+            :width: 100%
+            :class: img-responsive
+
+         .. container:: caption
+          
+            :header:`Custom order`
+
+            Interesting example no 5.
+
