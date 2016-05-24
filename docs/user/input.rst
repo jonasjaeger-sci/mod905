@@ -125,8 +125,7 @@ Settings defining the system
 * :ref:`units <user-keywords-units>`:
     Specify a system of units to use for the simulation and the
     input file. The possible system of units are described
-    in detail in the
-    :ref:`reference section on units <user-guide-units>`.
+    in detail in the :ref:`reference section on units <user-guide-units>`.
 
     Examples:
 
