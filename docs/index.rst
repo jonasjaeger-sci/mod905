@@ -11,9 +11,9 @@
      :class: img-responsive
 
   pyretis is a `Python <https://www.python.org>`_ library for **rare event molecular simulations**
-  with emphasis on methods based on `transition interface
-  sampling <http://en.wikipedia.org/wiki/Transition_path_sampling#Transition_interface_sampling>`_
-  and `replica exchange transition interface sampling <http://www.van-erp.org>`_.
+  with emphasis on methods based on
+  :ref:`transition interface sampling <user-guide-tis-theory>`
+  and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 
   pyretis is :ref:`open source <pyretis-license>`, designed to be easy to use
   and can be interfaced with other simulation packages such as GROMACS or CP2K.

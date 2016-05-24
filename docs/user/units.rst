@@ -29,9 +29,17 @@ The different systems of units defined in pyretis are described in the
 following :ref:`section <user-units-system>` and the creation of custom
 systems are :ref:`also described <user-units-custom>`.
 In the pyretis library, the units are defined in
-the :py:mod:`pyretis.core.units` module.
+the :py:mod:`pyretis.core.units` module. 
+The defined constants can be displayed by,
 
-CONSTANTS['kB']
+.. code-block:: python
+
+    from pyretis.core.units import CONSTANTS
+    print('All constants':)
+    print(CONSTANTS)
+    print('The Boltzmann constant:')
+    print(CONSTANTS['kB'])
+
 
 .. _user-units-system:
 

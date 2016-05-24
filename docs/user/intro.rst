@@ -5,8 +5,8 @@ Introduction to rare event methods
 
 pyretis is a computational library for performing molecular
 simulations of rare events with focus on transition
-interface sampling [TIS2003]_
-and replica exchange transition interface sampling [RETIS2007]_.
+interface sampling [1]_
+and replica exchange transition interface sampling [2]_.
 
 The typical goal of these simulations is to calculate the
 rate constant :math:`k_{\text{AB}}` for the transition between two stable
@@ -25,10 +25,14 @@ The rare event methods aim to compute both the flux and the intermediate
 probabilities :math:`P_{\text{A}} (i+1|i)`. This is done by generating
 reactive trajectories or paths connecting the initial and final state
 using a Monte Carlo algorithm. For a detailed description of the algorithms,
-please see [TIS2003]_ and [RETIS2007]_.
+please see [1]_ and [2]_.
+
+.. _user-guide-tis-theory:
 
 Transition Interface Sampling
 -----------------------------
+
+.. _user-guide-retis-theory:
 
 Replica Exchange Transition Interface Sampling
 ----------------------------------------------
@@ -36,10 +40,10 @@ Replica Exchange Transition Interface Sampling
 References
 ~~~~~~~~~~
 
-.. [TIS2003] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
-             J. Chem. Phys. 118, 7762 (2003)
-             https://dx.doi.org/10.1063%2F1.1562614
+.. [1] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
+       J. Chem. Phys. 118, 7762 (2003)
+       https://dx.doi.org/10.1063%2F1.1562614
 
-.. [RETIS2007] Titus S. van Erp,
-               Phys. Rev. Lett. 98, 26830 (2007)
-               http://dx.doi.org/10.1103/PhysRevLett.98.268301
+.. [2] Titus S. van Erp,
+       Phys. Rev. Lett. 98, 26830 (2007)
+       http://dx.doi.org/10.1103/PhysRevLett.98.268301
