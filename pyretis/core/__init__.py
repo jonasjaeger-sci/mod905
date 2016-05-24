@@ -12,54 +12,54 @@ Modules
 __init__.py
     Import core functions from the other modules.
 
-box.py
+box.py (:py:mod:`pyretis.core.box`)
     Definition of the simulation box class.
 
-integrators.py
+integrators.py (:py:mod:`pyretis.core.integrators`)
     This module defines integrators which can be used to
     evolve the dynamics/solve Newton's equations of motion.
 
-montecarlo.py:
+montecarlo.py (:py:mod:`pyretis.core.montecarlo`)
     This module defines functions for performing Monte Carlo moves.
 
-orderparameter.py:
+orderparameter.py (:py:mod:`pyretis.core.orderparameter`)
     Definition of classes for order parameters.
 
-particlefunctions.py
+particlefunctions.py (:py:mod:`pyretis.core.particlefunctions`)
     Functions that operate on (a selection of) particles, for instance
     calculation of the kinetic temperature, pressure, momentum etc.
 
-particles.py
+particles.py (:py:mod:`pyretis.core.particles`)
     Definition of the particle class which is used to represent
     a collection of particles.
 
-path.py
+path.py (:py:mod:`pyretis.core.path`)
     This module defines functions and classes for paths.
 
-pathensemble.py
+pathensemble.py (:py:mod:`pyretis.core.pathensemble`)
     Definition of a class for a collection of paths (i.e. a path
     ensemble).
 
-properties.py
+properties.py (:py:mod:`pyretis.core.properties`)
     This module defines a class for a generic property.
 
-random_gen.py
+random_gen.py (:py:mod:`pyretis.core.random_gen`)
     This module define a class for generating random numbers.
 
-retis.py
+retis.py (:py:mod:`pyretis.core.retis`)
     Module defining method for performing replica exchange transition
     interface sampling.
 
-system.py
+system.py (:py:mod:`pyretis.core.system`)
     This module define the system class which connects different
     parts (for instance box, forcefield and particles) into a single
     structure.
 
-tis.py
+tis.py (:py:mod:`pyretis.core.tis`)
     This module contains methods used in the transition
     interface sampling algorithm.
 
-units.py
+units.py (:py:mod:`pyretis.core.units`)
     This module defines conversion between units.
 
 Sub-packages

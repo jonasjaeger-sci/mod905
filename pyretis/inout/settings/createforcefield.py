@@ -77,7 +77,7 @@ def create_force_field(settings):
     except KeyError:
         desc = None
     potentials = create_potentials(settings)
-    pot_param = settings['potential-parameters']
+    pot_param = settings.get('potential-parameters', None)
     ffield = ForceField(desc=desc, potential=potentials, params=pot_param)
     msg = ['Created force field:']
     msg.append('{}'.format(ffield))

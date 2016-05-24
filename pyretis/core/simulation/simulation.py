@@ -46,21 +46,18 @@ class Simulation(object):
         This is the system the simulation will act on.
     """
 
-    def __init__(self, endcycle=0, startcycle=0):
+    def __init__(self, steps=0, startcycle=0):
         """Initialization of the simulation.
 
         Parameters
         ----------
+        steps : int, optional.
+            The number of simulation steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end. It some simulations (e.g. MD) this would be the
-            number of steps to perform, in other simulations this could
-            be the minimum or maximum number of cycles to perform.
         """
-        self.cycle = {'step': startcycle, 'end': endcycle,
+        self.cycle = {'step': startcycle, 'end': startcycle + steps,
                       'start': startcycle, 'stepno': 0}
         self.task = []
         self.first_step = True

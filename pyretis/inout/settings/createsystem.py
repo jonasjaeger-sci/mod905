@@ -326,9 +326,8 @@ def create_initial_positions(settings):
         zeros. This is only True if we have read from a file with
         velocities.
     """
-    msg = 'Settings used for initial potisions:\n{}'
+    msg = 'Settings used for initial positions: {}'
     debugtxt = msg.format(settings['particles-position'])
-    #logger.info('Creating initial positions:')
     logger.debug(debugtxt)
     particles = None
     if 'generate' in settings['particles-position']:
@@ -386,9 +385,7 @@ def create_box(settings, size, dim=3):
             box = Box(periodic=[False]*dim)
             msgtxt = msg.format('without specifications', box)
             logger.info(msgtxt)
-            msgwarn = ('The box was assumed non-periodic in ALL directions.'
-                       '\nIf positions were read from an xyz-file, this is'
-                       '\nprobably not what you want.')
+            msgwarn = 'The box was ASSUMED non-periodic in all directions.'
             logger.warning(msgwarn)
     return box
 

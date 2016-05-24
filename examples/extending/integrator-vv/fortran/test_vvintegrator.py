@@ -50,7 +50,7 @@ class VVIntegratorTest(unittest.TestCase):
         system = set_up_initial_state()
         initial = system.particles.get_phase_point()
         numberofsteps = 20
-        simulation = Simulation(endcycle=numberofsteps)
+        simulation = Simulation(steps=numberofsteps)
         integrator = VelocityVerlet(0.0025)
         task_integrate = {'func': integrator.integration_step,
                           'args': [system]}
@@ -60,7 +60,7 @@ class VVIntegratorTest(unittest.TestCase):
             traj.append(system.particles.get_phase_point())
         # repeat with external integrator:
         system.particles.set_phase_point(initial)
-        simulation = Simulation(endcycle=numberofsteps)
+        simulation = Simulation(steps=numberofsteps)
         integrator = VelocityVerletF(0.0025)
         task_integrate = {'func': integrator.integration_step,
                           'args': [system]}

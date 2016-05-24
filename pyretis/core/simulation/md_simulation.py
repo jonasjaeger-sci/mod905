@@ -43,7 +43,7 @@ class SimulationNVE(Simulation):
         for it to be usable in this simulation.
     """
 
-    def __init__(self, system, integrator, endcycle=0, startcycle=0):
+    def __init__(self, system, integrator, steps=0, startcycle=0):
         """Initialization of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
@@ -57,14 +57,13 @@ class SimulationNVE(Simulation):
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
+        steps : int, optional.
+            The number of simulation steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end.
         """
-        super(SimulationNVE, self).__init__(endcycle=endcycle,
+        super(SimulationNVE, self).__init__(steps=steps,
                                             startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
@@ -115,54 +114,53 @@ class SimulationMDFlux(Simulation):
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    order_function : function or object
+    orderparemter : function or object.
         The defines how the order parameter should be calculated.
-        This is either a function or a object like `OrderParameter` from
-        `pyretis.core.orderparameter`.
-        It is assumed that the `order_function` can be called with a
-        `System` object as a parameter (typically: `self.system`).
-    leftside_prev : list of booleans
+        This is either a function or a object like `OrderParameter`
+        from `pyretis.core.orderparameter`. It is assumed that
+        `orderparameter` can be called using a `System` object
+        as the parameter.
+    leftside_prev : list of booleans.
         These are used to store the previous positions with respect
         to the interfaces.
     """
 
-    def __init__(self, system, integrator, interfaces, order_function,
-                 endcycle=0, startcycle=0):
+    def __init__(self, system, integrator, orderparameter, interfaces,
+                 steps=0, startcycle=0):
         """Initialization of the MD-Flux simulation.
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like `System` from `pyretis.core.system`.
             This is the system we are investigating
-        integrator : object like `Integrator` from `pyretis.core.integrators`
+        integrator : object like `Integrator` from `pyretis.core.integrators`.
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats.
             These defines the interfaces for which we will check the
             crossing(s).
-        order_function : function or object like `OrderParameter`
+        orderparameter : function or object like `OrderParameter`.
             This function is used to calculate the order parameter.
-            It is assumed to be called with ``order_function(system)``
+            It is assumed to be called as ``orderparameter(system)``
             and to return at least two values where the first one
-            should be the order parameter.
+            is the scalar order parameter.
+        steps : int, optional.
+            The number of steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end.
         """
-        super(SimulationMDFlux, self).__init__(endcycle=endcycle,
+        super(SimulationMDFlux, self).__init__(steps=steps,
                                                startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
         self.interfaces = interfaces
-        self.order_function = order_function
+        self.orderparameter = orderparameter
         # set up for initial crossing
         self.leftside_prev = None
         leftside, _ = check_crossing(self.cycle['step'],
-                                     self.order_function(self.system)[0],
+                                     self.orderparameter(self.system)[0],
                                      self.interfaces,
                                      self.leftside_prev)
         self.leftside_prev = leftside
@@ -185,7 +183,7 @@ class SimulationMDFlux(Simulation):
         # collect energy and order parameter, this is done at all steps
         results = {'cycle': self.cycle,
                    'thermo': calculate_thermo(self.system),
-                   'orderp': self.order_function(self.system),
+                   'orderp': self.orderparameter(self.system),
                    'traj': self.system}
         # do not check crossing at step 0
         if not self.first_step:

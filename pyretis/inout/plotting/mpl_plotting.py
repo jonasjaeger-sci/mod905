@@ -906,7 +906,7 @@ def mpl_plot_energy(results, energies, sim_settings=None):
         title = title.format(ENERTITLE[key], dist[2][0], dist[2][1])
         if sim_settings is not None and key in ['ekin', 'temp']:
             pos = np.linspace(min(0.0, dist[1].min()), dist[1].max(), 1000)
-            alp = (0.5 * sim_settings['npart'] * sim_settings['dim'])
+            alp = (0.5 * sim_settings['npart'] * sim_settings['dimensions'])
             if key == 'ekin':
                 scale = 1.0 / sim_settings['beta']
             elif key == 'temp':

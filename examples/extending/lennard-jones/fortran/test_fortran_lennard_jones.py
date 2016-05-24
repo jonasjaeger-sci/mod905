@@ -56,7 +56,7 @@ def set_up_simulation():
         print('{0:>4d} atoms of type {1}'.format(int(natoms[atom]), atom))
     ljsystem.potential_and_force()
     numberofsteps = 100
-    simulationLAMMPS = Simulation(endcycle=numberofsteps)
+    simulationLAMMPS = Simulation(steps=numberofsteps)
     integrator = VelocityVerlet(0.0025)
     task_integrate = {'func': integrator.integration_step,
                       'args': [ljsystem]}

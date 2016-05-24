@@ -296,8 +296,8 @@ class CrossWriter(Writer):
 
         See Also
         --------
-        `check_crossing` in `pyretis.core.path` for definition of the
-        tuples in `cross`.
+        `check_crossing` in `pyretis.core.path` calculates the tuple
+        `cross` which is used in this routine.
 
         Note
         ----

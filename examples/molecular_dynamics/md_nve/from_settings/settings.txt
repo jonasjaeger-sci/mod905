@@ -7,7 +7,7 @@ Simulation settings
 units = lj
 task = md-nve
 integrator = {'class': 'velocityverlet', 'timestep': 0.002}
-endcycle = 1000
+steps = 1000
 
 
 System settings

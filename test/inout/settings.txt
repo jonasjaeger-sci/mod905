@@ -11,7 +11,7 @@ units= 'lj'
 units     = 'lj'
 task = 'md-nve'
 integrator = {'class': 'velocityverlet', 'timestep': 0.002}
-endcycle = 100
+steps = 100
 
 
 System settings

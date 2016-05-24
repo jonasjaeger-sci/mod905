@@ -13,7 +13,7 @@ from pyretis.inout.writers import FileIO, ThermoTable
 settings = {'task': 'md-nve',
             'units': 'lj',
             'integrator': {'class': 'velocityverlet', 'timestep': 0.002},
-            'endcycle': 100,
+            'steps': 100,
             'output-modify': [{'name': 'traj', 'when': {'every': 10},
                                'filename': 'traj.gro'}],
             'particles-velocity': {'generate': 'maxwell', 'momentum': True,

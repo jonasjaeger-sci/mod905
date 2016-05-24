@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """pyretis
 
@@ -16,18 +16,19 @@ import datetime
 import logging
 import os
 import sys
+# Other libraries:
+from tqdm import tqdm  # for a nice progress bar
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.settings import (create_system, create_force_field,
+from pyretis.inout.settings import (parse_settings_file,
+                                    create_system,
+                                    create_force_field,
                                     create_simulation)
 from pyretis.inout import create_output
-# Other libraries:
-from tqdm import tqdm  # for a nice progress bar
 
 
 DATEFORMAT = '%d.%m.%Y %H:%M:%S'
@@ -126,14 +127,17 @@ def bye_bye_world():
     print_to_screen(msgtxt)
     # display some references:
     references = ['{} references:'.format(NAME)]
+    references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
             references.append(line)
     reftxt = '\n'.join(references)
     logger.info(reftxt)
+    print_to_screen('')
     print_to_screen(reftxt)
-    urltxt = 'Visit us at: {}'.format(URL)
+    urltxt = '{}'.format(URL)
     logger.info(urltxt)
+    print_to_screen('')
     print_to_screen(urltxt)
 
 
@@ -144,11 +148,16 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-V', '--version', action='version',
                         version='{} {}'.format(NAME, VERSION))
-    parser.add_argument('-l', '--log',
-                        help='Specify log to write',
+    parser.add_argument('-f', '--log_file',
+                        help='Specify log file to write',
                         required=False,
                         default='{}.log'.format(NAME.lower()))
+    parser.add_argument('-l', '--log_level',
+                        help='Specify log level for log file',
+                        required=False,
+                        default='INFO')
     args_dict = vars(parser.parse_args())
+
 
     inputfile = args_dict['input']
     runpath = os.getcwd()
@@ -166,14 +175,16 @@ if __name__ == '__main__':
     console.setFormatter(formatter)
     logger.addHandler(console)
     # log to a file:
-    fileh = logging.FileHandler(args_dict['log'], mode='w')
-    fileh.setLevel(logging.DEBUG)
+    fileh = logging.FileHandler(args_dict['log_file'], mode='w')
+    log_level = getattr(logging, args_dict['log_level'].upper(),
+                        logging.INFO)
+    fileh.setLevel(log_level)
     formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
     fileh.setFormatter(formatter_file)
     logger.addHandler(fileh)
 
     try:
-        hello_world(inputfile, basepath, args_dict['log'])
+        hello_world(inputfile, basepath, args_dict['log_file'])
         if not os.path.isfile(inputfile):
             errtxt = ('No simulation input:'
                       ' {} is not a file!'.format(inputfile))
@@ -199,7 +210,7 @@ if __name__ == '__main__':
         print_to_screen('Running simulation!')
         print_to_screen(79*('-'))
         if USE_TQDM:
-            for result in tqdm(simulation.run(), total=settings['endcycle']):
+            for result in tqdm(simulation.run(), total=settings['steps']):
                 #for result in simulation.run():
                     #stepno = result['cycle']['stepno']
                     #result['thermo']['stepno'] = stepno

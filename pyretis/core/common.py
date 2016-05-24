@@ -119,24 +119,25 @@ def initiate_instance(klass, args=None, kwargs=None):
     out : instance of `klass`
         Here, we just return the initiated instance of the given class.
     """
+    msg = 'Initiated "{}" from "{}" {{}}'.format(klass.__name__,
+                                                 klass.__module__)
     if args is None:
         if kwargs is None:
-            msg = 'Initiated {} without arguments.'.format(klass)
-            logger.debug(msg)
+            msgtxt = msg.format('without arguments.')
+            logger.debug(msgtxt)
             return klass()
         else:
-            msg = 'Initiated {} with keyword arguments.'.format(klass)
-            logger.debug(msg)
+            msgtxt = msg.format('with keyword arguments.')
+            logger.debug(msgtxt)
             return klass(**kwargs)
     else:
         if kwargs is None:
-            msg = 'Initiated {}  with positional arguments.'.format(klass)
-            logger.debug(msg)
+            msgtxt = msg.format('with positional arguments.')
+            logger.debug(msgtxt)
             return klass(*args)
         else:
-            msg = 'Initiated {} with positional and keyword arguments.'
-            msg = msg.format(klass)
-            logger.debug(msg)
+            msgtxt = msg.format('with positional and keyword arguments.')
+            logger.debug(msgtxt)
             return klass(*args, **kwargs)
 
 
@@ -161,8 +162,8 @@ def generic_factory(settings, object_map, name='generic'):
     Returns
     -------
     out : instance of a class
-        The created object, in case we were successful. Otherwise we return
-        none.
+        The created object, in case we were successful. Otherwise we
+        return none.
     """
     try:
         klass = settings['class'].lower()

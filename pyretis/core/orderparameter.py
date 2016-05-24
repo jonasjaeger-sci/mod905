@@ -45,9 +45,8 @@ def order_factory(settings):
 
     Returns
     -------
-    out[0] : object
-        This object represents the orderparameter and will be one of the
-        classes defined in `pyretis.core.orderparameter`.
+    out : object like `OrderParameter`.
+        An object representing the orderparameter.
     """
     factory_map = {'orderparameter': {'cls': OrderParameter,
                                       'args': ['name']},
