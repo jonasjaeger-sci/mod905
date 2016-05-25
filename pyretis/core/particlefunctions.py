@@ -7,103 +7,53 @@ kinetic temperature, pressure etc.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-atomic_kinetic_energy_tensor (:py:func:`pyretis.core.particlefunctions.atomic_kinetic_energy_tensor`)
+atomic_kinetic_energy_tensor
     Return the kinetic energy tensor for each atom in a selection
     of particles.
 
-calculate_kinetic_energy (:py:func:`pyretis.core.particlefunctions.calculate_kinetic_energy`)
+calculate_kinetic_energy
     Return the kinetic energy of a collection of particles.
 
-calculate_kinetic_energy_tensor (:py:func:`pyretis.core.particlefunctions.calculate_kinetic_energy_tensor`)
+calculate_kinetic_energy_tensor
     Return the kinetic energy tensor for a selection of particles.
 
-calculate_kinetic_temperature (:py:func:`pyretis.core.particlefunctions.calculate_kinetic_temperature`)
+calculate_kinetic_temperature
     Return the kinetic temperature of a collection of particles.
 
-calculate_linear_momentum (:py:func:`pyretis.core.particlefunctions.calculate_linear_momentum`)
+calculate_linear_momentum
     Calculates the linear momentum of a collection of particles.
 
-calculate_pressure_from_temp (:py:func:`pyretis.core.particlefunctions.calculate_pressure_from_temp`)
+calculate_pressure_from_temp
     Return the scalar pressure using the temperature and the virial.
 
-calculate_pressure_tensor (:py:func:`pyretis.core.particlefunctions.calculate_pressure_tensor`)
+calculate_pressure_tensor
     Return the pressure tensor, obtained from the virial and the kinetic
     energy tensor.
 
-calculate_scalar_pressure (:py:func:`pyretis.core.particlefunctions.calculate_scalar_pressure`)
+calculate_scalar_pressure
     Return the scalar pressure (from the trace of the pressure tensor).
 
-calculate_thermo (:py:func:`pyretis.core.particlefunctions.calculate_thermo`)
+calculate_thermo
     Calculate and return several "thermodynamic" properties as the
     potential, kinetic and total energies per particle, the temperature,
     the pressure and the momentum.
 
-reset_momentum (:py:func:`pyretis.core.particlefunctions.reset_momentum`)
+reset_momentum
     Set linear momentum (for a selection of particles) to zero.
 """
 import numpy as np
 
 
-__all__ = ['calculate_kinetic_energy', 'calculate_kinetic_temperature',
-           'reset_momentum', 'calculate_kinetic_energy_tensor',
-           'calculate_scalar_pressure', 'calculate_pressure_tensor',
-           'calculate_linear_momentum', 'atomic_kinetic_energy_tensor',
-           'calculate_thermo']
-
-
-def calculate_linear_momentum(particles, selection=None):
-    """Calculate the linear momentum for a collection of particles.
-
-    Parameters
-    ----------
-    particles : object like `Particles` from `pyretis.core.particles`
-        This object represent the particles.
-    selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
-
-    Returns
-    -------
-    out : numpy.array
-        The array contains the linear momentum for each dimension.
-    """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    return np.sum(vel*mass, axis=0)
-
-
-def calculate_kinetic_energy_tensor(particles, selection=None):
-    """Return the kinetic energy tensor for a selection of particles.
-
-    The tensor is formed as the outer product of the velocities.
-
-    Parameters
-    ----------
-    particles : object like `Particles` from `pyretis.core.particles`
-        This object represent the particles.
-    selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
-
-    Returns
-    -------
-    out : numpy.array
-        A numpy array with dimensionality equal to (dim, dim) where dim
-        is the number of dimensions used in the velocities. This tensor
-        should be symmetric and it's trace should be identical to the
-        output from the `dim` times the averaged output of the
-        `kinetic_energy` function defined below.
-    """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    mom = vel*mass
-    if len(mass) == 1:  # in general: selection != particles.npart
-        kin = 0.5*np.outer(mom, vel)
-    else:
-        kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
-    return kin
+__all__ = ['atomic_kinetic_energy_tensor',
+           'calculate_kinetic_energy',
+           'calculate_kinetic_energy_tensor',
+           'calculate_kinetic_temperature',
+           'calculate_linear_momentum',
+           'calculate_pressure_from_temp',
+           'calculate_pressure_tensor',
+           'calculate_scalar_pressure',
+           'calculate_thermo',
+           'reset_momentum']
 
 
 def atomic_kinetic_energy_tensor(particles, selection=None):
@@ -164,6 +114,39 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     return kin_tensor.trace(), kin_tensor
 
 
+def calculate_kinetic_energy_tensor(particles, selection=None):
+    """Return the kinetic energy tensor for a selection of particles.
+
+    The tensor is formed as the outer product of the velocities.
+
+    Parameters
+    ----------
+    particles : object like `Particles` from `pyretis.core.particles`
+        This object represent the particles.
+    selection : list of integers, optional
+        A list with indexes of particles to use in calculation.
+
+    Returns
+    -------
+    out : numpy.array
+        A numpy array with dimensionality equal to (dim, dim) where dim
+        is the number of dimensions used in the velocities. This tensor
+        should be symmetric and it's trace should be identical to the
+        output from the `dim` times the averaged output of the
+        `kinetic_energy` function defined below.
+    """
+    if selection is None:
+        vel, mass = particles.vel, particles.mass
+    else:
+        vel, mass = particles.vel[selection], particles.mass[selection]
+    mom = vel*mass
+    if len(mass) == 1:  # in general: selection != particles.npart
+        kin = 0.5*np.outer(mom, vel)
+    else:
+        kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
+    return kin
+
+
 def calculate_kinetic_temperature(particles, boltzmann, dof=None,
                                   selection=None,
                                   kin_tensor=None):
@@ -214,8 +197,8 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     return temperature, np.average(temperature), kin_tensor
 
 
-def reset_momentum(particles, selection=None, dim=None):
-    """Set the linear momentum of a selection of particles to zero.
+def calculate_linear_momentum(particles, selection=None):
+    """Calculate the linear momentum for a collection of particles.
 
     Parameters
     ----------
@@ -223,28 +206,17 @@ def reset_momentum(particles, selection=None, dim=None):
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
-    dim : list
-        If dim is None, ``reset_momentum`` will be applied to
-        all dimensions. Otherwise it will only be applied to the
-        dimensions where dim is True.
 
     Returns
     -------
-    out : None
-        Returns `None` and modifies velocities of the selected
-        particles.
-
+    out : numpy.array
+        The array contains the linear momentum for each dimension.
     """
     if selection is None:
         vel, mass = particles.vel, particles.mass
     else:
         vel, mass = particles.vel[selection], particles.mass[selection]
-    mom = np.sum(vel * mass, axis=0)
-    if dim is not None:
-        for i, reset in enumerate(dim):
-            if not reset:
-                mom[i] = 0
-    particles.vel[selection] -= (mom / mass.sum())
+    return np.sum(vel*mass, axis=0)
 
 
 def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
@@ -295,6 +267,35 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
     return pressvolume, press
 
 
+def calculate_pressure_tensor(particles, volume, kin_tensor=None):
+    """Calculate the pressure tensor.
+
+    The pressure tensor is obtained from the virial the kinetic
+    energy tensor.
+
+    Parameters
+    ----------
+    particles : object like `Particles` from `pyretis.core.particles`
+        This object represent the particles.
+    volume : float
+        This is the volume 'occupied' by the particles. It can typically
+        be obtained by a `box.calculate_volume()`.
+    kin_tensor : numpy.array
+        The kinetic energy tensor. If `kin_tensor` is not given, it will
+        be calculated here.
+
+    Returns
+    -------
+    out : numpy.array
+        The symmetric pressure tensor, dimensions (`dim`, `dim`), where
+        `dim` = the number of dimensions considered in the simulation.
+    """
+    if kin_tensor is None:
+        kin_tensor = calculate_kinetic_energy_tensor(particles, selection=None)
+    pressure = (particles.virial + 2. * kin_tensor) / volume
+    return pressure
+
+
 def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
                               kin_tensor=None):
     """Evaluate the scalar pressure using the pressure tensor.
@@ -326,35 +327,6 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
         press_tensor = calculate_pressure_tensor(particles, volume,
                                                  kin_tensor=kin_tensor)
     return press_tensor.trace() / float(dim)
-
-
-def calculate_pressure_tensor(particles, volume, kin_tensor=None):
-    """Calculate the pressure tensor.
-
-    The pressure tensor is obtained from the virial the kinetic
-    energy tensor.
-
-    Parameters
-    ----------
-    particles : object like `Particles` from `pyretis.core.particles`
-        This object represent the particles.
-    volume : float
-        This is the volume 'occupied' by the particles. It can typically
-        be obtained by a `box.calculate_volume()`.
-    kin_tensor : numpy.array
-        The kinetic energy tensor. If `kin_tensor` is not given, it will
-        be calculated here.
-
-    Returns
-    -------
-    out : numpy.array
-        The symmetric pressure tensor, dimensions (`dim`, `dim`), where
-        `dim` = the number of dimensions considered in the simulation.
-    """
-    if kin_tensor is None:
-        kin_tensor = calculate_kinetic_energy_tensor(particles, selection=None)
-    pressure = (particles.virial + 2. * kin_tensor) / volume
-    return pressure
 
 
 def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
@@ -411,3 +383,36 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
               'temp': temp, 'press': press, 'mom': mom,
               'press-tens': press_tens}
     return result
+
+
+def reset_momentum(particles, selection=None, dim=None):
+    """Set the linear momentum of a selection of particles to zero.
+
+    Parameters
+    ----------
+    particles : object like `Particles` from `pyretis.core.particles`
+        This object represent the particles.
+    selection : list of integers, optional
+        A list with indexes of particles to use in calculation.
+    dim : list
+        If dim is None, ``reset_momentum`` will be applied to
+        all dimensions. Otherwise it will only be applied to the
+        dimensions where dim is True.
+
+    Returns
+    -------
+    out : None
+        Returns `None` and modifies velocities of the selected
+        particles.
+
+    """
+    if selection is None:
+        vel, mass = particles.vel, particles.mass
+    else:
+        vel, mass = particles.vel[selection], particles.mass[selection]
+    mom = np.sum(vel * mass, axis=0)
+    if dim is not None:
+        for i, reset in enumerate(dim):
+            if not reset:
+                mom[i] = 0
+    particles.vel[selection] -= (mom / mass.sum())
