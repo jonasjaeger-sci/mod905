@@ -25,6 +25,7 @@ from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (parse_settings_file,
+                                    write_settings_file,
                                     create_system,
                                     create_force_field,
                                     create_simulation)
@@ -158,7 +159,6 @@ if __name__ == '__main__':
                         default='INFO')
     args_dict = vars(parser.parse_args())
 
-
     inputfile = args_dict['input']
     runpath = os.getcwd()
     basepath = os.path.dirname(inputfile)
@@ -182,6 +182,8 @@ if __name__ == '__main__':
     formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
     fileh.setFormatter(formatter_file)
     logger.addHandler(fileh)
+
+    simulation = None
 
     try:
         hello_world(inputfile, basepath, args_dict['log_file'])
@@ -211,9 +213,6 @@ if __name__ == '__main__':
         print_to_screen(79*('-'))
         if USE_TQDM:
             for result in tqdm(simulation.run(), total=settings['steps']):
-                #for result in simulation.run():
-                    #stepno = result['cycle']['stepno']
-                    #result['thermo']['stepno'] = stepno
                 for task in output_tasks:
                     if task.target != 'screen':
                         task.output(result)
@@ -228,5 +227,11 @@ if __name__ == '__main__':
         print_to_screen('Execution failed! Will exit now.')
         raise
     finally:
+        # write out the simulation settings:
+        if simulation is not None:
+            cycle = getattr(simulation, 'cycle', {'step': None})
+            settings['endcycle'] = cycle['step']
+        settings_out = os.path.join(basepath, 'settings_out.rst')
+        write_settings_file(settings, settings_out, backup=True)
         print_to_screen(79*('-'))
         bye_bye_world()

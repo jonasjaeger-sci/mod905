@@ -2,12 +2,21 @@
 """This module handles parsing of input settings.
 
 This module define the file format for pyretis input files.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+parse_settings_file
+    Method for parsing settings from a given input file.
+
+write_settings_file
+    Method for writing settings from a simulation to a given file.
 """
 import ast
 import logging
-import os
 import pprint
 import re
+from pyretis.inout.common import create_backup
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -19,6 +28,7 @@ KEYWORDS = {'integrator': {'default': None},
             'orderparameter': {'default': None},
             'steps': {'default': 0},
             'startcycle': {'default': 0},
+            'endcycle': {'default': None},
             'task': {'default': None},
             'units': {'default': 'lj'},
             'units-base': {'default': {}},
@@ -227,8 +237,31 @@ def settings_to_text(settings):
         dump = '{} = {}\n'.format(key, pretty)
         yield dump
 
+def setting_to_text(settings, key):
+    """Turn a given setting into text usable for an output file.
 
-def write_settings_file(settings, outfile, path=None):
+    Parameters
+    ----------
+    settings : dict
+        The dictionary to write
+    key : string
+        The setting to format
+
+    Returns
+    ------
+    out : string
+        The string representing the settings.
+    """
+    if settings[key] is None:
+        return ''
+    else:
+        leng = len(key) + 3
+        pretty = pprint.pformat(settings[key], width=79-leng)
+        pretty = pretty.replace('\n', '\n' + ' ' * leng)
+        return '{} = {}\n'.format(key, pretty)
+
+
+def write_settings_file(settings, outfile, backup=True):
     """Write simulation settings to an output file.
 
     This will write a dictionary to a output file in the pyretis input
@@ -240,20 +273,55 @@ def write_settings_file(settings, outfile, path=None):
         The dictionary to write
     outfile : string
         The file to create
-    path : string, optional
-        A path which determines where the file should be written.
+    backup : boolean, optional
+        If True, we will backup existing files with the same file
+        name as the provided file name.
 
     Note
     ----
-    This will currently fail for objects.
+    This will currently fail if objects have made it into the supplied
+    ``settings``.
     """
-    if path is not None:
-        filename = os.path.join(path, outfile)
-    else:
-        filename = outfile
-    with open(filename, 'w') as fileh:
-        for dump in settings_to_text(settings):
-            fileh.write(dump)
+    # define a ordering of sections to write to the file:
+    group = [{'header': 'pyretis simulation\n==================\n',
+              'keys': ('units', 'task', 'steps', 'startcycle', 'interfaces',
+                       'integrator')},
+             {'header': '\nSystem settings\n---------------\n',
+              'keys': ('dimensions', 'temperature')},
+             {'header': '\nParticles\n---------',
+              'keys': ('particles-position', 'particles-velocity',
+                       'particles-mass', 'particles-name', 'particles-type')},
+             {'header': '\nForce field settings\n--------------------\n',
+              'keys': ('forcefield', 'potentials', 'potential-parameters')},
+             {'header': '\nOrder parameter\n---------------\n',
+              'keys': ('orderparameter',)},
+             {'header': '\nOutput settings\n---------------\n',
+              'keys': ('output-modify', 'output-add')}]
+
+    if backup:
+        msg = create_backup(outfile)
+        if msg:
+            logger.warning(msg)
+
+    written = set()  # make sure we don't write the same thing in many places
+    with open(outfile, 'w') as fileh:
+        for i, section in enumerate(group):
+            to_write = [section['header']]
+            for key in section['keys']:
+                if key in settings and key not in written:
+                    to_write.append(setting_to_text(settings, key))
+                    written.add(key)
+            if len(to_write) > 1 or i == 0:
+                fileh.write('\n'.join(to_write))
+        # Also write remaining if anything
+        to_write = ['\nOther settings\n--------------\n']
+        for key in sorted(settings):
+            if not key in written and settings[key] is not None:
+                to_write.append(setting_to_text(settings, key))
+                written.add(key)
+        if len(to_write) > 1:
+            fileh.write('\n'.join(to_write))
+
 
 
 def add_default_settings(settings):
