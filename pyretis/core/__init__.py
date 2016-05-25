@@ -92,7 +92,7 @@ Path (:py:class:`pyretis.core.path.Path`)
     A class representing a path. The path contains snapshots with
     some additional information (energies and order parameters).
 
-PathEnsemble (:py:class:`pyretis.core.pathensemble.Pathensemble`)
+PathEnsemble (:py:class:`pyretis.core.pathensemble.PathEnsemble`)
     A class representing a collection of paths. The path ensemble
     will not store the full trajectories of path, only a simplified
     representation of the paths.
