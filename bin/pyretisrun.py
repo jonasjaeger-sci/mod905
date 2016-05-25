@@ -232,6 +232,7 @@ if __name__ == '__main__':
             cycle = getattr(simulation, 'cycle', {'step': None})
             settings['endcycle'] = cycle['step']
         settings_out = os.path.join(basepath, 'settings_out.rst')
+        logger.info('Writing simulation settings.')
         write_settings_file(settings, settings_out, backup=True)
         print_to_screen(79*('-'))
         bye_bye_world()

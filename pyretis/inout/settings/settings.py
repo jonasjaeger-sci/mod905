@@ -237,6 +237,7 @@ def settings_to_text(settings):
         dump = '{} = {}\n'.format(key, pretty)
         yield dump
 
+
 def setting_to_text(settings, key):
     """Turn a given setting into text usable for an output file.
 
@@ -296,7 +297,9 @@ def write_settings_file(settings, outfile, backup=True):
              {'header': '\nOrder parameter\n---------------\n',
               'keys': ('orderparameter',)},
              {'header': '\nOutput settings\n---------------\n',
-              'keys': ('output-modify', 'output-add')}]
+              'keys': ('output-modify', 'output-add')},
+             {'header': '\nAnalysis settings\n--------------------\n',
+              'keys': ('endcycle', 'beta')}]
 
     if backup:
         msg = create_backup(outfile)
@@ -321,7 +324,6 @@ def write_settings_file(settings, outfile, backup=True):
                 written.add(key)
         if len(to_write) > 1:
             fileh.write('\n'.join(to_write))
-
 
 
 def add_default_settings(settings):
