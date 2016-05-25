@@ -233,6 +233,6 @@ if __name__ == '__main__':
             settings['endcycle'] = cycle['step']
         settings_out = os.path.join(basepath, 'settings_out.rst')
         logger.info('Writing simulation settings.')
-        write_settings_file(settings, settings_out, backup=True)
+        write_settings_file(settings, settings_out, backup=False)
         print_to_screen(79*('-'))
         bye_bye_world()

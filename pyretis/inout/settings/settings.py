@@ -49,7 +49,18 @@ KEYWORDS = {'integrator': {'default': None},
             'output-modify': {'default': None},
             'potentials': {'default': None},
             'potential-parameters': {'default': None},
-            'forcefield': {'default': None}}
+            'forcefield': {'default': None},
+            # Next are analysis-specific:
+            'skipcross': {'default': 1001},
+            'maxblock': {'default': 1000},
+            'blockskip': {'default': 1},
+            'bins': {'default': 1000},
+            'ngrid': {'default': 1001},
+            'maxordermsd': {'default': 100},
+            'plot': {'default': {'plotter': 'mpl', 'output': 'png',
+                                 'style': 'pyretis', 'backup': False}},
+            'txt-output': {'default': {'fmt': 'txt.gz', 'backup': False}},
+            'report': {'default': ['latex', 'rst', 'html']}}
 
 
 def look_for_keyword(line):
@@ -259,7 +270,7 @@ def setting_to_text(settings, key):
         leng = len(key) + 3
         pretty = pprint.pformat(settings[key], width=79-leng)
         pretty = pretty.replace('\n', '\n' + ' ' * leng)
-        return '{} = {}\n'.format(key, pretty)
+        return '{} = {}'.format(key, pretty)
 
 
 def write_settings_file(settings, outfile, backup=True):
@@ -287,19 +298,21 @@ def write_settings_file(settings, outfile, backup=True):
     group = [{'header': 'pyretis simulation\n==================\n',
               'keys': ('units', 'task', 'steps', 'startcycle', 'interfaces',
                        'integrator')},
-             {'header': '\nSystem settings\n---------------\n',
+             {'header': '\n\nSystem settings\n---------------\n',
               'keys': ('dimensions', 'temperature')},
-             {'header': '\nParticles\n---------',
+             {'header': '\n\nParticles\n---------\n',
               'keys': ('particles-position', 'particles-velocity',
                        'particles-mass', 'particles-name', 'particles-type')},
-             {'header': '\nForce field settings\n--------------------\n',
+             {'header': '\n\nForce field settings\n--------------------\n',
               'keys': ('forcefield', 'potentials', 'potential-parameters')},
-             {'header': '\nOrder parameter\n---------------\n',
+             {'header': '\n\nOrder parameter\n---------------\n',
               'keys': ('orderparameter',)},
-             {'header': '\nOutput settings\n---------------\n',
+             {'header': '\n\nOutput settings\n---------------\n',
               'keys': ('output-modify', 'output-add')},
-             {'header': '\nAnalysis settings\n--------------------\n',
-              'keys': ('endcycle', 'beta')}]
+             {'header': '\n\nAnalysis settings\n-----------------\n',
+              'keys': ('endcycle', 'skipcross', 'maxblock', 'blockskip',
+                       'bins', 'ngrid', 'maxordermsd', 'plot', 'txt-output',
+                       'report')}]
 
     if backup:
         msg = create_backup(outfile)
@@ -317,7 +330,7 @@ def write_settings_file(settings, outfile, backup=True):
             if len(to_write) > 1 or i == 0:
                 fileh.write('\n'.join(to_write))
         # Also write remaining if anything
-        to_write = ['\nOther settings\n--------------\n']
+        to_write = ['\n\nOther settings\n--------------\n']
         for key in sorted(settings):
             if not key in written and settings[key] is not None:
                 to_write.append(setting_to_text(settings, key))
