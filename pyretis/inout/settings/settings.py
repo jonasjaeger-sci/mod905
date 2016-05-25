@@ -60,7 +60,8 @@ KEYWORDS = {'integrator': {'default': None},
             'plot': {'default': {'plotter': 'mpl', 'output': 'png',
                                  'style': 'pyretis', 'backup': False}},
             'txt-output': {'default': {'fmt': 'txt.gz', 'backup': False}},
-            'report': {'default': ['latex', 'rst', 'html']}}
+            'report': {'default': ['latex', 'rst', 'html']},
+            'npart': {'default': None}}
 
 
 def look_for_keyword(line):
@@ -312,7 +313,7 @@ def write_settings_file(settings, outfile, backup=True):
              {'header': '\n\nAnalysis settings\n-----------------\n',
               'keys': ('endcycle', 'skipcross', 'maxblock', 'blockskip',
                        'bins', 'ngrid', 'maxordermsd', 'plot', 'txt-output',
-                       'report')}]
+                       'report', 'npart')}]
 
     if backup:
         msg = create_backup(outfile)

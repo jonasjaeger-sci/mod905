@@ -184,6 +184,7 @@ if __name__ == '__main__':
     logger.addHandler(fileh)
 
     simulation = None
+    system = None
 
     try:
         hello_world(inputfile, basepath, args_dict['log_file'])
@@ -227,10 +228,12 @@ if __name__ == '__main__':
         print_to_screen('Execution failed! Will exit now.')
         raise
     finally:
-        # write out the simulation settings:
+        # write out the simulation settings and add some extra ones:
         if simulation is not None:
             cycle = getattr(simulation, 'cycle', {'step': None})
             settings['endcycle'] = cycle['step']
+        if system is not None:
+            settings['npart'] = system.particles.npart
         settings_out = os.path.join(basepath, 'settings_out.rst')
         logger.info('Writing simulation settings.')
         write_settings_file(settings, settings_out, backup=False)
