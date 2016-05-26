@@ -94,6 +94,7 @@ converted internally to the selected system of units.
 .. _table_unit_input:
 
 .. table:: Input units for different systems
+   :class: table-hover
 
    +--------------+----------+---------+---------------+----------+---------+
    | Unit system  | Energy   | Length  | Mass          | Velocity | Time    |
@@ -136,6 +137,7 @@ further described in the :ref:`next section <user-units-custom>`.
 .. _table_unit_systems:
 
 .. table:: Defining units for energy systems
+   :class: table-hover
 
    +--------------+----------------+-------------+--------------------+
    | Unit system  | Energy unit    | Length unit | Mass unit          |
@@ -188,15 +190,13 @@ Where the ``value`` is a number defining the scale and ``unit`` a text string
 which defines the unit to use. For each dimension, pyretis defines a set of
 "known" units to choose from:
 
-- Length
-
+Length:
   * ``A``: Ångström.
   * ``nm``: Nanometre.
   * ``bohr``: Bohr radius.
   * ``m``: Meter.
 
-- Energy
-
+Energy:
   * ``kcal``: Kilocalorie.
   * ``kcal/mol``: Kilocalorie per mol.
   * ``J``: Joule.
@@ -205,8 +205,7 @@ which defines the unit to use. For each dimension, pyretis defines a set of
   * ``eV``: Electronvolt.
   * ``hartree``: Hartree (atomic unit of energy).
 
-- Mass
-
+Mass:
   * ``g/mol``: Grams per mol, numerically equal to the atomic mass unit.
   * ``g``: Gram.
   * ``kg``: Kilogram.
