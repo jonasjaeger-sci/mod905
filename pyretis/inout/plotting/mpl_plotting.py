@@ -21,7 +21,6 @@ mpl_set_style
 import os
 import logging
 import numpy as np
-from scipy.stats import gamma  # pylint: disable=E0611
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -156,7 +155,7 @@ class MplPlotter(Plotter):
                                 'errflux': outputfilee})
         return outputfiles
 
-    def plot_energy(self, results, energies, sim_settings=None):
+    def plot_energy(self, results, energies):
         """Function to plot energy results using `mpl_plot_energy`.
 
         The parameters for this method is described in
@@ -167,7 +166,7 @@ class MplPlotter(Plotter):
         out : dict
             This dict contains the files created by the plotting.
         """
-        canvas = mpl_plot_energy(results, energies, sim_settings=sim_settings)
+        canvas = mpl_plot_energy(results, energies)
         return self._print_figures_to_file(canvas)
 
     def plot_orderp(self, results, orderdata):
@@ -819,7 +818,7 @@ def mpl_plot_orderp(results, orderdata):
     return canvas
 
 
-def mpl_plot_energy(results, energies, sim_settings=None):
+def mpl_plot_energy(results, energies, ):
     r"""Plot the output from the energy analysis using matplotlib.
 
     Parameters
@@ -830,17 +829,6 @@ def mpl_plot_energy(results, energies, sim_settings=None):
         'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
     energies : dict of numpy.arrays
         This is the raw-data for the energy analysis.
-    sim_settings : dict, optional
-        This is the simulation settings which are useful for creating
-        theoretical plots of distributions. It is assumed to contain
-        the following keys:
-
-        * `npart`: The number of particles in the simulation.
-        * `dim`: Number of dimensions used in the simulation.
-        * `beta`: The beta factor :math:`\beta = \frac{1}{k_B T}` where
-          :math:`k_B` is the Boltzmann constant and :math:`T` the
-          temperature.
-        * `temperature`: The temperature of the system.
 
     Returns
     -------
@@ -904,19 +892,10 @@ def mpl_plot_energy(results, energies, sim_settings=None):
                    'label': ENERTITLE[key]}]
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
         title = title.format(ENERTITLE[key], dist[2][0], dist[2][1])
-        if sim_settings is not None and key in ['ekin', 'temp']:
-            pos = np.linspace(min(0.0, dist[1].min()), dist[1].max(), 1000)
-            alp = (0.5 * sim_settings['npart'] * sim_settings['dimensions'])
-            if key == 'ekin':
-                scale = 1.0 / sim_settings['beta']
-            elif key == 'temp':
-                scale = sim_settings['temperature'] / alp
-            else:
-                msgtxt = 'No scale defined for {}! Assuming "1.0"'.format(key)
-                logger.warning(msgtxt)
-                scale = 1.0
-            series.append({'type': 'xy', 'x': pos,
-                           'y': gamma.pdf(pos, alp, loc=0, scale=scale),
+        if 'boltzmann-dist' in results[key]:
+            series.append({'type': 'xy',
+                           'x': results[key]['boltzmann-dist'][1],
+                           'y': results[key]['boltzmann-dist'][0],
                            'label': 'Boltzmann distribution'})
         plot = ENERFILES['dist'].format(key)
         canvas[plot] = mpl_simple_plot(series, fig_settings={'title': title})

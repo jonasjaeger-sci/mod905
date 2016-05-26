@@ -9,7 +9,7 @@ from pyretis.analysis.analysis import (running_average, block_error_corr,
 __all__ = ['analyse_flux']
 
 
-def analyse_flux(fluxdata, settings, simulation_settings):
+def analyse_flux(fluxdata, settings):
     """Run the analysis on the given flux data.
 
     This will run the flux analysis and collect the results into a
@@ -22,10 +22,10 @@ def analyse_flux(fluxdata, settings, simulation_settings):
         The contents of this array is the data obtained from a MD
         simulation for the fluxes.
     settings : dict
-        This dict contains the settings for the analysis.
-    simulation_settings : dict
-        This dict contains information about the simulation that was
-        performed.
+        This dict contains the settings for the analysis. Note that
+        this dictionary also needs some settings from the simulation,
+        in particular the number of cycles, the interfaces and
+        information about the time step.
 
     Returns
     -------
@@ -33,8 +33,8 @@ def analyse_flux(fluxdata, settings, simulation_settings):
         This dict contains the results from the flux analysis.
         The keys are defined in the `results` variable.
     """
-    end_step = simulation_settings['endcycle']  # TODO: CHECK IF THIS IS OK!
-    time_step = simulation_settings['integrator']['timestep']
+    end_step = settings['endcycle'] 
+    time_step = settings['integrator']['timestep']
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
                'neffcross': [],  # number of effective crossings
@@ -42,7 +42,7 @@ def analyse_flux(fluxdata, settings, simulation_settings):
                'flux': [],  # store raw flux data
                'runflux': [],  # running average of flux
                'errflux': [],  # block error analysis
-               'interfaces': [i for i in simulation_settings['interfaces']],
+               'interfaces': [i for i in settings['interfaces']],
                'totalcycle': end_step,  # store total number of cycles
                'cross_time': [],  # steps per crossing
                'neffc/nc': [],  # Effective crossings per crossing

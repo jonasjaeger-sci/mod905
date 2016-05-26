@@ -74,8 +74,7 @@ from .order_analysis import analyse_orderp
 from .path_analysis import analyse_path_ensemble, match_probabilities
 
 
-def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
-                    simulation_settings):
+def analyse_md_flux(crossdata, energydata, orderdata, settings):
     """Function to analyse the output from a MD-flux simulation.
 
     The obtained results will be returned as a convenient structure for
@@ -89,11 +88,9 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         This is the raw data for the energies.
     orderdata : numpy.array
         This is the raw data for the order parameter.
-    analysis_settings : dict
-        This dict contains settings for running the analysis (e.g block
-        length for error analysis).
-    simulation_settings : dict
-        This dict contains settings from the simulation (interfaces,
+    settings : dict
+        The settings for the analysis (e.g block length for error
+        analysis) and some settings from the simulation (interfaces,
         time step etc.).
 
     Returns
@@ -103,8 +100,7 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         dictionary. This dict can be used further for plotting or for
         generating reports.
     """
-    results = {'flux': analyse_flux(crossdata, analysis_settings,
-                                    simulation_settings),
-               'energy': analyse_energies(energydata, analysis_settings),
-               'order': analyse_orderp(orderdata, analysis_settings)}
+    results = {'flux': analyse_flux(crossdata, settings),
+               'energy': analyse_energies(energydata, settings),
+               'order': analyse_orderp(orderdata, settings)}
     return results
