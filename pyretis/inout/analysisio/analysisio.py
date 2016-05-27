@@ -292,7 +292,8 @@ def analyse_and_output_cross(settings, rawdata, plotter=None, txt=None):
         figures = plotter.plot_flux(result)
     if txt is not None:
         outtxt = txt_flux_output(result, out_fmt=txt['fmt'],
-                                 backup=txt['backup'])
+                                 backup=txt['backup'],
+                                 path=settings.get('report-dir', None))
     return result, figures, outtxt
 
 
@@ -330,7 +331,8 @@ def analyse_and_output_orderp(settings, rawdata, plotter=None, txt=None):
         figures = plotter.plot_orderp(result, rawdata)
     if txt is not None:
         outtxt = txt_orderp_output(result, rawdata, out_fmt=txt['fmt'],
-                                   backup=txt['backup'])
+                                   backup=txt['backup'],
+                                   path=settings.get('report-dir', None))
     return result, figures, outtxt
 
 
@@ -366,7 +368,8 @@ def analyse_and_output_energy(settings, rawdata, plotter=None, txt=None):
         figures = plotter.plot_energy(result, rawdata)
     if txt is not None:
         outtxt = txt_energy_output(result, rawdata, out_fmt=txt['fmt'],
-                                   backup=txt['backup'])
+                                   backup=txt['backup'],
+                                   path=settings.get('report-dir', None))
     return result, figures, outtxt
 
 
@@ -415,5 +418,6 @@ def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
     if txt is not None:
         outtxt = txt_path_output(path_ensemble, result, idetect,
                                  out_fmt=txt['fmt'],
-                                 backup=txt['backup'])
+                                 backup=txt['backup'],
+                                 path=settings.get('report-dir', None))
     return result, figures, outtxt

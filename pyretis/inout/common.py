@@ -325,6 +325,28 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     return fmt.format(ens)
 
 
+def add_dirname(filename, dirname):
+    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
+
+    Parameters
+    ----------
+    filename : string
+        The filename.
+    dirname : string
+        The directory we want to prefix. It can be None, in which
+        case we ignore it.
+
+    Returns
+    -------
+    out : string
+        The path to the resulting file.
+    """
+    if dirname is not None:
+        return os.path.join(dirname, filename)
+    else:
+        return filename
+
+
 def name_file(name, extension, path=None):
     """Return a file name by joining a name and an file extension.
 
@@ -347,11 +369,7 @@ def name_file(name, extension, path=None):
     out : string
         The resulting file name
     """
-    filename = os.extsep.join([name, extension])
-    if path is not None:
-        return os.path.join(path, filename)
-    else:
-        return filename
+    return add_dirname(os.extsep.join([name, extension]), path)
 
 
 def check_python_version():

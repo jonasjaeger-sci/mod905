@@ -86,7 +86,8 @@ def txt_histogram(outputfile, title, histograms, backup=False):
     txt_save_columns(outputfile, headertxt, data, backup=backup)
 
 
-def txt_flux_output(results, out_fmt='txt.gz', backup=False):
+def txt_flux_output(results, out_fmt='txt.gz', backup=False,
+                    path=None):
     """Store the output from the flux analysis in text files.
 
     Parameters
@@ -98,6 +99,8 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
         specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+    path : string, optional
+        Specify a directory for writing the files to.
 
     Returns
     -------
@@ -113,20 +116,23 @@ def txt_flux_output(results, out_fmt='txt.gz', backup=False):
         flux = results['flux'][i]
         runflux = results['runflux'][i]
         errflux = results['errflux'][i]
-        outfile = name_file(FLUXFILES['runflux'].format(i + 1), out_fmt)
+        outfile = name_file(FLUXFILES['runflux'].format(i + 1), out_fmt,
+                            path=path)
         outfiles['runflux'].append(outfile)
         # output running average:
         txt_save_columns(outfile, 'Time, running average',
                          (flux[:, 0], runflux), backup=backup)
         # output block-error results:
-        outfile = name_file(FLUXFILES['block'].format(i + 1), out_fmt)
+        outfile = name_file(FLUXFILES['block'].format(i + 1), out_fmt,
+                            path=path)
         outfiles['block'].append(outfile)
         txt_block_error(outfile, 'Block error for flux analysis',
                         errflux, backup=backup)
     return outfiles
 
 
-def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
+def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False,
+                      path=None):
     """Save the output from the order parameter analysis to text files.
 
     Parameters
@@ -141,6 +147,8 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
         specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+    path : string, optional
+        Specify a directory for writing the files to.
 
     Returns
     -------
@@ -158,7 +166,7 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     """
     outfiles = {}
     for key in ORDERFILES:
-        outfiles[key] = name_file(ORDERFILES[key], out_fmt)
+        outfiles[key] = name_file(ORDERFILES[key], out_fmt, path=path)
 
     time = orderdata[0]
     # output running average:
@@ -183,7 +191,8 @@ def txt_orderp_output(results, orderdata, out_fmt='txt.gz', backup=False):
     return outfiles
 
 
-def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
+def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False,
+                      path=None):
     """Save the output from the energy analysis to text files.
 
     Parameters
@@ -199,6 +208,8 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+    path : string, optional
+        Specify a directory for writing the files to.
 
     Returns
     -------
@@ -207,7 +218,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
     """
     outfiles = {}
     for key in ['run_energies', 'temperature', 'run_temp']:
-        outfiles[key] = name_file(ENERFILES[key], out_fmt)
+        outfiles[key] = name_file(ENERFILES[key], out_fmt, path=path)
     time = energies['time']
     # 1) Store the running average:
     header = ['Running average of energy data: time']
@@ -223,7 +234,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         if key not in results:
             continue
         outkey = ENERFILES['block'].format(key)
-        outfiles[outkey] = name_file(outkey, out_fmt)
+        outfiles[outkey] = name_file(outkey, out_fmt, path=path)
         txt_block_error(outfiles[outkey], ENERTITLE[key],
                         results[key]['blockerror'], backup=backup)
     # 3) Save histograms:
@@ -231,7 +242,7 @@ def txt_energy_output(results, energies, out_fmt='txt.gz', backup=False):
         if key not in results:
             continue
         outkey = ENERFILES['dist'].format(key)
-        outfiles[outkey] = name_file(outkey, out_fmt)
+        outfiles[outkey] = name_file(outkey, out_fmt, path=path)
         txt_histogram(outfiles[outkey],
                       r'Histogram for {}'.format(ENERTITLE[key]),
                       [results[key]['distribution']], backup=backup)
@@ -274,7 +285,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
 
 
 def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
-                    backup=False):
+                    backup=False, path=None):
     """Output all the results obtained by the path analysis.
 
     Parameters
@@ -290,6 +301,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
         specified, the file will be written in compressed gzip format.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+    path : string, optional
+        Specify a directory for writing the files to.
 
     Returns
     -------
@@ -300,7 +313,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     ens_simplified = simplify_ensemble_name(ens)
     out = {}
     for key in PATHFILES:
-        out[key] = name_file(PATHFILES[key].format(ens_simplified), out_fmt)
+        out[key] = name_file(PATHFILES[key].format(ens_simplified), out_fmt,
+                             path=path)
     # 1) Output pcross vs lambda:
     txt_save_columns(out['pcross'],
                      'Ensemble: {}, idetect: {}'.format(ens, idetect),
@@ -323,7 +337,7 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
 
 
 def txt_matched_probability(path_ensembles, detect, matched,
-                            out_fmt='txt.gz', backup=False):
+                            out_fmt='txt.gz', backup=False, path=None):
     """Output the matched probabilities to a text file.
 
     This function will output the matched probabilities for the
@@ -346,6 +360,9 @@ def txt_matched_probability(path_ensembles, detect, matched,
     backup : boolean
         If `backup` is False, we will overwrite files, otherwise we will
         backup.
+    path : string, optional
+        Specify a directory for writing the files to.
+
 
     Returns
     -------
@@ -353,7 +370,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
         The files created by this function.
     """
     output = {}
-    output['match'] = name_file(PATH_MATCH['match'], out_fmt)
+    output['match'] = name_file(PATH_MATCH['match'], out_fmt, path=path)
     # start by creating the matched file, here we use a custom
     # file writer:
     if backup:
@@ -366,7 +383,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
             header = 'Ensemble: {}, idetect: {}'.format(ens.ensemble, idet)
             np.savetxt(fhandle, prob, header=header)
     # output the over-all matched probability:
-    output['total'] = name_file(PATH_MATCH['total'], out_fmt)
+    output['total'] = name_file(PATH_MATCH['total'], out_fmt, path=path)
     interf = ' , '.join([str(idet) for idet in detect])
     header = 'Total matched probability. Interfaces: {}'
     txt_save_columns(output['total'], header.format(interf),

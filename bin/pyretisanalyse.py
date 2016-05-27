@@ -52,7 +52,6 @@ if __name__ == '__main__':
     localfile = os.path.basename(inputfile)
     if not os.path.isdir(basepath):
         basepath = os.getcwd()
-
     # set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
@@ -78,6 +77,7 @@ if __name__ == '__main__':
         settings['beta'] = 1.0 / (settings['temperature'] *
                                   CONSTANTS['kB'][settings['units']])
         output_dir = os.path.join(runpath, 'report')
+        settings['report-dir'] = output_dir
         msg_dir = make_dirs(output_dir)
         print_to_screen(msg_dir)
         task = settings['task']

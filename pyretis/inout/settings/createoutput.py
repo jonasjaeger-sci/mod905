@@ -25,6 +25,7 @@ import os
 import pprint
 import json
 # pyretis imports
+from pyretis.inout.common import add_dirname
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.writers import get_writer, FileIO
@@ -108,28 +109,6 @@ _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
                            'energy': {'filename': 'energyp.dat',
                                       'when': {'every': 10},
                                       'freq': 10}}]
-
-
-def add_dirname(filename, dirname):
-    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
-
-    Parameters
-    ----------
-    filename : string
-        The filename.
-    dirname : string
-        The directory we want to prefix. It can be None, in which
-        case we ignore it.
-
-    Returns
-    -------
-    out : string
-        The path to the resulting file.
-    """
-    if dirname is not None:
-        return os.path.join(dirname, filename)
-    else:
-        return filename
 
 
 class OutputTask(object):
