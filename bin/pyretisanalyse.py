@@ -23,7 +23,7 @@ from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors, CONSTANTS
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.analysisio import run_md_flux_analysis
+from pyretis.inout.analysisio import run_analysis
 from pyretis.inout.common import (check_python_version,
                                   LOG_FMT,
                                   make_dirs,
@@ -33,8 +33,8 @@ from pyretis.inout.common import (check_python_version,
 
 RAW_DATA = {'md-flux': {'files': {'cross': 'cross.dat',
                                   'energy': 'energy.dat',
-                                  'order': 'order.dat'}}}
-ANALYSIS = {'md-flux': run_md_flux_analysis}
+                                  'order': 'order.dat'}},
+            'md-nve': {'files': {'energy': 'energy.dat'}}}
 
 
 if __name__ == '__main__':
@@ -82,8 +82,7 @@ if __name__ == '__main__':
         print_to_screen(msg_dir)
         task = settings['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
-        analysis = ANALYSIS[task]
-        analysis(settings, RAW_DATA[task])
+        run_analysis(settings, RAW_DATA[task])
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         print_to_screen(errtxt)

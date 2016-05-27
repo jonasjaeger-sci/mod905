@@ -27,9 +27,9 @@ __init__.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-run_md_flux_analysis
-    Function to run the MD flux analysis on a set of files. It will
-    plot the results and generate a MD-flux report.
+run_analysis
+    Function to analyse simulation data. It will plot the results
+    and generate a report if requested.
 """
 from __future__ import absolute_import
-from .analysisio import run_md_flux_analysis, analyse_file
+from .analysisio import run_analysis, analyse_file

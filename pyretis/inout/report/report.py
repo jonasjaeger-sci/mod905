@@ -57,6 +57,10 @@ _TEMPLATES = {'rst': 'report_{}.rst',
 _TEMPLATE_NAMES = {'md-flux': 'mdflux',
                    'tis': 'tis',
                    'tis-path': 'tis_path'}
+
+_REPORT_MAP = {'md-flux': generate_report_mdflux,
+               'tis': generate_report_tis,
+               'tis_path': generate_report_tis_path}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -205,6 +209,10 @@ def generate_report(report_type, analysis, output, template=None):
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
               'figures': [], 'tables': [], 'numbers': []}
+    try:
+        generator = _REPORT_MAP[report_type]
+    except KeyError:
+        return None, None
     # Check if the output is a valid format
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
@@ -212,13 +220,7 @@ def generate_report(report_type, analysis, output, template=None):
         logger.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
-    generated = None
-    if report_type == 'md-flux':
-        generated = generate_report_mdflux(analysis, output=output)
-    elif report_type == 'tis':
-        generated = generate_report_tis(analysis, output=output)
-    elif report_type == 'tis_path':
-        generated = generate_report_tis_path(analysis, output=output)
+    generated = generator(analysis, output=output)
     report.update(generated)
     # Remove white-space from numbers:
     for key in report['numbers']:

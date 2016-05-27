@@ -9,10 +9,6 @@ according to given settings.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-run_md_flux_analysis
-    Methods to run the MD flux analysis on a set of files. It will
-    plot the results and generate a MD-flux report.
-
 analyse_file
     Method to analyse a file. For example, it can be used as
 
@@ -25,6 +21,10 @@ analyse_file
 
     >>> from pyretis.inout.analysisio import analyse_and_output_cross
     >>> out, fig, txt = analyse_and_output_cross(settings, rawdata)
+
+run_analysis
+    Methods to the analysis on a set of files. It will make some plots
+    and output a report if possible.
 """
 from __future__ import absolute_import
 import logging
@@ -43,11 +43,11 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['run_md_flux_analysis', 'analyse_file']
+__all__ = ['analyse_file', 'run_analysis']
 
 
-def run_md_flux_analysis(settings, raw_data):
-    """Analyse the output from a MD-flux simulation.
+def run_analysis(settings, raw_data):
+    """Analyse the output from a simulation.
 
     This function will will determine if the data should be read from
     files or if it's passed as other structures directly from the
@@ -69,8 +69,17 @@ def run_md_flux_analysis(settings, raw_data):
     plotter = create_plotter(settings['plot'])
     txtout = settings['txt-output']
     if 'files' in raw_data:
-        results = run_md_flux_files(settings, raw_data['files'],
-                                    plotter, txtout)
+        results = {'txtfile': {}}
+        raw_files = raw_data['files']
+        for key in raw_files:
+            analyse_func = analyse_file(key, raw_files[key])
+            out, fig, txtfile = analyse_func(settings,
+                                             plotter=plotter,
+                                             txt=txtout)
+            if txtfile is not None:
+                results['txtfile'].update(txtfile)
+            results[key] = out
+            results['{}_figures'.format(key)] = fig
     else:
         msg = 'Analysis & output have not been implemented for objects yet'
         logger.error(msg)
@@ -78,50 +87,10 @@ def run_md_flux_analysis(settings, raw_data):
 
     if results is not None:  # output the report
         for report_type in settings['report']:
-            report, ext = generate_report('md-flux', results,
+            report, ext = generate_report(settings['task'], results,
                                           output=report_type)
-            write_report(report, 'md-flux', ext)
-    return results
-
-
-def run_md_flux_files(settings, raw_files, plotter, txtout):
-    """Analyse the output from a MD-flux simulation from files.
-
-    The raw data will be read from output files obtained by the MD-flux
-    simulation. This function will output a series of plots and
-    generate a report based on the analysis. The function calls for
-    performing the actual analysis are here wrapped with
-    `run_analysis_file`, this is just to ensure that we are only
-    analyzing one block and ignoring the rest of the possible blocks
-    in the file.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed and it should also contain
-        information on how the simulation was performed.
-    raw_files : dict
-        The different files to open. We assume/hope that it contains
-        the keys `flux`, `order` and `energy` with the file names to
-        open.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txtout : dict
-        If `txtout` is different from None it is assumed to contain the
-        format for the text files and backup settings.
-    """
-    results = {'txtfile': {}}
-    for key in raw_files:
-        analyse_func = analyse_file(key, raw_files[key])
-        out, fig, txtfile = analyse_func(settings,
-                                         plotter=plotter,
-                                         txt=txtout)
-
-        if txtfile is not None:
-            results['txtfile'].update(txtfile)
-        results[key] = out
-        results['{}_figures'.format(key)] = fig
+            if report is not None:
+                write_report(report, settings['task'], ext)
     return results
 
 
