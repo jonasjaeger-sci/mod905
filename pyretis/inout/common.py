@@ -6,11 +6,25 @@
 It contains some functions that is used when generating reports,
 typically to format tables and numbers.
 
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyretisLogFormatter
+    A class representing a formatter for the pyretis log file.
+
+PyretisLogFormatterDebug
+    A class representing a formatter for the pyretis log file with
+    some extra information/details for a debug log file.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 apply_format
     Apply a format string to a given value.
+
+check_python_version
+    Method that will give warnings when we use older and untested
+    versions of python.
 
 create_backup
     A function to handle the creation of backups of old files.
@@ -18,20 +32,25 @@ create_backup
 make_dirs
     Create directories (for path simulation).
 
+print_to_screen
+    A method used for printing to screen.
+
 remove_extensions
     Remove extensions for a list of files.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import errno
 import os
 import re
+import sys
 import logging
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['create_backup', 'apply_format', 'remove_extensions',
-           'make_dirs']
+__all__ = ['apply_format', 'check_python_version', 'create_backup',
+           'make_dirs', 'print_to_screen', 'PyretisLogFormatter',
+           'PyretisLogFormatterDebug', 'remove_extensions']
 
 
 # Hard-coded patters for energy analysis output files.
@@ -74,6 +93,9 @@ PATH_MATCH = {'total': 'total-probability',
 REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
                'tis': os.extsep.join(['tis_report', '{}']),
                'tis_path': os.extsep.join(['tis_path_report', '{}'])}
+# hard-coded formats to use for Log files:
+LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
+LOG_FMT = '[%(levelname)s]: %(message)s'
 
 
 def create_backup(outputfile):
@@ -188,7 +210,7 @@ def remove_extensions(list_of_files):
 
     Returns
     -------
-    newlist : list or dict
+    out : list or dict
         A copy of list_of_files, where the extensions has been removed.
 
     Note
@@ -197,12 +219,12 @@ def remove_extensions(list_of_files):
     integers, the TypeError will not be raised. This is pretty unlikely
     and we therefore do not check for this.
     """
-    # we assume that list_of_files is a simple dict
+    # We assume that list_of_files is a simple dict
     try:
-        newlist = {}
+        newdict = {}
         for key in list_of_files:
-            newlist[key] = _remove_extension(list_of_files[key])
-        return newlist
+            newdict[key] = _remove_extension(list_of_files[key])
+        return newdict
     except TypeError:
         newlist = []
         for fig in list_of_files:
@@ -243,6 +265,23 @@ def make_dirs(dirname):
         if os.path.isdir(dirname):
             msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
             return msg
+
+
+def print_to_screen(txt):
+    """Method to print output to standard out.
+
+    This method is included to ensure that output from pyretis to the
+    screen is written out in a uniform way across the library and
+    application(s).
+
+    Parameters
+    ----------
+    txt : string
+        The text to write to the screen
+    """
+    out = '# {}'.format(txt)
+    out = out.replace('\n', '\n# ')
+    print(out)
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
@@ -313,3 +352,52 @@ def name_file(name, extension, path=None):
         return os.path.join(path, filename)
     else:
         return filename
+
+
+def check_python_version():
+    """Method that will give a warning about old python version(s)."""
+    pyversion = sys.version.split()[0]
+    if sys.version_info < (3, 0):
+        warntxt = ('Please upgrade to Python 3.'
+                   '\nPython 2.7 support will be dropped in the near future!')
+        warntxt = warntxt.format(pyversion)
+        logger.warning(warntxt)
+        if sys.version_info < (2.7):
+            msgtxt = ('Your version of Python is NOT and supported.'
+                      ' Please upgrade!')
+            logger.critical(msgtxt)
+
+
+class PyretisLogFormatter(logging.Formatter):
+    """Hardcoded formatter for pyretis log file.
+
+    This formatter is using a format of type:
+
+    ``'[%(levelname)s]: %(message)s'``
+
+    and is less verbose than the ``PyretisLogFormatterDebug``.
+    """
+    def format(self, record):
+        out = logging.Formatter.format(self, record)
+        shortname = record.name.split('.')[-1]
+        out = out.replace(record.name, shortname)
+        header, _ = out.split(record.message)
+        out = out.replace('\n', '\n' + ' ' * len(header))
+        return out
+
+
+class PyretisLogFormatterDebug(logging.Formatter):
+    """Hardcoded formatter for pyretis log.
+
+    This formatter is intended for usage when more debugging
+    information is needed with a format for logging as:
+
+    ``'%(name)s: [%(levelname)s]: %(message)s'``
+
+    so that information about modules will be printed out as well.
+    """
+    def format(self, record):
+        out = logging.Formatter.format(self, record)
+        header, _ = out.split(record.message)
+        out = out.replace('\n', '\n' + ' ' * len(header))
+        return out

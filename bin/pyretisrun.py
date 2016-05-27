@@ -20,8 +20,8 @@ optional arguments:
                         Specify log file to write
   -l LOG_LEVEL, --log_level LOG_LEVEL
                         Specify log level for log file
-  -p, --progress        Display a progress meter instead of text output
-                        for the simulation
+  -p, --progress        Display a progress meter instead of text output for
+                        the simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function, absolute_import
@@ -38,61 +38,40 @@ from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
+from pyretis.inout import create_output
+from pyretis.inout.common import (check_python_version,
+                                  LOG_DEBUG_FMT,
+                                  LOG_FMT,
+                                  print_to_screen,
+                                  PyretisLogFormatter,
+                                  PyretisLogFormatterDebug)
 from pyretis.inout.settings import (parse_settings_file,
                                     write_settings_file,
                                     create_system,
                                     create_force_field,
                                     create_simulation)
-from pyretis.inout import create_output
 
 
-DATEFORMAT = '%d.%m.%Y %H:%M:%S'
+DATE_FMT = '%d.%m.%Y %H:%M:%S'
 
 
-def print_to_screen(txt):
-    """Method to print output to standard out.
-
-    This method is included to mirror the `MultiLineFormatter` used
-    for the logging. The reason for not using just the console output
-    is since we just want the console output to report on errors and
-    possible problems (warnings etc.)
+def get_formatter(level):
+    """Helper function to select a log format.
 
     Parameters
     ----------
-    txt : string
-        The text to write to the screen
+    level : integer
+        This integer defines the log level.
+
+    Returns
+    -------
+    out : object like ``logging.Formatter``
+        An object that can be used as a formatter for a logger.
     """
-    out = '# {}'.format(txt)
-    out = out.replace('\n', '\n# ')
-    print(out)
-
-
-class MultiLineFormatter(logging.Formatter):
-    """Hardcoded formatter for pyretis log file."""
-    def format(self, record):
-        out = logging.Formatter.format(self, record)
-        shortname = record.name.split('.')[-1]
-        out = out.replace(record.name, shortname)
-        header, _ = out.split(record.message)
-        out = out.replace('\n', '\n' + ' ' * len(header))
-        return out
-
-
-class MultiLineFormatterDebug(logging.Formatter):
-    """Hardcoded formatter for pyretis log.
-
-    This formatter is intended for usage when more debugging
-    information is needed with a format for logging as:
-
-    `'%(name)s: [%(levelname)s]: %(message)s'`
-
-    so that information about modules will be printed out as well.
-    """
-    def format(self, record):
-        out = logging.Formatter.format(self, record)
-        header, _ = out.split(record.message)
-        out = out.replace('\n', '\n' + ' ' * len(header))
-        return out
+    if level <= logging.DEBUG:
+        return PyretisLogFormatterDebug(LOG_DEBUG_FMT)
+    else:
+        return PyretisLogFormatter(LOG_FMT)
 
 
 def hello_world(infile, rundir, logfile):
@@ -107,25 +86,12 @@ def hello_world(infile, rundir, logfile):
     logfile : string
         The output log file
     """
-    timestart = datetime.datetime.now().strftime(DATEFORMAT)
+    timestart = datetime.datetime.now().strftime(DATE_FMT)
     pyversion = sys.version.split()[0]
     msg = ['{}'.format(timestart)]
     msg += ['{} version {} (Python version: {})'.format(NAME, VERSION,
                                                         pyversion)]
-    for message in msg:
-        logger.info(message)
-        print_to_screen(message)
-    if sys.version_info < (3, 0):
-        warntxt = ('Please upgrade to Python 3.'
-                   '\nPython 2.X support will be dropped in the near future!')
-        warntxt = warntxt.format(pyversion)
-        logger.warning(warntxt)
-        if sys.version_info < (2.7):
-            msgtxt = ('Your version of Python is NOT supported by {}!'
-                      '\nPlease upgrade!')
-            msgtxt = msgtxt.format(NAME)
-            raise ValueError(msgtxt)
-    msg = ['Running in directory: {}'.format(rundir)]
+    msg += ['Running in directory: {}'.format(rundir)]
     msg += ['Input file: {}'.format(infile)]
     msg += ['Log file: {}'.format(logfile)]
     for message in msg:
@@ -135,7 +101,7 @@ def hello_world(infile, rundir, logfile):
 
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
-    timeend = datetime.datetime.now().strftime(DATEFORMAT)
+    timeend = datetime.datetime.now().strftime(DATE_FMT)
     msgtxt = 'End of {} execution: {}'.format(NAME, timeend)
     logger.info(msgtxt)
     print_to_screen(msgtxt)
@@ -181,23 +147,24 @@ if __name__ == '__main__':
     localfile = os.path.basename(inputfile)
     if not os.path.isdir(basepath):
         basepath = os.getcwd()
+
     # set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
-    # log to screen:
+    # Define a console logger. This will log to sys.stderr:
     console = logging.StreamHandler()
     console.setLevel(logging.WARNING)
-    formatter = MultiLineFormatter('[%(levelname)s]: %(message)s')
-    console.setFormatter(formatter)
+    console.setFormatter(PyretisLogFormatter(LOG_FMT))
     logger.addHandler(console)
-    # log to a file:
+    # Define a file logger:
     fileh = logging.FileHandler(args_dict['log_file'], mode='w')
     log_level = getattr(logging, args_dict['log_level'].upper(),
                         logging.INFO)
     fileh.setLevel(log_level)
-    formatter_file = MultiLineFormatter('[%(levelname)s]: %(message)s')
-    fileh.setFormatter(formatter_file)
+    fileh.setFormatter(get_formatter(log_level))
     logger.addHandler(fileh)
+
+    check_python_version()
 
     simulation = None
     system = None
