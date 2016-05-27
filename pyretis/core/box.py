@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of a class for a simulation box.
 
 The simulation box handles the periodic boundaries if needed.

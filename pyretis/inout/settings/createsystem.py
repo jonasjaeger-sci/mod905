@@ -1,8 +1,35 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module handles the set-up of initial positions and a box.
 
 The initial positions can either be generated on a lattice, or it can
 be read from a file.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+create_box
+    Create a simulation box from simulation settings.
+
+create_initial_positions
+    Get initial positions based on settings. This will either be
+    read from a file or generated on a lattice.
+
+create_system
+    Set up a system from given settings. This method will probably
+    also need to set/get the initial positions and velocities for
+    the particles and set up the simulation box.
+
+create_velocities
+    Create velocities from settings for a system with particles.
+
+initial_positions_file
+    Get initial positions from a file.
+
+initial_positions_lattice
+    Get initial positions by generating a lattice.
 """
 import logging
 import os
@@ -306,8 +333,8 @@ def initial_positions_file(settings):
 def create_initial_positions(settings):
     """Set up the initial positions from the given settings.
 
-    The settings can specify the initial positions as a file, as a
-    string or to be generated on a lattice.
+    The settings can specify the initial positions as a file or
+    to be generated on a lattice by pyretis.
 
     Parameters
     ----------

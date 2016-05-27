@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Functions for analysis of path ensembles.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Methods for analysis of path ensembles.
 
-Path ensembles are defined in the object `PathEnsemble`
-in `pyretis.core.path`.
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+analyse_path_ensemble
+    Method to analyse a path ensemble, it will calculate crossing
+    probabilities and information about moves etc. This method
+    can be applied to files as well as path ensemble objects.
+
+analyse_path_ensemble_object
+    Method to analyse a path ensemble, it will calculate crossing
+    probabilities and information about moves etc. This method is
+    intended to work directly on path ensemble objects.
+
+match_probabilities
+    Match probabilities from several path ensembles and calculate
+    efficiencies and the error for the matched probability.
 """
 from __future__ import absolute_import
 import logging

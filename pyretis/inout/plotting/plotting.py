@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of the base class for the plotter.
 
 This module just defines a base class for plotters. This is just to
@@ -49,7 +51,7 @@ class Plotter(object):
         """Function that plots flux results."""
         raise NotImplementedError()
 
-    def plot_energy(self, results, energies, sim_settings=None):
+    def plot_energy(self, results, energies):
         """Function that plots energy results."""
         raise NotImplementedError()
 

@@ -1,13 +1,27 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""pyretis
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""pyretisrun - An application for running pyretis simulations
 
 This script is a part of the pyretis library and can be used for
 running simulations from an input script.
 
-Typical usage is:
+usage: pyretisrun.py [-h] -i INPUT [-V] [-f LOG_FILE] [-l LOG_LEVEL] [-p]
 
-pyretisrun -i inputfile.txt
+pyretis
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Location of pyretis input file
+  -V, --version         show program's version number and exit
+  -f LOG_FILE, --log_file LOG_FILE
+                        Specify log file to write
+  -l LOG_LEVEL, --log_level LOG_LEVEL
+                        Specify log level for log file
+  -p, --progress        Display a progress meter instead of text output
+                        for the simulation
 """
 # pylint: disable=C0103
 from __future__ import print_function, absolute_import
@@ -33,7 +47,6 @@ from pyretis.inout import create_output
 
 
 DATEFORMAT = '%d.%m.%Y %H:%M:%S'
-USE_TQDM = True
 
 
 def print_to_screen(txt):
@@ -157,6 +170,9 @@ if __name__ == '__main__':
                         help='Specify log level for log file',
                         required=False,
                         default='INFO')
+    parser.add_argument('-p', '--progress', action='store_true',
+                        help=('Display a progress meter instead of text '
+                              'output for the simulation'))
     args_dict = vars(parser.parse_args())
 
     inputfile = args_dict['input']
@@ -212,7 +228,7 @@ if __name__ == '__main__':
         logger.info('Running simulation.')
         print_to_screen('Running simulation!')
         print_to_screen(79*('-'))
-        if USE_TQDM:
+        if args_dict['progress']:
             for result in tqdm(simulation.run(), total=settings['steps']):
                 for task in output_tasks:
                     if task.target != 'screen':

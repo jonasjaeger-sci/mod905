@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """
 pyretis - A simulation package for rare event simulations.
 Copyright (C) 2015  The pyretis team
@@ -40,6 +42,8 @@ ISRELEASED = False
 VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
 VERSION_FILE = os.path.join('pyretis', 'version.py')
 VERSION_TXT = '''# -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Version information for pyretis.
 
 This file is generated from pyretis setup.py
@@ -164,5 +168,6 @@ setup(name='pyretis',
                         'scipy>=0.13.3',
                         'matplotlib>=1.1',
                         'jinja2>=2.7.2',
-                        'docutils>=0.11'],
+                        'docutils>=0.11',
+                        'tqdm>=4.7.0'],
       scripts=['bin/pyretisrun.py'])

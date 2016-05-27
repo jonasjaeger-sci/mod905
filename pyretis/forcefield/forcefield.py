@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class for a generic force field."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""This file contains a class for a generic force field.
+
+This module defines the class used for representing force field.
+The forcefield class is built up of potential functions.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ForceField
+    A class representing a generic Force Field.
+"""
 import logging
 from pyretis.core.common import inspect_function
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

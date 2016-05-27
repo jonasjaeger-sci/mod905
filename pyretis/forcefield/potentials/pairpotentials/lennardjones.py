@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Classes for Lennard-Jones pair potentials and variations."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Module defining Lennard-Jones pair potentials.
+
+This module defines the Lennard-Jones potential for pyretis.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PairLennardJonesCut
+    A class represening a Lennard-Jones 6-12 potential implemented
+    in pure python.
+
+PairLennardJonesCutnp
+    A class represening a Lennard-Jones 6-12 potential implemented
+    with usage of numpy.
+"""
 from __future__ import absolute_import
 import logging
 import numpy as np

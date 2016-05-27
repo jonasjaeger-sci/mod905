@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Functions for analysis of crossings for the flux data."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Methods for analysis of crossings for flux data.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+analyse_flux
+    Run analysis for simulation flux data. This will calculate
+    the initial flux for a simulation.
+"""
 from __future__ import absolute_import
 import numpy as np
 from pyretis.analysis.analysis import (running_average, block_error_corr,
@@ -33,7 +43,7 @@ def analyse_flux(fluxdata, settings):
         This dict contains the results from the flux analysis.
         The keys are defined in the `results` variable.
     """
-    end_step = settings['endcycle'] 
+    end_step = settings['endcycle']
     time_step = settings['integrator']['timestep']
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings

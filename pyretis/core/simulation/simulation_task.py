@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Definition of a class for tasks."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Definition of a class for simulation tasks.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SimulationTask
+    A class representing a simulation task.
+"""
 from __future__ import print_function
 import logging
 from pyretis.core.common import inspect_function

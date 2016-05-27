@@ -1,8 +1,20 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Module for Monte Carlo Algorithms and other "random" functions.
 
 In this module, Monte Carlo Algorithms are defined. Note that some
 derived or "random" functions are also defined in the TIS module.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+metropolis_accept_reject
+    Accept/reject a energy change according to the metropolis rule.
+
+max_displace_step
+    Monte Carlo routine for displacing particles. It will select and
+    displace one particle randomly.
 """
 from __future__ import absolute_import
 import numpy as np

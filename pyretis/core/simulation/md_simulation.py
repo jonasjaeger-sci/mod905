@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definitions of simulation objects for molecular dynamics simulations.
 
 This module contains definitions of classes for performing molecular

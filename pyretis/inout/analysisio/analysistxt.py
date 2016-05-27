@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Functions and classes for text based output from the analysis.
 
 This file contains functions and classes that handle text files for the
@@ -32,7 +34,6 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 from pyretis.inout.writers.txtinout import txt_save_columns
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-
 
 
 __all__ = ['txt_energy_output', 'txt_flux_output',

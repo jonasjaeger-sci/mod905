@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*-
-"""This file contains positions dependent potentials."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""A collection of simple position dependent potentials.
+
+This module defines some potential functions which are useful
+as simple models.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DoubleWell
+    This class defines a one-dimensional double well potential.
+
+RectangularWell
+    This class defines a one-dimensional rectangular well potential.
+"""
 from __future__ import absolute_import
 import logging
 import numpy as np

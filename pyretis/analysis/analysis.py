@@ -1,6 +1,21 @@
 # -*- coding: utf-8 -*-
-"""This file contains some simple functions for numerical analysis."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Module defining functions useful in analysis of simulation data.
 
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+running_average
+    Method to calculate a running average.
+
+block_error
+    Perform block error analysis.
+
+block_error_corr
+    Method to run a block error analysis and calculate relative
+    errors and correlation length.
+"""
 import numpy as np
 from pyretis.analysis.histogram import histogram_and_avg
 

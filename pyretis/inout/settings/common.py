@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module defines common methods for the settings handling.
 
 Important methods defined here
@@ -67,7 +69,7 @@ def import_from(module_path, function_name):
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
-            spec = importlib.util.spec_from_file_location(module_name, # pylint: disable=no-member
+            spec = importlib.util.spec_from_file_location(module_name,  # pylint: disable=no-member
                                                           module_path)
             module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
             spec.loader.exec_module(module)

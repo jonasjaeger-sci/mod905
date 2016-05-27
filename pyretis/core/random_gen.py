@@ -1,9 +1,20 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module handles random number generation.
 
 It derives most of the random number procedures from `RandomState` in
 `numpy.random` and defines a class which used `RandomState` to generate
 pseudo-random numbers.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RandomGenerator
+    A class representing a random number generator.
+
+ReservoirSampler
+    A class for reservoir sampling.
 """
 from __future__ import absolute_import
 import logging

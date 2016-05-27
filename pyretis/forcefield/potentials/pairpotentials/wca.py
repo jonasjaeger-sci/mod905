@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
-"""This file contains a WCA pair potential."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""This file contains a WCA double well potential.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DoubleWellWCA
+    This class defines a n-dimensional Double Well potential.
+"""
 from __future__ import absolute_import
 import logging
 import numpy as np

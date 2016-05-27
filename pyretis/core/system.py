@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Definition of the system class.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Module defining the system class
 
-The system object defines the system the simulation acts on. The system
-object contains particles, a force field and a box.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+System
+    A class representing a system. A system object defines the system
+    the simulation acts and contains information about particles,
+    force fields etc.
 """
 from __future__ import absolute_import
 import logging
