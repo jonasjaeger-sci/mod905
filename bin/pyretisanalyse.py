@@ -80,10 +80,13 @@ if __name__ == '__main__':
         output_dir = os.path.join(runpath, 'report')
         msg_dir = make_dirs(output_dir)
         print_to_screen(msg_dir)
-        analysis = ANALYSIS[RAW_DATA[settings['task']]]
-        analysis(settings, RAW_DATA[settings['task']])
+        task = settings['task']
+        print_to_screen('Will run analysis for task "{}"'.format(task))
+        analysis = ANALYSIS[task]
+        analysis(settings, RAW_DATA[task])
     except Exception as error:  # Exceptions should subclass BaseException.
-        print_to_screen(error)
+        errtxt = '{}: {}'.format(type(error).__name__, error.args)
+        print_to_screen(errtxt)
         print_to_screen('Execution failed! Will exit now.')
         raise
     finally:

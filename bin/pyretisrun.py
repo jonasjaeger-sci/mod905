@@ -205,9 +205,10 @@ if __name__ == '__main__':
                 for task in output_tasks:
                     task.output(result)
     except Exception as error:  # Exceptions should subclass BaseException.
-        logger.error(error)
+        errtxt = '{}: {}'.format(type(error).__name__, error.args)
+        logger.error(errtxt)
         logger.error('Execution failed! Will exit now.')
-        print_to_screen(error)
+        print_to_screen(errtxt)
         print_to_screen('Execution failed! Will exit now.')
         raise
     finally:
