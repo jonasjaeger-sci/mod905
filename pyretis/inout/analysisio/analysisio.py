@@ -271,7 +271,7 @@ def check_output(function):
         if txt is not None:  # just make sure we specify the things we need:
             default = KEYWORDS['txt-output']['default']
             try:
-                txtout = {'fmt': txt.get('fmt', default['txt']),
+                txtout = {'fmt': txt.get('fmt', default['fmt']),
                           'backup': txt.get('backup', default['backup'])}
             except AttributeError:
                 txtout = default
