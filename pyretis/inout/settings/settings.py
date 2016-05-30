@@ -63,6 +63,7 @@ KEYWORDS = {'integrator': {'default': None},
                                  'style': 'pyretis', 'backup': False}},
             'txt-output': {'default': {'fmt': 'txt.gz', 'backup': False}},
             'report': {'default': ['latex', 'rst', 'html']},
+            'report-dir': {'default': None},  # for saving output.
             'npart': {'default': None}}
 
 

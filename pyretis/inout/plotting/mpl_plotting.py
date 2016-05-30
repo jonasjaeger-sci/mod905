@@ -60,11 +60,11 @@ _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
 class MplPlotter(Plotter):
     """Class MplPlotter(Plotter).
 
-    This class defines a plotter. A plotter is just a object
-    that supports certain functions which conveniently can be called in
+    This class defines a plotter. A plotter is just a object that
+    supports certain functions which conveniently can be called in
     different analysis output function. The `MplPlotter` will use
-    matplotlib and it can be used to create other plotters based on
-    other tools, for instance gnuplot or Veusz, visvis or *your*
+    matplotlib and it can be used to create other plotters based
+    on other tools, for instance gnuplot or Veusz, visvis or your
     favorite plotting tool.
 
     Attributes
@@ -75,7 +75,7 @@ class MplPlotter(Plotter):
         Selects format for output plots.
     """
 
-    def __init__(self, out_fmt, backup=False, style=None):
+    def __init__(self, out_fmt, backup=False, style=None, out_dir=None):
         """Initiate the plotting object.
 
         Here we only define the style and check if the requested file
@@ -88,11 +88,15 @@ class MplPlotter(Plotter):
         style : string, optional
             This selects the style to use, it can be a file path or the
             string with the style name.
-        backup : boolean
+        backup : boolean, optional
             Determines if we should overwrite or backup old files.
+        out_dir : string, optional
+            Determines if we should write the files to a particular
+            directory.
         """
         super(MplPlotter, self).__init__(backup=backup,
-                                         plotter_type='matplotlib')
+                                         plotter_type='matplotlib',
+                                         out_dir=out_dir)
         self.style = style
         mpl_set_style(self.style)
         # Check if the requested file format is something we can do:
@@ -130,7 +134,8 @@ class MplPlotter(Plotter):
         """
         outputfiles = {}
         for key in canvas:
-            outputfiles[key] = name_file(key, self.out_fmt)
+            outputfiles[key] = name_file(key, self.out_fmt,
+                                         path=self.out_dir)
             mpl_savefig(canvas[key], outputfiles[key], self.backup)
         return outputfiles
 
@@ -149,8 +154,10 @@ class MplPlotter(Plotter):
         # Restructure output files for reporting
         outputfiles = []
         for run, err in zip(canvas_run, canvas_err):
-            outputfiler = name_file(run['name'], self.out_fmt)
-            outputfilee = name_file(err['name'], self.out_fmt)
+            outputfiler = name_file(run['name'], self.out_fmt,
+                                    path=self.out_dir)
+            outputfilee = name_file(err['name'], self.out_fmt,
+                                    path=self.out_dir)
             mpl_savefig(run['canvas'], outputfiler, self.backup)
             mpl_savefig(err['canvas'], outputfilee, self.backup)
             outputfiles.append({'runflux': outputfiler,

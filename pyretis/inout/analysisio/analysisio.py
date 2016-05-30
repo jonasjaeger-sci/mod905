@@ -66,7 +66,8 @@ def run_analysis(settings, raw_data):
     -------
     The results from the analysis.
     """
-    plotter = create_plotter(settings['plot'])
+    plotter = create_plotter(settings['plot'],
+                             out_dir=settings.get('report-dir', None))
     txtout = settings['txt-output']
     if 'files' in raw_data:
         results = {'txtfile': {}}
@@ -240,7 +241,8 @@ def check_output(function):
         """
         txtout = None
         if plotter is None:
-            plotter = create_plotter(settings['plot'])
+            plotter = create_plotter(settings['plot'],
+                                     out_dir=settings.get('report-dir', None))
         txt = settings['txt-output']
         if plotter is None and txt is None:
             msg = 'No output selected. Skipping analysis!'
