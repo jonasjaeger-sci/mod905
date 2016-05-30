@@ -55,6 +55,8 @@ __all__ = ['MplPlotter']
 # Define default style file:
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                                'pyretis.mplstyle'])
+TITLE_SETTINGS = {'fontsize': 'x-small', 'loc': 'right'}
+LEGEND_PROP = {'size': 'x-small'}
 
 
 class MplPlotter(Plotter):
@@ -440,13 +442,12 @@ def mpl_simple_plot(series, fig_settings=None):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
         ncol, rest = divmod(len(labels), 10)
         if rest > 0:
             ncol += 1
-        axs.legend(handles, labels, prop={'size': 'x-small'},
-                   ncol=ncol)
+        axs.legend(handles, labels, prop=LEGEND_PROP, ncol=ncol)
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
     return canvas
@@ -587,9 +588,9 @@ def mpl_line_gradient(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
+        axs.legend(handles, labels, prop=LEGEND_PROP)
     return canvas
 
 
@@ -638,7 +639,7 @@ def mpl_error_plot(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
         axs.legend(handles, labels, prop={'size': 'x-small'})
     return canvas
