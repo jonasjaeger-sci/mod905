@@ -71,7 +71,8 @@ def run_analysis(settings, raw_data):
     txtout = settings['txt-output']
     results = None
     if 'files' in raw_data:
-        run_analysis_files(settings, raw_data['files'], plotter, txtout)
+        results = run_analysis_files(settings, raw_data['files'],
+                                     plotter, txtout)
     else:
         msg = 'Analysis & output have not been implemented for objects yet'
         logger.error(msg)
