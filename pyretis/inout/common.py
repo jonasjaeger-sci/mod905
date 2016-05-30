@@ -90,9 +90,9 @@ PATHFILES = {'pcross': '{}_pcross',
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
 # hard-coded patters for report outputs:
-REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
-               'tis': os.extsep.join(['tis_report', '{}']),
-               'tis_path': os.extsep.join(['tis_path_report', '{}'])}
+REPORTFILES = {'md-flux': 'md_flux_report',
+               'tis': 'tis_report',
+               'tis_path': 'tis_path_report'}
 # hard-coded formats to use for Log files:
 LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
 LOG_FMT = '[%(levelname)s]: %(message)s'

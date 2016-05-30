@@ -50,10 +50,10 @@ templates
 """
 from __future__ import absolute_import
 from .report import generate_report
-from pyretis.inout.common import REPORTFILES
+from pyretis.inout.common import name_file, REPORTFILES
 
 
-def write_report(report_txt, report_type, ext):
+def write_report(report_txt, report_type, ext, path=None):
     """Write a generated report to a given file.
 
     Parameters
@@ -64,8 +64,10 @@ def write_report(report_txt, report_type, ext):
         Identifier for the report we are writing
     ext : string
         Extension for the file to write
+    path : string
+        A directory to use for saving the report to.
     """
-    outfile = REPORTFILES[report_type].format(ext)
+    outfile = name_file(REPORTFILES[report_type], ext, path=path)
     with open(outfile, 'wt') as report_fh:
         try:  # will work in python 3
             report_fh.write(report_txt)

@@ -66,21 +66,12 @@ def run_analysis(settings, raw_data):
     -------
     The results from the analysis.
     """
-    plotter = create_plotter(settings['plot'],
-                             out_dir=settings.get('report-dir', None))
+    report_dir = settings.get('report-dir', None)
+    plotter = create_plotter(settings['plot'], out_dir=report_dir)
     txtout = settings['txt-output']
+    results = None
     if 'files' in raw_data:
-        results = {'txtfile': {}}
-        raw_files = raw_data['files']
-        for key in raw_files:
-            analyse_func = analyse_file(key, raw_files[key])
-            out, fig, txtfile = analyse_func(settings,
-                                             plotter=plotter,
-                                             txt=txtout)
-            if txtfile is not None:
-                results['txtfile'].update(txtfile)
-            results[key] = out
-            results['{}_figures'.format(key)] = fig
+        run_analysis_files(settings, raw_data['files'], plotter, txtout)
     else:
         msg = 'Analysis & output have not been implemented for objects yet'
         logger.error(msg)
@@ -91,7 +82,36 @@ def run_analysis(settings, raw_data):
             report, ext = generate_report(settings['task'], results,
                                           output=report_type)
             if report is not None:
-                write_report(report, settings['task'], ext)
+                write_report(report, settings['task'], ext, path=report_dir)
+    return results
+
+
+def run_analysis_files(settings, raw_files, plotter, txtout):
+    """Run the analysis on a collection of files.
+
+    settings : dict
+        This dict contains settings which dictates how the
+        analysis should be performed and it should also contain
+        information on how the simulation was performed.
+    raw_files : dict
+        This is a dictionary of files to analyse. It is on the form
+        ``{'cross': 'cross.dat', 'energy': 'energy.dat'}``, i.e. the
+        key determines the file type and the value the file name.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txtout : dict
+        If `txtout` is different from None it is assumed to contain
+        the format for the text files and backup settings.
+    """
+    results = {'txtfile': {}}
+    for key in raw_files:
+        analyse_func = analyse_file(key, raw_files[key])
+        out, fig, txtfile = analyse_func(settings, plotter=plotter,
+                                         txt=txtout)
+        if txtfile is not None:
+            results['txtfile'].update(txtfile)
+        results[key] = out
+        results['{}_figures'.format(key)] = fig
     return results
 
 
@@ -249,11 +269,12 @@ def check_output(function):
             logger.warning(msg)
             return None, None, None
         if txt is not None:  # just make sure we specify the things we need:
+            default = KEYWORDS['txt-output']['default']
             try:
-                txtout = {'fmt': txt.get('fmt', 'txt'),
-                          'backup': txt.get('backup', False)}
+                txtout = {'fmt': txt.get('fmt', default['txt']),
+                          'backup': txt.get('backup', default['backup'])}
             except AttributeError:
-                txtout = KEYWORDS['txt-output']['default']
+                txtout = default
                 msgtxt = ('Malformed "txt-output" setting: "{}".'
                           ' Assuming "{}"')
                 msgtxt = msgtxt.format(txt, txtout)
