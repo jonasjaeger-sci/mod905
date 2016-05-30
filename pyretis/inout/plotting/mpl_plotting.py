@@ -134,9 +134,10 @@ class MplPlotter(Plotter):
         """
         outputfiles = {}
         for key in canvas:
-            outputfiles[key] = name_file(key, self.out_fmt,
-                                         path=self.out_dir)
-            mpl_savefig(canvas[key], outputfiles[key], self.backup)
+            local_file = name_file(key, self.out_fmt, path=None)
+            full_path = name_file(key, self.out_fmt, self.out_dir)
+            outputfiles[key] = local_file
+            mpl_savefig(canvas[key], full_path, self.backup)
         return outputfiles
 
     def plot_flux(self, results):
@@ -154,14 +155,14 @@ class MplPlotter(Plotter):
         # Restructure output files for reporting
         outputfiles = []
         for run, err in zip(canvas_run, canvas_err):
-            outputfiler = name_file(run['name'], self.out_fmt,
-                                    path=self.out_dir)
-            outputfilee = name_file(err['name'], self.out_fmt,
-                                    path=self.out_dir)
-            mpl_savefig(run['canvas'], outputfiler, self.backup)
-            mpl_savefig(err['canvas'], outputfilee, self.backup)
-            outputfiles.append({'runflux': outputfiler,
-                                'errflux': outputfilee})
+            local_run = name_file(run['name'], self.out_fmt, path=None)
+            local_err = name_file(err['name'], self.out_fmt, path=None)
+            full_run = name_file(run['name'], self.out_fmt, path=self.out_dir)
+            full_err = name_file(err['name'], self.out_fmt, path=self.out_dir)
+            mpl_savefig(run['canvas'], full_run, self.backup)
+            mpl_savefig(err['canvas'], full_err, self.backup)
+            outputfiles.append({'runflux': local_run,
+                                'errflux': local_err})
         return outputfiles
 
     def plot_energy(self, results, energies):
