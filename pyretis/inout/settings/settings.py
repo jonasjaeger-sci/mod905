@@ -33,6 +33,7 @@ KEYWORDS = {'integrator': {'default': None},
             'endcycle': {'default': None},
             'task': {'default': None},
             'units': {'default': 'lj'},
+            'units-out': {'default': None},  # for output of analysis.
             'units-base': {'default': {}},
             'ensemble': {'default': None},
             'interfaces': {'default': None},

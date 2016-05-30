@@ -347,7 +347,7 @@ def analyse_and_output_orderp(settings, rawdata, plotter=None, txt=None):
     out[2] : list of strings
         List with the text files created (if any).
     """
-    if 'units' in settings:
+    if 'units-out' in settings:
         logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     result = analyse_orderp(rawdata, settings)
@@ -426,7 +426,7 @@ def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
     out[2] : list of strings
         List with the text files created (if any).
     """
-    if 'units' in settings:
+    if 'units-out' in settings:
         logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     idetect = path_ensemble.detect
