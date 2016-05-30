@@ -9,7 +9,6 @@ be read from a file.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 create_box
     Create a simulation box from simulation settings.
 
