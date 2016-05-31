@@ -405,13 +405,13 @@ def create_box(settings, size, dim=3):
             box = Box(size=size)
             msgtxt = msg.format('from initial positions', box)
             logger.info(msgtxt)
-            msgwarn = 'The box was assumed periodic in ALL directions.'
+            msgwarn = 'The box was assumed periodic in all directions.'
             logger.warning(msgwarn)
         else:
             box = Box(periodic=[False]*dim)
             msgtxt = msg.format('without specifications', box)
             logger.info(msgtxt)
-            msgwarn = 'The box was ASSUMED non-periodic in all directions.'
+            msgwarn = 'The box was assumed *nonperiodic* in all directions.'
             logger.warning(msgwarn)
     return box
 
