@@ -38,6 +38,9 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # import styles for newer matplotlibs:
+_STYLEFILE = 'pyretis.mplstyle'
+if matplotlib.__version__ < '1.5.0':
+    _STYLEFILE = 'pyretis-old.mplstyle'
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
     logger.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
@@ -54,9 +57,8 @@ __all__ = ['MplPlotter']
 
 # Define default style file:
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
-                               'pyretis.mplstyle'])
-TITLE_SETTINGS = {'fontsize': 'x-small', 'loc': 'right'}
-LEGEND_PROP = {'size': 'x-small'}
+                               _STYLEFILE])
+_TITLE_SETTINGS = {'loc': 'right'}
 
 
 class MplPlotter(Plotter):
@@ -442,12 +444,12 @@ def mpl_simple_plot(series, fig_settings=None):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
         ncol, rest = divmod(len(labels), 10)
         if rest > 0:
             ncol += 1
-        axs.legend(handles, labels, prop=LEGEND_PROP, ncol=ncol)
+        axs.legend(handles, labels, ncol=ncol)
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
     return canvas
@@ -588,9 +590,9 @@ def mpl_line_gradient(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop=LEGEND_PROP)
+        axs.legend(handles, labels)
     return canvas
 
 
@@ -639,9 +641,9 @@ def mpl_error_plot(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], **TITLE_SETTINGS)
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
+        axs.legend(handles, labels)
     return canvas
 
 
