@@ -20,9 +20,8 @@ from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from pyretis.core.simulation.path_simulation import SimulationTIS
-from pyretis.core.pathensemble import create_path_ensembles
-from pyretis.inout.common import make_dirs
+from pyretis.core.simulation.path_simulation import SimulationSingleTIS
+from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter,
                                            check_settings)
@@ -46,7 +45,7 @@ def create_nve_simulation(settings, system):
     Returns
     -------
     out : object like `Simulation`
-        The object representing the simulation we would like to run.
+        The object representing the simulation to run.
     """
     integ = create_integrator(settings)
     return SimulationNVE(system, integ, steps=settings['steps'],
@@ -66,7 +65,7 @@ def create_mdflux_simulation(settings, system):
     Returns
     -------
     out : object like `Simulation`
-        The object representing the simulation we would like to run.
+        The object representing the simulation to run.
     """
     integ = create_integrator(settings)
     orderp = create_orderparameter(settings)
@@ -87,8 +86,8 @@ def create_umbrellaw_simulation(settings, system):
 
     Returns
     -------
-    out : object like `Simulation`
-        The object representing the simulation we would like to run.
+    out : list of object(s) like `Simulation`
+        The object(s) representing the simulation(s) to run.
     """
     try:
         rgen = settings['rgen']
@@ -119,15 +118,56 @@ def create_tis_single_simulation(settings, system):
     Returns
     -------
     out : object like `Simulation`
-        The object representing the simulation we would like to run.
+        The object representing the simulation to run.
     """
     integ = create_integrator(settings)
     orderp = create_orderparameter(settings)
-    return SimulationTIS(system, integ, orderp,
-                         settings['path-ensemble'],
-                         settings['tis'],
-                         steps=settings['steps'],
-                         startcycle=settings.get('startcycle', 0))
+    if 'path-ensemble' in settings:
+        path_ensemble = settings['path-ensemble']
+    else:
+        path_ensemble = create_path_ensemble(settings)
+    return SimulationSingleTIS(system, integ, orderp,
+                               path_ensemble,
+                               settings['tis'],
+                               steps=settings['steps'],
+                               startcycle=settings.get('startcycle', 0))
+
+
+def create_path_ensemble(settings):
+    """Create a new path ensemble from simulation settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains the settings needed to create the path
+        ensemble.
+
+    Returns
+    -------
+    out : object like `PathEnsemble`.
+        An object that can be used as a path ensemble in simulations.
+    """
+    interfaces = settings['interfaces']
+    if len(interfaces) != 3:
+        msgtxt = ('Wrong number of interfaces given. Expected 3 '
+                  'got {}'.format(len(interfaces)))
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
+    if not 'detect' in settings:
+        detect = interfaces[-1]
+        msgtxt = ('Detect-interface not specified, '
+                  'using "product" interface: {}'.format(detect))
+        logger.warning(msgtxt)
+    else:
+        detect = settings['detect']
+    if not 'ensemble' in settings:
+        ensemble_name = '[{}^+]'.format(1)
+        msgtxt = ('Ensemble name not specified, '
+                  'using default name "{}"'.format(ensemble_name))
+    else:
+        ensemble_name = settings['ensemble']
+    return PathEnsemble(ensemble_name, interfaces,
+                        detect=detect)
 
 
 def create_tis_simulations(settings, system):
@@ -146,30 +186,30 @@ def create_tis_simulations(settings, system):
 
     Returns
     -------
-    out : object like `Simulation`
-        The object representing the simulation we would like to run.
+    sim_settings : list of dicts
+        `sim_settings[i]` is a dictionary with settings for running
+        simulation i. Note that the actual simulation object is not
+        created here.
     """
-    ensembles, detect = create_path_ensembles(settings['interfaces'],
-                                              include_zero=False)
-    for i, (path_ensemble, idetect) in enumerate(zip(ensembles, detect)):
-        ensemble = '{:03d}'.format(i+1)
+    sim_settings = []
+    interfaces = settings['interfaces']
+    reactant = interfaces[0]
+    product = interfaces[-1]
+    for i, middle in enumerate(interfaces[:-1]):
+        ensemble = '{:03d}'.format(i + 1)
         local_settings = {}
         for key in settings:  # this common for all simulations:
             local_settings[key] = settings[key]
-        # things we change for each simulation
-        local_settings['path-ensemble'] = path_ensemble
-        local_settings['ensemble'] = path_ensemble.ensemble
-        local_settings['interfaces'] = path_ensemble.interfaces
-        local_settings['output-dir'] = ensemble
         local_settings['task'] = 'tis-single'
-        local_settings['detect'] = idetect
-        tis_simulation = create_tis_single_simulation(local_settings, system)
-        msg_dir = make_dirs(ensemble)
-        msgtxt = ('Creating directories:\n'
-                  '* {}'.format(msg_dir))
-        logger.info(msgtxt)
-        return tis_simulation
-        #print(local_settings)
+        local_settings['ensemble'] = ensemble
+        local_settings['interfaces'] = [reactant, middle, product]
+        local_settings['output-dir'] = ensemble
+        try:
+            local_settings['detect'] = interfaces[i + 1]
+        except IndexError:
+            local_settings['detect'] = product
+        sim_settings.append(local_settings)
+    return sim_settings
 
 
 def create_simulation(settings, system):
@@ -196,16 +236,24 @@ def create_simulation(settings, system):
     sim_type = settings['task'].lower()
     settings['task'] = sim_type  # just to be consistent
     sim_map = {'md-nve': {'create': create_nve_simulation,
+                          'single': True,
                           'required': ('steps', 'integrator')},
                'md-flux': {'create': create_mdflux_simulation,
+                           'single': True,
                            'required': ('steps', 'integrator', 'interfaces',
                                         'orderparameter')},
                'umbrellawindow': {'create': create_umbrellaw_simulation,
+                                  'single': True,
                                   'required': ('umbrella', 'over', 'maxdx',
                                                'mincycle')},
                'tis': {'create': create_tis_simulations,
+                       'single': False,
                        'required': ('steps', 'tis', 'integrator',
-                                    'interfaces')}}
+                                    'interfaces')},
+               'tis-single': {'create': create_tis_single_simulation,
+                              'single': True,
+                              'required': ('steps', 'tis', 'integrator',
+                                           'interfaces')}}
 
     if sim_type not in sim_map:
         msgtxt = 'Unknown simulation task {}'.format(sim_type)
@@ -219,8 +267,9 @@ def create_simulation(settings, system):
             logger.error(msgtxt)
             raise ValueError('Required simulation setting not found!')
         simulation = sim['create'](settings, system)
-        msg = ['Created simulation:']
-        msg += ['{}'.format(simulation)]
-        msgtxt = '\n'.join(msg)
-        logger.info(msgtxt)
+        if sim['single']:
+            msg = ['Created simulation:']
+            msg += ['{}'.format(simulation)]
+            msgtxt = '\n'.join(msg)
+            logger.info(msgtxt)
         return simulation

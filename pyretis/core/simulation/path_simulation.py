@@ -9,8 +9,8 @@ simulations.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SimulationTIS
-    Definition of a TIS simulation.
+SimulationSingleTIS
+    Definition of a TIS simulation for a single path ensemble.
 """
 from __future__ import absolute_import
 import logging
@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['SimulationTIS']
+__all__ = ['SimulationSingleTIS']
 
 
-class SimulationTIS(Simulation):
-    """SimulationTIS(Simulation).
+class SimulationSingleTIS(Simulation):
+    """SimulationSingleTIS(Simulation).
 
     This class is used to define a TIS simulation where the goal is
-    to calculate crossing probabilities.
+    to calculate crossing probabilities for a single path ensemble.
 
     Attributes
     ----------
@@ -98,8 +98,8 @@ class SimulationTIS(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super(SimulationTIS, self).__init__(steps=steps,
-                                            startcycle=startcycle)
+        super(SimulationSingleTIS, self).__init__(steps=steps,
+                                                  startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator

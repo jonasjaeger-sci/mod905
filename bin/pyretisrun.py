@@ -31,7 +31,7 @@ import logging
 import os
 import sys
 # Other libraries:
-from tqdm import tqdm  # for a nice progress bar
+import tqdm  # for a nice progress bar
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
@@ -42,6 +42,7 @@ from pyretis.inout import create_output
 from pyretis.inout.common import (check_python_version,
                                   LOG_DEBUG_FMT,
                                   LOG_FMT,
+                                  make_dirs,
                                   print_to_screen,
                                   PyretisLogFormatter,
                                   PyretisLogFormatterDebug)
@@ -52,7 +53,20 @@ from pyretis.inout.settings import (parse_settings_file,
                                     create_simulation)
 
 
-DATE_FMT = '%d.%m.%Y %H:%M:%S'
+_DATE_FMT = '%d.%m.%Y %H:%M:%S'
+
+
+def use_tqdm(progress):
+    """Return a progress bar if we want one."""
+    if progress:
+        return tqdm.tqdm
+    else:
+        def empty_tqdm(*args, **kwargs):
+            """Dummy function to replace tqdm when it's not used."""
+            if args:
+                return args[0]
+            return kwargs.get('iterable', None)
+        return empty_tqdm
 
 
 def get_formatter(level):
@@ -86,7 +100,7 @@ def hello_world(infile, rundir, logfile):
     logfile : string
         The output log file
     """
-    timestart = datetime.datetime.now().strftime(DATE_FMT)
+    timestart = datetime.datetime.now().strftime(_DATE_FMT)
     pyversion = sys.version.split()[0]
     msg = ['{}'.format(timestart)]
     msg += ['{} version {} (Python version: {})'.format(NAME, VERSION,
@@ -95,16 +109,20 @@ def hello_world(infile, rundir, logfile):
     msg += ['Input file: {}'.format(infile)]
     msg += ['Log file: {}'.format(logfile)]
     for message in msg:
-        logger.info(message)
-        print_to_screen(message)
+        print_and_loginfo(message)
+
+
+def print_and_loginfo(msg):
+    """Print and log a message."""
+    logger.info(msg)
+    print_to_screen(msg)
 
 
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
-    timeend = datetime.datetime.now().strftime(DATE_FMT)
+    timeend = datetime.datetime.now().strftime(_DATE_FMT)
     msgtxt = 'End of {} execution: {}'.format(NAME, timeend)
-    logger.info(msgtxt)
-    print_to_screen(msgtxt)
+    print_and_loginfo(msgtxt)
     # display some references:
     references = ['{} references:'.format(NAME)]
     references.append(('-')*len(references[0]))
@@ -119,6 +137,212 @@ def bye_bye_world():
     logger.info(urltxt)
     print_to_screen('')
     print_to_screen(urltxt)
+
+
+def get_tasks(sim_settings, progress=False):
+    """Simple function to create tasks from settings.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar and we don't need
+        to set up writing of results to the screen.
+
+    Returns
+    -------
+    out : list of objects like `OutputTask`.
+        Objects that can be used for creating output.
+    """
+    msgtxt = 'Creating output tasks from settings'
+    print_to_screen(msgtxt)
+    logger.info(msgtxt)
+    output_tasks = []
+    for task in create_output(sim_settings):
+        if progress and task.target == 'screen':
+            pass
+        else:
+            output_tasks.append(task)
+    return output_tasks
+
+
+def run_md_flux_simulation(sim, sim_settings, progress=False):
+    """This will run a md-flux simulation.
+
+    Note that we will try do do a small analysis after the
+    simulation is done.
+
+    Parameters
+    ----------
+    sim : object like `Simulation`.
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    """
+    #cross = []  # variable for storing the crossing output
+    # create output tasks:
+    output_tasks = get_tasks(sim_settings, progress=progress)
+    print_and_loginfo('Starting MD-Flux simulation')
+    tqd = use_tqdm(progress)
+    for result in tqd(sim.run(), total=sim_settings['steps'],
+                      desc='# MD-flux'):
+        for task in output_tasks:
+            task.output(result)
+        #if 'cross' in result:
+        #    for cri in result['cross']:
+        #        cross.append((cri[0], cri[1] + 1, -1 if cri[2] == '-' else 1))
+    #analysis_settings = {'skipcross': 1000,
+    #                     'maxblock': 1000,
+    #                     'blockskip': 1,
+    #                     'bins': 1000,
+    #                     'ngrid': 1001}
+    #results = {}
+    #results['cross'] = analyse_flux(cross, analysis_settings,
+    #                                simulation_settings)
+    #report_txt = generate_report('md-flux', results, 'txt')[0]
+    #print(''.join(report_txt))
+
+
+def run_md_simulation(sim, sim_settings, progress=False):
+    """This will run a md simulation.
+
+    Parameters
+    ----------
+    sim : object like `Simulation`.
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    """
+    # create output tasks:
+    output_tasks = get_tasks(sim_settings, progress=progress)
+    print_and_loginfo('Starting MD simulation')
+    tqd = use_tqdm(progress)
+    for result in tqd(sim.run(), total=sim_settings['steps'],
+                      desc='# MD step'):
+        for task in output_tasks:
+            task.output(result)
+
+
+def run_tis_single_simulation(sim, sim_settings, progress=False,
+                              position=0):
+    """This will run a single TIS simulation.
+
+    Parameters
+    ----------
+    sim : object like `Simulation`.
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    position : integer
+        Used to control location of progress bars
+    """
+    # ensure that we create an output directory
+    msg_dir = make_dirs(sim_settings['ensemble'])
+    msgtxt = ('Creating output directory: '
+              '{}'.format(msg_dir))
+    print_and_loginfo(msgtxt)
+    # create output tasks:
+    output_tasks = get_tasks(sim_settings, progress=progress)
+    print_and_loginfo('Running TIS ensemble simulation')
+    tqd = use_tqdm(progress)
+    for result in tqd(sim.run(), total=sim_settings['steps'],
+                      desc='# Ensemble {}'.format(sim_settings['ensemble']),
+                      position=position):
+        for task in output_tasks:
+            task.output(result)
+
+
+def run_tis_simulation(settings_all, settings_tis, progress=False):
+    """This will run several TIS simulations.
+
+    Here, we have the possibility of doing 2 things:
+
+    1) Just write out input files for single TIS simulations and
+       exit without running a simulation.
+
+    2) Run the TIS simulations in series.
+
+    pyretisrun will not run a parallel TIS simulation. This since
+    the tasks can be run in parallel by using option 1.
+
+
+    Parameters
+    ----------
+    settings_all : list of dicts.
+        The settings for the single TIS simulations to run.
+    settings_tis : dict
+        The simulation settings for the TIS simulation.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    """
+    run_type = settings_tis.get('run_type', 'serial')
+    if run_type == 'write':
+        print_and_loginfo('Creation of input files requested.')
+        for i, setting in enumerate(settings_all):
+            msgtxt = 'Setting up TIS ensemble: {0:03d}'.format(i + 1)
+            print_and_loginfo(msgtxt)
+            infile = '{0}-{1:03d}.rst'.format(setting['task'], i + 1)
+            print_and_loginfo('Create file: "{}"'.format(infile))
+            print_to_screen('')
+            write_settings_file(setting, infile, backup=False)
+    else:
+        simulations = []
+        for i, setting in enumerate(settings_all):
+            msgtxt = 'Creating simulation for TIS ensemble: {0:03d}'.format(i+1)
+            print_and_loginfo(msgtxt)
+            simulations.append(create_simulation(setting, system))
+        print_to_screen('')
+        print_and_loginfo('Starting SERIAL TIS simulation')
+        print_to_screen('')
+        nens = len(simulations)
+        for i, (sim, setting) in enumerate(zip(simulations, settings_all)):
+            print_and_loginfo('Running TIS ensemble: {0:03d}'.format(i + 1))
+            run_tis_single_simulation(sim, setting, progress=progress)
+            print_and_loginfo('Done with TIS ensemble: {0:03d}!'.format(i + 1))
+            print_and_loginfo('{0} / {1} Completed!'.format(i + 1, nens))
+
+
+def run_generic_simulation(sim, sim_settings, progress=False):
+    """Run a pyretis single simulation.
+
+    These are simulations that are just going to complete a given
+    number of steps. Other simulation may consist of several
+    simulations tied together and these are NOT handled here.
+
+    Parameters
+    ----------
+    sim : object like `Simulation`.
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    """
+    # create output tasks:
+    output_tasks = get_tasks(sim_settings, progress=progress)
+    print_and_loginfo('Running simulation')
+    tqd = use_tqdm(progress)
+    for result in tqd(sim.run(), desc='# Step'):
+        for task in output_tasks:
+            task.output(result)
+
+
+_RUNNERS = {'md-flux': run_md_flux_simulation,
+            'md-nve': run_md_simulation,
+            'tis-single': run_tis_single_simulation,
+            'tis': run_tis_simulation}
 
 
 if __name__ == '__main__':
@@ -174,52 +398,40 @@ if __name__ == '__main__':
         if not os.path.isfile(inputfile):
             errtxt = ('No simulation input:'
                       ' {} is not a file!'.format(inputfile))
+            logger.error(errtxt)
             raise ValueError(errtxt)
-        logger.info('Reading input settings.')
-        print_to_screen('Reading input settings.')
+        print_and_loginfo('Reading input settings')
         settings = parse_settings_file(inputfile)
-        # Add to exe-path:
         settings['exe-path'] = runpath
         create_conversion_factors(settings['units'], **settings['units-base'])
 
-        print_to_screen('Creating system from settings.')
+        print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
         system.forcefield = create_force_field(settings)
 
-        print_to_screen('Creating simulation from settings.')
+        print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
 
-        print_to_screen('Creating output tasks from settings.')
-        output_tasks = [task for task in create_output(settings)]
-
-        logger.info('Running simulation.')
-        print_to_screen('Running simulation!')
-        print_to_screen(79*('-'))
-        if args_dict['progress']:
-            for result in tqdm(simulation.run(), total=settings['steps']):
-                for task in output_tasks:
-                    if task.target != 'screen':
-                        task.output(result)
-        else:
-            for result in simulation.run():
-                for task in output_tasks:
-                    task.output(result)
+        print_and_loginfo('Will run simulation: "{}"'.format(settings['task']))
+        runner = _RUNNERS.get(settings['task'], run_generic_simulation)
+        runner(simulation, settings, progress=args_dict['progress'])
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         logger.error(errtxt)
-        logger.error('Execution failed! Will exit now.')
-        print_to_screen(errtxt)
-        print_to_screen('Execution failed! Will exit now.')
+        print_to_screen('Error encountered, execution stopped.')
+        print_to_screen('Please see the LOG for more info.')
         raise
     finally:
         # write out the simulation settings and add some extra ones:
         if simulation is not None:
-            cycle = getattr(simulation, 'cycle', {'step': None})
-            settings['endcycle'] = cycle['step']
+            end = getattr(simulation, 'cycle', {'step': None})['step']
+            if end is not None:
+                settings['endcycle'] = end
+                print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
             settings['npart'] = system.particles.npart
-        settings_out = os.path.join(basepath, 'settings_out.rst')
-        logger.info('Writing simulation settings.')
-        write_settings_file(settings, settings_out, backup=False)
-        print_to_screen(79*('-'))
+        outfile = '_out-{}'.format(inputfile)
+        outpath = os.path.join(basepath, outfile)
+        print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
+        write_settings_file(settings, outpath, backup=False)
         bye_bye_world()
