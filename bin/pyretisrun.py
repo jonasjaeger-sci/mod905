@@ -290,16 +290,21 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
     if run_type == 'write':
         print_and_loginfo('Creation of input files requested.')
         for i, setting in enumerate(settings_all):
-            msgtxt = 'Setting up TIS ensemble: {0:03d}'.format(i + 1)
+            ens = setting['ensemble']
+            msgtxt = 'Setting up TIS ensemble: {}'.format(ens)
             print_and_loginfo(msgtxt)
-            infile = '{0}-{1:03d}.rst'.format(setting['task'], i + 1)
+            infile = '{}-{}.rst'.format(setting['task'], ens)
             print_and_loginfo('Create file: "{}"'.format(infile))
-            print_to_screen()
             write_settings_file(setting, infile, backup=False)
+            print_and_loginfo('Command for executing:')
+            print_and_loginfo('pyretisrun -i {} -p -f {}.log'.format(infile,
+                                                                     ens))
+            print_to_screen()
     else:
         simulations = []
         for i, setting in enumerate(settings_all):
-            msgtxt = 'Creating TIS simulation, ensemble: {0:03d}'.format(i + 1)
+            ens = setting['ensemble']
+            msgtxt = 'Creating TIS simulation, ensemble: {0}'.format(ens)
             print_and_loginfo(msgtxt)
             simulations.append(create_simulation(setting, system))
         print_to_screen()
