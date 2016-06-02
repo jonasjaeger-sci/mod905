@@ -93,22 +93,23 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                                'name': 'thermo-screen',
                                'when': {'every': 10}}]
 
-_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
-                           'name': 'pathensemble-file',
-                           'when': {'every': 10},
-                           'filename': 'pathensemble.dat'},
-                          {'type': 'pathensemble-screen',
-                           'name': 'pathensemble-screen',
-                           'when': {'every': 10}},
-                          {'type': 'trialpath',
-                           'name': 'trialpath',
-                           'when': {'every': 1},
-                           'orderp': {'filename': 'orderp.dat',
-                                      'when': {'every': 10},
-                                      'freq': 10},
-                           'energy': {'filename': 'energyp.dat',
-                                      'when': {'every': 10},
-                                      'freq': 10}}]
+_DEFAULT_OUTPUT['tis-single'] = [{'type': 'pathensemble',
+                                  'name': 'pathensemble-file',
+                                  'when': {'every': 10},
+                                  'filename': 'pathensemble.dat'},
+                                 {'type': 'pathensemble-screen',
+                                  'name': 'pathensemble-screen',
+                                  'when': {'every': 10}}]
+                                # {'type': 'trialpath',
+                                #  'name': 'trialpath',
+                                #  'when': {'every': 1},
+                                #  'orderp': {'filename': 'orderp.dat',
+                                #             'when': {'every': 10},
+                                #             'freq': 10},
+                                #  'energy': {'filename': 'energyp.dat',
+                                #             'when': {'every': 10},
+                                #             'freq': 10}}]
+_DEFAULT_OUTPUT['tis'] = []
 
 
 class OutputTask(object):
