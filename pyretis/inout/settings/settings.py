@@ -27,6 +27,7 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 
 
 KEYWORDS = {'integrator': {'default': None},
+            'run_type': {'default': None},
             'orderparameter': {'default': None},
             'steps': {'default': 0},
             'startcycle': {'default': 0},
@@ -48,6 +49,7 @@ KEYWORDS = {'integrator': {'default': None},
             'dimensions': {'default': 3},
             'temperature': {'default': None},
             'tis': {'default': None},
+            'detect': {'default': None},  # detect interface
             'output-add': {'default': None},
             'output-modify': {'default': None},
             'potentials': {'default': None},
