@@ -135,6 +135,7 @@ def select_analyse_function(what):
     function_map = {'cross': analyse_and_output_cross,
                     'order': analyse_and_output_orderp,
                     'energy': analyse_and_output_energy}
+                    #'pathensemble': analyse_and_output_path}
     return function_map.get(what, None)
 
 
@@ -188,7 +189,7 @@ def analyse_file(file_type, file_name):
                        'This will be ignored by the flux analysis.',
                        'Are you sure you are running the correct analysis',
                        'with correct input?']
-                msgtxt = '\n'.join(msg).format(fileobj.filename)
+                msgtxt = '\n'.join(msg).format(file_name)
                 logger.warning(msgtxt)
                 break
         return function(settings, first_block['data'],
