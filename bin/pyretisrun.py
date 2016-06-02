@@ -131,11 +131,11 @@ def bye_bye_world():
             references.append(line)
     reftxt = '\n'.join(references)
     logger.info(reftxt)
-    print_to_screen('')
+    print_to_screen()
     print_to_screen(reftxt)
     urltxt = '{}'.format(URL)
     logger.info(urltxt)
-    print_to_screen('')
+    print_to_screen()
     print_to_screen(urltxt)
 
 
@@ -294,23 +294,24 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
             print_and_loginfo(msgtxt)
             infile = '{0}-{1:03d}.rst'.format(setting['task'], i + 1)
             print_and_loginfo('Create file: "{}"'.format(infile))
-            print_to_screen('')
+            print_to_screen()
             write_settings_file(setting, infile, backup=False)
     else:
         simulations = []
         for i, setting in enumerate(settings_all):
-            msgtxt = 'Creating simulation for TIS ensemble: {0:03d}'.format(i+1)
+            msgtxt = 'Creating TIS simulation, ensemble: {0:03d}'.format(i + 1)
             print_and_loginfo(msgtxt)
             simulations.append(create_simulation(setting, system))
-        print_to_screen('')
+        print_to_screen()
         print_and_loginfo('Starting SERIAL TIS simulation')
-        print_to_screen('')
+        print_to_screen()
         nens = len(simulations)
         for i, (sim, setting) in enumerate(zip(simulations, settings_all)):
             print_and_loginfo('Running TIS ensemble: {0:03d}'.format(i + 1))
             run_tis_single_simulation(sim, setting, progress=progress)
             print_and_loginfo('Done with TIS ensemble: {0:03d}!'.format(i + 1))
             print_and_loginfo('{0} / {1} Completed!'.format(i + 1, nens))
+            print_to_screen()
 
 
 def run_generic_simulation(sim, sim_settings, progress=False):
