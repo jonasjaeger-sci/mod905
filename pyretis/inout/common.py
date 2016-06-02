@@ -267,7 +267,7 @@ def make_dirs(dirname):
             return msg
 
 
-def print_to_screen(txt):
+def print_to_screen(txt=None):
     """Method to print output to standard out.
 
     This method is included to ensure that output from pyretis to the
@@ -279,9 +279,12 @@ def print_to_screen(txt):
     txt : string
         The text to write to the screen
     """
-    out = '# {}'.format(txt)
-    out = out.replace('\n', '\n# ')
-    print(out)
+    if txt is None:
+        print()
+    else:
+        out = '# {}'.format(txt)
+        out = out.replace('\n', '\n# ')
+        print(out)
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
