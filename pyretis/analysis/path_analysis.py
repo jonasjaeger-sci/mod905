@@ -262,20 +262,20 @@ def _get_path_length(path):
         The path length
     """
     move = path['generated'][0]
-    if move == 'tr':
-        return 0
-    elif move == 'sh':
-        return path['length'] - 1
-    elif move == 's+':
-        return 0
-    elif move == 's-':
-        return 0
-    elif move == '00':
-        return 0
+    return_table = {'tr': 0, 's+': 0, 's-': 0, '00': 0}
+    if move in return_table:
+        return return_table[move]
     else:
-        msg = 'Ignored unknown mc move: {}'.format(move)
-        logger.warning(msg)
-        return None
+        if move == 'sh':
+            return path['length'] - 1
+        elif move == 'ki':
+            msg = 'Ignored initial path: {}'.format(move)
+            logger.warning(msg)
+            return None
+        else:
+            msg = 'Ignored unknown mc move: {}'.format(move)
+            logger.warning(msg)
+            return None
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
