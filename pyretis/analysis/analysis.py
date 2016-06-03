@@ -193,36 +193,11 @@ def block_error_corr(data, maxblock=None, blockskip=1):
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)
     # also calculate some relative errors:
-    rel_err = safe_divide(berr, abs(bavg[0]),
-                          val_if_zero=float('inf') * np.ones(berr.shape))
-    avg_rel_err = safe_divide(berr_avg, abs(bavg[0]),
-                              val_if_zero=float('inf'))
-    ncor = safe_divide(berr**2, berr[0]**2,
-                       val_if_zero=float('inf') * np.ones(berr.shape))
-    avg_ncor = safe_divide(berr_avg**2, berr[0]**2,
-                           val_if_zero=float('inf'))
+    rel_err = np.divide(berr, abs(bavg[0]))
+    avg_rel_err = np.divide(berr_avg, abs(bavg[0]))
+    ncor = np.divide(berr**2, berr[0]**2)
+    avg_ncor = np.divide(berr_avg**2, berr[0]**2)
     return blen, berr, berr_avg, rel_err, avg_rel_err, ncor, avg_ncor
-
-
-def safe_divide(numerator, denominator, val_if_zero=np.nan):
-    """Function to divide two numbers safely.
-
-    If a zero division exception is raised this function will handle it.
-
-    Parameters
-    ----------
-    numerator : float or numpy.array
-        The numerator(s).
-    denominator : float or numpy.array
-        The denominator(s).
-    val_if_zero : float or numpy.array
-        The value(s) to return in case of a ZeroDivisionError.
-    """
-    try:
-        fraction = numerator / denominator
-    except ZeroDivisionError:
-        fraction = val_if_zero
-    return fraction
 
 
 def mean_square_displacement(data, ndt=None):

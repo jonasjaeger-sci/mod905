@@ -12,8 +12,7 @@ analyse_flux
 """
 from __future__ import absolute_import
 import numpy as np
-from pyretis.analysis.analysis import (running_average, block_error_corr,
-                                       safe_divide)
+from pyretis.analysis.analysis import running_average, block_error_corr
 
 
 __all__ = ['analyse_flux']
@@ -80,18 +79,18 @@ def analyse_flux(fluxdata, settings):
         results['errflux'].append(block_error)
 
     # do some additional statistics:
-    results['cross_time'] = [safe_divide(float(end_step), float(neff))
+    results['cross_time'] = [np.divide(float(end_step), float(neff))
                              for neff in results['neffcross']]
 
-    results['neffc/nc'] = [safe_divide(float(neff), float(ncr)) for neff, ncr
+    results['neffc/nc'] = [np.divide(float(neff), float(ncr)) for neff, ncr
                            in zip(results['neffcross'], results['ncross'])]
     for flux, error in zip(results['runflux'], results['errflux']):
         results['pMD'].append(flux[-1] * time_step)
-        results['1-p'].append(safe_divide(float(1.0 - results['pMD'][-1]),
-                                          results['pMD'][-1]))
+        results['1-p'].append(np.divide(float(1.0 - results['pMD'][-1]),
+                                        results['pMD'][-1]))
         results['teffMD'].append(end_step * error[4]**2)
-        results['corrMD'].append(safe_divide(results['teffMD'][-1],
-                                             results['1-p'][-1]))
+        results['corrMD'].append(np.divide(results['teffMD'][-1],
+                                           results['1-p'][-1]))
     return results
 
 
