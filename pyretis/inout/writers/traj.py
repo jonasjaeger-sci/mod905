@@ -108,11 +108,13 @@ class TrajXYZ(Writer):
             msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
 
-    def xyz_format(self, pos, names=None, header=None):
+    def xyz_format(self, npart, pos, names=None, header=None):
         """Generate output for a configuration in xyz-format.
 
         Parameters
         ----------
+        npart : integer
+            The number of particles.
         pos : numpy.array
             The positions to write.
         names : numpy.array, optional
@@ -127,7 +129,6 @@ class TrajXYZ(Writer):
             The data to be written
         """
         buff = []
-        npart = len(pos)
         buff.append('{0}'.format(npart))
         if header is None:
             header = 'Trajectory output. Frame: {}'.format(self.frame)
@@ -166,7 +167,8 @@ class TrajXYZ(Writer):
         out : string
             The lines in the XYZ-snapshot.
         """
-        for lines in self.xyz_format(system.particles.pos,
+        for lines in self.xyz_format(system.particles.npart,
+                                     system.particles.pos,
                                      names=system.particles.name,
                                      header=header):
             yield lines
@@ -237,7 +239,7 @@ class TrajGRO(Writer):
             msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
 
-    def gro_format(self, pos, vel, box, **kwargs):
+    def gro_format(self, npart, pos, vel, box, **kwargs):
         """Format positions, box and velocities according to the GRO format.
 
         This method will generate a list of strings which is the GRO
@@ -246,6 +248,8 @@ class TrajGRO(Writer):
 
         Parameters
         ----------
+        npart : integer
+            The number of particles.
         pos : numpy.array
             The positions to write.
         vel : numpy.array or None
@@ -272,7 +276,6 @@ class TrajGRO(Writer):
             The strings which is the GRO representation of the given
             configuration.
         """
-        npart = len(pos)
         atomname = kwargs.get('atomname', ['X'] * npart)
         residuename = kwargs.get('residuename', atomname)
         residuenum = kwargs.get('residuenum', None)
@@ -331,7 +334,8 @@ class TrajGRO(Writer):
             The lines in the XYZ-snapshot.
         """
         velocity = None if not write_vel else system.particles.vel
-        for lines in self.gro_format(system.particles.pos,
+        for lines in self.gro_format(system.particles.npart,
+                                     system.particles.pos,
                                      velocity,
                                      system.box,
                                      atomname=system.particles.name,
