@@ -50,10 +50,10 @@ def _check_pair_parameters(parameters):
             factor = parameters[pair].get('factor', 0.0)
             rcut = factor * parameters[pair]['sigma']
             parameters[pair]['rcut'] = rcut
-            msg = ('rcut for {} not given. Using factor to set it to:'
+            msg = ('rcut for {} not given. Using factor to set it to: '
                    '{} * {} = {}')
             msg = msg.format(pair, parameters[pair]['sigma'], factor, rcut)
-            logger.warning(msg)
+            logger.info(msg)
 
 
 def generate_pair_interactions(parameters):
