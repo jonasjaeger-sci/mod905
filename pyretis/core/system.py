@@ -48,6 +48,12 @@ class System(object):
     particles : object like `pyretis.core.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
+    post_setup : list of tuples
+        This list contain extra functions that should be called when
+        preparing to run a simulation. This is typically functions that
+        should only be called after the system is fully set up. The
+        tuples should correspond to ('function', args) where
+        such that system.function(*args) can be called.
     forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
         and potential calculation.
@@ -85,6 +91,7 @@ class System(object):
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
+        self.post_setup = []
 
     def adjust_dof(self, dof):
         """Adjust the degrees of freedom to neglect in the system.
@@ -424,6 +431,18 @@ class System(object):
                                                    CONSTANTS['kB'][self.units],
                                                    dof=dof)
         return temp
+
+    def extra_setup(self):
+        """Perform extra set-up for the system.
+
+        The extra set-up will typically be tasks that can only
+        be performed after the system is fully set-up, for instance
+        after the force field is properly defined.
+        """
+        for func_name, args in self.post_setup:
+            func = getattr(self, func_name, None)
+            if func is not None:
+                func(*args)
 
     def rescale_velocities(self, energy):
         """Rescale the kinetic energy to a given total energy.

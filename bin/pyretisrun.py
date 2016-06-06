@@ -414,7 +414,7 @@ if __name__ == '__main__':
         print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
         system.forcefield = create_force_field(settings)
-
+        system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
 
