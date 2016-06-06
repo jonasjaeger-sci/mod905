@@ -185,10 +185,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
         vel, mass = particles.vel[selection], particles.mass[selection]
 
     npart = len(mass)  # using mass, since selection may be != particles.npart
-    if npart == 1:
-        ndof = npart * np.ones(vel.shape)
-    else:
-        ndof = npart * np.ones(vel[0].shape)
+    ndof = npart * np.ones(vel[0].shape)
 
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(particles,

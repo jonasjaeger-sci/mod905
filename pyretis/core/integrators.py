@@ -570,13 +570,8 @@ class Langevin(Integrator):
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
                 randxv = self.rgen.multivariate_normal(meani, covi, cho=choi,
                                                        size=ndim)
-                # special case for just a single particle:
-                if system.particles.npart == 1:
-                    pos_rand = randxv[:, 0]
-                    vel_rand = randxv[:, 1]
-                else:
-                    pos_rand[i] = randxv[:, 0]
-                    vel_rand[i] = randxv[:, 1]
+                pos_rand[i] = randxv[:, 0]
+                vel_rand[i] = randxv[:, 1]
         particles.pos += (self.param_iner['a1'] * particles.vel +
                           self.param_iner['a2'] * particles.force + pos_rand)
 

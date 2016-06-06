@@ -18,32 +18,25 @@ class OrderPositionTest(unittest.TestCase):
     def test_one_particle(self):
         """Test the position order parameter for a one-particle system."""
         create_conversion_factors('lj')
-        dim_map = {'x': 0, 'y': 1, 'z': 2}
-        for xdim in dim_map:
-            idim = dim_map[xdim]
-            orderp = OrderParameterPosition('Positional order parameter', 0,
-                                            dim=xdim, periodic=False)
-            # Test for a one-particle system:
-            for ndim in [1, 2, 3]:
-                box = Box(periodic=[False]*ndim)
-                system = System(temperature=1.0, units='lj', box=box)
-                pos = np.random.random(box.dim)
-                vel = np.random.random(box.dim)
-                system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
-                                    ptype=0)
-                if idim > ndim-1 and ndim != 1:
+        for ndim in [1, 2, 3]:
+            box = Box(periodic=[False]*ndim)
+            system = System(temperature=1.0, units='lj', box=box)
+            pos = np.random.random(box.dim)
+            vel = np.random.random(box.dim)
+            system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                                ptype=0)
+            for idim, xdim in enumerate(('x', 'y', 'z')):
+                orderp = OrderParameterPosition('Positional order parameter',
+                                                0, dim=xdim, periodic=False)
+                if idim > ndim - 1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
                     self.assertRaises(IndexError, orderp.calculate_velocity,
                                       (system))
                 else:
                     lmb = orderp.calculate(system)
                     lmb_vel = orderp.calculate_velocity(system)
-                    if ndim == 1:
-                        lmb_correct = system.particles.pos[0]
-                        lmb_vel_correct = system.particles.vel[0]
-                    else:
-                        lmb_correct = system.particles.pos[idim]
-                        lmb_vel_correct = system.particles.vel[idim]
+                    lmb_correct = system.particles.pos[0][idim]
+                    lmb_vel_correct = system.particles.vel[0][idim]
                     self.assertAlmostEqual(lmb, lmb_correct)
                     self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
@@ -64,19 +57,15 @@ class OrderPositionTest(unittest.TestCase):
                     vel = np.random.random(box.dim)
                     system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
                                         ptype=0)
-                if idim > ndim-1 and ndim != 1:
+                if idim > ndim-1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
                     self.assertRaises(IndexError, orderp.calculate_velocity,
                                       (system))
                 else:
                     lmb = orderp.calculate(system)
                     lmb_vel = orderp.calculate_velocity(system)
-                    if ndim == 1:
-                        lmb_correct = system.particles.pos[0]
-                        lmb_vel_correct = system.particles.vel[0]
-                    else:
-                        lmb_correct = system.particles.pos[0, idim]
-                        lmb_vel_correct = system.particles.vel[0, idim]
+                    lmb_correct = system.particles.pos[0][idim]
+                    lmb_vel_correct = system.particles.vel[0][idim]
                     self.assertAlmostEqual(lmb, lmb_correct)
                     self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
@@ -196,6 +185,7 @@ class OrderFactoryTest(unittest.TestCase):
         for setting, correct in zip(test_settings, correct_class):
             orderp = order_factory(setting)
             self.assertIsInstance(orderp, correct)
+
 
 if __name__ == '__main__':
     unittest.main()

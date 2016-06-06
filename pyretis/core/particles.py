@@ -176,9 +176,12 @@ class Particles(object):
         if self.npart == 0:
             self.name = [name]
             self.ptype = np.array(ptype, dtype=np.int16)
-            self.pos = pos
-            self.vel = vel
-            self.force = force
+            self.pos = np.zeros((1, self.dim))
+            self.pos[0] = pos
+            self.vel = np.zeros((1, self.dim))
+            self.vel[0] = vel
+            self.force = np.zeros((1, self.dim))
+            self.force[0] = force
             self.mass = np.array([mass])
             self.imass = np.array([1.0/mass])
         else:

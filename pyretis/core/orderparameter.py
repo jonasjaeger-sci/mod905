@@ -270,14 +270,8 @@ class OrderParameterPosition(OrderParameter):
             The order parameter.
         """
         particles = system.particles
-        if particles.npart == 1:  # ignore self.index
-            pos = particles.pos
-        else:
-            pos = particles.pos[self.index]
-        if system.get_dim() == 1:
-            lmb = pos[0]
-        else:
-            lmb = pos[self.dim]
+        pos = particles.pos[self.index]
+        lmb = pos[self.dim]
         if self.periodic:
             return system.box.pbc_coordinate_dim(lmb, self.dim)
         else:
@@ -299,14 +293,8 @@ class OrderParameterPosition(OrderParameter):
             The velocity of the order parameter
         """
         particles = system.particles
-        if particles.npart == 1:  # ignore self.index
-            vel = particles.vel
-        else:
-            vel = particles.vel[self.index]
-        if system.get_dim() == 1:
-            return vel[0]
-        else:
-            return vel[self.dim]
+        vel = particles.vel[self.index]
+        return vel[self.dim]
 
 
 class OrderParameterDistance(OrderParameter):
