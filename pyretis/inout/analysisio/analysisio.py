@@ -31,7 +31,7 @@ import logging
 # pyretis imports
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble)
-from pyretis.inout.writers import get_file_object
+from pyretis.inout.writers import get_file_object, PathEnsembleFile
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
@@ -46,7 +46,13 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['analyse_file', 'run_analysis']
 
 
-def run_analysis(settings, raw_data):
+_FILE_LOAD = {'cross': True,
+              'order': True,
+              'energy': True, 
+              'pathensemble': False}
+
+
+def run_analysis(settings, files):
     """Analyse the output from a simulation.
 
     This function will will determine if the data should be read from
@@ -59,8 +65,10 @@ def run_analysis(settings, raw_data):
         This dict contains settings which dictates how the
         analysis should be performed and it should also contain
         information on how the simulation was performed.
-    raw_data : dict
+    files : dict
         This dict contains the raw data needed for the analysis.
+        The raw data is stored as `files[key]` where the key is
+        the file type and the value is the file name.
 
     Returns
     -------
@@ -69,15 +77,7 @@ def run_analysis(settings, raw_data):
     report_dir = settings.get('report-dir', None)
     plotter = create_plotter(settings['plot'], out_dir=report_dir)
     txtout = settings['txt-output']
-    results = None
-    if 'files' in raw_data:
-        results = run_analysis_files(settings, raw_data['files'],
-                                     plotter, txtout)
-    else:
-        msg = 'Analysis & output have not been implemented for objects yet'
-        logger.error(msg)
-        raise NotImplementedError(msg)
-
+    results = run_analysis_files(settings, files, plotter, txtout)
     if results is not None:  # output the report
         for report_type in settings['report']:
             report, ext = generate_report(settings['task'], results,
@@ -103,16 +103,24 @@ def run_analysis_files(settings, raw_files, plotter, txtout):
     txtout : dict
         If `txtout` is different from None it is assumed to contain
         the format for the text files and backup settings.
+
+    Returns
+    -------
+    results : dict
+        The items in this dict represents the results for the analysis.
+        In addition `results['txtfile']` lists the output text files
+        created.
     """
-    results = {'txtfile': {}}
+    results = {'txtfile': []}
     for key in raw_files:
         analyse_func = analyse_file(key, raw_files[key])
-        out, fig, txtfile = analyse_func(settings, plotter=plotter,
-                                         txt=txtout)
-        if txtfile is not None:
-            results['txtfile'].update(txtfile)
+        out, figures, txtfile = analyse_func(settings, plotter=plotter,
+                                             txt=txtout)
         results[key] = out
-        results['{}_figures'.format(key)] = fig
+        if txtfile is not None:
+            results['txtfile'].extend(txtfile)
+        if figures is not None:
+            results['{}_figures'.format(key)] = figures
     return results
 
 
@@ -134,9 +142,43 @@ def select_analyse_function(what):
     """
     function_map = {'cross': analyse_and_output_cross,
                     'order': analyse_and_output_orderp,
-                    'energy': analyse_and_output_energy}
-                    #'pathensemble': analyse_and_output_path}
+                    'energy': analyse_and_output_energy,
+                    'pathensemble': analyse_and_output_path}
     return function_map.get(what, None)
+
+
+def read_first_block(fileobj, file_name):
+    """Helper function to read the first block of data from a file.
+
+    Parameters
+    ----------
+    fileobj : object like `Writer`.
+        A object that supports a `load` function to read block
+        of data from a file.
+    file_name : string
+        The file to open.
+
+    Returns
+    -------
+    out : numpy.array
+        The raw data read from the file.
+    """
+    first_block = None
+    for block in fileobj.load(file_name):
+        if first_block is None:
+            first_block = block
+        else:
+            msg = ['Noticed a second block in the input file "{}"',
+                   'This will be ignored by the flux analysis.',
+                   ('Are you are running the analysis with '
+                    'the correct input?')]
+            msgtxt = '\n'.join(msg).format(file_name)
+            logger.warning(msgtxt)
+            break
+    if first_block is None:
+        return None
+    else:
+        return first_block['data']
 
 
 def analyse_file(file_type, file_name):
@@ -178,22 +220,19 @@ def analyse_file(file_type, file_name):
             If txt is different from None it is assumed to contain the
             format for the text files and backup settings.
         """
-        fileobj = get_file_object(file_type)
         function = select_analyse_function(file_type)
-        first_block = None
-        for block in fileobj.load(file_name):
-            if first_block is None:
-                first_block = block
-            else:
-                msg = ['Noticed a second block in the input file "{}"',
-                       'This will be ignored by the flux analysis.',
-                       'Are you sure you are running the correct analysis',
-                       'with correct input?']
-                msgtxt = '\n'.join(msg).format(file_name)
-                logger.warning(msgtxt)
-                break
-        return function(settings, first_block['data'],
-                        plotter=plotter, txt=txt)
+        if file_type in ('energy', 'order', 'cross'):
+            raw_data = read_first_block(get_file_object(file_type), file_name)
+            return function(settings, raw_data, plotter=plotter, txt=txt)
+        elif file_type == 'pathensemble':
+            fileobj = PathEnsembleFile(file_name, settings['ensemble'],
+                                       settings['interfaces'],
+                                       detect=settings.get('detect', None))
+            return function(settings, fileobj, plotter=plotter, txt=txt)
+        else:
+            msgtxt = 'Unknown file type "{}" requested!'.format(file_type)
+            logger.error(msgtxt)
+            raise ValueError(msgtxt)
     return wrapper
 
 

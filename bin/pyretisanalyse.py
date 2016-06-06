@@ -38,10 +38,23 @@ from pyretis.inout.common import (check_python_version,
                                   PyretisLogFormatter)
 
 
-RAW_DATA = {'md-flux': {'files': {'cross': 'cross.dat',
-                                  'energy': 'energy.dat',
-                                  'order': 'order.dat'}},
-            'md-nve': {'files': {'energy': 'energy.dat'}}}
+FILES = {'md-flux': {'cross': 'cross.dat',
+                     'energy': 'energy.dat',
+                     'order': 'order.dat'},
+         'md-nve': {'energy': 'energy.dat'},
+         'tis-single': {'pathensemble': 'pathensemble.dat'}}
+
+def get_raw_files(task, sim_settings):
+    """Return a list of files we can analyse."""
+    raw_data = {}
+    ensemble_sim = task in set(('tis-single', 'retis'))
+    for file_type in FILES[task]:
+        filename = FILES[task][file_type]
+        if ensemble_sim:
+            filename = os.path.join(sim_settings['output-dir'], filename)
+        if os.path.isfile(filename):
+            raw_data[file_type] = filename
+    return raw_data
 
 
 def hello_world(infile, reportdir):
@@ -132,12 +145,15 @@ if __name__ == '__main__':
         print_to_screen(msg_dir)
         task = settings['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
-        run_analysis(settings, RAW_DATA[task])
+        results = run_analysis(settings, get_raw_files(task, settings))
+        print_to_screen('Analysis done. Output created:')
+        # Just write info about what we created:
+        for files in results['txtfile']:
+            print_to_screen('- {}'.format(os.path.basename(files)))
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         print_to_screen(errtxt)
         print_to_screen('Execution failed! Will exit now.')
         raise
     finally:
-        print_to_screen(79*('-'))
         bye_bye_world()

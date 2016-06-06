@@ -151,9 +151,14 @@ class MplPlotter(Plotter):
 
         Returns
         -------
-        outputfile : dict
-            A dict containing the files created for the flux and for
+        outputfile : list of dicts
+            A list containing the files created for the flux and for
             the error in the flux.
+
+        Note
+        ----
+        We return a list here. This is because we want to plot these
+        figures in pairs.
         """
         canvas_run, canvas_err = mpl_plot_flux(results)
         # Restructure output files for reporting
@@ -294,8 +299,9 @@ def mpl_set_style(style='pyretis'):
             msgtxt = 'Loading matplitlib style from file: {}'.format(style)
             logger.info(msgtxt)
             rcpar = matplotlib.rc_params_from_file(style)
-            # For version mpl version 1.5: use_default_template=False can be
-            # added to matplotlib.rc_params_from_file().
+            # TODO: For mpl version 1.5: use_default_template=False can be
+            # added to matplotlib.rc_params_from_file(). But this is
+            # not added yet in case we break something.
             matplotlib.rcParams.update(rcpar)
 
 
@@ -831,7 +837,7 @@ def mpl_plot_orderp(results, orderdata):
     return canvas
 
 
-def mpl_plot_energy(results, energies, ):
+def mpl_plot_energy(results, energies):
     r"""Plot the output from the energy analysis using matplotlib.
 
     Parameters
