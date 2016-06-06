@@ -487,10 +487,10 @@ class Langevin(Integrator):
             self.param_iner['cho'] = []
 
             for imass in imasses:
-                sig_ri2 = ((self.delta_t * imass / (beta * self.gamma)) *
+                sig_ri2 = ((self.delta_t * imass[0] / (beta * self.gamma)) *
                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
-                sig_vi2 = ((1.0 - exp_gdt**2) * imass / beta)
-                cov_rvi = (imass/(beta * self.gamma)) * (1.0 - exp_gdt)**2
+                sig_vi2 = ((1.0 - exp_gdt**2) * imass[0] / beta)
+                cov_rvi = (imass[0]/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.array([[sig_ri2, cov_rvi],
                                        [cov_rvi, sig_vi2]])
                 self.param_iner['cov'].append(cov_matrix)
