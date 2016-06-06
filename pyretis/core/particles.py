@@ -182,8 +182,9 @@ class Particles(object):
             self.vel[0] = vel
             self.force = np.zeros((1, self.dim))
             self.force[0] = force
-            self.mass = np.array([mass])
-            self.imass = np.array([1.0/mass])
+            self.mass = np.zeros((1,1))  # column matrix
+            self.mass[0] = mass
+            self.imass = 1.0 / self.mass
         else:
             self.name.append(name)
             self.ptype = np.append(self.ptype, ptype)
