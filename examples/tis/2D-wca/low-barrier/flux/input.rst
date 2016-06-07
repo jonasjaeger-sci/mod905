@@ -40,11 +40,6 @@ potential-parameters = [{'mixing': 'geometric',
 Order parameter
 ---------------
 
-#orderparameter = {'class': 'OrderParameterDist',
-#                  'index': (0,1),
-#                  'name': 'Position',
-#                  'periodic': True}
-
 orderparameter = {'class': 'OrderParameterDist',
                   'args': ['Position', (7,8)],
                   'kwargs': {'periodic': True},
