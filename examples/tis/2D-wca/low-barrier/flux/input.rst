@@ -21,10 +21,8 @@ Particles
 
 particles-position = {'file': 'initial.xyz'}
 
-#particles-velocity = {'generate': 'maxwell',
-#                      'momentum': True,
-#                      'seed': 0}
 particles-velocity = {'scale': 9.0}
+
 particles-mass = {'A': 1.0, 'B': 1.0}
 
 Force field settings
@@ -42,10 +40,15 @@ potential-parameters = [{'mixing': 'geometric',
 Order parameter
 ---------------
 
-orderparameter = {'class': 'OrderParameterDistance',
-                  'index': (0,1),
-                  'name': 'Position',
-                  'periodic': True}
+#orderparameter = {'class': 'OrderParameterDist',
+#                  'index': (0,1),
+#                  'name': 'Position',
+#                  'periodic': True}
+
+orderparameter = {'class': 'OrderParameterDist',
+                  'args': ['Position', (7,8)],
+                  'kwargs': {'periodic': True},
+                  'module': 'orderp.py'}
 
 Output settings
 ---------------
