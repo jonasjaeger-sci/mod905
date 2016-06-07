@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class OrderParameterDist(OrderParameter):
-    """OrderParameterDist(OrderParameter).
+class OrderParameterWCAJCP1(OrderParameter):
+    """OrderParameterWCAJCP1(OrderParameter).
 
     This class defines a very simple order parameter which is just
     the scalar distance between two particles.
@@ -30,7 +30,7 @@ class OrderParameterDist(OrderParameter):
     """
 
     def __init__(self, name, index, periodic=True):
-        """Initialize `OrderParameterDist`.
+        """Initialize the order parameter.
 
         Parameters
         ----------
@@ -46,7 +46,7 @@ class OrderParameterDist(OrderParameter):
         description = '{} distance particles {} and {}'.format(pbc,
                                                                index[0],
                                                                index[1])
-        super(OrderParameterDist, self).__init__(name, desc=description)
+        super(OrderParameterWCAJCP1, self).__init__(name, desc=description)
         self.periodic = periodic
         self.index = index
 
@@ -73,7 +73,9 @@ class OrderParameterDist(OrderParameter):
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
         if self.periodic:
             delta = system.box.pbc_dist_coordinate(delta)
-        return np.sqrt(np.dot(delta, delta))
+        r = np.sqrt(np.dot(delta, delta))
+	potential_func = system.forcefield.potential[1]
+	return r
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.
