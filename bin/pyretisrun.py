@@ -398,6 +398,7 @@ if __name__ == '__main__':
 
     simulation = None
     system = None
+    settings = {}
 
     try:
         hello_world(inputfile, basepath, args_dict['log_file'])
