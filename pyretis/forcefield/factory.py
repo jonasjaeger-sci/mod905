@@ -23,7 +23,7 @@ __all__ = ['potential_factory']
 
 
 def potential_factory(settings):
-    """Create a potential according to the given integrator settings.
+    """Create a potential according to the given settings.
 
     This function is included as a convenient way of setting up and
     selecting a potential function.
