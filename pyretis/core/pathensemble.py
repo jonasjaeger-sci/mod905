@@ -75,7 +75,7 @@ class PathEnsemble(object):
         ----------
         ensemble : string
             The string representation of the path ensemble.
-        interfaces : list of ints
+        interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
         """
