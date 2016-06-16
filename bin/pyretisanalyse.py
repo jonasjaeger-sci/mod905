@@ -30,7 +30,7 @@ from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors, CONSTANTS
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.analysisio import run_analysis
+from pyretis.inout.analysisio import run_analysis_files, report_results
 from pyretis.inout.common import (check_python_version,
                                   LOG_FMT,
                                   make_dirs,
@@ -44,12 +44,14 @@ FILES = {'md-flux': {'cross': 'cross.dat',
          'md-nve': {'energy': 'energy.dat'},
          'tis-single': {'pathensemble': 'pathensemble.dat'}}
 
-def get_raw_files(task, sim_settings):
+
+def get_raw_files(sim_settings):
     """Return a list of files we can analyse."""
     raw_data = {}
-    ensemble_sim = task in set(('tis-single', 'retis'))
-    for file_type in FILES[task]:
-        filename = FILES[task][file_type]
+    sim_task = sim_settings['task']
+    ensemble_sim = sim_task in set(('tis-single', 'retis'))
+    for file_type in FILES[sim_task]:
+        filename = FILES[sim_task][file_type]
         if ensemble_sim:
             filename = os.path.join(sim_settings['output-dir'], filename)
         if os.path.isfile(filename):
@@ -145,7 +147,9 @@ if __name__ == '__main__':
         print_to_screen(msg_dir)
         task = settings['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
-        results = run_analysis(settings, get_raw_files(task, settings))
+        results = run_analysis_files(settings, get_raw_files(settings))
+        for report in report_results(settings, results):
+            print_to_screen('Created report: {}'.format(report))
         print_to_screen('Analysis done. Output created:')
         # Just write info about what we created:
         for files in results['txtfile']:

@@ -27,9 +27,16 @@ __init__.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-run_analysis
-    Function to analyse simulation data. It will plot the results
-    and generate a report if requested.
+analyse_file
+    Method to analyse a file.
+
+report_results
+    Method to create report(s) from analysis results. The report(s)
+    will be written to disk.
+
+run_analysis_files
+    Method to analyse simulation data in output files. This is a
+    post-processing step.
 """
 from __future__ import absolute_import
-from .analysisio import run_analysis, analyse_file
+from .analysisio import analyse_file, report_results, run_analysis_files

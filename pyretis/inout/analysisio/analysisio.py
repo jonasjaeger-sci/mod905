@@ -22,9 +22,9 @@ analyse_file
     >>> from pyretis.inout.analysisio import analyse_and_output_cross
     >>> out, fig, txt = analyse_and_output_cross(settings, rawdata)
 
-run_analysis
-    Methods to the analysis on a set of files. It will make some plots
-    and output a report if possible.
+run_analysis_files
+    Methods to the analysis on a set of files. It will create some
+    output that can be used for reporting.
 """
 from __future__ import absolute_import
 import logging
@@ -43,21 +43,50 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['analyse_file', 'run_analysis']
+__all__ = ['analyse_file', 'report_results', 'run_analysis_files']
 
 
 _FILE_LOAD = {'cross': True,
               'order': True,
-              'energy': True, 
+              'energy': True,
               'pathensemble': False}
 
 
-def run_analysis(settings, files):
+def report_results(settings, results):
     """Analyse the output from a simulation.
 
     This function will will determine if the data should be read from
     files or if it's passed as other structures directly from the
     simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains settings which dictates how the
+        analysis should be performed and it should also contain
+        information on how the simulation was performed.
+    results : dict
+        The results from an analysis.
+
+    Yields
+    ------
+    out : string
+        The name of the files written.
+    """
+    report_dir = settings.get('report-dir', None)
+    if results is None:
+        return None
+    for report_type in settings['report']:
+        report, ext = generate_report(settings['task'], results,
+                                      output=report_type)
+        if report is not None:
+            outfile = write_report(report, settings['task'], ext,
+                                   path=report_dir)
+            yield outfile
+
+
+def run_analysis_files(settings, files):
+    """Run the analysis on a collection of files.
 
     Parameters
     ----------
@@ -77,43 +106,9 @@ def run_analysis(settings, files):
     report_dir = settings.get('report-dir', None)
     plotter = create_plotter(settings['plot'], out_dir=report_dir)
     txtout = settings['txt-output']
-    results = run_analysis_files(settings, files, plotter, txtout)
-    if results is not None:  # output the report
-        for report_type in settings['report']:
-            report, ext = generate_report(settings['task'], results,
-                                          output=report_type)
-            if report is not None:
-                write_report(report, settings['task'], ext, path=report_dir)
-    return results
-
-
-def run_analysis_files(settings, raw_files, plotter, txtout):
-    """Run the analysis on a collection of files.
-
-    settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed and it should also contain
-        information on how the simulation was performed.
-    raw_files : dict
-        This is a dictionary of files to analyse. It is on the form
-        ``{'cross': 'cross.dat', 'energy': 'energy.dat'}``, i.e. the
-        key determines the file type and the value the file name.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txtout : dict
-        If `txtout` is different from None it is assumed to contain
-        the format for the text files and backup settings.
-
-    Returns
-    -------
-    results : dict
-        The items in this dict represents the results for the analysis.
-        In addition `results['txtfile']` lists the output text files
-        created.
-    """
     results = {'txtfile': []}
-    for key in raw_files:
-        analyse_func = analyse_file(key, raw_files[key])
+    for key in files:
+        analyse_func = analyse_file(key, files[key])
         out, figures, txtfile = analyse_func(settings, plotter=plotter,
                                              txt=txtout)
         results[key] = out

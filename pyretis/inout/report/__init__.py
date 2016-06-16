@@ -66,6 +66,11 @@ def write_report(report_txt, report_type, ext, path=None):
         Extension for the file to write
     path : string
         A directory to use for saving the report to.
+
+    Returns
+    -------
+    out : string
+        The name of the file written.
     """
     outfile = name_file(REPORTFILES[report_type], ext, path=path)
     with open(outfile, 'wt') as report_fh:
@@ -73,3 +78,4 @@ def write_report(report_txt, report_type, ext, path=None):
             report_fh.write(report_txt)
         except UnicodeEncodeError:  # for python 2
             report_fh.write(report_txt.encode('utf-8'))
+    return outfile
