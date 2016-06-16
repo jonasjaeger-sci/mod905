@@ -269,11 +269,11 @@ def _get_path_length(path):
         if move == 'sh':
             return path['length'] - 1
         elif move == 'ki':
-            msg = 'Ignored initial path: {}'.format(move)
-            logger.warning(msg)
+            msg = 'Skipped initial path: {}'.format(move)
+            logger.info(msg)
             return None
         else:
-            msg = 'Ignored unknown mc move: {}'.format(move)
+            msg = 'Skipped unknown mc move: {}'.format(move)
             logger.warning(msg)
             return None
 
