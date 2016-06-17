@@ -29,20 +29,109 @@ from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors, CONSTANTS
-from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.analysisio import run_analysis_files, report_results
+from pyretis.inout.analysisio import run_analysis_files
 from pyretis.inout.common import (check_python_version,
                                   LOG_FMT,
                                   make_dirs,
+                                  name_file,
                                   print_to_screen,
                                   PyretisLogFormatter)
+from pyretis.inout.report import generate_report
+from pyretis.inout.settings import parse_settings_file
 
 
+# Input files for analysis
 FILES = {'md-flux': {'cross': 'cross.dat',
                      'energy': 'energy.dat',
                      'order': 'order.dat'},
          'md-nve': {'energy': 'energy.dat'},
          'tis-single': {'pathensemble': 'pathensemble.dat'}}
+
+
+# Hard-coded patters for report outputs:
+REPORTFILES = {'md-flux': 'md_flux_report',
+               'tis': 'tis_report',
+               'tis-single': 'tis_single_report'}
+
+
+def get_report_name(report_type, ext, prefix=None, path=None):
+    """Generate file name for a report.
+
+    Parameters
+    ----------
+    report_type : string
+        Identifier for the report we are writing.
+    ext : string
+        Extension for the file to write.
+    prefix : string, optional
+        A prefix to add to the file name. Usually just used
+        to mark reports with ensemble number for `report_type` equal
+        to 'tis-single'
+    path : string
+        A directory to use for saving the report to.
+
+    Returns
+    -------
+    out : string
+        The name of the file written.
+    """
+    name = REPORTFILES[report_type]
+    if prefix is not None:
+        name = '{}_{}'.format(prefix, name)
+    return name_file(name, ext, path=path)
+
+
+def write_file(outname, report_txt):
+    """Write a generated report to a given file.
+
+    Parameters
+    ----------
+    outname : string
+        The name of the file to write/create.
+    report_txt : string
+        This is the generated report as a string.
+
+    Returns
+    -------
+    out : string
+        The name of the file written.
+    """
+    with open(outname, 'wt') as report_fh:
+        try:  # will work in python 3
+            report_fh.write(report_txt)
+        except UnicodeEncodeError:  # for python 2
+            report_fh.write(report_txt.encode('utf-8'))
+    return outname
+
+
+def create_reports(setts, analysis_results, report_path):
+    """Create some reports to display the output.
+
+    Parameters
+    ----------
+    setts : dict
+        Settings for analysis (and the simulation).
+    analysis_results : dict
+        Results from the analysis.
+    report_path : string
+        Path to the directory where the reports should be saved.
+
+    Yields
+    ------
+    out : string
+        The reprot files created
+    """
+    pfix = None
+    if setts['task'] == 'tis-single':
+        pfix = setts['ensemble']
+    for report_type in setts['report']:
+        report, ext = generate_report(setts['task'], analysis_results,
+                                      output=report_type)
+        if report is not None:
+            reportfile = get_report_name(setts['task'], ext, prefix=pfix,
+                                         path=report_path)
+            write_file(reportfile, report)
+            yield reportfile
 
 
 def get_raw_files(sim_settings):
@@ -148,12 +237,11 @@ if __name__ == '__main__':
         task = settings['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
         results = run_analysis_files(settings, get_raw_files(settings))
-        for report in report_results(settings, results):
-            print_to_screen('Created report: {}'.format(report))
-        print_to_screen('Analysis done. Output created:')
-        # Just write info about what we created:
-        for files in results['txtfile']:
-            print_to_screen('- {}'.format(os.path.basename(files)))
+        print(results.keys())
+        print_to_screen('Analysis done.')
+        for outfile in create_reports(settings, results, report_dir):
+            relfile = os.path.relpath(outfile, start=runpath)
+            print_to_screen('Report created: {}'.format(relfile))
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         print_to_screen(errtxt)

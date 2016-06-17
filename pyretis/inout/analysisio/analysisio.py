@@ -37,52 +37,18 @@ from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
                                                   txt_orderp_output,
                                                   txt_path_output)
-from pyretis.inout.report import generate_report, write_report
 from pyretis.inout.settings.settings import KEYWORDS
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['analyse_file', 'report_results', 'run_analysis_files']
+__all__ = ['analyse_file', 'run_analysis_files']
 
 
 _FILE_LOAD = {'cross': True,
               'order': True,
               'energy': True,
               'pathensemble': False}
-
-
-def report_results(settings, results):
-    """Analyse the output from a simulation.
-
-    This function will will determine if the data should be read from
-    files or if it's passed as other structures directly from the
-    simulation.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains settings which dictates how the
-        analysis should be performed and it should also contain
-        information on how the simulation was performed.
-    results : dict
-        The results from an analysis.
-
-    Yields
-    ------
-    out : string
-        The name of the files written.
-    """
-    report_dir = settings.get('report-dir', None)
-    if results is None:
-        return None
-    for report_type in settings['report']:
-        report, ext = generate_report(settings['task'], results,
-                                      output=report_type)
-        if report is not None:
-            outfile = write_report(report, settings['task'], ext,
-                                   path=report_dir)
-            yield outfile
 
 
 def run_analysis_files(settings, files):
@@ -106,16 +72,14 @@ def run_analysis_files(settings, files):
     report_dir = settings.get('report-dir', None)
     plotter = create_plotter(settings['plot'], out_dir=report_dir)
     txtout = settings['txt-output']
-    results = {'txtfile': []}
+    results = {}
     for key in files:
         analyse_func = analyse_file(key, files[key])
         out, figures, txtfile = analyse_func(settings, plotter=plotter,
                                              txt=txtout)
-        results[key] = out
-        if txtfile is not None:
-            results['txtfile'].extend(txtfile)
-        if figures is not None:
-            results['{}_figures'.format(key)] = figures
+        results[key] = {'out': out,
+                        'figures': figures,
+                        'txtfile': txtfile}
     return results
 
 

@@ -483,7 +483,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
-        from `pyretis.core.path and `pyretis.inout.pathfile`.
+        from `pyretis.core.pathensemble` or from
+        `pyretis.inout.writers.pathfile`.
         This is the path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
@@ -518,7 +519,11 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     .. [wikimov] Wikipedia, "Moving Average",
        http://en.wikipedia.org/wiki/Moving_average
     """
-    result = {'prun': [], 'cycle': []}
+    result = {'prun': [],
+              'cycle': [],
+              'detect': idetect,
+              'ensemble': path_ensemble.ensemble,
+              'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
     success = 0  # determines if the current path is successful or not

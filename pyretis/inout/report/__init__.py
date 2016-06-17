@@ -35,12 +35,8 @@ report.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-write_report
-    Method for writing a report to file.
-
 generate_report
     Method for generating reports.
-
 
 Folders
 ~~~~~~~
@@ -50,32 +46,3 @@ templates
 """
 from __future__ import absolute_import
 from .report import generate_report
-from pyretis.inout.common import name_file, REPORTFILES
-
-
-def write_report(report_txt, report_type, ext, path=None):
-    """Write a generated report to a given file.
-
-    Parameters
-    ----------
-    report_txt : string
-        This is the generated report as a string
-    report_type : string
-        Identifier for the report we are writing
-    ext : string
-        Extension for the file to write
-    path : string
-        A directory to use for saving the report to.
-
-    Returns
-    -------
-    out : string
-        The name of the file written.
-    """
-    outfile = name_file(REPORTFILES[report_type], ext, path=path)
-    with open(outfile, 'wt') as report_fh:
-        try:  # will work in python 3
-            report_fh.write(report_txt)
-        except UnicodeEncodeError:  # for python 2
-            report_fh.write(report_txt.encode('utf-8'))
-    return outfile

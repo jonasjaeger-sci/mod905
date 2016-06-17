@@ -50,29 +50,37 @@ def generate_report_tis_path(analysis, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    path_ensemble = analysis['ensemble']
-    interfaces = analysis['interfaces']
-    report = {'ensemble': path_ensemble,
-              'figures': {'tis': None},
+    analysis_out = analysis['pathensemble']['out']
+    ensemble = analysis_out['ensemble']
+    interfaces = analysis_out['interfaces']
+    detect = analysis_out['detect']
+    figures = analysis['pathensemble']['figures']
+    report = {'ensemble': ensemble,
+              'figures': {'pcross': None, 'prun': None, 'perror': None,
+                          'lpath': None, 'shoots': None,
+                          'shoots_scaled': None},
               'tables': {'interfaces': None,
                          'probability': None,
                          'path': None,
                          'efficiency': None}}
     # Get figures (if any):
-    report['figures']['tis'] = analysis.get('tis-fig', None)
+    for key in report['figures']:
+        for key2 in figures:
+            if key2.endswith(key):
+                report['figures'][key] = figures[key2]
     # Create tables
-    report['tables']['interfaces'] = _table_interface([path_ensemble],
+    report['tables']['interfaces'] = _table_interface([ensemble],
                                                       [interfaces],
-                                                      [analysis['detect']],
+                                                      [detect],
                                                       fmt=output)[1]
-    report['tables']['probability'] = _table_probability([path_ensemble],
-                                                         [analysis],
+    report['tables']['probability'] = _table_probability([ensemble],
+                                                         [analysis_out],
                                                          fmt=output)[1]
-    report['tables']['path'] = _table_path([path_ensemble],
-                                           [analysis],
+    report['tables']['path'] = _table_path([ensemble],
+                                           [analysis_out],
                                            fmt=output)[1]
-    report['tables']['efficiency'] = _table_efficiencies([path_ensemble],
-                                                         [analysis],
+    report['tables']['efficiency'] = _table_efficiencies([ensemble],
+                                                         [analysis_out],
                                                          fmt=output)[1]
     return report
 

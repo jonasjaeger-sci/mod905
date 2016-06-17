@@ -762,7 +762,7 @@ def mpl_plot_path(path_ensemble, results, idetect):
     can_tmp = _mpl_shoots_histogram(results['shoots'][0],
                                     results['shoots'][1], ens)
     canvas[out['shoots']] = can_tmp[0]
-    canvas[out['shoots-scaled']] = can_tmp[1]
+    canvas[out['shoots_scaled']] = can_tmp[1]
     return canvas
 
 

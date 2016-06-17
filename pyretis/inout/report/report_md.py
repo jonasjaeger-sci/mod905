@@ -39,14 +39,14 @@ def generate_report_mdflux(analysis, output='rst'):
     """
     report = {'figures': {}, 'tables': {}}
     # generate some tables:
-    report['figures']['flux'] = analysis.get('cross_figures', [])
-    report['figures']['energy'] = analysis.get('energy_figures', {})
-    report['figures']['order'] = analysis.get('order_figures', {})
-    report['tables']['md-flux'] = _table_md_flux(analysis['cross'],
-                                                 fmt=output)[1]
-    report['tables']['md-cycles'] = _table_md_flux_cycles(analysis['cross'],
+    cross_out = analysis['cross']['out']
+    report['figures']['flux'] = analysis['cross']['figures']
+    report['figures']['energy'] = analysis['energy']['figures']
+    report['figures']['order'] = analysis['order']['figures']
+    report['tables']['md-flux'] = _table_md_flux(cross_out, fmt=output)[1]
+    report['tables']['md-cycles'] = _table_md_flux_cycles(cross_out,
                                                           fmt=output)[1]
-    report['tables']['md-efficiency'] = _table_md_efficiency(analysis['cross'],
+    report['tables']['md-efficiency'] = _table_md_efficiency(cross_out,
                                                              fmt=output)[1]
     return report
 

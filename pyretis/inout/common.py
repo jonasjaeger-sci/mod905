@@ -34,9 +34,6 @@ make_dirs
 
 print_to_screen
     A method used for printing to screen.
-
-remove_extensions
-    Remove extensions for a list of files.
 """
 from __future__ import absolute_import, print_function
 import errno
@@ -50,7 +47,7 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['apply_format', 'check_python_version', 'create_backup',
            'make_dirs', 'print_to_screen', 'PyretisLogFormatter',
-           'PyretisLogFormatterDebug', 'remove_extensions']
+           'PyretisLogFormatterDebug']
 
 
 # Hard-coded patters for energy analysis output files.
@@ -85,14 +82,10 @@ PATHFILES = {'pcross': '{}_pcross',
              'perror': '{}_perror',
              'pathlength': '{}_lpath',
              'shoots': '{}_shoots',
-             'shoots-scaled': '{}_shoots_scale'}
+             'shoots_scaled': '{}_shoots_scaled'}
 # hard-coded patterns for matched files:
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
-# hard-coded patters for report outputs:
-REPORTFILES = {'md-flux': 'md_flux_report',
-               'tis': 'tis_report',
-               'tis_path': 'tis_path_report'}
 # hard-coded formats to use for Log files:
 LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
 LOG_FMT = '[%(levelname)s]: %(message)s'
@@ -193,44 +186,6 @@ def _remove_extension(filename):
         return os.path.splitext(filename)[0]
     except IndexError:
         return filename
-
-
-def remove_extensions(list_of_files):
-    """Remove extensions for a list of files.
-
-    This will strip out extensions for all the files in a given
-    iterable. Here, the iterable might be a simple list which contains
-    dictionaries or it can be a dictionary. How we to the loop will
-    depend on this.
-
-    Parameters
-    ----------
-    list_of_files : list or dict, iterable
-        This is the list for which we will try to remove extensions.
-
-    Returns
-    -------
-    out : list or dict
-        A copy of list_of_files, where the extensions has been removed.
-
-    Note
-    ----
-    If, for some reason, list_of_files is a list and the items are just
-    integers, the TypeError will not be raised. This is pretty unlikely
-    and we therefore do not check for this.
-    """
-    # We assume that list_of_files is a simple dict
-    try:
-        newdict = {}
-        for key in list_of_files:
-            newdict[key] = _remove_extension(list_of_files[key])
-        return newdict
-    except TypeError:
-        newlist = []
-        for fig in list_of_files:
-            newfig = {key: _remove_extension(fig[key]) for key in fig}
-            newlist.append(newfig)
-        return newlist
 
 
 def make_dirs(dirname):

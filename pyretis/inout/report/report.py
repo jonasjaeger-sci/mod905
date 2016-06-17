@@ -31,7 +31,6 @@ import jinja2
 # pyretis imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as PROGRAM_NAME
-from pyretis.inout.common import remove_extensions
 from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_tis,
@@ -56,11 +55,11 @@ _TEMPLATES = {'rst': 'report_{}.rst',
 
 _TEMPLATE_NAMES = {'md-flux': 'mdflux',
                    'tis': 'tis',
-                   'tis-path': 'tis_path'}
+                   'tis-single': 'tis_single'}
 
 _REPORT_MAP = {'md-flux': generate_report_mdflux,
                'tis': generate_report_tis,
-               'tis_path': generate_report_tis_path}
+               'tis-single': generate_report_tis_path}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -182,14 +181,14 @@ def render_report(report, output, template, path):
         return render, _EXT[output]
 
 
-def generate_report(report_type, analysis, output, template=None):
+def generate_report(report_type, analysis_results, output, template=None):
     """Generate a report of a given type with the given analysis results.
 
     Parameters
     ----------
     report_type : string
         Selects the kind of report we want.
-    analysis : dict
+    analysis_results : dict
         The results from running the analysis.
     output : string
         Output format for the report.
@@ -220,15 +219,13 @@ def generate_report(report_type, analysis, output, template=None):
         logger.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
-    generated = generator(analysis, output=output)
+    generated = generator(analysis_results, output=output)
     report.update(generated)
     # Remove white-space from numbers:
     for key in report['numbers']:
         report['numbers'][key] = report['numbers'][key].strip()
-    # Remove file extensions for figures and latexify numbers:
     if output in ('latex', 'tex'):
-        for key in report['figures']:
-            report['figures'][key] = remove_extensions(report['figures'][key])
+        # Latexify numbers:
         for key in report['numbers']:
             report['numbers'][key] = latexify_number(report['numbers'][key])
     return render_report(report, output, template, path)

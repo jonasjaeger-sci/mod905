@@ -17,28 +17,24 @@ analysis:
 Probability figures
 -------------------
 
-@{% for figure in figures['tis'] %}@
-.. image:: @{{ figure['pcross'] }}@
+.. image:: @{{ figures['pcross'] }}@
    :width: 30%
-.. image:: @{{ figure['prun'] }}@
+.. image:: @{{ figures['prun'] }}@
    :width: 30%
-.. image:: @{{ figure['perror'] }}@
+.. image:: @{{ figures['perror'] }}@
    :width: 30%
-@{% endfor %}@
 
 .. _len-shoot-figures-output:
 
 Length and shoots figures
 -------------------------
 
-@{% for figure in figures['tis'] %}@
-.. image:: @{{ figure['pathlength'] }}@
+.. image:: @{{ figures['lpath'] }}@
    :width: 30%
-.. image:: @{{ figure['shoots'] }}@
+.. image:: @{{ figures['shoots'] }}@
    :width: 30%
-.. image:: @{{ figure['shoots-scaled'] }}@
+.. image:: @{{ figures['shoots_scaled'] }}@
    :width: 30%
-@{% endfor %}@
 
 
 .. _tis-results:

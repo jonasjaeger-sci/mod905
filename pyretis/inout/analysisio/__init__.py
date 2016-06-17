@@ -30,13 +30,9 @@ Important methods defined here
 analyse_file
     Method to analyse a file.
 
-report_results
-    Method to create report(s) from analysis results. The report(s)
-    will be written to disk.
-
 run_analysis_files
     Method to analyse simulation data in output files. This is a
     post-processing step.
 """
 from __future__ import absolute_import
-from .analysisio import analyse_file, report_results, run_analysis_files
+from .analysisio import analyse_file, run_analysis_files
