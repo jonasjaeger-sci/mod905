@@ -522,7 +522,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     result = {'prun': [],
               'cycle': [],
               'detect': idetect,
-              'ensemble': path_ensemble.ensemble,
+              'ensemble': path_ensemble.ensemble_name(),
               'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
