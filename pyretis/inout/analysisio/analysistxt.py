@@ -27,8 +27,7 @@ txt_matched_probability
 import logging
 import numpy as np
 # pyretis imports:
-from pyretis.inout.common import (create_backup, simplify_ensemble_name,
-                                  name_file)
+from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 from pyretis.inout.writers.txtinout import txt_save_columns
@@ -310,8 +309,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     outfiles : list
         The output files created by this function.
     """
-    ens = path_ensemble.ensemble  # identify the ensemble
-    ens_simplified = simplify_ensemble_name(ens)
+    ens = path_ensemble.ensemble_name()  # identify the ensemble
+    ens_simplified = path_ensemble.ensemble_name_simple()
     outfiles = []
     # 1) Output pcross vs lambda:
     outfile = name_file(PATHFILES['pcross'].format(ens_simplified),

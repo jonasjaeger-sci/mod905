@@ -21,7 +21,7 @@ from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.path_simulation import SimulationSingleTIS
-from pyretis.core.pathensemble import PathEnsemble
+from pyretis.core.pathensemble import PathEnsemble, PATH_DIR_FMT
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter,
                                            check_settings)
@@ -153,24 +153,24 @@ def create_path_ensemble(settings):
                   'got {}'.format(len(interfaces)))
         logger.error(msgtxt)
         raise ValueError(msgtxt)
-    if not 'detect' in settings:
+    if 'detect' not in settings:
         detect = interfaces[-1]
         msgtxt = ('Detect-interface not specified, '
                   'using "product" interface: {}'.format(detect))
         logger.warning(msgtxt)
     else:
         detect = settings['detect']
-    if not 'ensemble' in settings:
-        ensemble_name = '[{}^+]'.format(1)
+    if 'ensemble' not in settings:
+        ensemble_name = 1
         msgtxt = ('Ensemble name not specified, '
-                  'using default name "{}"'.format(ensemble_name))
+                  'using default ensemble "{}"'.format(ensemble_name))
+        logger.warning(msgtxt)
     else:
-        ensemble_name = settings['ensemble']
-    return PathEnsemble(ensemble_name, interfaces,
-                        detect=detect)
+        ensemble_name = int(settings['ensemble'])
+    return PathEnsemble(ensemble_name, interfaces, detect=detect)
 
 
-def create_tis_simulations(settings, system):
+def create_tis_simulations(settings):
     """This will set up and create a series of TIS simulations.
 
     This method will for each interface set up a single TIS simulation.
@@ -181,8 +181,6 @@ def create_tis_simulations(settings, system):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `System`
-        The system we are going to simulate.
 
     Returns
     -------
@@ -196,14 +194,13 @@ def create_tis_simulations(settings, system):
     reactant = interfaces[0]
     product = interfaces[-1]
     for i, middle in enumerate(interfaces[:-1]):
-        ensemble = '{:03d}'.format(i + 1)
         local_settings = {}
         for key in settings:  # this common for all simulations:
             local_settings[key] = settings[key]
         local_settings['task'] = 'tis-single'
-        local_settings['ensemble'] = ensemble
+        local_settings['ensemble'] = i + 1
         local_settings['interfaces'] = [reactant, middle, product]
-        local_settings['output-dir'] = ensemble
+        local_settings['output-dir'] = PATH_DIR_FMT.format(i + 1)
         try:
             local_settings['detect'] = interfaces[i + 1]
         except IndexError:
@@ -266,10 +263,11 @@ def create_simulation(settings, system):
             msgtxt = '{} settings not found: {}'.format(sim_type, not_found)
             logger.error(msgtxt)
             raise ValueError('Required simulation setting not found!')
-        simulation = sim['create'](settings, system)
         if sim['single']:
-            msg = ['Created simulation:']
-            msg += ['{}'.format(simulation)]
-            msgtxt = '\n'.join(msg)
+            simulation = sim['create'](settings, system)
+            msgtxt = ('Created simulation:\n'
+                      '{}'.format(simulation))
             logger.info(msgtxt)
+        else:
+            simulation = sim['create'](settings)
         return simulation

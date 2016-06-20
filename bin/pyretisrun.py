@@ -312,9 +312,9 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
         print_to_screen()
         nens = len(simulations)
         for i, (sim, setting) in enumerate(zip(simulations, settings_all)):
-            print_and_loginfo('Running TIS ensemble: {0:03d}'.format(i + 1))
+            print_and_loginfo('Running TIS ensemble: {}'.format(i + 1))
             run_tis_single_simulation(sim, setting, progress=progress)
-            print_and_loginfo('Done with TIS ensemble: {0:03d}!'.format(i + 1))
+            print_and_loginfo('Done with TIS ensemble: {}!'.format(i + 1))
             print_and_loginfo('{0} / {1} Completed!'.format(i + 1, nens))
             print_to_screen()
 

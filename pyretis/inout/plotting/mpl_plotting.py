@@ -29,8 +29,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
 # pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
-from pyretis.inout.common import (create_backup, simplify_ensemble_name,
-                                  name_file)
+from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 
@@ -709,8 +708,8 @@ def mpl_plot_path(path_ensemble, results, idetect):
         This dictionary contains the different canvases we have
         created
     """
-    ens = path_ensemble.ensemble  # identify the ensemble
-    ens_simplified = simplify_ensemble_name(ens)
+    ens = path_ensemble.ensemble_name()
+    ens_simplified = path_ensemble.ensemble_name_simple()
     canvas = {}
     out = {}
     for key in PATHFILES:
