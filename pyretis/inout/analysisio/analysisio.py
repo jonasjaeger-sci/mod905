@@ -60,10 +60,9 @@ def run_analysis_files(settings, files):
         This dict contains settings which dictates how the
         analysis should be performed and it should also contain
         information on how the simulation was performed.
-    files : dict
-        This dict contains the raw data needed for the analysis.
-        The raw data is stored as `files[key]` where the key is
-        the file type and the value is the file name.
+    files : list of tuples
+        This list contains the raw files to be analysed. The
+        tuples are on format ('filetype', 'filename').
 
     Returns
     -------
@@ -73,13 +72,13 @@ def run_analysis_files(settings, files):
     plotter = create_plotter(settings['plot'], out_dir=report_dir)
     txtout = settings['txt-output']
     results = {}
-    for key in files:
-        analyse_func = analyse_file(key, files[key])
+    for (file_type, file_name) in files:
+        analyse_func = analyse_file(file_type, file_name)
         out, figures, txtfile = analyse_func(settings, plotter=plotter,
                                              txt=txtout)
-        results[key] = {'out': out,
-                        'figures': figures,
-                        'txtfile': txtfile}
+        results[file_type] = {'out': out,
+                              'figures': figures,
+                              'txtfile': txtfile}
     return results
 
 
