@@ -52,7 +52,7 @@ is fully specified as follows:
                  'timestep': 0.002,  # time step for the integration
                  'gamma': 0.3,  # set gamma value,
                  'seed': 0,  # set seed for random value generator used
-                 'high-friction': False}  # are we in the high friction limit?
+                 'high_friction': False}  # are we in the high friction limit?
 
 **Required settings:**
 
@@ -67,13 +67,13 @@ is fully specified as follows:
 **Optional settings:**
 
 * ``seed``: seed for the stochastic integrator (default: ``0``)
-* ``high-friction``: select high friction or low friction
+* ``high_friction``: select high friction or low friction
   limit (default: ``True``)
 
-The optional setting ``high-friction`` determines how the equations
+The optional setting ``high_friction`` determines how the equations
 of motion are integrated, either in the
 
-* high friction limit (``high-friction`` is ``True``),
+* high friction limit (``high_friction`` is ``True``),
 
   .. math::
 
@@ -83,7 +83,7 @@ of motion are integrated, either in the
   velocities (:math:`\delta \mathbf{r}`) are drawn from a
   normal distribution,
 
-* or in the low friction limit (``high-friction`` is ``False``),
+* or in the low friction limit (``high_friction`` is ``False``),
 
   .. math::
 

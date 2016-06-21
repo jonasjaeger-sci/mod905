@@ -164,7 +164,7 @@ Settings defining the simulations
                       'timestep': 0.002,
                       'gamma': 0.3,
                       'seed': 0,
-                      'high-friction': False}
+                      'high_friction': False}
 
 
 .. _user-guide-input-commonforce:
