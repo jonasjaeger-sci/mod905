@@ -95,41 +95,6 @@ def run_analysis(sim_settings):
         return run_analysis_files(sim_settings, raw_data)
 
 
-def get_flux_files(sim_settings):
-    """Return files for the flux analysis in TIS.
-
-    Parameters
-    ----------
-    sim_settings : dict
-        The settings to use for an analysis/simulation
-
-    Returns
-    -------
-    local_settings : dict
-        This dict contains settings which can be used for a initial
-        flux analysis.
-    files : list of tuples
-        The tuples in this list are the files which can be analysed
-        further, using the settings in `out[0]`.
-    """
-    local_settings = {}
-    for key in sim_settings:
-        local_settings[key] = sim_settings[key]
-    local_settings['task'] = 'md-flux'
-    run_flux = False
-    files = []
-    for file_type in FILES['md-flux']:
-        filename = os.path.join('flux', FILES['md-flux'][file_type])
-        if os.path.isfile(filename):
-            files.append((file_type, filename))
-            if file_type == 'cross':
-                run_flux = True
-    if run_flux:
-        return local_settings, files
-    else:
-        return None, None
-
-
 def get_path_ensemble_files(ensemble, sim_settings, detect,
                             interfaces):
     """This method will return files for a single path ensemble.
@@ -209,9 +174,8 @@ def get_path_simulation_files(sim_settings):
     reactant = interfaces[0]
     product = interfaces[-1]
     if sim_settings['task'] == 'tis':
-        setts, files = get_flux_files(sim_settings)
-        all_files.append(files)
-        all_settings.append(setts)
+        all_files.append(None)
+        all_settings.append(None)
     else:  # just add the 0 ensemble
         detect = None
         interface = [-float('inf'), reactant, reactant]
@@ -241,7 +205,7 @@ def run_tis_analysis(sim_settings):
         The settings to use for an analysis/simulation
     all_settings : list of dicts
         `all_settings[i]` contains information for analysing a
-        specific path ensemble (or for the initial flux simulation).
+        specific path ensemble.
     all_files : list of lists
         `all_files[i]` contains the paths for the files to be analysed.
     """
@@ -252,20 +216,10 @@ def run_tis_analysis(sim_settings):
     nens = len(all_settings) - 1
     for i, (sett, files) in enumerate(zip(all_settings, all_files)):
         if i == 0:
-            # this is the initial flux calculation
-            if sett is None or files is None:
-                msgtxt = ('Data for initial flux calculation NOT found!\n'
-                          'The rate constant will NOT be calculated!')
-                logger.critical(msgtxt)
-                print_to_screen(msgtxt)
-            else:
-                msgtxt = 'Calculating initial flux...'
-                logger.info(msgtxt)
-                print_to_screen(msgtxt)
-                results['cross'] = run_analysis_files(sett, files)
-                report_txt = generate_report('md-flux', results,
-                                             output='txt')[0]
-                print_to_screen(''.join(report_txt))
+            msgtxt = ('Initial flux is not calculated here.\n'
+                      'Remember to calculate this separately!')
+            logger.info(msgtxt)
+            print_to_screen(msgtxt)
         else:
             msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
             print_to_screen(msgtxt)
