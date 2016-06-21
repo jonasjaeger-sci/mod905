@@ -38,6 +38,7 @@ from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors
+from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout import create_output
 from pyretis.inout.common import (check_python_version,
                                   LOG_DEBUG_FMT,
@@ -276,14 +277,15 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
         print_and_loginfo('Creation of input files requested.')
         for i, setting in enumerate(settings_all):
             ens = setting['ensemble']
+            ensf = PATH_DIR_FMT.format(ens)
             msgtxt = 'Setting up TIS ensemble: {}'.format(ens)
             print_and_loginfo(msgtxt)
-            infile = '{}-{}.rst'.format(setting['task'], ens)
+            infile = '{}-{}.rst'.format(setting['task'], ensf)
             print_and_loginfo('Create file: "{}"'.format(infile))
             write_settings_file(setting, infile, backup=False)
             print_and_loginfo('Command for executing:')
             print_and_loginfo('pyretisrun -i {} -p -f {}.log'.format(infile,
-                                                                     ens))
+                                                                     ensf))
             print_to_screen()
     else:
         simulations = []
