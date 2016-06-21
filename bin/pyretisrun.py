@@ -183,8 +183,6 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    #cross = []  # variable for storing the crossing output
-    # create output tasks:
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Starting MD-Flux simulation')
     tqd = use_tqdm(progress)
@@ -192,19 +190,6 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
                       desc='# MD-flux'):
         for task in output_tasks:
             task.output(result)
-        #if 'cross' in result:
-        #    for cri in result['cross']:
-        #        cross.append((cri[0], cri[1] + 1, -1 if cri[2] == '-' else 1))
-    #analysis_settings = {'skipcross': 1000,
-    #                     'maxblock': 1000,
-    #                     'blockskip': 1,
-    #                     'bins': 1000,
-    #                     'ngrid': 1001}
-    #results = {}
-    #results['cross'] = analyse_flux(cross, analysis_settings,
-    #                                simulation_settings)
-    #report_txt = generate_report('md-flux', results, 'txt')[0]
-    #print(''.join(report_txt))
 
 
 def run_md_simulation(sim, sim_settings, progress=False):
@@ -247,7 +232,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
         Used to control location of progress bars
     """
     # ensure that we create an output directory
-    msg_dir = make_dirs(sim_settings['ensemble'])
+    msg_dir = make_dirs(sim_settings['output-dir'])
     msgtxt = ('Creating output directory: '
               '{}'.format(msg_dir))
     print_and_loginfo(msgtxt)

@@ -29,7 +29,8 @@ from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import create_conversion_factors, CONSTANTS
-from pyretis.inout.analysisio import run_analysis_files
+from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.inout.analysisio.analysisio import run_analysis
 from pyretis.inout.common import (check_python_version,
                                   LOG_FMT,
                                   make_dirs,
@@ -38,14 +39,6 @@ from pyretis.inout.common import (check_python_version,
                                   PyretisLogFormatter)
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings import parse_settings_file
-
-
-# Input files for analysis
-FILES = {'md-flux': {'cross': 'cross.dat',
-                     'energy': 'energy.dat',
-                     'order': 'order.dat'},
-         'md-nve': {'energy': 'energy.dat'},
-         'tis-single': {'pathensemble': 'pathensemble.dat'}}
 
 
 # Hard-coded patters for report outputs:
@@ -123,7 +116,7 @@ def create_reports(setts, analysis_results, report_path):
     """
     pfix = None
     if setts['task'] == 'tis-single':
-        pfix = setts['ensemble']
+        pfix = PATH_DIR_FMT.format(setts['ensemble'])
     for report_type in setts['report']:
         report, ext = generate_report(setts['task'], analysis_results,
                                       output=report_type)
@@ -132,20 +125,6 @@ def create_reports(setts, analysis_results, report_path):
                                          path=report_path)
             write_file(reportfile, report)
             yield reportfile
-
-
-def get_raw_files(sim_settings):
-    """Return a list of files we can analyse."""
-    raw_data = {}
-    sim_task = sim_settings['task']
-    ensemble_sim = sim_task in set(('tis-single', 'retis'))
-    for file_type in FILES[sim_task]:
-        filename = FILES[sim_task][file_type]
-        if ensemble_sim:
-            filename = os.path.join(sim_settings['output-dir'], filename)
-        if os.path.isfile(filename):
-            raw_data[file_type] = filename
-    return raw_data
 
 
 def hello_world(infile, reportdir):
@@ -236,8 +215,7 @@ if __name__ == '__main__':
         print_to_screen(msg_dir)
         task = settings['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
-        results = run_analysis_files(settings, get_raw_files(settings))
-        print(results.keys())
+        results = run_analysis(settings)
         print_to_screen('Analysis done.')
         for outfile in create_reports(settings, results, report_dir):
             relfile = os.path.relpath(outfile, start=runpath)

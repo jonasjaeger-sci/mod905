@@ -50,38 +50,22 @@ def generate_report_tis_path(analysis, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    analysis_out = analysis['pathensemble']['out']
-    ensemble = analysis_out['ensemble']
-    interfaces = analysis_out['interfaces']
-    detect = analysis_out['detect']
-    figures = analysis['pathensemble']['figures']
-    report = {'ensemble': ensemble,
-              'figures': {'pcross': None, 'prun': None, 'perror': None,
-                          'lpath': None, 'shoots': None,
-                          'shoots_scaled': None},
+    result = analysis['pathensemble']
+    report = {'ensemble': result['out']['ensemble'],
+              'figures': {},
               'tables': {'interfaces': None,
                          'probability': None,
                          'path': None,
                          'efficiency': None}}
     # Get figures (if any):
-    for key in report['figures']:
-        for key2 in figures:
-            if key2.endswith(key):
-                report['figures'][key] = figures[key2]
+    report['figures'] = _get_path_figures(result['figures'])
     # Create tables
-    report['tables']['interfaces'] = _table_interface([ensemble],
-                                                      [interfaces],
-                                                      [detect],
-                                                      fmt=output)[1]
-    report['tables']['probability'] = _table_probability([ensemble],
-                                                         [analysis_out],
-                                                         fmt=output)[1]
-    report['tables']['path'] = _table_path([ensemble],
-                                           [analysis_out],
-                                           fmt=output)[1]
-    report['tables']['efficiency'] = _table_efficiencies([ensemble],
-                                                         [analysis_out],
-                                                         fmt=output)[1]
+    results = [result]
+    tables = report['tables']
+    tables['interfaces'] = _table_interface(results, fmt=output)[1]
+    tables['probability'] = _table_probability(results, fmt=output)[1]
+    tables['path'] = _table_path(results, fmt=output)[1]
+    tables['efficiency'] = _table_efficiencies(results, fmt=output)[1]
     return report
 
 
@@ -117,60 +101,54 @@ def generate_report_tis(analysis, output='rst'):
     out[1] : string
         The file extension (i.e. file type) for the generated report.
     """
-    path_ensembles = analysis['ensembles']
-    interfaces = analysis['interfaces']
-    report = {'figures': {'tis': None,
-                          'tis-matched': None},
+    report = {'figures': {'tis': [],
+                          'matched': None},
               'tables': {'interfaces': None,
                          'probability': None,
                          'path': None,
                          'efficiency': None},
               'numbers': {'pcross': None, 'perr': None, 'simt': None,
                           'teff': None, 'opteff': None}}
-    # Get figures:
-    report['figures']['tis'] = analysis.get('tis-fig', None)
-    report['figures']['tis-matched'] = analysis.get('matched-fig', None)
+    results = analysis['pathensemble']
+    figures = report['figures']
+    # Add figures:
+    for result in results:
+        figures['tis'].append(_get_path_figures(result['figures']))
+    # Get matched result:
+    matched_fig = analysis['matched']['figures']
+    matched_out = analysis['matched']['out']
+    figures['matched'] = matched_fig.get('matched-probability', None)
+    figures['total'] = matched_fig.get('total-probability', None)
     # Get numbers:
     fmte = '{0:<16.9e}'
     fmtf = '{0:<16.9f}'
-    report['numbers']['pcross'] = fmte.format(analysis['matched']['prob'])
-    scaled = analysis['matched']['relerror'] * 100
+    report['numbers']['pcross'] = fmte.format(matched_out['prob'])
+    scaled = matched_out['relerror'] * 100
     if scaled > 1.0:
         report['numbers']['perr'] = fmtf.format(scaled)
     else:
         report['numbers']['perr'] = fmte.format(scaled)
-    report['numbers']['simt'] = fmte.format(analysis['matched']['simtime'])
-    report['numbers']['teff'] = fmte.format(analysis['matched']['eff'])
-    report['numbers']['opteff'] = fmte.format(analysis['matched']['opteff'])
+    report['numbers']['simt'] = fmte.format(matched_out['simtime'])
+    report['numbers']['teff'] = fmte.format(matched_out['eff'])
+    report['numbers']['opteff'] = fmte.format(matched_out['opteff'])
     # Get tables:
-    report['tables']['interfaces'] = _table_interface(path_ensembles,
-                                                      interfaces,
-                                                      analysis['detect'],
-                                                      fmt=output)[1]
-    report['tables']['probability'] = _table_probability(path_ensembles,
-                                                         analysis['tis'],
-                                                         fmt=output)[1]
-    report['tables']['path'] = _table_path(path_ensembles, analysis['tis'],
-                                           fmt=output)[1]
-    report['tables']['efficiency'] = _table_efficiencies(path_ensembles,
-                                                         analysis['tis'],
-                                                         fmt=output)[1]
+    tables = report['tables']
+    tables['interfaces'] = _table_interface(results, fmt=output)[1]
+    tables['probability'] = _table_probability(results, fmt=output)[1]
+    tables['path'] = _table_path(results, fmt=output)[1]
+    tables['efficiency'] = _table_efficiencies(results, fmt=output)[1]
     return report
 
 
-def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
+def _table_interface(results, fmt='rst'):
     """Generate the table for the interfaces.
 
     This table will display the location of the different interfaces.
 
     Parameters
     ----------
-    path_ensembles : list of strings
-        These are the path ensembles we have analyzed.
-    interfaces : list of lists
-        `interfaces[i]` are the interfaces used for `path_ensembles[i]`.
-    detect : list of floats
-        These are the detect interfaces used in the analysis.
+    results : list of dicts
+        These are the results from the analysis.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').
@@ -184,18 +162,20 @@ def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
         the table.
     """
     table = []
-    for ensemble, interf, idet in zip(path_ensembles, interfaces, detect):
-        row = ['{:^8s}'.format(ensemble)]
+    for result in results:
+        row = ['{:^8s}'.format(result['out']['ensemble'])]
+        interf = result['out']['interfaces']
         row.append(apply_format(interf[0], '{:^8.4f}'))
         row.append(apply_format(interf[1], '{:^8.4f}'))
         row.append(apply_format(interf[2], '{:^8.4f}'))
-        row.append(apply_format(idet, '{:^8.4f}'))
+        detect = result['out']['detect']
+        row.append(apply_format(detect, '{:^8.4f}'))
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Interfaces',
                                          ['Ensemble', 'Left', 'Middle',
                                           'Right', 'Detect'],
-                                         fixnum={1, 2, 3, 4})
+                                         fixnum={0, 1, 2, 3, 4})
     else:
         table_str = generate_rst_table(table, 'Interfaces',
                                        ['Ensemble', 'Left', 'Middle',
@@ -204,7 +184,7 @@ def _table_interface(path_ensembles, interfaces, detect, fmt='rst'):
     return table, table_txt
 
 
-def _table_probability(path_ensembles, results, fmt='rst'):
+def _table_probability(results, fmt='rst'):
     """Generate the table for the probabilities.
 
     This table will display the crossing probabilities with
@@ -212,8 +192,6 @@ def _table_probability(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of strings
-        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -229,17 +207,18 @@ def _table_probability(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for ensemble, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(ensemble)]
-        row.append(apply_format(result['prun'][-1], '{:^10.6f}'))
-        row.append(apply_format(result['blockerror'][2], '{:^10.6f}'))
-        row.append(apply_format(result['blockerror'][4] * 100, '{:^10.6f}'))
+    for result in results:
+        row = ['{:^8s}'.format(result['out']['ensemble'])]
+        row.append(apply_format(result['out']['prun'][-1], '{:^10.6f}'))
+        row.append(apply_format(result['out']['blockerror'][2], '{:^10.6f}'))
+        row.append(apply_format(result['out']['blockerror'][4] * 100,
+                                '{:^10.6f}'))
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, r'Probabilities',
                                          [r'Ensemble', r'$P_\text{cross}$',
                                           r'Error', r'Rel. error (\%)'],
-                                         fixnum={1, 2, 3})
+                                         fixnum={0, 1, 2, 3})
     else:
         table_str = generate_rst_table(table, r'Probabilities',
                                        [r'Ensemble', r'Pcross', r'Error',
@@ -248,7 +227,7 @@ def _table_probability(path_ensembles, results, fmt='rst'):
     return table, table_txt
 
 
-def _table_path(path_ensembles, results, fmt='rst'):
+def _table_path(results, fmt='rst'):
     """Generate the table for the path lengths.
 
     This table will display the path lengths and also show the ratio of
@@ -256,8 +235,6 @@ def _table_path(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of strings
-        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -273,10 +250,10 @@ def _table_path(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for ensemble, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(ensemble)]
-        hist1 = result['pathlength'][0]
-        hist2 = result['pathlength'][1]
+    for result in results:
+        row = ['{:^8s}'.format(result['out']['ensemble'])]
+        hist1 = result['out']['pathlength'][0]
+        hist2 = result['out']['pathlength'][1]
         row.append(apply_format(hist1[2][0], '{:^10.6f}'))
         row.append(apply_format(hist2[2][0], '{:^10.6f}'))
         row.append(apply_format(hist2[2][0] / hist1[2][0], '{:^10.6f}'))
@@ -285,7 +262,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
         table_str = generate_latex_table(table, 'Path lengths',
                                          ['Ensemble', 'Accepted', 'All',
                                           'All/Accepted'],
-                                         fixnum={1, 2, 3})
+                                         fixnum={0, 1, 2, 3})
     else:
         table_str = generate_rst_table(table, 'Path lengths',
                                        ['Ensemble', 'Accepted', 'All',
@@ -294,7 +271,7 @@ def _table_path(path_ensembles, results, fmt='rst'):
     return table, table_txt
 
 
-def _table_efficiencies(path_ensembles, results, fmt='rst'):
+def _table_efficiencies(results, fmt='rst'):
     """Generate table for efficiencies.
 
     This table will display results for the efficiencies, acceptance
@@ -302,8 +279,6 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `pyretis.core.path.PathEnsemble`.
-        These are the path ensembles we have analyzed.
     results : list of dicts
         The dictionaries are the results obtained from the analysis.
     fmt : string, optional
@@ -319,20 +294,20 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
         the table.
     """
     table = []
-    for ensemble, result in zip(path_ensembles, results):
-        row = ['{:^8s}'.format(ensemble)]
-        row.append(apply_format(result['tis-cycles'], '{:^10.0f}'))
-        row.append(apply_format(result['efficiency'][1], '{:^10.6f}'))
-        row.append(apply_format(result['efficiency'][0], '{:^10.6f}'))
-        row.append(apply_format(result['blockerror'][6], '{:^10.6f}'))
-        row.append(apply_format(result['efficiency'][2], '{:^10.6f}'))
+    for result in results:
+        row = ['{:^8s}'.format(result['out']['ensemble'])]
+        row.append(apply_format(result['out']['tis-cycles'], '{:^10.0f}'))
+        row.append(apply_format(result['out']['efficiency'][1], '{:^10.6f}'))
+        row.append(apply_format(result['out']['efficiency'][0], '{:^10.6f}'))
+        row.append(apply_format(result['out']['blockerror'][6], '{:^10.6f}'))
+        row.append(apply_format(result['out']['efficiency'][2], '{:^10.6f}'))
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Efficiency',
                                          ['Ensemble', 'TIS cycles',
                                           'Tot sim.', 'Acceptance ratio',
                                           'Correlation', 'Efficiency'],
-                                         fixnum={1, 2, 3, 4, 5})
+                                         fixnum={0, 1, 2, 3, 4, 5})
     else:
         table_str = generate_rst_table(table, 'Efficiency',
                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
@@ -340,3 +315,28 @@ def _table_efficiencies(path_ensembles, results, fmt='rst'):
                                         'Efficiency'])
     table_txt = '\n'.join(table_str)
     return table, table_txt
+
+
+def _get_path_figures(figures):
+    """Return path figures from a dict of figures.
+
+    This method extracts figures from results and make them avaiable
+    to the report.
+
+    Paramters
+    ---------
+    figures : dict
+        The figures generated by the analysis.
+
+    Returns
+    -------
+    path_figures : dict
+        A dict which can be used in the report.
+    """
+    path_figures = {}
+    for fig in set(('pcross', 'prun', 'perror', 'lpath',
+                    'shoots', 'shoots_scaled')):
+        for key in figures:
+            if key.endswith(fig):
+                path_figures[fig] = figures[key]
+    return path_figures

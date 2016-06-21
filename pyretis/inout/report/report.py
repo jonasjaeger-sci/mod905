@@ -85,6 +85,7 @@ def _rst_to_html(rst):
     htmlwriter = HTMLWriter()
     htmlwriter.translator_class = HTMLTranslator
     override = {'output_encoding': 'unicode'}
+    # custom css can be added by: 'stylesheet_path': '/path/to/style.css'
     html = docutils.core.publish_string(rst, writer=htmlwriter,
                                         settings_overrides=override)
     return html
@@ -224,7 +225,7 @@ def generate_report(report_type, analysis_results, output, template=None):
     # Remove white-space from numbers:
     for key in report['numbers']:
         report['numbers'][key] = report['numbers'][key].strip()
-    if output in ('latex', 'tex'):
+    if output in ('latex', 'tex', 'html', 'htm'):
         # Latexify numbers:
         for key in report['numbers']:
             report['numbers'][key] = latexify_number(report['numbers'][key])

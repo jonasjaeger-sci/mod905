@@ -28,16 +28,21 @@ run_analysis_files
 """
 from __future__ import absolute_import
 import logging
+import os
 # pyretis imports
+from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
-                              analyse_path_ensemble)
-from pyretis.inout.writers import get_file_object, PathEnsembleFile
-from pyretis.inout.plotting import create_plotter
+                              analyse_path_ensemble, match_probabilities)
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
                                                   txt_orderp_output,
-                                                  txt_path_output)
+                                                  txt_path_output,
+                                                  txt_matched_probability)
+from pyretis.inout.common import print_to_screen
+from pyretis.inout.plotting import create_plotter
+from pyretis.inout.report import generate_report
 from pyretis.inout.settings.settings import KEYWORDS
+from pyretis.inout.writers import get_file_object, PathEnsembleFile
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -49,6 +54,233 @@ _FILE_LOAD = {'cross': True,
               'order': True,
               'energy': True,
               'pathensemble': False}
+
+
+# Input files for analysis
+FILES = {'md-flux': {'cross': 'cross.dat',
+                     'energy': 'energy.dat',
+                     'order': 'order.dat'},
+         'md-nve': {'energy': 'energy.dat'},
+         'tis-single': {'pathensemble': 'pathensemble.dat'},
+         'tis': {'pathensemble': 'pathensemble.dat'}}
+
+
+def run_analysis(sim_settings):
+    """Run a predefined analysis task.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        Simulation settings and settings for the analysis.
+
+    Returns
+    -------
+    out : dict
+        A dictionary with the results from the analysis. This dict
+        can be used to generate a report.
+    """
+    sim_task = sim_settings['task']
+    if sim_task in set(('retis', 'tis')):
+        if sim_task == 'tis':
+            return run_tis_analysis(sim_settings)
+    else:
+        raw_data = []
+        add_outdir = sim_task in set(('tis-single',))
+        for file_type in FILES[sim_task]:
+            filename = FILES[sim_task][file_type]
+            if add_outdir:
+                filename = os.path.join(sim_settings['output-dir'], filename)
+            if os.path.isfile(filename):
+                raw_data.append((file_type, filename))
+        return run_analysis_files(sim_settings, raw_data)
+
+
+def get_flux_files(sim_settings):
+    """Return files for the flux analysis in TIS.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        The settings to use for an analysis/simulation
+
+    Returns
+    -------
+    local_settings : dict
+        This dict contains settings which can be used for a initial
+        flux analysis.
+    files : list of tuples
+        The tuples in this list are the files which can be analysed
+        further, using the settings in `out[0]`.
+    """
+    local_settings = {}
+    for key in sim_settings:
+        local_settings[key] = sim_settings[key]
+    local_settings['task'] = 'md-flux'
+    run_flux = False
+    files = []
+    for file_type in FILES['md-flux']:
+        filename = os.path.join('flux', FILES['md-flux'][file_type])
+        if os.path.isfile(filename):
+            files.append((file_type, filename))
+            if file_type == 'cross':
+                run_flux = True
+    if run_flux:
+        return local_settings, files
+    else:
+        return None, None
+
+
+def get_path_ensemble_files(ensemble, sim_settings, detect,
+                            interfaces):
+    """This method will return files for a single path ensemble.
+
+    Here, we will return the files needed to analyse a single path
+    ensemble and we will also return settings which can be used for
+    the analysis.
+
+    Parameters
+    ----------
+    ensemble : int
+        This is the integer representing the ensemble.
+    sim_settings : dict
+        The settings to use for an analysis/simulation
+    detect : float or None
+        The interface use for detecting if a path is successful for not.
+    interfaces : list of floats
+        The interfaces used for this particular path simulation.
+
+    Returns
+    -------
+    local_settings : dict
+        This dict contains settings which can be used for a initial
+        flux analysis.
+    files : list of tuples
+        The tuples in this list are the files which can be analysed
+        further, using the settings in `out[0]`.
+    """
+    sim_task = sim_settings['task']
+    local_settings = {}
+    for key in sim_settings:
+        local_settings[key] = sim_settings[key]
+    local_settings['detect'] = detect
+    local_settings['interfaces'] = interfaces
+    local_settings['ensemble'] = ensemble
+    files = []
+    for file_type in FILES[sim_task]:
+        filename = os.path.join(PATH_DIR_FMT.format(ensemble),
+                                FILES[sim_task][file_type])
+        if os.path.isfile(filename):
+            files.append((file_type, filename))
+    return local_settings, files
+
+
+def get_path_simulation_files(sim_settings):
+    """Set up for analysis of TIS and RETIS simulations.
+
+    For these kinds of simulations, we expect to analyse several
+    directories with raw-data. For TIS we expect to find a directory
+    with raw-data for the initial flux (named ``flux``) and the
+    directories for the path simulations (named ``001``, ``002`` etc.
+    for ensembles [0^+], [1^+] and so on). For RETIS, we expect to
+    find the same directories buth with a ``000`` (for the ``[0^-]``
+    ensemble) rather than the ``flux`` directory.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        The settings used for the (RE)TIS simulation(s). These settings
+        are used to get the interfaces used and the path ensembles
+        defined by these interfaces.
+
+    Returns
+    -------
+    all_settings : list of dict
+        This dict in this list contains settings which can be used for
+        analysis.
+    all_files : list of lists of tuples
+        `all_files[i]` is a list of files from path ensemble
+        simulation `i`. For TIS, `all_files[0]` should be the files
+        obtained in the initial flux simulation. These files can be
+        analysed using the settings in `all_settings[i]`.
+    """
+    # Check if we can do flux analysis:
+    all_files, all_settings = [], []
+    interfaces = sim_settings['interfaces']
+    reactant = interfaces[0]
+    product = interfaces[-1]
+    if sim_settings['task'] == 'tis':
+        setts, files = get_flux_files(sim_settings)
+        all_files.append(files)
+        all_settings.append(setts)
+    else:  # just add the 0 ensemble
+        detect = None
+        interface = [-float('inf'), reactant, reactant]
+        setts, files = get_path_ensemble_files(0, sim_settings, detect,
+                                               interface)
+        all_files.append(files)
+        all_settings.append(setts)
+    for i, middle in enumerate(interfaces[:-1]):
+        try:
+            detect = interfaces[i + 1]
+        except IndexError:
+            detect = product
+        interface = [reactant, middle, product]
+        setts, files = get_path_ensemble_files(i + 1, sim_settings, detect,
+                                               interface)
+        all_files.append(files)
+        all_settings.append(setts)
+    return all_settings, all_files
+
+
+def run_tis_analysis(sim_settings):
+    """Run the analysis for TIS.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        The settings to use for an analysis/simulation
+    all_settings : list of dicts
+        `all_settings[i]` contains information for analysing a
+        specific path ensemble (or for the initial flux simulation).
+    all_files : list of lists
+        `all_files[i]` contains the paths for the files to be analysed.
+    """
+    all_settings, all_files = get_path_simulation_files(sim_settings)
+    results = {'cross': None,
+               'pathensemble': [],
+               'matched': None}
+    nens = len(all_settings) - 1
+    for i, (sett, files) in enumerate(zip(all_settings, all_files)):
+        if i == 0:
+            # this is the initial flux calculation
+            if sett is None or files is None:
+                msgtxt = ('Data for initial flux calculation NOT found!\n'
+                          'The rate constant will NOT be calculated!')
+                logger.critical(msgtxt)
+                print_to_screen(msgtxt)
+            else:
+                msgtxt = 'Calculating initial flux...'
+                logger.info(msgtxt)
+                print_to_screen(msgtxt)
+                results['cross'] = run_analysis_files(sett, files)
+                report_txt = generate_report('md-flux', results,
+                                             output='txt')[0]
+                print_to_screen(''.join(report_txt))
+        else:
+            msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+            print_to_screen(msgtxt)
+            print_to_screen()
+            result = run_analysis_files(sett, files)
+            results['pathensemble'].append(result['pathensemble'])
+            report_txt = generate_report('tis-single', result,
+                                         output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+    # match probabilities:
+    out, fig, txt = analyse_and_output_matched(sim_settings,
+                                               results['pathensemble'])
+    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+    return results
 
 
 def run_analysis_files(settings, files):
@@ -442,4 +674,49 @@ def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
                                  out_fmt=txt['fmt'],
                                  backup=txt['backup'],
                                  path=settings.get('report-dir', None))
+    return result, figures, outtxt
+
+
+@check_output
+def analyse_and_output_matched(settings, raw_data, plotter=None, txt=None):
+    """Analyse and output matched probability,
+
+    This will calculate the over-all crossing probability by combining
+    results from many path simulations.
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains settings for the analysis and information
+        on how the simulation was performed.
+    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt : dict
+        If txt is different from None it is assumed to contain the
+        format for the text files and backup settings.
+
+    Returns
+    -------
+    out[0] : dict
+        This dict contains the results from the analysis
+    out[1] : list of dicts
+        A dictionary with the figure files created (if any).
+    out[2] : list of strings
+        A list with the text files created (if any).
+    """
+    figures, outtxt = None, None
+    path_results, path_ensembles_name, detect = [], [], []
+    for ensemble in raw_data:
+        path_results.append(ensemble['out'])
+        path_ensembles_name.append(ensemble['out']['ensemble'])
+        detect.append(ensemble['out']['detect'])
+    result = match_probabilities(path_results, detect)
+    if plotter is not None:
+        figures = plotter.plot_total_probability(path_ensembles_name, detect,
+                                                 result)
+    if txt is not None:
+        outtxt = txt_matched_probability(path_ensembles_name, detect, result,
+                                         out_fmt=txt['fmt'],
+                                         backup=txt['backup'],
+                                         path=settings.get('report-dir', None))
     return result, figures, outtxt

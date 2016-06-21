@@ -358,8 +358,9 @@ def txt_matched_probability(path_ensembles, detect, matched,
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`.
-        This is the path ensembles we have analysed.
+    path_ensembles : list of strings
+        This is the names for the path ensembles we have calculated
+        the probability for.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
@@ -385,15 +386,21 @@ def txt_matched_probability(path_ensembles, detect, matched,
     # start by creating the matched file, here we use a custom
     # file writer:
     outfile = name_file(PATH_MATCH['match'], out_fmt, path=path)
-    outfiles.append(outfile)
+    if outfile.endswith('.gz'):
+        outfile = outfile[:-3]
+        msgtxt = ('Writing gzipped matched probabilities is not supported!\n'
+                  'File will be written as text.')
+
+        logger.warning(msgtxt)
     if backup:
-        msg = create_backup(outfile)
-        if msg:
-            logger.warning(msg)
-    with open(outfile, 'w') as fhandle:
+        msgtxt = create_backup(outfile)
+        if msgtxt:
+            logger.warning(msgtxt)
+    outfiles.append(outfile)
+    with open(outfile, 'wb') as fhandle:
         for prob, ens, idet in zip(matched['matched-prob'],
                                    path_ensembles, detect):
-            header = 'Ensemble: {}, idetect: {}'.format(ens.ensemble, idet)
+            header = 'Ensemble: {}, idetect: {}'.format(ens, idet)
             np.savetxt(fhandle, prob, header=header)
     # output the over-all matched probability:
     outfile = name_file(PATH_MATCH['total'], out_fmt, path=path)
@@ -401,5 +408,7 @@ def txt_matched_probability(path_ensembles, detect, matched,
     interf = ' , '.join([str(idet) for idet in detect])
     header = 'Total matched probability. Interfaces: {}'
     txt_save_columns(outfile, header.format(interf),
-                     matched['overall-prob'], backup=backup)
+                     (matched['overall-prob'][:, 0],
+                      matched['overall-prob'][:, 1]),
+                     backup=backup)
     return outfiles
