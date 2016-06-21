@@ -978,8 +978,9 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`.
-        This is the path ensembles we have analysed.
+    path_ensembles : list of strings.
+        This is the name of the path ensembles we have calculated
+        the probability for.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
@@ -1012,10 +1013,14 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     else:
         colors = None
 
+    series.append({'type': 'xy',
+                   'x': matched['overall-prob'][:, 0],
+                   'y': matched['overall-prob'][:, 1],
+                   'lw': 5, 'label': 'Over-all'})
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):
         new_series = {'type': 'xy', 'x': prob[:, 0], 'y': prob[:, 1], 'lw': 3,
-                      'label': '${}$'.format(path_e.ensemble)}
+                      'label': '${}$'.format(path_e)}
         if colors is not None:
             new_series['color'] = colors[i]
         series.append(new_series)
