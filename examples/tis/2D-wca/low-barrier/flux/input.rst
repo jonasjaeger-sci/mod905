@@ -4,7 +4,7 @@ MD flux simulation
 units = lj
 task = md-flux
 steps = 10000000
-interfaces = [1.24]
+interfaces = [1.34]
 
 integrator = {'class': 'velocityverlet', 'timestep': 0.002}
 
