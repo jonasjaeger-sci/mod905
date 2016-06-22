@@ -82,7 +82,7 @@ The overall crossing probability is:
 
 .. admonition:: Overall probability
 
-   :math:`P_{\text{cross}} = @{{ numbers['pcross'] }}@  \pm  @{{ numbers['perr'] }}@`
+   :math:`P_{\text{cross}} = @{{ numbers['pcross'] }}@  \pm  @{{ numbers['perr'] }}@ \%`
 
 
 Other statistics:
