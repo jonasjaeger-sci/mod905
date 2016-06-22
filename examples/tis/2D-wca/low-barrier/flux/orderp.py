@@ -75,7 +75,6 @@ class OrderParameterWCAJCP1(OrderParameter):
         if self.periodic:
             delta = system.box.pbc_dist_coordinate(delta)
         r = np.sqrt(np.dot(delta, delta))
-#        dx = particles.pos[self.index[1]] - particles.pos[self.index[0]]
         dx = delta
         dv = particles.vel[self.index[1]] - particles.vel[self.index[0]]
 	dxdv = np.dot(dx,dv)/r
@@ -86,11 +85,6 @@ class OrderParameterWCAJCP1(OrderParameter):
             if system.forcefield.potential[item].__class__.__name__ == 'DoubleWellWCA':
                 potential_func = system.forcefield.potential[item]
                 break
-#        print (potential_func)
-#        print (potential_func.potential(particles,system.box))
-#        print(CONVERT['time'])
-#        print (particles.pos[0]*1.122462048309373,particles.pos[1]*1.122462048309373)
- 
         if (r<1.2):
             E = potential_func.potential(particles, system.box)+0.5*m*(dxdv)**2
             orderp = 1.19
