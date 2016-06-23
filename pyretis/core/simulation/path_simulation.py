@@ -20,8 +20,7 @@ import logging
 import numpy as np
 from pyretis.core.simulation.simulation import Simulation
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.tis import (generate_initial_path_kick,
-                              make_tis_step_ensemble,
+from pyretis.core.tis import (make_tis_step_ensemble,
                               initiate_path_ensemble)
 from pyretis.core.retis import make_retis_step
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -69,7 +68,7 @@ class SimulationSingleTIS(Simulation):
         Parameters
         ----------
         system : object like `System` from `pyretis.core.system`
-            This is the system we are investigating
+            This is the system we are investigating.
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
@@ -122,29 +121,6 @@ class SimulationSingleTIS(Simulation):
         # create a random generator for TIS moves etc.:
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
 
-    def _initialize_path(self):
-        """Initialize the path for the TIS simulation.
-
-        It will select the initialization method based on the setting
-        given in `self.tis_settings['initial_path']`.
-        """
-        path = None
-        if self.tis_settings['initial_path'] == 'kick':
-            logger.info('Initiating path by kicking')
-            path = generate_initial_path_kick(self.system,
-                                              self.interfaces,
-                                              self.orderparameter,
-                                              self.integrator,
-                                              self.rgen,
-                                              self.tis_settings)
-        else:
-            msg = ('Unknown initialization method ',
-                   "{}".format(self.tis_settings['initial_path']),
-                   ' requested!')
-            logger.error(msg)
-            raise ValueError(msg)
-        return path
-
     def step(self):
         """Perform a simulation step.
 
@@ -167,12 +143,9 @@ class SimulationSingleTIS(Simulation):
                                    self.rgen,
                                    self.tis_settings,
                                    self.cycle['step'])
-            #initial_path = self._initialize_path()
             trial = self.path_ensemble.last_path
             status = 'ACC'
             accept = True
-            #self.path_ensemble.add_path_data(initial_path, status,
-            #                                 cycle=self.cycle['step'])
             self.first_step = False
         else:
             self.cycle['step'] += 1
@@ -219,6 +192,48 @@ class SimulationRETIS(Simulation):
 
         Parameters
         ----------
+        system : object like `System` from `pyretis.core.system`
+            This is the system we are investigating.
+        integrator : object like `Integrator` from `pyretis.core.integrators`
+            This is the integrator that is used to propagate the system
+            in time.
+        orderparameter : function or object like `OrderParameter`
+            This function is used to calculate the order parameter.
+            It is assumed to be called as ``orderparameter(system)``
+            and to return at least two values where the first one
+            is the scalar order parameter.
+        path_ensembles : list of objects like `PathEnsemble`.
+            This is used for storing results for the different path
+            ensembles.
+        tis_settings : dict
+            This dict contains TIS specific settings, in particular we
+            expect that the following keys are defined:
+
+            * `aimless`: Determines if we should do aimless shooting
+              (True) or not (False).
+            * `sigma_v`: Values used for non-aimless shooting.
+            * `initial_path`: A string which defines the method used
+              for obtaining the initial path.
+            * `seed`: A integer seed for the random generator used for
+              the path ensemble we are simulating here.
+
+            Note that the `make_tis_step_ensemble` method will make
+            use of additional keys from `tis_settings`. Please see
+            this method for further details.
+        retis_settings : dict
+            This dict contains RETIS specific settings, in particular:
+
+            * `swapfreq`: The frequency for swapping moves.
+            * `relative_shoots`: If we should do relative shooting for
+              the ensembles.
+            * `nullmoves`: Should we perform nullmoves.
+            * `swapsimul`: Should we just swap a single pair or several
+              pairs.
+        steps : int, optional.
+            The number of simulation steps to perform.
+        startcycle : int, optional.
+            The cycle we start the simulation on, can be useful if
+            restarting.
         steps : int, optional.
             The number of simulation steps to perform.
         startcycle : int, optional.
