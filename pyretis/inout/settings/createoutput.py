@@ -95,21 +95,16 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
 
 _DEFAULT_OUTPUT['tis-single'] = [{'type': 'pathensemble',
                                   'name': 'pathensemble-file',
-                                  'when': {'every': 10},
+                                  'when': {'every': 1},
                                   'filename': 'pathensemble.dat'},
                                  {'type': 'pathensemble-screen',
                                   'name': 'pathensemble-screen',
                                   'when': {'every': 10}}]
-                                # {'type': 'trialpath',
-                                #  'name': 'trialpath',
-                                #  'when': {'every': 1},
-                                #  'orderp': {'filename': 'orderp.dat',
-                                #             'when': {'every': 10},
-                                #             'freq': 10},
-                                #  'energy': {'filename': 'energyp.dat',
-                                #             'when': {'every': 10},
-                                #             'freq': 10}}]
-_DEFAULT_OUTPUT['tis'] = []
+
+_DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
+                             'name': 'pathensemble-file',
+                             'when': {'every': 1},
+                             'filename': 'pathensemble.dat'}]
 
 
 class OutputTask(object):
