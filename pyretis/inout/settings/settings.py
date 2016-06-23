@@ -49,6 +49,7 @@ KEYWORDS = {'integrator': {'default': None},
             'dimensions': {'default': 3},
             'temperature': {'default': None},
             'tis': {'default': None},
+            'retis': {'default': None},
             'detect': {'default': None},  # detect interface
             'output-add': {'default': None},
             'output-modify': {'default': None},
@@ -339,7 +340,7 @@ def write_settings_file(settings, outfile, backup=True):
         # Also write remaining if anything
         to_write = ['\n\nOther settings\n--------------\n']
         for key in sorted(settings):
-            if not key in written and settings[key] is not None:
+            if key not in written and settings[key] is not None:
                 to_write.append(setting_to_text(settings, key))
                 written.add(key)
         if len(to_write) > 1:

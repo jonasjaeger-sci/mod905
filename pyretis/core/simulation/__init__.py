@@ -46,4 +46,4 @@ from .simulation import Simulation
 from .simulation_task import SimulationTask
 from .mc_simulation import UmbrellaWindowSimulation
 from .md_simulation import SimulationNVE, SimulationMDFlux
-from .path_simulation import SimulationSingleTIS
+from .path_simulation import SimulationSingleTIS, SimulationRETIS

@@ -56,7 +56,7 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     We have two options:
 
     1) Do the RETIS swapping moves. This is done by calling
-       `name_of_function`
+       `retis_move`
     2) Do TIS moves, either for all ensembles or for just one, based on
        values of relative shoot frequencies. This is done by calling
        `make_retis_tis_steps`.
@@ -442,32 +442,37 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
-    path0 = ensemble1.last_path.empty_path(maxlen=maxlen-1)
+    path0 = ensemble1.last_path.empty_path(maxlen=maxlen)
     integrator.propagate(path0, system, ensemble0.interfaces,
                          order_function, reverse=True)
-    # Reverse this path:
     path0 = path0.reverse()
-    # and add second point from [0^+] at the end:
+    # And add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.phasepoint(1))
+    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
+    path0.set_move('0s+')
     # 2) Generate path for [0^+] from [0^-]:
-    # We begin by creating a path with just the SECOND LAST point from [0^-]
-    path1 = path0.empty_path(maxlen=maxlen)
-    path1.append(*ensemble0.last_path.phasepoint(-2))
+    # This path will be generated starting from the LAST point of [0^-] which
+    # should be on the right side of the interface. We will also add the
+    # SECOND LAST point from [0^-] which should be on the left side of the
+    # interface, this is added after we have generated the path and we
+    # save space for this point by letting maxlen = maxlen-1 here:
+    path11 = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
-    # propagate forward, note that the maxlen is there set to
-    # maxlength - 1 since we already have one point in the path
-    integrator.propagate(path1, system, ensemble1.interfaces,
+    integrator.propagate(path11, system, ensemble1.interfaces,
                          order_function, reverse=False)
-    # update status, etc
-    status = 'ACC'  # we are optimistic and hope that this is the default
-    path0.set_move('s+')
-    path1.set_move('s-')
-    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
+    # Ok, now we need to just add the SECOND LAST point from [0^-1] as
+    # the first point for the path:
+    path1 = path0.empty_path(maxlen=maxlen)
+    path1.append(*ensemble0.last_path.phasepoint(-2))
+    path1 += path11
+    path1.set_move('0s-')
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'
+    # Update status, etc
+    status = 'ACC'  # we are optimistic and hope that this is the default
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'

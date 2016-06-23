@@ -248,6 +248,43 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
             task.output(result)
 
 
+def run_retis_simulation(sim, sim_settings, progress=False,
+                         position=0):
+    """This will run a RETIS simulation.
+
+    Parameters
+    ----------
+    sim : object like `Simulation`.
+        This is the simulation to run.
+    sim_settings : dict
+        The simulation settings.
+    progress : boolean, optional
+        If True, we will display a progress bar, otherwise we print
+        results to the screen.
+    position : integer
+        Used to control location of progress bars
+    """
+    # ensure that we create output directories
+    output_tasks = []
+    print_and_loginfo('Creating output directories:')
+    for ensemble in sim.path_ensembles:
+        dirname = ensemble.ensemble_name_simple()
+        msg_dir = make_dirs(dirname)
+        msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name(), msg_dir)
+        print_and_loginfo(msgtxt)
+        sim_settings['output-dir'] = dirname
+        ensemble_task = get_tasks(sim_settings, progress=progress)
+        output_tasks.extend(ensemble_task)
+    print_and_loginfo('Running RETIS ensemble simulation')
+    tqd = use_tqdm(progress)
+    for result in tqd(sim.run(), total=sim_settings['steps'],
+                      desc='RETIS',
+                      position=position):
+        for task, ensemble in zip(output_tasks, sim.path_ensembles):
+            result['pathensemble'] = ensemble
+            task.output(result)
+
+
 def run_tis_simulation(settings_all, settings_tis, progress=False):
     """This will run several TIS simulations.
 
@@ -335,7 +372,8 @@ def run_generic_simulation(sim, sim_settings, progress=False):
 _RUNNERS = {'md-flux': run_md_flux_simulation,
             'md-nve': run_md_simulation,
             'tis-single': run_tis_single_simulation,
-            'tis': run_tis_simulation}
+            'tis': run_tis_simulation,
+            'retis': run_retis_simulation}
 
 
 if __name__ == '__main__':

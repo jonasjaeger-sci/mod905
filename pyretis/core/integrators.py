@@ -128,7 +128,7 @@ class Integrator(object):
         return self.delta_t > 0.0
 
     def propagate(self, path, system, interfaces, order_function,
-                  reverse=False):
+                  reverse=False, thermo=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -158,6 +158,8 @@ class Integrator(object):
             first item is equal to the order parameter.
         reverse : boolean
             If True, the system will be propagated backwards in time.
+        thermo : boolean
+            If True, we will do some extra calculation of energies.
         """
         status = 'Generating path...'
         success = False
@@ -165,10 +167,16 @@ class Integrator(object):
         left, _, right = interfaces
         while True:
             orderp = order_function(system)
-            add = path.append(orderp,
-                              system.particles.pos,
-                              system.particles.vel,
-                              calculate_thermo(system))
+            if thermo:
+                add = path.append(orderp,
+                                  system.particles.pos,
+                                  system.particles.vel,
+                                  calculate_thermo(system))
+            else:
+                add = path.append(orderp,
+                                  system.particles.pos,
+                                  system.particles.vel,
+                                  None)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -176,11 +184,11 @@ class Integrator(object):
                     status = 'Could not add for unknown reason'
                 success = False
                 break
-            if orderp[0] < left:
+            if path.ordermin[0] < left:
                 status = 'Crossed left interface!'
                 success = True
                 break
-            elif orderp[0] > right:
+            elif path.ordermax[0] > right:
                 status = 'Crossed right interface!'
                 success = True
                 break

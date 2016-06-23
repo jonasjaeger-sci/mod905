@@ -20,8 +20,11 @@ from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from pyretis.core.simulation.path_simulation import SimulationSingleTIS
-from pyretis.core.pathensemble import PathEnsemble, PATH_DIR_FMT
+from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
+                                                     SimulationRETIS)
+from pyretis.core.pathensemble import (PathEnsemble,
+                                       PATH_DIR_FMT,
+                                       create_path_ensembles)
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter,
                                            check_settings)
@@ -131,6 +134,33 @@ def create_tis_single_simulation(settings, system):
                                settings['tis'],
                                steps=settings['steps'],
                                startcycle=settings.get('startcycle', 0))
+
+
+def create_retis_simulation(settings, system):
+    """This will set up and create a RETIS simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings needed to set up the simulation.
+    system : object like `System`
+        The system we are going to simulate.
+
+    Returns
+    -------
+    out : object like `Simulation`
+        The object representing the simulation to run.
+    """
+    integ = create_integrator(settings)
+    orderp = create_orderparameter(settings)
+    path_ensembles, _ = create_path_ensembles(settings['interfaces'],
+                                              include_zero=True)
+    return SimulationRETIS(system, integ, orderp,
+                           path_ensembles,
+                           settings['tis'],
+                           settings['retis'],
+                           steps=settings['steps'],
+                           startcycle=settings.get('startcycle', 0))
 
 
 def create_path_ensemble(settings):
@@ -250,7 +280,11 @@ def create_simulation(settings, system):
                'tis-single': {'create': create_tis_single_simulation,
                               'single': True,
                               'required': ('steps', 'tis', 'integrator',
-                                           'interfaces')}}
+                                           'interfaces')},
+               'retis': {'create': create_retis_simulation,
+                         'single': True,
+                         'required': ('steps', 'tis', 'integrator',
+                                      'interfaces', 'retis')}}
 
     if sim_type not in sim_map:
         msgtxt = 'Unknown simulation task {}'.format(sim_type)
