@@ -449,7 +449,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # And add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.phasepoint(1))
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
-    path0.set_move('0s+')
+    path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
     # This path will be generated starting from the LAST point of [0^-] which
     # should be on the right side of the interface. We will also add the
@@ -469,7 +469,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     path1 = path0.empty_path(maxlen=maxlen)
     path1.append(*ensemble0.last_path.phasepoint(-2))
     path1 += path11
-    path1.set_move('0s-')
+    path1.set_move('s-')
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'
     # Update status, etc
     status = 'ACC'  # we are optimistic and hope that this is the default
