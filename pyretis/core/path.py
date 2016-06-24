@@ -96,7 +96,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             # Note that now there is a chance of truncating the path while
             # pasting!
             maxlen = max(path_back.maxlen, path_forw.maxlen)
-            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
+            msg = 'Unequal length: Using {} for the new path!'.format(maxlen)
             logger.warning(msg)
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = path_back.empty_path(maxlen=maxlen, time_origin=time_origin)
@@ -358,6 +358,7 @@ class PathBase(object):
         else:
             end = None
             logger.info('Undefined end point.')
+            print('Undefined end point.')
         return end
 
     def get_start_point(self, left, right):
@@ -386,6 +387,7 @@ class PathBase(object):
         else:
             start = None
             logger.info('Undefined starting point.')
+            print('Undefined starting point.')
         return start
 
     def get_shooting_point(self):
@@ -427,7 +429,7 @@ class PathBase(object):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -547,9 +549,12 @@ class PathBase(object):
         """Reverse a path and return the reverse path as a new path.
 
         This will simply reverse a path and return the reversed path as
-        a new `Path` object. An `order_func` can be specified here if
-        we have to recalculate the order parameter. But that will
-        probably only happen if we are crazy.
+        a new `Path` object. Note that currently, recalculating
+        order parameters have not been implemented! An `order_func` can
+        be specified here if we have to recalculate the order parameter.
+        Typically, reversing will not change the order parameter,
+        but it might change the velocity for the order parameter and so
+        on.
 
         Parameters
         ----------
@@ -571,7 +576,8 @@ class PathBase(object):
             if vel is not None:
                 vel *= -1
             if order_func and pos is not None:
-                orderp = order_func(pos, vel)
+                msg = 'Recalculating order parameter(s) not implemented!'
+                logger.critical(msg)
             else:
                 orderp = phasepoint[0]
             app = new_path.append(orderp, pos, vel, energy)
@@ -666,7 +672,7 @@ class Path(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -799,7 +805,7 @@ class ReservoirPath(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
