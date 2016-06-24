@@ -40,6 +40,11 @@ calculate_thermo
     potential, kinetic and total energies per particle, the temperature,
     the pressure and the momentum.
 
+calculate_thermo_path
+    Calculate and return some thermodynamic properties. This method
+    is similar to the `calculate_thermo`, however it is simpler and
+    calculates fewer quantities.
+
 reset_momentum
     Set linear momentum (for a selection of particles) to zero.
 """
@@ -55,6 +60,7 @@ __all__ = ['atomic_kinetic_energy_tensor',
            'calculate_pressure_tensor',
            'calculate_scalar_pressure',
            'calculate_thermo',
+           'calculate_thermo_path',
            'reset_momentum']
 
 
@@ -382,6 +388,33 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
               'temp': temp, 'press': press, 'mom': mom,
               'press-tens': press_tens}
     return result
+
+
+def calculate_thermo_path(system):
+    """Calculate and return several thermodynamic properties.
+
+    The calculated properties are the potential, kinetic and total
+    energies for the system and the current temperature.
+
+    Parameters
+    ----------
+    system : object like `System` from `pyretis.core.system`.
+        This object is used to access the particles and the box.
+
+    Returns
+    -------
+    out : dict
+        This dict contains the float that is calculated in this routine.
+    """
+    particles = system.particles
+    kin_tens = calculate_kinetic_energy_tensor(particles)
+    _, temp, _ = calculate_kinetic_temperature(particles,
+                                               system.get_boltzmann(),
+                                               dof=system.temperature['dof'],
+                                               kin_tensor=kin_tens)
+    ekin = kin_tens.trace()
+    vpot = system.v_pot
+    return {'vpot': vpot, 'ekin': ekin, 'etot': ekin + vpot, 'temp': temp}
 
 
 def reset_momentum(particles, selection=None, dim=None):
