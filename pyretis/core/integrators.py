@@ -33,7 +33,7 @@ import logging
 import numpy as np
 from pyretis.core.common import generic_factory
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.particlefunctions import calculate_thermo
+from pyretis.core.particlefunctions import calculate_thermo_path
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -162,21 +162,17 @@ class Integrator(object):
             If True, we will do some extra calculation of energies.
         """
         status = 'Generating path...'
+        logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
         left, _, right = interfaces
         while True:
             orderp = order_function(system)
-            if thermo:
-                add = path.append(orderp,
-                                  system.particles.pos,
-                                  system.particles.vel,
-                                  calculate_thermo(system))
-            else:
-                add = path.append(orderp,
-                                  system.particles.pos,
-                                  system.particles.vel,
-                                  None)
+            energy = calculate_thermo_path(system) if thermo else None
+            add = path.append(orderp,
+                              system.particles.pos,
+                              system.particles.vel,
+                              energy)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -199,6 +195,8 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
+        msg = 'Propagate done: "{}" (success: {}'.format(status, success)
+        logger.debug(msg)
         return success, status
 
     def __call__(self, system):
