@@ -426,10 +426,10 @@ def reset_momentum(particles, selection=None, dim=None):
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
-    dim : list
-        If dim is None, ``reset_momentum`` will be applied to
-        all dimensions. Otherwise it will only be applied to the
-        dimensions where dim is True.
+    dim : list or None, optional
+        If ``dim`` is None, the momentum will be reset for ALL
+        dimensions. Otherwise it will only be applied to the
+        dimensions where ``dim`` is True.
 
     Returns
     -------

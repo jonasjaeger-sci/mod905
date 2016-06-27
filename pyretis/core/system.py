@@ -44,7 +44,10 @@ class System(object):
         * `dof`: Information about the degrees of freedom for the
           system.
     v_pot : float
-        the potential energy of the system
+        The potential energy of the system.
+    set_energy : float
+        The total energy of the system in case we want to fix this
+        value.
     particles : object like `pyretis.core.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
@@ -62,7 +65,8 @@ class System(object):
         units in `pyretis.core.units`.
     """
 
-    def __init__(self, units='eV/K', box=None, temperature=None):
+    def __init__(self, units='lj', box=None, temperature=None,
+                 energy=None):
         """Initialization of the system.
 
         Parameters
@@ -74,6 +78,9 @@ class System(object):
             The (desired) temperature of the system, if applicable.
         units : string
             The system of units to use in the simulation box.
+        energy : float, optional
+            In case we want to fix the total energy of the system to
+            a given value.
 
         Note
         ----
@@ -91,6 +98,7 @@ class System(object):
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
+        self.set_energy = energy
         self.post_setup = []
 
     def adjust_dof(self, dof):

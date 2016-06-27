@@ -28,7 +28,8 @@ import logging
 import numpy as np
 from pyretis.core.path import Path, paste_paths
 from pyretis.core.montecarlo import metropolis_accept_reject
-from pyretis.core.particlefunctions import calculate_kinetic_energy
+from pyretis.core.particlefunctions import (calculate_kinetic_energy,
+                                            reset_momentum)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -179,11 +180,9 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
-        # print('Reversing path')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
-        # print('Shooting')
         accept, new_path, status = _shoot(path, system, interfaces,
                                           order_function, integrator, rgen,
                                           tis_settings)
@@ -534,14 +533,17 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     return previous, particles.get_phase_point()
 
 
-def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
-    """Make a random modification to a time slice (modify the velocities).
+def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
+                    rescale=False):
+    """Make a random modification to a time slice.
+
+    This method will modify the velocities of a time slice.
 
     Parameters
     ----------
     system : object like `System` from `.system`.
-        System is used here since we need access to the temperature
-        and to the particle list.
+        System is used here since we need access to the particle
+        list.
     rgen : object like `RandomGenerator` from `.random_gen`.
         This is the random generator that will be used.
     sigma_v : numpy.array
@@ -550,7 +552,13 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
     aimless : boolean, optional
         Determines if we should do aimless shooting or not.
     momentum : boolean, optional
-        This handles resetting of the momentum.
+        If True, we reset the linear momentum to zero after kicking.
+    rescale : boolean, optional
+        For some NVE simulations, we rescale the energy to a fixed
+        value. If `rescale` is True, we will rescale the energy (after
+        modification of the velocities) to match the set energy
+        specified in `system.set_energy`.
+
 
     Returns
     -------
@@ -559,10 +567,11 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
     kin_new : float
         The new kinetic energy
     """
-    # NOTE: kin_old might be set/obtained differently according to
-    # the dynamics. E.g. In NVE it is just E-Epot.
     particles = system.particles
-    kin_old = calculate_kinetic_energy(particles)
+    if rescale:
+        kin_old = system.set_energy - system.v_pot
+    else:
+        kin_old = calculate_kinetic_energy(particles)[0]
     if aimless:
         vel, _ = rgen.draw_maxwellian_velocities(system)
         particles.vel = vel
@@ -570,10 +579,11 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False):
         dvel, _ = rgen.draw_maxwellian_velocities(system, sigma_v=sigma_v)
         particles.vel = particles.vel + dvel
     if momentum:
-        pass
-    kin_new = calculate_kinetic_energy(particles)
-    # NOTE velocity should for some dynamics be rescaled
-    dek = kin_new[0] - kin_old[0]
+        reset_momentum(particles)
+    if rescale:
+        system.rescale_velocities(system.set_energy)
+    kin_new = calculate_kinetic_energy(particles)[0]
+    dek = kin_new - kin_old
     return dek, kin_new
 
 
