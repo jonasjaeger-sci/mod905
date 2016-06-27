@@ -233,7 +233,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     length_acc = np.array(length_acc)
     length_all = []
     for path in path_ensemble.paths:
-        length = _get_path_length(path)
+        length = _get_path_length(path, path_ensemble.ensemble)
         if length is not None:
             length_all.append(length)
     length_all = np.array(length_all)
@@ -242,7 +242,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     return hist_acc, hist_all
 
 
-def _get_path_length(path):
+def _get_path_length(path, ensemble):
     """Return the path length for different moves.
 
     Different moves may have a different way of obtaining the path
@@ -255,6 +255,9 @@ def _get_path_length(path):
         It can typically be obtained by iterating over the path
         ensemble object, e.g. with a
         `for path in path_ensemble.get_paths():`.
+    ensemble : int
+        This integer identifies the ensemble. This is used for
+        the swapping moves in [0^-] and [0^+].
 
     Returns
     -------
@@ -264,7 +267,12 @@ def _get_path_length(path):
     move = path['generated'][0]
     return_table = {'tr': 0, 's+': 0, 's-': 0, '00': 0}
     if move in return_table:
-        return return_table[move]
+        if move == 's+' and ensemble == 0:
+            return path['length'] - 2
+        elif move == 's-' and ensemble == 1:
+            return path['length'] - 2
+        else:
+            return return_table[move]
     else:
         if move == 'sh':
             return path['length'] - 1
@@ -519,10 +527,14 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     .. [wikimov] Wikipedia, "Moving Average",
        http://en.wikipedia.org/wiki/Moving_average
     """
+    if path_ensemble.ensemble == 0:
+        return analyse_path_ensemble0(path_ensemble, settings, idetect)
+    ensemble = path_ensemble.ensemble
     result = {'prun': [],
               'cycle': [],
               'detect': idetect,
               'ensemble': path_ensemble.ensemble_name(),
+              'ensembleid': ensemble,
               'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
@@ -554,7 +566,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
         result['cycle'].append(path['cycle'])
         # get the length - note that this length depends on the type of move
         # see the `_get_path_length` function.
-        length = _get_path_length(path)
+        length = _get_path_length(path, ensemble)
         if length is not None:
             length_all.append(length)
         # update the shoot stats, this will only be done for shooting moves
@@ -593,6 +605,49 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = npath
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
+    return result
+
+
+def analyse_path_ensemble0(path_ensemble, settings, idetect):
+    """Analyse the [0^-] ensemble"""
+    ensemble = path_ensemble.ensemble
+    result = {'cycle': [],
+              'detect': idetect,
+              'ensemble': path_ensemble.ensemble_name(),
+              'ensembleid': ensemble,
+              'interfaces': [i for i in path_ensemble.interfaces]}
+    length_acc, length_all, weights = [], [], []
+    shoot_stats = {'REJ': [], 'ALL': []}
+    nacc, npath = 0, 0
+    for path in path_ensemble.get_paths():  # loop over all paths
+        npath += 1
+        if path['status'] == 'ACC':
+            nacc += 1
+            weights.append(1)
+            length_acc.append(path['length'])
+        else:  # just increase the weigths
+            weights[-1] += 1
+        result['cycle'].append(path['cycle'])
+        length = _get_path_length(path, ensemble)
+        if length is not None:
+            length_all.append(length)
+        # update the shoot stats, this will only be done for shooting moves
+        _update_shoot_stats(shoot_stats, path)
+    # Perform the different analysis tasks:
+    result['cycle'] = np.array(result['cycle'])
+    # 1) length analysis:
+    hist1 = histogram_and_avg(np.repeat(length_acc, weights),
+                              settings['bins'], density=True)
+    hist2 = histogram_and_avg(np.array(length_all),
+                              settings['bins'], density=True)
+    result['pathlength'] = (hist1, hist2)
+    # 2) shoots analysis:
+    result['shoots'] = _create_shoot_histograms(shoot_stats,
+                                                settings['bins'])
+    # 3) Add some simple efficiency metrics:
+    result['efficiency'] = [float(nacc) / float(npath),
+                            float(npath) * hist2[2][0]]
+    result['tis-cycles'] = npath
     return result
 
 
