@@ -1,0 +1,6 @@
+Results for [0^-]
+=================
+
+@{{ tables['interfaces0'] }}@
+
+@{{ tables['path0'] }}@

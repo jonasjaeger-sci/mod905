@@ -30,6 +30,7 @@ from __future__ import absolute_import
 import logging
 import os
 # pyretis imports
+from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble, match_probabilities)
@@ -62,7 +63,8 @@ FILES = {'md-flux': {'cross': 'cross.dat',
                      'order': 'order.dat'},
          'md-nve': {'energy': 'energy.dat'},
          'tis-single': {'pathensemble': 'pathensemble.dat'},
-         'tis': {'pathensemble': 'pathensemble.dat'}}
+         'tis': {'pathensemble': 'pathensemble.dat'},
+         'retis': {'pathensemble': 'pathensemble.dat'}}
 
 
 def run_analysis(sim_settings):
@@ -83,6 +85,8 @@ def run_analysis(sim_settings):
     if sim_task in set(('retis', 'tis')):
         if sim_task == 'tis':
             return run_tis_analysis(sim_settings)
+        elif sim_task == 'retis':
+            return run_retis_analysis(sim_settings)
     else:
         raw_data = []
         add_outdir = sim_task in set(('tis-single',))
@@ -196,6 +200,27 @@ def get_path_simulation_files(sim_settings):
     return all_settings, all_files
 
 
+def print_matched(matched_out, flux=None):
+    """Just print out matched results"""
+    print_to_screen('Overall results')
+    print_to_screen('===============')
+    print_to_screen('')
+    msgtxt = 'TIS Crossing Probability: {:<16.9e}'.format(matched_out['prob'])
+    print_to_screen(msgtxt)
+    scaled = matched_out['relerror']*100
+    if scaled > 1:
+        fmt_scale = '{:<16.9f}'.format(scaled)
+    else:
+        fmt_scale = '{:<16.ef}'.format(scaled)
+    msgtxt = 'Relative error: {} %'.format(fmt_scale.rstrip())
+    print_to_screen(msgtxt)
+    print_to_screen('')
+    if flux is not None:
+        msgtxt = 'Initial flux: {:<16.9f}'.format(flux)
+        print_to_screen(msgtxt)
+        print_to_screen('')
+
+
 def run_tis_analysis(sim_settings):
     """Run the analysis for TIS.
 
@@ -234,6 +259,62 @@ def run_tis_analysis(sim_settings):
     out, fig, txt = analyse_and_output_matched(sim_settings,
                                                results['pathensemble'])
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+    print_matched(out)
+    return results
+
+
+def run_retis_analysis(sim_settings):
+    """Run the analysis for RETIS.
+
+    Parameters
+    ----------
+    sim_settings : dict
+        The settings to use for an analysis/simulation
+    all_settings : list of dicts
+        `all_settings[i]` contains information for analysing a
+        specific path ensemble.
+    all_files : list of lists
+        `all_files[i]` contains the paths for the files to be analysed.
+    """
+    units = sim_settings['units']
+    create_conversion_factors(units, **sim_settings['units-base'])
+    all_settings, all_files = get_path_simulation_files(sim_settings)
+    results = {'cross': None,
+               'pathensemble': [],
+               'matched': None}
+    nens = len(all_settings) - 1
+    print_to_screen()
+    for i, (sett, files) in enumerate(zip(all_settings, all_files)):
+        msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+        print_to_screen(msgtxt)
+        print_to_screen()
+        if i == 0:
+            result = run_analysis_files(sett, files)
+            results['pathensemble0'] = result['pathensemble']
+            report_txt = generate_report('retis0', result, output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+        else:
+            result = run_analysis_files(sett, files)
+            results['pathensemble'].append(result['pathensemble'])
+            report_txt = generate_report('tis-single', result,
+                                         output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+    # match probabilities:
+    out, fig, txt = analyse_and_output_matched(sim_settings,
+                                               results['pathensemble'])
+    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+    dist1 = results['pathensemble0']['out']['pathlength']
+    dist2 = results['pathensemble'][0]['out']['pathlength']
+    flux = 1.0 / ((dist1[0][2][0]-2. + dist2[0][2][0]-2.) *
+                  sim_settings['integrator']['timestep'])
+    results['flux'] = {'value': flux, 'error': float('inf'),
+                       'unit': units}
+    results['fluxc'] = {'value': flux / CONVERT['time'][units, 'ns'],
+                        'error': float('inf'),
+                        'unit': 'ns'}
+    print_matched(out, flux)
     return results
 
 
@@ -614,12 +695,6 @@ def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
         logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     idetect = path_ensemble.detect
-    if idetect is None:
-        idetect = settings.get('detect', None)
-        if idetect is None:  # Time to panic:
-            msgtxt = 'Could not determine detect interface!'
-            logger.error(msgtxt)
-            raise ValueError(msgtxt)
     result = analyse_path_ensemble(path_ensemble, settings, idetect)
     if plotter is not None:
         figures = plotter.plot_path(path_ensemble, result, idetect)

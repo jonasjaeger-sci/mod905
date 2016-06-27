@@ -33,7 +33,9 @@ from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as PROGRAM_NAME
 from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
-from pyretis.inout.report.report_path import (generate_report_tis,
+from pyretis.inout.report.report_path import (generate_report_retis,
+                                              generate_report_retis0,
+                                              generate_report_tis,
                                               generate_report_tis_path)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -54,10 +56,14 @@ _TEMPLATES = {'rst': 'report_{}.rst',
               'txt': 'report_{}.txt'}
 
 _TEMPLATE_NAMES = {'md-flux': 'mdflux',
+                   'retis': 'retis',
+                   'retis0': 'retis0',
                    'tis': 'tis',
                    'tis-single': 'tis_single'}
 
 _REPORT_MAP = {'md-flux': generate_report_mdflux,
+               'retis': generate_report_retis,
+               'retis0': generate_report_retis0,
                'tis': generate_report_tis,
                'tis-single': generate_report_tis_path}
 # Table for file extensions:
