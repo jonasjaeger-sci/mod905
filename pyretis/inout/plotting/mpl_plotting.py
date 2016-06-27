@@ -42,7 +42,7 @@ if matplotlib.__version__ < '1.5.0':
     _STYLEFILE = 'pyretis-old.mplstyle'
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
-    logger.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
+    logger.warning('Using Matplotlib version < 1.4.0, please upgrade.')
 else:
     try:
         import matplotlib.style
@@ -299,8 +299,7 @@ def mpl_set_style(style='pyretis'):
             logger.info(msgtxt)
             rcpar = matplotlib.rc_params_from_file(style)
             # TODO: For mpl version 1.5: use_default_template=False can be
-            # added to matplotlib.rc_params_from_file(). But this is
-            # not added yet in case we break something.
+            # added to matplotlib.rc_params_from_file().
             matplotlib.rcParams.update(rcpar)
 
 
@@ -714,34 +713,37 @@ def mpl_plot_path(path_ensemble, results, idetect):
     out = {}
     for key in PATHFILES:
         out[key] = PATHFILES[key].format(ens_simplified)
-    # First plot `pcross` vs `lambda` with the `idetect` surface:
-    series = [{'type': 'xy', 'x': results['pcross'][0],
-               'y': results['pcross'][1]}]
-    series.append({'type': 'vline', 'x': idetect, 'ls': '--',
-                   'alpha': 0.8})
-    figset = {'xlabel': r'Order parameter ($\lambda$)',
-              'ylabel': 'Probability',
-              'title': r'Ensemble ${0}$'.format(ens)}
-    canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
-    # Next plot running ` pcross`:
-    series = [{'type': 'xy', 'x': results['cycle'],
-               'y': results['prun']}]
-    series.append({'type': 'hline', 'y': results['prun'][-1],
-                   'ls': '--', 'alpha': 0.8})
-    figset = {'xlabel': 'Cycle number',
-              'ylabel': 'Probability (running avg.)',
-              'title': r'Ensemble ${0}$'.format(ens)}
-    canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
-    # Plot results of block-error analysis:
-    series = [{'type': 'xy', 'x': results['blockerror'][0],
-               'y': results['blockerror'][3]}]
-    series.append({'type': 'hline', 'y': results['blockerror'][4],
-                   'ls': '--', 'alpha': 0.8})
-    title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
-    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
-              'title': title.format(ens, results['blockerror'][4],
-                                    results['blockerror'][6])}
-    canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'pcross' in results:
+        # First plot `pcross` vs `lambda` with the `idetect` surface:
+        series = [{'type': 'xy', 'x': results['pcross'][0],
+                   'y': results['pcross'][1]}]
+        series.append({'type': 'vline', 'x': idetect, 'ls': '--',
+                       'alpha': 0.8})
+        figset = {'xlabel': r'Order parameter ($\lambda$)',
+                  'ylabel': 'Probability',
+                  'title': r'Ensemble ${0}$'.format(ens)}
+        canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'prun' in results:
+        # Next plot running ` pcross`:
+        series = [{'type': 'xy', 'x': results['cycle'],
+                   'y': results['prun']}]
+        series.append({'type': 'hline', 'y': results['prun'][-1],
+                       'ls': '--', 'alpha': 0.8})
+        figset = {'xlabel': 'Cycle number',
+                  'ylabel': 'Probability (running avg.)',
+                  'title': r'Ensemble ${0}$'.format(ens)}
+        canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'blockerror' in results:
+        # Plot results of block-error analysis:
+        series = [{'type': 'xy', 'x': results['blockerror'][0],
+                   'y': results['blockerror'][3]}]
+        series.append({'type': 'hline', 'y': results['blockerror'][4],
+                       'ls': '--', 'alpha': 0.8})
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['blockerror'][4],
+                                        results['blockerror'][6])}
+        canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
     # Plot length-histogram:
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
     series = [{'type': 'xy', 'x': results['pathlength'][0][1],
