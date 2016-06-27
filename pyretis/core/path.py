@@ -358,7 +358,6 @@ class PathBase(object):
         else:
             end = None
             logger.info('Undefined end point.')
-            print('Undefined end point.')
         return end
 
     def get_start_point(self, left, right):
@@ -387,7 +386,6 @@ class PathBase(object):
         else:
             start = None
             logger.info('Undefined starting point.')
-            print('Undefined starting point.')
         return start
 
     def get_shooting_point(self):
