@@ -33,13 +33,14 @@ import os
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
-                              analyse_path_ensemble, match_probabilities)
+                              analyse_path_ensemble, match_probabilities,
+                              retis_flux, retis_rate)
 from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
                                                   txt_flux_output,
                                                   txt_orderp_output,
                                                   txt_path_output,
                                                   txt_matched_probability)
-from pyretis.inout.common import print_to_screen
+from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings.settings import KEYWORDS
@@ -200,25 +201,14 @@ def get_path_simulation_files(sim_settings):
     return all_settings, all_files
 
 
-def print_matched(matched_out, flux=None):
+def print_value_error(heading, value, rel_error):
     """Just print out matched results"""
-    print_to_screen('Overall results')
-    print_to_screen('===============')
-    print_to_screen('')
-    msgtxt = 'TIS Crossing Probability: {:<16.9e}'.format(matched_out['prob'])
+    val = format_number(value, 0.1, 100)
+    msgtxt = '{}: {}'.format(heading, val)
+    print_to_screen(msgtxt.strip())
+    fmt_scale = format_number(rel_error * 100, 0.1, 100)
+    msgtxt = '(Relative error: {} %)'.format(fmt_scale.rstrip())
     print_to_screen(msgtxt)
-    scaled = matched_out['relerror']*100
-    if scaled > 1:
-        fmt_scale = '{:<16.9f}'.format(scaled)
-    else:
-        fmt_scale = '{:<16.ef}'.format(scaled)
-    msgtxt = 'Relative error: {} %'.format(fmt_scale.rstrip())
-    print_to_screen(msgtxt)
-    print_to_screen('')
-    if flux is not None:
-        msgtxt = 'Initial flux: {:<16.9f}'.format(flux)
-        print_to_screen(msgtxt)
-        print_to_screen('')
 
 
 def run_tis_analysis(sim_settings):
@@ -259,7 +249,11 @@ def run_tis_analysis(sim_settings):
     out, fig, txt = analyse_and_output_matched(sim_settings,
                                                results['pathensemble'])
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-    print_matched(out)
+    print_to_screen('Overall results')
+    print_to_screen('===============')
+    print_to_screen('')
+    print_value_error('TIS Crossing probability',
+                      out['prob'], out['relerror'])
     return results
 
 
@@ -305,16 +299,31 @@ def run_retis_analysis(sim_settings):
     out, fig, txt = analyse_and_output_matched(sim_settings,
                                                results['pathensemble'])
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-    dist1 = results['pathensemble0']['out']['pathlength']
-    dist2 = results['pathensemble'][0]['out']['pathlength']
-    flux = 1.0 / ((dist1[0][2][0]-2. + dist2[0][2][0]-2.) *
-                  sim_settings['integrator']['timestep'])
-    results['flux'] = {'value': flux, 'error': float('inf'),
+    flux, flux_error = retis_flux(results['pathensemble0'],
+                                  results['pathensemble'][0],
+                                  sim_settings['integrator']['timestep'])
+    results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
     results['fluxc'] = {'value': flux / CONVERT['time'][units, 'ns'],
-                        'error': float('inf'),
+                        'error': flux_error,
                         'unit': 'ns'}
-    print_matched(out, flux)
+    rate, rate_error = retis_rate(out['prob'], out['relerror'],
+                                  flux, flux_error)
+    results['rate'] = {'value': rate, 'error': rate_error,
+                       'unit': units}
+    results['ratec'] = {'value': rate / CONVERT['time'][units, 'ns'],
+                        'error': rate_error, 'unit': 'ns'}
+    print_to_screen('Overall results')
+    print_to_screen('===============')
+    print_to_screen('')
+    print_value_error('RETIS Crossing probability',
+                      out['prob'], out['relerror'])
+    print_to_screen('')
+    print_value_error('Initial flux (units 1/{})'.format(units), flux,
+                      flux_error)
+    print_to_screen('')
+    print_value_error('Rate constant (units 1/{})'.format(units), rate,
+                      rate_error)
     return results
 
 

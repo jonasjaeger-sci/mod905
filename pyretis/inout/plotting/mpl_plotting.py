@@ -744,6 +744,18 @@ def mpl_plot_path(path_ensemble, results, idetect):
                   'title': title.format(ens, results['blockerror'][4],
                                         results['blockerror'][6])}
         canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'lengtherror' in results:
+        # Plot results of length-error analysis:
+        series = [{'type': 'xy', 'x': results['lengtherror'][0],
+                   'y': results['lengtherror'][3]}]
+        series.append({'type': 'hline', 'y': results['lengtherror'][4],
+                       'ls': '--', 'alpha': 0.8})
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['lengtherror'][4],
+                                        results['lengtherror'][6])}
+        canvas[out['lengtherror']] = mpl_simple_plot(series, fig_settings=figset)
+
     # Plot length-histogram:
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
     series = [{'type': 'xy', 'x': results['pathlength'][0][1],
@@ -1015,10 +1027,12 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     else:
         colors = None
 
-    series.append({'type': 'xy',
-                   'x': matched['overall-prob'][:, 0],
-                   'y': matched['overall-prob'][:, 1],
-                   'lw': 5, 'label': 'Over-all'})
+    new_series = {'type': 'xy',
+                  'x': matched['overall-prob'][:, 0],
+                  'y': matched['overall-prob'][:, 1],
+                  'alpha': 0.8,
+                  'lw': 9, 'label': 'Over-all', 'color': '#262626'}
+    series.append(new_series)
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):
         new_series = {'type': 'xy', 'x': prob[:, 0], 'y': prob[:, 1], 'lw': 3,

@@ -20,6 +20,7 @@ generate_report
     Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
+import datetime
 import logging
 import os
 # for converting rst to html and/or latex:
@@ -44,6 +45,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['get_template', 'render_report', 'generate_report']
 
 
+_DATE_FMT = '%d.%m.%Y %H:%M:%S'
 # File names for pre-defined templates.
 # - html is done via rst (i.e. there is no html template)
 # - htm is assumed to be equal to html
@@ -214,6 +216,7 @@ def generate_report(report_type, analysis_results, output, template=None):
     """
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
+              'date': datetime.datetime.now().strftime(_DATE_FMT),
               'figures': [], 'tables': [], 'numbers': []}
     try:
         generator = _REPORT_MAP[report_type]

@@ -21,41 +21,13 @@ from __future__ import absolute_import
 import logging
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
-from pyretis.inout.common import apply_format
+from pyretis.inout.common import apply_format, format_number
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['generate_report_tis', 'generate_report_tis_path',
            'generate_report_retis']
-
-
-def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
-    """Method to format a number based on it's size.
-
-    Parameters
-    ----------
-    number : float
-        The number to format.
-    minf : float
-        If the number is smaller than `minf` then apply the
-        format with scientific notation.
-    maxf : float
-        If the number is greater than `maxf` then apply the
-        format with scientific notation.
-    fmtf : string
-        Format to use for floats.
-    fmte : string
-        Format to use for scientific notation.
-
-    Returns
-    -------
-    out : string
-        The formatted number."""
-    if minf <= number <= maxf:
-        return fmtf.format(number)
-    else:
-        return fmte.format(number)
 
 
 def generate_report_tis_path(analysis, output='rst'):
@@ -177,7 +149,8 @@ def generate_report_retis(analysis, output='rst'):
                          'path0': None,
                          'probability': None,
                          'path': None,
-                         'efficiency': None},
+                         'efficiency': None,
+                         'summary': None},
               'numbers': {'pcross': None, 'perr': None, 'simt': None,
                           'teff': None, 'opteff': None, 'flux': None,
                           'fluxc': None, 'flux-err': None, 'fluxc-err': None},
@@ -195,24 +168,26 @@ def generate_report_retis(analysis, output='rst'):
     figures['matched'] = matched_fig.get('matched-probability', None)
     figures['total'] = matched_fig.get('total-probability', None)
     # Get numbers:
-    report['numbers']['pcross'] = format_number(matched_out['prob'], 0.1, 1)
-    report['numbers']['perr'] = format_number(matched_out['relerror'] * 100,
-                                              0.1, 100)
-    report['numbers']['flux'] = format_number(analysis['flux']['value'],
-                                              0.1, 100)
-    report['numbers']['flux-err'] = format_number(analysis['flux']['error'],
-                                                  0.1, 100)
+    numbers = report['numbers']
+    numbers['pcross'] = format_number(matched_out['prob'], 0.1, 1)
+    numbers['perr'] = format_number(matched_out['relerror'] * 100, 0.1, 100)
+    numbers['flux'] = format_number(analysis['flux']['value'], 0.1, 100)
+    numbers['flux-err'] = format_number(analysis['flux']['error'] * 100,
+                                        0.1, 100)
+    numbers['fluxc'] = format_number(analysis['fluxc']['value'], 0.1, 100)
+    numbers['fluxc-err'] = format_number(analysis['fluxc']['error'] * 100,
+                                         0.1, 100)
+    numbers['rate'] = format_number(analysis['rate']['value'], 0.1, 100)
+    numbers['rate-err'] = format_number(analysis['rate']['error'] * 100,
+                                        0.1, 100)
+    numbers['ratec'] = format_number(analysis['ratec']['value'], 0.1, 100)
+    numbers['ratec-err'] = format_number(analysis['ratec']['error'] * 100,
+                                         0.1, 100)
+    numbers['simt'] = format_number(matched_out['simtime'], 0.1, 100)
+    numbers['teff'] = format_number(matched_out['eff'], 0.1, 100)
+    numbers['opteff'] = format_number(matched_out['opteff'], 0.1, 100)
     report['text']['flux-unit'] = analysis['flux']['unit']
-    report['numbers']['fluxc'] = format_number(analysis['fluxc']['value'],
-                                               0.1, 100)
-    report['numbers']['fluxc-err'] = format_number(analysis['fluxc']['error'],
-                                                   0.1, 100)
     report['text']['fluxc-unit'] = analysis['fluxc']['unit']
-    report['numbers']['simt'] = format_number(matched_out['simtime'],
-                                              0.1, 100)
-    report['numbers']['teff'] = format_number(matched_out['eff'], 0.1, 100)
-    report['numbers']['opteff'] = format_number(matched_out['opteff'], 0.1,
-                                                100)
     # Get tables:
     tables = report['tables']
     tables['interfaces0'] = _table_interface0([result0], fmt=output)[1]
@@ -221,6 +196,7 @@ def generate_report_retis(analysis, output='rst'):
     tables['probability'] = _table_probability(results, fmt=output)[1]
     tables['path'] = _table_path(results, fmt=output)[1]
     tables['efficiency'] = _table_efficiencies(results, fmt=output)[1]
+    tables['summary'] = _table_summary(report, fmt=output)[1]
     return report
 
 
@@ -252,11 +228,16 @@ def generate_report_retis0(analysis, output='txt'):
         logger.warning(msg)
         output = 'txt'
     result = analysis['pathensemble']
-    report = {'ensemble': result['out']['ensemble']}
+    report = {'ensemble': result['out']['ensemble'], 'numbers': {},
+              'tables': {}}
     # Create tables
     report['tables'] = {'interfaces0': _table_interface0([result],
                                                          fmt=output)[1],
                         'path0': _table_path([result], fmt=output)[1]}
+    numbers = report['numbers']
+    flux = result['out']['fluxlength']
+    numbers['fluxlength'] = format_number(flux[0], 0, 10000)
+    numbers['fluxlengtherror'] = format_number(flux[1] * 100, 0, 100)
     return report
 
 
@@ -478,6 +459,56 @@ def _table_efficiencies(results, fmt='rst'):
                                        ['Ensemble', 'TIS cycles', 'Tot sim.',
                                         'Acceptance ratio', 'Correlation',
                                         'Efficiency'])
+    table_txt = '\n'.join(table_str)
+    return table, table_txt
+
+
+def _table_summary(report, fmt='rst'):
+    """Generate table with summary of main results
+
+    This table will display results for the crossing probability,
+    the initial flux and rate constant.
+
+    Parameters
+    ----------
+    report : dict
+        Dict with current report. We use the information in this
+        dictionary to generate the table.
+    fmt : string, optional
+        Determines if we create reStructuredText ('rst') or
+        latex ('tex').
+
+    Returns
+    -------
+    out[0] : list of strings
+        These are the rows of the table.
+    out[1] : string
+        This is a string in reStructuredText format which represents
+        the table.
+    """
+    numbers = report['numbers']
+    text = report['text']
+    table = [['Crossing probability', numbers['pcross'], numbers['perr']],
+             ['Flux (1/{})'.format(text['flux-unit']), numbers['flux'],
+              numbers['flux-err']],
+             ['Rate constant (1/{})'.format(text['flux-unit']),
+              numbers['rate'], numbers['rate-err']],
+             ['Flux (1/{})'.format(text['fluxc-unit']), numbers['fluxc'],
+              numbers['fluxc-err']],
+             ['Rate constant (1/{})'.format(text['fluxc-unit']),
+              numbers['ratec'], numbers['ratec-err']]]
+           
+    #table.append(row)
+    if fmt in ['tex', 'latex']:
+        #table[0][0] = r'$P_{\text{cross}}$'
+        table_str = generate_latex_table(table, 'Summary of main results',
+                                         ['Property', 'Value',
+                                          'Relative error ($\%$)'],
+                                         fixnum={1, 2})
+    else:
+        table_str = generate_rst_table(table, 'Summary of main results',
+                                       ['Property', 'Value',
+                                        'Relative error (%)'])
     table_txt = '\n'.join(table_str)
     return table, table_txt
 

@@ -19,6 +19,12 @@ analyse_path_ensemble_object
 match_probabilities
     Match probabilities from several path ensembles and calculate
     efficiencies and the error for the matched probability.
+
+retis_flux
+    Calculate the initial flux with errors for a RETIS simulation.
+
+retis_rate
+    Calculate the rate constant with errors for a RETIS simulation.
 """
 from __future__ import absolute_import
 import logging
@@ -30,7 +36,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
-           'match_probabilities']
+           'match_probabilities', 'retis_flux', 'retis_rate']
 
 
 def _get_successful(path_ensemble, idetect):
@@ -223,6 +229,9 @@ def _get_path_distribution(path_ensemble, bins=1000):
         histogram and `out[1][1]` are the mid points for bins.
         `out[1][2]` is a tuple with the average and standard deviation
         for the length.
+    out[2] : numpy.array
+        The length of the accepted paths, in case we want to analyse it
+        further.
 
     See Also
     --------
@@ -239,7 +248,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     length_all = np.array(length_all)
     hist_acc = histogram_and_avg(length_acc, bins, density=True)
     hist_all = histogram_and_avg(length_all, bins, density=True)
-    return hist_acc, hist_all
+    return hist_acc, hist_all, length_acc
 
 
 def _get_path_length(path, ensemble):
@@ -460,8 +469,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
                                             blockskip=settings['blockskip'])
 
     # next length-analysis:
-    hist1, hist2 = _get_path_distribution(path_ensemble,
-                                          bins=settings['bins'])
+    hist1, hist2, _ = _get_path_distribution(path_ensemble,
+                                             bins=settings['bins'])
     result['pathlength'] = (hist1, hist2)
     # next, shoots:
     # move so that the analysis returns histograms and scale...
@@ -604,6 +613,17 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = npath
+    # extra analysis for the [0^+] ensemble in case we will determine
+    # the initial flux:
+    if ensemble == 1:
+        result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
+                                                                weights),
+                                                 maxblock=settings['maxblock'],
+                                                 blockskip=settings['blockskip'])
+        lenge2 = result['lengtherror'][4] * hist1[2][0] / (hist1[2][0]-2.)
+        result['fluxlength'] = [hist1[2][0]-2.0, lenge2,
+                                lenge2 * (hist1[2][0]-2.)]
+        result['fluxlength'].append(result['efficiency'][1] * lenge2**2)
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
@@ -641,12 +661,22 @@ def analyse_path_ensemble0(path_ensemble, settings, idetect):
     hist2 = histogram_and_avg(np.array(length_all),
                               settings['bins'], density=True)
     result['pathlength'] = (hist1, hist2)
-    # 2) shoots analysis:
+    # 2) block error of lengths:
+    result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
+                                                            weights),
+                                             maxblock=settings['maxblock'],
+                                             blockskip=settings['blockskip'])
+    # 3) shoots analysis:
     result['shoots'] = _create_shoot_histograms(shoot_stats,
                                                 settings['bins'])
-    # 3) Add some simple efficiency metrics:
+    # 4) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
                             float(npath) * hist2[2][0]]
+    result['efficiency'].append(result['efficiency'][1] *
+                                result['lengtherror'][4]**2)
+    lenge2 = result['lengtherror'][4] * hist1[2][0] / (hist1[2][0]-2.)
+    result['fluxlength'] = [hist1[2][0]-2.0, lenge2, lenge2 * (hist1[2][0]-2.)]
+    result['fluxlength'].append(result['efficiency'][1] * lenge2**2)
     result['tis-cycles'] = npath
     return result
 
@@ -704,3 +734,55 @@ def match_probabilities(path_results, detect):
     results['opteff'] = prob_opt_eff**2  # optimized TIS efficiency
     results['eff'] = accprob_err * prob_simtime  # over-all TIS efficiency
     return results
+
+
+def retis_flux(results0, results1, timestep):
+    """Method to calculate the initial flux for RETIS.
+
+    Parameters
+    ----------
+    results0 : dict
+        Results from the analysis of ensemble [0^-]
+    results1 : dict
+        Results from the analysis of ensemble [0^+]
+
+    Returns
+    -------
+    flux : float
+        The initial flux.
+    flux_error : float
+        The relative error in the initial flux.
+    """
+    flux0 = results0['out']['fluxlength']
+    flux1 = results1['out']['fluxlength']
+    tsum = flux0[0] + flux1[0]
+    flux = 1.0 / (tsum * timestep)
+    flux_error = (np.sqrt((flux0[1]*flux0[0])**2 + (flux1[1]*flux1[0])**2) /
+                  tsum)
+    return flux, flux_error
+
+
+def retis_rate(pcross, pcross_relerror, flux, flux_relerror):
+    """Method to calculate the rate constant for RETIS.
+
+    Parameters
+    ----------
+    pcross : float
+        Estimated crossing probability
+    pcross_relerror : float
+        Relative error in crossing probability.
+    flux : float
+        The initial flux.
+    flux_relerror : float
+        Relative error in the initial flux.
+
+    Returns
+    -------
+    rate : float
+        The rate constant
+    rate_error : float
+        The relative error in the rate constant.
+    """
+    rate = pcross * flux
+    rate_error = np.sqrt(pcross_relerror**2 + flux_relerror**2)
+    return rate, rate_error

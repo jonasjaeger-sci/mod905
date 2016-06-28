@@ -14,7 +14,7 @@ The main results are:
   :math:`f_{A} = @{{ numbers['flux'] }}@  \pm  @{{ numbers['flux-err'] }}@ \%`
 
 * The rate constant (unit: 1/@{{ text['flux-unit'] }}@):
-  :math:`k_{AB} = 0.0`
+  :math:`k_{AB} = @{{ numbers['rate'] }}@  \pm  @{{ numbers['rate-err'] }}@ \%`
 
 Detailed results are given below for the different path
 ensembles and the overall results are summarized 
@@ -106,14 +106,6 @@ and the indivitual matched probabilities are shown in the right figure:
    :width: 45%
 .. image:: @{{ figures['total'] }}@
    :width: 45%
-
-Main results:
-
-* Rate constant in simulation units (1/@{{ text['flux-unit'] }}@):
-  :math:`k_{AB} = f_{A} P_{\text{cross}} =`
-
-* Rate constant in units (1/@{{ text['fluxc-unit'] }}@):
-  :math:`k_{AB} = f_{A} P_{\text{cross}} =`
 
 @{{ tables['summary'] }}@
 

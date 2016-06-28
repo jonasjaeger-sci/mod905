@@ -80,6 +80,7 @@ ORDERFILES = {'order': 'orderp',
 PATHFILES = {'pcross': '{}_pcross',
              'prun': '{}_prun',
              'perror': '{}_perror',
+             'lengtherror': '{}_lerror',
              'pathlength': '{}_lpath',
              'shoots': '{}_shoots',
              'shoots_scaled': '{}_shoots_scaled'}

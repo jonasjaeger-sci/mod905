@@ -312,26 +312,29 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     ens = path_ensemble.ensemble_name()  # identify the ensemble
     ens_simplified = path_ensemble.ensemble_name_simple()
     outfiles = []
-    # 1) Output pcross vs lambda:
-    outfile = name_file(PATHFILES['pcross'].format(ens_simplified),
-                        out_fmt, path=path)
-    outfiles.append(outfile)
-    txt_save_columns(outfile,
-                     'Ensemble: {}, idetect: {}'.format(ens, idetect),
-                     [results['pcross'][0], results['pcross'][1]],
-                     backup=backup)
-    # 2) Output the running average of p:
-    outfile = name_file(PATHFILES['prun'].format(ens_simplified),
-                        out_fmt, path=path)
-    outfiles.append(outfile)
-    txt_save_columns(outfile, 'Ensemble: {}'.format(ens),
-                     [results['prun']], backup=backup)
-    # 3) Block error results:
-    outfile = name_file(PATHFILES['perror'].format(ens_simplified),
-                        out_fmt, path=path)
-    outfiles.append(outfile)
-    txt_block_error(outfile, 'Ensemble: {0}'.format(ens),
-                    results['blockerror'], backup=backup)
+    if 'pcross' in results:
+        # 1) Output pcross vs lambda:
+        outfile = name_file(PATHFILES['pcross'].format(ens_simplified),
+                            out_fmt, path=path)
+        outfiles.append(outfile)
+        txt_save_columns(outfile,
+                         'Ensemble: {}, idetect: {}'.format(ens, idetect),
+                         [results['pcross'][0], results['pcross'][1]],
+                         backup=backup)
+    if 'prun' in results:
+        # 2) Output the running average of p:
+        outfile = name_file(PATHFILES['prun'].format(ens_simplified),
+                            out_fmt, path=path)
+        outfiles.append(outfile)
+        txt_save_columns(outfile, 'Ensemble: {}'.format(ens),
+                         [results['prun']], backup=backup)
+    if 'blockerror' in results:
+        # 3) Block error results:
+        outfile = name_file(PATHFILES['perror'].format(ens_simplified),
+                            out_fmt, path=path)
+        outfiles.append(outfile)
+        txt_block_error(outfile, 'Ensemble: {0}'.format(ens),
+                        results['blockerror'], backup=backup)
     # 3) Length histograms
     outfile = name_file(PATHFILES['pathlength'].format(ens_simplified),
                         out_fmt, path=path)
