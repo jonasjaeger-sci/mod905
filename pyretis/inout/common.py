@@ -377,3 +377,31 @@ class PyretisLogFormatterDebug(logging.Formatter):
         header, _ = out.split(record.message)
         out = out.replace('\n', '\n' + ' ' * len(header))
         return out
+
+
+def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
+    """Method to format a number based on it's size.
+
+    Parameters
+    ----------
+    number : float
+        The number to format.
+    minf : float
+        If the number is smaller than `minf` then apply the
+        format with scientific notation.
+    maxf : float
+        If the number is greater than `maxf` then apply the
+        format with scientific notation.
+    fmtf : string
+        Format to use for floats.
+    fmte : string
+        Format to use for scientific notation.
+
+    Returns
+    -------
+    out : string
+        The formatted number."""
+    if minf <= number <= maxf:
+        return fmtf.format(number)
+    else:
+        return fmte.format(number)
