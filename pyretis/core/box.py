@@ -151,56 +151,6 @@ class Box(object):
             return delta + low
         else:
             return pos
-        #while x < self.low[dim]:
-        #    x = x + self.length[dim]
-        #while x > self.high[dim]:
-        #    x = x - self.length[dim]
-        #return x
-
-    #def pbc_slow2(self, allpos):
-    #    """
-    #    This implementation of applying the pbc coordinate
-    #    are included here just for testing. It will probably be
-    #    removed in the future.
-    #    """
-    #    dpos = np.zeros(allpos.shape)
-    #    for i, periodic in enumerate(self.periodic):
-    #        if periodic:
-    #            coord = [self.pbc_coordinate2(x, i) for x in allpos[:, i]]
-    #            dpos[:, i] = np.array(coord)
-    #        else:
-    #            dpos[:, i] = np.array([x for x in allpos[:, i]])
-    #    return dpos
-
-    #def pbc_coordinate(self, x, low, high, length):
-    #    """
-    #    This implementation of applying the pbc coordinate
-    #    are included here just for testing. It will probably be
-    #    removed or modified in the future.
-    #    """
-    #    if x < low or x > high:
-    #        return x - np.floor(x/length)*length
-    #    else:
-    #        return x
-
-    #def pbc_slow(self, allpos):
-    #    """
-    #    This implementation of applying the pbc coordinate
-    #    are included here just for testing. It will probably be
-    #    removed or modified in the future.
-    #    """
-    #    dpos = np.zeros(allpos.shape)
-    #    for i, periodic in enumerate(self.periodic):
-    #        if periodic:
-    #            low = self.low[i]
-    #            high = self.high[i]
-    #            length = self.length[i]
-    #            pos = [self.pbc_coordinate(xi, low, high, length)
-    #                                      for xi in allpos[:, i]]
-    #            dpos[:, i] = np.array(pos)
-    #        else:
-    #            dpos[:, i] = allpos[:, i]
-    #    return dpos
 
     def pbc_wrap(self, pos):
         """Apply periodic boundaries to the given position.
