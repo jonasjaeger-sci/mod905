@@ -248,7 +248,6 @@ class ForceField(object):
         virial = None
         for pot, argu in zip(self.potential, self.arguments['pot-and-force']):
             var = argu['args']
-            #args = [kwargs[vari] for vari in var if vari is not 'self']
             args = [kwargs[vari] for vari in var if vari != 'self']
             if v_pot is None or force is None or virial is None:
                 v_pot, force, virial = pot.potential_and_force(*args)
