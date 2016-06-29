@@ -543,23 +543,14 @@ class PathBase(object):
                 return self
         return self
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse a path and return the reverse path as a new path.
 
         This will simply reverse a path and return the reversed path as
         a new `Path` object. Note that currently, recalculating
-        order parameters have not been implemented! An `order_func` can
-        be specified here if we have to recalculate the order parameter.
-        Typically, reversing will not change the order parameter,
-        but it might change the velocity for the order parameter and so
-        on.
-
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
+        order parameters have not been implemented!  Typically, reversing
+        will not change the order parameter, but it might change the
+        velocity for the order parameter and so on.
 
         Returns
         -------
@@ -573,11 +564,7 @@ class PathBase(object):
             energy = phasepoint[3]
             if vel is not None:
                 vel *= -1
-            if order_func and pos is not None:
-                msg = 'Recalculating order parameter(s) not implemented!'
-                logger.critical(msg)
-            else:
-                orderp = phasepoint[0]
+            orderp = phasepoint[0]
             app = new_path.append(orderp, pos, vel, energy)
             if not app:
                 msg = 'Could not reverse path'
@@ -913,26 +900,19 @@ class ReservoirPath(PathBase):
                               time_origin=time_origin,
                               res_length=res_length)
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse the path with addinional handling for the reservoir.
 
         This method will call `PathBase.reverse()` but will also do
         some extra reverse handling since we here have to reverse
         indices in the reservoir of shooting points.
 
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
-
         Returns
         -------
         path : object like `PathBase`.
             This is basically a copy of `self`, just reversed.
         """
-        path = super(ReservoirPath, self).reverse(order_func=order_func)
+        path = super(ReservoirPath, self).reverse()
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]
