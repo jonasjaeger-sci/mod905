@@ -473,15 +473,15 @@ class PathBase(object):
                      'status': status,
                      'length': self.length}
 
-        if self.ordermax is not None:
-            path_info['ordermax'] = tuple(self.ordermax)
-        else:
-            path_info['ordermax'] = (0.0, 0)
+        #if self.ordermax is not None:
+        path_info['ordermax'] = tuple(self.ordermax)
+        #else:
+        #    path_info['ordermax'] = (0.0, 0)
 
-        if self.ordermin is not None:
-            path_info['ordermin'] = tuple(self.ordermin)
-        else:
-            path_info['ordermin'] = (0.0, 0)
+        #if self.ordermin is not None:
+        path_info['ordermin'] = tuple(self.ordermin)
+        #else:
+        #    path_info['ordermin'] = (0.0, 0)
 
         start, end, middle, _ = self.check_interfaces(interfaces)
         path_info['interface'] = (start, middle, end)

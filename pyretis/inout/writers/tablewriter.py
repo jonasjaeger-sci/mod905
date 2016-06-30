@@ -33,15 +33,15 @@ __all__ = ['TxtTable', 'PathTable', 'ThermoTable']
 
 
 # Tables can be defined and created as follows:
-#tabl = {'title': 'Energy output',
-#        'var': ['step', 'temp', 'vpot',
-#                'ekin', 'etot', 'press'],
-#        'format': {'labels': ['Step', 'Temp', 'Pot',
+# tabl = {'title': 'Energy output',
+#         'var': ['step', 'temp', 'vpot',
+#                 'ekin', 'etot', 'press'],
+#         'format': {'labels': ['Step', 'Temp', 'Pot',
 #                              'Kin', 'Tot', 'Press'],
-#                   'width': (10, 12),
-#                   'spacing': 2,
-#                   'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
-#table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
+#                    'width': (10, 12),
+#                    'spacing': 2,
+#                    'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
+# table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
 
 
 def _fill_list(the_list, length, fillvalue=None):

@@ -309,8 +309,8 @@ def txt_path_output(path_ensemble, results, idetect, out_fmt='txt.gz',
     outfiles : list
         The output files created by this function.
     """
-    ens = path_ensemble.ensemble_name()  # identify the ensemble
-    ens_simplified = path_ensemble.ensemble_name_simple()
+    ens = path_ensemble.ensemble_name  # identify the ensemble
+    ens_simplified = path_ensemble.ensemble_name_simple
     outfiles = []
     if 'pcross' in results:
         # 1) Output pcross vs lambda:

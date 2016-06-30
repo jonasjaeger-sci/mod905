@@ -122,12 +122,7 @@ class SimulationSingleTIS(Simulation):
         self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
 
     def step(self):
-        """Perform a simulation step.
-
-        Rather than using the tasks for the more general simulation, we
-        here just execute what we need. Since we are integrating and
-        checking the crossing at every step, these tasks are not in
-        the `self.tasks` list. Other tasks are handled by this list.
+        """Perform a TIS simulation step.
 
         Returns
         -------
@@ -259,13 +254,37 @@ class SimulationRETIS(Simulation):
         # create a random generator for TIS moves etc.:
         self.rgen = RandomGenerator(seed=local_tis['seed'])
 
-    def step(self):
-        """Perform a simulation step.
+    def initiate_ensemble(self, ensemble):
+        """Method to initiate a given ensemble.
 
-        Rather than using the tasks for the more general simulation, we
-        here just execute what we need. Since we are integrating and
-        checking the crossing at every step, these tasks are not in
-        the `self.tasks` list. Other tasks are handled by this list.
+        This method is mainly here for convenience. Sometimes we
+        might want to do more stuff around the initiation - output
+        to the user and so on. This method will just do the
+        initialization.
+
+        Parameters
+        ----------
+        ensemble : object like `PathEnsemble`
+            The ensemble to initiate.
+
+        Returns
+        -------
+        out : object like `Path`
+            The initial path created.
+        """
+        msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
+        logger.info(msg)
+        initiate_path_ensemble(ensemble,
+                               self.system,
+                               self.orderparameter,
+                               self.integrator,
+                               self.rgen,
+                               self.settings['tis'],
+                               self.cycle['step'])
+        return ensemble.last_path
+
+    def step(self):
+        """Perform a RETIS simulation step.
 
         Returns
         -------
@@ -275,7 +294,7 @@ class SimulationRETIS(Simulation):
         results = {}
         if self.first_step:
             for ensemble in self.path_ensembles:
-                msg = 'Initiating path in {}'.format(ensemble.ensemble_name())
+                msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
                 logger.info(msg)
                 initiate_path_ensemble(ensemble,
                                        self.system,
@@ -304,7 +323,9 @@ class SimulationRETIS(Simulation):
         msg = ['RETIS simulation']
         msg += ['Path ensembles:']
         for ensemble in self.path_ensembles:
-            msg += ['{}'.format(ensemble.ensemble_name())]
+            msgtxt = '{}: Interfaces: {}'.format(ensemble.ensemble_name,
+                                                 ensemble.interfaces)
+            msg += [msgtxt]
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         return '\n'.join(msg)

@@ -43,6 +43,7 @@ from pyretis.inout.settings import parse_settings_file
 
 # Hard-coded patters for report outputs:
 REPORTFILES = {'md-flux': 'md_flux_report',
+               'retis': 'retis_report',
                'tis': 'tis_report',
                'tis-single': 'tis_single_report'}
 

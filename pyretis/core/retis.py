@@ -212,7 +212,7 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
-            #msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name())
+            #msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
             #logger.info(msgtxt)
             accept, trial, status = make_tis_step_ensemble(path_ensemble,
                                                            system,
@@ -352,8 +352,8 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     out : string
         The result of the swapping move.
     """
-    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble_name(),
-                                          ensembles[idx+1].ensemble_name())
+    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble_name,
+                                          ensembles[idx+1].ensemble_name)
     logger.debug(msg)
     status = None
     if idx == 0:
@@ -511,7 +511,7 @@ def null_move(path_ensemble, cycle):
         The status, which here will be 'ACC' since we just accept the
         last accepted path.
     """
-    msg = 'Null move for: {}'.format(path_ensemble.ensemble_name())
+    msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
     logger.info(msg)
     path = path_ensemble.last_path
     path.set_move('00')

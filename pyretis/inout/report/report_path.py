@@ -497,10 +497,7 @@ def _table_summary(report, fmt='rst'):
               numbers['fluxc-err']],
              ['Rate constant (1/{})'.format(text['fluxc-unit']),
               numbers['ratec'], numbers['ratec-err']]]
-           
-    #table.append(row)
     if fmt in ['tex', 'latex']:
-        #table[0][0] = r'$P_{\text{cross}}$'
         table_str = generate_latex_table(table, 'Summary of main results',
                                          ['Property', 'Value',
                                           'Relative error ($\%$)'],

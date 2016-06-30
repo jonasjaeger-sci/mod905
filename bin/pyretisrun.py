@@ -32,6 +32,9 @@ import os
 import sys
 # Other libraries:
 import tqdm  # for a nice progress bar
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
@@ -247,7 +250,6 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
         for task in output_tasks:
             task.output(result)
 
-
 def run_retis_simulation(sim, sim_settings, progress=False,
                          position=0):
     """This will run a RETIS simulation.
@@ -264,25 +266,39 @@ def run_retis_simulation(sim, sim_settings, progress=False,
     position : integer
         Used to control location of progress bars
     """
-    # ensure that we create output directories
     output_tasks = []
     print_and_loginfo('Creating output directories:')
     for ensemble in sim.path_ensembles:
-        dirname = ensemble.ensemble_name_simple()
+        dirname = ensemble.ensemble_name_simple
         msg_dir = make_dirs(dirname)
-        msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name(), msg_dir)
+        msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
         print_and_loginfo(msgtxt)
         sim_settings['output-dir'] = dirname
         ensemble_task = get_tasks(sim_settings, progress=progress)
         output_tasks.extend(ensemble_task)
+    print_to_screen('')
     print_and_loginfo('Running RETIS ensemble simulation')
+    print_and_loginfo('Initializing the path ensembles...')
+    # Here we explicitly do the initialization. This is just
+    # because we want to print out some info!
+    for task, ensemble in zip(output_tasks, sim.path_ensembles):
+        print_and_loginfo('Initiating in {}'.format(ensemble.ensemble_name))
+        path = sim.initiate_ensemble(ensemble)
+        print_and_loginfo('Initial path: {}'.format(path))
+        print_to_screen('')
+        result = {'pathensemble': ensemble, 'cycle': sim.cycle}
+        task.output(result)
+    sim.first_step = False  # We have done the "first" step now.
+    print_and_loginfo('Starting main RETIS simulation...')
     tqd = use_tqdm(progress)
     for result in tqd(sim.run(), total=sim_settings['steps'],
                       desc='RETIS',
                       position=position):
         for task, ensemble in zip(output_tasks, sim.path_ensembles):
+            print('Ensemble path-length:', ensemble.ensemble_name, ensemble.last_path.length)
             result['pathensemble'] = ensemble
             task.output(result)
+        print('\nStep:', result['cycle']['step']+1)
 
 
 def run_tis_simulation(settings_all, settings_tis, progress=False):

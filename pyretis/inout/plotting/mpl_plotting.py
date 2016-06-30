@@ -707,8 +707,8 @@ def mpl_plot_path(path_ensemble, results, idetect):
         This dictionary contains the different canvases we have
         created
     """
-    ens = path_ensemble.ensemble_name()
-    ens_simplified = path_ensemble.ensemble_name_simple()
+    ens = path_ensemble.ensemble_name
+    ens_simplified = path_ensemble.ensemble_name_simple
     canvas = {}
     out = {}
     for key in PATHFILES:

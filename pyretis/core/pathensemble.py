@@ -49,6 +49,11 @@ class PathEnsemble(object):
         simulations it's useful to identify the path ensemble. The path
         ensembles are numbered sequentially 0, 1, 2, etc. This
         corresponds to ``[0^-]``, ``[0^+]``, ``[1^+]``, etc.
+    ensemble_name : string
+        A string which can be used for printing the ensemble name
+    ensemble_name_simple : string
+        A string with a simpler representation of the ensemble name,
+        can be used for creating output files etc.
     interfaces : list of floats
         Interfaces, specified with the values for the
         order parameters: `[left, middle, right]`.
@@ -72,7 +77,7 @@ class PathEnsemble(object):
         This is the last **accepted** path.
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000000):
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=100):
         """Initialize the PathEnsemble object.
 
         Parameters
@@ -90,6 +95,11 @@ class PathEnsemble(object):
         self.nstats = {'npath': 0, 'nshoot': 0, 'ACC': 0}
         self.paths = []
         self.maxpath = maxpath
+        if self.ensemble == 0:
+            self.ensemble_name = '[0^-]'
+        else:
+            self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
+        self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
@@ -127,13 +137,13 @@ class PathEnsemble(object):
             The current cycle number
         """
         if len(self.paths) >= self.maxpath:
-            msg = ('Maxpath in ensemble {} exceeded!\n'
-                   'Emptying path-data in this path ensemble.\n'
-                   'Note that this might influence the analysis if you '
-                   'run it using this path ensemble object.\n'
-                   '-> Use the path ensemble file for an accurate analysis!')
-            msg = msg.format(self.ensemble_name())
-            logger.warning(msg)
+            msg = ('Exceeded maximum number of paths in ensemble {}!\n'
+                   'The path-data in this path ensemble will be reset.\n'
+                   'Note that this will *NOT* influence the simulation. '
+                   'Remember to use the path ensemble file for an '
+                   'accurate analysis!')
+            msg = msg.format(self.ensemble_name)
+            logger.info(msg)
             self.paths = []
         # update statistics:
         if path is None:
@@ -225,20 +235,9 @@ class PathEnsemble(object):
         else:
             return 'L'
 
-    def ensemble_name(self):
-        """Return a fancy string for the ensemble name"""
-        if self.ensemble == 0:
-            return '[0^-]'
-        else:
-            return '[{}^+]'.format(self.ensemble - 1)
-
-    def ensemble_name_simple(self):
-        """Return a simple string for the ensemble name"""
-        return PATH_DIR_FMT.format(self.ensemble)
-
     def __str__(self):
         """Return a string with some info about the path ensemble."""
-        msg = ['Path ensemble: {}'.format(self.ensemble_name())]
+        msg = ['Path ensemble: {}'.format(self.ensemble_name)]
         msg += ['\tInterfaces: {}'.format(self.interfaces)]
         if self.detect is not None:
             msg += ['\tDetect: {}'.format(self.detect)]
@@ -286,7 +285,6 @@ def create_path_ensembles(interfaces, include_zero=False):
     reactant = interfaces[0]
     product = interfaces[-1]
     if include_zero:
-        # ensemble_name = '[0^-]'
         interface = [-float('inf'), reactant, reactant]
         path_ensemble = PathEnsemble(0, interface, detect=None)
         ensembles.append(path_ensemble)
@@ -296,7 +294,6 @@ def create_path_ensembles(interfaces, include_zero=False):
             detect.append(interfaces[i+1])
         except IndexError:
             detect.append(product)
-        # ensemble_name = '[{}^+]'.format(i)
         path_ensemble = PathEnsemble(i + 1, interface, detect=detect[-1])
         ensembles.append(path_ensemble)
     return ensembles, detect

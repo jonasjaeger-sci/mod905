@@ -883,7 +883,7 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
             msg = 'Undefined charge unit for {}'.format(unit)
             raise ValueError(msg)
     else:
-        if not charge_unit in UNITS['charge']:
+        if charge_unit not in UNITS['charge']:
             msg = 'Unknown charge unit "{}" requested.'.format(charge_unit)
             raise ValueError(msg)
     generate_conversion_factors(unit, length, energy, mass,
