@@ -132,17 +132,17 @@ def _effective_crossings(fluxdata, nint, end_step):
     """
     # First line is used to determine if we start in B or A
     overallstate_a = not (fluxdata[0][1] == 2 and fluxdata[0][2] < 0)
-    firstcross = [False] * nint
+    firstcross = [True] * nint
     ncross = [0] * nint
     neffcross = [0] * nint
-    eff_cross = {key: [] for key in range(nint)}
+    eff_cross = [[] for _ in range(nint)]
     end = {'A': 0, 'B': 0, 'OA': 0, 'OB': 0}
     start = {'A': 0, 'B': 0, 'OA': 0, 'OB': 0}
     time_in_state = {'A': 0, 'B': 0, 'OA': 0, 'OB': 0}
     time, intf, sign = None, None, None
     for (time, intf, sign) in fluxdata:
         if sign > 0:  # positive direction
-            if intf - 1 == 0:  # moving out of a
+            if intf - 1 == 0:  # moving out of A
                 end['A'] = time
                 time_in_state['A'] += (end['A'] - start['A'])
             elif intf - 1 == 2:  # moving into B
@@ -151,10 +151,10 @@ def _effective_crossings(fluxdata, nint, end_step):
                     end['OA'] = time
                     start['OB'] = time
                     time_in_state['OA'] += (end['OA'] - start['OA'])
-                    overallstate_a = not overallstate_a
+                    overallstate_a = False
             ncross[intf - 1] += 1
             if firstcross[intf - 1]:
-                firstcross[intf - 1] = True
+                firstcross[intf - 1] = False
                 neffcross[intf - 1] += 1
                 eff_cross[intf - 1].append((time - time_in_state['OB'], time))
         elif sign < 0:
@@ -205,7 +205,6 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     flux : np.array
         The flux within a time window.
     """
-    delta_t = time_step * time_window
     max_windows = int(1.0 * time_in_state / time_window)
     ncross = np.zeros(max_windows, dtype=np.int)
     for crossing in effective_cross:
@@ -213,6 +212,6 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
         if idx >= max_windows:
             idx = max_windows - 1
         ncross[idx] += 1
-    flux = (1.0 * ncross) / delta_t
+    flux = (1.0 * ncross) / (time_step * time_window)
     time = np.arange(1, max_windows+1) * time_window
     return time, ncross, flux
