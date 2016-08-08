@@ -262,6 +262,6 @@ class Particles(object):
     def __str__(self):
         """Print out basic info about the particle list."""
         msg = ['Particles: {}'.format(self.npart)]
-        msg += ['Types: {}'.format(set(self.ptype))]
+        msg += ['Types: {}'.format(np.unique(self.ptype))]
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)

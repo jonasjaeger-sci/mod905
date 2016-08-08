@@ -72,30 +72,33 @@ class DoubleWell(PotentialFunction):
         super(DoubleWell, self).__init__(dim=1, desc=desc)
         self.params = {'a': a, 'b': b, 'c': c}
 
-    def potential(self, pos):
+    def potential(self, system):
         """Evaluate the potential for the one-dimensional double well.
 
         Parameters
         ----------
-        pos : numpy.array
-            Positions used for evaluation of the potential.
+        system : object like `System`.
+            The system we evaluate the potential for. Here, we
+            make use of the positions only.
 
         Returns
         -------
         out : float
             The potential energy.
         """
+        pos = system.particles.pos
         v_pot = (self.params['a'] * pos**4 -
                  self.params['b'] * (pos - self.params['c'])**2)
         return v_pot.sum()
 
-    def force(self, pos):
+    def force(self, system):
         """Evaluate forces for the 1D double well potential.
 
         Parameters
         ----------
-        pos : numpy.array
-            The position to use for the evaluation of the force.
+        system : object like `System`.
+            The system we evaluate the potential for. Here, we
+            make use of the positions only.
 
         Returns
         -------
@@ -104,18 +107,20 @@ class DoubleWell(PotentialFunction):
         out[1] : numpy.array
             The virial, currently not implemented for this potential
         """
+        pos = system.particles.pos
         forces = (-4.0*(self.params['a'] * pos**3) +
                   2.0*(self.params['b'] * (pos - self.params['c'])))
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
-    def potential_and_force(self, pos):
+    def potential_and_force(self, system):
         """Evaluate the potential and the force.
 
         Parameters
         ----------
-        pos : numpy.array
-            The position to use for the evaluation of the force.
+        system : object like `System`.
+            The system we evaluate the potential for. Here, we
+            make use of the positions only.
 
         Returns
         -------
@@ -127,6 +132,7 @@ class DoubleWell(PotentialFunction):
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
         """
+        pos = system.particles.pos
         dist = pos - self.params['c']
         pos3 = pos**3
         v_pot = self.params['a'] * pos3 * pos - self.params['b'] * dist**2
@@ -190,19 +196,21 @@ class RectangularWell(PotentialFunction):
             msg = 'Setting left >= right in RectangularWell potential!'
             logger.warning(msg)
 
-    def potential(self, pos):
+    def potential(self, system):
         """Evaluate the potential.
 
         Parameters
         ----------
-        pos : numpy.array
-            The position(s) to evaluate the potential at.
+        system : object like `System`.
+            The system we evaluate the potential for. Here, we
+            make use of the positions only.
 
         Returns
         -------
         out : float
             The potential energy.
         """
+        pos = system.particles.pos
         left = self.params['left']
         right = self.params['right']
         largenumber = self.params['largenumber']

@@ -53,7 +53,10 @@ def accept_reject_displace(rgen, system, trial):
     out[4] : boolean
         True if move is accepted, False otherwise.
     """
-    v_trial = system.evaluate_potential(pos=trial)
+    pos = np.copy(system.particles.pos)
+    system.particles.pos = trial
+    v_trial = system.evaluate_potential()
+    system.particles.pos = pos
     deltae = v_trial - system.v_pot
     if metropolis_accept_reject(rgen, system, deltae):
         return trial, v_trial, trial, v_trial, True
