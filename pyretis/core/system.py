@@ -225,7 +225,9 @@ class System(object):
                                     name=name, ptype=ptype)
 
     def force(self):
-        """Update the forces by calling `self._evaluate_potential_force`.
+        """Update the forces and virial
+
+        The update is done by calling `self._evaluate_potential_force`.
 
         Returns
         -------
@@ -236,20 +238,20 @@ class System(object):
             The virial. Note that `self.particles.virial` will be
             updated.
         """
-        force, virial = self._evaluate_potential_force(what='force')
+        force, virial = self.forcefield.evaluate_force(self)
         self.particles.force = force
         self.particles.virial = virial
         return self.particles.force, virial
 
     def potential(self):
-        """Update `self.v_pot` by calling `self._evaluate_potential_force()`.
+        """Update the potential energy in `self.v_pot`.
 
         Returns
         -------
         out : float.
             The potential energy, note `self.v_pot` is also updated.
         """
-        self.v_pot = self._evaluate_potential_force(what='potential')
+        self.v_pot = self.forcefield.evaluate_potential(self)
         return self.v_pot
 
     def potential_and_force(self):
@@ -257,7 +259,7 @@ class System(object):
 
         The potential in `self.v_pot` and the forces in
         `self.particles.force` are here updated by calling
-        `self._evaluate_potential_force()`.
+        `forcefield.evaluate_potential_force()`.
 
         Returns
         -------
@@ -270,21 +272,14 @@ class System(object):
             The virial. Note that `self.particles.virial` will also be
             updated.
         """
-        v_pot, force, virial = self._evaluate_potential_force(what='both')
-        self.v_pot = v_pot
+        pot, force, viri = self.forcefield.evaluate_potential_and_force(self)
+        self.v_pot = pot
         self.particles.force = force
-        self.particles.virial = virial
-        return v_pot, force, virial
+        self.particles.virial = viri
+        return pot, force, viri
 
-    def evaluate_force(self, **kwargs):
+    def evaluate_force(self):
         """Evaluate the forces on the particles.
-
-        Parameters
-        ----------
-        kwargs : dictionary
-            Settings that can be used to override the information in
-            `self.particles`. This is useful if one wants to evaluate
-            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -298,17 +293,10 @@ class System(object):
         This function will not update the forces, just calculate them.
         Use `self.force` to update the forces.
         """
-        return self._evaluate_potential_force(what='force', **kwargs)
+        return self.forcefield.evaluate_force(self)
 
-    def evaluate_potential(self, **kwargs):
+    def evaluate_potential(self):
         """Evaluate the potential energy.
-
-        Parameters
-        ----------
-        kwargs : dictionary
-            Settings that can be used to override the information in
-            `self.particles`. This is useful if one wants to evaluate
-            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -321,17 +309,10 @@ class System(object):
         return it's value for the (possibly given) configuration.
         The function `self.potential` can be used to update `self.v_pot`.
         """
-        return self._evaluate_potential_force(what='potential', **kwargs)
+        return self.forcefield.evaluate_potential(self)
 
-    def evaluate_potential_and_force(self, **kwargs):
+    def evaluate_potential_and_force(self):
         """Evaluate the potential and/or the force.
-
-        Parameters
-        ----------
-        kwargs : dictionary
-            Settings that can be used to override the information in
-            `self.particles`. This is useful if one wants to evaluate
-            the forces for a different configuration of the particles.
 
         Returns
         -------
@@ -347,36 +328,7 @@ class System(object):
         This function will not update the forces on the particles nor
         `self.v_pot`. To update these, call `self.potential_and_force`.
         """
-        return self._evaluate_potential_force(what='both', **kwargs)
-
-    def _evaluate_potential_force(self, what='both', **kwargs):
-        """Evaluate the potential or force or both.
-
-        Parameters
-        ----------
-        what : string
-            This selects what we are to evaluate. 'potential' selects
-            the potential energy only, 'force' selects the force only
-            and anything else will give both.
-        kwargs : dict
-            This dictionary can be used to override position, name,
-            types, particles and/or box. Default values are taken from
-            `self.box` or `self.particles`.
-        """
-        args = {'pos': kwargs.get('pos', self.particles.pos),
-                'name': kwargs.get('name', self.particles.name),
-                'ptype': kwargs.get('ptype', self.particles.ptype),
-                'particles': kwargs.get('particles', self.particles),
-                'box': kwargs.get('box', self.box)}
-        # Here we allow for **args when calling the force field. This is
-        # simply because we do not know what parameters we should
-        # pass into the force field.
-        if what == 'potential':
-            return self.forcefield.evaluate_potential(**args)
-        elif what == 'force':
-            return self.forcefield.evaluate_force(**args)
-        else:
-            return self.forcefield.evaluate_potential_and_force(**args)
+        return self.forcefield.evaluate_potential_and_force(self)
 
     def generate_velocities(self, rgen=None, seed=0, momentum=True,
                             temperature=None, distribution='maxwell'):

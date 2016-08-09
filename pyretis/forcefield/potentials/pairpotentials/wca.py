@@ -136,20 +136,21 @@ class DoubleWellWCA(PotentialFunction):
         width = self.params['width']
         return rzero, rzero + 2.0 * width, rzero + width
 
-    def potential(self, particles, box):
+    def potential(self, system):
         """Calculate the potential energy.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` for `pyretis.core.system`.
+            The system we evaluate the potential in.
 
         Returns
         -------
-        The potential energy as a float.
+        v_pot : float
+            The potential energy.
         """
+        particles = system.particles
+        box = system.box
         v_pot = 0.0
         rwidth = self.params['rwidth']
         width2 = self.params['width2']
@@ -163,23 +164,27 @@ class DoubleWellWCA(PotentialFunction):
                 v_pot += (height * (1.0 - (((delr - rwidth)**2) / width2))**2)
         return v_pot
 
-    def force(self, particles, box):
+    def force(self, system):
         """Calculate the force.
 
         We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` for `pyretis.core.system`.
+            The system we evaluate the potential in.
 
         Returns
         -------
-        The force as a numpy.array of the same shape as the positions
-        in `particles.pos`.
+        forces : numpy.array
+            The force as a numpy.array of the same shape as the
+            positions in `particles.pos`.
+        virial : numpy.array
+            The virial, as a symmetric matrix with dimensions (dim, dim)
+            where dim is given by the box.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
         rwidth = self.params['rwidth']
@@ -199,18 +204,15 @@ class DoubleWellWCA(PotentialFunction):
                 virial += np.outer(forceij, delta)
         return forces, virial
 
-    def potential_and_force(self, particles, box):
+    def potential_and_force(self, system):
         """Calculate the force & potential.
 
         We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
-
+        system : object like `System` for `pyretis.core.system`.
+            The system we evaluate the potential in.
 
         Returns
         -------
@@ -223,6 +225,8 @@ class DoubleWellWCA(PotentialFunction):
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
         v_pot = 0.0

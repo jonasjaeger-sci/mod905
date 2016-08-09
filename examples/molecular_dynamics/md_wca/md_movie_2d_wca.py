@@ -154,7 +154,7 @@ def plot_dwca_potential():
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     for ri in rpos:
         fakesys.particles.pos[-1] = np.array([ri, 0.0])
-        potdwca.append(dwca.potential(fakesys.particles, fakebox))
+        potdwca.append(dwca.potential(fakesys))
     return rpos, np.array(potdwca)
 
 
@@ -354,7 +354,7 @@ def update(frame, sys, output_tasks, sim):
         delta = sys.box.pbc_dist_coordinate(sys.particles.pos[BIDX[1]] -
                                             sys.particles.pos[BIDX[0]])
         dr = np.sqrt(np.dot(delta, delta))
-        points = [dr, dwca.potential(sys.particles, sys.box)]
+        points = [dr, dwca.potential(sys)]
         orderscatter.set_offsets(points)
         patches.append(orderscatter)
         # draw the bond:

@@ -161,20 +161,20 @@ class PairLennardJonesCut(PotentialFunction):
             strparam.append(atmformat2.format(stri, eps_ij, sig_ij, rcut))
         return '\n'.join(strparam)
 
-    def potential(self, particles, box):
+    def potential(self, system):
         """Calculate the potential energy for the Lennard-Jones interaction.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the potential.
 
         Returns
         -------
         The potential energy as a float.
         """
+        particles = system.particles
+        box = system.box
         v_pot = 0.0
         for pair in particles.pairs():
             i, j, itype, jtype = pair
@@ -189,7 +189,7 @@ class PairLennardJonesCut(PotentialFunction):
                           self._offset[itype, jtype])
         return v_pot
 
-    def force(self, particles, box):
+    def force(self, system):
         """Calculate the force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force
@@ -197,16 +197,16 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the force.
 
         Returns
         -------
         The force as a numpy.array of the same shape as the positions
         in `particles.pos`.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
         for pair in particles.pairs():
@@ -225,17 +225,15 @@ class PairLennardJonesCut(PotentialFunction):
                 virial += np.outer(forceij, delta)
         return forces, virial
 
-    def potential_and_force(self, particles, box):
+    def potential_and_force(self, system):
         """Calculate potential and force for the Lennard-Jones interaction.
 
         Since the force is evaluated, the virial is also calculated.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the potential and force.
 
         Note
         ----
@@ -256,6 +254,8 @@ class PairLennardJonesCut(PotentialFunction):
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
         """
+        particles = system.particles
+        box = system.box
         v_pot = 0.0
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
@@ -302,21 +302,21 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
                                                     shift=shift)
 
-    def potential(self, particles, box):
+    def potential(self, system):
         """Calculate the potential energy for the Lennard-Jones interaction.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the potential.
 
         Returns
         -------
         out : float
             The potential energy as a float.
         """
+        particles = system.particles
+        box = system.box
         pot = 0.0
         # the particle list may implement a list which we can
         # loop over. This could be some kind of fancy neighborlist
@@ -335,7 +335,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                                         r6inv, particles.ptype[k+i+1], itype))
         return pot
 
-    def force(self, particles, box):
+    def force(self, system):
         """Calculate the force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force
@@ -343,10 +343,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the force.
 
         Note
         ----
@@ -362,6 +360,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
         for i, particle_i in enumerate(particles.pos[:-1]):
@@ -383,17 +383,15 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
                 virial += np.einsum('ij,ik->jk', forceij, delta[k])
         return forces, virial
 
-    def potential_and_force(self, particles, box):
+    def potential_and_force(self, system):
         """Calculate the potential & force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force is evaluated.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System` from `pyretis.core.system`.
+            The system for which we calculate the potential and force.
 
         Note
         ----
@@ -414,6 +412,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
         """
+        particles = system.particles
+        box = system.box
         pot = 0.0
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))

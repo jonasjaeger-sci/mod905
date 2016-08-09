@@ -515,7 +515,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
         previous = particles.get_phase_point()
         previous['order'] = curr
         # kick the time slice
-        _kick_timeslice(system, rgen, aimless=True, momentum=True)
+        _kick_timeslice(system, rgen, aimless=True, momentum=False)
         # integrate forward one step:
         integrator.integration_step(system)
         # compare previous order parameter and the new one:

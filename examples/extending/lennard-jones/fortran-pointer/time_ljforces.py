@@ -39,10 +39,10 @@ def test_wrapper(func, *args, **kwargs):
     return wrapped
 
 
-def test_function(function, particles, box, repeat=3, number=5):
+def test_function(function, system, repeat=3, number=5):
     """Run the test for a function"""
     print('Testing function: {}'.format(function.__name__))
-    wrapped = test_wrapper(function, particles, box)
+    wrapped = test_wrapper(function, system)
     res = timeit.repeat(wrapped, repeat=repeat, number=number)
     best = min(res) / float(number)
     avg = np.average([resi / float(number) for resi in res])
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         system = set_up_initial_state(nlattice=i)
         print('Testing fortran implementation')
         time1 = test_function(potential.potential_and_force,
-                              system.particles, system.box,
+                              system,
                               number=10, repeat=3)
         results.append((system.particles.npart, time1[0], time1[1], time1[2]))
     results = np.array(results)

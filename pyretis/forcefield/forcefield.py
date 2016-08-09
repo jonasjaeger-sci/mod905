@@ -13,7 +13,6 @@ ForceField
     A class representing a generic Force Field.
 """
 import logging
-from pyretis.core.common import inspect_function
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -36,11 +35,6 @@ class ForceField(object):
         The potential functions that the force field is built up from.
     params : list
         The parameters for the corresponding potential functions.
-    arguments : dict
-        Contains information on how to call the different functions.
-        `arguments['force']` = list with information on how to call the
-        corresponding potential function, i.e. it is equal to
-        `inspect.getargspec(potential.force)`.
     """
 
     def __init__(self, desc='Generic force field', potential=None,
@@ -60,7 +54,6 @@ class ForceField(object):
         self.desc = desc
         self.potential = []
         self.params = []
-        self.arguments = {'force': [], 'potential': [], 'pot-and-force': []}
         if potential is not None:
             if params is None:
                 for pot in potential:
@@ -97,10 +90,6 @@ class ForceField(object):
                    'This was ignored -- please check your settings.')
             logger.warning(msg)
             return None
-        arg_force, arg_pot, arg_pot_force = inspect_potential(potential)
-        self.arguments['force'].append(arg_force)
-        self.arguments['potential'].append(arg_pot)
-        self.arguments['pot-and-force'].append(arg_pot_force)
         self.potential.append(potential)
         if parameters is not None:
             potential.set_parameters(parameters)
@@ -124,9 +113,6 @@ class ForceField(object):
             idx = self.potential.index(potential)
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
-            self.arguments['force'].pop(idx)
-            self.arguments['potential'].pop(idx)
-            self.arguments['pot-and-force'].pop(idx)
             return potrm, paramrm
         else:
             logger.warning('Potential not found in the force field functions')
@@ -154,14 +140,13 @@ class ForceField(object):
         else:
             logger.warning('Unknow potential. Will not update!')
 
-    def evaluate_force(self, **kwargs):
+    def evaluate_force(self, system):
         """Evaluate the force on the particles.
 
         Parameters
         ----------
-        kwargs : dict
-            Variables needed to evaluate the forces. Typically this is
-            the positions and the particle names/types.
+        system : object like `System`
+            The system we evaluate the forces in.
 
         Returns
         -------
@@ -169,61 +154,46 @@ class ForceField(object):
             The forces on the particles.
         out[1] : float
             The virial.
-
-        Note
-        ----
-        See note in :py:func:`pyretis.forcefield.evaluate_potential_and_force`
         """
         force = None
         virial = None
-        for pot, argu in zip(self.potential, self.arguments['force']):
-            var = argu['args']
-            args = [kwargs[vari] for vari in var if vari != 'self']
+        for pot in self.potential:
             if force is None or virial is None:
-                force, virial = pot.force(*args)
+                force, virial = pot.force(system)
             else:
-                forcei, viriali = pot.force(*args)
+                forcei, viriali = pot.force(system)
                 force += forcei
                 virial += viriali
         return force, virial
 
-    def evaluate_potential(self, **kwargs):
+    def evaluate_potential(self, system):
         """Evaluate the potential energy.
 
         Parameters
         ----------
-        kwargs : dict
-            Variables needed to evaluate the potential. Typically this
-            is the positions and the particle names/types.
+        system : object like `System`.
+            The system we evaluate the potential in.
 
         Returns
         -------
         out : float
             The potential energy.
-
-        Note
-        ----
-        See note in :py:func:`pyretis.forcefield.evaluate_potential_and_force`
         """
         v_pot = None
-        for pot, argu in zip(self.potential, self.arguments['potential']):
-            var = argu['args']
-            args = [kwargs[vari] for vari in var if vari != 'self']
+        for pot in self.potential:
             if v_pot is None:
-                v_pot = pot.potential(*args)
+                v_pot = pot.potential(system)
             else:
-                v_pot += pot.potential(*args)
+                v_pot += pot.potential(system)
         return v_pot
 
-    def evaluate_potential_and_force(self, **kwargs):
+    def evaluate_potential_and_force(self, system):
         """Evaluate the potential energy and the force.
 
         Parameters
         ----------
-        kwargs : dict
-            Variables needed to evaluate the potential and force.
-            Typically this is the positions and the particle
-            names/types.
+        system : object like `System`.
+            The system we evaluate the potential energy and force in.
 
         Returns
         -------
@@ -233,26 +203,15 @@ class ForceField(object):
             The calculated forces.
         out[2] : float
             The calculated virial.
-
-        Note
-        ----
-        In this function each potential function picks out the variable
-        that it needs. This means that this function will be passed too
-        many parameters. One solution might be to just pass the system
-        to the potential, with additional optional arguments on what to
-        override (override is here useful when calculating the energies
-        in Monte Carlo moves - i.e. to use the trial positions).
         """
         v_pot = None
         force = None
         virial = None
-        for pot, argu in zip(self.potential, self.arguments['pot-and-force']):
-            var = argu['args']
-            args = [kwargs[vari] for vari in var if vari != 'self']
+        for pot in self.potential:
             if v_pot is None or force is None or virial is None:
-                v_pot, force, virial = pot.potential_and_force(*args)
+                v_pot, force, virial = pot.potential_and_force(system)
             else:
-                v_poti, forcei, viriali = pot.potential_and_force(*args)
+                v_poti, forcei, viriali = pot.potential_and_force(system)
                 v_pot += v_poti
                 force += forcei
                 virial += viriali
@@ -295,36 +254,3 @@ class ForceField(object):
         for i, pot in enumerate(self.potential):
             msg.append('\t{}: {}'.format(i + 1, pot.desc))
         return '\n'.join(msg)
-
-
-def inspect_potential(potential):
-    """A method to figure out arguments for a given function.
-
-    This method is used when adding potential functions to the force
-    field in order for the force field to figure out how these should
-    be executed. Here we need to distinguish between python versions
-    since the ``inspect.getargspec`` is deprecated for python3.5 and
-    later.
-
-    Parameters
-    ----------
-    potential : object like `PotentialFunction`
-        The potential to inspect
-
-    Returns
-    -------
-    out[0] : dict
-        The arguments for calling `potential.force` if any.
-    out[1] : dict
-        The arguments for calling `potential.potential` if any.
-    out[2] : dict
-        The arguments for calling `potential.potential_and_force`
-        if any.
-    """
-    args = {}
-    for funcname in ['force', 'potential', 'potential_and_force']:
-        args[funcname] = None
-        function = getattr(potential, funcname, None)
-        if function is not None:
-            args[funcname] = inspect_function(function)
-    return args['force'], args['potential'], args['potential_and_force']
