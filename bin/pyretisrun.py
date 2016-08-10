@@ -32,9 +32,9 @@ import os
 import sys
 # Other libraries:
 import tqdm  # for a nice progress bar
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot as plt
+#import matplotlib
+#matplotlib.use('Agg')
+#from matplotlib import pyplot as plt
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
@@ -54,6 +54,7 @@ from pyretis.inout.settings import (parse_settings_file,
                                     write_settings_file,
                                     create_system,
                                     create_force_field,
+                                    create_orderparameter,
                                     create_simulation)
 
 
@@ -456,6 +457,7 @@ if __name__ == '__main__':
         print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
         system.forcefield = create_force_field(settings)
+        system.order_function = create_orderparameter(settings)
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)

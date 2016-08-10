@@ -127,7 +127,7 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def propagate(self, path, system, interfaces, order_function,
+    def propagate(self, path, system, interfaces,
                   reverse=False, thermo=False):
         """Generate a path by integrating until a criterion is met.
 
@@ -152,10 +152,6 @@ class Integrator(object):
             reset to the initial state when the integration is done.
         interfaces : list of floats.
             These interfaces define the stopping criterion.
-        order_function : object like `OrderParameter` from
-            `.orderparameter` This object is callable and takes the
-            `System` as it's argument and returns a tuple where the
-            first item is equal to the order parameter.
         reverse : boolean
             If True, the system will be propagated backwards in time.
         thermo : boolean
@@ -167,7 +163,7 @@ class Integrator(object):
         initial_system = system.particles.get_phase_point()
         left, _, right = interfaces
         while True:
-            orderp = order_function(system)
+            orderp = system.calculate_order()
             energy = calculate_thermo_path(system) if thermo else None
             add = path.append(orderp,
                               system.particles.pos,

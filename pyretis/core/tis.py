@@ -37,8 +37,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['make_tis_step', 'generate_initial_path_kick']
 
 
-def make_tis_step_ensemble(path_ensemble, system, order_function,
-                           integrator, rgen, tis_settings, cycle):
+def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
+                           tis_settings, cycle):
     """Function to preform TIS step for a path ensemble.
 
     This function will run `make_tis_step` for the given path_ensemble.
@@ -54,9 +54,6 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -82,7 +79,6 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
                                           path_ensemble.interfaces,
-                                          order_function,
                                           integrator,
                                           rgen,
                                           tis_settings)
@@ -90,8 +86,8 @@ def make_tis_step_ensemble(path_ensemble, system, order_function,
     return accept, trial, status
 
 
-def initiate_path_ensemble(path_ensemble, system, order_function,
-                           integrator, rgen, tis_settings, cycle=0):
+def initiate_path_ensemble(path_ensemble, system, integrator, rgen,
+                           tis_settings, cycle=0):
     """This function will run the initiate for a given ensemble.
 
     This function is intended for convenience. It should handle and
@@ -104,9 +100,6 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -130,14 +123,13 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
     if tis_settings['initial_path'] == 'kick':
         initial_path = generate_initial_path_kick(system,
                                                   path_ensemble.interfaces,
-                                                  order_function,
                                                   integrator, rgen,
                                                   tis_settings)
         status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle=cycle)
 
 
-def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
+def make_tis_step(path, system, interfaces, integrator, rgen,
                   tis_settings):
     """Perform a TIS step and generate a new path/trajectory.
 
@@ -155,9 +147,6 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
         and to the particle list.
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    order_function : function
-        This function takes the system as it's argument and returns
-        float(s) which is equal to the order parameter(s).
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -184,7 +173,7 @@ def make_tis_step(path, system, interfaces, order_function, integrator, rgen,
                                                   tis_settings['start_cond'])
     else:
         accept, new_path, status = _shoot(path, system, interfaces,
-                                          order_function, integrator, rgen,
+                                          integrator, rgen,
                                           tis_settings)
     return accept, new_path, status
 
@@ -227,7 +216,7 @@ def _time_reversal(path, interfaces, start_condition):
     return accept, new_path, status
 
 
-def _shoot(path, system, interfaces, order_function, integrator, rgen,
+def _shoot(path, system, interfaces, integrator, rgen,
            tis_settings):
     """Perform a shooting-move.
 
@@ -245,9 +234,6 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     interfaces : list/tuple of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         The integrator is used to propagate a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -288,7 +274,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
                           momentum=False)[0]
     # update the order parameter since it could depend on velocity
-    orderp = order_function(system)
+    orderp = system.calculate_order()
     # We now check if the kick was OK or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
@@ -318,7 +304,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     # generate the backward path:
     path_back = Path(rgen, maxlen=maxlenb)
     success_back, _ = integrator.propagate(path_back, system, interfaces,
-                                           order_function, reverse=True)
+                                           reverse=True)
 
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
@@ -340,7 +326,7 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     maxlenf = maxlen - path_back.length + 1
     path_forw = Path(rgen, maxlen=maxlenf)
     success_forw, _ = integrator.propagate(path_forw, system, interfaces,
-                                           order_function, reverse=False)
+                                           reverse=False)
     path_forw.time_origin = time_shoot
     # Now, the forward could have failed by exceeding `maxlenf`,
     # however, it could also fail when we paste together so that
@@ -365,8 +351,8 @@ def _shoot(path, system, interfaces, order_function, integrator, rgen,
     return accept, trial_path, trial_path.status
 
 
-def generate_initial_path_kick(system, interfaces, order_function,
-                               integrator, rgen, tis_settings):
+def generate_initial_path_kick(system, interfaces, integrator,
+                               rgen, tis_settings):
     """Simple function to generate an initial path.
 
     This function will generate an initial path by repeatedly kicking a
@@ -386,9 +372,6 @@ def generate_initial_path_kick(system, interfaces, order_function,
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    order_function : function
-        This is a function that calculates the order parameter for a
-        system.
     integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -406,8 +389,8 @@ def generate_initial_path_kick(system, interfaces, order_function,
     out : object of type `Path` from `.path`.
         This is the generated initial path
     """
-    previous, _ = _kick_across_middle(system, order_function, integrator,
-                                      rgen, interfaces[1])
+    previous, _ = _kick_across_middle(system, integrator, rgen,
+                                      interfaces[1])
     # Note: current point is stored in system
     # When the kicking is done, we have two points (`previous` and the
     # current system.particles).
@@ -415,7 +398,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
     maxlen = tis_settings['maxlength']
     path_forw = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_forw, system, interfaces,
-                                        order_function, reverse=False)
+                                        reverse=False)
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -424,7 +407,7 @@ def generate_initial_path_kick(system, interfaces, order_function,
     system.particles.set_phase_point(previous)
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, interfaces,
-                                        order_function, reverse=True)
+                                        reverse=True)
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -461,15 +444,14 @@ def generate_initial_path_kick(system, interfaces, order_function,
                   '\nRunning TIS to fix it!')
         logger.info(msgtxt)
         initial_path = _fix_path_by_tis(initial_path, system, interfaces,
-                                        order_function, integrator, rgen,
-                                        tis_settings)
+                                        integrator, rgen, tis_settings)
     else:
         logger.error('Could not generate initial path.')
         raise ValueError('Could not generate initial path.')
     return initial_path
 
 
-def _kick_across_middle(system, order_function, integrator, rgen, middle):
+def _kick_across_middle(system, integrator, rgen, middle):
     """Repeatedly kick a phase point so that it crosses the middle interface.
 
     Parameters
@@ -477,9 +459,6 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     system : object like `System` from `.system`.
         This is the system that contains the particles we are
         investigating
-    order_function : function
-        This is a function that calculates the order parameter for a
-        system.
     integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -509,7 +488,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
     # this is done by sequentially kicking the initial phase point
     previous = None
     particles = system.particles
-    curr = order_function(system)[0]
+    curr = system.calculate_order()[0]
     while True:
         # save current state:
         previous = particles.get_phase_point()
@@ -520,7 +499,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle):
         integrator.integration_step(system)
         # compare previous order parameter and the new one:
         prev = curr
-        curr = order_function(system)[0]
+        curr = system.calculate_order()[0]
         if (prev <= middle < curr) or (curr < middle <= prev):
             # have crossed middle interface, just stop the loop
             break
@@ -587,7 +566,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     return dek, kin_new
 
 
-def _fix_path_by_tis(initial_path, system, interfaces, order_function,
+def _fix_path_by_tis(initial_path, system, interfaces,
                      integrator, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
@@ -605,9 +584,6 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    order_function : function
-        This is a function that calculates the order parameter for a
-        system.
     integrator : object like `Integrator` from `.integrators`.
         This is the propagator of the simulation
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -638,7 +614,6 @@ def _fix_path_by_tis(initial_path, system, interfaces, order_function,
         accept, trial, _ = make_tis_step(initial_path,
                                          system,
                                          interfaces,
-                                         order_function,
                                          integrator,
                                          rgen,
                                          local_tis_settings)

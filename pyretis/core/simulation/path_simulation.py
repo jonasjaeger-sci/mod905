@@ -44,12 +44,6 @@ class SimulationSingleTIS(Simulation):
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    orderparameter : function or object
-        The defines how the order parameter should be calculated.
-        This is either a function or a object like `OrderParameter` from
-        `pyretis.core.orderparameter`.
-        It is assumed that the order_function can be called with an
-        object like `pyretis.core.system.System` as a parameter.
     path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
         This is used for storing results for the simulation.
     rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
@@ -61,7 +55,7 @@ class SimulationSingleTIS(Simulation):
         (shooting moves etc.).
     """
 
-    def __init__(self, system, integrator, orderparameter, path_ensemble,
+    def __init__(self, system, integrator, path_ensemble,
                  tis_settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
@@ -72,11 +66,6 @@ class SimulationSingleTIS(Simulation):
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
-        orderparameter : function or object like `OrderParameter`
-            This function is used to calculate the order parameter.
-            It is assumed to be called as ``orderparameter(system)``
-            and to return at least two values where the first one
-            is the scalar order parameter
         path_ensemble : object like `PathEnsemble` from `pyretis.core.path`.
             This is used for storing results for the simulation. It
             is also used for defining the interfaces for this
@@ -107,7 +96,6 @@ class SimulationSingleTIS(Simulation):
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
-        self.orderparameter = orderparameter
         self.path_ensemble = path_ensemble
         self.interfaces = path_ensemble.interfaces
         self.tis_settings = tis_settings
@@ -133,7 +121,6 @@ class SimulationSingleTIS(Simulation):
         if self.first_step:
             initiate_path_ensemble(self.path_ensemble,
                                    self.system,
-                                   self.orderparameter,
                                    self.integrator,
                                    self.rgen,
                                    self.tis_settings,
@@ -147,7 +134,6 @@ class SimulationSingleTIS(Simulation):
             self.cycle['stepno'] += 1
             accept, trial, status = make_tis_step_ensemble(self.path_ensemble,
                                                            self.system,
-                                                           self.orderparameter,
                                                            self.integrator,
                                                            self.rgen,
                                                            self.tis_settings,
@@ -181,7 +167,7 @@ class SimulationRETIS(Simulation):
     ----------
     """
 
-    def __init__(self, system, integrator, orderparameter, path_ensembles,
+    def __init__(self, system, integrator, path_ensembles,
                  tis_settings, retis_settings, steps=0, startcycle=0):
         """Initialization of the RETIS simulation.
 
@@ -192,11 +178,6 @@ class SimulationRETIS(Simulation):
         integrator : object like `Integrator` from `pyretis.core.integrators`
             This is the integrator that is used to propagate the system
             in time.
-        orderparameter : function or object like `OrderParameter`
-            This function is used to calculate the order parameter.
-            It is assumed to be called as ``orderparameter(system)``
-            and to return at least two values where the first one
-            is the scalar order parameter.
         path_ensembles : list of objects like `PathEnsemble`.
             This is used for storing results for the different path
             ensembles.
@@ -240,7 +221,6 @@ class SimulationRETIS(Simulation):
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
-        self.orderparameter = orderparameter
         self.path_ensembles = path_ensembles
         self.settings = {'tis': tis_settings, 'retis': retis_settings}
         # check for shooting:
@@ -276,7 +256,6 @@ class SimulationRETIS(Simulation):
         logger.info(msg)
         initiate_path_ensemble(ensemble,
                                self.system,
-                               self.orderparameter,
                                self.integrator,
                                self.rgen,
                                self.settings['tis'],
@@ -298,7 +277,6 @@ class SimulationRETIS(Simulation):
                 logger.info(msg)
                 initiate_path_ensemble(ensemble,
                                        self.system,
-                                       self.orderparameter,
                                        self.integrator,
                                        self.rgen,
                                        self.settings['tis'],
@@ -309,7 +287,6 @@ class SimulationRETIS(Simulation):
             self.cycle['stepno'] += 1
             retis_step = make_retis_step(self.path_ensembles,
                                          self.system,
-                                         self.orderparameter,
                                          self.integrator,
                                          self.rgen,
                                          self.settings,

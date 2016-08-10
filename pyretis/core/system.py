@@ -60,6 +60,8 @@ class System(object):
     forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
         and potential calculation.
+    order_function : object like `OrderParameter` from `.orderparameter`
+        Defines the an order parameter to use for the system.
     units : string
         Units to use for the system/simulation. Should match the defined
         units in `pyretis.core.units`.
@@ -98,6 +100,8 @@ class System(object):
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
+        self.order_function = None
+        self.orderp = None
         self.set_energy = energy
         self.post_setup = []
 
@@ -223,6 +227,13 @@ class System(object):
             force = np.zeros(dim)
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
+
+    def calculate_order(self):
+        """Calculates and updates the order parameter"""
+        if self.order_function:
+            order = self.order_function(self)
+            self.orderp = order
+        return self.orderp
 
     def force(self):
         """Update the forces and virial
