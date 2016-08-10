@@ -26,7 +26,6 @@ from pyretis.core.pathensemble import (PathEnsemble,
                                        PATH_DIR_FMT,
                                        create_path_ensembles)
 from pyretis.inout.settings.common import (create_integrator,
-                                           create_orderparameter,
                                            check_settings)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -71,8 +70,7 @@ def create_mdflux_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    orderp = create_orderparameter(settings)
-    return SimulationMDFlux(system, integ, orderp, settings['interfaces'],
+    return SimulationMDFlux(system, integ, settings['interfaces'],
                             steps=settings['steps'],
                             startcycle=settings.get('startcycle', 0))
 
@@ -124,12 +122,11 @@ def create_tis_single_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    orderp = create_orderparameter(settings)
     if 'path-ensemble' in settings:
         path_ensemble = settings['path-ensemble']
     else:
         path_ensemble = create_path_ensemble(settings)
-    return SimulationSingleTIS(system, integ, orderp,
+    return SimulationSingleTIS(system, integ,
                                path_ensemble,
                                settings['tis'],
                                steps=settings['steps'],
@@ -152,10 +149,9 @@ def create_retis_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    orderp = create_orderparameter(settings)
     path_ensembles, _ = create_path_ensembles(settings['interfaces'],
                                               include_zero=True)
-    return SimulationRETIS(system, integ, orderp,
+    return SimulationRETIS(system, integ,
                            path_ensembles,
                            settings['tis'],
                            settings['retis'],
@@ -267,8 +263,7 @@ def create_simulation(settings, system):
                           'required': ('steps', 'integrator')},
                'md-flux': {'create': create_mdflux_simulation,
                            'single': True,
-                           'required': ('steps', 'integrator', 'interfaces',
-                                        'orderparameter')},
+                           'required': ('steps', 'integrator', 'interfaces')},
                'umbrellawindow': {'create': create_umbrellaw_simulation,
                                   'single': True,
                                   'required': ('umbrella', 'over', 'maxdx',

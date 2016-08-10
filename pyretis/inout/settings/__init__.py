@@ -39,6 +39,7 @@ parse_settings_file
 """
 from __future__ import absolute_import
 from .settings import parse_settings_file, write_settings_file
+from .common import create_orderparameter
 from .createsystem import create_system
 from .createsimulation import create_simulation
 from .createoutput import create_output

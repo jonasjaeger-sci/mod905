@@ -116,18 +116,12 @@ class SimulationMDFlux(Simulation):
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    orderparemter : function or object.
-        The defines how the order parameter should be calculated.
-        This is either a function or a object like `OrderParameter`
-        from `pyretis.core.orderparameter`. It is assumed that
-        `orderparameter` can be called using a `System` object
-        as the parameter.
     leftside_prev : list of booleans.
         These are used to store the previous positions with respect
         to the interfaces.
     """
 
-    def __init__(self, system, integrator, orderparameter, interfaces,
+    def __init__(self, system, integrator, interfaces,
                  steps=0, startcycle=0):
         """Initialization of the MD-Flux simulation.
 
@@ -141,11 +135,6 @@ class SimulationMDFlux(Simulation):
         interfaces : list of floats.
             These defines the interfaces for which we will check the
             crossing(s).
-        orderparameter : function or object like `OrderParameter`.
-            This function is used to calculate the order parameter.
-            It is assumed to be called as ``orderparameter(system)``
-            and to return at least two values where the first one
-            is the scalar order parameter.
         steps : int, optional.
             The number of steps to perform.
         startcycle : int, optional.
@@ -158,11 +147,10 @@ class SimulationMDFlux(Simulation):
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
         self.interfaces = interfaces
-        self.orderparameter = orderparameter
         # set up for initial crossing
         self.leftside_prev = None
         leftside, _ = check_crossing(self.cycle['step'],
-                                     self.orderparameter(self.system)[0],
+                                     self.system.calculate_order()[0],
                                      self.interfaces,
                                      self.leftside_prev)
         self.leftside_prev = leftside
@@ -185,7 +173,7 @@ class SimulationMDFlux(Simulation):
         # collect energy and order parameter, this is done at all steps
         results = {'cycle': self.cycle,
                    'thermo': calculate_thermo(self.system),
-                   'orderp': self.orderparameter(self.system),
+                   'orderp': self.system.calculate_order(),
                    'traj': self.system}
         # do not check crossing at step 0
         if not self.first_step:
