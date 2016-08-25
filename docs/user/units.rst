@@ -79,7 +79,12 @@ any of these units, e.g.
 
 Setting the unit system will define the units used for input to
 pyretis. The units for the different systems are given in
-the :ref:`table of input units <table_unit_input>` below.
+the :ref:`table of input units <table_unit_input>` below. Note
+that the time unit is determined by the energy, length and
+mass scale and that **the input time step will be assumed
+to be given in internal units**. Conversion factors to more
+familiar units are given in the
+:ref:`table on time units <table_unit_systems_time>`.
 
 If the initial configuration is given as a file (for instance
 in xyz format), then the system of units will be used to
@@ -96,23 +101,23 @@ converted internally to the selected system of units.
 .. table:: Input units for different systems
    :class: table-hover
 
-   +--------------+----------+---------+---------------+----------+---------+
-   | Unit system  | Energy   | Length  | Mass          | Velocity | Time    |
-   +==============+==========+=========+===============+==========+=========+
-   | ``lj``       | reduced  | reduced | reduced       | reduced  | reduced |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``real``     | kcal/mol |  Å      | g/mol         | Å/fs     | fs      |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``gromacs``  | kJ/mol   | nm      | g/mol         | nm/ps    | ps      |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``metal``    | eV       |  Å      | g/mol         | Å/ps     | ps      |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``au``       | hartree  | bohr    | electron mass | bohr/at  | at      |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``electron`` | hartree  | bohr    | g/mol (amu)   | bohr/fs  | fs      |
-   +--------------+----------+---------+---------------+----------+---------+
-   | ``si``       | J        | m       | kg            | m/s      | s       |
-   +--------------+----------+---------+---------------+----------+---------+
+   +--------------+----------+---------+---------------+
+   | Unit system  | Energy   | Length  | Mass          |
+   +==============+==========+=========+===============+
+   | ``lj``       | reduced  | reduced | reduced       |
+   +--------------+----------+---------+---------------+
+   | ``real``     | kcal/mol |  Å      | g/mol         |
+   +--------------+----------+---------+---------------+
+   | ``gromacs``  | kJ/mol   | nm      | g/mol         |
+   +--------------+----------+---------+---------------+
+   | ``metal``    | eV       |  Å      | g/mol         |
+   +--------------+----------+---------+---------------+
+   | ``au``       | hartree  | bohr    | electron mass |
+   +--------------+----------+---------+---------------+
+   | ``electron`` | hartree  | bohr    | g/mol (amu)   |
+   +--------------+----------+---------+---------------+
+   | ``si``       | J        | m       | kg            |
+   +--------------+----------+---------+---------------+
 
 For the ``lj`` system, the energy, length, mass, etc. are all
 given in reduced units. However, it still might be useful (for instance
@@ -156,6 +161,45 @@ further described in the :ref:`next section <user-units-custom>`.
    +--------------+----------------+-------------+--------------------+
    | ``si``       | 1 J            | 1 m         | 1 kg               |
    +--------------+----------------+-------------+--------------------+
+
+These units are also used for the input and defines the time unit.
+The time units are shown in :ref:`the table below <table_unit_systems_time>`.
+Further, all system of units expect an input temperature in Kelvin
+(``K``) and all systems, with the exception of ``si``, expects a
+charge in units of electron charges. The ``si`` system uses here
+Coulomb as it's unit for charge. The time units for the different
+energy systems are given in the table below.
+
+.. _table_unit_systems_time:
+
+.. table:: Time units and velocity conversions for energy systems
+   :class: table-hover
+
+   +--------------+--------------------+
+   | Unit system  | Time unit          |
+   +==============+====================+
+   | ``lj``       | 2.15634977232 ps   |
+   +--------------+--------------------+
+   | ``real``     | 48.8882129084 fs   |
+   +--------------+--------------------+
+   | ``gromacs``  | 1.0 ps             |
+   +--------------+--------------------+
+   | ``metal``    | 10.1805056505 fs   |
+   +--------------+--------------------+
+   | ``au``       | 0.0241888423521 fs |
+   +--------------+--------------------+
+   | ``electron`` | 1.03274987345 fs   |
+   +--------------+--------------------+
+   | ``si``       | 1.0 s              |
+   +--------------+--------------------+
+
+
+The interpretation here is that if you are for instance using the system
+``real`` and would like to have a time step equal to ``0.5 fs``, then the
+input time step should be ``0.5 fs / 48.8882129084 fs`` which is
+approximately ``0.010227``. Another example: If you are using the system
+``metal`` and set your time step to ``0.1``, then the time step will be
+approximately ``1.018 fs``.
 
 
 .. _user-units-custom:
