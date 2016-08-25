@@ -182,7 +182,7 @@ class System(object):
         ----------
         temperature : float, optional
             The temperature of the system. If the temperature
-            is not given, :py:attribute:`self.temperature` will be used.
+            is not given, `self.temperature` will be used.
 
         Returns
         -------
