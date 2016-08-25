@@ -17,10 +17,12 @@ http://physics.nist.gov/constants or in plain text. [7]_
 
 Internally, all computations are carried out in units which are defined
 by a length scale, an energy scale and a mass scale. This means that
-the time scale is given by these choice. Typically will the input to
-pyretis be in a more human-readable form (e.g. femtoseconds) which is
-converted to the internal units when pyretis is setting up a new
-simulation.
+the time scale is given by these choice. The input to pyretis is
+assumed to be in these internal units. There is one exception to
+this and that is initial configurations given by certain file types
+that define a particular unit (for instance the xyz-files which uses
+Ångström as the length unit). These will be converted to internal
+units by pyretis.
 
 Charges are typically given (in the input) in units of the electron
 charge. The internal unit for charge is not yet implemented, but one
@@ -166,34 +168,37 @@ units for the other systems are given in the table below:
   +-------------+--------------+-------------+--------------------+
 
 
-The input units for the different energy systems are given in the table
-below. For the ``lj`` system all input units are in reduced quantities.
+These units are also used for the input and defines the time unit.
 Further, all system of units expect an input temperature in Kelvin
 (``K``) and all systems, with the exception of ``si``, expects a
 charge in units of electron charges. The ``si`` system uses here
-Coulomb as it's unit for charge. The time unit ``at`` given below
-for ``au`` is the atomic time unit which is not explicitly shown
-here, but it's implicitly given by the energy, length
-and mass unit (``at`` is approximately 2.41888433e-17 s).
+Coulomb as it's unit for charge. The time units for the different
+energy systems are given in the table below.
 
 
-.. table:: Input units for energy systems
+.. table:: Time units and velocity conversions for energy systems
 
-  +-------------+----------+--------+---------------+----------+------+
-  | System name | Energy   | Length | Mass          | Velocity | Time |
-  +=============+==========+========+===============+==========+======+
-  | real        | kcal/mol |  Å     | g/mol         | Å/fs     | fs   |
-  +-------------+----------+--------+---------------+----------+------+
-  | metal       | eV       |  Å     | g/mol         | Å/ps     | ps   |
-  +-------------+----------+--------+---------------+----------+------+
-  | au          | hartree  | bohr   | electron mass | bohr/at  | at   |
-  +-------------+----------+--------+---------------+----------+------+
-  | electron    | hartree  | bohr   | g/mol (amu)   | bohr/fs  | fs   |
-  +-------------+----------+--------+---------------+----------+------+
-  | si          | J        | m      | kg            | m/s      | s    |
-  +-------------+----------+--------+---------------+----------+------+
-  | gromacs     | kJ/mol   | nm     | g/mol         | nm/ps    | ps   |
-  +-------------+----------+--------+---------------+----------+------+
+  +-------------+----------------------+
+  | System name | Time unit            |
+  +=============+======================+
+  | real        | 48.8882129084 fs     |
+  +-------------+----------------------+
+  | metal       | 10.1805056505 fs     |
+  +-------------+----------------------+
+  | au          |  0.0241888423521 fs  |
+  +-------------+----------------------+
+  | electron    | 1.03274987345 fs     |
+  +-------------+----------------------+
+  | si          | 1.0 s                |
+  +-------------+----------------------+
+  | gromacs     | 1.0 ps               |
+  +-------------+----------------------+
+
+
+The interpretation here is that if you are for instance using the system
+``real`` and would like to have a time step equal to 0.5 fs, then the
+input time step should be ``0.5 fs / 48.8882129084 fs`` which is
+approximately ``0.010227``.
 
 
 References and footnotes
