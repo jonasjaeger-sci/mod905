@@ -56,15 +56,17 @@ class System(object):
         preparing to run a simulation. This is typically functions that
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
-        such that system.function(*args) can be called.
+        such that ``system.function(*args)`` can be called.
     forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
         and potential calculation.
     order_function : object like `OrderParameter` from `.orderparameter`
-        Defines the an order parameter to use for the system.
+        Defines the an order parameter to use for the system. See
+        :py:mod:`pyretis.core.orderparameter` for the definition
+        of order parameters.
     units : string
         Units to use for the system/simulation. Should match the defined
-        units in `pyretis.core.units`.
+        units in :py:mod:`pyretis.core.units`.
     """
 
     def __init__(self, units='lj', box=None, temperature=None,
@@ -171,7 +173,7 @@ class System(object):
     def calculate_beta(self, temperature=None):
         r"""Return the so-called beta factor for the system.
 
-        Beta is defined as :math:`\beta = 1/(k_\text{B} \times T`
+        Beta is defined as :math:`\beta = 1/(k_\text{B} \times T)`
         where :math:`k_\text{B}` is the Boltzmann constant and the
         temperature `T` is either specified in the parameters or assumed
         equal to the set temperature of the system.
@@ -180,7 +182,7 @@ class System(object):
         ----------
         temperature : float, optional
             The temperature of the system. If the temperature
-            is not given, `self.temperature` will be used.
+            is not given, :py:attribute:`self.temperature` will be used.
 
         Returns
         -------
