@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package defines the core pyretis tools.
 
 The core tools are intended to set up simulations and run them.
@@ -92,7 +94,7 @@ Path (:py:class:`pyretis.core.path.Path`)
     A class representing a path. The path contains snapshots with
     some additional information (energies and order parameters).
 
-PathEnsemble (:py:class:`pyretis.core.pathensemble.Pathensemble`)
+PathEnsemble (:py:class:`pyretis.core.pathensemble.PathEnsemble`)
     A class representing a collection of paths. The path ensemble
     will not store the full trajectories of path, only a simplified
     representation of the paths.

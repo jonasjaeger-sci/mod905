@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of numerical integrators.
 
 These integrators are typically used to integrate and propagate
@@ -31,7 +33,7 @@ import logging
 import numpy as np
 from pyretis.core.common import generic_factory
 from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.particlefunctions import calculate_thermo
+from pyretis.core.particlefunctions import calculate_thermo_path
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -125,8 +127,8 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def propagate(self, path, system, interfaces, order_function,
-                  reverse=False):
+    def propagate(self, path, system, interfaces,
+                  reverse=False, thermo=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -150,23 +152,23 @@ class Integrator(object):
             reset to the initial state when the integration is done.
         interfaces : list of floats.
             These interfaces define the stopping criterion.
-        order_function : object like `OrderParameter` from
-            `.orderparameter` This object is callable and takes the
-            `System` as it's argument and returns a tuple where the
-            first item is equal to the order parameter.
         reverse : boolean
             If True, the system will be propagated backwards in time.
+        thermo : boolean
+            If True, we will do some extra calculation of energies.
         """
         status = 'Generating path...'
+        logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
         left, _, right = interfaces
         while True:
-            orderp = order_function(system)
+            orderp = system.calculate_order()
+            energy = calculate_thermo_path(system) if thermo else None
             add = path.append(orderp,
                               system.particles.pos,
                               system.particles.vel,
-                              calculate_thermo(system))
+                              energy)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -174,11 +176,11 @@ class Integrator(object):
                     status = 'Could not add for unknown reason'
                 success = False
                 break
-            if orderp[0] < left:
+            if path.ordermin[0] < left:
                 status = 'Crossed left interface!'
                 success = True
                 break
-            elif orderp[0] > right:
+            elif path.ordermax[0] > right:
                 status = 'Crossed right interface!'
                 success = True
                 break
@@ -189,6 +191,8 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
+        msg = 'Propagate done: "{}" (success: {}'.format(status, success)
+        logger.debug(msg)
         return success, status
 
     def __call__(self, system):
@@ -485,10 +489,10 @@ class Langevin(Integrator):
             self.param_iner['cho'] = []
 
             for imass in imasses:
-                sig_ri2 = ((self.delta_t * imass / (beta * self.gamma)) *
+                sig_ri2 = ((self.delta_t * imass[0] / (beta * self.gamma)) *
                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
-                sig_vi2 = ((1.0 - exp_gdt**2) * imass / beta)
-                cov_rvi = (imass/(beta * self.gamma)) * (1.0 - exp_gdt)**2
+                sig_vi2 = ((1.0 - exp_gdt**2) * imass[0] / beta)
+                cov_rvi = (imass[0]/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.array([[sig_ri2, cov_rvi],
                                        [cov_rvi, sig_vi2]])
                 self.param_iner['cov'].append(cov_matrix)
@@ -568,13 +572,8 @@ class Langevin(Integrator):
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
                 randxv = self.rgen.multivariate_normal(meani, covi, cho=choi,
                                                        size=ndim)
-                # special case for just a single particle:
-                if system.particles.npart == 1:
-                    pos_rand = randxv[:, 0]
-                    vel_rand = randxv[:, 1]
-                else:
-                    pos_rand[i] = randxv[:, 0]
-                    vel_rand[i] = randxv[:, 1]
+                pos_rand[i] = randxv[:, 0]
+                vel_rand[i] = randxv[:, 1]
         particles.pos += (self.param_iner['a1'] * particles.vel +
                           self.param_iner['a2'] * particles.force + pos_rand)
 

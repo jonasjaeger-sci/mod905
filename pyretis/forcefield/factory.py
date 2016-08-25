@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Define a factory for potentials.
 
 Note: This module will probably be deleted and replace with a true
@@ -21,7 +23,7 @@ __all__ = ['potential_factory']
 
 
 def potential_factory(settings):
-    """Create a potential according to the given integrator settings.
+    """Create a potential according to the given settings.
 
     This function is included as a convenient way of setting up and
     selecting a potential function.

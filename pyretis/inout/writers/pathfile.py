@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Functions and classes for input/output of path data.
 
 This module defines classes for writing path ensemble data.
@@ -238,7 +240,12 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
     This class is intended to mimic the `PathEnsemble` class but
     using files. It overloads the `get_paths()` from the PathEnsemble
     so that the analysis can be run on this object in the same way
-    that it is run on a `PathEnsemble` object.
+    that it is run on a `PathEnsemble` object. This object is included
+    as a convenient way of interacting with a path ensemble file
+    without having to load the entire file into memory. The
+    `PathensembleWriter` does not include a reference to a file name
+    but we do that in this class. We can then use the `load()` function
+    to iterate over paths in the file.
 
     Attributes
     ----------

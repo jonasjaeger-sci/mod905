@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module contains functions for RETIS.
 
 This module defines functions that are needed to perform Replica
@@ -46,7 +48,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['make_retis_step']
 
 
-def make_retis_step(ensembles, system, order_function, integrator, rgen,
+def make_retis_step(ensembles, system, integrator, rgen,
                     settings, cycle):
     """Determine and execute the appropriate RETIS move.
 
@@ -54,7 +56,7 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     We have two options:
 
     1) Do the RETIS swapping moves. This is done by calling
-       `name_of_function`
+       `retis_move`
     2) Do TIS moves, either for all ensembles or for just one, based on
        values of relative shoot frequencies. This is done by calling
        `make_retis_tis_steps`.
@@ -70,9 +72,6 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -91,12 +90,12 @@ def make_retis_step(ensembles, system, order_function, integrator, rgen,
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
-        logger.debug('Will execute RETIS moves')
-        return retis_moves(ensembles, system, order_function, integrator,
+        logger.debug('Will execute RETIS swapping moves')
+        return retis_moves(ensembles, system, integrator,
                            rgen, settings, cycle)
     else:
-        logger.debug('Will execute TIS moves')
-        return retis_tis_moves(ensembles, system, order_function, integrator,
+        logger.debug('Will execute RETIS TIS moves')
+        return retis_tis_moves(ensembles, system, integrator,
                                rgen, settings, cycle)
 
 
@@ -141,7 +140,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
     return idx, path_ensemble
 
 
-def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
+def retis_tis_moves(ensembles, system, integrator, rgen,
                     settings, cycle):
     """Execute the TIS steps in the RETIS method.
 
@@ -171,9 +170,6 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -197,7 +193,6 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
                                                      relative)
         # just to TIS for the ensemble we picked:
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
-                                                       order_function,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
         output[idx] = ['tis', accept, trial, status]
@@ -210,18 +205,21 @@ def retis_tis_moves(ensembles, system, order_function, integrator, rgen,
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
+            #msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
+            #logger.info(msgtxt)
             accept, trial, status = make_tis_step_ensemble(path_ensemble,
                                                            system,
-                                                           order_function,
                                                            integrator,
                                                            rgen,
                                                            settings['tis'],
                                                            cycle)
+            #msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
+            #logger.info(msgtxt)
             output.append(['tis', accept, trial, status])
     return output
 
 
-def retis_moves(ensembles, system, order_function, integrator, rgen,
+def retis_moves(ensembles, system, integrator, rgen,
                 settings, cycle):
     """Perform RETIS moves on the given ensembles.
 
@@ -248,9 +246,6 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
     system : object like `System` from `.system`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     rgen : object like `RandomGenerator` from `.random_gen`.
@@ -278,7 +273,7 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
         else:
             scheme = 0 if rgen.rand() < 0.5 else 1
         for idx in range(scheme, len(ensembles) - 1, 2):
-            status = retis_swap(ensembles, idx, system, order_function,
+            status = retis_swap(ensembles, idx, system,
                                 integrator, settings, cycle)
             output[idx] = ['swap', status]
             output[idx+1] = ['swap', status]
@@ -294,7 +289,7 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
                 output[0] = ['nullmove']
     else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
-        status = retis_swap(ensembles, idx, system, order_function, integrator,
+        status = retis_swap(ensembles, idx, system, integrator,
                             settings, cycle)
         if settings['retis']['nullmoves']:
             for idxo, path_ensemble in enumerate(ensembles):
@@ -306,7 +301,7 @@ def retis_moves(ensembles, system, order_function, integrator, rgen,
     return output
 
 
-def retis_swap(ensembles, idx, system, order_function, integrator,
+def retis_swap(ensembles, idx, system, integrator,
                settings, cycle):
     """Perform a RETIS swapping move for two ensembles.
 
@@ -331,9 +326,6 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     settings : dict
@@ -346,12 +338,12 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
     out : string
         The result of the swapping move.
     """
-    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble,
-                                          ensembles[idx+1].ensemble)
+    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble_name,
+                                          ensembles[idx+1].ensemble_name)
     logger.debug(msg)
     status = None
     if idx == 0:
-        return retis_swap_zero(ensembles, system, order_function, integrator,
+        return retis_swap_zero(ensembles, system, integrator,
                                settings, cycle)
     else:
         ensemble1 = ensembles[idx]
@@ -375,7 +367,7 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
         return status
 
 
-def retis_swap_zero(ensembles, system, order_function, integrator,
+def retis_swap_zero(ensembles, system, integrator,
                     settings, cycle):
     """The retis swapping move for ``[0^-] <-> [0^+]`` swaps.
 
@@ -415,9 +407,6 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     system : object like `System` from `.system`.
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : function
-        This function takes the system as it's argument and returns a
-        float which is equal to the order parameter.
     integrator : object like `Integrator` from `.integrators`.
         A integrator to use for propagating a path.
     settings : dict
@@ -433,39 +422,46 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     ensemble0 = ensembles[0]
     ensemble1 = ensembles[1]
     # 1) Generate path for [0^-] from [0^+]:
-    # Set the system at the initial point of path in [0^+]:
+    # We generate from the first point of the path in [0^+]:
     pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
-    path0 = ensemble1.last_path.empty_path(maxlen=maxlen-1)
-    integrator.propagate(path0, system, ensemble0.interfaces,
-                         order_function, reverse=True)
-    # Reverse this path:
-    path0 = path0.reverse()
-    # and add second point from [0^+] at the end:
+    path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
+    integrator.propagate(path_tmp, system, ensemble0.interfaces,
+                         reverse=True)
+    path0 = path_tmp.empty_path(maxlen=maxlen)
+    for phasepoint in path_tmp.trajectory(reverse=True):
+        _ = path0.append(*phasepoint)
+    # And add second point from [0^+] at the end:
     path0.append(*ensemble1.last_path.phasepoint(1))
+    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
+    path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
-    # We begin by creating a path with just the SECOND LAST point from [0^-]
-    path1 = path0.empty_path(maxlen=maxlen)
-    path1.append(*ensemble0.last_path.phasepoint(-2))
+    # This path will be generated starting from the LAST point of [0^-] which
+    # should be on the right side of the interface. We will also add the
+    # SECOND LAST point from [0^-] which should be on the left side of the
+    # interface, this is added after we have generated the path and we
+    # save space for this point by letting maxlen = maxlen-1 here:
+    path_tmp = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
     system.potential_and_force()  # update forces and potential
-    # propagate forward, note that the maxlen is there set to
-    # maxlength - 1 since we already have one point in the path
-    integrator.propagate(path1, system, ensemble1.interfaces,
-                         order_function, reverse=False)
-    # update status, etc
-    status = 'ACC'  # we are optimistic and hope that this is the default
-    path0.set_move('s+')
+    integrator.propagate(path_tmp, system, ensemble1.interfaces,
+                         reverse=False)
+    # Ok, now we need to just add the SECOND LAST point from [0^-] as
+    # the first point for the path:
+    path1 = path_tmp.empty_path(maxlen=maxlen)
+    path1.append(*ensemble0.last_path.phasepoint(-2))
+    path1 += path_tmp  # add rest of the path
     path1.set_move('s-')
-    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'
+    # Update status, etc
+    status = 'ACC'  # we are optimistic and hope that this is the default
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'
@@ -498,8 +494,8 @@ def null_move(path_ensemble, cycle):
         The status, which here will be 'ACC' since we just accept the
         last accepted path.
     """
-    msg = 'Null move for {}'.format(path_ensemble.ensemble)
-    logger.debug(msg)
+    msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
+    logger.info(msg)
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)

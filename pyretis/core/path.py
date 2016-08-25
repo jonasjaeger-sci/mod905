@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Classes and functions for paths.
 
 The classes and functions defined in this module are useful for
@@ -94,7 +96,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             # Note that now there is a chance of truncating the path while
             # pasting!
             maxlen = max(path_back.maxlen, path_forw.maxlen)
-            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
+            msg = 'Unequal length: Using {} for the new path!'.format(maxlen)
             logger.warning(msg)
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = path_back.empty_path(maxlen=maxlen, time_origin=time_origin)
@@ -425,7 +427,7 @@ class PathBase(object):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -471,15 +473,15 @@ class PathBase(object):
                      'status': status,
                      'length': self.length}
 
-        if self.ordermax is not None:
-            path_info['ordermax'] = tuple(self.ordermax)
-        else:
-            path_info['ordermax'] = (0.0, 0)
+        #if self.ordermax is not None:
+        path_info['ordermax'] = tuple(self.ordermax)
+        #else:
+        #    path_info['ordermax'] = (0.0, 0)
 
-        if self.ordermin is not None:
-            path_info['ordermin'] = tuple(self.ordermin)
-        else:
-            path_info['ordermin'] = (0.0, 0)
+        #if self.ordermin is not None:
+        path_info['ordermin'] = tuple(self.ordermin)
+        #else:
+        #    path_info['ordermin'] = (0.0, 0)
 
         start, end, middle, _ = self.check_interfaces(interfaces)
         path_info['interface'] = (start, middle, end)
@@ -541,20 +543,14 @@ class PathBase(object):
                 return self
         return self
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse a path and return the reverse path as a new path.
 
         This will simply reverse a path and return the reversed path as
-        a new `Path` object. An `order_func` can be specified here if
-        we have to recalculate the order parameter. But that will
-        probably only happen if we are crazy.
-
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
+        a new `Path` object. Note that currently, recalculating
+        order parameters have not been implemented!  Typically, reversing
+        will not change the order parameter, but it might change the
+        velocity for the order parameter and so on.
 
         Returns
         -------
@@ -568,10 +564,7 @@ class PathBase(object):
             energy = phasepoint[3]
             if vel is not None:
                 vel *= -1
-            if order_func and pos is not None:
-                orderp = order_func(pos, vel)
-            else:
-                orderp = phasepoint[0]
+            orderp = phasepoint[0]
             app = new_path.append(orderp, pos, vel, energy)
             if not app:
                 msg = 'Could not reverse path'
@@ -664,7 +657,7 @@ class Path(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -797,7 +790,7 @@ class ReservoirPath(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -907,26 +900,19 @@ class ReservoirPath(PathBase):
                               time_origin=time_origin,
                               res_length=res_length)
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse the path with addinional handling for the reservoir.
 
         This method will call `PathBase.reverse()` but will also do
         some extra reverse handling since we here have to reverse
         indices in the reservoir of shooting points.
 
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
-
         Returns
         -------
         path : object like `PathBase`.
             This is basically a copy of `self`, just reversed.
         """
-        path = super(ReservoirPath, self).reverse(order_func=order_func)
+        path = super(ReservoirPath, self).reverse()
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]

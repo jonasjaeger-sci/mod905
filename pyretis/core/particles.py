@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This file contain a class to represent a collection of particles.
 
 The class for particles is in reality a simplistic particle list which
@@ -174,11 +176,15 @@ class Particles(object):
         if self.npart == 0:
             self.name = [name]
             self.ptype = np.array(ptype, dtype=np.int16)
-            self.pos = pos
-            self.vel = vel
-            self.force = force
-            self.mass = np.array([mass])
-            self.imass = np.array([1.0/mass])
+            self.pos = np.zeros((1, self.dim))
+            self.pos[0] = pos
+            self.vel = np.zeros((1, self.dim))
+            self.vel[0] = vel
+            self.force = np.zeros((1, self.dim))
+            self.force[0] = force
+            self.mass = np.zeros((1, 1))  # column matrix
+            self.mass[0] = mass
+            self.imass = 1.0 / self.mass
         else:
             self.name.append(name)
             self.ptype = np.append(self.ptype, ptype)
@@ -256,6 +262,6 @@ class Particles(object):
     def __str__(self):
         """Print out basic info about the particle list."""
         msg = ['Particles: {}'.format(self.npart)]
-        msg += ['Types: {}'.format(set(self.ptype))]
+        msg += ['Types: {}'.format(np.unique(self.ptype))]
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)

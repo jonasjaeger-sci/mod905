@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package contains methods for generating reports.
 
 The reports will typically summarize the results from different
@@ -33,12 +35,8 @@ report.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-write_report
-    Method for writing a report to file.
-
 generate_report
     Method for generating reports.
-
 
 Folders
 ~~~~~~~
@@ -48,24 +46,3 @@ templates
 """
 from __future__ import absolute_import
 from .report import generate_report
-from pyretis.inout.common import REPORTFILES
-
-
-def write_report(report_txt, report_type, ext):
-    """Write a generated report to a given file.
-
-    Parameters
-    ----------
-    report_txt : string
-        This is the generated report as a string
-    report_type : string
-        Identifier for the report we are writing
-    ext : string
-        Extension for the file to write
-    """
-    outfile = REPORTFILES[report_type].format(ext)
-    with open(outfile, 'wt') as report_fh:
-        try:  # will work in python 3
-            report_fh.write(report_txt)
-        except UnicodeEncodeError:  # for python 2
-            report_fh.write(report_txt.encode('utf-8'))

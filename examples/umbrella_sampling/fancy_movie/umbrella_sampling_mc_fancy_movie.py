@@ -80,8 +80,11 @@ lim = (-1.2, 1.2)
 histlim = (-1.2, 1.2)
 potlim = (-0.35, 0.1)
 XPOT = np.linspace(-2, 2, 1000)
-VPOT = np.array([forcefield.evaluate_potential(pos=xi) for xi in XPOT])
-
+VPOT = []
+for xi in XPOT:
+    mysystem.particles.pos = xi
+    VPOT.append(forcefield.evaluate_potential(mysystem))
+VPOT = np.array(VPOT)
 
 # plotting for generating movie:
 fig = plt.figure()
@@ -156,7 +159,8 @@ for i, (traj, ener) in enumerate(zip(trajectory, energy)):
         if success[j]:
             scatter2.set_offsets([None, None])
         else:
-            pott = forcefield.evaluate_potential(pos=trial[j])
+            mysystem.particles.pos = trial[j]
+            pott = forcefield.evaluate_potential(mysystem)
             scatter2.set_offsets([trial[j], pott])
         hist, bins, bin_mid = histogram(pos_so_far, bins=bins, limits=histlim)
         hist2, bins2, bin_mid2 = histogram(pos_so_far, bins=bins,

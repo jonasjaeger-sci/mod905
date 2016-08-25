@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This sub-package handle writers for pyretis data.
 
 Writers are basically formatting the data created from pyretis.
@@ -95,7 +97,7 @@ _CLASS_MAP = {'cross': {'class': CrossWriter},
               'pathtable': {'class': PathTable}}
 
 
-def get_file_object(file_type):
+def get_file_object(file_type, settings=None):
     """Return a file object which can be used for loading files.
 
     This is a convenience function to return an instance of a `Writer`
@@ -123,10 +125,7 @@ def get_file_object(file_type):
     >>>     print(len(block['data']))
     """
     try:
-        if file_type == 'pathensemble':
-            msg = 'Opening a path ensemble file. Experimental feature!'
-            logger.warning(msg)
-        return get_writer(file_type, settings=None)
+        return get_writer(file_type, settings=settings)
     except KeyError:
         msg = 'Unknown file type {} requested. Ignored'.format(file_type)
         logger.error(msg)

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Functions for generating plots using matplotlib.
 
 This module defines a class for using matplotlib and it also defines
@@ -21,15 +23,13 @@ mpl_set_style
 import os
 import logging
 import numpy as np
-from scipy.stats import gamma  # pylint: disable=E0611
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
 # pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
-from pyretis.inout.common import (create_backup, simplify_ensemble_name,
-                                  name_file)
+from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 
@@ -37,9 +37,12 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # import styles for newer matplotlibs:
+_STYLEFILE = 'pyretis.mplstyle'
+if matplotlib.__version__ < '1.5.0':
+    _STYLEFILE = 'pyretis-old.mplstyle'
 if matplotlib.__version__ < '1.4.0':
     HAS_STYLE = False
-    logger.warning('Using Matplotlib version < 1.4.0, please upgrade it!')
+    logger.warning('Using Matplotlib version < 1.4.0, please upgrade.')
 else:
     try:
         import matplotlib.style
@@ -53,17 +56,18 @@ __all__ = ['MplPlotter']
 
 # Define default style file:
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
-                               'pyretis.mplstyle'])
+                               _STYLEFILE])
+_TITLE_SETTINGS = {'loc': 'right'}
 
 
 class MplPlotter(Plotter):
     """Class MplPlotter(Plotter).
 
-    This class defines a plotter. A plotter is just a object
-    that supports certain functions which conveniently can be called in
+    This class defines a plotter. A plotter is just a object that
+    supports certain functions which conveniently can be called in
     different analysis output function. The `MplPlotter` will use
-    matplotlib and it can be used to create other plotters based on
-    other tools, for instance gnuplot or Veusz, visvis or *your*
+    matplotlib and it can be used to create other plotters based
+    on other tools, for instance gnuplot or Veusz, visvis or your
     favorite plotting tool.
 
     Attributes
@@ -74,7 +78,7 @@ class MplPlotter(Plotter):
         Selects format for output plots.
     """
 
-    def __init__(self, out_fmt, backup=False, style=None):
+    def __init__(self, out_fmt, backup=False, style=None, out_dir=None):
         """Initiate the plotting object.
 
         Here we only define the style and check if the requested file
@@ -87,11 +91,15 @@ class MplPlotter(Plotter):
         style : string, optional
             This selects the style to use, it can be a file path or the
             string with the style name.
-        backup : boolean
+        backup : boolean, optional
             Determines if we should overwrite or backup old files.
+        out_dir : string, optional
+            Determines if we should write the files to a particular
+            directory.
         """
         super(MplPlotter, self).__init__(backup=backup,
-                                         plotter_type='matplotlib')
+                                         plotter_type='matplotlib',
+                                         out_dir=out_dir)
         self.style = style
         mpl_set_style(self.style)
         # Check if the requested file format is something we can do:
@@ -129,8 +137,10 @@ class MplPlotter(Plotter):
         """
         outputfiles = {}
         for key in canvas:
-            outputfiles[key] = name_file(key, self.out_fmt)
-            mpl_savefig(canvas[key], outputfiles[key], self.backup)
+            local_file = name_file(key, self.out_fmt, path=None)
+            full_path = name_file(key, self.out_fmt, self.out_dir)
+            outputfiles[key] = local_file
+            mpl_savefig(canvas[key], full_path, self.backup)
         return outputfiles
 
     def plot_flux(self, results):
@@ -140,23 +150,30 @@ class MplPlotter(Plotter):
 
         Returns
         -------
-        outputfile : dict
-            A dict containing the files created for the flux and for
+        outputfile : list of dicts
+            A list containing the files created for the flux and for
             the error in the flux.
+
+        Note
+        ----
+        We return a list here. This is because we want to plot these
+        figures in pairs.
         """
         canvas_run, canvas_err = mpl_plot_flux(results)
         # Restructure output files for reporting
         outputfiles = []
         for run, err in zip(canvas_run, canvas_err):
-            outputfiler = name_file(run['name'], self.out_fmt)
-            outputfilee = name_file(err['name'], self.out_fmt)
-            mpl_savefig(run['canvas'], outputfiler, self.backup)
-            mpl_savefig(err['canvas'], outputfilee, self.backup)
-            outputfiles.append({'runflux': outputfiler,
-                                'errflux': outputfilee})
+            local_run = name_file(run['name'], self.out_fmt, path=None)
+            local_err = name_file(err['name'], self.out_fmt, path=None)
+            full_run = name_file(run['name'], self.out_fmt, path=self.out_dir)
+            full_err = name_file(err['name'], self.out_fmt, path=self.out_dir)
+            mpl_savefig(run['canvas'], full_run, self.backup)
+            mpl_savefig(err['canvas'], full_err, self.backup)
+            outputfiles.append({'runflux': local_run,
+                                'errflux': local_err})
         return outputfiles
 
-    def plot_energy(self, results, energies, sim_settings=None):
+    def plot_energy(self, results, energies):
         """Function to plot energy results using `mpl_plot_energy`.
 
         The parameters for this method is described in
@@ -167,7 +184,7 @@ class MplPlotter(Plotter):
         out : dict
             This dict contains the files created by the plotting.
         """
-        canvas = mpl_plot_energy(results, energies, sim_settings=sim_settings)
+        canvas = mpl_plot_energy(results, energies)
         return self._print_figures_to_file(canvas)
 
     def plot_orderp(self, results, orderdata):
@@ -281,7 +298,7 @@ def mpl_set_style(style='pyretis'):
             msgtxt = 'Loading matplitlib style from file: {}'.format(style)
             logger.info(msgtxt)
             rcpar = matplotlib.rc_params_from_file(style)
-            # For version mpl version 1.5: use_default_template=False can be
+            # TODO: For mpl version 1.5: use_default_template=False can be
             # added to matplotlib.rc_params_from_file().
             matplotlib.rcParams.update(rcpar)
 
@@ -431,13 +448,12 @@ def mpl_simple_plot(series, fig_settings=None):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
         ncol, rest = divmod(len(labels), 10)
         if rest > 0:
             ncol += 1
-        axs.legend(handles, labels, prop={'size': 'x-small'},
-                   ncol=ncol)
+        axs.legend(handles, labels, ncol=ncol)
     if 'yscale' in fig_settings:
         axs.set_yscale(fig_settings['yscale'])
     return canvas
@@ -578,9 +594,9 @@ def mpl_line_gradient(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
+        axs.legend(handles, labels)
     return canvas
 
 
@@ -629,9 +645,9 @@ def mpl_error_plot(series, fig_settings):
     if 'ylabel' in fig_settings:
         axs.set_ylabel(fig_settings['ylabel'])
     if 'title' in fig_settings:
-        axs.set_title(fig_settings['title'], fontsize='x-small', loc='left')
+        axs.set_title(fig_settings['title'], **_TITLE_SETTINGS)
     if len(labels) == len(handles) and len(labels) >= 1:
-        axs.legend(handles, labels, prop={'size': 'x-small'})
+        axs.legend(handles, labels)
     return canvas
 
 
@@ -691,40 +707,55 @@ def mpl_plot_path(path_ensemble, results, idetect):
         This dictionary contains the different canvases we have
         created
     """
-    ens = path_ensemble.ensemble  # identify the ensemble
-    ens_simplified = simplify_ensemble_name(ens)
+    ens = path_ensemble.ensemble_name
+    ens_simplified = path_ensemble.ensemble_name_simple
     canvas = {}
     out = {}
     for key in PATHFILES:
         out[key] = PATHFILES[key].format(ens_simplified)
-    # First plot `pcross` vs `lambda` with the `idetect` surface:
-    series = [{'type': 'xy', 'x': results['pcross'][0],
-               'y': results['pcross'][1]}]
-    series.append({'type': 'vline', 'x': idetect, 'ls': '--',
-                   'alpha': 0.8})
-    figset = {'xlabel': r'Order parameter ($\lambda$)',
-              'ylabel': 'Probability',
-              'title': r'Ensemble ${0}$'.format(ens)}
-    canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
-    # Next plot running ` pcross`:
-    series = [{'type': 'xy', 'x': results['cycle'],
-               'y': results['prun']}]
-    series.append({'type': 'hline', 'y': results['prun'][-1],
-                   'ls': '--', 'alpha': 0.8})
-    figset = {'xlabel': 'Cycle number',
-              'ylabel': 'Probability (running avg.)',
-              'title': r'Ensemble ${0}$'.format(ens)}
-    canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
-    # Plot results of block-error analysis:
-    series = [{'type': 'xy', 'x': results['blockerror'][0],
-               'y': results['blockerror'][3]}]
-    series.append({'type': 'hline', 'y': results['blockerror'][4],
-                   'ls': '--', 'alpha': 0.8})
-    title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
-    figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
-              'title': title.format(ens, results['blockerror'][4],
-                                    results['blockerror'][6])}
-    canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'pcross' in results:
+        # First plot `pcross` vs `lambda` with the `idetect` surface:
+        series = [{'type': 'xy', 'x': results['pcross'][0],
+                   'y': results['pcross'][1]}]
+        series.append({'type': 'vline', 'x': idetect, 'ls': '--',
+                       'alpha': 0.8})
+        figset = {'xlabel': r'Order parameter ($\lambda$)',
+                  'ylabel': 'Probability',
+                  'title': r'Ensemble ${0}$'.format(ens)}
+        canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'prun' in results:
+        # Next plot running ` pcross`:
+        series = [{'type': 'xy', 'x': results['cycle'],
+                   'y': results['prun']}]
+        series.append({'type': 'hline', 'y': results['prun'][-1],
+                       'ls': '--', 'alpha': 0.8})
+        figset = {'xlabel': 'Cycle number',
+                  'ylabel': 'Probability (running avg.)',
+                  'title': r'Ensemble ${0}$'.format(ens)}
+        canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'blockerror' in results:
+        # Plot results of block-error analysis:
+        series = [{'type': 'xy', 'x': results['blockerror'][0],
+                   'y': results['blockerror'][3]}]
+        series.append({'type': 'hline', 'y': results['blockerror'][4],
+                       'ls': '--', 'alpha': 0.8})
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['blockerror'][4],
+                                        results['blockerror'][6])}
+        canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
+    if 'lengtherror' in results:
+        # Plot results of length-error analysis:
+        series = [{'type': 'xy', 'x': results['lengtherror'][0],
+                   'y': results['lengtherror'][3]}]
+        series.append({'type': 'hline', 'y': results['lengtherror'][4],
+                       'ls': '--', 'alpha': 0.8})
+        title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
+        figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
+                  'title': title.format(ens, results['lengtherror'][4],
+                                        results['lengtherror'][6])}
+        canvas[out['lengtherror']] = mpl_simple_plot(series, fig_settings=figset)
+
     # Plot length-histogram:
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
     series = [{'type': 'xy', 'x': results['pathlength'][0][1],
@@ -744,7 +775,7 @@ def mpl_plot_path(path_ensemble, results, idetect):
     can_tmp = _mpl_shoots_histogram(results['shoots'][0],
                                     results['shoots'][1], ens)
     canvas[out['shoots']] = can_tmp[0]
-    canvas[out['shoots-scaled']] = can_tmp[1]
+    canvas[out['shoots_scaled']] = can_tmp[1]
     return canvas
 
 
@@ -819,7 +850,7 @@ def mpl_plot_orderp(results, orderdata):
     return canvas
 
 
-def mpl_plot_energy(results, energies, sim_settings=None):
+def mpl_plot_energy(results, energies):
     r"""Plot the output from the energy analysis using matplotlib.
 
     Parameters
@@ -830,17 +861,6 @@ def mpl_plot_energy(results, energies, sim_settings=None):
         'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
     energies : dict of numpy.arrays
         This is the raw-data for the energy analysis.
-    sim_settings : dict, optional
-        This is the simulation settings which are useful for creating
-        theoretical plots of distributions. It is assumed to contain
-        the following keys:
-
-        * `npart`: The number of particles in the simulation.
-        * `dim`: Number of dimensions used in the simulation.
-        * `beta`: The beta factor :math:`\beta = \frac{1}{k_B T}` where
-          :math:`k_B` is the Boltzmann constant and :math:`T` the
-          temperature.
-        * `temperature`: The temperature of the system.
 
     Returns
     -------
@@ -904,19 +924,10 @@ def mpl_plot_energy(results, energies, sim_settings=None):
                    'label': ENERTITLE[key]}]
         title = '{0}. Average: {1:9.6e}, std: {2:9.6f}'
         title = title.format(ENERTITLE[key], dist[2][0], dist[2][1])
-        if sim_settings is not None and key in ['ekin', 'temp']:
-            pos = np.linspace(min(0.0, dist[1].min()), dist[1].max(), 1000)
-            alp = (0.5 * sim_settings['npart'] * sim_settings['dimensions'])
-            if key == 'ekin':
-                scale = 1.0 / sim_settings['beta']
-            elif key == 'temp':
-                scale = sim_settings['temperature'] / alp
-            else:
-                msgtxt = 'No scale defined for {}! Assuming "1.0"'.format(key)
-                logger.warning(msgtxt)
-                scale = 1.0
-            series.append({'type': 'xy', 'x': pos,
-                           'y': gamma.pdf(pos, alp, loc=0, scale=scale),
+        if 'boltzmann-dist' in results[key]:
+            series.append({'type': 'xy',
+                           'x': results[key]['boltzmann-dist'][1],
+                           'y': results[key]['boltzmann-dist'][0],
                            'label': 'Boltzmann distribution'})
         plot = ENERFILES['dist'].format(key)
         canvas[plot] = mpl_simple_plot(series, fig_settings={'title': title})
@@ -981,8 +992,9 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     Parameters
     ----------
-    path_ensembles : list of objects like `PathEnsemble`.
-        This is the path ensembles we have analysed.
+    path_ensembles : list of strings.
+        This is the name of the path ensembles we have calculated
+        the probability for.
     detect : list of floats
         These are the detect interfaces used in the analysis.
     matched : dict
@@ -1015,10 +1027,16 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     else:
         colors = None
 
+    new_series = {'type': 'xy',
+                  'x': matched['overall-prob'][:, 0],
+                  'y': matched['overall-prob'][:, 1],
+                  'alpha': 0.8,
+                  'lw': 9, 'label': 'Over-all', 'color': '#262626'}
+    series.append(new_series)
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):
         new_series = {'type': 'xy', 'x': prob[:, 0], 'y': prob[:, 1], 'lw': 3,
-                      'label': '${}$'.format(path_e.ensemble)}
+                      'label': '${}$'.format(path_e)}
         if colors is not None:
             new_series['color'] = colors[i]
         series.append(new_series)

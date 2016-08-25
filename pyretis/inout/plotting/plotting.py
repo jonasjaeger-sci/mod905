@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of the base class for the plotter.
 
 This module just defines a base class for plotters. This is just to
@@ -19,37 +21,43 @@ class Plotter(object):
     """Class Plotter(object).
 
     This class defines a plotter. A plotter is just a object
-    that supports certain functions which conveniently can be called in
-    different analysis output function. This plotter does not implement
-    any functions, it's just here to make sure that the derived plotters
-    implement these functions.
+    that supports certain functions which can be called by analysis
+    output functions. It should define certain plots and the
+    ``Plotter`` class is an abstract class just to make sure that
+    all plotters define the needed plots.
 
     Attributes
     ----------
     backup : boolean
-        Determines if we overwrite old files or try yo back them up.
+        Determines if we overwrite old files or try to back them up.
     plotter_type : string
         Defines a name for the plotter, in case we want to identify it.
+    out_dir : string, optional
+        Defines an output directory for the plotter.
     """
 
-    def __init__(self, backup=True, plotter_type=None):
+    def __init__(self, backup=True, plotter_type=None, out_dir=None):
         """Initiate the plotting object.
 
         Parameters
         ----------
-        backup : boolean
+        backup : boolean, optional
             Determines if we overwrite old files or not.
-        plotter_type : string
+        plotter_type : string, optional
             A name for the plotter.
+        out_dir : string, optional
+            A string which can be used to set an output directory
+            for the plotter.
         """
         self.plotter_type = plotter_type
         self.backup = backup in (True, 'yes', 'True')
+        self.out_dir = out_dir
 
     def plot_flux(self, results):
         """Function that plots flux results."""
         raise NotImplementedError()
 
-    def plot_energy(self, results, energies, sim_settings=None):
+    def plot_energy(self, results, energies):
         """Function that plots energy results."""
         raise NotImplementedError()
 

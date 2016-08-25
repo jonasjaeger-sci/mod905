@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Convenience functions for pair potentials."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""This module defines some helper functions for pair potentials.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mixing_parameters
+    Definition of mixing rules which are used in some force fields
+    for generating cross interactions.
+
+generate_pair_interactions
+    Function to generate pair parameters from atom parameters.
+"""
 import itertools
 import logging
 import numpy as np
@@ -38,10 +50,10 @@ def _check_pair_parameters(parameters):
             factor = parameters[pair].get('factor', 0.0)
             rcut = factor * parameters[pair]['sigma']
             parameters[pair]['rcut'] = rcut
-            msg = ('rcut for {} not given. Using factor to set it to:'
+            msg = ('rcut for {} not given. Using factor to set it to: '
                    '{} * {} = {}')
             msg = msg.format(pair, parameters[pair]['sigma'], factor, rcut)
-            logger.warning(msg)
+            logger.info(msg)
 
 
 def generate_pair_interactions(parameters):

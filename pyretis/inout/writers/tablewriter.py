@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """A module defining a generic writer for tables.
 
 The tables are defined with a set of variables (`keys`) and some rules
@@ -31,15 +33,15 @@ __all__ = ['TxtTable', 'PathTable', 'ThermoTable']
 
 
 # Tables can be defined and created as follows:
-#tabl = {'title': 'Energy output',
-#        'var': ['step', 'temp', 'vpot',
-#                'ekin', 'etot', 'press'],
-#        'format': {'labels': ['Step', 'Temp', 'Pot',
+# tabl = {'title': 'Energy output',
+#         'var': ['step', 'temp', 'vpot',
+#                 'ekin', 'etot', 'press'],
+#         'format': {'labels': ['Step', 'Temp', 'Pot',
 #                              'Kin', 'Tot', 'Press'],
-#                   'width': (10, 12),
-#                   'spacing': 2,
-#                   'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
-#table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
+#                    'width': (10, 12),
+#                    'spacing': 2,
+#                    'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
+# table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
 
 
 def _fill_list(the_list, length, fillvalue=None):

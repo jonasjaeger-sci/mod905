@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Module for handling output from simulations.
 
 This module defines functions and classes for handling the output from
@@ -23,6 +25,7 @@ import os
 import pprint
 import json
 # pyretis imports
+from pyretis.inout.common import add_dirname
 from pyretis.inout.settings.common import check_settings
 from pyretis.core.simulation.simulation_task import execute_now
 from pyretis.inout.writers import get_writer, FileIO
@@ -90,44 +93,18 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                                'name': 'thermo-screen',
                                'when': {'every': 10}}]
 
-_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
-                           'name': 'pathensemble-file',
-                           'when': {'every': 10},
-                           'filename': 'pathensemble.dat'},
-                          {'type': 'pathensemble-screen',
-                           'name': 'pathensemble-screen',
-                           'when': {'every': 10}},
-                          {'type': 'trialpath',
-                           'name': 'trialpath',
-                           'when': {'every': 1},
-                           'orderp': {'filename': 'orderp.dat',
-                                      'when': {'every': 10},
-                                      'freq': 10},
-                           'energy': {'filename': 'energyp.dat',
-                                      'when': {'every': 10},
-                                      'freq': 10}}]
+_DEFAULT_OUTPUT['tis-single'] = [{'type': 'pathensemble',
+                                  'name': 'pathensemble-file',
+                                  'when': {'every': 1},
+                                  'filename': 'pathensemble.dat'},
+                                 {'type': 'pathensemble-screen',
+                                  'name': 'pathensemble-screen',
+                                  'when': {'every': 10}}]
 
-
-def add_dirname(filename, dirname):
-    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
-
-    Parameters
-    ----------
-    filename : string
-        The filename.
-    dirname : string
-        The directory we want to prefix. It can be None, in which
-        case we ignore it.
-
-    Returns
-    -------
-    out : string
-        The path to the resulting file.
-    """
-    if dirname is not None:
-        return os.path.join(dirname, filename)
-    else:
-        return filename
+_DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
+                             'name': 'pathensemble-file',
+                             'when': {'every': 1},
+                             'filename': 'pathensemble.dat'}]
 
 
 class OutputTask(object):

@@ -71,7 +71,8 @@ def update(frame):
                        [umpos2, 1.0], [umpos2, 0.0],
                        [umpos1, 0.0]])
     axv.set_xy(region)
-    return scat, axv, linec
+    line.set_ydata(VPOT)
+    return scat, axv, linec, line
 
 anim = animation.FuncAnimation(fig, update, np.arange(len(traj_data)),
                                init_func=init, interval=25, blit=True,

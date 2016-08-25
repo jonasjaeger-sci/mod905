@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Module for handling the output/input of trajectory data.
 
 This module defines some classes for writing out trajectory data.
@@ -36,6 +38,7 @@ _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
 _GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.4f}{8:8.4f}{9:8.4f}'
 _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
+_XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
 __all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
@@ -106,11 +109,13 @@ class TrajXYZ(Writer):
             msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
 
-    def xyz_format(self, pos, names=None, header=None):
+    def xyz_format(self, npart, pos, names=None, header=None):
         """Generate output for a configuration in xyz-format.
 
         Parameters
         ----------
+        npart : integer
+            The number of particles.
         pos : numpy.array
             The positions to write.
         names : numpy.array, optional
@@ -125,7 +130,6 @@ class TrajXYZ(Writer):
             The data to be written
         """
         buff = []
-        npart = len(pos)
         buff.append('{0}'.format(npart))
         if header is None:
             header = 'Trajectory output. Frame: {}'.format(self.frame)
@@ -164,7 +168,8 @@ class TrajXYZ(Writer):
         out : string
             The lines in the XYZ-snapshot.
         """
-        for lines in self.xyz_format(system.particles.pos,
+        for lines in self.xyz_format(system.particles.npart,
+                                     system.particles.pos,
                                      names=system.particles.name,
                                      header=header):
             yield lines
@@ -235,7 +240,7 @@ class TrajGRO(Writer):
             msgtxt = '\n'.join(msg)
             logger.warning(msgtxt)
 
-    def gro_format(self, pos, vel, box, **kwargs):
+    def gro_format(self, npart, pos, vel, box, **kwargs):
         """Format positions, box and velocities according to the GRO format.
 
         This method will generate a list of strings which is the GRO
@@ -244,6 +249,8 @@ class TrajGRO(Writer):
 
         Parameters
         ----------
+        npart : integer
+            The number of particles.
         pos : numpy.array
             The positions to write.
         vel : numpy.array or None
@@ -270,7 +277,6 @@ class TrajGRO(Writer):
             The strings which is the GRO representation of the given
             configuration.
         """
-        npart = len(pos)
         atomname = kwargs.get('atomname', ['X'] * npart)
         residuename = kwargs.get('residuename', atomname)
         residuenum = kwargs.get('residuenum', None)
@@ -329,7 +335,8 @@ class TrajGRO(Writer):
             The lines in the XYZ-snapshot.
         """
         velocity = None if not write_vel else system.particles.vel
-        for lines in self.gro_format(system.particles.pos,
+        for lines in self.gro_format(system.particles.npart,
+                                     system.particles.pos,
                                      velocity,
                                      system.box,
                                      atomname=system.particles.name,
@@ -539,9 +546,9 @@ def write_xyz_file(filename, pos, names=None, header=None):
         if names is None:
             for posi in pos:
                 logger.warning('No atom name given. Using "X"')
-                out = _XYZ_FMT.format('X', posi[0], posi[1], posi[2])
+                out = _XYZ_FMTN.format('X', posi[0], posi[1], posi[2])
                 fileh.write(out)
         else:
             for namei, posi in zip(names, pos):
-                out = _XYZ_FMT.format(namei, posi[0], posi[1], posi[2])
+                out = _XYZ_FMTN.format(namei, posi[0], posi[1], posi[2])
                 fileh.write(out)

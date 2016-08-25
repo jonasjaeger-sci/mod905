@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package defines different simulations for use with pyretis.
 
 The different simulations are defined as objects which inherits from
@@ -44,4 +46,4 @@ from .simulation import Simulation
 from .simulation_task import SimulationTask
 from .mc_simulation import UmbrellaWindowSimulation
 from .md_simulation import SimulationNVE, SimulationMDFlux
-from .path_simulation import SimulationTIS
+from .path_simulation import SimulationSingleTIS, SimulationRETIS

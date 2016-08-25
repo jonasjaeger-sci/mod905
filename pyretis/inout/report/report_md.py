@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Functions for generating reports.
 
 The reports are useful for displaying results from the analysis.
@@ -35,26 +37,17 @@ def generate_report_mdflux(analysis, output='rst'):
     out : dictionary
         The generated report as a string
     """
-    report = {'figures': {'flux': None,
-                          'energy': None,
-                          'order': None},
-              'tables': {'md-flux': None,
-                         'md-cycles': None,
-                         'md-efficiency': None}}
+    report = {'figures': {}, 'tables': {}}
     # generate some tables:
-    report['figures']['flux'] = analysis.get('cross_figures', None)
-    report['figures']['energy'] = analysis.get('energy_figures', None)
-    report['figures']['order'] = analysis.get('order_figures', None)
-    report['tables']['md-flux'] = _table_md_flux(analysis['cross'],
-                                                 fmt=output)[1]
-    report['tables']['md-cycles'] = _table_md_flux_cycles(analysis['cross'],
+    cross_out = analysis['cross']['out']
+    report['figures']['flux'] = analysis['cross']['figures']
+    report['figures']['energy'] = analysis['energy']['figures']
+    report['figures']['order'] = analysis['order']['figures']
+    report['tables']['md-flux'] = _table_md_flux(cross_out, fmt=output)[1]
+    report['tables']['md-cycles'] = _table_md_flux_cycles(cross_out,
                                                           fmt=output)[1]
-    report['tables']['md-efficiency'] = _table_md_efficiency(analysis['cross'],
+    report['tables']['md-efficiency'] = _table_md_efficiency(cross_out,
                                                              fmt=output)[1]
-    # check if we need some additional latexification:
-    #if output in ['latex', 'tex']:
-    #    for fig in ['flux_figures', 'energy_figures', 'order_figures']:
-    #        report[fig] = remove_extensions(report[fig])
     return report
 
 

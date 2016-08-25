@@ -1,8 +1,20 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
 It contains some functions that is used when generating reports,
 typically to format tables and numbers.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyretisLogFormatter
+    A class representing a formatter for the pyretis log file.
+
+PyretisLogFormatterDebug
+    A class representing a formatter for the pyretis log file with
+    some extra information/details for a debug log file.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -10,26 +22,32 @@ Important methods defined here
 apply_format
     Apply a format string to a given value.
 
+check_python_version
+    Method that will give warnings when we use older and untested
+    versions of python.
+
 create_backup
     A function to handle the creation of backups of old files.
 
 make_dirs
     Create directories (for path simulation).
 
-remove_extensions
-    Remove extensions for a list of files.
+print_to_screen
+    A method used for printing to screen.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import errno
 import os
 import re
+import sys
 import logging
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['create_backup', 'apply_format', 'remove_extensions',
-           'make_dirs']
+__all__ = ['apply_format', 'check_python_version', 'create_backup',
+           'make_dirs', 'print_to_screen', 'PyretisLogFormatter',
+           'PyretisLogFormatterDebug']
 
 
 # Hard-coded patters for energy analysis output files.
@@ -62,16 +80,16 @@ ORDERFILES = {'order': 'orderp',
 PATHFILES = {'pcross': '{}_pcross',
              'prun': '{}_prun',
              'perror': '{}_perror',
+             'lengtherror': '{}_lerror',
              'pathlength': '{}_lpath',
              'shoots': '{}_shoots',
-             'shoots-scaled': '{}_shoots_scale'}
+             'shoots_scaled': '{}_shoots_scaled'}
 # hard-coded patterns for matched files:
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
-# hard-coded patters for report outputs:
-REPORTFILES = {'md-flux': os.extsep.join(['md_flux_report', '{}']),
-               'tis': os.extsep.join(['tis_report', '{}']),
-               'tis_path': os.extsep.join(['tis_path_report', '{}'])}
+# hard-coded formats to use for Log files:
+LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
+LOG_FMT = '[%(levelname)s]: %(message)s'
 
 
 def create_backup(outputfile):
@@ -171,44 +189,6 @@ def _remove_extension(filename):
         return filename
 
 
-def remove_extensions(list_of_files):
-    """Remove extensions for a list of files.
-
-    This will strip out extensions for all the files in a given
-    iterable. Here, the iterable might be a simple list which contains
-    dictionaries or it can be a dictionary. How we to the loop will
-    depend on this.
-
-    Parameters
-    ----------
-    list_of_files : list or dict, iterable
-        This is the list for which we will try to remove extensions.
-
-    Returns
-    -------
-    newlist : list or dict
-        A copy of list_of_files, where the extensions has been removed.
-
-    Note
-    ----
-    If, for some reason, list_of_files is a list and the items are just
-    integers, the TypeError will not be raised. This is pretty unlikely
-    and we therefore do not check for this.
-    """
-    # we assume that list_of_files is a simple dict
-    try:
-        newlist = {}
-        for key in list_of_files:
-            newlist[key] = _remove_extension(list_of_files[key])
-        return newlist
-    except TypeError:
-        newlist = []
-        for fig in list_of_files:
-            newfig = {key: _remove_extension(fig[key]) for key in fig}
-            newlist.append(newfig)
-        return newlist
-
-
 def make_dirs(dirname):
     """Create directories for path simulations.
 
@@ -241,6 +221,26 @@ def make_dirs(dirname):
         if os.path.isdir(dirname):
             msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
             return msg
+
+
+def print_to_screen(txt=None):
+    """Method to print output to standard out.
+
+    This method is included to ensure that output from pyretis to the
+    screen is written out in a uniform way across the library and
+    application(s).
+
+    Parameters
+    ----------
+    txt : string
+        The text to write to the screen
+    """
+    if txt is None:
+        print()
+    else:
+        out = '# {}'.format(txt)
+        out = out.replace('\n', '\n# ')
+        print(out)
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
@@ -284,6 +284,28 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     return fmt.format(ens)
 
 
+def add_dirname(filename, dirname):
+    """Add a directory as a prefix to a filename, i.e. `dirname/filename`.
+
+    Parameters
+    ----------
+    filename : string
+        The filename.
+    dirname : string
+        The directory we want to prefix. It can be None, in which
+        case we ignore it.
+
+    Returns
+    -------
+    out : string
+        The path to the resulting file.
+    """
+    if dirname is not None:
+        return os.path.join(dirname, filename)
+    else:
+        return filename
+
+
 def name_file(name, extension, path=None):
     """Return a file name by joining a name and an file extension.
 
@@ -306,8 +328,81 @@ def name_file(name, extension, path=None):
     out : string
         The resulting file name
     """
-    filename = os.extsep.join([name, extension])
-    if path is not None:
-        return os.path.join(path, filename)
+    return add_dirname(os.extsep.join([name, extension]), path)
+
+
+def check_python_version():
+    """Method that will give a warning about old python version(s)."""
+    pyversion = sys.version.split()[0]
+    if sys.version_info < (3, 0):
+        warntxt = ('Please upgrade to Python 3.'
+                   '\nPython 2.7 support will be dropped in the near future!')
+        warntxt = warntxt.format(pyversion)
+        logger.warning(warntxt)
+        if sys.version_info < (2.7):
+            msgtxt = ('Your version of Python is NOT and supported.'
+                      ' Please upgrade!')
+            logger.critical(msgtxt)
+
+
+class PyretisLogFormatter(logging.Formatter):
+    """Hardcoded formatter for pyretis log file.
+
+    This formatter is using a format of type:
+
+    ``'[%(levelname)s]: %(message)s'``
+
+    and is less verbose than the ``PyretisLogFormatterDebug``.
+    """
+    def format(self, record):
+        out = logging.Formatter.format(self, record)
+        shortname = record.name.split('.')[-1]
+        out = out.replace(record.name, shortname)
+        header, _ = out.split(record.message)
+        out = out.replace('\n', '\n' + ' ' * len(header))
+        return out
+
+
+class PyretisLogFormatterDebug(logging.Formatter):
+    """Hardcoded formatter for pyretis log.
+
+    This formatter is intended for usage when more debugging
+    information is needed with a format for logging as:
+
+    ``'%(name)s: [%(levelname)s]: %(message)s'``
+
+    so that information about modules will be printed out as well.
+    """
+    def format(self, record):
+        out = logging.Formatter.format(self, record)
+        header, _ = out.split(record.message)
+        out = out.replace('\n', '\n' + ' ' * len(header))
+        return out
+
+
+def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
+    """Method to format a number based on it's size.
+
+    Parameters
+    ----------
+    number : float
+        The number to format.
+    minf : float
+        If the number is smaller than `minf` then apply the
+        format with scientific notation.
+    maxf : float
+        If the number is greater than `maxf` then apply the
+        format with scientific notation.
+    fmtf : string
+        Format to use for floats.
+    fmte : string
+        Format to use for scientific notation.
+
+    Returns
+    -------
+    out : string
+        The formatted number."""
+    if minf <= number <= maxf:
+        return fmtf.format(number)
     else:
-        return filename
+        return fmte.format(number)

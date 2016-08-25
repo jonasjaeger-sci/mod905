@@ -1,8 +1,34 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module handles the set-up of initial positions and a box.
 
 The initial positions can either be generated on a lattice, or it can
 be read from a file.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+create_box
+    Create a simulation box from simulation settings.
+
+create_initial_positions
+    Get initial positions based on settings. This will either be
+    read from a file or generated on a lattice.
+
+create_system
+    Set up a system from given settings. This method will probably
+    also need to set/get the initial positions and velocities for
+    the particles and set up the simulation box.
+
+create_velocities
+    Create velocities from settings for a system with particles.
+
+initial_positions_file
+    Get initial positions from a file.
+
+initial_positions_lattice
+    Get initial positions by generating a lattice.
 """
 import logging
 import os
@@ -306,8 +332,8 @@ def initial_positions_file(settings):
 def create_initial_positions(settings):
     """Set up the initial positions from the given settings.
 
-    The settings can specify the initial positions as a file, as a
-    string or to be generated on a lattice.
+    The settings can specify the initial positions as a file or
+    to be generated on a lattice by pyretis.
 
     Parameters
     ----------
@@ -379,13 +405,13 @@ def create_box(settings, size, dim=3):
             box = Box(size=size)
             msgtxt = msg.format('from initial positions', box)
             logger.info(msgtxt)
-            msgwarn = 'The box was assumed periodic in ALL directions.'
+            msgwarn = 'The box was assumed periodic in all directions.'
             logger.warning(msgwarn)
         else:
             box = Box(periodic=[False]*dim)
             msgtxt = msg.format('without specifications', box)
             logger.info(msgtxt)
-            msgwarn = 'The box was ASSUMED non-periodic in all directions.'
+            msgwarn = 'The box was assumed *nonperiodic* in all directions.'
             logger.warning(msgwarn)
     return box
 
@@ -431,6 +457,18 @@ def create_velocities(system, settings, vel):
         msg = 'Settings used for generating velocities: \n{}'
         msg = msg.format(gen_settings)
         logger.debug(msg)
+        return True
+    elif 'scale' in vel_settings:
+        target = vel_settings['scale']
+        # just set the velocities to some temperature for now
+        # the scaling is done later by calling system.extra_setup()
+        gen_settings = {'distribution': 'maxwell',
+                        'momentum': system.particles.npart != 1,
+                        'temperature': settings['temperature']}
+        system.generate_velocities(**gen_settings)
+        msg = 'Scaling velocities to total energy {}'.format(target)
+        logger.debug(msg)
+        system.post_setup.append(('rescale_velocities', (target,)))
         return True
     else:
         return False

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This file contains classes to represent order parameters.
 
 The order parameters are assumed to all be completely determined
@@ -9,16 +11,16 @@ parameter (i.e. its velocity).
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OrderParameter (:py:class:`pyretis.core.orderparameter.OrderParameter`)
+OrderParameter
     Base class for the order parameters.
 
-OrderParameterPosition (:py:class:`pyretis.core.orderparameter.OrderParameterPosition`)
+OrderParameterPosition
     A class for a simple position dependent order parameter.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-order_factory (:py:func:`pyretus.core.orderparameter.order_factory`)
+order_factory
     A method to create order parameters from settings.
 """
 import logging
@@ -268,14 +270,8 @@ class OrderParameterPosition(OrderParameter):
             The order parameter.
         """
         particles = system.particles
-        if particles.npart == 1:  # ignore self.index
-            pos = particles.pos
-        else:
-            pos = particles.pos[self.index]
-        if system.get_dim() == 1:
-            lmb = pos[0]
-        else:
-            lmb = pos[self.dim]
+        pos = particles.pos[self.index]
+        lmb = pos[self.dim]
         if self.periodic:
             return system.box.pbc_coordinate_dim(lmb, self.dim)
         else:
@@ -297,14 +293,8 @@ class OrderParameterPosition(OrderParameter):
             The velocity of the order parameter
         """
         particles = system.particles
-        if particles.npart == 1:  # ignore self.index
-            vel = particles.vel
-        else:
-            vel = particles.vel[self.index]
-        if system.get_dim() == 1:
-            return vel[0]
-        else:
-            return vel[self.dim]
+        vel = particles.vel[self.index]
+        return vel[self.dim]
 
 
 class OrderParameterDistance(OrderParameter):

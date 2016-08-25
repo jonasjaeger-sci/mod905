@@ -1,8 +1,30 @@
 # -*- coding: utf-8 -*-
-"""Functions for analysis of path ensembles.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Methods for analysis of path ensembles.
 
-Path ensembles are defined in the object `PathEnsemble`
-in `pyretis.core.path`.
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+analyse_path_ensemble
+    Method to analyse a path ensemble, it will calculate crossing
+    probabilities and information about moves etc. This method
+    can be applied to files as well as path ensemble objects.
+
+analyse_path_ensemble_object
+    Method to analyse a path ensemble, it will calculate crossing
+    probabilities and information about moves etc. This method is
+    intended to work directly on path ensemble objects.
+
+match_probabilities
+    Match probabilities from several path ensembles and calculate
+    efficiencies and the error for the matched probability.
+
+retis_flux
+    Calculate the initial flux with errors for a RETIS simulation.
+
+retis_rate
+    Calculate the rate constant with errors for a RETIS simulation.
 """
 from __future__ import absolute_import
 import logging
@@ -14,7 +36,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['analyse_path_ensemble', 'analyse_path_ensemble_object',
-           'match_probabilities']
+           'match_probabilities', 'retis_flux', 'retis_rate']
 
 
 def _get_successful(path_ensemble, idetect):
@@ -207,6 +229,9 @@ def _get_path_distribution(path_ensemble, bins=1000):
         histogram and `out[1][1]` are the mid points for bins.
         `out[1][2]` is a tuple with the average and standard deviation
         for the length.
+    out[2] : numpy.array
+        The length of the accepted paths, in case we want to analyse it
+        further.
 
     See Also
     --------
@@ -217,16 +242,16 @@ def _get_path_distribution(path_ensemble, bins=1000):
     length_acc = np.array(length_acc)
     length_all = []
     for path in path_ensemble.paths:
-        length = _get_path_length(path)
+        length = _get_path_length(path, path_ensemble.ensemble)
         if length is not None:
             length_all.append(length)
     length_all = np.array(length_all)
     hist_acc = histogram_and_avg(length_acc, bins, density=True)
     hist_all = histogram_and_avg(length_all, bins, density=True)
-    return hist_acc, hist_all
+    return hist_acc, hist_all, length_acc
 
 
-def _get_path_length(path):
+def _get_path_length(path, ensemble):
     """Return the path length for different moves.
 
     Different moves may have a different way of obtaining the path
@@ -239,6 +264,9 @@ def _get_path_length(path):
         It can typically be obtained by iterating over the path
         ensemble object, e.g. with a
         `for path in path_ensemble.get_paths():`.
+    ensemble : int
+        This integer identifies the ensemble. This is used for
+        the swapping moves in [0^-] and [0^+].
 
     Returns
     -------
@@ -246,20 +274,25 @@ def _get_path_length(path):
         The path length
     """
     move = path['generated'][0]
-    if move == 'tr':
-        return 0
-    elif move == 'sh':
-        return path['length'] - 1
-    elif move == 's+':
-        return 0
-    elif move == 's-':
-        return 0
-    elif move == '00':
-        return 0
+    return_table = {'tr': 0, 's+': 0, 's-': 0, '00': 0}
+    if move in return_table:
+        if move == 's+' and ensemble == 0:
+            return path['length'] - 2
+        elif move == 's-' and ensemble == 1:
+            return path['length'] - 2
+        else:
+            return return_table[move]
     else:
-        msg = 'Ignored unknown mc move: {}'.format(move)
-        logger.warning(msg)
-        return None
+        if move == 'sh':
+            return path['length'] - 1
+        elif move == 'ki':
+            msg = 'Skipped initial path: {}'.format(move)
+            logger.info(msg)
+            return None
+        else:
+            msg = 'Skipped unknown mc move: {}'.format(move)
+            logger.warning(msg)
+            return None
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
@@ -436,8 +469,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
                                             blockskip=settings['blockskip'])
 
     # next length-analysis:
-    hist1, hist2 = _get_path_distribution(path_ensemble,
-                                          bins=settings['bins'])
+    hist1, hist2, _ = _get_path_distribution(path_ensemble,
+                                             bins=settings['bins'])
     result['pathlength'] = (hist1, hist2)
     # next, shoots:
     # move so that the analysis returns histograms and scale...
@@ -467,7 +500,8 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     Parameters
     ----------
     path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
-        from `pyretis.core.path and `pyretis.inout.pathfile`.
+        from `pyretis.core.pathensemble` or from
+        `pyretis.inout.writers.pathfile`.
         This is the path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
@@ -502,7 +536,15 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     .. [wikimov] Wikipedia, "Moving Average",
        http://en.wikipedia.org/wiki/Moving_average
     """
-    result = {'prun': [], 'cycle': []}
+    if path_ensemble.ensemble == 0:
+        return analyse_path_ensemble0(path_ensemble, settings, idetect)
+    ensemble = path_ensemble.ensemble
+    result = {'prun': [],
+              'cycle': [],
+              'detect': idetect,
+              'ensemble': path_ensemble.ensemble_name,
+              'ensembleid': ensemble,
+              'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
     success = 0  # determines if the current path is successful or not
@@ -533,7 +575,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
         result['cycle'].append(path['cycle'])
         # get the length - note that this length depends on the type of move
         # see the `_get_path_length` function.
-        length = _get_path_length(path)
+        length = _get_path_length(path, ensemble)
         if length is not None:
             length_all.append(length)
         # update the shoot stats, this will only be done for shooting moves
@@ -571,7 +613,71 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = npath
+    # extra analysis for the [0^+] ensemble in case we will determine
+    # the initial flux:
+    if ensemble == 1:
+        result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
+                                                                weights),
+                                                 maxblock=settings['maxblock'],
+                                                 blockskip=settings['blockskip'])
+        lenge2 = result['lengtherror'][4] * hist1[2][0] / (hist1[2][0]-2.)
+        result['fluxlength'] = [hist1[2][0]-2.0, lenge2,
+                                lenge2 * (hist1[2][0]-2.)]
+        result['fluxlength'].append(result['efficiency'][1] * lenge2**2)
     # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
+    return result
+
+
+def analyse_path_ensemble0(path_ensemble, settings, idetect):
+    """Analyse the [0^-] ensemble"""
+    ensemble = path_ensemble.ensemble
+    result = {'cycle': [],
+              'detect': idetect,
+              'ensemble': path_ensemble.ensemble_name,
+              'ensembleid': ensemble,
+              'interfaces': [i for i in path_ensemble.interfaces]}
+    length_acc, length_all, weights = [], [], []
+    shoot_stats = {'REJ': [], 'ALL': []}
+    nacc, npath = 0, 0
+    for path in path_ensemble.get_paths():  # loop over all paths
+        npath += 1
+        if path['status'] == 'ACC':
+            nacc += 1
+            weights.append(1)
+            length_acc.append(path['length'])
+        else:  # just increase the weigths
+            weights[-1] += 1
+        result['cycle'].append(path['cycle'])
+        length = _get_path_length(path, ensemble)
+        if length is not None:
+            length_all.append(length)
+        # update the shoot stats, this will only be done for shooting moves
+        _update_shoot_stats(shoot_stats, path)
+    # Perform the different analysis tasks:
+    result['cycle'] = np.array(result['cycle'])
+    # 1) length analysis:
+    hist1 = histogram_and_avg(np.repeat(length_acc, weights),
+                              settings['bins'], density=True)
+    hist2 = histogram_and_avg(np.array(length_all),
+                              settings['bins'], density=True)
+    result['pathlength'] = (hist1, hist2)
+    # 2) block error of lengths:
+    result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
+                                                            weights),
+                                             maxblock=settings['maxblock'],
+                                             blockskip=settings['blockskip'])
+    # 3) shoots analysis:
+    result['shoots'] = _create_shoot_histograms(shoot_stats,
+                                                settings['bins'])
+    # 4) Add some simple efficiency metrics:
+    result['efficiency'] = [float(nacc) / float(npath),
+                            float(npath) * hist2[2][0]]
+    result['efficiency'].append(result['efficiency'][1] *
+                                result['lengtherror'][4]**2)
+    lenge2 = result['lengtherror'][4] * hist1[2][0] / (hist1[2][0]-2.)
+    result['fluxlength'] = [hist1[2][0]-2.0, lenge2, lenge2 * (hist1[2][0]-2.)]
+    result['fluxlength'].append(result['efficiency'][1] * lenge2**2)
+    result['tis-cycles'] = npath
     return result
 
 
@@ -628,3 +734,55 @@ def match_probabilities(path_results, detect):
     results['opteff'] = prob_opt_eff**2  # optimized TIS efficiency
     results['eff'] = accprob_err * prob_simtime  # over-all TIS efficiency
     return results
+
+
+def retis_flux(results0, results1, timestep):
+    """Method to calculate the initial flux for RETIS.
+
+    Parameters
+    ----------
+    results0 : dict
+        Results from the analysis of ensemble [0^-]
+    results1 : dict
+        Results from the analysis of ensemble [0^+]
+
+    Returns
+    -------
+    flux : float
+        The initial flux.
+    flux_error : float
+        The relative error in the initial flux.
+    """
+    flux0 = results0['out']['fluxlength']
+    flux1 = results1['out']['fluxlength']
+    tsum = flux0[0] + flux1[0]
+    flux = 1.0 / (tsum * timestep)
+    flux_error = (np.sqrt((flux0[1]*flux0[0])**2 + (flux1[1]*flux1[0])**2) /
+                  tsum)
+    return flux, flux_error
+
+
+def retis_rate(pcross, pcross_relerror, flux, flux_relerror):
+    """Method to calculate the rate constant for RETIS.
+
+    Parameters
+    ----------
+    pcross : float
+        Estimated crossing probability
+    pcross_relerror : float
+        Relative error in crossing probability.
+    flux : float
+        The initial flux.
+    flux_relerror : float
+        Relative error in the initial flux.
+
+    Returns
+    -------
+    rate : float
+        The rate constant
+    rate_error : float
+        The relative error in the rate constant.
+    """
+    rate = pcross * flux
+    rate_error = np.sqrt(pcross_relerror**2 + flux_relerror**2)
+    return rate, rate_error

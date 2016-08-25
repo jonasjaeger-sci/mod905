@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """General functions for generating reports.
 
 This module contains some general functions for report generation. These
@@ -18,6 +20,7 @@ generate_report
     Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
+import datetime
 import logging
 import os
 # for converting rst to html and/or latex:
@@ -29,10 +32,11 @@ import jinja2
 # pyretis imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as PROGRAM_NAME
-from pyretis.inout.common import remove_extensions
 from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
-from pyretis.inout.report.report_path import (generate_report_tis,
+from pyretis.inout.report.report_path import (generate_report_retis,
+                                              generate_report_retis0,
+                                              generate_report_tis,
                                               generate_report_tis_path)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -41,6 +45,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['get_template', 'render_report', 'generate_report']
 
 
+_DATE_FMT = '%d.%m.%Y %H:%M:%S'
 # File names for pre-defined templates.
 # - html is done via rst (i.e. there is no html template)
 # - htm is assumed to be equal to html
@@ -53,8 +58,16 @@ _TEMPLATES = {'rst': 'report_{}.rst',
               'txt': 'report_{}.txt'}
 
 _TEMPLATE_NAMES = {'md-flux': 'mdflux',
+                   'retis': 'retis',
+                   'retis0': 'retis0',
                    'tis': 'tis',
-                   'tis-path': 'tis_path'}
+                   'tis-single': 'tis_single'}
+
+_REPORT_MAP = {'md-flux': generate_report_mdflux,
+               'retis': generate_report_retis,
+               'retis0': generate_report_retis0,
+               'tis': generate_report_tis,
+               'tis-single': generate_report_tis_path}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -80,6 +93,7 @@ def _rst_to_html(rst):
     htmlwriter = HTMLWriter()
     htmlwriter.translator_class = HTMLTranslator
     override = {'output_encoding': 'unicode'}
+    # custom css can be added by: 'stylesheet_path': '/path/to/style.css'
     html = docutils.core.publish_string(rst, writer=htmlwriter,
                                         settings_overrides=override)
     return html
@@ -176,14 +190,14 @@ def render_report(report, output, template, path):
         return render, _EXT[output]
 
 
-def generate_report(report_type, analysis, output, template=None):
+def generate_report(report_type, analysis_results, output, template=None):
     """Generate a report of a given type with the given analysis results.
 
     Parameters
     ----------
     report_type : string
         Selects the kind of report we want.
-    analysis : dict
+    analysis_results : dict
         The results from running the analysis.
     output : string
         Output format for the report.
@@ -202,7 +216,12 @@ def generate_report(report_type, analysis, output, template=None):
     """
     report = {'version': VERSION,
               'program': PROGRAM_NAME,
+              'date': datetime.datetime.now().strftime(_DATE_FMT),
               'figures': [], 'tables': [], 'numbers': []}
+    try:
+        generator = _REPORT_MAP[report_type]
+    except KeyError:
+        return None, None
     # Check if the output is a valid format
     if output not in _TEMPLATES:
         msg = 'Format {} not defined for {} report. Defaulting to rst'
@@ -210,21 +229,13 @@ def generate_report(report_type, analysis, output, template=None):
         logger.warning(msg)
         output = 'rst'
     template, path = get_template(output, report_type, template=template)
-    generated = None
-    if report_type == 'md-flux':
-        generated = generate_report_mdflux(analysis, output=output)
-    elif report_type == 'tis':
-        generated = generate_report_tis(analysis, output=output)
-    elif report_type == 'tis_path':
-        generated = generate_report_tis_path(analysis, output=output)
+    generated = generator(analysis_results, output=output)
     report.update(generated)
     # Remove white-space from numbers:
     for key in report['numbers']:
         report['numbers'][key] = report['numbers'][key].strip()
-    # Remove file extensions for figures and latexify numbers:
-    if output in ('latex', 'tex'):
-        for key in report['figures']:
-            report['figures'][key] = remove_extensions(report['figures'][key])
+    if output in ('latex', 'tex', 'html', 'htm'):
+        # Latexify numbers:
         for key in report['numbers']:
             report['numbers'][key] = latexify_number(report['numbers'][key])
     return render_report(report, output, template, path)

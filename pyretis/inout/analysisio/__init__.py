@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package contains functions for input/output for the analysis.
 
 The functions defined here will typically run the analysis on the
@@ -25,9 +27,12 @@ __init__.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-run_md_flux_analysis
-    Function to run the MD flux analysis on a set of files. It will
-    plot the results and generate a MD-flux report.
+analyse_file
+    Method to analyse a file.
+
+run_analysis_files
+    Method to analyse simulation data in output files. This is a
+    post-processing step.
 """
 from __future__ import absolute_import
-from .analysisio import run_md_flux_analysis, analyse_file
+from .analysisio import analyse_file, run_analysis_files

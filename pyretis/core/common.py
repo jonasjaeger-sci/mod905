@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of some common methods that might be useful.
 
 Important methods defined here
@@ -172,7 +174,7 @@ def generic_factory(settings, object_map, name='generic'):
                ' -- could not create object!').format(name)
         logger.critical(msg)
         return None
-    if not klass in object_map:
+    if klass not in object_map:
         msg = ('Could not create unknown class "{}"'
                ' for {}').format(settings['class'], name)
         logger.critical(msg)
@@ -183,7 +185,7 @@ def generic_factory(settings, object_map, name='generic'):
 
     input_args = []
     for arg in args:
-        if not arg in settings:
+        if arg not in settings:
             msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
                                                                       klass)
             logger.critical(msg)

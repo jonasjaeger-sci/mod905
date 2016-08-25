@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Classes and functions for path ensembles.
 
 The classes and functions defined in this module are useful for
@@ -25,6 +27,9 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PathEnsemble', 'create_path_ensembles']
 
 
+PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
+
+
 class PathEnsemble(object):
     """PathEnsemble(object) - representation of a path ensemble.
 
@@ -39,10 +44,16 @@ class PathEnsemble(object):
 
     Attributes
     ----------
-    ensemble : str
-        This is a string representation of the path ensemble. This is
-        used to identify the ensemble in retis simulations and the
-        string should be one of ``[0^-]``, ``[0^+]``, ``[1^+]``, ...
+    ensemble : integer
+        This integer is used to represent the path ensemble, for retis
+        simulations it's useful to identify the path ensemble. The path
+        ensembles are numbered sequentially 0, 1, 2, etc. This
+        corresponds to ``[0^-]``, ``[0^+]``, ``[1^+]``, etc.
+    ensemble_name : string
+        A string which can be used for printing the ensemble name
+    ensemble_name_simple : string
+        A string with a simpler representation of the ensemble name,
+        can be used for creating output files etc.
     interfaces : list of floats
         Interfaces, specified with the values for the
         order parameters: `[left, middle, right]`.
@@ -66,14 +77,14 @@ class PathEnsemble(object):
         This is the last **accepted** path.
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000000):
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=100):
         """Initialize the PathEnsemble object.
 
         Parameters
         ----------
-        ensemble : string
-            The string representation of the path ensemble.
-        interfaces : list of ints
+        ensemble : integer
+            An integer used to identify the ensemble.
+        interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
         """
@@ -84,6 +95,11 @@ class PathEnsemble(object):
         self.nstats = {'npath': 0, 'nshoot': 0, 'ACC': 0}
         self.paths = []
         self.maxpath = maxpath
+        if self.ensemble == 0:
+            self.ensemble_name = '[0^-]'
+        else:
+            self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
+        self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
@@ -121,12 +137,13 @@ class PathEnsemble(object):
             The current cycle number
         """
         if len(self.paths) >= self.maxpath:
-            msg = ['Maxpath in ensemble {} exceeded!'.format(self.ensemble)]
-            msg += ['Emptying path-data in this path ensemble!']
-            msg += ['Note that this might influence the analysis if']
-            msg += ['you run it using this path ensemble object.']
-            msg += ['(Hint: Use the path ensemble file for the analysis.)']
-            logger.warning('\n'.join(msg))
+            msg = ('Exceeded maximum number of paths in ensemble {}!\n'
+                   'The path-data in this path ensemble will be reset.\n'
+                   'Note that this will *NOT* influence the simulation. '
+                   'Remember to use the path ensemble file for an '
+                   'accurate analysis!')
+            msg = msg.format(self.ensemble_name)
+            logger.info(msg)
             self.paths = []
         # update statistics:
         if path is None:
@@ -203,23 +220,24 @@ class PathEnsemble(object):
     def get_start_condition(self):
         """Return the appropriate start condition for an ensemble.
 
-        This is useful for RETIS simulations where we for [0^-] will
-        have the start condition equal to 'R'ight. For all other
-        ensembles we assume that we start from the 'L'eft.
+        This is useful for RETIS simulations where we for ``[0^-]``
+        (that is ``self.ensemble == 0``)  will have the start condition
+        equal to 'R'ight. For all other ensembles we assume that we
+        start from the 'L'eft.
 
         Returns
         -------
         out : string
             'R' for right or 'L' for left start condition.
         """
-        if self.ensemble == '[0^-]':
+        if self.ensemble == 0:
             return 'R'
         else:
             return 'L'
 
     def __str__(self):
         """Return a string with some info about the path ensemble."""
-        msg = ['Path ensemble: {}'.format(self.ensemble)]
+        msg = ['Path ensemble: {}'.format(self.ensemble_name)]
         msg += ['\tInterfaces: {}'.format(self.interfaces)]
         if self.detect is not None:
             msg += ['\tDetect: {}'.format(self.detect)]
@@ -267,10 +285,8 @@ def create_path_ensembles(interfaces, include_zero=False):
     reactant = interfaces[0]
     product = interfaces[-1]
     if include_zero:
-        ensemble_name = '[0^-]'
         interface = [-float('inf'), reactant, reactant]
-        path_ensemble = PathEnsemble(ensemble_name, interface,
-                                     detect=None)
+        path_ensemble = PathEnsemble(0, interface, detect=None)
         ensembles.append(path_ensemble)
     for i, middle in enumerate(interfaces[:-1]):
         interface = [reactant, middle, product]
@@ -278,8 +294,6 @@ def create_path_ensembles(interfaces, include_zero=False):
             detect.append(interfaces[i+1])
         except IndexError:
             detect.append(product)
-        ensemble_name = '[{}^+]'.format(i)
-        path_ensemble = PathEnsemble(ensemble_name, interface,
-                                     detect=detect[-1])
+        path_ensemble = PathEnsemble(i + 1, interface, detect=detect[-1])
         ensembles.append(path_ensemble)
     return ensembles, detect
