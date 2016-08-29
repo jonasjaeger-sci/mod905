@@ -272,7 +272,8 @@ def _shoot(path, system, interfaces, integrator, rgen,
     trial_path.generated = ('sh', orderp[0], idx, 0)
     # kick the timeslice:
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
-                          momentum=False)[0]
+                          momentum=tis_settings['zero_momentum'],
+                          rescale=tis_settings['rescale_energy'])[0]
     # update the order parameter since it could depend on velocity
     orderp = system.calculate_order()
     # We now check if the kick was OK or not:
@@ -382,7 +383,8 @@ def generate_initial_path_kick(system, interfaces, integrator,
         * `start_cond`: string, starting condition, 'L'eft or 'R'ight
         * `maxlength`: integer, maximum allowed length of paths.
 
-        Note that also `_fix_path_by_tis` will use the `tis_settings`.
+        Note that also `_fix_path_by_tis` and `_kick_across_middle`
+        will use `tis_settings`.
 
     Returns
     -------
@@ -390,7 +392,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
         This is the generated initial path
     """
     previous, _ = _kick_across_middle(system, integrator, rgen,
-                                      interfaces[1])
+                                      interfaces[1], tis_settings)
     # Note: current point is stored in system
     # When the kicking is done, we have two points (`previous` and the
     # current system.particles).
@@ -451,7 +453,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
     return initial_path
 
 
-def _kick_across_middle(system, integrator, rgen, middle):
+def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
     """Repeatedly kick a phase point so that it crosses the middle interface.
 
     Parameters
@@ -465,6 +467,11 @@ def _kick_across_middle(system, integrator, rgen, middle):
         This is the random generator that will be used.
     middle : float
         This is the value for the middle interface.
+    tis_settings : dict
+        This dictionary contains settings for TIS. Explicitly used here:
+
+        * `zero_momentum`: boolean, determines if the mometum is zeroed
+        * `rescale_energy`: boolean, determines if energy is rescaled.
 
     Returns
     -------
@@ -494,7 +501,9 @@ def _kick_across_middle(system, integrator, rgen, middle):
         previous = particles.get_phase_point()
         previous['order'] = curr
         # kick the time slice
-        _kick_timeslice(system, rgen, aimless=True, momentum=False)
+        _kick_timeslice(system, rgen, aimless=True,
+                        momentum=tis_settings['zero_momentum'],
+                        rescale=tis_settings['rescale_energy'])
         # integrate forward one step:
         integrator.integration_step(system)
         # compare previous order parameter and the new one:
