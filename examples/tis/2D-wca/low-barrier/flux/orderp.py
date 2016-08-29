@@ -6,7 +6,6 @@
 import logging
 import numpy as np
 from pyretis.core.orderparameter import OrderParameter
-from pyretis.core.units import CONVERT
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -77,24 +76,29 @@ class OrderParameterWCAJCP1(OrderParameter):
         r = np.sqrt(np.dot(delta, delta))
         dx = delta
         dv = particles.vel[self.index[1]] - particles.vel[self.index[0]]
-	dxdv = np.dot(dx,dv)/r
-	m1 = particles.mass[self.index[0]]
-	m2 = particles.mass[self.index[1]]
-	m = m1*m2/(m1+m2)
-	for item in range(len(system.forcefield.potential)):
-            if system.forcefield.potential[item].__class__.__name__ == 'DoubleWellWCA':
-                potential_func = system.forcefield.potential[item]
+        dxdv = np.dot(dx, dv) / r
+        m1 = particles.mass[self.index[0]]
+        m2 = particles.mass[self.index[1]]
+        m = m1 * m2 / (m1 + m2)
+        potential_func = None
+        for potential in system.forcefield.potential:
+            if potential.__class__.__name__ == 'DoubleWellWCA':
+                potential_func = potential
                 break
-        if (r<1.2):
-            E = potential_func.potential(particles, system.box)+0.5*m*(dxdv)**2
+        if potential_func is None:
+            return r
+        if r < 1.2:
+            E = (potential_func.potential(particles, system.box) +
+                 0.5 * m * (dxdv)**2)
             orderp = 1.19
-            if (E < 1.5):
-                orderp = 1.18-(1.5-E)/0.5*0.02
-        elif (r>1.42):
-            E = potential_func.potential(particles, system.box)+0.5*m*(dxdv)**2
+            if E < 1.5:
+                orderp = 1.18 - (1.5 - E) / 0.5 * 0.02
+        elif r > 1.42:
+            E = (potential_func.potential(particles, system.box) +
+                 0.5 * m * (dxdv)**2)
             orderp = 1.43
-            if (E<5.0):
-                orderp = 1.44+(5.0-E)/0.5*0.02
+            if E < 5.0:
+                orderp = 1.44 + (5.0 - E) / 0.5 * 0.02
         else:
             orderp = r
         return float(orderp)
