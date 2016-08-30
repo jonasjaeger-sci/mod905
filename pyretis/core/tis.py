@@ -522,7 +522,7 @@ def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
 
 
 def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
-                    rescale=False):
+                    rescale=None):
     """Make a random modification to a time slice.
 
     This method will modify the velocities of a time slice.
@@ -541,11 +541,10 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
         Determines if we should do aimless shooting or not.
     momentum : boolean, optional
         If True, we reset the linear momentum to zero after kicking.
-    rescale : boolean, optional
-        For some NVE simulations, we rescale the energy to a fixed
-        value. If `rescale` is True, we will rescale the energy (after
-        modification of the velocities) to match the set energy
-        specified in `system.target_energy`.
+    rescale : float, optional
+        For some NVE simulations, we can rescale the energy to a fixed
+        value. If `rescale` is a float > 0, we will rescale the energy (after
+        modification of the velocities) to match the given float.
 
 
     Returns
@@ -556,8 +555,8 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
         The new kinetic energy
     """
     particles = system.particles
-    if rescale:
-        kin_old = system.target_energy - system.v_pot
+    if rescale is not None and rescale is not False and rescale > 0:
+        kin_old = rescale - system.v_pot
     else:
         kin_old = calculate_kinetic_energy(particles)[0]
     if aimless:
@@ -569,7 +568,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     if momentum:
         reset_momentum(particles)
     if rescale:
-        system.rescale_velocities(system.target_energy)
+        system.rescale_velocities(rescale)
     kin_new = calculate_kinetic_energy(particles)[0]
     dek = kin_new - kin_old
     return dek, kin_new
