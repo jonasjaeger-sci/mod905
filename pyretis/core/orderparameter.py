@@ -17,6 +17,9 @@ OrderParameter
 OrderParameterPosition
     A class for a simple position dependent order parameter.
 
+OrderParameterDistance
+    A class for a particle-particle distance order parameter.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
