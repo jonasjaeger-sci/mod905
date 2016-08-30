@@ -545,7 +545,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
         For some NVE simulations, we rescale the energy to a fixed
         value. If `rescale` is True, we will rescale the energy (after
         modification of the velocities) to match the set energy
-        specified in `system.set_energy`.
+        specified in `system.target_energy`.
 
 
     Returns
@@ -557,7 +557,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     """
     particles = system.particles
     if rescale:
-        kin_old = system.set_energy - system.v_pot
+        kin_old = system.target_energy - system.v_pot
     else:
         kin_old = calculate_kinetic_energy(particles)[0]
     if aimless:
@@ -569,7 +569,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     if momentum:
         reset_momentum(particles)
     if rescale:
-        system.rescale_velocities(system.set_energy)
+        system.rescale_velocities(system.target_energy)
     kin_new = calculate_kinetic_energy(particles)[0]
     dek = kin_new - kin_old
     return dek, kin_new

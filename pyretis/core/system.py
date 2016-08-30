@@ -45,7 +45,7 @@ class System(object):
           system.
     v_pot : float
         The potential energy of the system.
-    set_energy : float
+    target_energy : float
         The total energy of the system in case we want to fix this
         value.
     particles : object like `pyretis.core.particles.Particles`
@@ -104,7 +104,7 @@ class System(object):
         self.forcefield = None
         self.order_function = None
         self.orderp = None
-        self.set_energy = energy
+        self.target_energy = energy
         self.post_setup = []
 
     def adjust_dof(self, dof):
