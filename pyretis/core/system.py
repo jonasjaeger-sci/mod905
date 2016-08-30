@@ -45,9 +45,6 @@ class System(object):
           system.
     v_pot : float
         The potential energy of the system.
-    target_energy : float
-        The total energy of the system in case we want to fix this
-        value.
     particles : object like `pyretis.core.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
@@ -69,8 +66,7 @@ class System(object):
         units in :py:mod:`pyretis.core.units`.
     """
 
-    def __init__(self, units='lj', box=None, temperature=None,
-                 energy=None):
+    def __init__(self, units='lj', box=None, temperature=None):
         """Initialization of the system.
 
         Parameters
@@ -104,7 +100,6 @@ class System(object):
         self.forcefield = None
         self.order_function = None
         self.orderp = None
-        self.target_energy = energy
         self.post_setup = []
 
     def adjust_dof(self, dof):
