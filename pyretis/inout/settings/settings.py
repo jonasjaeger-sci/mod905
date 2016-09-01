@@ -57,11 +57,10 @@ KEYWORDS['units base'] = {'name': None,
 KEYWORDS['box'] = {'size': None,
                    'periodic': None}
 KEYWORDS['integrator'] = {'class': None,
-                          'timestep': 0,
-                          'gamma': None,
-                          'high_friction': False,
-                          'seed': 0}
-KEYWORDS['orderparameter'] = {'class': None,
+                          'module': None,
+                          'setting': None}
+KEYWORDS['order parameter'] = {'class': None,
+                              'module': None,
                               'setting': None}
 KEYWORDS['potential'] = {'class': None,
                          'setting': None,
@@ -142,7 +141,7 @@ def look_for_keyword(keywords, line):
     out[1] : string
         A lower-case, stripped version of `out[0]`.
     out[2] : boolean
-        `True` if the keyword is one of the known keywords.
+        `True` if we found a possible keyword.
     """
     # match a word followed by a '='
     key = re.match(r'(.*?)=', line)
@@ -152,7 +151,7 @@ def look_for_keyword(keywords, line):
         for i in SPECIAL_KEY:
             if keyword_low.startswith(i):
                 return keyword, i, True
-        return keyword, keyword_low, keyword_low in keywords
+        return keyword, keyword_low, True
     else:
         return None, None, False
 

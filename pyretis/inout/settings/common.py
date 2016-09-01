@@ -75,15 +75,14 @@ def import_from(module_path, function_name):
             spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
         logger.debug(msg)
-        try:
-            return getattr(module, function_name)
-        except AttributeError:
-            msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                           module_path)
-            logger.critical(msg)
-            raise ValueError(msg)
-    except ImportError:
+        return getattr(module, function_name)
+    except (ImportError, IOError):
         msg = 'Could not import module: {}'.format(module_path)
+        logger.critical(msg)
+        raise ValueError(msg)
+    except AttributeError:
+        msg = 'Could not import "{}" from "{}"'.format(function_name,
+                                                       module_path)
         logger.critical(msg)
         raise ValueError(msg)
 
@@ -198,9 +197,7 @@ def create_external(settings, key, factory, required_methods,
                                                                  function)
                     logger.critical(msg)
                     raise ValueError(msg)
-        return initiate_instance(obj,
-                                 args=key_settings.get('args', None),
-                                 kwargs=key_settings.get('kwargs', None))
+        return initiate_instance(obj, key_settings)
 
 
 def create_orderparameter(settings):
@@ -216,7 +213,7 @@ def create_orderparameter(settings):
     out : object like `OrderParameter` from `pyretis.core.orderparameter`.
         This object represents the order parameter.
     """
-    return create_external(settings, 'orderparameter', order_factory,
+    return create_external(settings, 'order parameter', order_factory,
                            ['calculate', 'calculate_velocity'])
 
 

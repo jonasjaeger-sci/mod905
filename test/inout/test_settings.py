@@ -92,11 +92,13 @@ class KeywordParsing(unittest.TestCase):
         teststr.append(['Integrator settings', '-------------------', 'junk',
                         '    ', 'junk = 10',
                         'class =    velocityverlet', 'timestep=0.002'])
-        correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
+        correct.append({'timestep': 0.002, 'junk': 10,
+                        'class': 'velocityverlet'})
         teststr.append(['Integrator settings', '-------------------', 'junk',
                         '    ', 'junk = 10',
                         'class =    velocityverlet', 'timestep=0.002'])
-        correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
+        correct.append({'timestep': 0.002, 'class': 'velocityverlet',
+                        'junk': 10})
         teststr.append(['Integrator settings', '-------------------',
                         'class = langevin', 'timestep = 0.002',
                         'gamma = 0.3', 'high_friction = False',
@@ -143,24 +145,30 @@ timestep = 0.002"""
                 temp.write(txt.encode('utf-8'))
             temp.flush()
             settings_read = parse_settings_file(temp.name, add_default=False)
-            print(settings_read)
         self.assertEqual(settings_read, correct)
 
-'''
+
 class KeywordIntegrator(unittest.TestCase):
     """Test the parsing of input settings for integrators."""
     def test_load_external_integrator(self):
         """Test that we can load external python modules for integrators."""
-        data = """integrator = {'class': 'FooIntegrator',
-                                'module': 'foointegrator.py',
-                                'args': [0.5],
-                                'kwargs': {'parameter': 100}}"""
-        correct = {'integrator': {'class': 'FooIntegrator',
-                                  'module': 'foointegrator.py',
-                                  'args': [0.5],
-                                  'kwargs': {'parameter': 100}}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Integrator settings
+-------------------
+class = FooIntegrator
+module = foointegrator.py
+timestep = 0.5
+extra = 100
+"""
+        correct = {'class': 'FooIntegrator',
+                   'module': 'foointegrator.py',
+                   'timestep': 0.5,
+                   'extra': 100}
+        raw, _ = _parse_sections(data.split('\n'))
+        settings = {}
+        settings['integrator'] = _parse_raw_section(raw['integrator'],
+                                                    'integrator')
+        self.assertEqual(settings['integrator'], correct)
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
@@ -168,50 +176,49 @@ class KeywordIntegrator(unittest.TestCase):
         settings['exe-path'] = here
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
-                         correct['integrator']['args'][0])
-        self.assertEqual(foointegrator.parameter,  # pylint: disable=no-member
-                         correct['integrator']['kwargs']['parameter'])
+                         correct['timestep'])
+        self.assertEqual(foointegrator.extra,  # pylint: disable=no-member
+                         correct['extra'])
 
     def test_fail_external_integrator(self):
         """Test that external loads fail in a predicable way."""
-        data = """integrator = {'class': 'BarIntegrator',
-                                'module': 'foointegrator.py',}"""
-        correct = {'integrator': {'class': 'BarIntegrator',
-                                  'module': 'foointegrator.py'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
-        # script we want to run.
+        # First test: an integrator that forgot to define a required method.
+        test_data, correct = [], []
+        test_data.append('Integrator settings\n'
+                         '-------------------\n'
+                         'class = BarIntegrator\n'
+                         'module = foointegrator.py')
+        correct.append({'class': 'BarIntegrator',
+                        'module': 'foointegrator.py'})
+        
+        test_data.append('Integrator settings\n'
+                         '-------------------\n'
+                         'class = BazIntegrator\n'
+                         'module = foointegrator.py')
+        correct.append({'class': 'BazIntegrator',
+                        'module': 'foointegrator.py'})
+        
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'module =  dummy')
+        correct.append({'module': 'dummy'})
+        
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'module = dummy\n'
+                         'class = dummy')
+        correct.append({'module': 'dummy', 'class': 'dummy'})
+
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['exe-path'] = here
-        args = [settings]
-        self.assertRaises(ValueError, create_integrator, *args)
-        # Test for another integrator that defines a self.integration_step,
-        # on __init__
-        data = """integrator = {'class': 'BazIntegrator',
-                                'module': 'foointegrator.py',}"""
-        correct = {'integrator': {'class': 'BazIntegrator',
-                                  'module': 'foointegrator.py'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        settings['exe-path'] = here
-        args = [settings]
-        self.assertRaises(ValueError, create_integrator, *args)
-        # Test for a case where we forgot to input the 'class'
-        data = "integrator = {'module': 'dummy'}"
-        correct = {'integrator': {'module': 'dummy'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        args = [settings]
-        self.assertRaises(ValueError, create_integrator, *args)
-        # test for a case where we can't find the module:
-        data = "integrator = {'module': 'dummy', 'class': 'dummy'}"
-        correct = {'integrator': {'module': 'dummy', 'class': 'dummy'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        args = [settings]
-        self.assertRaises(ValueError, create_integrator, *args)
+        for data, corr in zip(test_data, correct):
+            raw, _ = _parse_sections(data.split('\n'))
+            settings = {}
+            settings['integrator'] = _parse_raw_section(raw['integrator'], 
+                                                            'integrator')
+            self.assertEqual(settings['integrator'], corr)
+            settings['exe-path'] = here
+            args = [settings]
+            self.assertRaises(ValueError, create_integrator, *args)
 
 
 class KeywordOrderPrameter(unittest.TestCase):
@@ -219,14 +226,20 @@ class KeywordOrderPrameter(unittest.TestCase):
 
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
-        data = """orderparameter = {'class': 'FooOrderParameter',
-                                    'module': 'fooorderparameter.py',
-                                    'args': ['Dummy']}"""
-        correct = {'orderparameter': {'class': 'FooOrderParameter',
-                                      'module': 'fooorderparameter.py',
-                                      'args': ['Dummy']}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        SEC = 'order parameter'
+        data = """
+Order parameter
+---------------
+class = FooOrderParameter
+module = fooorderparameter.py
+name = Dummy"""
+        correct = {'class': 'FooOrderParameter',
+                   'module': 'fooorderparameter.py',
+                   'name': 'Dummy'}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
+        self.assertEqual(settings[SEC], correct)
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
@@ -234,7 +247,7 @@ class KeywordOrderPrameter(unittest.TestCase):
         settings['exe-path'] = here
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
-                         correct['orderparameter']['args'][0])
+                         correct['name'])
 
         def extra_function(args):
             """Dummy function for testing."""
@@ -248,77 +261,66 @@ class KeywordOrderPrameter(unittest.TestCase):
 
     def test_fail_orderparameter(self):
         """Test that loading external order parameters fails."""
-        data = """orderparameter = {'class': 'BarOrderParameter',
-                                    'module': 'fooorderparameter.py'}"""
-        correct = {'orderparameter': {'class': 'BarOrderParameter',
-                                      'module': 'fooorderparameter.py'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
-        # script we want to run.
+        SEC = 'order parameter'
+        test_data, correct = [], []
+        test_data.append('Order parameter\n'
+                         '---------------\n'
+                         'class = BarOrderParameter\n'
+                         'module = fooorderparameter.py')
+        test_data.append('Order parameter\n'
+                         '---------------\n'
+                         'class = BazOrderParameter\n'
+                         'module =  fooorderparameter.py')
+        correct.append({'class': 'BarOrderParameter',
+                        'module': 'fooorderparameter.py'})
+        correct.append({'class': 'BazOrderParameter',
+                        'module': 'fooorderparameter.py'})
         here = os.path.abspath(os.path.dirname(__file__))
-        settings['exe-path'] = here
-        args = [settings]
-        self.assertRaises(ValueError, create_orderparameter, *args)
-        data = """orderparameter = {'class': 'BazOrderParameter',
-                                    'module': 'fooorderparameter.py'}"""
-        correct = {'orderparameter': {'class': 'BazOrderParameter',
-                                      'module': 'fooorderparameter.py'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        settings['exe-path'] = here
-        args = [settings]
-        self.assertRaises(ValueError, create_orderparameter, *args)
+        for data, corr in zip(test_data, correct):
+            raw, _ = _parse_sections(data.split('\n'))
+            settings = {}
+            settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
+            self.assertEqual(settings[SEC], corr)
+            settings['exe-path'] = here
+            args = [settings]
+            self.assertRaises(ValueError, create_orderparameter, *args)
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        data = """orderparameter = {'class': 'OrderParameter',
-                                    'name': 'test'}"""
-        correct = {'orderparameter': {'class': 'OrderParameter',
-                                      'name': 'test'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        SEC = 'order parameter'
+        data = """
+Order parameter
+--------------- 
+class = OrderParameter
+name =  test"""
+        correct = {'class': 'OrderParameter', 'name': 'test'}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
+        self.assertEqual(settings[SEC], correct)
         orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name, correct['orderparameter']['name'])
+        self.assertEqual(orderp.name, correct['name'])
 
-        data = """orderparameter = {'class': 'OrderParameterPosition',
-                                    'name': 'Position', 'index': 0,
-                                    'dim': 'x', 'periodic': False}"""
-        correct = {'orderparameter': {'class': 'OrderParameterPosition',
-                                      'name': 'Position', 'index': 0,
-                                      'dim': 'x', 'periodic': False}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Order parameter
+---------------
+class = OrderParameterPosition
+name = Position
+index = 0
+dim = x
+periodic = False"""
+        correct = {'class': 'OrderParameterPosition',
+                   'name': 'Position', 'index': 0,
+                   'dim': 'x', 'periodic': False}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
+        self.assertEqual(settings[SEC], correct)
         orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name, correct['orderparameter']['name'])
-        self.assertEqual(orderp.index, correct['orderparameter']['index'])
+        self.assertEqual(orderp.name, correct['name'])
+        self.assertEqual(orderp.index, correct['index'])
         self.assertEqual(orderp.dim, 0)
-        self.assertEqual(orderp.periodic,
-                         correct['orderparameter']['periodic'])
-
-        data = """orderparameter = {'class': 'OrderParameterParse',
-                                    'name': 'Position', 'orderp': 'sin(x[0])',
-                                    'ordervel': 'cos(x[0])'}"""
-        correct = {'orderparameter': {'class': 'OrderParameterParse',
-                                      'name': 'Position',
-                                      'orderp': 'sin(x[0])',
-                                      'ordervel': 'cos(x[0])'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        orderp = create_orderparameter(settings)
-
-        data = """orderparameter = {'class': 'OrderParameterParse',
-                                    'name': 'Position',
-                                    'orderp': 'sin(pbc_x(x[0]))',
-                                    'ordervel': 'cos(x[0])'}"""
-        correct = {'orderparameter': {'class': 'OrderParameterParse',
-                                      'name': 'Position',
-                                      'orderp': 'sin(pbc_x(x[0]))',
-                                      'ordervel': 'cos(x[0])'}}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        orderp = create_orderparameter(settings)
+        self.assertEqual(orderp.periodic, correct['periodic'])
 
 
 class KeywordParticles(unittest.TestCase):
@@ -345,6 +347,7 @@ class KeywordParticles(unittest.TestCase):
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
 
+'''
     def test_lattice_type(self):
         """Test initialization on a lattice with types."""
         data = """particles-position = {'generate': 'fcc',

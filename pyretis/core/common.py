@@ -104,27 +104,43 @@ def inspect_function(function):
         return out
 
 
-def initiate_instance(klass, args=None, kwargs=None):
+def initiate_instance(klass, settings):
     """Function to initiate a class with optional arguments.
 
     Parameters
     ----------
     klass : class
         The class to initiate.
-    args : list, optional
-        Positional arguments to `klass.__init__()`.
-    kwargs : dict, optional
-        The keyword arguments to `klass.__init__()`
+    settings : dict
+        Positional and keyword arguments to pass to `klass.__init__()`.
 
     Returns
     -------
     out : instance of `klass`
         Here, we just return the initiated instance of the given class.
     """
+    # first pick out arguments and keyword arguments:
+    info = inspect_function(klass.__init__)
+    args, kwargs = [], {}
+    for arg in info['args']:
+        if arg == 'self':
+            continue
+        try:
+            args.append(settings[arg])
+        except KeyError:
+            msg = 'Required argument "{}" for "{}" not found!'.format(arg,
+                                                                      klass)
+            raise ValueError(msg)
+    for arg in info['kwargs']:
+        if arg == 'self':
+            continue
+        if arg in settings:
+            kwargs[arg] = settings[arg]
+    # Ready to initiate!
     msg = 'Initiated "{}" from "{}" {{}}'.format(klass.__name__,
                                                  klass.__module__)
-    if args is None:
-        if kwargs is None:
+    if len(args) == 0:
+        if len(kwargs) == 0:
             msgtxt = msg.format('without arguments.')
             logger.debug(msgtxt)
             return klass()
@@ -133,7 +149,7 @@ def initiate_instance(klass, args=None, kwargs=None):
             logger.debug(msgtxt)
             return klass(**kwargs)
     else:
-        if kwargs is None:
+        if len(kwargs) == 0:
             msgtxt = msg.format('with positional arguments.')
             logger.debug(msgtxt)
             return klass(*args)
@@ -180,30 +196,30 @@ def generic_factory(settings, object_map, name='generic'):
         logger.critical(msg)
         return None
     cls = object_map[klass].get('cls')
-    args = object_map[klass].get('args', [])
-    kwargs = object_map[klass].get('kwargs', {})
+#    args = object_map[klass].get('args', [])
+#    kwargs = object_map[klass].get('kwargs', {})
 
-    input_args = []
-    for arg in args:
-        if arg not in settings:
-            msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
-                                                                      klass)
-            logger.critical(msg)
-            return None
-        else:
-            input_args.append(settings[arg])
+#    input_args = []
+#    for arg in args:
+#        if arg not in settings:
+#            msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
+#                                                                      klass)
+#            logger.critical(msg)
+#            return None
+#        else:
+#            input_args.append(settings[arg])
 
-    input_kwargs = {}
-    for kwarg in kwargs:
-        if kwarg in settings:
-            input_kwargs[kwarg] = settings[kwarg]
-        else:
-            # Here we could do something, but we just assume that we
-            # now should use the default defined by the class.
-            pass
+   # input_kwargs = {}
+ #   for kwarg in kwargs:
+ #       if kwarg in settings:
+ #           input_kwargs[kwarg] = settings[kwarg]
+ #       else:
+ #           # Here we could do something, but we just assume that we
+ #           # now should use the default defined by the class.
+#            pass
 
-    if len(input_args) == 0:
-        input_args = None
-    if len(input_kwargs) == 0:
-        input_kwargs = None
-    return initiate_instance(cls, input_args, input_kwargs)
+#    if len(input_args) == 0:
+#        input_args = None
+#    if len(input_kwargs) == 0:
+#        input_kwargs = None
+    return initiate_instance(cls, settings)
