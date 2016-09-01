@@ -49,11 +49,10 @@ class KeywordParsing(unittest.TestCase):
                                              'set-temperature': 2.0,
                                              'momentum': True,
                                              'seed': 0},
-                   
                                 'mass': {'Ar': 1.0}}
         correct['force field'] = {'description': 'Lennard Jones test'}
         correct['potential'] = [{'class': 'PairLennardJonesCutnp',
-                                          'setting': {'shift': True}}]
+                                 'setting': {'shift': True}}]
         for key in correct:
             self.assertIn(key, settings)
             self.assertEqual(correct[key], settings[key])
@@ -190,19 +189,19 @@ extra = 100
                          'module = foointegrator.py')
         correct.append({'class': 'BarIntegrator',
                         'module': 'foointegrator.py'})
-        
+
         test_data.append('Integrator settings\n'
                          '-------------------\n'
                          'class = BazIntegrator\n'
                          'module = foointegrator.py')
         correct.append({'class': 'BazIntegrator',
                         'module': 'foointegrator.py'})
-        
+
         test_data.append('Integrator\n'
                          '----------\n'
                          'module =  dummy')
         correct.append({'module': 'dummy'})
-        
+
         test_data.append('Integrator\n'
                          '----------\n'
                          'module = dummy\n'
@@ -213,8 +212,8 @@ extra = 100
         for data, corr in zip(test_data, correct):
             raw, _ = _parse_sections(data.split('\n'))
             settings = {}
-            settings['integrator'] = _parse_raw_section(raw['integrator'], 
-                                                            'integrator')
+            settings['integrator'] = _parse_raw_section(raw['integrator'],
+                                                        'integrator')
             self.assertEqual(settings['integrator'], corr)
             settings['exe-path'] = here
             args = [settings]
@@ -226,20 +225,20 @@ class KeywordOrderPrameter(unittest.TestCase):
 
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
-        SEC = 'order parameter'
         data = """
 Order parameter
 ---------------
 class = FooOrderParameter
 module = fooorderparameter.py
 name = Dummy"""
-        correct = {'class': 'FooOrderParameter',
-                   'module': 'fooorderparameter.py',
-                   'name': 'Dummy'}
+        correct = {'order parameter': {'class': 'FooOrderParameter',
+                                       'module': 'fooorderparameter.py',
+                                       'name': 'Dummy'}}
         settings = {}
         raw, _ = _parse_sections(data.split('\n'))
-        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
-        self.assertEqual(settings[SEC], correct)
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
@@ -247,7 +246,7 @@ name = Dummy"""
         settings['exe-path'] = here
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
-                         correct['name'])
+                         correct['order parameter']['name'])
 
         def extra_function(args):
             """Dummy function for testing."""
@@ -261,7 +260,6 @@ name = Dummy"""
 
     def test_fail_orderparameter(self):
         """Test that loading external order parameters fails."""
-        SEC = 'order parameter'
         test_data, correct = [], []
         test_data.append('Order parameter\n'
                          '---------------\n'
@@ -276,28 +274,29 @@ name = Dummy"""
         correct.append({'class': 'BazOrderParameter',
                         'module': 'fooorderparameter.py'})
         here = os.path.abspath(os.path.dirname(__file__))
+        sec = 'order parameter'
         for data, corr in zip(test_data, correct):
             raw, _ = _parse_sections(data.split('\n'))
             settings = {}
-            settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
-            self.assertEqual(settings[SEC], corr)
+            settings[sec] = _parse_raw_section(raw[sec], sec)
+            self.assertEqual(settings[sec], corr)
             settings['exe-path'] = here
             args = [settings]
             self.assertRaises(ValueError, create_orderparameter, *args)
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        SEC = 'order parameter'
         data = """
 Order parameter
---------------- 
+---------------
 class = OrderParameter
 name =  test"""
         correct = {'class': 'OrderParameter', 'name': 'test'}
         settings = {}
         raw, _ = _parse_sections(data.split('\n'))
-        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
-        self.assertEqual(settings[SEC], correct)
+        sec = 'order parameter'
+        settings[sec] = _parse_raw_section(raw[sec], sec)
+        self.assertEqual(settings[sec], correct)
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name, correct['name'])
 
@@ -314,8 +313,8 @@ periodic = False"""
                    'dim': 'x', 'periodic': False}
         settings = {}
         raw, _ = _parse_sections(data.split('\n'))
-        settings[SEC] = _parse_raw_section(raw[SEC], SEC) 
-        self.assertEqual(settings[SEC], correct)
+        settings[sec] = _parse_raw_section(raw[sec], sec)
+        self.assertEqual(settings[sec], correct)
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name, correct['name'])
         self.assertEqual(orderp.index, correct['index'])
@@ -328,17 +327,26 @@ class KeywordParticles(unittest.TestCase):
 
     def test_lattice(self):
         """Test initialization on a lattice."""
-        data = """particles-position = {'generate': 'fcc',
-                                        'repeat': [6, 6, 6],
-                                        'lcon': 1.0}
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'fcc',
-                                          'repeat': [6, 6, 6],
-                                          'lcon': 1.0},
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        create_conversion_factors(settings['units'])
+        data = """
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [6, 6, 6],
+            'lcon': 1.0}
+
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'fcc',
+                                              'repeat': [6, 6, 6],
+                                              'lcon': 1.0}},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
+        create_conversion_factors(settings['system']['units'])
         particles, size, _ = create_initial_positions(settings)
         self.assertEqual(size, [[0.0, 6.0], [0.0, 6.0], [0.0, 6.0]])
         self.assertEqual(particles.npart, 4 * 6 * 6 * 6)
@@ -347,21 +355,29 @@ class KeywordParticles(unittest.TestCase):
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
 
-'''
     def test_lattice_type(self):
         """Test initialization on a lattice with types."""
-        data = """particles-position = {'generate': 'fcc',
-                                        'repeat': [3, 3, 3],
-                                        'lcon': 1.0}
-                  particles-type = [0, 1]
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'fcc',
-                                          'repeat': [3, 3, 3],
-                                          'lcon': 1.0},
-                   'particles-type': [0, 1],
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'lcon': 1.0}
+type = [0, 1]
+
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'fcc',
+                                              'repeat': [3, 3, 3],
+                                              'lcon': 1.0},
+                                 'type': [0, 1]},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
@@ -373,20 +389,28 @@ class KeywordParticles(unittest.TestCase):
 
     def test_lattice_dens(self):
         """Test initialization on a lattice with density set."""
-        data = """particles-position = {'generate': 'fcc',
-                                        'repeat': [3, 3, 3],
-                                        'density': 0.9}
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'fcc',
-                                          'repeat': [3, 3, 3],
-                                          'density': 0.9},
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'density': 0.9}
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'fcc',
+                                              'repeat': [3, 3, 3],
+                                              'density': 0.9}},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         particles, size, _ = create_initial_positions(settings)
         correct_size = []
         lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
-        for _ in settings['particles-position']['repeat']:
+        for _ in settings['particles']['position']['repeat']:
             correct_size.append([0.0, lcon])
         self.assertTrue(np.allclose(size, correct_size))
         for i in range(particles.npart):
@@ -395,44 +419,63 @@ class KeywordParticles(unittest.TestCase):
 
     def test_lattice_dens_lcon(self):
         """Test initialization on a lattice with density and lcon set."""
-        data = """particles-position = {'generate': 'fcc',
-                                        'repeat': [3, 3, 3],
-                                        'density': 0.9,
-                                        'lcon': 1000.}
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'fcc',
-                                          'repeat': [3, 3, 3],
-                                          'density': 0.9,
-                                          'lcon': 1000.},
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'density': 0.9,
+            'lcon': 1000.}
+
+
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'fcc',
+                                              'repeat': [3, 3, 3],
+                                              'density': 0.9,
+                                              'lcon': 1000.}},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         _, size, _ = create_initial_positions(settings)
         correct_size = []
         # `lcon` should be replaced by density:
         lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
-        for _ in settings['particles-position']['repeat']:
+        for _ in settings['particles']['position']['repeat']:
             correct_size.append([0.0, lcon])
         self.assertTrue(np.allclose(size, correct_size))
 
     def test_lattice_and_mass(self):
         """Test initialization on a lattice and setting of masses/types."""
-        data = """particles-position = {'generate': 'fcc',
-                                        'repeat': [3, 3, 3],
-                                        'lcon': 1.0}
-                  particles-type = [0, 1]
-                  particles-name = ['Ar', 'Kr']
-                  particles-mass = {'Ar': 1.0}
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'fcc',
-                                          'repeat': [3, 3, 3],
-                                          'lcon': 1.0},
-                   'particles-type': [0, 1],
-                   'particles-name': ['Ar', 'Kr'],
-                   'particles-mass': {'Ar': 1.0},
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Particles
+---------
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'lcon': 1.0}
+type = [0, 1]
+name = ['Ar', 'Kr']
+mass = {'Ar': 1.0}
+
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'fcc',
+                                              'repeat': [3, 3, 3],
+                                              'lcon': 1.},
+                                 'type': [0, 1],
+                                 'name': ['Ar', 'Kr'],
+                                 'mass': {'Ar': 1.0}},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             if i == 0:
@@ -446,52 +489,73 @@ class KeywordParticles(unittest.TestCase):
 
     def test_inconsistent_dimlattice(self):
         """Test initialization on a lattice with inconsistent dims."""
-        data = """particles-position = {'generate': 'sq',
-                                        'repeat': [6, 6],
-                                        'lcon': 1.0}
-                  dimensions = 3
-                  units = lj"""
-        correct = {'particles-position': {'generate': 'sq',
-                                          'repeat': [6, 6],
-                                          'lcon': 1.0},
-                   'dimensions': 3,
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
+        data = """
+Particles
+---------
+position = {'generate': 'sq',
+            'repeat': [6, 6],
+            'lcon': 1.0}
+name = ['Ar']
+mass = {'Ar': 1.0}
+
+System
+------
+dimensions = 3
+units = lj"""
+        correct = {'particles': {'position': {'generate': 'sq',
+                                              'repeat': [6, 6],
+                                              'lcon': 1.},
+                                 'name': ['Ar'],
+                                 'mass': {'Ar': 1.0}},
+                   'system': {'units': 'lj', 'dimensions': 3}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
         args = [settings]
         self.assertRaises(ValueError, create_initial_positions, *args)
 
     def test_file_xyz(self):
         """Test initialization from a XYZ file."""
-        data = """particles-position = {'file': 'config.xyz'}
-                  units = lj"""
-        correct = {'particles-position': {'file': 'config.xyz'},
-                   'units': 'lj'}
-        settings = parse_settings(data.split('\n'), add_default=False)
-        self.assertEqual(settings, correct)
-        create_conversion_factors(settings['units'])
+        data = """
+Particles
+---------
+position = {'file': 'config.xyz'}
+System
+------
+units = lj"""
+        correct = {'particles': {'position': {'file': 'config.xyz'}},
+                   'system': {'units': 'lj'}}
+        settings = {}
+        raw, _ = _parse_sections(data.split('\n'))
+        for key in raw:
+            settings[key] = _parse_raw_section(raw[key], key)
+            self.assertEqual(settings[key], correct[key])
+        units = settings['system']['units']
+        create_conversion_factors(units)
         # Add path to the file for this test:
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
-        pos = particles.pos * CONVERT['length'][settings['units'], 'A']
+        pos = particles.pos * CONVERT['length'][units, 'A']
         correct_pos = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5],
                                 [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
                                 [0.0, 0.5, 0.5]])
         self.assertTrue(np.allclose(pos, correct_pos))
-        pequal = all([i == j for i, j in zip(particles.ptype,
-                                             [0, 1, 2, 2, 2])])
-        self.assertTrue(pequal)
-        nequal = all([i == j for i, j in zip(particles.name,
-                                             ['Ba', 'Hf', 'O', 'O', 'O'])])
-        self.assertTrue(nequal)
+        self.assertTrue(all([i == j for i, j in zip(particles.ptype,
+                                                    [0, 1, 2, 2, 2])]))
+        self.assertTrue(all([i == j for i, j in zip(particles.name,
+                                                    ['Ba', 'Hf', 'O',
+                                                     'O', 'O'])]))
         masses = []
         for i in particles.mass:
-            masses.append(i[0] * CONVERT['mass'][settings['units'], 'g/mol'])
+            masses.append(i[0] * CONVERT['mass'][units, 'g/mol'])
         self.assertTrue(np.allclose(masses, [137.327, 178.49, 15.9994,
                                              15.9994, 15.9994]))
 
+'''
     def test_file_gro(self):
         """Test initialization from a GRO file."""
         data = """particles-position = {'file': 'config.gro'}
