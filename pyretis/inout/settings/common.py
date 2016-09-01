@@ -10,7 +10,7 @@ check_settings
     Check that required simulation settings are actually given.
 
 import_from
-    A function to dynamically import functions/classes etc. from user
+    A method to dynamically import method/classes etc. from user
     specified modules.
 """
 import sys
@@ -32,11 +32,11 @@ __all__ = ['check_settings', 'import_from',
 
 
 def import_from(module_path, function_name):
-    """Function to import a function/class from a module.
+    """Method to import a method/class from a module.
 
-    This function will dynamically import a specified function/object
+    This method will dynamically import a specified method/object
     from a module and return it. If the module can not be imported or
-    if we can't find the function/class in the module we will raise
+    if we can't find the method/class in the module we will raise
     exceptions.
 
     Parameters
@@ -44,7 +44,7 @@ def import_from(module_path, function_name):
     module_path : string
         The path/filename to load from.
     function_name : string
-        The name of the function/class to load.
+        The name of the method/class to load.
 
     Returns
     -------
@@ -90,11 +90,11 @@ def import_from(module_path, function_name):
 def check_settings(settings, required):
     """Check that required simulation settings are actually given.
 
-    This function will look for required settings in the given
+    This method will look for required settings in the given
     `settings`. If one or more keys from the given `required` list of
-    strings are not found, this function will return False. Otherwise
+    strings are not found, this method will return False. Otherwise
     if will return True. Typically, and exception should be raised if
-    False is returned, this is handled outside the function in case
+    False is returned, this is handled outside the method in case
     someone wants to add some magic handling of missing settings.
 
     Parameters
@@ -123,7 +123,11 @@ def check_settings(settings, required):
 
 def create_external(settings, key, factory, required_methods,
                     key_settings=None):
-    """Function to create order parameters from settings.
+    """Method to create objects from settings.
+
+    This method will handle creation of objects from settings. The
+    requested objects can be pyretis internals or defined in external
+    modules.
 
     Parameters
     ----------
@@ -201,7 +205,7 @@ def create_external(settings, key, factory, required_methods,
 
 
 def create_orderparameter(settings):
-    """Function to create order parameters from settings.
+    """Method to create order parameters from settings.
 
     Parameters
     ----------
@@ -218,7 +222,7 @@ def create_orderparameter(settings):
 
 
 def create_integrator(settings):
-    """Function to create an integrator from settings.
+    """Method to create an integrator from settings.
 
     Parameters
     ----------
@@ -235,7 +239,7 @@ def create_integrator(settings):
 
 
 def create_potential(settings, key_settings):
-    """Function to create a potential from settings.
+    """Method to create a potential from settings.
 
     Parameters
     ----------

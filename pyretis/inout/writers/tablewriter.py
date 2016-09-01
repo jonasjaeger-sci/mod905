@@ -198,7 +198,7 @@ class PathTable(TxtTable):
     def generate_output(self, step, path_ensemble):
         """Generate the output for the PathTable.
 
-        Here we overload the `generate_output` function in `TxtTable`
+        Here we overload the `generate_output` method in `TxtTable`
         in order to write path ensemble statistics to (presumably)
         the screen.
 

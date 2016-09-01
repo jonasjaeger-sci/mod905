@@ -21,9 +21,9 @@ __all__ = ['create_force_field']
 
 
 def create_potentials(settings):
-    """Function to create potential functions from simulations settings.
+    """Method to create potential functions from simulations settings.
 
-    This function will basically loop over the given potential settings
+    This method will basically loop over the given potential settings
     and just run `create_potential` for each setting.
 
     Parameters
@@ -64,9 +64,9 @@ def create_potentials(settings):
 
 
 def create_force_field(settings):
-    """Function to create a force field from input settings.
+    """Method to create a force field from input settings.
 
-    This function will create the required potential functions with the
+    This method will create the required potential functions with the
     specified parameters from `settings`.
 
     Parameters

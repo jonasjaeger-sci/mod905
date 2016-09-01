@@ -9,6 +9,12 @@ Important methods defined here
 inspect_function (:py:func:`pyretis.core.common.inspect_function`)
     A method to obtain information about arguments, keyword arguments
     for functions.
+
+initiate_instance
+    Method to initiate a class with optional arguments.
+
+generic_factory
+    Create instances of classes based on settings.
 """
 import logging
 import inspect
@@ -145,6 +151,7 @@ def _pick_out_arg_kwargs(klass, settings):
                                                                       klass)
             logger.warning(msg)
     return args, kwargs
+
 
 def initiate_instance(klass, settings):
     """Method to initiate a class with optional arguments.

@@ -87,9 +87,9 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 
 
 def list_get(input_list, index):
-    """Function to get an item from a list that handles out-of bounds errors.
+    """Method to get an item from a list that handles out-of bounds errors.
 
-    This function is intended to be used when we are picking items from
+    This method is intended to be used when we are picking items from
     a list and possibly we want a number of items which is larger than
     the number of items in the list. Here, we then just return the last
     element.
@@ -108,7 +108,7 @@ def list_get(input_list, index):
 
 
 def _guess_particle_mass(particle_no, particle_type, unit):
-    """Function that will try to guess a particle mass from it's type.
+    """Method that will try to guess a particle mass from it's type.
 
     Parameters
     ----------
@@ -137,7 +137,7 @@ def _guess_particle_mass(particle_no, particle_type, unit):
 
 
 def initial_positions_lattice(settings):
-    """Function to generate initial positions based on given settings.
+    """Method to generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
     as dictated by `settings['system']['units']`.
@@ -197,7 +197,7 @@ def initial_positions_lattice(settings):
 
 
 def _get_snapshot_from_file(pos_settings, units):
-    """Helper function to get a snapshot from a file.
+    """Get a configuration snapshot from a file.
 
     This snapshot will be used to set up the initial configuration.
 
@@ -256,7 +256,7 @@ def _get_snapshot_from_file(pos_settings, units):
 
 
 def initial_positions_file(settings):
-    """Function to get initial positions from an input file.
+    """Method to get initial positions from an input file.
 
     Parameters
     ----------
@@ -375,7 +375,7 @@ def create_initial_positions(settings):
 
 
 def create_box(settings, size, dim=3):
-    """Function that will try to set up a box from settings.
+    """Method that will try to set up a box from settings.
 
     Parameters
     ----------
@@ -475,7 +475,7 @@ def create_velocities(system, settings, vel):
 
 
 def create_system(settings):
-    """Function that will set up a system from settings.
+    """Method that will set up a system from settings.
 
     In order to set up the system, there are several things we might
     need to do:
