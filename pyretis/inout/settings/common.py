@@ -249,6 +249,6 @@ def create_potential(settings, key_settings):
     out : object like `PotentialFunction` from `pyretis.forcefield`.
         This object represents the order parameter.
     """
-    return create_external(settings, 'potentials', potential_factory,
+    return create_external(settings, 'potential', potential_factory,
                            ['force', 'potential', 'potential_and_force'],
                            key_settings=key_settings)

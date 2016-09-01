@@ -57,13 +57,10 @@ KEYWORDS['units base'] = {'name': None,
 KEYWORDS['box'] = {'size': None,
                    'periodic': None}
 KEYWORDS['integrator'] = {'class': None,
-                          'module': None,
-                          'setting': None}
+                          'module': None}
 KEYWORDS['order parameter'] = {'class': None,
-                              'module': None,
-                              'setting': None}
+                               'module': None}
 KEYWORDS['potential'] = {'class': None,
-                         'setting': None,
                          'parameter': None}
 KEYWORDS['force field'] = {'description': None}
 KEYWORDS['output trajectory'] = {'when': None}
@@ -73,7 +70,7 @@ KEYWORDS['particles'] = {'position': None,
                          'mass': None,
                          'name': None,
                          'type': None}
-SPECIAL_KEY = set(('parameter', 'setting'))
+SPECIAL_KEY = set(('parameter', ))
 
 
 def parse_primitive(text):
@@ -120,7 +117,7 @@ def look_for_section_mark(string):
     return string.startswith('--') or string.startswith('==')
 
 
-def look_for_keyword(keywords, line):
+def look_for_keyword(line):
     """Function to look for a keyword in a string.
 
     A string is assumed to define a keyword if the keyword appears as
@@ -128,8 +125,6 @@ def look_for_keyword(keywords, line):
 
     Parameters
     ----------
-    keywords : dict
-        The keywords to search for.
     line : string
         A string to check for a keyword.
 
@@ -187,8 +182,8 @@ def _parse_sections(inputtxt):
         if look_for_section_mark(current_line):
             found, section_title = look_for_section(previous_line)
             if found:
-                if section_title == 'potential':
-                    section_title = 'potential{}'.format(potentials)
+                if section_title == 'potential' and potentials < 99:
+                    section_title = 'potential{:02d}'.format(potentials)
                     potentials += 1
                 if section_title not in raw_data:
                     raw_data[section_title] = []
@@ -235,15 +230,13 @@ def _parse_raw_section(raw_section, section):
     # first we merge text that is split across line.
     # this is done by assuming that keyword separate settings
     for line in raw_section:
-        _, _, found_keyword = look_for_keyword(KEYWORDS[section], line)
+        _, _, found_keyword = look_for_keyword(line)
         if found_keyword or len(merged) == 0:
             merged.append(line)
         else:
             merged[-1] = ''.join((merged[-1], line))
-
     for line in merged:
-        match, keyword, found_keyword = look_for_keyword(KEYWORDS[section],
-                                                         line)
+        match, keyword, found_keyword = look_for_keyword(line)
         if found_keyword:
             raw = line[len(match):].strip()
             parsed, success = parse_primitive(raw)
@@ -252,7 +245,12 @@ def _parse_raw_section(raw_section, section):
                     if not keyword in setting:
                         setting[keyword] = {}
                     var = line.split(keyword)[1].split()[0]
-                    setting[keyword][var] = parsed
+                    if var.isdigit():
+                        # yes, in some cases we really want an int
+                        # this only work for positive numbers.
+                        setting[keyword][int(var)] = parsed
+                    else:
+                        setting[keyword][var] = parsed
                 else:
                     setting[keyword] = parsed
             else:
@@ -262,6 +260,38 @@ def _parse_raw_section(raw_section, section):
                 msgtxt = '\n'.join(msg)
                 logger.critical(msgtxt)
     return setting
+
+
+def _parse_all_raw_sections(raw_sections):
+    """Helper method to parse all raw sections.
+
+    This method is helpfull for running tests etc.
+
+    Parameters
+    ----------
+    raw_sections : dict
+        The dictionary with the raw data in sections.
+
+    Returns
+    -------
+    settings : dict
+        The parsed settings, with one key for each section parsed.
+    """
+    settings = {}
+    for key in sorted(raw_sections.keys()):
+        if key.startswith('potential'):
+            new_setting = _parse_raw_section(raw_sections[key], 'potential')
+            if 'potential' not in settings:
+                settings['potential'] = []
+            settings['potential'].append(new_setting)
+        else:
+            new_setting = _parse_raw_section(raw_sections[key], key)
+            if new_setting is None:
+                continue
+            settings[key] = {}
+            for sub_key in new_setting:
+                settings[key][sub_key] = new_setting[sub_key]
+    return settings
 
 
 def parse_settings_file(filename, add_default=True):
@@ -283,22 +313,9 @@ def parse_settings_file(filename, add_default=True):
     settings : dict
         A dictionary with settings for pyretis.
     """
-    settings = {}
     with open(filename, 'r') as fileh:
         raw_sections, _ = _parse_sections(fileh)
-    for key in raw_sections:
-        if key.startswith('potential'):
-            new_setting = _parse_raw_section(raw_sections[key], 'potential')
-            if not 'potential' in settings:
-                settings['potential'] = []
-            settings['potential'].append(new_setting)
-        else:
-            new_setting = _parse_raw_section(raw_sections[key], key)
-            if new_setting is None:
-                continue
-            settings[key] = {}
-            for sub_key in new_setting:
-                settings[key][sub_key] = new_setting[sub_key]
+    settings = _parse_all_raw_sections(raw_sections)
     if add_default:
         print('Time to add defaults!')
     return settings

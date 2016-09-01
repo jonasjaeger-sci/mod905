@@ -46,4 +46,4 @@ description = Lennard Jones test
 potential
 ---------
 class  = PairLennardJonesCutnp
-setting shift = True
+shift = True

@@ -104,8 +104,50 @@ def inspect_function(function):
         return out
 
 
+def _pick_out_arg_kwargs(klass, settings):
+    """Method to pick out arguments for a class from settings.
+
+    Parameters
+    ----------
+    klass : class
+        The class to initiate.
+    settings : dict
+        Positional and keyword arguments to pass to `klass.__init__()`.
+
+    Returns
+    -------
+    out[0] : list
+        A list of the positional arguments.
+    out[1] : dict
+        The keyword arguments.
+    """
+    info = inspect_function(klass.__init__)
+    used, args, kwargs = set(), [], {}
+    for arg in info['args']:
+        if arg == 'self':
+            continue
+        try:
+            args.append(settings[arg])
+            used.add(arg)
+        except KeyError:
+            msg = 'Required argument "{}" for "{}" not found!'.format(arg,
+                                                                      klass)
+            raise ValueError(msg)
+    for arg in info['kwargs']:
+        if arg == 'self':
+            continue
+        if arg in settings:
+            kwargs[arg] = settings[arg]
+            used.add(arg)
+    for key in settings:
+        if key not in used:
+            msg = 'Superfluous setting "{}" ignored for "{}"!'.format(key,
+                                                                      klass)
+            logger.warning(msg)
+    return args, kwargs
+
 def initiate_instance(klass, settings):
-    """Function to initiate a class with optional arguments.
+    """Method to initiate a class with optional arguments.
 
     Parameters
     ----------
@@ -119,23 +161,7 @@ def initiate_instance(klass, settings):
     out : instance of `klass`
         Here, we just return the initiated instance of the given class.
     """
-    # first pick out arguments and keyword arguments:
-    info = inspect_function(klass.__init__)
-    args, kwargs = [], {}
-    for arg in info['args']:
-        if arg == 'self':
-            continue
-        try:
-            args.append(settings[arg])
-        except KeyError:
-            msg = 'Required argument "{}" for "{}" not found!'.format(arg,
-                                                                      klass)
-            raise ValueError(msg)
-    for arg in info['kwargs']:
-        if arg == 'self':
-            continue
-        if arg in settings:
-            kwargs[arg] = settings[arg]
+    args, kwargs = _pick_out_arg_kwargs(klass, settings)
     # Ready to initiate!
     msg = 'Initiated "{}" from "{}" {{}}'.format(klass.__name__,
                                                  klass.__module__)
@@ -195,31 +221,5 @@ def generic_factory(settings, object_map, name='generic'):
                ' for {}').format(settings['class'], name)
         logger.critical(msg)
         return None
-    cls = object_map[klass].get('cls')
-#    args = object_map[klass].get('args', [])
-#    kwargs = object_map[klass].get('kwargs', {})
-
-#    input_args = []
-#    for arg in args:
-#        if arg not in settings:
-#            msg = 'Setting "{}" for "{}" not found. Aborting!'.format(arg,
-#                                                                      klass)
-#            logger.critical(msg)
-#            return None
-#        else:
-#            input_args.append(settings[arg])
-
-   # input_kwargs = {}
- #   for kwarg in kwargs:
- #       if kwarg in settings:
- #           input_kwargs[kwarg] = settings[kwarg]
- #       else:
- #           # Here we could do something, but we just assume that we
- #           # now should use the default defined by the class.
-#            pass
-
-#    if len(input_args) == 0:
-#        input_args = None
-#    if len(input_kwargs) == 0:
-#        input_kwargs = None
+    cls = object_map[klass]['cls']
     return initiate_instance(cls, settings)

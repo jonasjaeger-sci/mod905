@@ -53,14 +53,9 @@ def order_factory(settings):
     out : object like `OrderParameter`.
         An object representing the orderparameter.
     """
-    factory_map = {'orderparameter': {'cls': OrderParameter,
-                                      'args': ['name']},
-                   'orderparameterposition': {'cls': OrderParameterPosition,
-                                              'args': ['name', 'index'],
-                                              'kwargs': {'dim', 'periodic'}},
-                   'orderparameterdistance': {'cls': OrderParameterDistance,
-                                              'args': ['name', 'index'],
-                                              'kwargs': {'periodic'}}}
+    factory_map = {'orderparameter': {'cls': OrderParameter},
+                   'orderparameterposition': {'cls': OrderParameterPosition},
+                   'orderparameterdistance': {'cls': OrderParameterDistance}}
     return generic_factory(settings, factory_map, name='order parameter')
 
 

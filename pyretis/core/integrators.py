@@ -59,14 +59,9 @@ def integrator_factory(settings):
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    integrator_map = {'velocityverlet': {'cls': VelocityVerlet,
-                                         'args': ['timestep']},
-                      'verlet': {'cls': Verlet,
-                                 'args': ['timestep']},
-                      'langevin': {'cls': Langevin,
-                                   'args': ['timestep', 'gamma'],
-                                   'kwargs': {'rgen', 'seed',
-                                              'high-friction'}}}
+    integrator_map = {'velocityverlet': {'cls': VelocityVerlet},
+                      'verlet': {'cls': Verlet},
+                      'langevin': {'cls': Langevin}}
     return generic_factory(settings, integrator_map, name='integrator')
 
 

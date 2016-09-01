@@ -38,16 +38,9 @@ def potential_factory(settings):
     out[0] : object like `PotentialFunction`.
         This object represents the potential.
     """
-    potential_map = {'doublewell': {'cls': DoubleWell,
-                                    'kwargs': {'a', 'b', 'c', 'desc'}},
-                     'rectangularwell': {'cls': RectangularWell,
-                                         'kwargs': {'left', 'right', 'desc'}},
-                     'pairlennardjonescut': {'cls': PairLennardJonesCut,
-                                             'kwargs': {'dim', 'shift',
-                                                        'desc'}},
-                     'pairlennardjonescutnp': {'cls': PairLennardJonesCutnp,
-                                               'kwargs': {'dim', 'shift',
-                                                          'desc'}},
-                     'doublewellwca': {'cls': DoubleWellWCA,
-                                       'kwargs': {'dim', 'desc'}}}
+    potential_map = {'doublewell': {'cls': DoubleWell},
+                     'rectangularwell': {'cls': RectangularWell},
+                     'pairlennardjonescut': {'cls': PairLennardJonesCut},
+                     'pairlennardjonescutnp': {'cls': PairLennardJonesCutnp},
+                     'doublewellwca': {'cls': DoubleWellWCA}}
     return generic_factory(settings, potential_map, name='potential')
