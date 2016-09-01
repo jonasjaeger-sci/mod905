@@ -26,80 +26,55 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['parse_settings_file', 'write_settings_file']
 
 
-KEYWORDS = {'integrator': {'default': None},
-            'run_type': {'default': None},
-            'orderparameter': {'default': None},
-            'steps': {'default': 0},
-            'startcycle': {'default': 0},
-            'endcycle': {'default': None},
-            'task': {'default': None},
-            'units': {'default': 'lj'},
-            'units-out': {'default': None},  # for output of analysis.
-            'units-base': {'default': {}},
-            'ensemble': {'default': None},
-            'interfaces': {'default': None},
-            'output-dir': {'default': None},
-            'exe-path': {'defualt': None},
-            'box': {'default': None},
-            'particles-position': {'default': None},
-            'particles-velocity': {'default': None},
-            'particles-mass': {'default': None},
-            'particles-type': {'default': None},
-            'particles-name': {'default': None},
-            'dimensions': {'default': 3},
-            'temperature': {'default': None},
-            'tis': {'default': None},
-            'retis': {'default': None},
-            'detect': {'default': None},  # detect interface
-            'output-add': {'default': None},
-            'output-modify': {'default': None},
-            'potentials': {'default': None},
-            'potential-parameters': {'default': None},
-            'forcefield': {'default': None},
-            # Next are analysis-specific:
-            'skipcross': {'default': 1001},
-            'maxblock': {'default': 1000},
-            'blockskip': {'default': 1},
-            'bins': {'default': 1000},
-            'ngrid': {'default': 1001},
-            'maxordermsd': {'default': 100},
-            'plot': {'default': {'plotter': 'mpl', 'output': 'png',
-                                 'style': 'pyretis', 'backup': False}},
-            'txt-output': {'default': {'fmt': 'txt.gz', 'backup': False}},
-            'report': {'default': ['latex', 'rst', 'html']},
-            'report-dir': {'default': None},  # for saving output.
-            'npart': {'default': None}}
+SECTIONS = {'system', 'simulation',
+            'units base',
+            'tis settings',
+            'box',
+            'integrator',
+            'path sampling',
+            'particles',
+            'force field',
+            'potential',
+            'order parameter',
+            'output trajectory',
+            'output pathensemble'}
 
-
-def look_for_keyword(line):
-    """Function to look for a keyword in a string.
-
-    A string is assumed to define a keyword if the keyword appears as
-    the first word in the string, ending with a '='.
-
-    Parameters
-    ----------
-    line : string
-        The string for which we look for the keyword
-
-    Returns
-    -------
-    out[0] : string
-        The matched keyword, note that this can be any case. And it
-        may also contain spaces. It contains the '=' seperator also.
-    out[1] : string
-        A lower-case version of `out[0]`.
-    out[2] : boolean
-        `True` if the keyword is one of the known keywords.
-    """
-
-    key = re.match(r'(.*?)=', line)
-    if key:
-        keyword = ''.join([key.group(1), '='])
-        keywordl = key.group(1).strip().lower()
-        return keyword, keywordl, keywordl in KEYWORDS
-    else:
-        return None, None, False
+KEYWORDS = {}
+KEYWORDS['system'] = {'dimensions': 3,
+                      'temperature': 1.0,
+                      'units': 'lj'}
+KEYWORDS['simulation'] = {'task': None,
+                          'run_type': None,
+                          'steps': 0,
+                          'startcycle': 0,
+                          'endcycle': 0,
+                          'ensemble': None}
+KEYWORDS['units base'] = {'name': None,
+                          'length': None,
+                          'mass': None,
+                          'energy': None,
+                          'charge': None}
+KEYWORDS['box'] = {'size': None,
+                   'periodic': None}
+KEYWORDS['integrator'] = {'class': None,
+                          'timestep': 0,
+                          'gamma': None,
+                          'high_friction': False,
+                          'seed': 0}
+KEYWORDS['orderparameter'] = {'class': None,
+                              'setting': None}
+KEYWORDS['potential'] = {'class': None,
+                         'setting': None,
+                         'parameter': None}
+KEYWORDS['force field'] = {'description': None}
+KEYWORDS['output trajectory'] = {'when': None}
+KEYWORDS['output pathensemble'] = {'when': None}
+KEYWORDS['particles'] = {'position': None,
+                         'velocity': None,
+                         'mass': None,
+                         'name': None,
+                         'type': None}
+SPECIAL_KEY = set(('parameter', 'setting'))
 
 
 def parse_primitive(text):
@@ -131,6 +106,165 @@ def parse_primitive(text):
     return parsed, success
 
 
+def look_for_section(string):
+    """Return True + section name if we find a section name."""
+    if string is None:
+        return False, None
+    for key in SECTIONS:
+        if string.lower().startswith(key):
+            return True, key
+    return False, None
+
+
+def look_for_section_mark(string):
+    """Return True if we find a headline marker like '-------'"""
+    return string.startswith('--') or string.startswith('==')
+
+
+def look_for_keyword(keywords, line):
+    """Function to look for a keyword in a string.
+
+    A string is assumed to define a keyword if the keyword appears as
+    the first word in the string, ending with a `=`.
+
+    Parameters
+    ----------
+    keywords : dict
+        The keywords to search for.
+    line : string
+        A string to check for a keyword.
+
+    Returns
+    -------
+    out[0] : string
+        The matched keyword. It may contains spaces and it will also
+        contain the matched `=` seperator.
+    out[1] : string
+        A lower-case, stripped version of `out[0]`.
+    out[2] : boolean
+        `True` if the keyword is one of the known keywords.
+    """
+    # match a word followed by a '='
+    key = re.match(r'(.*?)=', line)
+    if key:
+        keyword = ''.join([key.group(1), '='])
+        keyword_low = key.group(1).strip().lower()
+        for i in SPECIAL_KEY:
+            if keyword_low.startswith(i):
+                return keyword, i, True
+        return keyword, keyword_low, keyword_low in keywords
+    else:
+        return None, None, False
+
+
+def _parse_sections(inputtxt):
+    """Parse raw data in sections from the input file.
+
+    Parameters
+    ----------
+    inputtxt : list of strings or iterable file object
+        The raw data to parse
+
+    Returns
+    -------
+    raw_data : dict
+        A dictionary with keys corresponding to the sections found
+        in the input file. `raw_data[key]` contains the raw data
+        for the section corresponding to `key`.
+    """
+    potentials = 0
+    raw_data = {}
+    heading = None
+    current_line = None
+    previous_line = None
+    add_section = None
+    data = []
+    for lines in inputtxt:
+        current_line, _, _ = lines.strip().partition('#')
+        if not current_line:
+            continue
+        else:
+            data += [current_line]
+        if look_for_section_mark(current_line):
+            found, section_title = look_for_section(previous_line)
+            if found:
+                if section_title == 'potential':
+                    section_title = 'potential{}'.format(potentials)
+                    potentials += 1
+                if section_title not in raw_data:
+                    raw_data[section_title] = []
+                if add_section is not None:
+                    raw_data[add_section].extend(data[:-2])
+                    data = []
+                else:
+                    # All data before first section is assumed
+                    # to just be a heading.
+                    heading = data[:-2]
+                    data = []
+                add_section = section_title
+            else:
+                # we found a section mark, let's just nuke it
+                # from data:
+                data.pop()
+        previous_line = current_line
+    if add_section is not None:
+        raw_data[add_section].extend(data)
+    return raw_data, heading
+
+
+def _parse_raw_section(raw_section, section):
+    """Parse the raw data from a section.
+
+    Parameters
+    ----------
+    raw_section : list of strings
+        The text data for a given section which will be parsed.
+    section : string
+        A text identifying the section we are parsing for. This is
+        used to get a list over valid keywords for the section.
+
+    Returns
+    -------
+    setting : dict
+        A dict with keys corresponding to the settings.
+    """
+    setting = {}
+    if section not in KEYWORDS:
+        # unknown section, just ignore silently
+        return None
+    merged = []
+    # first we merge text that is split across line.
+    # this is done by assuming that keyword separate settings
+    for line in raw_section:
+        _, _, found_keyword = look_for_keyword(KEYWORDS[section], line)
+        if found_keyword or len(merged) == 0:
+            merged.append(line)
+        else:
+            merged[-1] = ''.join((merged[-1], line))
+
+    for line in merged:
+        match, keyword, found_keyword = look_for_keyword(KEYWORDS[section],
+                                                         line)
+        if found_keyword:
+            raw = line[len(match):].strip()
+            parsed, success = parse_primitive(raw)
+            if success:
+                if keyword in SPECIAL_KEY:
+                    if not keyword in setting:
+                        setting[keyword] = {}
+                    var = line.split(keyword)[1].split()[0]
+                    setting[keyword][var] = parsed
+                else:
+                    setting[keyword] = parsed
+            else:
+                msg = ['Could read keyword {}'.format(keyword)]
+                msg += ['Keyword was skipped, please check your input!']
+                msg += ['Input setting: {}'.format(raw)]
+                msgtxt = '\n'.join(msg)
+                logger.critical(msgtxt)
+    return setting
+
+
 def parse_settings_file(filename, add_default=True):
     """Parse settings from a file name.
 
@@ -147,94 +281,31 @@ def parse_settings_file(filename, add_default=True):
 
     Returns
     -------
-    out : dict
-        A dictionary with settings for pyretis.
-    """
-    with open(filename, 'r') as fileh:
-        settings = parse_settings(fileh, add_default=add_default)
-    return settings
-
-
-def parse_settings(input_text, add_default=True):
-    """Parse settings from a list of strings.
-
-    Here, we read the file line-by-line and check if the current line
-    contains a keyword, if so, we parse that keyword.
-
-    Parameters
-    ----------
-    input_text : iterable (e.g. list of strings)
-        The input to parse.
-    add_default : boolean
-        If True, we will add default settings as well for keywords
-        not found in the input.
-
-    Returns
-    -------
-    out : dict
+    settings : dict
         A dictionary with settings for pyretis.
     """
     settings = {}
-    current_keyword = None
-    to_parse = []
-    for lines in input_text:
-        to_read, _, _ = lines.strip().partition('#')
-        if not to_read:
-            if current_keyword is not None:
-                # empty line or comment or something else -> parse!
-                parse_setting(''.join(to_parse), current_keyword,
-                              settings)
-                current_keyword = None
-                to_parse = []
-            continue
-        match, keyword, found_keyword = look_for_keyword(to_read)
-        if found_keyword:
-            if current_keyword is not None:
-                # found new keyword, parse for the previous one!
-                parse_setting(''.join(to_parse), current_keyword,
-                              settings)
-            current_keyword = keyword
-            to_parse = [to_read[len(match):]]
+    with open(filename, 'r') as fileh:
+        raw_sections, _ = _parse_sections(fileh)
+    for key in raw_sections:
+        if key.startswith('potential'):
+            new_setting = _parse_raw_section(raw_sections[key], 'potential')
+            if not 'potential' in settings:
+                settings['potential'] = []
+            settings['potential'].append(new_setting)
         else:
-            if current_keyword is not None:
-                to_parse.append(to_read)
-    if current_keyword is not None:
-        # reached end of file, parse for the last setting!
-        parse_setting(''.join(to_parse), current_keyword, settings)
+            new_setting = _parse_raw_section(raw_sections[key], key)
+            if new_setting is None:
+                continue
+            settings[key] = {}
+            for sub_key in new_setting:
+                settings[key][sub_key] = new_setting[sub_key]
     if add_default:
-        add_default_settings(settings)
+        print('Time to add defaults!')
     return settings
 
 
-def parse_setting(text, keyword, settings):
-    """Method that will parse a string and try to add the settings.
-
-    Parameters
-    ----------
-    text : string
-       The text to parse.
-    keyword : string
-        The keyword we are trying to read settings for.
-    settings : dict
-        The dict to store settings in.
-
-    Returns
-    -------
-    out : boolean
-        True if we managed to parse the setting, False otherwise.
-    """
-    parsed, success = parse_primitive(text.strip())
-    if success:
-        settings[keyword] = parsed
-    else:
-        msg = ['Could not parse setting for keyword {}'.format(keyword)]
-        msg += ['Input setting: {}'.format(text.strip())]
-        msgtxt = '\n'.join(msg)
-        logger.critical(msgtxt)
-    return success
-
-
-def settings_to_text(settings):
+def settings_to_text(settings, section):
     """Turn the given settings into text usable for an output file.
 
     Parameters
@@ -247,6 +318,8 @@ def settings_to_text(settings):
     out : strings
         The strings representing the settings.
     """
+    sec = '{}\n{}'.format(section.capitalize(), len(section)*('-'))
+    data = []
     for key in settings:
         if settings[key] is None:
             continue
@@ -254,7 +327,12 @@ def settings_to_text(settings):
         pretty = pprint.pformat(settings[key], width=79-leng)
         pretty = pretty.replace('\n', '\n' + ' ' * leng)
         dump = '{} = {}\n'.format(key, pretty)
-        yield dump
+        data.append(dump)
+    if len(data) > 0:
+        string = '{}\n{}'.format(sec, ''.join(data))
+    else:
+        string = ''
+    return string
 
 
 def setting_to_text(settings, key):
@@ -272,7 +350,7 @@ def setting_to_text(settings, key):
     out : string
         The string representing the settings.
     """
-    if settings[key] is None:
+    if settings is None:
         return ''
     else:
         leng = len(key) + 3
@@ -345,33 +423,3 @@ def write_settings_file(settings, outfile, backup=True):
                 written.add(key)
         if len(to_write) > 1:
             fileh.write('\n'.join(to_write))
-
-
-def add_default_settings(settings):
-    """Method that will add default values to the settings.
-
-    Parameters
-    ----------
-    settings : dict
-        The current settings.
-
-    Returns
-    -------
-    None, but will update `settings` with default values.
-
-    Note
-    ----
-    For many cases the default values can depend on what we want do
-    to. For instance if we are reading particles from an input file,
-    then the default particle type is not used but read from the
-    file and assigned automatically. When generating on a lattice,
-    we do not have information on the particles types and in this case,
-    the default is used. This means that we can't set a uniform default
-    in this case. That is why we ignore all defaults here when the
-    default is `None`
-    """
-    for key in KEYWORDS:
-        if key not in settings:
-            default = KEYWORDS[key].get('default', None)
-            if default is not None:
-                settings[key] = default
