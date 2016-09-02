@@ -242,7 +242,7 @@ def _parse_raw_section(raw_section, section):
             parsed, success = parse_primitive(raw)
             if success:
                 if keyword in SPECIAL_KEY:
-                    if not keyword in setting:
+                    if keyword not in setting:
                         setting[keyword] = {}
                     var = line.split(keyword)[1].split()[0]
                     if var.isdigit():

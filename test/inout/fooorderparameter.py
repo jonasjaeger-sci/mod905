@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Dummy order parameter for running tests."""
 from pyretis.core.orderparameter import OrderParameter
 
@@ -17,6 +19,7 @@ class BarOrderParameter(object):
     """FailingIntegrator(object) - Dummy integrator for tests."""
     def __init__(self, desc='Dummy test integrator'):
         self.desc = desc
+
 
 class BazOrderParameter(object):
     """FailingIntegrator(object) - Dummy integrator for tests."""

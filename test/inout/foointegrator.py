@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Dummy integrator for tests."""
 from pyretis.core.integrators import Integrator
 
@@ -13,7 +15,7 @@ class FooIntegrator(Integrator):
                  desc='Dummy test integrator'):
         super(FooIntegrator, self).__init__(timestep, desc=desc,
                                             dynamics=None)
-        self.extra = extra 
+        self.extra = extra
 
     def integration_step(self, system):
         """Perform the integration step."""

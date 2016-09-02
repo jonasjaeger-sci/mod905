@@ -531,7 +531,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     value = np.sqrt(4.0 * np.pi * CONSTANTS['e0'][unit])
     _add_conversion_and_inverse(CONVERT['charge'], value, unit, charge_unit)
     # convert [charge] * V/A to force, in case it's needed in the future:
-    #qE = CONVERT['energy']['J', unit] / CONVERT['charge']['C', 'e']
+    # qE = CONVERT['energy']['J', unit] / CONVERT['charge']['C', 'e']
     _generate_conversion_for_dim(CONVERT, 'charge', unit)
 
 
@@ -912,26 +912,26 @@ if __name__ == '__main__':
                                   mass=NEW_UNITS[uni]['mass'],
                                   charge_unit=NEW_UNITS[uni]['charge'])
     # Units can be stored by:
-    #write_conversions()
+    # write_conversions()
     # and loaded by:
-    #ccc = read_conversions(units='metal')
-    #for key in ccc:
-    #    print(key)
-    #    for key2 in ccc[key]:
-    #        print(key2, ccc[key][key2])
+    # ccc = read_conversions(units='metal')
+    # for key in ccc:
+    #     print(key)
+    #     for key2 in ccc[key]:
+    #         print(key2, ccc[key][key2])
     # just write out a table:
     for uni in NEW_UNITS:
         print_table(uni)
     # Also add some conversions between systems:
-    #print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
-    #print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
-    #print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
-    #print(bfs_convert(CONVERT['length'], 'lj', 'real'))
-    #print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
+    # print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
+    # print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['length'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
     # To generate conversions between different systems:
-    #for sys1 in UNIT_SYSTEMS:
-    #    for sys2 in UNIT_SYSTEMS:
-    #        if sys1 != sys2:
-    #            generate_system_conversions(sys1, sys2)
-    #for uni in UNIT_SYSTEMS:
+    # for sys1 in UNIT_SYSTEMS:
+    #     for sys2 in UNIT_SYSTEMS:
+    #         if sys1 != sys2:
+    #             generate_system_conversions(sys1, sys2)
+    # for uni in UNIT_SYSTEMS:
     #    print_table(uni, system=True)

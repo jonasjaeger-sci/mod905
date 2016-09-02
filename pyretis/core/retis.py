@@ -205,16 +205,16 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
-            #msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
-            #logger.info(msgtxt)
+            # msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
+            # logger.info(msgtxt)
             accept, trial, status = make_tis_step_ensemble(path_ensemble,
                                                            system,
                                                            integrator,
                                                            rgen,
                                                            settings['tis'],
                                                            cycle)
-            #msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
-            #logger.info(msgtxt)
+            # msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
+            # logger.info(msgtxt)
             output.append(['tis', accept, trial, status])
     return output
 

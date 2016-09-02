@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """A simple test module for parsing a settings input file.
 
 Here we test that we understand the input file and that fail in
@@ -47,27 +49,27 @@ class TestForceField(unittest.TestCase):
         param1 = {'a': 1.0}
         pot1 = TestPotential()
         forcefield.add_potential(pot1, parameters=param1)
-        
+
         force, virial = forcefield.evaluate_force(system)
         self.assertAlmostEqual(1.0, force)
         self.assertAlmostEqual(2.0, virial)
-        
+
         vpot = forcefield.evaluate_potential(system)
         self.assertAlmostEqual(1.0, vpot)
-        
+
         vpot, force, virial = forcefield.evaluate_potential_and_force(system)
         self.assertAlmostEqual(1.0, force)
         self.assertAlmostEqual(2.0, virial)
         self.assertAlmostEqual(1.0, vpot)
-        
+
         param2 = {'a': 2.0}
         forcefield.update_potential_parameters(pot1, param2)
-        
+
         vpot, force, virial = forcefield.evaluate_potential_and_force(system)
         self.assertAlmostEqual(2.0, force)
         self.assertAlmostEqual(2.0, virial)
         self.assertAlmostEqual(2.0, vpot)
-        
+
         potr, paramr = forcefield.remove_potential(pot1)
         self.assertIs(pot1, potr)
         self.assertIs(param2, paramr)
