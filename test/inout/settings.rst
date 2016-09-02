@@ -38,8 +38,8 @@ velocity = {'generate': 'maxwell',
 mass = {'Ar': 1.0}
 
 
-Force field settings
---------------------
+Forcefield settings
+-------------------
 
 description = Lennard Jones test
 

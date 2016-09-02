@@ -15,6 +15,7 @@ write_settings_file
     Method for writing settings from a simulation to a given file.
 """
 import ast
+from collections import OrderedDict
 import logging
 import pprint
 import re
@@ -26,51 +27,38 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['parse_settings_file', 'write_settings_file']
 
 
-SECTIONS = {'system', 'simulation',
-            'units base',
-            'tis settings',
-            'box',
-            'integrator',
-            'path sampling',
-            'particles',
-            'force field',
-            'potential',
-            'order parameter',
-            'output trajectory',
-            'output pathensemble'}
-
-KEYWORDS = {}
-KEYWORDS['system'] = {'dimensions': 3,
+MAX_POT = 99  # For practical reasons, just limit this.
+SECTIONS = OrderedDict()
+SECTIONS['heading'] = {'text': 'pyretis input settings'}
+SECTIONS['simulation'] = {'task': None,
+                          'steps': None,
+                          'startcycle': None,
+                          'endcycle': None,
+                          'ensemble': None}
+SECTIONS['system'] = {'dimensions': 3,
                       'temperature': 1.0,
                       'units': 'lj'}
-KEYWORDS['simulation'] = {'task': None,
-                          'run_type': None,
-                          'steps': 0,
-                          'startcycle': 0,
-                          'endcycle': 0,
-                          'ensemble': None}
-KEYWORDS['units base'] = {'name': None,
+SECTIONS['unitsystem'] = {'name': None,
                           'length': None,
                           'mass': None,
                           'energy': None,
                           'charge': None}
-KEYWORDS['box'] = {'size': None,
-                   'periodic': None}
-KEYWORDS['integrator'] = {'class': None,
+SECTIONS['integrator'] = {'class': None,
                           'module': None}
-KEYWORDS['order parameter'] = {'class': None,
-                               'module': None}
-KEYWORDS['potential'] = {'class': None,
-                         'parameter': None}
-KEYWORDS['force field'] = {'description': None}
-KEYWORDS['output trajectory'] = {'when': None}
-KEYWORDS['output pathensemble'] = {'when': None}
-KEYWORDS['particles'] = {'position': None,
+SECTIONS['box'] = {'size': None,
+                   'periodic': None}
+SECTIONS['particles'] = {'position': None,
                          'velocity': None,
                          'mass': None,
                          'name': None,
                          'type': None}
+SECTIONS['forcefield'] = {'description': None}
+SECTIONS['potential'] = {'class': None,
+                         'parameter': None}
+SECTIONS['orderparameter'] = {'class': None,
+                              'module': None}
 SPECIAL_KEY = set(('parameter', ))
+ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'integrator'))
 
 
 def parse_primitive(text):
@@ -100,16 +88,6 @@ def parse_primitive(text):
         parsed = text.strip()
         success = True
     return parsed, success
-
-
-def look_for_section(string):
-    """Return True + section name if we find a section name."""
-    if string is None:
-        return False, None
-    for key in SECTIONS:
-        if string.lower().startswith(key):
-            return True, key
-    return False, None
 
 
 def look_for_section_mark(string):
@@ -180,26 +158,23 @@ def _parse_sections(inputtxt):
         else:
             data += [current_line]
         if look_for_section_mark(current_line):
-            found, section_title = look_for_section(previous_line)
-            if found:
-                if section_title == 'potential' and potentials < 99:
-                    section_title = 'potential{:02d}'.format(potentials)
-                    potentials += 1
-                if section_title not in raw_data:
-                    raw_data[section_title] = []
-                if add_section is not None:
-                    raw_data[add_section].extend(data[:-2])
-                    data = []
-                else:
-                    # All data before first section is assumed
-                    # to just be a heading.
-                    heading = data[:-2]
-                    data = []
-                add_section = section_title
+            if previous_line is None:
+                continue
+            section_title = previous_line.split()[0].lower()
+            if section_title == 'potential' and potentials < MAX_POT:
+                section_title = 'potential{:02d}'.format(potentials)
+                potentials += 1
+            if section_title not in raw_data:
+                raw_data[section_title] = []
+            if add_section is not None:
+                raw_data[add_section].extend(data[:-2])
+                data = []
             else:
-                # we found a section mark, let's just nuke it
-                # from data:
-                data.pop()
+                # All data before first section is assumed
+                # to just be a heading.
+                heading = data[:-2]
+                data = []
+            add_section = section_title
         previous_line = current_line
     if add_section is not None:
         raw_data[add_section].extend(data)
@@ -223,7 +198,9 @@ def _parse_raw_section(raw_section, section):
         A dict with keys corresponding to the settings.
     """
     setting = {}
-    if section not in KEYWORDS:
+    if section not in SECTIONS:
+        msgtxt = 'Ignoring unknown input section "{}"'.format(section)
+        logger.warning(msgtxt)
         # unknown section, just ignore silently
         return None
     merged = []
@@ -294,6 +271,72 @@ def _parse_all_raw_sections(raw_sections):
     return settings
 
 
+def _add_default_settings(settings):
+    """Add default settings.
+
+    Paramters
+    ---------
+    settings : dict
+        The current input settings.
+
+    Returns
+    -------
+    None, but this method might add data to the input settings.
+    """
+    for sec in SECTIONS:
+        if not sec in settings:
+            settings[sec] = {}
+        for key in SECTIONS[sec]:
+            if SECTIONS[sec][key] is not None and key not in settings[sec]:
+                settings[sec][key] = SECTIONS[sec][key]
+    to_remove = [key for key in settings if len(settings[key]) == 0]
+    for key in to_remove:
+        settings.pop(key, None)
+
+
+def _clean_settings(settings):
+    """Clean up input settings.
+
+    Here, we attempt to remove unwanted stuff from the input settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The current input settings.
+
+    Returns
+    -------
+    settingsc : dict
+        The cleaned input settings.
+    """
+    settingc = {}
+    # Add other sections
+    for sec in settings:
+        if sec not in SECTIONS:  # Well, ignore unknown ones
+            msgtxt = 'Ignoring unknown section "{}"'.format(sec)
+            logger.warning(msgtxt)
+            continue
+        if sec == 'potential':
+            settingc[sec] = [i for i in settings[sec]]
+        else:
+            settingc[sec] = {}
+            if sec in ALLOW_MULTIPLE:  # Here, just add them all
+                for key in settings[sec]:
+                    settingc[sec][key] = settings[sec][key]
+            else:
+                for key in settings[sec]:
+                    if key not in SECTIONS[sec]:  # Ignore junk
+                        msgtxt = 'Ignoring unknown "{}" in "{}"'.format(key,
+                                                                        sec)
+                        logger.warning(msgtxt)
+                    else:
+                        settingc[sec][key] = settings[sec][key]
+    to_remove = [key for key in settingc if len(settingc[key]) == 0]
+    for key in to_remove:
+        settingc.pop(key, None)
+    return settingc
+
+
 def parse_settings_file(filename, add_default=True):
     """Parse settings from a file name.
 
@@ -317,8 +360,9 @@ def parse_settings_file(filename, add_default=True):
         raw_sections, _ = _parse_sections(fileh)
     settings = _parse_all_raw_sections(raw_sections)
     if add_default:
-        print('Time to add defaults!')
-    return settings
+        logger.debug('Adding default settings')
+        _add_default_settings(settings)
+    return _clean_settings(settings)
 
 
 def settings_to_text(settings, section):
@@ -401,18 +445,23 @@ def write_settings_file(settings, outfile, backup=True):
         msg = create_backup(outfile)
         if msg:
             logger.warning(msg)
-    print(outfile)
     with open(outfile, 'w') as fileh:
-        for section in settings:
+        for section in SECTIONS:
+            if section not in settings:
+                continue
             if section == 'potential':
                 for pot in settings[section]:
-                    fileh.write(section.capitalize())
-                    fileh.write('\n{}\n'.format(('-')*len(section)))
+                #    fileh.write(section.capitalize())
+                #    fileh.write('\n{}\n'.format(('-')*len(section)))
                     print(pot)
                     for key in pot:
                         print(key)
+            elif section == 'heading':
+                fileh.write('pyretis\n')
+                fileh.write('-------\n')
+                fileh.write('Default stuff\n')
             else:
-                fileh.write(section.capitalize())
+                fileh.write('\n{}'.format(section.capitalize()))
                 fileh.write('\n{}\n'.format(('-')*len(section)))
                 for key in settings[section]:
                     txt = setting_to_text(settings[section], key)

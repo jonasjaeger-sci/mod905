@@ -35,6 +35,7 @@ class KeywordParsing(unittest.TestCase):
         settings = parse_settings_file(inputfile)
         correct = {}
         correct['system'] = {'units': 'lj',
+                             'dimensions': 3,
                              'temperature': 2.0}
         correct['simulation'] = {'task': 'md-nve',
                                  'steps': 100}
@@ -46,7 +47,7 @@ class KeywordParsing(unittest.TestCase):
                                              'momentum': True,
                                              'seed': 0},
                                 'mass': {'Ar': 1.0}}
-        correct['force field'] = {'description': 'Lennard Jones test'}
+        correct['forcefield'] = {'description': 'Lennard Jones test'}
         correct['potential'] = [{'class': 'PairLennardJonesCutnp',
                                  'shift': True}]
         for key in correct:

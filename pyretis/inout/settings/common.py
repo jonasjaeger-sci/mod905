@@ -217,7 +217,7 @@ def create_orderparameter(settings):
     out : object like `OrderParameter` from `pyretis.core.orderparameter`.
         This object represents the order parameter.
     """
-    return create_external(settings, 'order parameter', order_factory,
+    return create_external(settings, 'orderparameter', order_factory,
                            ['calculate', 'calculate_velocity'])
 
 

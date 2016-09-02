@@ -56,7 +56,7 @@ def order_factory(settings):
     factory_map = {'orderparameter': {'cls': OrderParameter},
                    'orderparameterposition': {'cls': OrderParameterPosition},
                    'orderparameterdistance': {'cls': OrderParameterDistance}}
-    return generic_factory(settings, factory_map, name='order parameter')
+    return generic_factory(settings, factory_map, name='orderparameter')
 
 
 class OrderParameter(object):

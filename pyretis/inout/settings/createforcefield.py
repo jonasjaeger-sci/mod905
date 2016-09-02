@@ -80,7 +80,7 @@ def create_force_field(settings):
         This object represents the force field.
     """
     try:
-        desc = settings['force field']['description']
+        desc = settings['forcefield']['description']
     except KeyError:
         desc = None
     potentials, pot_param = create_potentials(settings)

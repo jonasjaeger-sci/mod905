@@ -36,6 +36,30 @@ from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 
 
+def _test_correct_parsing(test, data, correct):
+    """Helper method to test that we correctly parse settings.
+
+    Parameters
+    ----------
+    test : object like unittest.TestCase
+        The test that should pass or fail.
+    data : string
+        Raw data to be parsed.
+    correct : dict
+        The correct data.
+
+    Returns
+    -------
+    out : dict
+        The parsed settings.
+    """
+    raw, _ = _parse_sections(data.split('\n'))
+    settings = _parse_all_raw_sections(raw)
+    for key in settings:
+        test.assertEqual(settings[key], correct[key])
+    return settings
+
+
 class KeywordParsing(unittest.TestCase):
     """Test the parsing of input settings."""
 
@@ -46,6 +70,7 @@ class KeywordParsing(unittest.TestCase):
         settings = parse_settings_file(inputfile)
         correct = {}
         correct['system'] = {'units': 'lj',
+                             'dimensions': 3, # added by default
                              'temperature': 2.0}
         correct['simulation'] = {'task': 'md-nve',
                                  'steps': 100}
@@ -57,7 +82,7 @@ class KeywordParsing(unittest.TestCase):
                                              'momentum': True,
                                              'seed': 0},
                                 'mass': {'Ar': 1.0}}
-        correct['force field'] = {'description': 'Lennard Jones test'}
+        correct['forcefield'] = {'description': 'Lennard Jones test'}
         correct['potential'] = [{'class': 'PairLennardJonesCutnp',
                                  'shift': True}]
         for key in correct:
@@ -134,17 +159,11 @@ Integrator settings
 -------------------
 class = velocityverlet
 timestep = 0.002"""
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = {}
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
         correct = {'integrator': {'timestep': 0.002,
                                   'class': 'velocityverlet'},
                    'system': {'dimensions': 2, 'temperature': 1.0},
                    'simulation': {'task': 'md-nve', 'steps': 100}}
-        for key in correct:
-            self.assertIn(key, settings)
-            self.assertEqual(correct[key], settings[key])
+        settings = _test_correct_parsing(self, data, correct)
         with tempfile.NamedTemporaryFile() as temp:
             for key in settings:
                 txt = settings_to_text(settings[key], key)
@@ -152,6 +171,25 @@ timestep = 0.002"""
             temp.flush()
             settings_read = parse_settings_file(temp.name, add_default=False)
         self.assertEqual(settings_read, correct)
+
+    def test_ignore_section(self):
+        """Test that we indeed ingnore unknow sections."""
+        data = """
+Integrator settings
+-------------------
+class = velocityverlet
+timestep = 0.002
+
+Junk section
+------------
+This section should be ignored
+# and not give any problems
+Is this = True?
+"""
+        correct = {'integrator': {'timestep': 0.002,
+                                  'class': 'velocityverlet'}}
+        settings = _test_correct_parsing(self, data, correct)
+        self.assertNotIn('junk', settings)
 
 
 class KeywordIntegrator(unittest.TestCase):
@@ -166,15 +204,11 @@ module = foointegrator.py
 timestep = 0.5
 extra = 100
 """
-        correct = {'class': 'FooIntegrator',
-                   'module': 'foointegrator.py',
-                   'timestep': 0.5,
-                   'extra': 100}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = {}
-        settings['integrator'] = _parse_raw_section(raw['integrator'],
-                                                    'integrator')
-        self.assertEqual(settings['integrator'], correct)
+        correct = {'integrator': {'class': 'FooIntegrator',
+                                  'module': 'foointegrator.py',
+                                  'timestep': 0.5,
+                                  'extra': 100}}
+        settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
@@ -182,9 +216,9 @@ extra = 100
         settings['exe-path'] = here
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
-                         correct['timestep'])
+                         correct['integrator']['timestep'])
         self.assertEqual(foointegrator.extra,  # pylint: disable=no-member
-                         correct['extra'])
+                         correct['integrator']['extra'])
 
     def test_fail_external_integrator(self):
         """Test that external loads fail in a predicable way."""
@@ -194,34 +228,27 @@ extra = 100
                          '-------------------\n'
                          'class = BarIntegrator\n'
                          'module = foointegrator.py')
-        correct.append({'class': 'BarIntegrator',
-                        'module': 'foointegrator.py'})
-
+        correct.append({'integrator': {'class': 'BarIntegrator',
+                                       'module': 'foointegrator.py'}})
         test_data.append('Integrator settings\n'
                          '-------------------\n'
                          'class = BazIntegrator\n'
                          'module = foointegrator.py')
-        correct.append({'class': 'BazIntegrator',
-                        'module': 'foointegrator.py'})
-
+        correct.append({'integrator': {'class': 'BazIntegrator',
+                                       'module': 'foointegrator.py'}})
         test_data.append('Integrator\n'
                          '----------\n'
                          'module =  dummy')
-        correct.append({'module': 'dummy'})
-
+        correct.append({'integrator': {'module': 'dummy'}})
         test_data.append('Integrator\n'
                          '----------\n'
                          'module = dummy\n'
                          'class = dummy')
-        correct.append({'module': 'dummy', 'class': 'dummy'})
+        correct.append({'integrator': {'module': 'dummy', 'class': 'dummy'}})
 
         here = os.path.abspath(os.path.dirname(__file__))
         for data, corr in zip(test_data, correct):
-            raw, _ = _parse_sections(data.split('\n'))
-            settings = {}
-            settings['integrator'] = _parse_raw_section(raw['integrator'],
-                                                        'integrator')
-            self.assertEqual(settings['integrator'], corr)
+            settings = _test_correct_parsing(self, data, corr)
             settings['exe-path'] = here
             args = [settings]
             self.assertRaises(ValueError, create_integrator, *args)
@@ -271,10 +298,7 @@ extra = 100
                                        'seed': 11,
                                        'high_friction': False}})
         for data, corr, cls in zip(test_data, correct, klass):
-            raw, _ = _parse_sections(data.split('\n'))
-            settings = _parse_all_raw_sections(raw)
-            for key in settings:
-                self.assertEqual(settings[key], corr[key])
+            settings = _test_correct_parsing(self, data, corr)
             integ = create_integrator(settings)
             self.assertIsInstance(integ, cls)
             self.assertAlmostEqual(integ.delta_t,
@@ -291,19 +315,15 @@ class KeywordOrderPrameter(unittest.TestCase):
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
         data = """
-Order parameter
----------------
+Orderparameter
+--------------
 class = FooOrderParameter
 module = fooorderparameter.py
 name = Dummy"""
-        correct = {'order parameter': {'class': 'FooOrderParameter',
-                                       'module': 'fooorderparameter.py',
-                                       'name': 'Dummy'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        correct = {'orderparameter': {'class': 'FooOrderParameter',
+                                      'module': 'fooorderparameter.py',
+                                      'name': 'Dummy'}}
+        settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
@@ -311,7 +331,7 @@ name = Dummy"""
         settings['exe-path'] = here
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
-                         correct['order parameter']['name'])
+                         correct['orderparameter']['name'])
 
         def extra_function(args):
             """Dummy function for testing."""
@@ -326,25 +346,21 @@ name = Dummy"""
     def test_fail_orderparameter(self):
         """Test that loading external order parameters fails."""
         test_data, correct = [], []
-        test_data.append('Order parameter\n'
-                         '---------------\n'
+        test_data.append('Orderparameter\n'
+                         '--------------\n'
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
-        test_data.append('Order parameter\n'
-                         '---------------\n'
+        test_data.append('Orderparameter\n'
+                         '--------------\n'
                          'class = BazOrderParameter\n'
                          'module =  fooorderparameter.py')
-        correct.append({'class': 'BarOrderParameter',
-                        'module': 'fooorderparameter.py'})
-        correct.append({'class': 'BazOrderParameter',
-                        'module': 'fooorderparameter.py'})
+        correct.append({'orderparameter': {'class': 'BarOrderParameter',
+                                           'module': 'fooorderparameter.py'}})
+        correct.append({'orderparameter': {'class': 'BazOrderParameter',
+                                           'module': 'fooorderparameter.py'}})
         here = os.path.abspath(os.path.dirname(__file__))
-        sec = 'order parameter'
         for data, corr in zip(test_data, correct):
-            raw, _ = _parse_sections(data.split('\n'))
-            settings = {}
-            settings[sec] = _parse_raw_section(raw[sec], sec)
-            self.assertEqual(settings[sec], corr)
+            settings = _test_correct_parsing(self, data, corr)
             settings['exe-path'] = here
             args = [settings]
             self.assertRaises(ValueError, create_orderparameter, *args)
@@ -353,48 +369,45 @@ name = Dummy"""
         """Test that we can create internal order parameters."""
         test_data, correct, klass = [], [], []
         klass.append(OrderParameter)
-        test_data.append('Order parameter\n'
-                         '---------------\n'
+        test_data.append('Orderparameter\n'
+                         '--------------\n'
                          'class = OrderParameter\n'
                          'name =  test')
-        correct.append({'order parameter': {'class': 'OrderParameter',
-                                            'name': 'test'}})
+        correct.append({'orderparameter': {'class': 'OrderParameter',
+                                           'name': 'test'}})
         klass.append(OrderParameterPosition)
-        test_data.append('Order parameter\n'
-                         '---------------\n'
+        test_data.append('Orderparameter\n'
+                         '--------------\n'
                          'class = OrderParameterPosition\n'
                          'name = Position\n'
                          'index = 0\n'
                          'dim = x\n'
                          'periodic = False')
-        correct.append({'order parameter': {'class': 'OrderParameterPosition',
-                                            'name': 'Position', 'index': 0,
-                                            'dim': 'x', 'periodic': False}})
+        correct.append({'orderparameter': {'class': 'OrderParameterPosition',
+                                           'name': 'Position', 'index': 0,
+                                           'dim': 'x', 'periodic': False}})
         klass.append(OrderParameterDistance)
-        test_data.append('Order parameter\n'
-                         '---------------\n'
+        test_data.append('Orderparameter\n'
+                         '--------------\n'
                          'class = OrderParameterDistance\n'
                          'name = My distance\n'
                          'index = (100, 101)\n'
                          'periodic = False')
-        correct.append({'order parameter': {'class': 'OrderParameterDistance',
-                                            'name': 'My distance',
-                                            'index': (100, 101),
-                                            'periodic': False}})
+        correct.append({'orderparameter': {'class': 'OrderParameterDistance',
+                                           'name': 'My distance',
+                                           'index': (100, 101),
+                                           'periodic': False}})
         for data, corr, cls in zip(test_data, correct, klass):
-            raw, _ = _parse_sections(data.split('\n'))
-            settings = _parse_all_raw_sections(raw)
-            for key in settings:
-                self.assertEqual(settings[key], corr[key])
+            settings = _test_correct_parsing(self, data, corr)
             insta = create_orderparameter(settings)
             self.assertIsInstance(insta, cls)
-            for key in corr['order parameter']:
+            for key in corr['orderparameter']:
                 if hasattr(insta, key):
                     if key == 'dim':
                         self.assertAlmostEqual(insta.dim, 0)
                     else:
                         self.assertAlmostEqual(getattr(insta, key),
-                                               corr['order parameter'][key])
+                                               corr['orderparameter'][key])
 
 
 class KeywordParticles(unittest.TestCase):
@@ -416,11 +429,7 @@ units = lj"""
                                               'repeat': [6, 6, 6],
                                               'lcon': 1.0}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         create_conversion_factors(settings['system']['units'])
         particles, size, _ = create_initial_positions(settings)
         self.assertEqual(size, [[0.0, 6.0], [0.0, 6.0], [0.0, 6.0]])
@@ -448,11 +457,7 @@ units = lj"""
                                               'lcon': 1.0},
                                  'type': [0, 1]},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
@@ -477,11 +482,7 @@ units = lj"""
                                               'repeat': [3, 3, 3],
                                               'density': 0.9}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         particles, size, _ = create_initial_positions(settings)
         correct_size = []
         lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
@@ -511,11 +512,7 @@ units = lj"""
                                               'density': 0.9,
                                               'lcon': 1000.}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         _, size, _ = create_initial_positions(settings)
         correct_size = []
         # `lcon` should be replaced by density:
@@ -546,11 +543,7 @@ units = lj"""
                                  'name': ['Ar', 'Kr'],
                                  'mass': {'Ar': 1.0}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         particles, _, _ = create_initial_positions(settings)
         for i in range(particles.npart):
             if i == 0:
@@ -583,11 +576,7 @@ units = lj"""
                                  'name': ['Ar'],
                                  'mass': {'Ar': 1.0}},
                    'system': {'units': 'lj', 'dimensions': 3}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         args = [settings]
         self.assertRaises(ValueError, create_initial_positions, *args)
 
@@ -602,11 +591,7 @@ System
 units = lj"""
         correct = {'particles': {'position': {'file': 'config.xyz'}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
@@ -641,10 +626,7 @@ System
 units = gromacs"""
         correct = {'particles': {'position': {'file': 'config.gro'}},
                    'system': {'units': 'gromacs'}}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         # Add path to the file for this test:
         create_conversion_factors(settings['system']['units'])
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
@@ -688,11 +670,7 @@ units = lj
                                  'mass': {'Ar': 1., 'Kr': 2.09767698,
                                           'Kr2': 2.09767698}},
                    'system': {'units': 'lj'}}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
@@ -718,8 +696,8 @@ class Keywordforcefield(unittest.TestCase):
     def test_forcefield(self):
         """Test initialization of a simple force field."""
         data = """
-Force field
------------
+Forcefield
+----------
 description = My first force field
 
 potential
@@ -727,16 +705,13 @@ potential
 class = PairLennardJonesCutnp
 shift = True
 parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}"""
-        correct = {'force field': {'description': 'My first force field'},
+        correct = {'forcefield': {'description': 'My first force field'},
                    'potential': [{'class': 'PairLennardJonesCutnp',
                                   'shift': True,
                                   'parameter': {0: {'sigma': 1.0,
                                                     'epsilon': 1.0,
                                                     'rcut': 2.5}}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         forcefield = create_force_field(settings)
         self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
         self.assertEqual(forcefield.potential[0].shift,
@@ -760,10 +735,7 @@ parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
                                                 1: {'sigma': 2.0,
                                                     'epsilon': 2.0,
                                                     'rcut': 2.5}}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         potentials, pot_par = create_potentials(settings)
         self.assertIsInstance(potentials[0], PairLennardJonesCut)
         self.assertEqual(potentials[0].shift,
@@ -801,11 +773,7 @@ dimensions = 2"""
                                   'parameter': {0: {'sigma': 1.0,
                                                     'epsilon': 1.0,
                                                     'rcut': 2.5}}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
-        self.assertEqual(settings, correct)
+        settings = _test_correct_parsing(self, data, correct)
         args = [settings]
         self.assertRaises(ValueError, create_potentials, *args)
 
@@ -854,10 +822,7 @@ parameter a = 2.0"""
         correct = {'potential': [{'class': 'FooPotential',
                                   'module': 'foopotential.py',
                                   'parameter': {'a': 2.0}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
         # add path for testing:
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
@@ -879,10 +844,7 @@ parameter a = 2.0"""
         correct = {'potential': [{'class': 'BarPotential',
                                   'module': 'foopotential.py',
                                   'parameter': {'a': 2.0}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         args = [settings]
@@ -891,8 +853,8 @@ parameter a = 2.0"""
     def test_complicated_input(self):
         """Test that we can read 'complex' force field input."""
         data = """
-Force field
------------
+Forcefield
+----------
 description = My force field mix
 
 Potential
@@ -914,7 +876,7 @@ Potential
 class = FooPotential
 module = foopotential.py
 parameter a = 10.0"""
-        correct = {'force field': {'description': 'My force field mix'},
+        correct = {'forcefield': {'description': 'My force field mix'},
                    'potential': [{'class': 'PairLennardJonesCutnp',
                                   'shift': True,
                                   'parameter': {0: {'sigma': 1.0,
@@ -927,10 +889,7 @@ parameter a = 10.0"""
                                  {'class': 'FooPotential',
                                   'module': 'foopotential.py',
                                   'parameter': {'a': 10.0}}]}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings = _parse_all_raw_sections(raw)
-        for key in settings:
-            self.assertEqual(settings[key], correct[key])
+        settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         forcefield = create_force_field(settings)
