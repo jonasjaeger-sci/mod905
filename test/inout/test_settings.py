@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""a simple test module for parsing a settings input file.
+"""Test parsing from a settings input file.
 
-Here we test that we understand the input file and that fail in
-a predictable way.
+Here we test that we parse the input file correctly and also that
+we fail in predictable ways.
 """
 from __future__ import absolute_import
 import os
@@ -21,6 +21,10 @@ from pyretis.inout.settings.settings import (parse_settings_file,
                                              settings_to_text)
 from pyretis.inout.settings.createsystem import create_initial_positions
 from pyretis.core.units import create_conversion_factors, CONVERT
+from pyretis.core.integrators import Verlet, VelocityVerlet, Langevin
+from pyretis.core.orderparameter import (OrderParameter,
+                                         OrderParameterPosition,
+                                         OrderParameterDistance)
 from pyretis.forcefield.potentials import (PairLennardJonesCut,
                                            PairLennardJonesCutnp,
                                            DoubleWellWCA,
@@ -220,6 +224,64 @@ extra = 100
             args = [settings]
             self.assertRaises(ValueError, create_integrator, *args)
 
+    def test_internal_integrators(self):
+        """Test that we can load all internal integrators"""
+        klass, test_data, correct = [], [], []
+        klass.append(Verlet)
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'class = Verlet\n'
+                         'timestep = 0.5')
+        correct.append({'integrator': {'class': 'Verlet', 'timestep': 0.5}})
+        klass.append(VelocityVerlet)
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'class = VelocityVerlet\n'
+                         'timestep = 0.314\n'
+                         'desc = Test VV integrator')
+        correct.append({'integrator': {'class': 'VelocityVerlet',
+                                       'timestep': 0.314,
+                                       'desc': 'Test VV integrator'}})
+        klass.append(Langevin)
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'class = Langevin\n'
+                         'timestep = 0.1\n'
+                         'gamma = 2.718281828\n'
+                         'seed = 101\n'
+                         'high_friction = True')
+        correct.append({'integrator': {'class': 'Langevin',
+                                       'timestep': 0.1,
+                                       'gamma': 2.718281828,
+                                       'seed': 101,
+                                       'high_friction': True}})
+        klass.append(Langevin)
+        test_data.append('Integrator\n'
+                         '----------\n'
+                         'class = Langevin\n'
+                         'timestep = 0.25\n'
+                         'gamma = 2.718281828\n'
+                         'seed = 11\n'
+                         'high_friction = False')
+        correct.append({'integrator': {'class': 'Langevin',
+                                       'timestep': 0.25,
+                                       'gamma': 2.718281828,
+                                       'seed': 11,
+                                       'high_friction': False}})
+        for data, corr, cls in zip(test_data, correct, klass):
+            raw, _ = _parse_sections(data.split('\n'))
+            settings = _parse_all_raw_sections(raw)
+            for key in settings:
+                self.assertEqual(settings[key], corr[key])
+            integ = create_integrator(settings)
+            self.assertIsInstance(integ, cls)
+            self.assertAlmostEqual(integ.delta_t,
+                                   corr['integrator']['timestep'])
+            for key in corr['integrator']:
+                if hasattr(integ, key):
+                    self.assertAlmostEqual(getattr(integ, key),
+                                           corr['integrator'][key])
+
 
 class KeywordOrderPrameter(unittest.TestCase):
     """Test creation of order parameters."""
@@ -287,40 +349,50 @@ name = Dummy"""
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        data = """
-Order parameter
----------------
-class = OrderParameter
-name =  test"""
-        correct = {'class': 'OrderParameter', 'name': 'test'}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        sec = 'order parameter'
-        settings[sec] = _parse_raw_section(raw[sec], sec)
-        self.assertEqual(settings[sec], correct)
-        orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name, correct['name'])
-
-        data = """
-Order parameter
----------------
-class = OrderParameterPosition
-name = Position
-index = 0
-dim = x
-periodic = False"""
-        correct = {'class': 'OrderParameterPosition',
-                   'name': 'Position', 'index': 0,
-                   'dim': 'x', 'periodic': False}
-        settings = {}
-        raw, _ = _parse_sections(data.split('\n'))
-        settings[sec] = _parse_raw_section(raw[sec], sec)
-        self.assertEqual(settings[sec], correct)
-        orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name, correct['name'])
-        self.assertEqual(orderp.index, correct['index'])
-        self.assertEqual(orderp.dim, 0)
-        self.assertEqual(orderp.periodic, correct['periodic'])
+        test_data, correct, klass = [], [], []
+        klass.append(OrderParameter)
+        test_data.append('Order parameter\n'
+                         '---------------\n'
+                         'class = OrderParameter\n'
+                         'name =  test')
+        correct.append({'order parameter': {'class': 'OrderParameter',
+                                            'name': 'test'}})
+        klass.append(OrderParameterPosition)
+        test_data.append('Order parameter\n'
+                         '---------------\n'
+                         'class = OrderParameterPosition\n'
+                         'name = Position\n'
+                         'index = 0\n'
+                         'dim = x\n'
+                         'periodic = False')
+        correct.append({'order parameter': {'class': 'OrderParameterPosition',
+                                            'name': 'Position', 'index': 0,
+                                            'dim': 'x', 'periodic': False}})
+        klass.append(OrderParameterDistance)
+        test_data.append('Order parameter\n'
+                         '---------------\n'
+                         'class = OrderParameterDistance\n'
+                         'name = My distance\n'
+                         'index = (100, 101)\n'
+                         'periodic = False')
+        correct.append({'order parameter': {'class': 'OrderParameterDistance',
+                                            'name': 'My distance',
+                                            'index': (100, 101),
+                                            'periodic': False}})
+        for data, corr, cls in zip(test_data, correct, klass):
+            raw, _ = _parse_sections(data.split('\n'))
+            settings = _parse_all_raw_sections(raw)
+            for key in settings:
+                self.assertEqual(settings[key], corr[key])
+            insta = create_orderparameter(settings)
+            self.assertIsInstance(insta, cls)
+            for key in corr['order parameter']:
+                if hasattr(insta, key):
+                    if key == 'dim':
+                        self.assertAlmostEqual(insta.dim, 0)
+                    else:
+                        self.assertAlmostEqual(getattr(insta, key),
+                                               corr['order parameter'][key])
 
 
 class KeywordParticles(unittest.TestCase):
@@ -564,44 +636,35 @@ Particles
 position = {'file': 'config.gro'}
 System
 ------
-units = real"""
+units = gromacs"""
         correct = {'particles': {'position': {'file': 'config.gro'}},
-                   'system': {'units': 'real'}}
-        settings = {}
+                   'system': {'units': 'gromacs'}}
         raw, _ = _parse_sections(data.split('\n'))
-        for key in raw:
-            settings[key] = _parse_raw_section(raw[key], key)
+        settings = _parse_all_raw_sections(raw)
+        for key in settings:
             self.assertEqual(settings[key], correct[key])
-        units = settings['system']['units']
-        create_conversion_factors(units)
         # Add path to the file for this test:
+        create_conversion_factors(settings['system']['units'])
         settings['exe-path'] = os.path.abspath(os.path.dirname(__file__))
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
-        self.assertTrue(np.allclose(size, [20., 20., 20.]))
-        pos = particles.pos * CONVERT['length'][units, 'A']
-        correct_pos = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5],
-                                [0.5, 0.5, 0.0], [0.5, 0.0, 0.5],
-                                [0.0, 0.5, 0.5]])
-        self.assertTrue(np.allclose(pos, correct_pos))
+        self.assertTrue(np.allclose(size, [2., 2., 2.]))
+        correct_pos = np.array([[0., 0., 0.], [0.05, 0.05, 0.05],
+                                [0.05, 0.05, 0.], [0.05, 0., 0.05],
+                                [0., 0.05, 0.05]])
+        self.assertTrue(np.allclose(particles.pos, correct_pos))
         self.assertTrue(all([i == j for i, j in zip(particles.ptype,
                                                     [0, 1, 2, 2, 2])]))
         self.assertTrue(all([i == j for i, j in zip(particles.name,
                                                     ['Ba', 'Hf', 'O',
                                                      'O', 'O'])]))
-        masses = []
-        for i in particles.mass:
-            masses.append(i[0] * CONVERT['mass'][units, 'g/mol'])
-        self.assertTrue(np.allclose(masses, [137.327, 178.49, 15.9994,
-                                             15.9994, 15.9994]))
-        vel = []
-        for i in particles.vel:
-            vel.append(i * CONVERT['velocity'][units, 'nm/ps'])
-        vel = np.array(vel)
+        self.assertTrue(np.allclose(particles.mass.T,
+                                    [137.327, 178.49, 15.9994,
+                                     15.9994, 15.9994]))
         correct_vel = np.array([[1.0, 1.0, 1.0], [-1.0, -1.0, -1.0],
                                 [2.0, 0.0, -2.0], [-2.0, 1.0, 2.0],
                                 [0.0, -1.0, 0.0]])
-        self.assertTrue(np.allclose(vel, correct_vel))
+        self.assertTrue(np.allclose(particles.vel, correct_vel))
 
     def test_file_xyztab(self):
         """Test initialization from a XYZ file with mass dict."""
@@ -714,7 +777,7 @@ parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
         self.assertAlmostEqual(potparam[(1, 1)]['sigma'], 2.0)
         self.assertAlmostEqual(potparam[(1, 1)]['rcut'], 2.5)
         self.assertAlmostEqual(potparam[(0, 1)]['epsilon'], 1.4142135623730951)
-        self.assertAlmostEqual(potparam[(0, 1)]['sigma'],  1.4142135623730951)
+        self.assertAlmostEqual(potparam[(0, 1)]['sigma'], 1.4142135623730951)
         self.assertAlmostEqual(potparam[(0, 1)]['rcut'], 2.5)
 
     def test_potential_inconsitentdim(self):
