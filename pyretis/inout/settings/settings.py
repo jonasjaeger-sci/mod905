@@ -397,45 +397,24 @@ def write_settings_file(settings, outfile, backup=True):
     ``settings``.
     """
     # define a ordering of sections to write to the file:
-    group = [{'header': 'pyretis simulation\n==================\n',
-              'keys': ('units', 'task', 'steps', 'startcycle', 'interfaces',
-                       'integrator')},
-             {'header': '\n\nSystem settings\n---------------\n',
-              'keys': ('dimensions', 'temperature')},
-             {'header': '\n\nParticles\n---------\n',
-              'keys': ('particles-position', 'particles-velocity',
-                       'particles-mass', 'particles-name', 'particles-type')},
-             {'header': '\n\nForce field settings\n--------------------\n',
-              'keys': ('forcefield', 'potentials', 'potential-parameters')},
-             {'header': '\n\nOrder parameter\n---------------\n',
-              'keys': ('orderparameter',)},
-             {'header': '\n\nOutput settings\n---------------\n',
-              'keys': ('output-modify', 'output-add')},
-             {'header': '\n\nAnalysis settings\n-----------------\n',
-              'keys': ('endcycle', 'skipcross', 'maxblock', 'blockskip',
-                       'bins', 'ngrid', 'maxordermsd', 'plot', 'txt-output',
-                       'report', 'npart')}]
-
     if backup:
         msg = create_backup(outfile)
         if msg:
             logger.warning(msg)
-
-    written = set()  # make sure we don't write the same thing in many places
+    print(outfile)
     with open(outfile, 'w') as fileh:
-        for i, section in enumerate(group):
-            to_write = [section['header']]
-            for key in section['keys']:
-                if key in settings and key not in written:
-                    to_write.append(setting_to_text(settings, key))
-                    written.add(key)
-            if len(to_write) > 1 or i == 0:
-                fileh.write('\n'.join(to_write))
-        # Also write remaining if anything
-        to_write = ['\n\nOther settings\n--------------\n']
-        for key in sorted(settings):
-            if key not in written and settings[key] is not None:
-                to_write.append(setting_to_text(settings, key))
-                written.add(key)
-        if len(to_write) > 1:
-            fileh.write('\n'.join(to_write))
+        for section in settings:
+            if section == 'potential':
+                for pot in settings[section]:
+                    fileh.write(section.capitalize())
+                    fileh.write('\n{}\n'.format(('-')*len(section)))
+                    print(pot)
+                    for key in pot:
+                        print(key)
+            else:
+                fileh.write(section.capitalize())
+                fileh.write('\n{}\n'.format(('-')*len(section)))
+                for key in settings[section]:
+                    txt = setting_to_text(settings[section], key)
+                    if len(txt) > 3:  # shortest possible is of form "x=1"
+                        fileh.write('{}\n'.format(txt))
