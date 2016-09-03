@@ -14,11 +14,11 @@ Simulation warnings/error messages
 .. topic:: Error: ``No default integrator for XXX``
 
    If no integrator is defined for a simulation, pyretis will try to see
-   if a default integrator is selected. For some simulation types this is
+   if a default integrator can be selected. For some simulation types this is
    not the case and this error message is issued. 
    
    **Fix**: Specify an integrator in the pyretis input (see the 
-   :ref:`integrator keyword <user-keywords-integrator>`).
+   :ref:`integrator section <user-section-integrator>`).
 
 
 .. topic:: Error: ``Unknown integrator XXX``
@@ -26,7 +26,7 @@ Simulation warnings/error messages
    An unknown integrator was requested in the input.
 
    **Fix**: Specify an integrator in the pyretis input (see the 
-   :ref:`integrator keyword <user-keywords-integrator>`).
+   :ref:`integrator section <user-section-integrator>`).
 
 
 .. topic:: Warning: ``No random seed given. Will just use "0"``

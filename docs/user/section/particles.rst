@@ -1,29 +1,32 @@
-.. _user-keywords-particles:
+.. _user-section-particles:
 
-particles
----------
+The particles section
+---------------------
 
 Particles are added to the simulation by defining one or
 more of the following keywords:
 
-* ``particles-position`` which defines the initial positions  of the particles,
-* ``particles-velocity`` which defines the initial velocities,
-* ``particles-mass`` which defines the masses for the particles,
-* ``particles-name`` which defines names for the particles,
-* ``particles-type`` which defines particle types for.
+* ``position`` which defines the initial positions  of the particles,
+* ``velocity`` which defines the initial velocities,
+* ``mass`` which defines the masses for the particles,
+* ``name`` which defines names for the particles,
+* ``type`` which defines particle types for.
 
 Example:
 
-.. code-block:: python
+.. code-block:: rst
 
-    particles-position = {'file': 'initial.gro'}
-    particles-velocity = {'generate': 'maxwell',
-                          'set-temperature': 2.0,
-                          'momentum': True,
-                          'seed': 0}
-    particles-mass = {'Ar': 1.0}
-    particles-name = ['Ar']
-    particles-type = [0]
+    Particles
+    ---------
+
+    position = {'file': 'initial.gro'}
+    velocity = {'generate': 'maxwell',
+                'set-temperature': 2.0,
+                'momentum': True,
+                'seed': 0}
+    mass = {'Ar': 1.0}
+    name = ['Ar']
+    type = [0]
 
 In this example, the particles are read from a file
 called `'initial.gro'` and the velocities are set according
@@ -33,21 +36,20 @@ Further, the mass of particles with name `'Ar'` is set to `1.0`
 and all particles are named `'Ar'` and assigned a particle type of `0`.
 
 
-.. _user-keywords-particles-position:
+.. _user-section-particles-keyword-position:
 
-particles-position
-..................
+position
+~~~~~~~~
 
-The ``particles-position`` is used to set the initial positions for a
+The ``position`` keyword is used to set the initial positions for a
 simulation. It is also used to define the particles we will use in the
 simulation. The initial positions can be:
 
-
 1. Generated on a lattice,
    
-   .. code-block:: python
+   .. code-block:: rst
 
-      particles-position = {'generate': 'fcc', 'repeat': [3, 3, 3], 'lcon': 1.0}
+      position = {'generate': 'fcc', 'repeat': [3, 3, 3], 'lcon': 1.0}
 
    When generating on a lattice, the following settings must be
    provided:
@@ -77,9 +79,9 @@ simulation. The initial positions can be:
 
 2. Or read from a file,
    
-   .. code-block:: python
+   .. code-block:: rst
 
-      particles-position = {'file': 'initial.gro'}
+      position = {'file': 'initial.gro'}
 
    When reading initial positions from a file, the following settings
    must be provided:
@@ -95,43 +97,45 @@ simulation. The initial positions can be:
 
 More examples:
 
-.. code-block:: python
-    
+.. code-block:: rst
+
+   Particles
+   ---------
    # Read a file from the current directory  
-   particles-position = {'file': 'initial.gro'}
+   position = {'file': 'initial.gro'}
 
    # Read a file from another position:  
-   particles-position = {'file': '/path/to/file/initial.gro'}
+   position = {'file': '/path/to/file/initial.gro'}
 
    # Generate a fcc lattice with 4 * 5**3 = 500 particles and
    # a lattice constant of in reduced units
-   particles-position = {'generate': 'fcc',
-                         'repeat': [5, 5, 5],
-                         'lcon': 1.0}
+   position = {'generate': 'fcc',
+               'repeat': [5, 5, 5],
+               'lcon': 1.0}
 
    # Generate a bcc lattice with 2*5**3 = 250 particles and
    # a reduced density of 0.9
-   particles-position = {'generate': 'bcc',
-                         'repeat': [5, 5, 5],
-                         'density': 0.9}
+   position = {'generate': 'bcc',
+               'repeat': [5, 5, 5],
+               'density': 0.9}
 
 
-.. _user-keywords-particles-velocity:
+.. _user-section-particles-keyword-velocity:
 
-particles-velocity
-..................
+velocity
+~~~~~~~~
 
-The ``particles-velocity`` keyword is used to set initial velocities
+The ``velocity`` keyword is used to set initial velocities
 for the particles according to a specified temperature. 
 
 Example:
 
-.. code-block:: python
+.. code-block:: rst
 
-    particles-velocity = {'generate': 'maxwell',
-                          'set-temperature': 2.0,
-                          'momentum': True,
-                          'seed': 0}
+    velocity = {'generate': 'maxwell',
+                'set-temperature': 2.0,
+                'momentum': True,
+                'seed': 0}
 
 The following settings must be provided:
 
@@ -154,96 +158,94 @@ The following settings are optional:
   generator. If this value is not given a ``0`` will be used.
 
 
-.. _user-keywords-particles-mass:
+.. _user-section-particles-keyword-mass:
 
-particles-mass
-..............
+mass
+~~~~
 
-The ``particles-mass`` keyword sets the masses for different particles.
-The provided values are assumed to be in *internal units*. If masses are not
+The ``mass`` keyword sets the masses for different particles.
+The provided values are assumed to be in **internal units**. If masses are not
 set, pyretis will try to guess them from the periodic system, however this
 might fail unless the names you have used for the particles correspond to
 names used in the periodic system.
 
 Example 1:
 
-.. code-block:: python
+.. code-block:: rst
     
     # define masses for particles with name 'Ar'
-    particles-mass = {'Ar': 1.0}
+    mass = {'Ar': 1.0}
 
 Example 2:
 
-.. code-block:: python
+.. code-block:: rst
     
     # define masses for particles with name 'Ar', 'Kr' and 'big'
-    particles-mass = {'Ar': 1.0,
-                      'Kr': 2.098,
-                      'big': 10.0}
+    mass = {'Ar': 1.0, 'Kr': 2.098, 'big': 10.0}
 
 
-.. _user-keywords-particles-name:
+.. _user-section-particles-keyword-name:
 
-particles-name
-..............
+name
+~~~~
 
-The ``particles-name`` keyword is used give particles a name.
+The ``name`` keyword is used give particles a name.
 This can for instance be used to label specific particles and, when
-used together with the ``particles-mass`` keyword, it can be
+used together with the ``mass`` keyword, it can be
 used to control the masses assigned to the different particles.
 The particle names are also used when writing output configurations.
 
 Example:
 
-.. code-block:: python
+.. code-block:: rst
 
-   particles-name = ['Ar']
+   name = ['Ar']
 
 The input value is a list with the particle names in the order
 they have been generated/read from a file by the
-``particles-position`` keyword. If the ``particles-name`` list
+``position`` keyword. If the ``name`` list
 contain to few items, the **last** item in the list will be repeated.
 
 This means that,
 
-.. code-block:: python
+.. code-block:: rst
    
-   particles-name = ['Ar', 'Kr']
+   name = ['Ar', 'Kr']
 
-will create one particle (the first one) with name ``'Ar'`` and the rest
+will name one particle (the first) ``'Ar'`` and the rest
 of the particles will be named ``'Kr'``.
 
 
-.. _user-keywords-particles-type:
+.. _user-section-particles-keyword-type:
 
-particles-type
-..............
+type
+~~~~
 
-The ``particles-type`` keyword is used to specify the particle types for the
+The ``type`` keyword is used to specify the particle types for the
 different particles. The particle type is used to distinguish particles, for
 instance when calculating pair interactions.
-
+-
 The input value is a list with the particle types in the order
 they have been generated/read from a file by the
-``particles-position`` keyword. If the ``particles-type`` list
+``position`` keyword. If the ``type`` list
 contain to few items, the **last** item in the list will be repeated.
 
 Example 1:
 
-.. code-block:: python
+.. code-block:: rst
     
-    particles-type = [0, 1]
-    particles-name= ['Ar', 'Kr']
+    type = [0, 1]
+    name= ['Ar', 'Kr']
 
 This can be used to define a simulation where we have particles of
 two different types with different masses.
 
 Example 2:
 
-.. code-block:: python
+.. code-block:: rst
     
-    particles-type = [0]
-    particles-name= ['Ar', 'Ar2', 'Ar']
+    type = [0]
+    name= ['Ar', 'Ar2', 'Ar']
 
 This can be used to define a simulation where we have only particles
 of the same type, however one of the particles have a different

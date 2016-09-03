@@ -1,7 +1,7 @@
-.. _user-keywords-integrator:
+.. _user-section-integrator:
 
-integrator
-----------
+The integrator section
+----------------------
 Specify which integrator to use for the dynamics.
 The integrator is responsible for integrating Newton's
 equations of motion numerically in pyretis.
@@ -14,18 +14,20 @@ as discussed below.
 
 Integrator setting example:
 
-.. code-block:: python
+.. code-block:: rst 
 
-   integrator = {'class': 'VelocityVerlet',
-                 'timestep': 0.002}
+    Integrator
+    ----------
+    class = VelocityVerlet
+    timestep = 0.002
 
 pyretis supports different integrators which are selected by setting
 the ``class`` value as show in the example above. The supported integrators
 are:
 
-* :ref:`Langevin <user-keywords-integrator-langevin>`
-* :ref:`Verlet <user-keywords-integrator-verlet>`
-* :ref:`Velocity Verlet <user-keywords-integrator-velocity-verlet>`
+* :ref:`Langevin <user-section-integrator-langevin>`
+* :ref:`Verlet <user-section-integrator-verlet>`
+* :ref:`Velocity Verlet <user-section-integrator-velocity-verlet>`
 
 which are described in detail below.
 
@@ -34,25 +36,27 @@ integrators written in for instance python, fortran or c.
 Such integrators can be requested by
 specifying some additional keywords as described in detail
 in the section 
-on :ref:`user defined integrators <user-keywords-integrator-user-defined>`
+on :ref:`user defined integrators <user-section-integrator-user-defined>`
 
 
-.. _user-keywords-integrator-langevin:
+.. _user-section-integrator-langevin:
 
 Langevin
-........
+~~~~~~~~
 
 This is a stochastic (Brownian) integrator and a description of 
 the implementation can be found in e.g. [ALLEN]_. The integrator
 is fully specified as follows:
 
-.. code-block:: python
+.. code-block:: rst 
 
-   integrator = {'class': 'Langevin', # select Langevin integrator
-                 'timestep': 0.002,  # time step for the integration
-                 'gamma': 0.3,  # set gamma value,
-                 'seed': 0,  # set seed for random value generator used
-                 'high_friction': False}  # are we in the high friction limit?
+    Integrator
+    ----------
+    class = Langevin # select Langevin integrator
+    timestep = 0.002  # time step for the integration
+    gamma = 0.3  # set gamma value,
+    seed = 0  # set seed for random value generator used
+    high_friction = False  # are we in the high friction limit?
 
 **Required settings:**
 
@@ -102,18 +106,20 @@ of motion are integrated, either in the
   obtained as stochastic variables.
 
 
-.. _user-keywords-integrator-verlet:
+.. _user-section-integrator-verlet:
 
 Verlet
-......
+~~~~~~
 
 The integrator is specified by specifying the integrator class ``Verlet`` and
 the time step:
 
-.. code-block:: python
+.. code-block:: rst 
 
-   integrator = {'class': 'Verlet', # select Verlet integrator
-                 'timestep': 0.002}  # time step for the integration
+   Integrator
+   ----------
+   class = Verlet # select Verlet integrator
+   timestep = 0.002  # time step for the integration
 
 **Required settings:**
 
@@ -122,18 +128,20 @@ the time step:
 * ``timestep``: Integration time step.
 
 
-.. _user-keywords-integrator-velocity-verlet:
+.. _user-section-integrator-velocity-verlet:
 
 Velocity Verlet
-...............
+~~~~~~~~~~~~~~~
 
 The integrator is specified by specifying the integrator
 class ``VelocityVerlet`` and the time step:
 
-.. code-block:: python
+.. code-block:: rst 
 
-   integrator = {'class': 'VelocityVerlet', # select Velocity Verlet integrator
-                 'timestep': 0.002}  # time step for the integration
+   Integrator
+   ----------
+   class = VelocityVerlet # select Velocity Verlet integrator
+   timestep = 0.002  # time step for the integration
 
 **Required settings:**
 
@@ -142,19 +150,22 @@ class ``VelocityVerlet`` and the time step:
 * ``timestep``: Integration time step.
 
 
-.. _user-keywords-integrator-user-defined:
+.. _user-section-integrator-user-defined:
 
 User defined integrators
-........................
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 User defined integrators are specified in python modules that
 pyretis can load. 
 
-.. code-block:: python
+.. code-block:: rst 
 
-    integrator: {'class': 'VelocityVerletF',  # select integrator
-                 'args': [0.002],  # arguments for the integrator
-                 'module': 'vvintegratorf.py'}  # module defining integrator
+    Integrator
+    ----------
+    class = VelocityVerletF # select integrator
+    module = vvintegratorf.py # module defining integrator
+    timestep = 0.002 # arguments for the integrator
+    argument = 10.0 # additional argument for the integrator
 
 **Required settings:**
 
@@ -164,15 +175,6 @@ pyretis can load.
 * ``module``: specify the external module where the class specified with
   ``class`` is given. This module must be placed in the same folder as
   you are running pyretis in or you must specify the full path to the module.
-
-* ``args``: Ppositional arguments that we need to supply to the user defined
-  integrator.
-
-
-**Optional settings:**
-
-* ``kwargs``: keyword arguments that we need to supply to the user defined
-  integrator.
 
 
 References

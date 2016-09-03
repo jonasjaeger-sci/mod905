@@ -14,6 +14,7 @@ User Guide
     application.rst
     units.rst
     intro-api.rst
+    Sections <section/sections.rst>
     Reference list for keywords <keywords/keywords.rst>
     errors.rst
 

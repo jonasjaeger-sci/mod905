@@ -143,7 +143,7 @@ html_theme_options = {
                      ("Installing", "user/install"),
                      ("Getting started", "user/getting-started"),
                      #("Examples", "examples/index"),
-                     ("Keywords", "user/keywords/keywords"),
+                     ("Input sections", "user/section/sections"),
                      #("API", "api/pyretis"),
                      #("Developer guide", "developer/index")],
                     ],
