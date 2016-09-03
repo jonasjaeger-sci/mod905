@@ -42,7 +42,7 @@ SECTIONS['simulation'] = {'task': None,
 SECTIONS['system'] = {'dimensions': 3,
                       'temperature': 1.0,
                       'units': 'lj'}
-SECTIONS['unitsystem'] = {'name': None,
+SECTIONS['unit-system'] = {'name': None,
                           'length': None,
                           'mass': None,
                           'energy': None,

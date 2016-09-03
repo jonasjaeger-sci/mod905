@@ -32,9 +32,6 @@ import os
 import sys
 # Other libraries:
 import tqdm  # for a nice progress bar
-#import matplotlib
-#matplotlib.use('Agg')
-#from matplotlib import pyplot as plt
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
