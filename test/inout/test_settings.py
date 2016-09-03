@@ -165,8 +165,9 @@ timestep = 0.002"""
                    'simulation': {'task': 'md-nve', 'steps': 100}}
         settings = _test_correct_parsing(self, data, correct)
         with tempfile.NamedTemporaryFile() as temp:
-            for key in settings:
-                txt = settings_to_text(settings[key], key)
+            title, lines, raw_data = settings_to_text(settings)
+            for tit, line, raw in zip(title, lines, raw_data):
+                txt = '{}\n{}\n{}\n\n'.format(tit, line, raw)
                 temp.write(txt.encode('utf-8'))
             temp.flush()
             settings_read = parse_settings_file(temp.name, add_default=False)

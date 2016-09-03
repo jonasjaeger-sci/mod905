@@ -20,6 +20,8 @@ import logging
 import pprint
 import re
 from pyretis.inout.common import create_backup
+from pyretis import __program_name__ as NAME
+from pyretis import __url__ as URL
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -29,7 +31,9 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 
 MAX_POT = 99  # For practical reasons, just limit this.
 SECTIONS = OrderedDict()
-SECTIONS['heading'] = {'text': 'pyretis input settings'}
+SECTIONS['heading'] = {'title': '{} input settings'.format(NAME),
+                       'text': 'For more info, please see: {}\n'.format(URL) +\
+                               'Have fun!'}
 SECTIONS['simulation'] = {'task': None,
                           'steps': None,
                           'startcycle': None,
@@ -222,9 +226,9 @@ def _parse_raw_section(raw_section, section):
                     if keyword not in setting:
                         setting[keyword] = {}
                     var = line.split(keyword)[1].split()[0]
+                    # yes, in some cases we really want an int
+                    # this only work for positive numbers.
                     if var.isdigit():
-                        # yes, in some cases we really want an int
-                        # this only work for positive numbers.
                         setting[keyword][int(var)] = parsed
                     else:
                         setting[keyword][var] = parsed
@@ -365,58 +369,76 @@ def parse_settings_file(filename, add_default=True):
     return _clean_settings(settings)
 
 
-def settings_to_text(settings, section):
-    """Turn the given settings into text usable for an output file.
+def settings_to_text(settings):
+    """Turn settings into text usable for an output file.
 
     Parameters
     ----------
     settings : dict
         The dictionary to write
-
-    Yields
-    ------
-    out : strings
-        The strings representing the settings.
-    """
-    sec = '{}\n{}'.format(section.capitalize(), len(section)*('-'))
-    data = []
-    for key in settings:
-        if settings[key] is None:
-            continue
-        leng = len(key) + 3
-        pretty = pprint.pformat(settings[key], width=79-leng)
-        pretty = pretty.replace('\n', '\n' + ' ' * leng)
-        dump = '{} = {}\n'.format(key, pretty)
-        data.append(dump)
-    if len(data) > 0:
-        string = '{}\n{}'.format(sec, ''.join(data))
-    else:
-        string = ''
-    return string
-
-
-def setting_to_text(settings, key):
-    """Turn a given setting into text usable for an output file.
-
-    Parameters
-    ----------
-    settings : dict
-        The dictionary to write
-    key : string
-        The setting to format
 
     Returns
     ------
-    out : string
-        The string representing the settings.
+    out[0] : list of strings
+        The strings representing titles
+    out[1] : list of string
+        Strings representing section markers (i.e. "lines").
+    out[2] : list of strings
+        String representing settings for a section.
     """
-    if settings is None:
-        return ''
-    else:
-        leng = len(key) + 3
-        pretty = pprint.pformat(settings[key], width=79-leng)
-        pretty = pretty.replace('\n', '\n' + ' ' * leng)
-        return '{} = {}'.format(key, pretty)
+    title = []
+    lines = []
+    raw_data = []
+    for section in SECTIONS:
+        if section not in settings:
+            continue
+        if section == 'potential':
+            for pot in settings[section]:
+                title.append(section.capitalize())
+                lines.append(('-') * len(title[-1]))
+                raw_data.append(section_to_text(pot))
+        elif section == 'heading':
+            title.append(settings[section]['title'])
+            lines.append(('=') * len(title[-1]))
+            raw_data.append(settings[section]['text'])
+        else:
+            title.append('{} settings'.format(section.capitalize()))
+            lines.append(('-') * len(title[-1]))
+            raw_data.append(section_to_text(settings[section]))
+    return title, lines, raw_data
+
+
+def section_to_text(settings, prefix=None):
+    """Turn settings for a section into text for output.
+
+    Parameters
+    ----------
+    settings : dict
+        A dictionary with settings to transform.
+
+    Returns
+    -------
+    out : string
+        Formatted text representing the settings.
+    """
+    data = []
+    for key in settings:
+        if key == 'parameter':
+            txt = section_to_text(settings[key], prefix='parameter')
+        else:
+            if prefix is not None:
+                leng = len(str(key)) + 3 + len(prefix) + 1
+            else:
+                leng = len(str(key)) + 3
+            pretty = pprint.pformat(settings[key], width=79-leng)
+            pretty = pretty.replace('\n', '\n' + ' ' * leng)
+            if prefix is not None:
+                txt = '{} {} = {}'.format(prefix, key, pretty)
+            else:
+                txt = '{} = {}'.format(key, pretty)
+        if len(txt) >= 5:  # Shortest is a = 1
+            data.append(txt)
+    return '\n'.join(data)
 
 
 def write_settings_file(settings, outfile, backup=True):
@@ -446,24 +468,6 @@ def write_settings_file(settings, outfile, backup=True):
         if msg:
             logger.warning(msg)
     with open(outfile, 'w') as fileh:
-        for section in SECTIONS:
-            if section not in settings:
-                continue
-            if section == 'potential':
-                for pot in settings[section]:
-                #    fileh.write(section.capitalize())
-                #    fileh.write('\n{}\n'.format(('-')*len(section)))
-                    print(pot)
-                    for key in pot:
-                        print(key)
-            elif section == 'heading':
-                fileh.write('pyretis\n')
-                fileh.write('-------\n')
-                fileh.write('Default stuff\n')
-            else:
-                fileh.write('\n{}'.format(section.capitalize()))
-                fileh.write('\n{}\n'.format(('-')*len(section)))
-                for key in settings[section]:
-                    txt = setting_to_text(settings[section], key)
-                    if len(txt) > 3:  # shortest possible is of form "x=1"
-                        fileh.write('{}\n'.format(txt))
+        title, lines, raw_data = settings_to_text(settings)
+        for tit, line, raw in zip(title, lines, raw_data):
+            fileh.write('{}\n{}\n{}\n\n'.format(tit, line, raw))
