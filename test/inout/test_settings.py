@@ -53,7 +53,7 @@ def _test_correct_parsing(test, data, correct):
     out : dict
         The parsed settings.
     """
-    raw, _ = _parse_sections(data.split('\n'))
+    raw = _parse_sections(data.split('\n'))
     settings = _parse_all_raw_sections(raw)
     for key in settings:
         test.assertEqual(settings[key], correct[key])
@@ -70,7 +70,7 @@ class KeywordParsing(unittest.TestCase):
         settings = parse_settings_file(inputfile)
         correct = {}
         correct['system'] = {'units': 'lj',
-                             'dimensions': 3, # added by default
+                             'dimensions': 3,  # added by default
                              'temperature': 2.0}
         correct['simulation'] = {'task': 'md-nve',
                                  'steps': 100}
@@ -138,7 +138,7 @@ class KeywordParsing(unittest.TestCase):
                         'gamma': 0.3, 'high_friction': False,
                         'seed': 0})
         for tst, corr in zip(teststr, correct):
-            raw, _ = _parse_sections(tst)
+            raw = _parse_sections(tst)
             setting = _parse_raw_section(raw['integrator'], 'integrator')
             self.assertEqual(setting, corr)
 
@@ -165,10 +165,8 @@ timestep = 0.002"""
                    'simulation': {'task': 'md-nve', 'steps': 100}}
         settings = _test_correct_parsing(self, data, correct)
         with tempfile.NamedTemporaryFile() as temp:
-            title, lines, raw_data = settings_to_text(settings)
-            for tit, line, raw in zip(title, lines, raw_data):
-                txt = '{}\n{}\n{}\n\n'.format(tit, line, raw)
-                temp.write(txt.encode('utf-8'))
+            txt = settings_to_text(settings)
+            temp.write(txt.encode('utf-8'))
             temp.flush()
             settings_read = parse_settings_file(temp.name, add_default=False)
         self.assertEqual(settings_read, correct)
@@ -806,7 +804,7 @@ class = RectangularWell
                           DoubleWellWCA,
                           DoubleWell,
                           RectangularWell]
-        raw, _ = _parse_sections(data.split('\n'))
+        raw = _parse_sections(data.split('\n'))
         settings = _parse_all_raw_sections(raw)
         potentials, _ = create_potentials(settings)
         for pot, pot_input in zip(potentials, all_potentials):

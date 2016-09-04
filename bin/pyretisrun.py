@@ -449,7 +449,8 @@ if __name__ == '__main__':
         print_and_loginfo('Reading input settings')
         settings = parse_settings_file(inputfile)
         settings['exe-path'] = runpath
-        create_conversion_factors(settings['units'], **settings['units-base'])
+        create_conversion_factors(settings['system']['units'],
+                                 **settings['units-system'])
 
         print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
@@ -459,8 +460,9 @@ if __name__ == '__main__':
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
 
-        print_and_loginfo('Will run simulation: "{}"'.format(settings['task']))
-        runner = _RUNNERS.get(settings['task'], run_generic_simulation)
+        task = settings['simulation']['task']
+        print_and_loginfo('Will run simulation: "{}"'.format(taks))
+        runner = _RUNNERS.get(task, run_generic_simulation)
         runner(simulation, settings, progress=args_dict['progress'])
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
@@ -476,7 +478,7 @@ if __name__ == '__main__':
                 settings['endcycle'] = end
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
-            settings['npart'] = system.particles.npart
+            settings['particles']['npart'] = system.particles.npart
         outfile = '_out-{}'.format(inputfile)
         outpath = os.path.join(basepath, outfile)
         print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))

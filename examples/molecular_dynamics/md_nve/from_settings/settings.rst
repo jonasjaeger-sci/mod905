@@ -29,7 +29,7 @@ mass = {'Ar': 1.0}
 name = ['Ar']
 type = [0]
 
-Force field settings
+Forcefield settings
 --------------------
 
 description = Lennard Jones test

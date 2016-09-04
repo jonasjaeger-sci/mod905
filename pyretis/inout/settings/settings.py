@@ -31,9 +31,9 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 
 MAX_POT = 99  # For practical reasons, just limit this.
 SECTIONS = OrderedDict()
-SECTIONS['heading'] = {'title': '{} input settings'.format(NAME),
-                       'text': 'For more info, please see: {}\n'.format(URL) +\
-                               'Have fun!'}
+TITLE = '{} input settings'.format(NAME)
+HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
+SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
 SECTIONS['simulation'] = {'task': None,
                           'steps': None,
                           'startcycle': None,
@@ -55,14 +55,14 @@ SECTIONS['particles'] = {'position': None,
                          'velocity': None,
                          'mass': None,
                          'name': None,
-                         'type': None}
+                         'type': None,
+                         'npart': None}
 SECTIONS['forcefield'] = {'description': None}
 SECTIONS['potential'] = {'class': None,
                          'parameter': None}
 SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
-SECTIONS['output'] = {'bakcup': False,
-                      'exe-path': None}
+SECTIONS['output'] = {'backup': False}
 SECTIONS['analysis'] = {'skipcross': 1000,
                         'maxblock': 1000,
                         'blockskip': 1,
@@ -73,8 +73,7 @@ SECTIONS['analysis'] = {'skipcross': 1000,
                                  'style': 'pyretis'},
                         'txt-output': 'txt.gz',
                         'report': ['latex', 'rst', 'html'],
-                        'report-dir': None,
-                        'npart': None}
+                        'report-dir': None}
 
 
 SPECIAL_KEY = set(('parameter', ))
@@ -108,11 +107,6 @@ def parse_primitive(text):
         parsed = text.strip()
         success = True
     return parsed, success
-
-
-def look_for_section_mark(string):
-    """Return True if we find a headline marker like '-------'"""
-    return string.startswith('--') or string.startswith('==')
 
 
 def look_for_keyword(line):
@@ -165,11 +159,10 @@ def _parse_sections(inputtxt):
         for the section corresponding to `key`.
     """
     potentials = 0
-    raw_data = {}
-    heading = None
+    raw_data = {'heading': []}
     current_line = None
     previous_line = None
-    add_section = None
+    add_section = 'heading'
     data = []
     for lines in inputtxt:
         current_line, _, _ = lines.strip().partition('#')
@@ -177,7 +170,7 @@ def _parse_sections(inputtxt):
             continue
         else:
             data += [current_line]
-        if look_for_section_mark(current_line):
+        if current_line.startswith('---'):
             if previous_line is None:
                 continue
             section_title = previous_line.split()[0].lower()
@@ -186,19 +179,13 @@ def _parse_sections(inputtxt):
                 potentials += 1
             if section_title not in raw_data:
                 raw_data[section_title] = []
-            if add_section is not None:
-                raw_data[add_section].extend(data[:-2])
-                data = []
-            else:
-                # All data before first section is assumed
-                # to just be a heading.
-                heading = data[:-2]
-                data = []
+            raw_data[add_section].extend(data[:-2])
+            data = []
             add_section = section_title
         previous_line = current_line
     if add_section is not None:
         raw_data[add_section].extend(data)
-    return raw_data, heading
+    return raw_data
 
 
 def _parse_raw_section(raw_section, section):
@@ -223,6 +210,11 @@ def _parse_raw_section(raw_section, section):
         logger.warning(msgtxt)
         # unknown section, just ignore silently
         return None
+    if section == 'heading':
+        if len(raw_section) == 0:
+            return None
+        else:
+            return {'text': '\n'.join(raw_section)}
     merged = []
     # first we merge text that is split across line.
     # this is done by assuming that keyword separate settings
@@ -377,7 +369,7 @@ def parse_settings_file(filename, add_default=True):
         A dictionary with settings for pyretis.
     """
     with open(filename, 'r') as fileh:
-        raw_sections, _ = _parse_sections(fileh)
+        raw_sections = _parse_sections(fileh)
     settings = _parse_all_raw_sections(raw_sections)
     if add_default:
         logger.debug('Adding default settings')
@@ -395,33 +387,27 @@ def settings_to_text(settings):
 
     Returns
     ------
-    out[0] : list of strings
-        The strings representing titles
-    out[1] : list of string
-        Strings representing section markers (i.e. "lines").
-    out[2] : list of strings
-        String representing settings for a section.
+    out : string
+        Text represeting the settings.
     """
-    title = []
-    lines = []
-    raw_data = []
+    txt = []
     for section in SECTIONS:
         if section not in settings:
             continue
         if section == 'potential':
             for pot in settings[section]:
-                title.append(section.capitalize())
-                lines.append(('-') * len(title[-1]))
-                raw_data.append(section_to_text(pot))
+                title = section.capitalize()
+                line = ('-') * len(title)
+                raw_data = section_to_text(pot)
+                txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
         elif section == 'heading':
-            title.append(settings[section]['title'])
-            lines.append(('=') * len(title[-1]))
-            raw_data.append(settings[section]['text'])
+            txt.append('{}\n\n'.format(settings[section]['text']))
         else:
-            title.append('{} settings'.format(section.capitalize()))
-            lines.append(('-') * len(title[-1]))
-            raw_data.append(section_to_text(settings[section]))
-    return title, lines, raw_data
+            title = '{} settings'.format(section.capitalize())
+            line = ('-') * len(title)
+            raw_data = section_to_text(settings[section])
+            txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
+    return ''.join(txt)
 
 
 def section_to_text(settings, prefix=None):
@@ -484,6 +470,5 @@ def write_settings_file(settings, outfile, backup=True):
         if msg:
             logger.warning(msg)
     with open(outfile, 'w') as fileh:
-        title, lines, raw_data = settings_to_text(settings)
-        for tit, line, raw in zip(title, lines, raw_data):
-            fileh.write('{}\n{}\n{}\n\n'.format(tit, line, raw))
+        txt = settings_to_text(settings)
+        fileh.write(txt)
