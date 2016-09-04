@@ -15,7 +15,7 @@
   :ref:`transition interface sampling <user-guide-tis-theory>`
   and :ref:`replica exchange transition interface sampling <user-guide-retis-theory>`.
 
-  pyretis is :ref:`open source <pyretis-license>`, designed to be easy to use
+  pyretis is :ref:`open source <pyretis-license>`, easy to use
   and can be interfaced with other simulation packages such as GROMACS or CP2K.
 
   You can use the pyretis :ref:`library <api-doc>` to set up tailored
@@ -23,20 +23,6 @@
   to run different kinds of path sampling simulations. Please see the
   :ref:`user guide <user-guide-index>` for information about the usage and
   how to :ref:`obtain pyretis! <user-guide-install>`
-
-  .. code-block:: python
-
-    from pyretis.core import create_system, create_simulation, create_force_field
-    settings = {'task': 'tis',
-                'interfaces': [-1.0, 0.0, 1.0],
-                # more settings...
-               }
-    system = create_system(settings)
-    system.forcefield = create_force_field(settings)
-    simulation = create_simulation(settings, system)
-    for results in simulation.run():
-        print(results)  # print out calculated properties
-
 
 .. toctree::
     :maxdepth: 2

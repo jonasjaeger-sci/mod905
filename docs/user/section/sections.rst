@@ -13,6 +13,7 @@ The pyretis sections are:
     :hidden:
 
     box.rst
+    forcefield.rst
     integrator.rst
     orderparameter.rst
     particles.rst
@@ -21,6 +22,7 @@ The pyretis sections are:
     system.rst
 
 * :ref:`box <user-section-box>`: for defining a simulation box.
+* :ref:`forcefield <user-section-forcefield>`: for defining a forcefield.
 * :ref:`integrator <user-section-integrator>`: for defining the integrator for the simulation.
 * :ref:`orderparameter <user-section-orderparameter>`: for defining the order parameter.
 * :ref:`particles <user-section-particles>`: for defining initial state of partices.
