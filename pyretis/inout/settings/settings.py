@@ -43,10 +43,10 @@ SECTIONS['system'] = {'dimensions': 3,
                       'temperature': 1.0,
                       'units': 'lj'}
 SECTIONS['unit-system'] = {'name': None,
-                          'length': None,
-                          'mass': None,
-                          'energy': None,
-                          'charge': None}
+                           'length': None,
+                           'mass': None,
+                           'energy': None,
+                           'charge': None}
 SECTIONS['integrator'] = {'class': None,
                           'module': None}
 SECTIONS['box'] = {'size': None,
@@ -61,6 +61,22 @@ SECTIONS['potential'] = {'class': None,
                          'parameter': None}
 SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
+SECTIONS['output'] = {'bakcup': False,
+                      'exe-path': None}
+SECTIONS['analysis'] = {'skipcross': 1000,
+                        'maxblock': 1000,
+                        'blockskip': 1,
+                        'bins': 100,
+                        'ngrid': 1001,
+                        'maxordermsd': 100,
+                        'plot': {'plotter': 'mpl', 'output': 'png',
+                                 'style': 'pyretis'},
+                        'txt-output': 'txt.gz',
+                        'report': ['latex', 'rst', 'html'],
+                        'report-dir': None,
+                        'npart': None}
+
+
 SPECIAL_KEY = set(('parameter', ))
 ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'integrator'))
 
@@ -288,7 +304,7 @@ def _add_default_settings(settings):
     None, but this method might add data to the input settings.
     """
     for sec in SECTIONS:
-        if not sec in settings:
+        if sec not in settings:
             settings[sec] = {}
         for key in SECTIONS[sec]:
             if SECTIONS[sec][key] is not None and key not in settings[sec]:
