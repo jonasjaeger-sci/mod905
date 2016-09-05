@@ -88,14 +88,12 @@ class OrderParameterWCAJCP1(OrderParameter):
         if potential_func is None:
             return r
         if r < 1.2:
-            E = (potential_func.potential(particles, system.box) +
-                 0.5 * m * (dxdv)**2)
+            E = potential_func.potential(system) + 0.5 * m * (dxdv)**2
             orderp = 1.19
             if E < 1.5:
                 orderp = 1.18 - (1.5 - E) / 0.5 * 0.02
         elif r > 1.42:
-            E = (potential_func.potential(particles, system.box) +
-                 0.5 * m * (dxdv)**2)
+            E = potential_func.potential(system) + 0.5 * m * (dxdv)**2
             orderp = 1.43
             if E < 5.0:
                 orderp = 1.44 + (5.0 - E) / 0.5 * 0.02
