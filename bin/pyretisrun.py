@@ -248,6 +248,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
         for task in output_tasks:
             task.output(result)
 
+
 def run_retis_simulation(sim, sim_settings, progress=False,
                          position=0):
     """This will run a RETIS simulation.
@@ -293,7 +294,9 @@ def run_retis_simulation(sim, sim_settings, progress=False,
                       desc='RETIS',
                       position=position):
         for task, ensemble in zip(output_tasks, sim.path_ensembles):
-            print('Ensemble path-length:', ensemble.ensemble_name, ensemble.last_path.length)
+            print('Ensemble path-length:',
+                  ensemble.ensemble_name,
+                  ensemble.last_path.length)
             result['pathensemble'] = ensemble
             task.output(result)
         print('\nStep:', result['cycle']['step']+1)
