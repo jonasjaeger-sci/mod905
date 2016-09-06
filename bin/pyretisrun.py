@@ -37,7 +37,7 @@ from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
-from pyretis.core.units import create_conversion_factors
+from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout import create_output
 from pyretis.inout.common import (check_python_version,
@@ -211,7 +211,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Starting MD simulation')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
+    for result in tqd(sim.run(), total=sim_settings['simulation']['steps'],
                       desc='# MD step'):
         for task in output_tasks:
             task.output(result)
@@ -242,7 +242,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Running TIS ensemble simulation')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
+    for result in tqd(sim.run(), total=sim_settings['simulation']['steps'],
                       desc='# Ensemble {}'.format(sim_settings['ensemble']),
                       position=position):
         for task in output_tasks:
@@ -449,19 +449,21 @@ if __name__ == '__main__':
         print_and_loginfo('Reading input settings')
         settings = parse_settings_file(inputfile)
         settings['exe-path'] = runpath
-        create_conversion_factors(settings['system']['units'],
-                                 **settings['units-system'])
-
+        print_and_loginfo('Initiaizing unit system.')
+        units_from_settings(settings)
         print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
+        print_and_loginfo('Creating force field')
         system.forcefield = create_force_field(settings)
+        print_and_loginfo('Creating order parameter')
         system.order_function = create_orderparameter(settings)
+        if system.order_function is None:
+            print_and_loginfo('-> No order parameter was created!')
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
-
-        task = settings['simulation']['task']
-        print_and_loginfo('Will run simulation: "{}"'.format(taks))
+        task = settings['simulation']['task'].lower()
+        print_and_loginfo('Will run simulation: "{}"'.format(task))
         runner = _RUNNERS.get(task, run_generic_simulation)
         runner(simulation, settings, progress=args_dict['progress'])
     except Exception as error:  # Exceptions should subclass BaseException.
@@ -475,12 +477,13 @@ if __name__ == '__main__':
         if simulation is not None:
             end = getattr(simulation, 'cycle', {'step': None})['step']
             if end is not None:
-                settings['endcycle'] = end
+                settings['simulation']['endcycle'] = end
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
             settings['particles']['npart'] = system.particles.npart
         outfile = '_out-{}'.format(inputfile)
         outpath = os.path.join(basepath, outfile)
         print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
-        write_settings_file(settings, outpath, backup=False)
+        write_settings_file(settings, outpath,
+                            backup=settings['output']['backup'])
         bye_bye_world()

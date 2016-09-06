@@ -62,7 +62,15 @@ SECTIONS['potential'] = {'class': None,
                          'parameter': None}
 SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
-SECTIONS['output'] = {'backup': False}
+SECTIONS['output'] = {'backup': False,
+                      'directory': None,
+                      'energy-file': 10,
+                      'cross-file': 1,
+                      'order-file': 10,
+                      'pathensemble-file': 1,
+                      'trajectory-file': 100,
+                      'energy-screen': 10,
+                      'write_vel': False}
 SECTIONS['analysis'] = {'skipcross': 1000,
                         'maxblock': 1000,
                         'blockskip': 1,

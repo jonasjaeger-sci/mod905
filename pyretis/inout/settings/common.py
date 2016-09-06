@@ -160,15 +160,15 @@ def create_external(settings, key, factory, required_methods,
         try:
             key_settings = settings[key]
         except KeyError:
-            msg = 'No {} settings found!'.format(key)
-            logger.critical(msg)
+            msg = 'No {} settings found. Skipping set-up.'.format(key)
+            logger.debug(msg)
             return None
     module = key_settings.get('module', None)
     klass = None
     try:
         klass = key_settings['class']
     except KeyError:
-        msg = 'No {} "class" specified!'.format(key)
+        msg = 'No "{}" setting "class" specified!'.format(key)
         logger.critical(msg)
         raise ValueError(msg)
     if module is None:

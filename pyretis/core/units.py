@@ -895,6 +895,48 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
                                 charge_unit=charge_unit)
 
 
+def units_from_settings(settings):
+    """Helper method to set up units from given input settings.
+
+    Parameters
+    ----------
+    settings : dict
+        A dict defining the units.
+
+    Returns
+    -------
+    N/A but generate conversion factors based on the given settings.
+    """
+    unit = settings['system']['units'].lower()
+    if 'unit-system' in settings:
+        try:
+            unit2 = settings['unit-system']['name'].lower()
+        except KeyError:
+            msg = 'Could not find "name" setting for section "unit-system"!'
+            logger.critical(msg)
+            raise ValueError(msg)
+        if not unit2 == unit:
+            msg = 'Inconsisten unit settings "{}" != "{}"'.format(unit, unit2)
+            logger.critical(msg)
+            raise ValueError(msg)
+        setts = {}
+        for key in ('length', 'energy', 'mass', 'charge_unit'):
+            try:
+                setts[key] = settings['unit-system'][key]
+            except KeyError:
+                msg = 'Could not find "{}" for section "unit-system"!'
+                msg = msg.format(key)
+                logger.critical(msg)
+                raise ValueError(msg)
+            msg = 'Creating (custom) unit system: "{}"'.format(unit)
+            logger.debug(msg)
+            create_conversion_factors(unit, **setts)
+    else:
+        msg = 'Creating unit: "{}"'.format(unit)
+        logger.debug(msg)
+        create_conversion_factors(unit)
+
+
 if __name__ == '__main__':
     # This is intended as an example of how to use the functions
     # here to generate conversion factors for systems. This in case you

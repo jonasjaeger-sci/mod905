@@ -39,3 +39,12 @@ Potential
 class = PairLennardJonesCutnp
 shift = True
 parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
+
+Output
+------
+backup = False # True, False, Append
+energy-file = 10
+order-file = 10
+cross-file = 1
+trajectory-file = 10
+write-vel = True

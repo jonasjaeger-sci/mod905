@@ -25,8 +25,7 @@ from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
 from pyretis.core.pathensemble import (PathEnsemble,
                                        PATH_DIR_FMT,
                                        create_path_ensembles)
-from pyretis.inout.settings.common import (create_integrator,
-                                           check_settings)
+from pyretis.inout.settings.common import create_integrator
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -49,9 +48,23 @@ def create_nve_simulation(settings, system):
     out : object like `Simulation`
         The object representing the simulation to run.
     """
+    if 'integrator' not in settings:
+        msgtxt = 'No integrator settings found!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     integ = create_integrator(settings)
-    return SimulationNVE(system, integ, steps=settings['steps'],
-                         startcycle=settings.get('startcycle', 0))
+    if integ is None:
+        msgtxt = 'No integrator created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
+    sim = settings['simulation']
+    for key in ('steps',):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
+    return SimulationNVE(system, integ, steps=sim['steps'],
+                         startcycle=sim.get('startcycle', 0))
 
 
 def create_mdflux_simulation(settings, system):
@@ -70,6 +83,10 @@ def create_mdflux_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
+    if integ is None:
+        msgtxt = 'No integrator created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     return SimulationMDFlux(system, integ, settings['interfaces'],
                             steps=settings['steps'],
                             startcycle=settings.get('startcycle', 0))
@@ -122,6 +139,10 @@ def create_tis_single_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
+    if integ is None:
+        msgtxt = 'No integrator created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     if 'path-ensemble' in settings:
         path_ensemble = settings['path-ensemble']
     else:
@@ -149,6 +170,10 @@ def create_retis_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
+    if integ is None:
+        msgtxt = 'No integrator created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     path_ensembles, _ = create_path_ensembles(settings['interfaces'],
                                               include_zero=True)
     return SimulationRETIS(system, integ,
@@ -256,11 +281,9 @@ def create_simulation(settings, system):
     out : object like `Simulation` from `pyretis.core.simulation.simulation`.
         This object will correspond to the selected simulation type.
     """
-    sim_type = settings['task'].lower()
-    settings['task'] = sim_type  # just to be consistent
+    sim_type = settings['simulation']['task'].lower()
     sim_map = {'md-nve': {'create': create_nve_simulation,
-                          'single': True,
-                          'required': ('steps', 'integrator')},
+                          'single': True},
                'md-flux': {'create': create_mdflux_simulation,
                            'single': True,
                            'required': ('steps', 'integrator', 'interfaces')},
@@ -287,11 +310,6 @@ def create_simulation(settings, system):
         raise ValueError(msgtxt)
     else:
         sim = sim_map[sim_type]
-        settings_ok, not_found = check_settings(settings, sim['required'])
-        if not settings_ok:
-            msgtxt = '{} settings not found: {}'.format(sim_type, not_found)
-            logger.error(msgtxt)
-            raise ValueError('Required simulation setting not found!')
         if sim['single']:
             simulation = sim['create'](settings, system)
             msgtxt = ('Created simulation:\n'

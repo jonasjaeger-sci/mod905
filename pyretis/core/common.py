@@ -144,12 +144,16 @@ def _pick_out_arg_kwargs(klass, settings):
             continue
         if arg in settings:
             kwargs[arg] = settings[arg]
-            used.add(arg)
-    for key in settings:
-        if key not in used:
-            msg = 'Superfluous setting "{}" ignored for "{}"!'.format(key,
-                                                                      klass)
-            logger.warning(msg)
+            # used.add(arg)
+    # add special keys as used:
+    # used.add('class')
+    # used.add('parameter')
+    # used.add('module')
+    # for key in settings:
+    #     if key not in used:
+    #        msg = 'Superfluous setting "{}" ignored for "{}"!'.format(key,
+    #                                                                  klass)
+    #        logger.warning(msg)
     return args, kwargs
 
 

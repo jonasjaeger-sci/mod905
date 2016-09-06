@@ -498,7 +498,7 @@ def create_system(settings):
     """
     particles, size, vel = create_initial_positions(settings)
     box = create_box(settings, size, dim=particles.dim)
-    system = System(temperature=settings.get('temperature', None),
+    system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
