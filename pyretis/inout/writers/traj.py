@@ -215,6 +215,9 @@ class TrajGRO(Writer):
         `nm/ps`.
     frame : integer
         The number of frames written.
+    write_vel : boolean
+        Determines if we should write the velocity in addition to the
+        positions.
 
     References
     ----------
@@ -224,11 +227,12 @@ class TrajGRO(Writer):
     """
     heading = 'Trajectory output. Frame: {}'
 
-    def __init__(self, units):
+    def __init__(self, units, write_vel):
         """Initiate the gromacs writer."""
         super(TrajGRO, self).__init__('TrajGRO', header=None)
         self.atomnames = []
         self.frame = 0  # number of frames written
+        self.write_vel = write_vel
         try:
             self.convert_pos = CONVERT['length'][units, 'nm']
             self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
@@ -312,7 +316,7 @@ class TrajGRO(Writer):
         self.frame += 1
         return buff
 
-    def generate_output(self, system, header=None, write_vel=False):
+    def generate_output(self, system, header=None):
         """Write a configuration in gromacs format.
 
         This is a method for writing a configuration in GRO-format.
@@ -326,15 +330,13 @@ class TrajGRO(Writer):
             The system object with the positions to write
         header : string, optional
             Header to use for writing the frame.
-        write_vel : boolean, optional
-            If true, velocities will be written
 
         Yields
         ------
         out : string
             The lines in the XYZ-snapshot.
         """
-        velocity = None if not write_vel else system.particles.vel
+        velocity = None if not self.write_vel else system.particles.vel
         for lines in self.gro_format(system.particles.npart,
                                      system.particles.pos,
                                      velocity,
