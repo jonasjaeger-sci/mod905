@@ -35,7 +35,7 @@ logger.addHandler(logging.NullHandler())
 
 # define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
-_GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.4f}{8:8.4f}{9:8.4f}'
+_GRO_VEL_FMT = _GRO_FMT + '{7:8.4f}{8:8.4f}{9:8.4f}'
 _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 _XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
