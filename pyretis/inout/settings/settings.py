@@ -176,20 +176,25 @@ def _parse_sections(inputtxt):
         current_line, _, _ = lines.strip().partition('#')
         if not current_line:
             continue
-        else:
-            data += [current_line]
         if current_line.startswith('---'):
             if previous_line is None:
                 continue
             section_title = previous_line.split()[0].lower()
-            if section_title == 'potential' and potentials < MAX_POT:
-                section_title = 'potential{:02d}'.format(potentials)
-                potentials += 1
+            if section_title == 'potential':
+                if potentials < MAX_POT:
+                    section_title = 'potential{:02d}'.format(potentials)
+                    potentials += 1
+                else:
+                    logger.critical('If you are having potential-function'
+                                    'problems if feel bad for you son. \n'
+                                    "I got 99 problems but a pot ain't one")
             if section_title not in raw_data:
                 raw_data[section_title] = []
-            raw_data[add_section].extend(data[:-2])
+            raw_data[add_section].extend(data[:-1])
             data = []
             add_section = section_title
+        else:
+            data += [current_line]
         previous_line = current_line
     if add_section is not None:
         raw_data[add_section].extend(data)
