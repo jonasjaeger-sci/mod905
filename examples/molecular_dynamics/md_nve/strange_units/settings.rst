@@ -9,23 +9,24 @@ steps = 1000
 Integrator settings
 -------------------
 class = velocityverlet
-timestep = 0.002
+timestep = 0.08821552861273872
 
 System settings
 ---------------
-temperature = 2.0
-units = lj
+temperature = 239.6000017707801
+units = real
 
 Particles
 ---------
-position = {'file': 'initial.gro'}
+position = {'generate': 'fcc', 'density': 0.02279770663050494,
+            'repeat': [3, 3, 3]}
 
 velocity = {'generate': 'maxwell',
-            'set-temperature': 2.0,
+            'set-temperature': 239.6000017707801,
             'momentum': True,
             'seed': 0}
 
-mass = {'Ar': 1.0}
+mass = {'Ar': 39.948}
 name = ['Ar']
 type = [0]
 
@@ -38,13 +39,13 @@ Potential
 ---------
 class = PairLennardJonesCutnp
 shift = True
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
+parameter 0 = {'sigma': 3.405, 'epsilon': 0.238066991253, 'factor': 2.5}
 
 Output
 ------
 backup = False # True, False, Append
-energy-file = 10
-order-file = 10
+energy-file = 1
+order-file = 1
 cross-file = 1
-trajectory-file = 10
-write_vel = True
+trajectory-file = 1
+write_vel = False
