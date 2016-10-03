@@ -16,27 +16,31 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib as mpl
 
-ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-            'mixing': 'geometric'}
+ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 # Define simulation settings:
-settings = {'task': 'md-nve',
-            'dimensions': 2,
-            'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
-            'steps': 950,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
-            'units': 'lj',
-            'temperature': 1.0,
-            'potentials': [{'class': 'PairLennardJonesCutnp', 'dim': 2,
-                            'shift': True}],
-            'potential-parameters': [ljparams],
-            'particles-position': {'file': 'initial.xyz'},
-            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
-                                   'seed': 0},
-            'box': {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
-                    'periodic': [True, True]}}
-create_conversion_factors(settings['units'])
-SIGMA = CONVERT['length']['lj', 'A']
-ECONV = CONVERT['energy']['lj', 'kcal/mol']
+settings = {}
+settings['system'] = {'temperature': 1.0, 'dimensions': 2,
+                      'units': 'lj'}
+settings['box'] = {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
+                   'periodic': [True, True]}
+settings['simulation'] = {'task': 'md-nve', 'steps': 950}
+settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['output'] = {'backup': False,
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 10}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp',
+                          'dim': 2, 'shift': True,
+                          'mixing': 'geometric',
+                          'parameter': ljparams}]
+settings['particles'] = {'position': {'file': 'initial.xyz'},
+                         'velocity': {'generate': 'maxwell', 'momentum': True,
+                                      'seed': 0}}
+UNIT = settings['system']['units']
+create_conversion_factors(UNIT)
+SIGMA = CONVERT['length'][UNIT, 'A']
+ECONV = CONVERT['energy'][UNIT, 'kcal/mol']
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
@@ -60,8 +64,8 @@ npart = float(npart)
 # update the plot and display it and continue this loop until the
 # simulation is done.
 timeunit = (settings['integrator']['timestep'] *
-            CONVERT['time'][ljsystem.units, 'fs'])
-timeendfs = settings['steps'] * timeunit
+            CONVERT['time'][UNIT, 'fs'])
+timeendfs = settings['simulation']['steps'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
@@ -269,7 +273,8 @@ def init():
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=settings['steps']+1,
+anim = animation.FuncAnimation(fig, update,
+                               frames=settings['simulation']['steps']+1,
                                fargs=[simulation_nve, outputs],
                                repeat=False, interval=2, blit=True,
                                init_func=init)
