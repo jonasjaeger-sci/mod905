@@ -104,8 +104,7 @@ class LennardJonesTest(unittest.TestCase):
         print('\nTesting for a two-component mixture')
         system = set_up_initial_state()
         param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5},
-                 'mixing': 'geometric'}
+                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5}}
         idx = [i for i in range(system.particles.npart)]
         idx2 = np.random.choice(idx, size=int(system.particles.npart * 0.5),
                                 replace=False)
@@ -136,8 +135,7 @@ class LennardJonesTest(unittest.TestCase):
         ncomp = np.random.randint(3, 11)
         print('\nTesting for a {}-component mixture'.format(ncomp))
         system = set_up_initial_state()
-        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 'mixing': 'geometric'}
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
         maxcut = 0.5 * min(system.box.length)
         self.assertGreaterEqual(maxcut, param[0]['rcut'])
 
