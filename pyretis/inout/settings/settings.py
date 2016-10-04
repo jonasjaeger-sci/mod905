@@ -64,6 +64,7 @@ SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
 SECTIONS['output'] = {'backup': False,
                       'directory': None,
+                      'prefix': None,
                       'energy-file': 10,
                       'cross-file': 1,
                       'order-file': 10,

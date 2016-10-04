@@ -180,7 +180,12 @@ class OutputTask(object):
         when = {'every': settings['output'][out['when']]}
         target = out['target']
         if target == 'file':
-            filename = add_dirname(task['filename'],
+            prefix = settings['output'].get('prefix', None)
+            if prefix is not None:
+                filename = '{}{}'.format(prefix, task['filename'])
+            else:
+                filename = task['filename']
+            filename = add_dirname(filename,
                                    settings['output'].get('directory', None))
             try:
                 old = settings['output']['backup'].lower()
