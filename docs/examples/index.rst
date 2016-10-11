@@ -19,7 +19,9 @@ Complete list of examples:
 
 .. toctree::
     :maxdepth: 2
+    :numbered:
 
+    examples-cecam-2016.rst
     examples-mc.rst
     examples-md.rst
     examples-modify.rst

@@ -50,6 +50,7 @@ templates_path = ['_templates']
 
 # Number figures please!
 numfig = True
+numfig_secnum_depth = 1
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
