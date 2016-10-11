@@ -553,10 +553,11 @@ class PathBase(object):
         new_path = self.empty_path()
         for phasepoint in self.trajectory(reverse=True):
             pos = phasepoint[1]
-            vel = phasepoint[2]
             energy = phasepoint[3]
-            if vel is not None:
-                vel *= -1
+            if phasepoint[2] is not None:
+                vel = phasepoint[2] * -1
+            else:
+                vel = phasepoint[2]
             orderp = phasepoint[0]
             app = new_path.append(orderp, pos, vel, energy)
             if not app:
