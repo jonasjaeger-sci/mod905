@@ -8,25 +8,25 @@ Getting started with pyretis
 ============================
 
 After :ref:`installing pyretis <user-guide-install>`, you
-can run simulations, either by using a **text-based input
-file** or by making **explicit use of the pyretis library**:
+can run simulations by:
 
-**The text based input file**:
-   Using the input file is the simplest approach. You will first have
-   to learn how to create this file and this is explained in
+1. Using a **text based input file**.
+   This is the simplest approach. You will first have
+   to learn how to create this file and this is explained in detail
    the :ref:`input description <user-guide-input>`.
 
-**Explicit use of the pyretis library**:
-   The second option offers more freedom in defining, running
-   and interacting with the simulation. However, this approach requires
-   that you study how the pyretis library is structured and build up.
-   This is described in the 
+2. Using **the pyretis library explicitly**. This is a more
+   involved approach, but it offers more freedom in defining, running
+   and interacting with the simulation. In order to make use of the
+   library, you will have to read about the structure of the
+   pyretis library in the 
    :ref:`introduction to the library <user-guide-intro-api>`
    and in the
    :ref:`detailed reference section <api-doc>`.
 
 A more extensive overview can be found in
-the :ref:`full user guide <user-guide-index>`
+the :ref:`full user guide <user-guide-index>`.
+Here, we will now rather jump into some examples showing the use of pyretis!
 
 
 pyretis examples
@@ -39,7 +39,7 @@ the :ref:`example section <examples-index>`.
 
 .. container:: row
 
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
      
       .. container:: thumbnail
 
@@ -51,10 +51,10 @@ the :ref:`example section <examples-index>`.
          
             :header:`Molecular dynamics`
 
-            Interesting example no 4.
+            Simple molecular dynamics
 
 
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
 
       .. container:: thumbnail
 
@@ -70,7 +70,7 @@ the :ref:`example section <examples-index>`.
             simulation.
 
 
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
      
       .. container:: thumbnail
 
@@ -85,8 +85,10 @@ the :ref:`example section <examples-index>`.
             This example is using Replica Exchange Transition Interface Sampling
             for calculating the rate of a simple reaction.
 
+   
+.. container:: row
 
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
 
       .. container:: thumbnail
 
@@ -99,26 +101,25 @@ the :ref:`example section <examples-index>`.
             :header:`Custom order`
 
             This example demonstrates how custom order parameters
-            can be added to pyretis. "Lorem ipsum dolor sit amet,
-            consectetur adipiscing elit, sed do"
+            can be added to pyretis.
 
 
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
      
       .. container:: thumbnail
 
-         .. image:: ../img/examples/thumbnails/placeholder.png
+         .. image:: ../img/examples/thumbnails/pyretisrev.png
             :width: 100%
             :class: img-responsive
 
          .. container:: caption
           
-            :header:`Custom order`
+            :header:`pyretis + C`
 
-            Interesting example no 4.
+            Molecular dynamics powered by Fortran or C.
 
  
-   .. container:: col-sm-6 col-md-3
+    .. container:: col-sm-3
      
       .. container:: thumbnail
 
@@ -128,7 +129,9 @@ the :ref:`example section <examples-index>`.
 
          .. container:: caption
           
-            :header:`Custom order`
+            :header:`pyretis & CP2K`
 
-            Interesting example no 5.
+            RETIS simulations using CP2K.
+
+
 

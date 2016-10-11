@@ -1,12 +1,24 @@
 .. _user-section:
 
-List of pyretis sections
-========================
+Input file sections
+===================
 
 The pyretis input file is structured with sections
-as described in :ref:`the user guide <user-guide-input-structure>`.
+as described in :ref:`the user guide <user-guide-input-structure>`:
 
-The pyretis sections are:
+* The input file is organized into sections where keywords are set:
+
+  .. code-block:: rst
+
+      Section Title
+      -------------
+      keyword = value
+
+* Comments are marked with a #.
+
+* Input is in general not case sensitive unless you are referring to files and python classes.
+
+Here, you can find information about the different sections recognized by pyretis:
 
 .. toctree::
     :maxdepth: 1

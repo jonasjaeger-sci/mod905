@@ -10,10 +10,6 @@ The system section defines some properties of the system.
 units
 ~~~~~
 The ``units`` keyword defines the system of units to use by pyretis.
-The system of units should be one of the systems defined by
-pyretis  or you define your own system of units by making use of a
-special :ref:`units-base <user-section-units-base>` section in combination
-with the ``units`` keyword.
 
 Example:
 
@@ -37,6 +33,11 @@ Currently, the following system of units are defined by pyretis
 - ``si``: A system of units similar to the LAMMPS [2]_ unit si.
 
 - ``gromacs``: A system of units similar to the units used by GROMACS. [4]_
+
+The system of units should be one of the systems defined by
+pyretis listed above. Alternatively, you can define your own unit system by
+making use of a special :ref:`unit-system <user-section-unit-system>` section
+in combination with the ``units`` keyword.
 
 References
 ~~~~~~~~~~

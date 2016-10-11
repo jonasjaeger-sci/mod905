@@ -4,9 +4,12 @@
 }
 
 .jumbotron {
-    background-color: #fff;
+  background-color: #fff;
 }
 
+body {
+  font-size: 16px;
+}
 /* Make footnote [] visible when multiple refs*/
 table.footnote td.label {
   color: inherit;
