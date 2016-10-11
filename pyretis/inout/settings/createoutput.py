@@ -95,10 +95,18 @@ _DEFAULT_OUTPUT['md-flux'] = [{'type': 'orderp',
                               {'type': 'thermo-screen'}]
 
 _DEFAULT_OUTPUT['tis-single'] = [{'type': 'pathensemble',
-                                  'filename': 'pathensemble.dat'},
-                                 {'type': 'pathensemble-screen'}]
+                                  'name': 'tis-path-ensemble',
+                                  'when': {'every': 10},
+                                  'filename': 'pathensemble.dat',
+                                  'settings': {'path': ('ensemble', 'interfaces')}},
+                                 {'type': 'pathensemble-screen',
+                                  'name': 'tis-pathensemble-screen',
+                                  'when': {'every': 10}}]
 
 _DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
+                             'name': 'retis-path-ensemble',
+                             'settings': {'path': ('ensemble', 'interfaces')},
+                             'when': {'every': 10},
                              'filename': 'pathensemble.dat'}]
 
 

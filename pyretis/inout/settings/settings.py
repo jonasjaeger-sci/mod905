@@ -35,6 +35,7 @@ TITLE = '{} input settings'.format(NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
 SECTIONS['simulation'] = {'task': None,
+                          'run_type': None,  # is this one needed?
                           'steps': None,
                           'startcycle': None,
                           'endcycle': None,
@@ -69,9 +70,24 @@ SECTIONS['output'] = {'backup': False,
                       'cross-file': 1,
                       'order-file': 10,
                       'pathensemble-file': 1,
+                      'pathensemble-screen': 10,
                       'trajectory-file': 100,
                       'energy-screen': 10,
                       'write_vel': False}
+SECTIONS['tis'] = {'freq': None,
+                   'maxlength': None,
+                   'aimless': True,
+                   'allowmaxlength': False,
+                   'zero_momentum': False,
+                   'rescale_energy': False,
+                   'sigma_v': -1,
+                   'seed': 0,
+                   'initial_path': 'kick'}
+SECTIONS['retis'] = {'swapfreq': None,
+                     'relative_shoots': None,
+                     'nullmoves': True,
+                     'swapsimul': True}
+SECTIONS['path'] = {'interfaces': None, 'ensemble': None}
 SECTIONS['analysis'] = {'skipcross': 1000,
                         'maxblock': 1000,
                         'blockskip': 1,

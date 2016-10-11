@@ -234,7 +234,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
         Used to control location of progress bars
     """
     # ensure that we create an output directory
-    msg_dir = make_dirs(sim_settings['output-dir'])
+    msg_dir = make_dirs(sim_settings['output']['directory'])
     msgtxt = ('Creating output directory: '
               '{}'.format(msg_dir))
     print_and_loginfo(msgtxt)
@@ -243,7 +243,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
     print_and_loginfo('Running TIS ensemble simulation')
     tqd = use_tqdm(progress)
     for result in tqd(sim.run(), total=sim_settings['simulation']['steps'],
-                      desc='# Ensemble {}'.format(sim_settings['ensemble']),
+                      desc='# Ensemble {}'.format(sim_settings['path']['ensemble']),
                       position=position):
         for task in output_tasks:
             task.output(result)
@@ -272,7 +272,9 @@ def run_retis_simulation(sim, sim_settings, progress=False,
         msg_dir = make_dirs(dirname)
         msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
         print_and_loginfo(msgtxt)
-        sim_settings['output-dir'] = dirname
+        sim_settings['output']['directory'] = dirname
+        sim_settings['path']['ensemble'] = ensemble.ensemble_name
+        print(ensemble.ensemble_name)
         ensemble_task = get_tasks(sim_settings, progress=progress)
         output_tasks.extend(ensemble_task)
     print_to_screen('')
@@ -290,7 +292,7 @@ def run_retis_simulation(sim, sim_settings, progress=False,
     sim.first_step = False  # We have done the "first" step now.
     print_and_loginfo('Starting main RETIS simulation...')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
+    for result in tqd(sim.run(), total=sim_settings['simulation']['steps'],
                       desc='RETIS',
                       position=position):
         for task, ensemble in zip(output_tasks, sim.path_ensembles):
@@ -326,16 +328,17 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    run_type = settings_tis.get('run_type', 'serial')
+    run_type = settings_tis['simulation'].get('run_type', 'serial')
     if run_type == 'write':
         print_and_loginfo('Creation of input files requested.')
         for i, setting in enumerate(settings_all):
-            ens = setting['ensemble']
+            ens = setting['path']['ensemble']
             ensf = PATH_DIR_FMT.format(ens)
             msgtxt = 'Setting up TIS ensemble: {}'.format(ens)
             print_and_loginfo(msgtxt)
-            infile = '{}-{}.rst'.format(setting['task'], ensf)
+            infile = '{}-{}.rst'.format(setting['simulation']['task'], ensf)
             print_and_loginfo('Create file: "{}"'.format(infile))
+            print(setting)
             write_settings_file(setting, infile, backup=False)
             print_and_loginfo('Command for executing:')
             print_and_loginfo('pyretisrun -i {} -p -f {}.log'.format(infile,
@@ -344,7 +347,7 @@ def run_tis_simulation(settings_all, settings_tis, progress=False):
     else:
         simulations = []
         for i, setting in enumerate(settings_all):
-            ens = setting['ensemble']
+            ens = setting['path']['ensemble']
             msgtxt = 'Creating TIS simulation, ensemble: {0}'.format(ens)
             print_and_loginfo(msgtxt)
             simulations.append(create_simulation(setting, system))
@@ -451,7 +454,7 @@ if __name__ == '__main__':
             raise ValueError(errtxt)
         print_and_loginfo('Reading input settings')
         settings = parse_settings_file(inputfile)
-        settings['exe-path'] = runpath
+        settings['simulation']['exe-path'] = runpath
         print_and_loginfo('Initiaizing unit system.')
         units_from_settings(settings)
         print_and_loginfo('Creating system from settings.')

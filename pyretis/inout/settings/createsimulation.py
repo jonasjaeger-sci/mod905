@@ -87,7 +87,7 @@ def create_mdflux_simulation(settings, system):
         msgtxt = 'No integrator created!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
-    return SimulationMDFlux(system, integ, settings['interfaces'],
+    return SimulationMDFlux(system, integ, settings['path']['interfaces'],
                             steps=settings['steps'],
                             startcycle=settings.get('startcycle', 0))
 
@@ -150,8 +150,8 @@ def create_tis_single_simulation(settings, system):
     return SimulationSingleTIS(system, integ,
                                path_ensemble,
                                settings['tis'],
-                               steps=settings['steps'],
-                               startcycle=settings.get('startcycle', 0))
+                               steps=settings['simulation']['steps'],
+                               startcycle=settings['simulation'].get('startcycle', 0))
 
 
 def create_retis_simulation(settings, system):
@@ -174,14 +174,14 @@ def create_retis_simulation(settings, system):
         msgtxt = 'No integrator created!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
-    path_ensembles, _ = create_path_ensembles(settings['interfaces'],
+    path_ensembles, _ = create_path_ensembles(settings['path']['interfaces'],
                                               include_zero=True)
     return SimulationRETIS(system, integ,
                            path_ensembles,
                            settings['tis'],
                            settings['retis'],
-                           steps=settings['steps'],
-                           startcycle=settings.get('startcycle', 0))
+                           steps=settings['simulation']['steps'],
+                           startcycle=settings['simulation'].get('startcycle', 0))
 
 
 def create_path_ensemble(settings):
@@ -198,7 +198,7 @@ def create_path_ensemble(settings):
     out : object like `PathEnsemble`.
         An object that can be used as a path ensemble in simulations.
     """
-    interfaces = settings['interfaces']
+    interfaces = settings['path']['interfaces']
     if len(interfaces) != 3:
         msgtxt = ('Wrong number of interfaces given. Expected 3 '
                   'got {}'.format(len(interfaces)))
@@ -211,13 +211,13 @@ def create_path_ensemble(settings):
         logger.warning(msgtxt)
     else:
         detect = settings['detect']
-    if 'ensemble' not in settings:
+    if 'ensemble' not in settings['path']:
         ensemble_name = 1
         msgtxt = ('Ensemble name not specified, '
                   'using default ensemble "{}"'.format(ensemble_name))
         logger.warning(msgtxt)
     else:
-        ensemble_name = int(settings['ensemble'])
+        ensemble_name = int(settings['path']['ensemble'])
     return PathEnsemble(ensemble_name, interfaces, detect=detect)
 
 
@@ -241,17 +241,23 @@ def create_tis_simulations(settings):
         created here.
     """
     sim_settings = []
-    interfaces = settings['interfaces']
+    interfaces = settings['path']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
     for i, middle in enumerate(interfaces[:-1]):
         local_settings = {}
-        for key in settings:  # this common for all simulations:
-            local_settings[key] = settings[key]
-        local_settings['task'] = 'tis-single'
-        local_settings['ensemble'] = i + 1
-        local_settings['interfaces'] = [reactant, middle, product]
-        local_settings['output-dir'] = PATH_DIR_FMT.format(i + 1)
+        for sec in settings:  # this is common for all simulations:
+            print(sec, settings[sec])
+            local_settings[sec] = {}
+            if sec == 'potential':
+                local_settings[sec] = [j for j in settings[sec]]
+            else:
+                for key in settings[sec]:
+                    local_settings[sec][key] = settings[sec][key]
+        local_settings['simulation']['task'] = 'tis-single'
+        local_settings['path']['interfaces'] = [reactant, middle, product]
+        local_settings['path']['ensemble'] = i + 1
+        local_settings['output']['directory'] = PATH_DIR_FMT.format(i + 1)
         try:
             local_settings['detect'] = interfaces[i + 1]
         except IndexError:

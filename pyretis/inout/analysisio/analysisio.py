@@ -94,7 +94,8 @@ def run_analysis(sim_settings):
         for file_type in FILES[sim_task]:
             filename = FILES[sim_task][file_type]
             if add_outdir:
-                filename = os.path.join(sim_settings['output-dir'], filename)
+                filename = os.path.join(sim_settings['output']['directory'],
+                                        filename)
             if os.path.isfile(filename):
                 raw_data.append((file_type, filename))
         return run_analysis_files(sim_settings, raw_data)

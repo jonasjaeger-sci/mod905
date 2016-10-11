@@ -181,8 +181,9 @@ def create_external(settings, key, factory, required_methods,
         if os.path.isfile(module):
             obj = import_from(module, klass)
         else:
-            if 'exe-path' in settings:
-                module = os.path.join(settings['exe-path'], module)
+            if 'exe-path' in settings['simulation']:
+                module = os.path.join(settings['simulation']['exe-path'],
+                                      module)
                 obj = import_from(module, klass)
             else:
                 msg = 'Could not find module "{}" for {}!'.format(module, key)
