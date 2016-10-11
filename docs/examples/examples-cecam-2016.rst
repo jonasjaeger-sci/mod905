@@ -169,8 +169,12 @@ Here are some examples:
   
   .. code-block:: python
 
-     SETTINGS['potential'] = [{'a': 1.0, 'b': 1.0, 'c': 0.0,
+     SETTINGS['potential'] = [{'a': 0.5, 'b': 1.0, 'c': 0.0,
                                'class': 'DoubleWell'}]
+
+  Note: It is a good idea to plot the potential if you change the
+  parameters. This will allow you to check the position of the
+  interfaces.
 
 
 References
