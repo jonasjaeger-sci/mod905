@@ -407,6 +407,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
         raise ValueError('Forward path not successful.', msg)
     # And the previous phase point backward:
     system.particles.set_phase_point(previous)
+    system.potential_and_force()
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, interfaces,
                                         reverse=True)
@@ -615,9 +616,10 @@ def _fix_path_by_tis(initial_path, system, interfaces,
     path_ok = False
     local_tis_settings = {'allowmaxlength': True,
                           'aimless': True,
-                          'freq': 0.5,
-                          'start_cond': tis_settings['start_cond'],
-                          'maxlength': tis_settings['maxlength']}
+                          'freq': 0.5}
+    for key in ('start_cond', 'maxlength', 'zero_momentum', 'rescale_energy'):
+        local_tis_settings[key] = tis_settings[key]
+
     while not path_ok:
         accept, trial, _ = make_tis_step(initial_path,
                                          system,
