@@ -12,8 +12,8 @@ Introduction and installation
 In this example, we will use the RETIS algorithm to investigate
 the transition between two states for a particle moving in a 1D potential.
 The potential is given by
-:math:`V_{\text{pot}} = a x^4 - (b-c) x^2` where :math:`x` is the position 
-and :math:`a` and :math:`b` are potential parameters.
+:math:`V_{\text{pot}} = a x^4 - b (x-c)^2` where :math:`x` is the position 
+and :math:`a`, :math:`b` and :math:`c` are potential parameters.
 
 .. figure:: ../img/examples/thumbnails/tis-1d-pot.png
     :class: img-responsive center-block
