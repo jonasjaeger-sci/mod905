@@ -32,7 +32,7 @@ But before we can run this script, we need to install the pyretis library and
 
    .. code-block:: bash
 
-      pip install pyretis-cecam-2016
+      pip install pyretis-cecam2016
 
 
    If you want to install the library system wide, you will need
@@ -46,7 +46,7 @@ But before we can run this script, we need to install the pyretis library and
 
    .. code-block:: bash
 
-      pip install --upgrade pyretis-cecam-2016
+      pip install --upgrade pyretis-cecam2016
 
 2. Matplotlib can also be installed using pip. However, for the best
    performance we recommend that you follow a guide specific for your
