@@ -13,6 +13,7 @@ Important classes defined here
 Plotter
     A generic class for creating plots.
 """
+from abc import ABCMeta, abstractmethod
 
 __all__ = ['Plotter']
 
@@ -36,6 +37,8 @@ class Plotter(object):
         Defines an output directory for the plotter.
     """
 
+    __metaclass__ = ABCMeta
+
     def __init__(self, backup=True, plotter_type=None, out_dir=None):
         """Initiate the plotting object.
 
@@ -53,25 +56,30 @@ class Plotter(object):
         self.backup = backup in (True, 'yes', 'True')
         self.out_dir = out_dir
 
+    @abstractmethod
     def plot_flux(self, results):
         """Function that plots flux results."""
-        raise NotImplementedError()
+        return
 
+    @abstractmethod
     def plot_energy(self, results, energies):
         """Function that plots energy results."""
-        raise NotImplementedError()
+        return
 
+    @abstractmethod
     def plot_orderp(self, results, orderdata):
         """Function that plots order parameter results."""
-        raise NotImplementedError()
+        return
 
+    @abstractmethod
     def plot_path(self, path_ensemble, results, idetect):
         """Function that plots path ensemble results."""
-        raise NotImplementedError()
+        return
 
+    @abstractmethod
     def plot_total_probability(self, path_ensembles, detect, matched):
         """Function that plots the overall probability for path ensembles."""
-        raise NotImplementedError()
+        return
 
     def __str__(self):
         """Just print out the basic info."""
