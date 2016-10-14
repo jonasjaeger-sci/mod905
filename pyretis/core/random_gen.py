@@ -17,6 +17,7 @@ ReservoirSampler
     A class for reservoir sampling.
 """
 from __future__ import absolute_import
+from abc import ABCMeta, abstractmethod
 import logging
 import numpy as np
 from numpy.random import RandomState
@@ -29,8 +30,163 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['RandomGenerator', 'ReservoirSampler']
 
 
-class RandomGenerator(object):
-    """RandomGenerator(object) - A random number generator.
+class RandomGeneratorBase(object):
+    """RandomGeneratorBase - A base class for the generators
+
+    This is a base class for random number generators. It does not
+    actually implement a generator.
+
+    Attributes
+    ----------
+    seed : int
+        A seed for the generator
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, seed=None):
+        """Initiate the random number generator.
+
+        Parameters
+        ----------
+        seed : int, optional
+            An integer used for seeding the generator if needed.
+        """
+        self.seed = seed
+
+    @abstractmethod
+    def rand(self, shape=1):
+        """Draw random numbers in [0, 1).
+
+        Parameters
+        ----------
+        shape : int
+            Number of numbers to draw
+
+        Returns
+        -------
+        out : float
+            Pseudo random number in [0, 1)
+        """
+        return
+
+    @abstractmethod
+    def random_integers(self, low, high, size=None):
+        """Draw random integers in [low, high].
+
+        Parameters
+        ----------
+        low : int
+            This is the lower limit
+        high : int
+            This is the upper limit
+        size : int or tuple of ints, optional
+            Output shape. Default is None, in which case a
+            single value is returned.
+
+        Returns
+        -------
+        out : int
+            The pseudo random integers in [low, high].
+        """
+        return
+
+    @abstractmethod
+    def normal(self, loc=0.0, scale=1.0, size=None):
+        """Return values from a normal distribution.
+
+        Parameters
+        ----------
+        loc : float, optional
+            The mean of the distribution
+        scale : float, optional
+            The standard deviation of the distribution
+        size : int, tuple of ints, optional
+            Output shape, i.e. how many values to generate. Default is
+            None which is just a single value.
+
+        Returns
+        -------
+        out : float, numpy.array of floats
+            The random numbers generated
+        """
+        return
+
+    @abstractmethod
+    def multivariate_normal(self, mean, cov, cho=None, size=1):
+        """Draw numbers from a multi-variate distribution.
+
+        Parameters
+        ----------
+        mean : numpy array (1D, 2)
+            Mean of the N-dimensional array
+        cov : numpy array (2D, (2, 2))
+            Covariance matrix of the distribution.
+        cho : numpy.array (2D, (2, 2)), optional
+            Cholesky factorization of cov. If not given,
+            it will be calculated here.
+        size : int, optional.
+            Number of samples to do.
+
+        Returns
+        -------
+        out : float or numpy.array of floats size
+            The random numbers drawn.
+        """
+        return
+
+    @abstractmethod
+    def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
+                                       dof, selection=None, momentum=True):
+        """Generate velocities from a Maxwell distribution.
+
+        The velocities are drawn to match a given temperature and this
+        function can be applied to a sub-set of the particles.
+
+        Parameters
+        ----------
+        particles : object like `Particles` from `pyretis.core.particles`
+            These are the particles to set the velocity of.
+        boltzmann : float
+            The Boltzmann factor in correct units.
+        temperature : float
+            The desired temperature.
+            Typically, `system.temperature['set']` will be used here.
+        dof : list of floats, optional
+            dof is the degrees of freedom to subtract. It's shape should
+            be equal to the number of dimensions.
+        selection : list of ints, optional
+            A list with indexes of the particles to consider.
+            Can be used to only apply it to a selection of particles
+        momentum : boolean
+            If true, we will reset the momentum.
+
+        Returns
+        -------
+        out : None
+            Returns `None` but modifies velocities of the selected
+            particles.
+        """
+        return
+
+    @abstractmethod
+    def draw_maxwellian_velocities(self, system, sigma_v=None):
+        """Simple function to draw numbers from a Gaussian distribution.
+
+        Parameters
+        ----------
+        system : object like `System` from `pyretis.core.system`
+            This is used to determine the temperature parameter(s) and
+            the shape (number of particles and dimensionality)
+        sigma_v : numpy.array, optional
+            Standard deviation in velocity, one for each particle.
+            If it's not given it will be estimated.
+        """
+        return
+
+
+class RandomGenerator(RandomGeneratorBase):
+    """RandomGenerator(RandomGeneratorBase) - A random number generator.
 
     This class that defines a random number generator. It will use
     `numpy.random.RandomState` for the actual generation, and we refer
@@ -41,6 +197,8 @@ class RandomGenerator(object):
 
     Attributes
     ----------
+    seed : int
+        A seed for the pseudo-random generator.
     rgen : object like `RandomState`
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy [#]_.
@@ -62,6 +220,7 @@ class RandomGenerator(object):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
+        super(RandomGenerator, self).__init__(seed=seed)
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
