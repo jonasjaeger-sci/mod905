@@ -79,7 +79,7 @@ class RandomGenerator(object):
         """
         return self.rgen.rand(shape)
 
-    def random_integers(self, low, high):
+    def random_integers(self, low, high, size=None):
         """Draw random integers in [low, high].
 
         Parameters
@@ -88,13 +88,16 @@ class RandomGenerator(object):
             This is the lower limit
         high : int
             This is the upper limit
+        size : int or tuple of ints, optional
+            Output shape. Default is None, in which case a
+            single value is returned.
 
         Returns
         -------
         out : int
-            This is a pseudo random integer in [low, high]
+            The pseudo random integers in [low, high].
         """
-        return self.rgen.random_integers(low, high)
+        return self.rgen.random_integers(low, high, size=size)
 
     def normal(self, loc=0.0, scale=1.0, size=None):
         """Return values from a normal distribution.
