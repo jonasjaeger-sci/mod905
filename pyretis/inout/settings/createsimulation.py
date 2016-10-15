@@ -107,20 +107,21 @@ def create_umbrellaw_simulation(settings, system):
     out : list of object(s) like `Simulation`
         The object(s) representing the simulation(s) to run.
     """
+    sim_sett = settings['simulation']
     try:
-        rgen = settings['rgen']
+        rgen = sim_sett['rgen']
     except KeyError:
         msg = 'No random generator specified, will initiate one.'
         logger.info(msg)
-        if 'seed' not in settings:
+        if 'seed' not in sim_sett:
             msg = 'No random seed given. Will just use "0"'
             logger.warning(msg)
-        rgen = RandomGenerator(seed=settings.get('seed', 0))
-    return UmbrellaWindowSimulation(system, settings['umbrella'],
-                                    settings['over'], rgen,
-                                    settings['maxdx'],
-                                    mincycle=settings['mincycle'],
-                                    startcycle=settings.get('startcycle', 0))
+        rgen = RandomGenerator(seed=sim_sett.get('seed', 0))
+    return UmbrellaWindowSimulation(system, sim_sett['umbrella'],
+                                    sim_sett['over'], rgen,
+                                    sim_sett['maxdx'],
+                                    mincycle=sim_sett['mincycle'],
+                                    startcycle=sim_sett.get('startcycle', 0))
 
 
 def create_tis_single_simulation(settings, system):
