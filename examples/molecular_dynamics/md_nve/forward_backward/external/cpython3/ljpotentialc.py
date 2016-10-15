@@ -11,7 +11,6 @@ from pyretis.forcefield.potentials.pairpotentials import generate_pair_interacti
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-print(sys.path)
 try:
     import ljc
 except ImportError:

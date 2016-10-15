@@ -23,11 +23,12 @@ module = {'fortran': 'fortran/ljpotentialf.py',
 
 USE = 'cpython3'
 # or
-USE = 'fortran'
+#USE = 'fortran'
 
 settings = {}
 settings['simulation'] = {'task': 'md-nve',
-                          'steps': 2000}
+                          'steps': 2000,
+                          'exe-path': ''}
 settings['system'] = {'units': 'lj',
                       'temperature': 2.5,
                       'dimensions': 3}
@@ -46,7 +47,7 @@ settings['potential'] = [{'class': klass[USE],
                                             'epsilon': 1,
                                             'factor': 2.5}},
                           'shift': True}]
-settings['particles'] = {'position': {'file': 'initial.gro'},
+settings['particles'] = {'position': {'file': 'initial2.gro'},
                          'velocity': {'generate': 'maxwell',
                                       'momentum': True,
                                       'seed': 0}}
