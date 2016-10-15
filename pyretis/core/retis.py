@@ -191,17 +191,18 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
         output = [None for path_ensemble in ensembles]
         idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
                                                      relative)
-        # just to TIS for the ensemble we picked:
+        # Do TIS for the ensemble we picked:
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
         output[idx] = ['tis', accept, trial, status]
+        #output[idx] = ['tis', status, trial, accept]
         # and do null moves for the others if requested:
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)
-                    output[idx] = ['nullmove']
+                    output[idx] = ['nullmove', 'ACC']
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
@@ -215,7 +216,8 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
                                                            cycle)
             # msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
             # logger.info(msgtxt)
-            output.append(['tis', accept, trial, status])
+            #output.append(['tis', accept, trial, status])
+            output.append(['tis', status, trial, accept])
     return output
 
 
@@ -275,18 +277,18 @@ def retis_moves(ensembles, system, integrator, rgen,
         for idx in range(scheme, len(ensembles) - 1, 2):
             status = retis_swap(ensembles, idx, system,
                                 integrator, settings, cycle)
-            output[idx] = ['swap', status]
-            output[idx+1] = ['swap', status]
+            output[idx] = ['swap', status, idx+1]
+            output[idx+1] = ['swap', status, idx]
         if settings['retis']['nullmoves']:
             if len(ensembles) % 2 != scheme:  # missed last
                 # this is perhaps strange but it's equal to:
                 # (scheme == 0 and len(ensembles) % 2 != 0) or
                 # (scheme == 1 and len(ensembles) % 2 == 0)
                 null_move(ensembles[-1], cycle)
-                output[-1] = ['nullmove']
+                output[-1] = ['nullmove', 'ACC']
             if scheme == 1:  # we did not include [0^-]
                 null_move(ensembles[0], cycle)
-                output[0] = ['nullmove']
+                output[0] = ['nullmove', 'ACC']
     else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
         status = retis_swap(ensembles, idx, system, integrator,
@@ -297,7 +299,7 @@ def retis_moves(ensembles, system, integrator, rgen,
                     output[idxo] = ['swap', status]
                 else:
                     null_move(path_ensemble, cycle)
-                    output[idxo] = ['nullmove']
+                    output[idxo] = ['nullmove', 'ACC']
     return output
 
 

@@ -87,9 +87,10 @@ def create_mdflux_simulation(settings, system):
         msgtxt = 'No integrator created!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
+    sim = settings['simulation']
     return SimulationMDFlux(system, integ, settings['path']['interfaces'],
-                            steps=settings['steps'],
-                            startcycle=settings.get('startcycle', 0))
+                            steps=sim['steps'],
+                            startcycle=sim.get('startcycle', 0))
 
 
 def create_umbrellaw_simulation(settings, system):
@@ -107,25 +108,29 @@ def create_umbrellaw_simulation(settings, system):
     out : list of object(s) like `Simulation`
         The object(s) representing the simulation(s) to run.
     """
-    sim_sett = settings['simulation']
+    sim = settings['simulation']
     try:
-        rgen = sim_sett['rgen']
+        rgen = sim['rgen']
     except KeyError:
         msg = 'No random generator specified, will initiate one.'
         logger.info(msg)
-        if 'seed' not in sim_sett:
+        if 'seed' not in sim:
             msg = 'No random seed given. Will just use "0"'
             logger.warning(msg)
-        rgen = RandomGenerator(seed=sim_sett.get('seed', 0))
-    return UmbrellaWindowSimulation(system, sim_sett['umbrella'],
-                                    sim_sett['over'], rgen,
-                                    sim_sett['maxdx'],
-                                    mincycle=sim_sett['mincycle'],
-                                    startcycle=sim_sett.get('startcycle', 0))
+        rgen = RandomGenerator(seed=sim.get('seed', 0))
+    return UmbrellaWindowSimulation(system, sim['umbrella'],
+                                    sim['over'], rgen,
+                                    sim['maxdx'],
+                                    mincycle=sim['mincycle'],
+                                    startcycle=sim.get('startcycle', 0))
 
 
-def create_tis_single_simulation(settings, system):
-    """This will set up and create a single TIS simulation.
+def create_tis_simulations(settings, system):
+    """This will set up and create a series of TIS simulations.
+
+    This method will for each interface set up a single TIS simulation.
+    These simulations can then be run in series, parallel or written
+    out as settings files that pyretis can run.
 
     Parameters
     ----------
@@ -133,6 +138,48 @@ def create_tis_single_simulation(settings, system):
         The settings needed to set up the simulation.
     system : object like `System`
         The system we are going to simulate.
+
+    Returns
+    -------
+    sim_settings : list of dicts
+        `sim_settings[i]` is a dictionary with settings for running
+        simulation i. Note that the actual simulation object is not
+        created here.
+    """
+    sim_settings = []
+    interfaces = settings['path']['interfaces']
+    reactant = interfaces[0]
+    product = interfaces[-1]
+    if len(interfaces) <= 3:
+        return _create_tis_single_simulation(settings, system)
+    else:
+        for i, middle in enumerate(interfaces[:-1]):
+            local_settings = {}
+            for sec in settings:  # this is common for all simulations:
+                local_settings[sec] = {}
+                if sec == 'potential':
+                    local_settings[sec] = [j for j in settings[sec]]
+                else:
+                    for key in settings[sec]:
+                        local_settings[sec][key] = settings[sec][key]
+            local_settings['path']['interfaces'] = [reactant, middle, product]
+            local_settings['path']['ensemble'] = i + 1
+            local_settings['output']['directory'] = PATH_DIR_FMT.format(i + 1)
+            try:
+                local_settings['path']['detect'] = interfaces[i + 1]
+            except IndexError:
+                local_settings['path']['detect'] = product
+            sim_settings.append(local_settings)
+        return sim_settings
+
+
+def _create_tis_single_simulation(settings, system):
+    """This will set up and create a single TIS simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings needed to set up the simulation.
 
     Returns
     -------
@@ -148,11 +195,12 @@ def create_tis_single_simulation(settings, system):
         path_ensemble = settings['path-ensemble']
     else:
         path_ensemble = create_path_ensemble(settings)
+    sim = settings['simulation']
     return SimulationSingleTIS(system, integ,
                                path_ensemble,
                                settings['tis'],
-                               steps=settings['simulation']['steps'],
-                               startcycle=settings['simulation'].get('startcycle', 0))
+                               steps=sim['steps'],
+                               startcycle=sim.get('startcycle', 0))
 
 
 def create_retis_simulation(settings, system):
@@ -177,12 +225,13 @@ def create_retis_simulation(settings, system):
         raise ValueError(msgtxt)
     path_ensembles, _ = create_path_ensembles(settings['path']['interfaces'],
                                               include_zero=True)
+    sim = settings['simulation']
     return SimulationRETIS(system, integ,
                            path_ensembles,
                            settings['tis'],
                            settings['retis'],
-                           steps=settings['simulation']['steps'],
-                           startcycle=settings['simulation'].get('startcycle', 0))
+                           steps=sim['steps'],
+                           startcycle=sim.get('startcycle', 0))
 
 
 def create_path_ensemble(settings):
@@ -205,13 +254,13 @@ def create_path_ensemble(settings):
                   'got {}'.format(len(interfaces)))
         logger.error(msgtxt)
         raise ValueError(msgtxt)
-    if 'detect' not in settings:
+    if 'detect' not in settings['path']:
         detect = interfaces[-1]
         msgtxt = ('Detect-interface not specified, '
                   'using "product" interface: {}'.format(detect))
         logger.warning(msgtxt)
     else:
-        detect = settings['detect']
+        detect = settings['path']['detect']
     if 'ensemble' not in settings['path']:
         ensemble_name = 1
         msgtxt = ('Ensemble name not specified, '
@@ -220,51 +269,6 @@ def create_path_ensemble(settings):
     else:
         ensemble_name = int(settings['path']['ensemble'])
     return PathEnsemble(ensemble_name, interfaces, detect=detect)
-
-
-def create_tis_simulations(settings):
-    """This will set up and create a series of TIS simulations.
-
-    This method will for each interface set up a single TIS simulation.
-    These simulations can then be run in series, parallel or written
-    out as settings files that pyretis can run.
-
-    Parameters
-    ----------
-    settings : dict
-        The settings needed to set up the simulation.
-
-    Returns
-    -------
-    sim_settings : list of dicts
-        `sim_settings[i]` is a dictionary with settings for running
-        simulation i. Note that the actual simulation object is not
-        created here.
-    """
-    sim_settings = []
-    interfaces = settings['path']['interfaces']
-    reactant = interfaces[0]
-    product = interfaces[-1]
-    for i, middle in enumerate(interfaces[:-1]):
-        local_settings = {}
-        for sec in settings:  # this is common for all simulations:
-            print(sec, settings[sec])
-            local_settings[sec] = {}
-            if sec == 'potential':
-                local_settings[sec] = [j for j in settings[sec]]
-            else:
-                for key in settings[sec]:
-                    local_settings[sec][key] = settings[sec][key]
-        local_settings['simulation']['task'] = 'tis-single'
-        local_settings['path']['interfaces'] = [reactant, middle, product]
-        local_settings['path']['ensemble'] = i + 1
-        local_settings['output']['directory'] = PATH_DIR_FMT.format(i + 1)
-        try:
-            local_settings['detect'] = interfaces[i + 1]
-        except IndexError:
-            local_settings['detect'] = product
-        sim_settings.append(local_settings)
-    return sim_settings
 
 
 def create_simulation(settings, system):
@@ -289,39 +293,35 @@ def create_simulation(settings, system):
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()
-    sim_map = {'md-nve': {'create': create_nve_simulation,
-                          'single': True},
-               'md-flux': {'create': create_mdflux_simulation,
-                           'single': True,
-                           'required': ('steps', 'integrator', 'interfaces')},
-               'umbrellawindow': {'create': create_umbrellaw_simulation,
-                                  'single': True,
-                                  'required': ('umbrella', 'over', 'maxdx',
-                                               'mincycle')},
-               'tis': {'create': create_tis_simulations,
-                       'single': False,
-                       'required': ('steps', 'tis', 'integrator',
-                                    'interfaces')},
-               'tis-single': {'create': create_tis_single_simulation,
-                              'single': True,
-                              'required': ('steps', 'tis', 'integrator',
-                                           'interfaces')},
-               'retis': {'create': create_retis_simulation,
-                         'single': True,
-                         'required': ('steps', 'tis', 'integrator',
-                                      'interfaces', 'retis')}}
-
+    #sim_map = {'md-nve': {'create': create_nve_simulation,
+    #                      'single': True},
+    #           'md-flux': {'create': create_mdflux_simulation,
+    #                       'single': True,
+    #                       'required': ('steps', 'integrator', 'interfaces')},
+    #           'umbrellawindow': {'create': create_umbrellaw_simulation,
+    #                              'single': True,
+    #                              'required': ('umbrella', 'over', 'maxdx',
+    #                                           'mincycle')},
+    #           'tis': {'create': create_tis_simulations,
+    #                   'single': False,
+    #                   'required': ('steps', 'tis', 'integrator',
+    #                                'interfaces')},
+    #           'retis': {'create': create_retis_simulation,
+    #                     'single': True,
+    #                     'required': ('steps', 'tis', 'integrator',
+    #                                  'interfaces', 'retis')}}
+    sim_map = {'md-nve': create_nve_simulation,
+               'md-flux': create_mdflux_simulation,
+               'umbrellawindow': create_umbrellaw_simulation,
+               'tis': create_tis_simulations,
+               'retis': create_retis_simulation}
     if sim_type not in sim_map:
         msgtxt = 'Unknown simulation task {}'.format(sim_type)
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     else:
-        sim = sim_map[sim_type]
-        if sim['single']:
-            simulation = sim['create'](settings, system)
-            msgtxt = ('Created simulation:\n'
-                      '{}'.format(simulation))
-            logger.info(msgtxt)
-        else:
-            simulation = sim['create'](settings)
+        simulation = sim_map[sim_type](settings, system)
+        msgtxt = ('Created simulation:\n'
+                  '{}'.format(simulation))
+        logger.info(msgtxt)
         return simulation

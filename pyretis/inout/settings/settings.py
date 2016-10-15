@@ -34,35 +34,46 @@ SECTIONS = OrderedDict()
 TITLE = '{} input settings'.format(NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
+
 SECTIONS['simulation'] = {'task': None,
                           'run_type': None,  # is this one needed?
                           'steps': None,
                           'startcycle': None,
                           'endcycle': None,
-                          'ensemble': None}
+                          'ensemble': None,
+                          'exe-path': None}
+
 SECTIONS['system'] = {'dimensions': 3,
                       'temperature': 1.0,
                       'units': 'lj'}
+
 SECTIONS['unit-system'] = {'name': None,
                            'length': None,
                            'mass': None,
                            'energy': None,
                            'charge': None}
+
 SECTIONS['integrator'] = {'class': None,
                           'module': None}
+
 SECTIONS['box'] = {'size': None,
                    'periodic': None}
+
 SECTIONS['particles'] = {'position': None,
                          'velocity': None,
                          'mass': None,
                          'name': None,
                          'type': None,
                          'npart': None}
+
 SECTIONS['forcefield'] = {'description': None}
+
 SECTIONS['potential'] = {'class': None,
                          'parameter': None}
+
 SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
+
 SECTIONS['output'] = {'backup': False,
                       'directory': None,
                       'prefix': None,
@@ -74,6 +85,7 @@ SECTIONS['output'] = {'backup': False,
                       'trajectory-file': 100,
                       'energy-screen': 10,
                       'write_vel': False}
+
 SECTIONS['tis'] = {'freq': None,
                    'maxlength': None,
                    'aimless': True,
@@ -83,11 +95,16 @@ SECTIONS['tis'] = {'freq': None,
                    'sigma_v': -1,
                    'seed': 0,
                    'initial_path': 'kick'}
+
 SECTIONS['retis'] = {'swapfreq': None,
                      'relative_shoots': None,
                      'nullmoves': True,
                      'swapsimul': True}
-SECTIONS['path'] = {'interfaces': None, 'ensemble': None}
+
+SECTIONS['path'] = {'interfaces': None,
+                    'ensemble': None,
+                    'detect': None}
+
 SECTIONS['analysis'] = {'skipcross': 1000,
                         'maxblock': 1000,
                         'blockskip': 1,

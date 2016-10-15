@@ -905,7 +905,10 @@ def units_from_settings(settings):
 
     Returns
     -------
-    N/A but generate conversion factors based on the given settings.
+    msg : string
+        Just a string with some information about the units
+        created. This can be used for printing out some info to
+        the user.
     """
     unit = settings['system']['units'].lower()
     if 'unit-system' in settings:
@@ -935,6 +938,7 @@ def units_from_settings(settings):
         msg = 'Creating unit: "{}"'.format(unit)
         logger.debug(msg)
         create_conversion_factors(unit)
+    return msg
 
 
 if __name__ == '__main__':
