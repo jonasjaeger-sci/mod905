@@ -106,7 +106,7 @@ previously reported data of van Erp. [4]_ [5]_
 Modifying the RETIS simulation
 ------------------------------
 
-The dictionary ``SETTINGS`` defined in the ``retis_move.py`` script defines
+The dictionary ``SETTINGS`` in the ``retis_move.py`` script defines
 the simulation. Changing the values in this dictionary will modify the simulation.
 
 Here are some examples:
