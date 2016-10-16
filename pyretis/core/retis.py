@@ -191,7 +191,6 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
         output = [None for path_ensemble in ensembles]
         idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
                                                      relative)
-        # Do TIS for the ensemble we picked:
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
@@ -206,17 +205,12 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
-            # msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
-            # logger.info(msgtxt)
             accept, trial, status = make_tis_step_ensemble(path_ensemble,
                                                            system,
                                                            integrator,
                                                            rgen,
                                                            settings['tis'],
                                                            cycle)
-            # msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
-            # logger.info(msgtxt)
-            #output.append(['tis', accept, trial, status])
             output.append(['tis', status, trial, accept])
     return output
 
@@ -425,6 +419,7 @@ def retis_swap_zero(ensembles, system, integrator,
     ensemble1 = ensembles[1]
     # 1) Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
+    logger.debug('Creating path for [0^-]')
     pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
@@ -442,6 +437,7 @@ def retis_swap_zero(ensembles, system, integrator,
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
+    logger.debug('Creating path for [0^+]')
     # This path will be generated starting from the LAST point of [0^-] which
     # should be on the right side of the interface. We will also add the
     # SECOND LAST point from [0^-] which should be on the left side of the
@@ -497,7 +493,7 @@ def null_move(path_ensemble, cycle):
         last accepted path.
     """
     msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
-    logger.info(msg)
+    logger.debug(msg)
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)

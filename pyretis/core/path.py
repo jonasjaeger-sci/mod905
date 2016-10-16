@@ -357,7 +357,7 @@ class PathBase(object):
             end = 'R'
         else:
             end = None
-            logger.info('Undefined end point.')
+            logger.debug('Undefined end point.')
         return end
 
     def get_start_point(self, left, right):
@@ -385,7 +385,7 @@ class PathBase(object):
             start = 'R'
         else:
             start = None
-            logger.info('Undefined starting point.')
+            logger.debug('Undefined starting point.')
         return start
 
     def get_shooting_point(self):
@@ -570,15 +570,15 @@ class PathBase(object):
         """Return a simple string representation of the Path."""
         msg = ['Path with length {} (max: {})'.format(self.length,
                                                       self.maxlen)]
-        msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
-        msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
+        msg += ['Order parameter max: {}'.format(self.ordermax)]
+        msg += ['Order parameter min: {}'.format(self.ordermin)]
         if self.length > 0:
-            msg += ['\tStart {}'.format(self.order[0][0])]
-            msg += ['\tEnd {}'.format(self.order[-1][0])]
+            msg += ['Start {}'.format(self.order[0][0])]
+            msg += ['End {}'.format(self.order[-1][0])]
         if self.status:
-            msg += ['\tStatus: {}'.format(_STATUS[self.status])]
+            msg += ['Status: {}'.format(_STATUS[self.status])]
         if self.generated:
-            msg += ['\tGenerated: {}'.format(_GENERATED[self.generated[0]])]
+            msg += ['Generated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
 
     def empty_path(self, **kwargs):
@@ -691,8 +691,8 @@ class Path(PathBase):
             self.length += 1
             return True
         else:
-            msg = 'Path length exceeded! Could not append to path!'
-            logger.info(msg)
+            msg = 'Max length exceeded! Could not append to path!'
+            logger.debug(msg)
             return False
 
     def get_shooting_point(self):
@@ -825,7 +825,7 @@ class ReservoirPath(PathBase):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logger.info(msg)
+            logger.debug(msg)
             return False
 
     def get_shooting_point(self):

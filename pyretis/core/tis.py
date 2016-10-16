@@ -12,6 +12,10 @@ Important methods defined here
 make_tis_step
     Function that will perform a single TIS step.
 
+make_tis_step_ensemble
+    Function to preform a TIS step for a path ensemble. It will handle
+    adding of the path to a path ensemble object.
+
 generate_initial_path_kick
     Function for generating an initial path by repeatedly kicking a
     phase point.
@@ -34,7 +38,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['make_tis_step', 'generate_initial_path_kick']
+__all__ = ['make_tis_step_ensemble', 'make_tis_step',
+           'generate_initial_path_kick']
 
 
 def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
@@ -76,12 +81,19 @@ def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
         The status of the path
     """
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
+    msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
+    logger.debug(msgtxt)
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
                                           path_ensemble.interfaces,
                                           integrator,
                                           rgen,
                                           tis_settings)
+    if accept:
+        msgtxt = 'The move was accepted'
+    else:
+        msgtxt = 'The move was rejected ({})'.format(status)
+    logger.debug(msgtxt)
     path_ensemble.add_path_data(trial, status, cycle=cycle)
     return accept, trial, status
 
@@ -169,9 +181,11 @@ def make_tis_step(path, system, interfaces, integrator, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
+        logger.debug('Selected a time reversal move.')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
+        logger.debug('Selected a shooting move.')
         accept, new_path, status = _shoot(path, system, interfaces,
                                           integrator, rgen,
                                           tis_settings)

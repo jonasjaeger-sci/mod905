@@ -152,7 +152,10 @@ class Integrator(object):
         thermo : boolean
             If True, we will do some extra calculation of energies.
         """
-        status = 'Generating path...'
+        if reverse:
+            status = 'Generating backward path...'
+        else:
+            status = 'Generating forward path...'
         logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
@@ -186,7 +189,7 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
-        msg = 'Propagate done: "{}" (success: {}'.format(status, success)
+        msg = 'Propagate done: "{}" (success: {})'.format(status, success)
         logger.debug(msg)
         return success, status
 

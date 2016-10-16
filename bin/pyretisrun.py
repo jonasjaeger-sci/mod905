@@ -89,7 +89,9 @@ def get_formatter(level):
     out : object like ``logging.Formatter``
         An object that can be used as a formatter for a logger.
     """
-    if level <= logging.DEBUG:
+    if level < logging.DEBUG:
+        # Note: This will not happen. This formatter is intended
+        # for development and debugging.
         return PyretisLogFormatterDebug(LOG_DEBUG_FMT)
     else:
         return PyretisLogFormatter(LOG_FMT)
@@ -245,16 +247,25 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    # ensure that we create an output directory
+    # Ensure that we create an output directory
     msg_dir = make_dirs(sim_settings['output']['directory'])
     msgtxt = ('Creating output directory: '
               '{}'.format(msg_dir))
     print_and_loginfo(msgtxt)
-    # create output tasks:
+    # Create output tasks:
     output_tasks = get_tasks(sim_settings, progress=progress)
-    print_and_loginfo('Running TIS ensemble simulation')
+    print_and_loginfo(None)
+    print_and_loginfo('Starting TIS simulation!')
+    print_and_loginfo('Generating initial path...')
+    result = sim.step()
+    path = result['trialpath']
+    print_and_loginfo('Initiated path: {}'.format(path))
+    print_and_loginfo(None)
+    for task in output_tasks:
+        task.output(result)
+    # Start the full simulation:
     tqd = use_tqdm(progress)
-    nsteps = sim.cycle['end'] - sim.cycle['step']
+    nsteps = (sim.cycle['end'] - sim.cycle['step']) - 1  # -1 for init
     desc = 'Ensemble {}'.format(sim_settings['path']['ensemble'])
     for result in tqd(sim.run(), total=nsteps, desc=desc):
         for task in output_tasks:
@@ -284,34 +295,35 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         sim_settings['output']['directory'] = dirname
         sim_settings['path']['ensemble'] = ensemble.ensemble_name
         ensemble_task = get_tasks(sim_settings, progress=progress)
-        output_tasks.extend(ensemble_task)
+        #output_tasks.extend(ensemble_task)
+        output_tasks.append(ensemble_task)
     print_to_screen('')
-    print_and_loginfo('Running RETIS ensemble simulation')
-    print_and_loginfo('Initializing the path ensembles...')
+    print_and_loginfo('Running RETIS simulation!')
+    print_and_loginfo('Initializing path ensembles...')
     # Here we explicitly do the initialization. This is just
     # because we want to print out some info!
-    for task, ensemble in zip(output_tasks, sim.path_ensembles):
-        print_and_loginfo('Initiating in {}'.format(ensemble.ensemble_name))
+    for tasks, ensemble in zip(output_tasks, sim.path_ensembles):
+        print_and_loginfo('Initiating in {}:'.format(ensemble.ensemble_name))
         path = sim.initiate_ensemble(ensemble)
-        print_and_loginfo('Initial path: {}'.format(path))
+        print_and_loginfo('{}'.format(path))
         print_to_screen('')
         result = {'pathensemble': ensemble, 'cycle': sim.cycle}
-        task.output(result)
+        for task in tasks:
+            task.output(result)
     sim.first_step = False  # We have done the "first" step now.
-    print_and_loginfo('Starting main RETIS simulation...')
+    print_and_loginfo('Starting main RETIS simulation!')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
     for result in tqd(sim.run(), total=nsteps, desc='RETIS'):
-        for task, ensemble in zip(output_tasks, sim.path_ensembles):
-            #print('Ensemble path-length:',
-            #      ensemble.ensemble_name,
-            #      ensemble.last_path.length)
+        for tasks, ensemble in zip(output_tasks, sim.path_ensembles):
             result['pathensemble'] = ensemble
-            task.output(result)
-        print('\nStep:', result['cycle']['step']+1)
-        for res, ensemble in zip(result['retis'], sim.path_ensembles):
-            print(ensemble.ensemble_name, res[0], res[1])
-        print()
+            for task in tasks:
+                task.output(result)
+        if not progress:
+            print('\nStep:', result['cycle']['step']+1)
+            for res, ensemble in zip(result['retis'], sim.path_ensembles):
+                print(ensemble.ensemble_name, res[0], res[1])
+            print()
 
 
 def run_tis_simulation(settings_sim, settings_tis, progress=False):
