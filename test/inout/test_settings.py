@@ -36,6 +36,9 @@ from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 
 
+LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
 def _test_correct_parsing(test, data, correct):
     """Helper method to test that we correctly parse settings.
 
@@ -65,8 +68,7 @@ class KeywordParsing(unittest.TestCase):
 
     def test_parse_file(self):
         """Test that we can parse an input file."""
-        here = os.path.abspath(os.path.dirname(__file__))
-        inputfile = os.path.join(here, 'settings.rst')
+        inputfile = os.path.join(LOCAL_DIR, 'settings.rst')
         settings = parse_settings_file(inputfile)
         correct = {}
         correct['system'] = {'units': 'lj',
@@ -211,8 +213,7 @@ extra = 100
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['simulation']['exe-path'] = here
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         foointegrator = create_integrator(settings)
         self.assertEqual(foointegrator.delta_t,
                          correct['integrator']['timestep'])
@@ -245,10 +246,9 @@ extra = 100
                          'class = dummy')
         correct.append({'integrator': {'module': 'dummy', 'class': 'dummy'}})
 
-        here = os.path.abspath(os.path.dirname(__file__))
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
-            settings['simulation']['exe-path'] = here
+            settings['simulation'] = {'exe-path': LOCAL_DIR}
             args = [settings]
             self.assertRaises(ValueError, create_integrator, *args)
 
@@ -326,8 +326,7 @@ name = Dummy"""
         # Here we add the exe-path key to the settings to tell
         # pyretis where we are executing from. This is to locate the
         # script we want to run.
-        here = os.path.abspath(os.path.dirname(__file__))
-        settings['simulation']['exe-path'] = here
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         orderp = create_orderparameter(settings)
         self.assertEqual(orderp.name,
                          correct['orderparameter']['name'])
@@ -357,10 +356,9 @@ name = Dummy"""
                                            'module': 'fooorderparameter.py'}})
         correct.append({'orderparameter': {'class': 'BazOrderParameter',
                                            'module': 'fooorderparameter.py'}})
-        here = os.path.abspath(os.path.dirname(__file__))
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
-            settings['simulation']['exe-path'] = here
+            settings['simulation'] = {'exe-path': LOCAL_DIR}
             args = [settings]
             self.assertRaises(ValueError, create_orderparameter, *args)
 
@@ -594,7 +592,7 @@ units = lj"""
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
@@ -628,7 +626,7 @@ units = gromacs"""
         settings = _test_correct_parsing(self, data, correct)
         # Add path to the file for this test:
         create_conversion_factors(settings['system']['units'])
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
         self.assertTrue(np.allclose(size, [2., 2., 2.]))
@@ -673,7 +671,7 @@ units = lj
         units = settings['system']['units']
         create_conversion_factors(units)
         # Add path to the file for this test:
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertFalse(vel_read)
         self.assertIsNone(size)
@@ -824,7 +822,7 @@ parameter a = 2.0"""
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
         # add path for testing:
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         potentials, pot_param = create_potentials(settings)
         self.assertIsInstance(potentials[0], PotentialFunction)
         self.assertAlmostEqual(potentials[0].params['a'], 0.0)
@@ -845,7 +843,7 @@ parameter a = 2.0"""
                                   'parameter': {'a': 2.0}}]}
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         args = [settings]
         self.assertRaises(ValueError, create_potentials, *args)
 
@@ -890,7 +888,7 @@ parameter a = 10.0"""
                                   'parameter': {'a': 10.0}}]}
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
-        settings['simulation']['exe-path'] = os.path.abspath(os.path.dirname(__file__))
+        settings['simulation'] = {'exe-path': LOCAL_DIR}
         forcefield = create_force_field(settings)
         self.assertEqual(len(forcefield.potential), 3)
         self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
