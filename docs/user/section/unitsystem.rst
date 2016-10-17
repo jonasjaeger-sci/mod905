@@ -23,10 +23,10 @@ Example:
     length = (1.0, 'bohr')
     mass = (9.81e-31, 'kg')
     energy = (1.0, 'kcal/mol')
-    charge_unit = e
+    charge = e
 
 For the ``unit-system`` section the scale for each dimension
-(``'length'``, ``'mass'``, ``'energy'`` and ``'charge_unit'``)
+(``'length'``, ``'mass'``, ``'energy'`` and ``'charge'``)
 need to be supplied on the form
 
 .. code-block:: rst

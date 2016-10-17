@@ -217,7 +217,7 @@ units keyword and defining the base units with ``units-base``:
     units-base = {'length': (1.0, 'bohr'),
                   'mass': (9.81e-31, 'kg'),
                   'energy': (1.0, 'kcal/mol'),
-                  'charge_unit': 'e'}
+                  'charge': 'e'}
 
 Note again that this will influence how the input parameters are
 interpreted and again note that input configuration files will be
@@ -254,8 +254,8 @@ Mass:
   * ``g``: Gram.
   * ``kg``: Kilogram.
 
-For the ``charge_unit``, there it is currently only possible to define the
-unit as either ``e`` for the electron charge or ``C`` for Coulomb.
+For the ``charge`` setting, there it is currently only possible to define the
+unit as either ``e`` (for the electron charge) or ``C`` (for Coulomb).
 
 
 References
