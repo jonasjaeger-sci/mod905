@@ -91,7 +91,8 @@ def get_formatter(level):
     """
     if level < logging.DEBUG:
         # Note: This will not happen. This formatter is intended
-        # for development and debugging.
+        # for development and debugging. Change to
+        # level <= logging.DEBUG to use it at set the loglevel to debug.
         return PyretisLogFormatterDebug(LOG_DEBUG_FMT)
     else:
         return PyretisLogFormatter(LOG_FMT)
