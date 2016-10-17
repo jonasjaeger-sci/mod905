@@ -351,6 +351,10 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
         run_tis_single_simulation(settings_sim, settings_tis,
                                   progress=progress)
     else:
+        print_and_loginfo(None)
+        print_and_loginfo('Noted several path ensembles.')
+        print_and_loginfo('Will just create input files...')
+        print_and_loginfo(None)
         for setting in settings_sim:
             ens = setting['path']['ensemble']
             ensf = PATH_DIR_FMT.format(ens)
