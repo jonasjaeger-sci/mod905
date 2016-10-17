@@ -50,7 +50,7 @@ simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
 table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header)
+thermo_file = FileIO('thermo.dat', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]

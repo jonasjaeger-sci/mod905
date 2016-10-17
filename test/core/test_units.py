@@ -23,7 +23,7 @@ class UnitsTest(unittest.TestCase):
         create_conversion_factors('lj', length=(3.405, 'A'),
                                   energy=(119.8, 'kB'),
                                   mass=(39.948, 'g/mol'),
-                                  charge_unit='e')
+                                  charge='e')
         self.assertAlmostEqual(CONVERT['length']['bohr', 'nm'],
                                0.052917721067000, 12)
         self.assertAlmostEqual(CONVERT['length']['lj', 'nm'],
@@ -51,7 +51,7 @@ class UnitsTest(unittest.TestCase):
         """Test that we create correct cgs units."""
         create_conversion_factors('cgs', length=(0.01, 'm'),
                                   energy=(1.0e-7, 'J'),
-                                  mass=(1.0, 'g'), charge_unit='e')
+                                  mass=(1.0, 'g'), charge='e')
         self.assertAlmostEqual(CONVERT['force']['cgs', 'dyn'],
                                1.0, 12)
         self.assertAlmostEqual(CONVERT['force']['cgs', 'N'],
@@ -97,18 +97,18 @@ class UnitsTest(unittest.TestCase):
         """Test that creation of units works and fails as expected."""
         self.assertRaises(ValueError, create_conversion_factors, ['test'],
                           dict(length=None, energy=None, mass=None,
-                               charge_unit=None))
+                               charge=None))
         self.assertRaises(ValueError, create_conversion_factors, ['test'],
                           dict(length=(1.0, 'm'), energy=(1.0, 'J'),
-                               mass=(1.0, 'kg'), charge_unit=None))
+                               mass=(1.0, 'kg'), charge=None))
         self.assertRaises(ValueError, create_conversion_factors, ['test'],
                           dict(length=(1.0, 'm'), energy=(1.0, 'J'),
                                mass=(1.0, 'kg'),
-                               charge_unit='a non-existing unit'))
+                               charge='a non-existing unit'))
         # the next one should be successful
         create_conversion_factors('test', length=(1.0, 'm'),
                                   energy=(1.0, 'J'), mass=(1.0, 'kg'),
-                                  charge_unit='e')
+                                  charge='e')
         # check if we indeed created all conversions
         for key in CONVERT:
             dimtxt = 'for dimension "{}"'.format(key)
@@ -124,7 +124,7 @@ class UnitsTest(unittest.TestCase):
 
         self.assertRaises(ValueError, create_conversion_factors, ['test'],
                           dict(length=(1.0, 'm'), energy=(1.0, 'J'),
-                               mass=(1.0, 'kg'), charge_unit=(100, 'e')))
+                               mass=(1.0, 'kg'), charge=(100, 'e')))
 
     def test_read_from_file(self):
         """Test that we can read units from a input file."""

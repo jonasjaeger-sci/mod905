@@ -4,7 +4,7 @@
 The outcome of the md_nve.py simulation should be independent (to numerical
 precision) of the units used. This script will test that by comparing:
 
-- the output in `thermo.txt`
+- the output in `thermo.dat`
 
 - the generated trajectory, `traj.gro`
 
@@ -74,8 +74,8 @@ if __name__ == '__main__':
     create_conversion_factors(UNIT)
     generate_system_conversions('lj', UNIT)
     compare_traj('../traj.gro', 'traj.gro')
-    ljunits = np.loadtxt('../thermo.txt')
-    other_units = np.loadtxt('thermo.txt')
+    ljunits = np.loadtxt('../thermo.dat')
+    other_units = np.loadtxt('thermo.dat')
     # convert other_units:
     other_units[:, 1] *= CONVERT['temperature'][UNIT, 'lj']
     other_units[:, 2:5] *= CONVERT['energy'][UNIT, 'lj']
