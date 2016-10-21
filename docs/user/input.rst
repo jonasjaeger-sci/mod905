@@ -116,6 +116,16 @@ Note that the values set by the keywords might be
   and pyretis will expect this file to be present with exactly
   this file name.     
 
+- When defining your own system of units:
+
+  .. code-block:: rst
+
+      Unit-system
+      -----------
+      length = (1.0, 'm')
+
+  Here, we are using a unit of 1 metre which is identified with
+  a ``'m'`` and not a ``'M'``.
 
 You can also add text and comments to structure the input file:
 
