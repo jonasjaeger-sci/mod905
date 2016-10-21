@@ -21,7 +21,7 @@ Here, we will discuss
 the :ref:`structure of the input file <user-guide-input-structure>`
 and some of the :ref:`sections <user-guide-input-sections>`
 the input file is organized into. We refer to the
-:ref:`pyretisrun documentation <user-guide-application>`.
+:ref:`pyretisrun documentation <user-guide-application>`
 for more information about the usage of the ``pyretisrun`` application.
 
 
