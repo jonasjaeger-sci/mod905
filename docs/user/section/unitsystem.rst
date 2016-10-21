@@ -40,3 +40,4 @@ selected ``'dimension'``.
 For an overview of the possible base units, please see
 the description in the manual section
 :ref:`describing units in pyretis <user-units-custom>`.
+Also note that the ``baseunit`` is **case sensitive**!

@@ -4,7 +4,7 @@ pyretis units
 =============
 
 pyretis simulations are always carried out with a consistent
-set of units. A system of units are defined by specifying
+set of units. A system of units is defined by specifying
 the energy scale, :math:`E`, the length scale, :math:`L`, and the
 mass scale, :math:`M`.
 This implicitly defines the time scale, :math:`T`, as
@@ -208,19 +208,25 @@ Defining your own system of units
 ---------------------------------
 Defining your own system of units is basically just a matter of choosing
 the energy, length and mass scales. Typically this is done by setting the
-units keyword and defining the base units with ``units-base``:
+units keyword and defining the base units in the 
+section :ref:`Unit-system <user-section-unit-system>`:
 
-.. code-block:: python
+.. code-block:: rst
 
+    System
+    ------
     units = new-system
 
-    units-base = {'length': (1.0, 'bohr'),
-                  'mass': (9.81e-31, 'kg'),
-                  'energy': (1.0, 'kcal/mol'),
-                  'charge': 'e'}
+    Unit-system
+    -----------
+    name = new-system
+    length = (1.0, 'bohr')
+    mass = (9.81e-31, 'kg')
+    energy = (1.0, 'kcal/mol')
+    charge = e
 
 Note again that this will influence how the input parameters are
-interpreted and again note that input configuration files will be
+interpreted and that the input configuration files will be
 converted to the internal unit system. In the example above, a
 configuration read from a xyz-file will be converted from
 Ångström to Bohr for internal calculations.
@@ -228,10 +234,11 @@ The syntax for specifying a new scale for a dimension is of form
 
 .. code-block:: python
 
-    'dimension': (value, unit)
+    'dimension' = (value, unit)
 
 Where the ``value`` is a number defining the scale and ``unit`` a text string
-which defines the unit to use. For each dimension, pyretis defines a set of
+which defines the unit to use. This text string is case sensitive.
+For each dimension, pyretis defines a set of
 "known" units to choose from:
 
 Length:
