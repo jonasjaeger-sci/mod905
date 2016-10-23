@@ -362,7 +362,7 @@ def create_initial_positions(settings):
     elif 'file' in settings['particles']['position']:
         # First check if we need to add a path to the file:
         filename = settings['particles']['position']['file']
-        if not (os.path.isfile(filename) and
+        if (not os.path.isfile(filename) and
                 'exe-path' in settings['simulation']):
             filename = os.path.join(settings['simulation']['exe-path'],
                                     filename)
