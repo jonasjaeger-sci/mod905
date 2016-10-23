@@ -61,14 +61,12 @@ class DoublePendulumn(PotentialFunction):
         out : float
             The potential energy.
         """
-        g = self.g
-        pos = system.particles.pos
+        costheta1 = np.cos(system.particles.pos[0][0])
+        costheta2 = np.cos(system.particles.pos[1][0])
         m1 = system.particles.mass[0][0]
         m2 = system.particles.mass[1][0]
-        y1 = -self.l1 * np.cos(pos[0][0])
-        y2 = y1 - self.l2 * np.cos(pos[1][0])
-        pot = m1*g*y1 + m2*g*y2
-        return pot
+        return -self.g * ((m1 + m2) * self.l1 * costheta1 +
+                          m2 * self.l2 * costheta2)
 
     def force(self, system):
         """Evaluate forces for the double pendulum.
@@ -95,26 +93,25 @@ class DoublePendulumn(PotentialFunction):
         m2 = system.particles.mass[1][0]
         theta1 = pos[0][0]
         theta2 = pos[1][0]
-        sintheta1 = np.sin(theta1)
-        costheta1 = np.cos(theta1)
-        sintheta2 = np.sin(theta2)
-        costheta2 = np.cos(theta2)
         dtheta1 = vel[0][0]
         dtheta2 = vel[1][0]
-        denom = 2.0*m1 + m2 - m2*np.cos(2.0*theta1 - 2.0*theta2)
-        atheta1 = -g*(2.0*m1 + m2)*sintheta1
-        atheta1 += -m2*g*np.sin(theta1 - 2.0*theta2)
-        atheta1 += (-2.0*np.sin(theta1 - theta2)*m2*
-                    (dtheta2**2*l2 + dtheta1**2*l1*np.cos(theta1 - theta2)))
-        atheta1 /= (l1 * denom)
-        atheta2 = (dtheta1**2*l1*(m1 + m2) + g*(m1 + m2)*costheta1 +
-                   dtheta2**2*l2*m2*np.cos(theta1 - theta2))
-        atheta2 *= 2.0*np.sin(theta1 - theta2)
-        atheta2 /= (l2 * denom)
+        dth = theta1 - theta2
+        M = m2 / (m1 + m2)
+        l = l2 / l1
+        wsq = g / l1
+        denom = l*(1.0 - M*np.cos(dth)**2)
+        atheta1 = wsq*l*(-np.sin(theta1) + M*np.cos(dth)*np.sin(theta2))
+        atheta1 -= M*l*np.sin(dth)*(dtheta1**2*np.cos(dth) +
+                                    l*dtheta2**2)
+        atheta1 /= denom
+
+        atheta2 = wsq*np.cos(dth)*np.sin(theta1) - wsq*np.sin(theta2)
+        atheta2 += (dtheta1**2 + M*l*dtheta2**2*np.cos(dth))*np.sin(dth)
+        atheta2 /= denom
+
         forces = np.zeros((2, self.dim))
         forces[0, 0] = atheta1
         forces[1, 0] = atheta2
-        #print(forces)
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
@@ -137,6 +134,6 @@ class DoublePendulumn(PotentialFunction):
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
         """
-        pot = self.potential(system)
         forces, virial = self.force(system)
+        pot = self.potential(system)
         return pot, forces, virial
