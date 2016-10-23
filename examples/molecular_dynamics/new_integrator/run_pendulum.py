@@ -1,29 +1,47 @@
 # -*- coding: utf-8 -*-
 """
-Example of running a MD NVE simulation.
-This system considered is a simple Lennard-Jones fluid.
+Double pendulum
 """
 # pylint: disable=C0103
 from __future__ import print_function
 import numpy as np
+from pyretis.core import System, Box
+from pyretis.core.units import CONVERT, create_conversion_factors
+from pyretis.inout.plotting import COLORS, COLOR_SCHEME
+from pyretis.inout.settings import (create_output, create_system,
+                                    create_force_field, create_simulation)
+# imports for the plotting:
 from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
-from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import (create_simulation, create_force_field,
-                                    create_system)
-from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout import create_output
-# for plotting:
-from pyretis.inout.plotting import mpl_set_style
-# simulation settings:
+from matplotlib import animation
+import matplotlib as mpl
+import matplotlib.gridspec as gridspec
+
+# Define potential parameters:
+L1 = 1.5
+L2 = 2.0
+M1 = 1.0
+M2 = 1.0
+L1SQ = L1**2
+L2SQ = L2**2
+THETA1 = 45. * np.pi / 180.
+THETA2 = 90. * np.pi / 180.
+DTHETA1 = 0.0
+DTHETA2 = 0.0
+STEPS_PER_FRAME = 10
+# Give simulation settings:
 settings = {}
 settings['simulation'] = {'task': 'md-nve',
                           'steps': 100000,
                           'exe-path': None}
 settings['system'] = {'units': 'gromacs',
-                      'temperature': 0.5,
+                      'temperature': 1.,
                       'dimensions': 2}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.005}
+settings['integrator'] = {'class': 'VVIntegrator',
+                          'timestep': 0.005,
+                          'module': 'myintegrator.py'}
+#settings['integrator'] = {'class': 'Euler',
+#                          'timestep': 0.005,
+#                          'module': 'myintegrator.py'}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -31,83 +49,165 @@ settings['output'] = {'backup': False,
                       'trajectory-file': 10}
 settings['potential'] = [{'class': 'DoublePendulumn',
                           'module': 'doublependulum.py',
-                          'g': 1.0, 'l1': 1.0, 'l2': 1.0}]
-settings['particles'] = {'position': {'file': 'initial2.gro'}}
+                          'g': 1.0, 'l1': L1, 'l2': L2}]
+settings['particles'] = {'position': {'generate': 'sq', 'repeat': [2, 1],
+                                      'lcon': 1},
+                         'type': [0, 0],
+                         'name': ['A', 'B'],
+                         'mass': {'A': M1, 'B': M2}}
 
-create_conversion_factors(settings['system']['units'])
+UNIT = settings['system']['units']
+create_conversion_factors(UNIT)
 print('# Creating system from settings.')
-dsystem = create_system(settings)
-dsystem.forcefield = create_force_field(settings)
-msg = '# Created fcc grid with {} atoms.'
-print(msg.format(dsystem.particles.npart))
-simulation_nve = create_simulation(settings, dsystem)
+system = create_system(settings)
+system.forcefield = create_force_field(settings)
+system.particles.pos[0][0] = THETA1
+system.particles.pos[1][0] = THETA2
+system.particles.vel[0][0] = DTHETA1
+system.particles.vel[1][0] = DTHETA2
 
-# set up extra output:
-table = ThermoTable()
-thermo_file = FileIO('thermo.dat', header=table.header)
-store_results = []
-# also create some other outputs:
-output_tasks = [task for task in create_output(settings)]
-# run the simulation :-)
+simulation = create_simulation(settings, system)
+mpl.rc('axes', labelsize='large')
+mpl.rc('font', family='serif')
+fig = plt.figure(figsize=(12, 6))
+grid = gridspec.GridSpec(3, 2)
+ax1 = fig.add_subplot(grid[:, 0])
+ax1.set_xlim((-5, 5))
+ax1.set_ylim((-5, 2))
+ax1.set_aspect('equal')#, 'datalim')
+time_text = ax1.text(0.02, 0.90, '', transform=ax1.transAxes)
 
-for result in simulation_nve.run():
-    theta1 = dsystem.particles.pos[0, 0]
-    theta2 = dsystem.particles.pos[1, 0]
-    x1 = np.sin(theta1)
-    y1 = -np.cos(theta1)
-    x2 = x1 + np.sin(theta2)
-    y2 = y1 - np.cos(theta2)
-    dsystem.particles.pos[0, 0] = x1
-    dsystem.particles.pos[0, 1] = y1
-    dsystem.particles.pos[1, 0] = x2
-    dsystem.particles.pos[1, 1] = y2
-    stepno = result['cycle']['stepno']
-    for lines in table.generate_output(stepno, result['thermo']):
-        thermo_file.write(lines)
-    result['thermo']['stepno'] = stepno
-    store_results.append(result['thermo'])
-    for task in output_tasks:
-        task.output(result)
-    dsystem.particles.pos[0, 0] = theta1
-    dsystem.particles.pos[1, 0] = theta2
-# We are now done with the actual simulation. Let us now do some
-# simple plotting of energies:
-mpl_set_style()  # load pyretis style
-step = [res['stepno'] for res in store_results]
-pot_e = [res['vpot'] for res in store_results]
-kin_e = [res['ekin'] for res in store_results]
-tot_e = [res['etot'] for res in store_results]
-pressure = [res['press'] for res in store_results]
-temp = [res['temp'] for res in store_results]
-# first figure - some energies
-fig1 = plt.figure()
-gs = gridspec.GridSpec(2, 2)
-ax1 = fig1.add_subplot(gs[:, 0])
-ax1.plot(step, pot_e, label='Potential')
-ax1.plot(step, kin_e, label='Kinetic')
-ax1.plot(step, tot_e, label='Total')
-ax1.set_xlabel('Step no.')
-ax1.set_ylabel('Energy per particle')
-ax1.legend(loc='center left', prop={'size': 'small'})
+# set up circles to represent the two objects:
+circ1 = plt.Circle((0, 0), radius=0.25, alpha=0.6)
+circ1.set_visible(False)
+ax1.add_patch(circ1)
+circ2 = plt.Circle((0, 0), radius=0.25, alpha=0.6)
+circ2.set_visible(False)
+ax1.add_patch(circ2)
+# Add one for the orrigin
+circ0 = plt.Circle((0, 0), radius=0.1, alpha=0.6, color='#262626')
+ax1.add_patch(circ0)
+# Add a lines for the connection between them
+line1, = ax1.plot([], [], lw=3, ls='-', color='#262626', alpha=0.5)
+line2, = ax1.plot([], [], lw=3, ls='-', color='#262626', alpha=0.5)
+# add second axis for displaying energies:
+ax2 = fig.add_subplot(grid[0, 1])
+linepot, = ax2.plot([], [], lw=3, ls='-', alpha=0.8)
+ax2.set_ylim(-7.5, 0)
+ax3 = fig.add_subplot(grid[1, 1])
+linekin, = ax3.plot([], [], lw=3, ls='-', alpha=0.8)
+ax3.set_ylim(0, 3.5)
+ax4 = fig.add_subplot(grid[2, 1])
+linetot, = ax4.plot([], [], lw=3, ls='-', alpha=0.8)
+ax4.set_ylim(-2.5, -0.5)
+ax4.set_xlabel('Steps')
+ax2.set_xticks([])
+ax3.set_xticks([])
+#ax4.set_xticks([])
 
-ax2 = fig1.add_subplot(gs[0, 1])
-ax2.plot(step, temp)
-ax2.set_ylabel('Temperature')
+def init():
+    """Declare what to re-draw when clearing the animation frame.
 
-ax3 = fig1.add_subplot(gs[1, 1])
-ax3.plot(step, pressure)
-ax3.set_xlabel('Step no.')
-ax3.set_ylabel('Pressure')
+    Returns
+    -------
+    out : list
+        list of the patches to be drawn
+    """
+    patches = []
+    circ1.set_visible(False)
+    circ2.set_visible(False)
+    patches.append(circ1)
+    patches.append(circ2)
+    line1.set_data([], [])
+    patches.append(line1)
+    line2.set_data([], [])
+    patches.append(line2)
+    time_text.set_text('')
+    patches.append(time_text)
+    return patches
 
-fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95, left=0.12, wspace=0.3)
-# second figure, momentum in different directions
-momentum = np.array([res['mom'] for res in store_results])
-fig2 = plt.figure()
-ax4 = fig2.add_subplot(111)
-ax4.plot(step, momentum[:, 0], lw=4, alpha=0.7, label='x')
-ax4.plot(step, momentum[:, 1], lw=4, alpha=0.7, label='y')
-ax4.plot(step, momentum[:, 2], lw=4, alpha=0.7, label='z')
-ax4.set_xlabel('Step')
-ax4.set_ylabel('Linear momentum')
-ax4.legend(loc='upper center', prop={'size': 'small'}, ncol=3)
+
+def update(frame, sys, sim):
+    """Update plots for the animation.
+
+    This function will be running the simulation and updating the plots.
+    It is called one time per step, and we choose to update the simulation
+    inside this function
+
+    Parameters
+    ----------
+    frame : int
+        The current frame number, supplied by `animation.FuncAnimation`.
+    sys : object
+        The system object we are simulating
+    sim : object
+        The simulation we are running
+
+    Returns
+    -------
+    out : list
+        List of the patches to be drawn.
+    """
+    patches = []
+    if not sim.is_finished():
+        for _ in range(STEPS_PER_FRAME):
+            result = sim.step()
+        pos = sys.particles.pos
+        theta1 = pos[0][0]
+        costheta1 = np.cos(theta1)
+        sintheta1 = np.sin(theta1)
+        x1, y1 = L1 * sintheta1, -L1 * costheta1
+        circ1.center = np.array([x1, y1])
+        circ1.set_visible(True)
+        patches.append(circ1)
+        theta2 = pos[1][0]
+        costheta2 = np.cos(theta2)
+        sintheta2 = np.sin(theta2)
+        x2, y2 = x1 + L2*sintheta2, y1 - L2 * costheta2
+        circ2.center = np.array([x2, y2])
+        circ2.set_visible(True)
+        patches.append(circ2)
+        line1.set_data([0.0, x1], [0.0, y1])
+        patches.append(line1)
+        line2.set_data([x1, x2], [y1, y2])
+        patches.append(line2)
+        vpot = result['thermo']['vpot']
+        vel = sys.particles.vel
+        dtheta1 = vel[0][0]
+        dtheta2 = vel[1][0]
+        dt1sq = dtheta1**2
+        dt2sq = dtheta2**2
+        ekin = (0.5*(M1+M2)*L1SQ*dt1sq + 0.5*M2*L2SQ*dt2sq +
+                M2*L1*L2*dtheta1*dtheta2*np.cos(theta1-theta2))
+        vpot = 2.0 * result['thermo']['vpot']
+        etot = ekin + vpot
+        linekin.set_xdata(np.append(linekin.get_xdata(), frame))
+        linekin.set_ydata(np.append(linekin.get_ydata(), ekin))
+        patches.append(linekin)
+        linepot.set_xdata(np.append(linepot.get_xdata(), frame))
+        linepot.set_ydata(np.append(linepot.get_ydata(), vpot))
+        patches.append(linepot)
+        linetot.set_xdata(np.append(linetot.get_xdata(), frame))
+        linetot.set_ydata(np.append(linetot.get_ydata(), etot))
+        patches.append(linetot)
+        ax2.set_xlim(0, frame)
+        ax3.set_xlim(0, frame)
+        ax4.set_xlim(0, frame)
+        time_text.set_text('Step: {}'.format(result['cycle']['step']))
+        patches.append(time_text)
+        return patches
+    else:
+        print('Simulation is done')
+        return patches
+
+
+# This will run the animation/simulation:
+FMAX = int(float(settings['simulation']['steps']) / float(STEPS_PER_FRAME))
+anim = animation.FuncAnimation(fig, update,
+                               frames=FMAX+1,
+                               fargs=[system, simulation],
+                               repeat=False, interval=2, blit=True,
+                               init_func=init)
+# for making a movie:
+# anim.save('particles.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 plt.show()
