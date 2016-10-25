@@ -5,16 +5,13 @@ Simulation settings
 -------------------
 task = md-flux
 steps = 10000000
+interfaces = [-0.9]
 
 System settings
 ---------------
 units = lj
 dimensions = 1
 temperature = 0.07
-
-Path settings
--------------
-interfaces = [-0.9]
 
 Integrator settings
 -------------------
@@ -23,7 +20,6 @@ timestep = 0.002
 gamma = 0.3
 high_friction = False
 seed = 0
-
 
 Particles
 ---------
@@ -37,7 +33,6 @@ type = [0]
 
 ForceField settings
 --------------------
-
 description = 1D double well potential
 
 Potential
