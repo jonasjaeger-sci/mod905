@@ -3,26 +3,33 @@
 The RETIS section
 =================
 
-Specifies settings for RETIS simulations
+Specifies settings for RETIS simulations. Note that
+the section for :ref:`TIS <user-section-tis>` also needs
+to be defined for a RETIS simulation.
+
+Example:
 
 .. code-block:: rst
 
-    Simulation
-    ----------
-    task = retis
-    steps = 10000
+    RETIS settings
+    --------------
+    swapfreq = 0.5
+    relative_shoots = None
+    nullmoves = True
+    swapsimul = True
 
-    TIS settings
-    ------------
-    allowmaxlength = False
-    freq = 0.5
-    zero_momentum = False
-    initial_path = 'kick'
-    seed = 1
-    aimless = True
-    maxlength = 20000
-    sigma_v = -1
-    rescale_energy = False
-    interfaces = [-0.9, -0.9, 1.0]
-    detect = -0.8
-    ensemble = 1
+The following keywords can be set:
+
+* ``swapfreq``: This defines how often we perform swapping moves.
+  This gives the percentage of swapping moves in the simulation,
+  e.g.: ``swapfreq = 0.5`` corresponds to 50% swapping moves.
+
+* ``relative_shoots``: This defines if we perform relative shooting
+  moves.
+
+* ``nullmoves``: If ``True`` we perform null moves in the ensembles
+  not included in a swapping move. Otherwise no move is done in these
+  ensembles.
+
+* ``swapsimul``: If ``True`` several swaps are performed at the same
+  time.
