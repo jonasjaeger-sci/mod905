@@ -29,8 +29,8 @@ Path
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 
-TIS
----
+TIS settings
+------------
 freq =  0.5
 maxlength = 20000
 aimless = True
@@ -48,8 +48,8 @@ Particles
 position = {'file': 'initial.xyz'}
 
 velocity = {'generate': 'maxwell',
-                      'momentum': False,
-                      'seed': 10}
+            'momentum': False,
+            'seed': 10}
 
 mass = {'Ar': 1.0}
 name = ['Ar']
@@ -58,7 +58,7 @@ type = [0]
 Forcefield settings
 -------------------
 
-description =  1D double well
+description = 1D double well
 
 Potential
 ---------

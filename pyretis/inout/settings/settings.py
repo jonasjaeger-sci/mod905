@@ -98,8 +98,8 @@ SECTIONS['tis'] = {'freq': None,
 
 SECTIONS['retis'] = {'swapfreq': None,
                      'relative_shoots': None,
-                     'nullmoves': True,
-                     'swapsimul': True}
+                     'nullmoves': None,
+                     'swapsimul': None}
 
 SECTIONS['path'] = {'interfaces': None,
                     'ensemble': None,
