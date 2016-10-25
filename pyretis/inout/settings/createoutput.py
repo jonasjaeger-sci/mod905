@@ -116,14 +116,16 @@ _DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
                            'name': 'tis-path-ensemble',
                            'when': {'every': 1},
                            'filename': 'pathensemble.dat',
-                           'settings': {'path': ('ensemble', 'interfaces')}},
+                           'settings': {'simulation': ('ensemble',
+                                                       'interfaces')}},
                           {'type': 'pathensemble-screen',
                            'name': 'tis-pathensemble-screen',
                            'when': {'every': 10}}]
 
 _DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
                              'name': 'retis-path-ensemble',
-                             'settings': {'path': ('ensemble', 'interfaces')},
+                             'settings': {'simulation': ('ensemble',
+                                                         'interfaces')},
                              'when': {'every': 1},
                              'filename': 'pathensemble.dat'}]
 

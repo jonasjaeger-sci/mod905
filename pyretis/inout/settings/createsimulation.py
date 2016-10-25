@@ -88,7 +88,7 @@ def create_mdflux_simulation(settings, system):
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
     sim = settings['simulation']
-    return SimulationMDFlux(system, integ, settings['path']['interfaces'],
+    return SimulationMDFlux(system, integ, sim['interfaces'],
                             steps=sim['steps'],
                             startcycle=sim.get('startcycle', 0))
 
@@ -147,29 +147,29 @@ def create_tis_simulations(settings, system):
         created here.
     """
     sim_settings = []
-    interfaces = settings['path']['interfaces']
+    interfaces = settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
     if len(interfaces) <= 3:
         return _create_tis_single_simulation(settings, system)
     else:
         for i, middle in enumerate(interfaces[:-1]):
-            local_settings = {}
+            lsetting = {}
             for sec in settings:  # this is common for all simulations:
-                local_settings[sec] = {}
+                lsetting[sec] = {}
                 if sec == 'potential':
-                    local_settings[sec] = [j for j in settings[sec]]
+                    lsetting[sec] = [j for j in settings[sec]]
                 else:
                     for key in settings[sec]:
-                        local_settings[sec][key] = settings[sec][key]
-            local_settings['path']['interfaces'] = [reactant, middle, product]
-            local_settings['path']['ensemble'] = i + 1
-            local_settings['output']['directory'] = PATH_DIR_FMT.format(i + 1)
+                        lsetting[sec][key] = settings[sec][key]
+            lsetting['simulation']['interfaces'] = [reactant, middle, product]
+            lsetting['simulation']['ensemble'] = i + 1
+            lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)
             try:
-                local_settings['path']['detect'] = interfaces[i + 1]
+                lsetting['simulation']['detect'] = interfaces[i + 1]
             except IndexError:
-                local_settings['path']['detect'] = product
-            sim_settings.append(local_settings)
+                lsetting['simulation']['detect'] = product
+            sim_settings.append(lsetting)
         return sim_settings
 
 
@@ -223,9 +223,9 @@ def create_retis_simulation(settings, system):
         msgtxt = 'No integrator created!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
-    path_ensembles, _ = create_path_ensembles(settings['path']['interfaces'],
-                                              include_zero=True)
     sim = settings['simulation']
+    path_ensembles, _ = create_path_ensembles(sim['interfaces'],
+                                              include_zero=True)
     return SimulationRETIS(system, integ,
                            path_ensembles,
                            settings['tis'],
@@ -248,26 +248,26 @@ def create_path_ensemble(settings):
     out : object like `PathEnsemble`.
         An object that can be used as a path ensemble in simulations.
     """
-    interfaces = settings['path']['interfaces']
+    interfaces = settings['simulation']['interfaces']
     if len(interfaces) != 3:
         msgtxt = ('Wrong number of interfaces given. Expected 3 '
                   'got {}'.format(len(interfaces)))
         logger.error(msgtxt)
         raise ValueError(msgtxt)
-    if 'detect' not in settings['path']:
+    if 'detect' not in settings['simulation']:
         detect = interfaces[-1]
         msgtxt = ('Detect-interface not specified, '
                   'using "product" interface: {}'.format(detect))
         logger.warning(msgtxt)
     else:
-        detect = settings['path']['detect']
-    if 'ensemble' not in settings['path']:
+        detect = settings['simulation']['detect']
+    if 'ensemble' not in settings['simulation']:
         ensemble_name = 1
         msgtxt = ('Ensemble name not specified, '
                   'using default ensemble "{}"'.format(ensemble_name))
         logger.warning(msgtxt)
     else:
-        ensemble_name = int(settings['path']['ensemble'])
+        ensemble_name = int(settings['simulation']['ensemble'])
     return PathEnsemble(ensemble_name, interfaces, detect=detect)
 
 
@@ -293,23 +293,6 @@ def create_simulation(settings, system):
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()
-    #sim_map = {'md-nve': {'create': create_nve_simulation,
-    #                      'single': True},
-    #           'md-flux': {'create': create_mdflux_simulation,
-    #                       'single': True,
-    #                       'required': ('steps', 'integrator', 'interfaces')},
-    #           'umbrellawindow': {'create': create_umbrellaw_simulation,
-    #                              'single': True,
-    #                              'required': ('umbrella', 'over', 'maxdx',
-    #                                           'mincycle')},
-    #           'tis': {'create': create_tis_simulations,
-    #                   'single': False,
-    #                   'required': ('steps', 'tis', 'integrator',
-    #                                'interfaces')},
-    #           'retis': {'create': create_retis_simulation,
-    #                     'single': True,
-    #                     'required': ('steps', 'tis', 'integrator',
-    #                                  'interfaces', 'retis')}}
     sim_map = {'md-nve': create_nve_simulation,
                'md-flux': create_mdflux_simulation,
                'umbrellawindow': create_umbrellaw_simulation,

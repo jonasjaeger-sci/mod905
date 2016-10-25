@@ -36,12 +36,13 @@ HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
 
 SECTIONS['simulation'] = {'task': None,
-                          'run_type': None,  # is this one needed?
                           'steps': None,
                           'startcycle': None,
                           'endcycle': None,
+                          'exe-path': None,
+                          'interfaces': None,
                           'ensemble': None,
-                          'exe-path': None}
+                          'detect': None}
 
 SECTIONS['system'] = {'dimensions': 3,
                       'temperature': 1.0,
@@ -100,10 +101,6 @@ SECTIONS['retis'] = {'swapfreq': None,
                      'relative_shoots': None,
                      'nullmoves': None,
                      'swapsimul': None}
-
-SECTIONS['path'] = {'interfaces': None,
-                    'ensemble': None,
-                    'detect': None}
 
 SECTIONS['analysis'] = {'skipcross': 1000,
                         'maxblock': 1000,

@@ -1,10 +1,11 @@
-Retis path test
-===============
+Retis 1D example
+================
 
 Simulation
 ----------
 task = retis
 steps = 20000
+interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
 ------
@@ -23,10 +24,6 @@ timestep = 0.002
 gamma = 0.3
 high_friction = False
 seed = 0
-
-Path
-----
-interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 TIS settings
 ------------
@@ -47,23 +44,18 @@ relative_shoots = None
 nullmoves = True
 swapsimul = True
 
-
 Particles
 ---------
-
 position = {'file': 'initial.xyz'}
-
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
-
 mass = {'Ar': 1.0}
 name = ['Ar']
 type = [0]
 
 Forcefield settings
 -------------------
-
 description = 1D double well
 
 Potential
@@ -75,7 +67,6 @@ c = 0.0
 
 Orderparameter
 --------------
-
 class = OrderParameterPosition
 dim = x
 index = 0
