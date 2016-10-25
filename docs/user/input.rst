@@ -5,7 +5,7 @@ The pyretis input file
 
 pyretis simulations can be set up and run with a simple input file.
 The input file defines a simulation by setting values for
-:ref:`keywords <user-keywords>` which are organized into
+keywords which are organized into
 :ref:`sections <user-section>`. All keywords/sections that are not
 explicitly set will assume :ref:`default <input-default>`
 values. 
