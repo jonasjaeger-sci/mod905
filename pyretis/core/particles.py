@@ -72,7 +72,7 @@ class Particles(object):
         self.imass = None
         self.name = None
         self.ptype = None
-        self.virial = None
+        self.virial = np.zeros((dim, dim))
         self.dim = dim
 
     def empty_list(self):
@@ -97,7 +97,7 @@ class Particles(object):
         self.imass = None
         self.name = None
         self.ptype = None
-        self.virial = None
+        self.virial = np.zeros_like(self.virial)
 
     def get_dim(self):
         """Function to get the dimensionality"""
