@@ -11,7 +11,7 @@ released, the current version can be installed by pip:
     pip install pyretis
 
 The development version can be cloned
-from `gitlab <https://gitlab.com/andersle/>`_,
+from `gitlab <https://gitlab.com/andersle/pyretis/>`_,
 
 .. code-block:: bash
 
