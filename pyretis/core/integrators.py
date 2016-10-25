@@ -159,6 +159,7 @@ class Integrator(object):
         logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
+        system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
         while True:
             orderp = system.calculate_order()

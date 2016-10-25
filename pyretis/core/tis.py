@@ -280,7 +280,6 @@ def _shoot(path, system, interfaces, integrator, rgen,
     orderp, pos, vel, idx = path.get_shooting_point()
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
@@ -421,7 +420,6 @@ def generate_initial_path_kick(system, interfaces, integrator,
         raise ValueError('Forward path not successful.', msg)
     # And the previous phase point backward:
     system.particles.set_phase_point(previous)
-    system.potential_and_force()
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, interfaces,
                                         reverse=True)

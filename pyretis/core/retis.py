@@ -195,7 +195,6 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
         output[idx] = ['tis', accept, trial, status]
-        #output[idx] = ['tis', status, trial, accept]
         # and do null moves for the others if requested:
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
@@ -423,7 +422,6 @@ def retis_swap_zero(ensembles, system, integrator,
     pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
@@ -448,7 +446,6 @@ def retis_swap_zero(ensembles, system, integrator,
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     integrator.propagate(path_tmp, system, ensemble1.interfaces,
                          reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
