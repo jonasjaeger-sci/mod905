@@ -12,26 +12,17 @@ Specifies what kind of simulation to run
     task = retis
     steps = 10000
 
-The following keywords can be set in this section:
-
-* ``task`` which selects the kind of simulation to run.
-
-* ``steps`` which specifies the number of steps to run.
-
-.. _user-section-simulation-keyword-task:
-
-task
-----
-
+The keywords that needs to be set for this section
+depends on the selected ``task``.
 The ``task`` keyword specified the kind of simulation to run.
 
 Example:
 
 .. code-block:: rst 
 
-    task = md-nve
+    task = retis
 
-The possible tasks are:
+The tasks recognized by pyretis are:
 
 .. table:: Possible values for the ``task`` keyword
 
