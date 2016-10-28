@@ -4,7 +4,7 @@
 """Definition of numerical integrators.
 
 These integrators are typically used to integrate and propagate
-Newtons equations of motion in time, the dynamics in molecular dynamics.
+Newtons equations of motion in time, the "dynamics" in molecular dynamics!
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
