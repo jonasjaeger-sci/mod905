@@ -139,7 +139,7 @@ class Integrator(object):
         path : object like `Path` from `pyretis.core.Path`.
             This is the path we use to fill in phase-space point.
             We are here not returning a new path - this since we want
-            to delegte the creation of the path (type) to the method
+            to delegate the creation of the path (type) to the method
             that is running `propagate`.
         system : object like `System` from `pyretis.core.system`.
             The system object gives the initial state for the
