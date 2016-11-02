@@ -24,7 +24,7 @@ from matplotlib import gridspec as gridspec
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 20000,
+                          'steps': 120,
                           'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                          -0.5, -0.4, -0.3, 1.0]}
 # Basic settings for the system:
@@ -141,6 +141,7 @@ def matplotlib_setup():
     ax1 = new_fig.add_subplot(grid[:, :2])
     ax2 = new_fig.add_subplot(grid[0, 2:])
     ax3 = new_fig.add_subplot(grid[1:, 2:])
+    axes = (ax1, ax2, ax3)
     if COLORS is not None:
         ax1.set_color_cycle(COLORS)
     plot_patches = {'paths': [],
@@ -192,8 +193,8 @@ def matplotlib_setup():
     ax1.set_xlim(-1.5, 1.5)
 
     plot_patches['fluxline'] = ax2.plot([0], [0], lw=3, ls='-')[0]
-    ax2.set_ylim(0, 0.3)
-    ax2.set_xlim(0, SETTINGS['simulation']['steps'])
+    ax2.set_ylim(0, 1)
+    ax2.set_xlim(0, 1)
     ax2.set_ylabel('Flux')
     ax2.set_xlabel('Cycles completed')
     ax3.set_ylim(0, 1)
@@ -201,31 +202,11 @@ def matplotlib_setup():
     axp.set_ylim(1e-7, 1)
     ax3.set_xlabel(r'$\lambda$')
     ax3.set_ylabel(r'Probability')
-
-    def initf():
-        """Method to define what MPL needs to re-draw when clearing the frame.
-
-        Returns
-        -------
-        out : list
-            list of the patches to be re-drawn
-        """
-        patches = []
-        for line in (plot_patches['paths'] + plot_patches['prob'] +
-                     [plot_patches['matched']]):
-            line.set_data([], [])
-            patches.append(line)
-        for txt in plot_patches['txtmove'] + [plot_patches['txtcycle']]:
-            txt.set_text('')
-            patches.append(txt)
-        for scat in plot_patches['start'] + plot_patches['end']:
-            scat.set_visible(False)
-        return patches
     new_fig.set_tight_layout(True)
-    return new_fig, plot_patches, initf
+    return new_fig, plot_patches, axes
 
 
-def analyse_prob(ensemble, props, i, frame):
+def analyse_prob(ensemble, props, i, step):
     """Update running estimates for probability
 
     Parameters
@@ -236,7 +217,7 @@ def analyse_prob(ensemble, props, i, frame):
         A dictionary for storing properties we calculate
     i : int
         An index for the path ensemble.
-    frame : int
+    step : int
         The current simulation step
     """
     orderp = ensemble.last_path.ordermax[0]
@@ -245,7 +226,8 @@ def analyse_prob(ensemble, props, i, frame):
     if len(prun) == 0:
         prun.append(success)
     else:
-        prun.append(float(success + prun[-1] * (frame - 1)) / float(frame))
+        npath = step + 1
+        prun.append(float(success + prun[-1] * (npath-1)) / float(npath))
     props['orderp'][i].append(orderp)
     orderparam = np.array(props['orderp'][i])
     ordermax = min(orderparam.max(), max(ensemble.interfaces))
@@ -255,7 +237,7 @@ def analyse_prob(ensemble, props, i, frame):
     props['pcross'][i] = (lamb, pcross)
 
 
-def update(frame, simulation, plot_patches, prop):
+def update(frame, simulation, plot_patches, prop, axes):
     """Method to run the simulation and update plots.
 
     Parameters
@@ -269,6 +251,8 @@ def update(frame, simulation, plot_patches, prop):
         which we will use to diplay our data.
     prop : dict
         A dict with results from the simulation.
+    axes : tuple
+        This tuple contains the axes used for plotting.
 
     Returns
     -------
@@ -278,6 +262,8 @@ def update(frame, simulation, plot_patches, prop):
     patches = []
     if not simulation.is_finished():
         result = simulation.step()
+        step = result['cycle']['step']
+        print('\n# Current cycle: {}'.format(step))
         for i, ensemble in enumerate(simulation.path_ensembles):
             _, pos, vel = get_path(ensemble.last_path)
             plot_patches['paths'][i].set_data(pos, vel)
@@ -293,7 +279,7 @@ def update(frame, simulation, plot_patches, prop):
             elif i == 1:
                 prop['length0+'].add(ensemble.last_path.length)
             if i > 0:
-                analyse_prob(ensemble, prop, i, frame)
+                analyse_prob(ensemble, prop, i, step)
                 plot_patches['prob'][i].set_data(prop['pcross'][i][0],
                                                  prop['pcross'][i][1])
                 patches.append(plot_patches['prob'][i])
@@ -303,6 +289,9 @@ def update(frame, simulation, plot_patches, prop):
         xdata, ydata = plot_patches['fluxline'].get_data()
         plot_patches['fluxline'].set_data(np.append(xdata, xdata[-1] + 1),
                                           np.append(ydata, flux))
+        axes[1].set_xlim(0, step+1)
+        axes[1].set_ylim(0, 1.1*max(flux, max(ydata)))
+        #ax2.set_xlim(0, frame)
         patches.append(plot_patches['fluxline'])
         if 'retis' in result:
             for i, move in enumerate(result['retis']):
@@ -314,7 +303,7 @@ def update(frame, simulation, plot_patches, prop):
                 plot_patches['txtmove'][i].set_text(txtmove)
                 plot_patches['txtmove'][i].set_color(TXTCOLOR[txtmove])
                 patches.append(plot_patches['txtmove'][i])
-        plot_patches['txtcycle'].set_text('Cycle: {}'.format(frame))
+        plot_patches['txtcycle'].set_text('Cycle: {}'.format(step))
         patches.append(plot_patches['txtcycle'])
 
         # match probabilities:
@@ -331,14 +320,13 @@ def update(frame, simulation, plot_patches, prop):
             accprob *= prop['prun'][i][-1]
         plot_patches['matched'].set_data(matched_lamb, matched_prob)
         patches.append(plot_patches['matched'])
-        print('\n# Current cycle: {}'.format(frame))
         print('# Current flux estimate: {}'.format(flux))
         if matched_lamb[-1] < INTERFACES[-1]:
             pcr = 0.0
         else:
             pcr = matched_prob[-1]
         kab = flux * pcr
-        print('# Current pcross estimate: {}'.format(pcr))
+        print('# Current P_cross estimate: {}'.format(pcr))
         print('# Current rate constant estimate: {}'.format(kab))
         return patches
     else:
@@ -354,7 +342,7 @@ def main():
     simulation = create_simulation(SETTINGS, system)
     print(simulation)
     print('# GENERATING INITIAL PATHS')
-    fig, plot_patches, init = matplotlib_setup()
+    fig, plot_patches, axes = matplotlib_setup()
     prop = {}
     prop['length0-'] = Property(desc='Average path length for [0^-]')
     prop['length0+'] = Property(desc='Average path length for [0^+]')
@@ -363,11 +351,11 @@ def main():
     prop['pcross'] = [[] for _ in INTERFACES]
     anim = animation.FuncAnimation(fig, update,
                                    frames=SETTINGS['simulation']['steps']+1,
-                                   fargs=[simulation, plot_patches, prop],
+                                   fargs=[simulation, plot_patches, prop,
+                                          axes],
                                    repeat=False,
                                    interval=10,
-                                   blit=True,  # True, here might be faster
-                                   init_func=init)
+                                   blit=False)
     plt.show()
 
 if __name__ == '__main__':
