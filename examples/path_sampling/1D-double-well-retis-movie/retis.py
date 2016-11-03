@@ -20,7 +20,7 @@ INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 20000,
+                          'steps': 200,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -100,18 +100,24 @@ def step_txt(ensembles, retis_result, prun):
         in a ensemble.
     """
     txt = []
+    force = 0  # counter for force evaluations
     for i, result in enumerate(retis_result):
-        name = ensembles[i].ensemble_name
+        ensemble = ensembles[i]
+        name = ensemble.ensemble_name
         name_of_move = result[0]
         accepted = result[1]
         line = []
         if name_of_move == 'swap':
             name2 = ensembles[result[2]].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
+            if i == 0 or (i == 1 and result[2] == 0):
+                force += ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
             trial_path = result[2]
             tis_move = trial_path.generated[0]
             move = '{} ({}),'.format(name_of_move, tis_move)
+            if tis_move == 'sh':
+                force += ensemble.paths[-1]['length'] - 1
         else:
             move = '{},'.format(name_of_move)
         line.append('{}: {:11s}'.format(name, move))
@@ -119,7 +125,7 @@ def step_txt(ensembles, retis_result, prun):
         if i > 0:
             line.append('p = {:<8.6g}'.format(prun[i]))
         txt.append(' '.join(line))
-    return txt
+    return txt, force
 
 
 def probability_path_ensemble(ensemble, step, prun, orderp):
@@ -292,19 +298,29 @@ def main():
         print('Info about the initial path:')
         print(ensemble.last_path)
         print('')
+    force_counter = 0
+    # The force counter will just count the number for
+    # force evaluations for generating a path, it will not include
+    # the force evaluation that might be performed prior to propagation,
+    # i.e. the initial force evaluation since this can be stored in memory,
+    # along the path.
+
     # Run the rest of the simulation.
     while not simulation.is_finished():
         result = simulation.step()
         step = result['cycle']['step']
-        print('\n# Current cycle: {}'.format(step))
+        print('# Current cycle: {}'.format(step))
         anr = analyse_path_ensembles(ensembles, step, variables)
-        retis_txt = step_txt(ensembles, result['retis'], variables['prun'])
+        retis_txt, force = step_txt(ensembles, result['retis'],
+                                    variables['prun'])
+        force_counter += force
         for line in retis_txt:
             print('# {}'.format(line))
         print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
         print(('# Crossing probability: {pcross:<8.6g} +-'
-              '{pcrosse:<8.6g}').format(**anr))
+               '{pcrosse:<8.6g}').format(**anr))
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
+        print('# No. of force evaluations: {:g}'.format(force_counter))
         print('')
 
 
