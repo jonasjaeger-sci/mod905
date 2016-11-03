@@ -53,7 +53,7 @@ References
           http://stanford.edu/~mwaskom/software/seaborn/index.html
 .. [husl] The husl color scheme, http://www.husl-colors.org/
 """
-from pyretis.inout.settings.settings import KEYWORDS
+from pyretis.inout.settings.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
 
 
@@ -111,11 +111,11 @@ def create_plotter(plot_settings, out_dir=None):
     if plot_settings is None:
         return None
     try:
-        default = KEYWORDS['plot']['default']
+        default = SECTIONS['analysis']['plot']
         plotter = plot_settings.get('plotter', default['plotter'])
         out_fmt = plot_settings.get('output', default['output'])
         style = plot_settings.get('style', default['style'])
-        backup = plot_settings.get('backup', default['backup'])
+        backup = plot_settings.get('backup', SECTIONS['output']['backup'])
     except AttributeError:
         # Malformed input settings
         return None

@@ -229,7 +229,7 @@ class System(object):
         """Calculates and updates the order parameter"""
         if self.order_function:
             order = self.order_function.__call__(self)
-            #TODO: Maybe consider if we should create a new object that
+            # TODO: Maybe consider if we should create a new object that
             # is a composition of system, orderparameter and force field,
             # i.e. newobject.system, newobject.orderparameter, newobject.ff
             # etc. Then we could do newobject.calculate_order() which does

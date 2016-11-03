@@ -25,9 +25,8 @@ size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
 ljsystem = System(box=box, units='lj')
 
-ljpot = PairLennardJonesCutnp(shift=False)
-lj_param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-            'mixing': 'geometric'}
+ljpot = PairLennardJonesCutnp(shift=False, mixing='geometric')
+lj_param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 forcefield = ForceField(potential=[ljpot],
                         params=[lj_param])
 ljsystem.forcefield = forcefield

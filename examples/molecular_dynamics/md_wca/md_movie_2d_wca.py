@@ -19,31 +19,39 @@ import matplotlib.gridspec as gridspec
 PCOLOR = {'A': 'blue', 'B': 'magenta'}  # colors for visualization
 # Define potential parameters:
 WCA_PARAMETERS = {0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  'mixing': 'geometric'}
+                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}}
 DWCA_PARAMETERS = {'types': [(1, 1)], 'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 6.0, 'width': 0.25}
 # Give simulation settings:
-settings = {'task': 'md-nve',
-            'integrator': {'class': 'velocityverlet', 'timestep': 0.0025},
-            'steps': 1100,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1}}],
-            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
-                                   'seed': 0},
-            'temperature': 2.0,
-            'potentials': [{'class': 'PairLennardJonesCutnp', 'dim': 2},
-                           {'class': 'DoubleWellWCA', 'dim': 2}],
-            'potential-parameters': [WCA_PARAMETERS, DWCA_PARAMETERS],
-            'particles-position': {'generate': 'sq', 'repeat': [3, 3],
-                                   'lcon': 1.0},
-            'particles-type': [0, 1, 1, 0],
-            'particles-name': ['A', 'B', 'B', 'A'],
-            'particles-mass': {'A': 1.0, 'B': 1.0},
-            'box': {'size': [[0.0, 3.6], [0.0, 3.6]]},
-            'units': 'lj'}
+settings = {}
+settings['system'] = {'temperature': 2.0,
+                      'units': 'lj'}
+settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
+settings['simulation'] = {'task': 'md-nve',
+                          'steps': 1100}
+settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['output'] = {'backup': False,
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 10}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp',
+                          'dim': 2,
+                          'shift': True,
+                          'mixing': 'geometric',
+                          'parameter': WCA_PARAMETERS}]
+settings['potential'].append({'class': 'DoubleWellWCA', 'dim': 2,
+                              'parameter': DWCA_PARAMETERS})
+settings['particles'] = {'position': {'generate': 'sq', 'repeat': [3, 3],
+                                      'lcon': 1.0},
+                         'velocity': {'generate': 'maxwell', 'momentum': True,
+                                      'seed': 0},
+                         'type': [0, 1, 1, 0],
+                         'name': ['A', 'B', 'B', 'A'],
+                         'mass': {'A': 1.0, 'B': 1.0}}
 
-
-create_conversion_factors(settings['units'])
+UNIT = settings['system']['units']
+create_conversion_factors(UNIT)
 print('# Creating system from settings.')
 system = create_system(settings)
 system.forcefield = create_force_field(settings)
@@ -59,12 +67,12 @@ BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
 # some additional set-up for the animation
 timeunit = (settings['integrator']['timestep'] *
-            CONVERT['time'][settings['units'], 'fs'])
-timeendfs = settings['steps'] * timeunit
+            CONVERT['time'][UNIT, 'fs'])
+timeendfs = settings['simulation']['steps'] * timeunit
 
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
-SIGMA = CONVERT['length'][settings['units'], 'A']
-ECONV = CONVERT['energy'][settings['units'], 'kcal/mol']
+SIGMA = CONVERT['length'][UNIT, 'A']
+ECONV = CONVERT['energy'][UNIT, 'kcal/mol']
 # We will in this example animate on the fly. Here we do some additional
 # set-up to be able to do just that :-)
 mpl.rc('axes', labelsize='large')
@@ -388,7 +396,8 @@ def update(frame, sys, output_tasks, sim):
 
 
 # This will run the animation/simulation:
-anim = animation.FuncAnimation(fig, update, frames=settings['steps']+1,
+anim = animation.FuncAnimation(fig, update,
+                               frames=settings['simulation']['steps']+1,
                                fargs=[system, outputs, simulation],
                                repeat=False, interval=2, blit=True,
                                init_func=init)

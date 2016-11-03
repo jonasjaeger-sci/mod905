@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Test the Box class from pyretis.core"""
 import logging
 import unittest
@@ -14,7 +16,6 @@ class ParticleTest(unittest.TestCase):
         """Test the creation a particle list."""
         particles = Particles(dim=1)
         particles.add_particle(np.zeros(1), np.zeros(1), np.zeros(1))
-        
 
 
 if __name__ == '__main__':

@@ -238,8 +238,7 @@ def print_to_screen(txt=None):
     if txt is None:
         print()
     else:
-        out = '# {}'.format(txt)
-        out = out.replace('\n', '\n# ')
+        out = '{}'.format(txt)
         print(out)
 
 

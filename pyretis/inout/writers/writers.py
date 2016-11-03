@@ -76,11 +76,10 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
                     block_label='#'):
     """Open a file and try to read as many lines as possible.
 
-    This function will read a file using the given `line_parser`.
+    This method will read a file using the given `line_parser`.
     If the given `line_parser` fails at a line in the file,
-    `read_some_lines` will stop here.
-
-    This function will read data in blocks and yield a block when a new
+    `read_some_lines` will stop here. Further, this method
+    will read data in blocks and yield a block when a new
     block is found. A special string (`block_label`) is assumed to
     identify the start of blocks.
 

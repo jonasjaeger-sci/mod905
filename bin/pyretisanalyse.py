@@ -206,7 +206,7 @@ if __name__ == '__main__':
         print_to_screen('Reading input settings for analysis.')
         settings = parse_settings_file(inputfile)
         # override exe-path to the one we are executing in now:
-        settings['exe-path'] = runpath
+        settings['simulation']['exe-path'] = runpath
         create_conversion_factors(settings['units'], **settings['units-base'])
         # set derived properties:
         settings['beta'] = 1.0 / (settings['temperature'] *

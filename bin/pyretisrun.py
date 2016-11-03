@@ -32,15 +32,12 @@ import os
 import sys
 # Other libraries:
 import tqdm  # for a nice progress bar
-#import matplotlib
-#matplotlib.use('Agg')
-#from matplotlib import pyplot as plt
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis import __program_name__ as NAME
 from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
-from pyretis.core.units import create_conversion_factors
+from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout import create_output
 from pyretis.inout.common import (check_python_version,
@@ -62,7 +59,12 @@ _DATE_FMT = '%d.%m.%Y %H:%M:%S'
 
 
 def use_tqdm(progress):
-    """Return a progress bar if we want one."""
+    """Return a progress bar if we want one.
+
+    Parameters
+    ----------
+    progress : boolean
+        If True, we should use a progress bar, otherwise not."""
     if progress:
         return tqdm.tqdm
     else:
@@ -87,7 +89,10 @@ def get_formatter(level):
     out : object like ``logging.Formatter``
         An object that can be used as a formatter for a logger.
     """
-    if level <= logging.DEBUG:
+    if level < logging.DEBUG:
+        # Note: This will not happen. This formatter is intended
+        # for development and debugging. Change to
+        # level <= logging.DEBUG to use it at set the loglevel to debug.
         return PyretisLogFormatterDebug(LOG_DEBUG_FMT)
     else:
         return PyretisLogFormatter(LOG_FMT)
@@ -107,20 +112,30 @@ def hello_world(infile, rundir, logfile):
     """
     timestart = datetime.datetime.now().strftime(_DATE_FMT)
     pyversion = sys.version.split()[0]
-    msg = ['{}'.format(timestart)]
-    msg += ['{} version {} (Python version: {})'.format(NAME, VERSION,
-                                                        pyversion)]
-    msg += ['Running in directory: {}'.format(rundir)]
-    msg += ['Input file: {}'.format(infile)]
-    msg += ['Log file: {}'.format(logfile)]
-    for message in msg:
+    msgtxt = ["Welcome to"]
+    msgtxt += [r"                          _    _"]
+    msgtxt += [r" _ __   _   _  _ __  ___ | |_ (_) ___"]
+    msgtxt += [r"| '_ \ | | | || '__|/ _ \| __|| |/ __|"]
+    msgtxt += [r"| |_) || |_| || |  |  __/| |_ | |\__ \ "]
+    msgtxt += [r"| .__/  \__, ||_|   \___| \__||_||___/"]
+    msgtxt += [r"|_|     |___/"]
+    msgtxt += [None]
+    msgtxt += ['Version: {}'.format(VERSION)]
+    msgtxt += ['Start of execution: {}'.format(timestart)]
+    msgtxt += ['Python version: {}'.format(pyversion)]
+    msgtxt += ['Running in directory: {}'.format(rundir)]
+    msgtxt += ['Input file: {}'.format(infile)]
+    msgtxt += ['Log file: {}'.format(logfile)]
+    msgtxt += [None]
+    for message in msgtxt:
         print_and_loginfo(message)
 
 
-def print_and_loginfo(msg):
+def print_and_loginfo(msgtxt):
     """Print and log a message."""
-    logger.info(msg)
-    print_to_screen(msg)
+    if msgtxt is not None:
+        logger.info(msgtxt)
+    print_to_screen(msgtxt)
 
 
 def bye_bye_world():
@@ -164,11 +179,11 @@ def get_tasks(sim_settings, progress=False):
     print_to_screen(msgtxt)
     logger.info(msgtxt)
     output_tasks = []
-    for task in create_output(sim_settings):
-        if progress and task.target == 'screen':
+    for out_task in create_output(sim_settings):
+        if progress and out_task.target == 'screen':
             pass
         else:
-            output_tasks.append(task)
+            output_tasks.append(out_task)
     return output_tasks
 
 
@@ -191,10 +206,10 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Starting MD-Flux simulation')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
-                      desc='# MD-flux'):
-        for task in output_tasks:
-            task.output(result)
+    nsteps = sim.cycle['end'] - sim.cycle['step']
+    for result in tqd(sim.run(), total=nsteps, desc='MD-flux'):
+        for out_task in output_tasks:
+            out_task.output(result)
 
 
 def run_md_simulation(sim, sim_settings, progress=False):
@@ -214,14 +229,13 @@ def run_md_simulation(sim, sim_settings, progress=False):
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Starting MD simulation')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
-                      desc='# MD step'):
-        for task in output_tasks:
-            task.output(result)
+    nsteps = sim.cycle['end'] - sim.cycle['step']
+    for result in tqd(sim.run(), total=nsteps, desc='MD step'):
+        for out_task in output_tasks:
+            out_task.output(result)
 
 
-def run_tis_single_simulation(sim, sim_settings, progress=False,
-                              position=0):
+def run_tis_single_simulation(sim, sim_settings, progress=False):
     """This will run a single TIS simulation.
 
     Parameters
@@ -233,26 +247,33 @@ def run_tis_single_simulation(sim, sim_settings, progress=False,
     progress : boolean, optional
         If True, we will display a progress bar, otherwise we print
         results to the screen.
-    position : integer
-        Used to control location of progress bars
     """
-    # ensure that we create an output directory
-    msg_dir = make_dirs(sim_settings['output-dir'])
+    # Ensure that we create an output directory
+    msg_dir = make_dirs(sim_settings['output']['directory'])
     msgtxt = ('Creating output directory: '
               '{}'.format(msg_dir))
     print_and_loginfo(msgtxt)
-    # create output tasks:
+    # Create output tasks:
     output_tasks = get_tasks(sim_settings, progress=progress)
-    print_and_loginfo('Running TIS ensemble simulation')
+    print_and_loginfo(None)
+    print_and_loginfo('Starting TIS simulation!')
+    print_and_loginfo('Generating initial path...')
+    result = sim.step()
+    path = result['trialpath']
+    print_and_loginfo('Initiated path: {}'.format(path))
+    print_and_loginfo(None)
+    for out_task in output_tasks:
+        out_task.output(result)
+    # Start the full simulation:
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
-                      desc='# Ensemble {}'.format(sim_settings['ensemble']),
-                      position=position):
-        for task in output_tasks:
-            task.output(result)
+    nsteps = (sim.cycle['end'] - sim.cycle['step']) - 1  # -1 for init
+    desc = 'Ensemble {}'.format(sim_settings['simulation']['ensemble'])
+    for result in tqd(sim.run(), total=nsteps, desc=desc):
+        for out_task in output_tasks:
+            out_task.output(result)
 
-def run_retis_simulation(sim, sim_settings, progress=False,
-                         position=0):
+
+def run_retis_simulation(sim, sim_settings, progress=False):
     """This will run a RETIS simulation.
 
     Parameters
@@ -264,8 +285,6 @@ def run_retis_simulation(sim, sim_settings, progress=False,
     progress : boolean, optional
         If True, we will display a progress bar, otherwise we print
         results to the screen.
-    position : integer
-        Used to control location of progress bars
     """
     output_tasks = []
     print_and_loginfo('Creating output directories:')
@@ -274,89 +293,80 @@ def run_retis_simulation(sim, sim_settings, progress=False,
         msg_dir = make_dirs(dirname)
         msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
         print_and_loginfo(msgtxt)
-        sim_settings['output-dir'] = dirname
+        sim_settings['output']['directory'] = dirname
+        sim_settings['simulation']['ensemble'] = ensemble.ensemble_name
         ensemble_task = get_tasks(sim_settings, progress=progress)
-        output_tasks.extend(ensemble_task)
+        #output_tasks.extend(ensemble_task)
+        output_tasks.append(ensemble_task)
     print_to_screen('')
-    print_and_loginfo('Running RETIS ensemble simulation')
-    print_and_loginfo('Initializing the path ensembles...')
+    print_and_loginfo('Running RETIS simulation!')
+    print_and_loginfo('Initializing path ensembles...')
     # Here we explicitly do the initialization. This is just
     # because we want to print out some info!
-    for task, ensemble in zip(output_tasks, sim.path_ensembles):
-        print_and_loginfo('Initiating in {}'.format(ensemble.ensemble_name))
+    for tasks, ensemble in zip(output_tasks, sim.path_ensembles):
+        print_and_loginfo('Initiating in {}:'.format(ensemble.ensemble_name))
         path = sim.initiate_ensemble(ensemble)
-        print_and_loginfo('Initial path: {}'.format(path))
+        print_and_loginfo('{}'.format(path))
         print_to_screen('')
         result = {'pathensemble': ensemble, 'cycle': sim.cycle}
-        task.output(result)
+        for out_task in tasks:
+            out_task.output(result)
     sim.first_step = False  # We have done the "first" step now.
-    print_and_loginfo('Starting main RETIS simulation...')
+    print_and_loginfo('Starting main RETIS simulation!')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), total=sim_settings['steps'],
-                      desc='RETIS',
-                      position=position):
-        for task, ensemble in zip(output_tasks, sim.path_ensembles):
-            print('Ensemble path-length:', ensemble.ensemble_name, ensemble.last_path.length)
+    nsteps = sim.cycle['end'] - sim.cycle['step']
+    for result in tqd(sim.run(), total=nsteps, desc='RETIS'):
+        for tasks, ensemble in zip(output_tasks, sim.path_ensembles):
             result['pathensemble'] = ensemble
-            task.output(result)
-        print('\nStep:', result['cycle']['step']+1)
+            for out_task in tasks:
+                out_task.output(result)
+        if not progress:
+            print('\nStep:', result['cycle']['step']+1)
+            for res, ensemble in zip(result['retis'], sim.path_ensembles):
+                print(ensemble.ensemble_name, res[0], res[1])
+            print()
 
 
-def run_tis_simulation(settings_all, settings_tis, progress=False):
-    """This will run several TIS simulations.
+def run_tis_simulation(settings_sim, settings_tis, progress=False):
+    """This will run TIS simulations.
 
     Here, we have the possibility of doing 2 things:
 
     1) Just write out input files for single TIS simulations and
        exit without running a simulation.
 
-    2) Run the TIS simulations in series.
-
-    pyretisrun will not run a parallel TIS simulation. This since
-    the tasks can be run in parallel by using option 1.
-
+    2) Run a single TIS simulation.
 
     Parameters
     ----------
-    settings_all : list of dicts.
-        The settings for the single TIS simulations to run.
+    settings_sim : list of dicts or Simulation object.
+        The settings for the simulations or the actual simulation
+        to run.
     settings_tis : dict
         The simulation settings for the TIS simulation.
     progress : boolean, optional
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    run_type = settings_tis.get('run_type', 'serial')
-    if run_type == 'write':
-        print_and_loginfo('Creation of input files requested.')
-        for i, setting in enumerate(settings_all):
-            ens = setting['ensemble']
+    if len(settings_tis['simulation']['interfaces']) <= 3:
+        run_tis_single_simulation(settings_sim, settings_tis,
+                                  progress=progress)
+    else:
+        print_and_loginfo(None)
+        print_and_loginfo('Noted several path ensembles.')
+        print_and_loginfo('Will just create input files...')
+        print_and_loginfo(None)
+        for setting in settings_sim:
+            ens = setting['simulation']['ensemble']
             ensf = PATH_DIR_FMT.format(ens)
             msgtxt = 'Setting up TIS ensemble: {}'.format(ens)
             print_and_loginfo(msgtxt)
-            infile = '{}-{}.rst'.format(setting['task'], ensf)
+            infile = '{}-{}.rst'.format(setting['simulation']['task'], ensf)
             print_and_loginfo('Create file: "{}"'.format(infile))
             write_settings_file(setting, infile, backup=False)
             print_and_loginfo('Command for executing:')
             print_and_loginfo('pyretisrun -i {} -p -f {}.log'.format(infile,
                                                                      ensf))
-            print_to_screen()
-    else:
-        simulations = []
-        for i, setting in enumerate(settings_all):
-            ens = setting['ensemble']
-            msgtxt = 'Creating TIS simulation, ensemble: {0}'.format(ens)
-            print_and_loginfo(msgtxt)
-            simulations.append(create_simulation(setting, system))
-        print_to_screen()
-        print_and_loginfo('Starting SERIAL TIS simulation')
-        print_to_screen()
-        nens = len(simulations)
-        for i, (sim, setting) in enumerate(zip(simulations, settings_all)):
-            print_and_loginfo('Running TIS ensemble: {}'.format(i + 1))
-            run_tis_single_simulation(sim, setting, progress=progress)
-            print_and_loginfo('Done with TIS ensemble: {}!'.format(i + 1))
-            print_and_loginfo('{0} / {1} Completed!'.format(i + 1, nens))
             print_to_screen()
 
 
@@ -381,14 +391,13 @@ def run_generic_simulation(sim, sim_settings, progress=False):
     output_tasks = get_tasks(sim_settings, progress=progress)
     print_and_loginfo('Running simulation')
     tqd = use_tqdm(progress)
-    for result in tqd(sim.run(), desc='# Step'):
-        for task in output_tasks:
-            task.output(result)
+    for result in tqd(sim.run(), desc='Step'):
+        for out_task in output_tasks:
+            out_task.output(result)
 
 
 _RUNNERS = {'md-flux': run_md_flux_simulation,
             'md-nve': run_md_simulation,
-            'tis-single': run_tis_single_simulation,
             'tis': run_tis_simulation,
             'retis': run_retis_simulation}
 
@@ -449,21 +458,27 @@ if __name__ == '__main__':
                       ' {} is not a file!'.format(inputfile))
             logger.error(errtxt)
             raise ValueError(errtxt)
-        print_and_loginfo('Reading input settings')
+        print_and_loginfo('Reading input settings.')
         settings = parse_settings_file(inputfile)
-        settings['exe-path'] = runpath
-        create_conversion_factors(settings['units'], **settings['units-base'])
-
+        settings['simulation']['exe-path'] = runpath
+        print_and_loginfo(None)
+        print_and_loginfo('Initiaizing unit system.')
+        msg = units_from_settings(settings)
+        print_and_loginfo(msg)
         print_and_loginfo('Creating system from settings.')
         system = create_system(settings)
+        print_and_loginfo('Creating force field')
         system.forcefield = create_force_field(settings)
+        print_and_loginfo('Creating order parameter')
         system.order_function = create_orderparameter(settings)
+        if system.order_function is None:
+            print_and_loginfo('-> No order parameter was created!')
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)
-
-        print_and_loginfo('Will run simulation: "{}"'.format(settings['task']))
-        runner = _RUNNERS.get(settings['task'], run_generic_simulation)
+        task = settings['simulation']['task'].lower()
+        print_and_loginfo('Will run simulation: "{}"'.format(task))
+        runner = _RUNNERS.get(task, run_generic_simulation)
         runner(simulation, settings, progress=args_dict['progress'])
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
@@ -476,12 +491,13 @@ if __name__ == '__main__':
         if simulation is not None:
             end = getattr(simulation, 'cycle', {'step': None})['step']
             if end is not None:
-                settings['endcycle'] = end
+                settings['simulation']['endcycle'] = end
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
-            settings['npart'] = system.particles.npart
+            settings['particles']['npart'] = system.particles.npart
         outfile = '_out-{}'.format(inputfile)
         outpath = os.path.join(basepath, outfile)
         print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
-        write_settings_file(settings, outpath, backup=False)
+        write_settings_file(settings, outpath,
+                            backup=settings['output']['backup'])
         bye_bye_world()

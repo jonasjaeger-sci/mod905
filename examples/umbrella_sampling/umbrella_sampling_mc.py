@@ -41,10 +41,11 @@ umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:
-settings = {'task': 'umbrellawindow',
-            'rgen': RandomGenerator(seed=RANDSEED),
-            'mincycle': 10000,
-            'maxdx': 0.1}
+settings = {}
+settings['simulation'] = {'task': 'umbrellawindow',
+                          'rgen': RandomGenerator(seed=RANDSEED),
+                          'mincycle': 10000,
+                          'maxdx': 0.1}
 
 trajectory, energy = [], []  # to store all trajectories & energies
 # we run all the umbrella simulations by looping over
@@ -56,9 +57,9 @@ for i, umbrella in enumerate(umbrellas):
     # Move rectangular potential to correct place:
     potential_rw.set_parameters({'left': umbrella[0], 'right': umbrella[1]})
     mysystem.potential()  # recalculate potential energy
-    settings['umbrella'] = umbrella
+    settings['simulation']['umbrella'] = umbrella
     # Calculate position we must cross for this window:
-    settings['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
+    settings['simulation']['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
     # Create the umbrella simulation :-)
     simulation = create_simulation(settings, mysystem)
     print(simulation)
