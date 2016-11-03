@@ -19,7 +19,7 @@ import numpy as np
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 200,
+                          'steps': 20000,
                           'interfaces': [-0.9, -0.8, -0.7,
                                          -0.6, -0.5, -0.4,
                                          -0.3, 1.0]}

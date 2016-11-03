@@ -13,8 +13,8 @@ from pyretis.core.properties import Property
 from pyretis.inout.settings import (create_force_field,
                                     create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
-from pyretis.inout.plotting import mpl_set_style
 import numpy as np
+import matplotlib as mpl
 from matplotlib import pylab as plt
 from matplotlib import animation
 from matplotlib import gridspec as gridspec
@@ -24,7 +24,7 @@ from matplotlib import gridspec as gridspec
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 120,
+                          'steps': 20000,
                           'interfaces': [-0.9, -0.8, -0.7, -0.6,
                                          -0.5, -0.4, -0.3, 1.0]}
 # Basic settings for the system:
@@ -63,14 +63,16 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
 # and some settings for the analysis
 ANALYSIS = {'ngrid': 101}
 
-# Set up for plotting:
-mpl_set_style()
-COLORS = None
+# For convenience:
+TIMESTEP = SETTINGS['integrator']['timestep']
 INTERFACES = SETTINGS['simulation']['interfaces']
+
+# Set up for plotting:
+mpl.rc('font', size=14, family='serif')
+mpl.rc('lines', color='#262626')
 NINT = len(INTERFACES)
-if NINT > 6:
-    CMAP = plt.get_cmap('Set1')
-    COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
+CMAP = plt.get_cmap('Set1')
+COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
 TXTCOLOR = {'SW': '#006BA4', 'NU': '#FF800E',
             'TR': '#ABABAB', 'SH': '#595959'}
 
@@ -142,8 +144,8 @@ def matplotlib_setup():
     ax2 = new_fig.add_subplot(grid[0, 2:])
     ax3 = new_fig.add_subplot(grid[1:, 2:])
     axes = (ax1, ax2, ax3)
-    if COLORS is not None:
-        ax1.set_color_cycle(COLORS)
+    #if COLORS is not None:
+    #    ax1.set_color_cycle(COLORS)
     plot_patches = {'paths': [],
                     'prob': [],
                     'matched': None,
@@ -156,7 +158,7 @@ def matplotlib_setup():
     for i, pos in enumerate(INTERFACES):
         ax1.axvline(x=pos, lw=2, ls=':', color='#262626')
         ax3.axvline(x=pos, lw=2, ls=':', color='#262626')
-        newline, = ax1.plot([], [], lw=3, ls='-')
+        newline, = ax1.plot([], [], lw=3, ls='-', color=COLORS[i])
         plot_patches['paths'].append(newline)
         newlinep, = ax3.plot([], [], lw=3, ls='-', color=newline.get_color())
         plot_patches['prob'].append(newlinep)
@@ -192,7 +194,8 @@ def matplotlib_setup():
     ax1.set_ylim(-2, 2)
     ax1.set_xlim(-1.5, 1.5)
 
-    plot_patches['fluxline'] = ax2.plot([0], [0], lw=3, ls='-')[0]
+    plot_patches['fluxline'] = ax2.plot([-1], [0], lw=3, ls='-',
+                                        color='#4C72B0')[0]
     ax2.set_ylim(0, 1)
     ax2.set_xlim(0, 1)
     ax2.set_ylabel('Flux')
@@ -285,12 +288,14 @@ def update(frame, simulation, plot_patches, prop, axes):
                 patches.append(plot_patches['prob'][i])
 
         flux = 1.0 / ((prop['length0-'].mean + prop['length0+'].mean - 4.0) *
-                      SETTINGS['integrator']['timestep'])
-        xdata, ydata = plot_patches['fluxline'].get_data()
-        plot_patches['fluxline'].set_data(np.append(xdata, xdata[-1] + 1),
-                                          np.append(ydata, flux))
+                      TIMESTEP)
+        fluxx, fluxy = plot_patches['fluxline'].get_data()
+        fluxx = np.append(fluxx, fluxx[-1] + 1)
+        fluxy = np.append(fluxy, flux)
+    
+        plot_patches['fluxline'].set_data(fluxx, fluxy)
         axes[1].set_xlim(0, step+1)
-        axes[1].set_ylim(0, 1.1*max(flux, max(ydata)))
+        axes[1].set_ylim(0, 1.1*fluxy.max())
         #ax2.set_xlim(0, frame)
         patches.append(plot_patches['fluxline'])
         if 'retis' in result:
