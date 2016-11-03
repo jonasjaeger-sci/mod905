@@ -141,13 +141,21 @@ class RandomGeneratorBase(object):
         """
         return
 
-    @abstractmethod
     def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
                                        dof, selection=None, momentum=True):
         """Generate velocities from a Maxwell distribution.
 
         The velocities are drawn to match a given temperature and this
         function can be applied to a sub-set of the particles.
+
+        The generation is done in three steps:
+
+        1) We generate velocities from a standard normal distribution.
+
+        2) We scale the velocity of particle `i` with
+           ``1.0/sqrt(mass_i)`` and reset the momentum.
+
+        3) We scale the velocities to the set temperature.
 
         Parameters
         ----------
@@ -173,9 +181,23 @@ class RandomGeneratorBase(object):
             Returns `None` but modifies velocities of the selected
             particles.
         """
-        return
+        if selection is None:
+            vel, imass = particles.vel, particles.imass
+        else:
+            vel, imass = particles.vel[selection], particles.imass[selection]
+        vel = np.sqrt(imass) * self.normal(loc=0.0, scale=1.0,
+                                           size=vel.shape)
+        # NOTE: x[None] = x for a numpy.array - this is not valid for a list.
+        particles.vel[selection] = vel
+        if momentum:
+            reset_momentum(particles, selection=selection)
 
-    @abstractmethod
+        _, avgtemp, _ = calculate_kinetic_temperature(particles, boltzmann,
+                                                      dof=dof,
+                                                      selection=selection)
+        scale_factor = np.sqrt(temperature/avgtemp)
+        particles.vel[selection] *= scale_factor
+
     def draw_maxwellian_velocities(self, system, sigma_v=None):
         """Simple function to draw numbers from a Gaussian distribution.
 
@@ -188,7 +210,12 @@ class RandomGeneratorBase(object):
             Standard deviation in velocity, one for each particle.
             If it's not given it will be estimated.
         """
-        return
+        if not sigma_v or sigma_v < 0.0:
+            kbt = (1.0/system.temperature['beta'])
+            sigma_v = np.sqrt(kbt*system.particles.imass)
+        vel = self.normal(loc=0.0, scale=sigma_v,
+                          size=system.particles.vel.shape)
+        return vel, sigma_v
 
 
 class RandomGenerator(RandomGeneratorBase):
@@ -320,82 +347,6 @@ class RandomGenerator(RandomGeneratorBase):
         norm = norm.reshape(size, 2)
         meanm = np.array([mean, ] * size)
         return meanm + np.dot(norm, cho.T)
-
-    def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
-                                       dof, selection=None, momentum=True):
-        """Generate velocities from a Maxwell distribution.
-
-        The velocities are drawn to match a given temperature and this
-        function can be applied to a sub-set of the particles.
-
-        The generation is done in three steps:
-
-        1) We generate velocities from a standard normal distribution.
-
-        2) We scale the velocity of particle `i` with
-           ``1.0/sqrt(mass_i)`` and reset the momentum.
-
-        3) We scale the velocities to the set temperature.
-
-        Parameters
-        ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            These are the particles to set the velocity of.
-        boltzmann : float
-            The Boltzmann factor in correct units.
-        temperature : float
-            The desired temperature.
-            Typically, `system.temperature['set']` will be used here.
-        dof : list of floats, optional
-            dof is the degrees of freedom to subtract. It's shape should
-            be equal to the number of dimensions.
-        selection : list of ints, optional
-            A list with indexes of the particles to consider.
-            Can be used to only apply it to a selection of particles
-        momentum : boolean
-            If true, we will reset the momentum.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but modifies velocities of the selected
-            particles.
-        """
-        if selection is None:
-            vel, imass = particles.vel, particles.imass
-        else:
-            vel, imass = particles.vel[selection], particles.imass[selection]
-        vel = np.sqrt(imass) * self.normal(loc=0.0, scale=1.0,
-                                           size=vel.shape)
-        # NOTE: x[None] = x for a numpy.array - this is not valid for a list.
-        particles.vel[selection] = vel
-        if momentum:
-            reset_momentum(particles, selection=selection)
-
-        _, avgtemp, _ = calculate_kinetic_temperature(particles, boltzmann,
-                                                      dof=dof,
-                                                      selection=selection)
-        scale_factor = np.sqrt(temperature/avgtemp)
-        particles.vel[selection] *= scale_factor
-
-    def draw_maxwellian_velocities(self, system, sigma_v=None):
-        """Simple function to draw numbers from a Gaussian distribution.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This is used to determine the temperature parameter(s) and
-            the shape (number of particles and dimensionality)
-        sigma_v : numpy.array, optional
-            Standard deviation in velocity, one for each particle.
-            If it's not given it will be estimated.
-        """
-        if not sigma_v or sigma_v < 0.0:
-            kbt = (1.0/system.temperature['beta'])
-            sigma_v = np.sqrt(kbt*system.particles.imass)
-        vel = self.normal(loc=0.0, scale=sigma_v,
-                          size=system.particles.vel.shape)
-        return vel, sigma_v
 
 
 class ReservoirSampler(object):
@@ -621,56 +572,6 @@ class MockRandomGenerator(RandomGeneratorBase):
         norm = norm.reshape(size, 2)
         meanm = np.array([mean, ] * size)
         return 0.01*(meanm + norm)
-
-    def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
-                                       dof, selection=None, momentum=True):
-        """Generate fake velocities from a Maxwell distribution.
-
-        Parameters
-        ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            These are the particles to set the velocity of.
-        boltzmann : float
-            The Boltzmann factor in correct units.
-        temperature : float
-            The desired temperature.
-            Typically, `system.temperature['set']` will be used here.
-        dof : list of floats, optional
-            dof is the degrees of freedom to subtract. It's shape should
-            be equal to the number of dimensions.
-        selection : list of ints, optional
-            A list with indexes of the particles to consider.
-            Can be used to only apply it to a selection of particles
-        momentum : boolean
-            If true, we will reset the momentum.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but modifies velocities of the selected
-            particles.
-        """
-        particles.vel = self.normal(loc=0.0, scale=1.0,
-                                    size=particles.vel.shape)
-
-    def draw_maxwellian_velocities(self, system, sigma_v=None):
-        """Simple function to draw numbers from a Gaussian distribution.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This is used to determine the temperature parameter(s) and
-            the shape (number of particles and dimensionality)
-        sigma_v : numpy.array, optional
-            Standard deviation in velocity, one for each particle.
-            If it's not given it will be estimated.
-        """
-        if not sigma_v or sigma_v < 0.0:
-            kbt = (1.0/system.temperature['beta'])
-            sigma_v = np.sqrt(kbt*system.particles.imass)
-        vel = self.normal(loc=0.0, scale=sigma_v,
-                          size=system.particles.vel.shape)
-        return vel, sigma_v
 
 
 def create_random_generator(settings):
