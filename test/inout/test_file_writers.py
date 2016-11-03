@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """A simple test module for the writers.
 
 Here we test that we can write and read different output formats.
 """
 import logging
 import unittest
-import numpy as np
 import tempfile
 import itertools
+import numpy as np
 from pyretis.inout.writers.writers import (EnergyWriter, OrderWriter,
                                            CrossWriter)
 from pyretis.inout.writers.tablewriter import ThermoTable
@@ -53,7 +55,7 @@ class WriterTest(unittest.TestCase):
             string = '{}\n'.format(order_writer.header)
             temp.write(string.encode('utf-8'))
             for i in range(50):
-                rand = np.random.rand(2* (1 + extra))
+                rand = np.random.rand(2 * (1 + extra))
                 all_data.append([i])
                 all_data[-1].extend(rand)
                 for lines in order_writer.generate_output(i, rand):
@@ -114,7 +116,7 @@ class TableWritersTest(unittest.TestCase):
         for lines in table.generate_output(100, data):
             self.assertMultiLineEqual(lines, line)
             break
-        
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,6 +12,10 @@ Important methods defined here
 make_tis_step
     Function that will perform a single TIS step.
 
+make_tis_step_ensemble
+    Function to preform a TIS step for a path ensemble. It will handle
+    adding of the path to a path ensemble object.
+
 generate_initial_path_kick
     Function for generating an initial path by repeatedly kicking a
     phase point.
@@ -34,7 +38,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['make_tis_step', 'generate_initial_path_kick']
+__all__ = ['make_tis_step_ensemble', 'make_tis_step',
+           'generate_initial_path_kick']
 
 
 def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
@@ -76,12 +81,19 @@ def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
         The status of the path
     """
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
+    msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
+    logger.debug(msgtxt)
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
                                           path_ensemble.interfaces,
                                           integrator,
                                           rgen,
                                           tis_settings)
+    if accept:
+        msgtxt = 'The move was accepted'
+    else:
+        msgtxt = 'The move was rejected ({})'.format(status)
+    logger.debug(msgtxt)
     path_ensemble.add_path_data(trial, status, cycle=cycle)
     return accept, trial, status
 
@@ -169,9 +181,11 @@ def make_tis_step(path, system, interfaces, integrator, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
+        logger.debug('Selected a time reversal move.')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
+        logger.debug('Selected a shooting move.')
         accept, new_path, status = _shoot(path, system, interfaces,
                                           integrator, rgen,
                                           tis_settings)
@@ -266,13 +280,13 @@ def _shoot(path, system, interfaces, integrator, rgen,
     orderp, pos, vel, idx = path.get_shooting_point()
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
     # kick the timeslice:
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
-                          momentum=False)[0]
+                          momentum=tis_settings['zero_momentum'],
+                          rescale=tis_settings['rescale_energy'])[0]
     # update the order parameter since it could depend on velocity
     orderp = system.calculate_order()
     # We now check if the kick was OK or not:
@@ -382,7 +396,8 @@ def generate_initial_path_kick(system, interfaces, integrator,
         * `start_cond`: string, starting condition, 'L'eft or 'R'ight
         * `maxlength`: integer, maximum allowed length of paths.
 
-        Note that also `_fix_path_by_tis` will use the `tis_settings`.
+        Note that also `_fix_path_by_tis` and `_kick_across_middle`
+        will use `tis_settings`.
 
     Returns
     -------
@@ -390,7 +405,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
         This is the generated initial path
     """
     previous, _ = _kick_across_middle(system, integrator, rgen,
-                                      interfaces[1])
+                                      interfaces[1], tis_settings)
     # Note: current point is stored in system
     # When the kicking is done, we have two points (`previous` and the
     # current system.particles).
@@ -451,7 +466,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
     return initial_path
 
 
-def _kick_across_middle(system, integrator, rgen, middle):
+def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
     """Repeatedly kick a phase point so that it crosses the middle interface.
 
     Parameters
@@ -465,6 +480,11 @@ def _kick_across_middle(system, integrator, rgen, middle):
         This is the random generator that will be used.
     middle : float
         This is the value for the middle interface.
+    tis_settings : dict
+        This dictionary contains settings for TIS. Explicitly used here:
+
+        * `zero_momentum`: boolean, determines if the mometum is zeroed
+        * `rescale_energy`: boolean, determines if energy is rescaled.
 
     Returns
     -------
@@ -494,7 +514,9 @@ def _kick_across_middle(system, integrator, rgen, middle):
         previous = particles.get_phase_point()
         previous['order'] = curr
         # kick the time slice
-        _kick_timeslice(system, rgen, aimless=True, momentum=False)
+        _kick_timeslice(system, rgen, aimless=True,
+                        momentum=tis_settings['zero_momentum'],
+                        rescale=tis_settings['rescale_energy'])
         # integrate forward one step:
         integrator.integration_step(system)
         # compare previous order parameter and the new one:
@@ -513,7 +535,7 @@ def _kick_across_middle(system, integrator, rgen, middle):
 
 
 def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
-                    rescale=False):
+                    rescale=None):
     """Make a random modification to a time slice.
 
     This method will modify the velocities of a time slice.
@@ -532,11 +554,10 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
         Determines if we should do aimless shooting or not.
     momentum : boolean, optional
         If True, we reset the linear momentum to zero after kicking.
-    rescale : boolean, optional
-        For some NVE simulations, we rescale the energy to a fixed
-        value. If `rescale` is True, we will rescale the energy (after
-        modification of the velocities) to match the set energy
-        specified in `system.set_energy`.
+    rescale : float, optional
+        For some NVE simulations, we can rescale the energy to a fixed
+        value. If `rescale` is a float > 0, we will rescale the energy (after
+        modification of the velocities) to match the given float.
 
 
     Returns
@@ -547,8 +568,8 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
         The new kinetic energy
     """
     particles = system.particles
-    if rescale:
-        kin_old = system.set_energy - system.v_pot
+    if rescale is not None and rescale is not False and rescale > 0:
+        kin_old = rescale - system.v_pot
     else:
         kin_old = calculate_kinetic_energy(particles)[0]
     if aimless:
@@ -560,7 +581,7 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     if momentum:
         reset_momentum(particles)
     if rescale:
-        system.rescale_velocities(system.set_energy)
+        system.rescale_velocities(rescale)
     kin_new = calculate_kinetic_energy(particles)[0]
     dek = kin_new - kin_old
     return dek, kin_new
@@ -607,9 +628,10 @@ def _fix_path_by_tis(initial_path, system, interfaces,
     path_ok = False
     local_tis_settings = {'allowmaxlength': True,
                           'aimless': True,
-                          'freq': 0.5,
-                          'start_cond': tis_settings['start_cond'],
-                          'maxlength': tis_settings['maxlength']}
+                          'freq': 0.5}
+    for key in ('start_cond', 'maxlength', 'zero_momentum', 'rescale_energy'):
+        local_tis_settings[key] = tis_settings[key]
+
     while not path_ok:
         accept, trial, _ = make_tis_step(initial_path,
                                          system,

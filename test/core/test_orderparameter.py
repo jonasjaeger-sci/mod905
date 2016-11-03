@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Test the order parameter class from pyretis.core"""
 import logging
 import unittest

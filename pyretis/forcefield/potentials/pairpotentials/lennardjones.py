@@ -82,7 +82,8 @@ class PairLennardJonesCut(PotentialFunction):
         Keys are the pairs (particle types) that may interact.
     """
 
-    def __init__(self, dim=3, shift=True, desc='Lennard-Jones pair potential'):
+    def __init__(self, dim=3, shift=True, mixing='geometric',
+                 desc='Lennard-Jones pair potential'):
         """Initiate the Lennard-Jones potential.
 
         Parameters
@@ -91,6 +92,8 @@ class PairLennardJonesCut(PotentialFunction):
             The dimensionality to use.
         shift : boolean
             Determines if the potential should be shifted or not.
+        mixing : string
+            Determines how we should mix potential parameters.
         """
         super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
         self.shift = shift
@@ -101,6 +104,7 @@ class PairLennardJonesCut(PotentialFunction):
         self._rcut2 = {}
         self._offset = {}
         self.params = {}
+        self.mixing = mixing
 
     def set_parameters(self, parameters):
         """Update all parameters.
@@ -114,7 +118,7 @@ class PairLennardJonesCut(PotentialFunction):
             The input base parameters
         """
         self.params = {}
-        pair_param = generate_pair_interactions(parameters)
+        pair_param = generate_pair_interactions(parameters, self.mixing)
         for pair in pair_param:
             eps_ij = pair_param[pair]['epsilon']
             sig_ij = pair_param[pair]['sigma']
@@ -288,7 +292,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
     is similar to `PairLennardJonesCut`.
     """
 
-    def __init__(self, dim=3, shift=True,
+    def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential (numpy)'):
         """Initiate the Lennard-Jones potential.
 
@@ -300,7 +304,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             Determines if the potential should be shifted or not.
         """
         super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
-                                                    shift=shift)
+                                                    shift=shift, mixing=mixing)
 
     def potential(self, system):
         """Calculate the potential energy for the Lennard-Jones interaction.

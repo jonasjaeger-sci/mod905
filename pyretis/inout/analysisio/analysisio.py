@@ -44,7 +44,7 @@ from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings.settings import KEYWORDS
-from pyretis.inout.writers import get_file_object, PathEnsembleFile
+from pyretis.inout.writers import get_writer, PathEnsembleFile
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -94,7 +94,8 @@ def run_analysis(sim_settings):
         for file_type in FILES[sim_task]:
             filename = FILES[sim_task][file_type]
             if add_outdir:
-                filename = os.path.join(sim_settings['output-dir'], filename)
+                filename = os.path.join(sim_settings['output']['directory'],
+                                        filename)
             if os.path.isfile(filename):
                 raw_data.append((file_type, filename))
         return run_analysis_files(sim_settings, raw_data)
@@ -456,7 +457,7 @@ def analyse_file(file_type, file_name):
         """
         function = select_analyse_function(file_type)
         if file_type in ('energy', 'order', 'cross'):
-            raw_data = read_first_block(get_file_object(file_type), file_name)
+            raw_data = read_first_block(get_writer(file_type), file_name)
             return function(settings, raw_data, plotter=plotter, txt=txt)
         elif file_type == 'pathensemble':
             fileobj = PathEnsembleFile(file_name, settings['ensemble'],

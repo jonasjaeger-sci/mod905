@@ -45,9 +45,6 @@ class System(object):
           system.
     v_pot : float
         The potential energy of the system.
-    set_energy : float
-        The total energy of the system in case we want to fix this
-        value.
     particles : object like `pyretis.core.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
@@ -56,19 +53,20 @@ class System(object):
         preparing to run a simulation. This is typically functions that
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
-        such that system.function(*args) can be called.
+        such that ``system.function(*args)`` can be called.
     forcefield : object like `ForceField` from `pyretis.forcefield`
         Defines the force field to use and implements the actual force
         and potential calculation.
     order_function : object like `OrderParameter` from `.orderparameter`
-        Defines the an order parameter to use for the system.
+        Defines the an order parameter to use for the system. See
+        :py:mod:`pyretis.core.orderparameter` for the definition
+        of order parameters.
     units : string
         Units to use for the system/simulation. Should match the defined
-        units in `pyretis.core.units`.
+        units in :py:mod:`pyretis.core.units`.
     """
 
-    def __init__(self, units='lj', box=None, temperature=None,
-                 energy=None):
+    def __init__(self, units='lj', box=None, temperature=None):
         """Initialization of the system.
 
         Parameters
@@ -102,7 +100,6 @@ class System(object):
         self.forcefield = None
         self.order_function = None
         self.orderp = None
-        self.set_energy = energy
         self.post_setup = []
 
     def adjust_dof(self, dof):
@@ -171,7 +168,7 @@ class System(object):
     def calculate_beta(self, temperature=None):
         r"""Return the so-called beta factor for the system.
 
-        Beta is defined as :math:`\beta = 1/(k_\text{B} \times T`
+        Beta is defined as :math:`\beta = 1/(k_\text{B} \times T)`
         where :math:`k_\text{B}` is the Boltzmann constant and the
         temperature `T` is either specified in the parameters or assumed
         equal to the set temperature of the system.
@@ -232,7 +229,7 @@ class System(object):
         """Calculates and updates the order parameter"""
         if self.order_function:
             order = self.order_function.__call__(self)
-            #TODO: Maybe consider if we should create a new object that
+            # TODO: Maybe consider if we should create a new object that
             # is a composition of system, orderparameter and force field,
             # i.e. newobject.system, newobject.orderparameter, newobject.ff
             # etc. Then we could do newobject.calculate_order() which does
@@ -436,7 +433,8 @@ class System(object):
         ekin, _ = calculate_kinetic_energy(self.particles)
         ekin_new = energy - vpot
         if ekin_new < 0:
-            msg = 'Can not rescale velocities'
+            msg = ('Can not rescale velocities. '
+                   'Target: {}, Pot = {}'.format(energy, vpot))
             logger.warning(msg)
         else:
             alpha = np.sqrt(ekin_new / ekin)

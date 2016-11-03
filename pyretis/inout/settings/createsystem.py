@@ -87,9 +87,9 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 
 
 def list_get(input_list, index):
-    """Function to get an item from a list that handles out-of bounds errors.
+    """Method to get an item from a list that handles out-of bounds errors.
 
-    This function is intended to be used when we are picking items from
+    This method is intended to be used when we are picking items from
     a list and possibly we want a number of items which is larger than
     the number of items in the list. Here, we then just return the last
     element.
@@ -108,7 +108,7 @@ def list_get(input_list, index):
 
 
 def _guess_particle_mass(particle_no, particle_type, unit):
-    """Function that will try to guess a particle mass from it's type.
+    """Method that will try to guess a particle mass from it's type.
 
     Parameters
     ----------
@@ -137,10 +137,10 @@ def _guess_particle_mass(particle_no, particle_type, unit):
 
 
 def initial_positions_lattice(settings):
-    """Function to generate initial positions based on given settings.
+    """Method to generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
-    as dictated by `settings['units']`.
+    as dictated by `settings['system']['units']`.
 
     Parameters
     ----------
@@ -155,16 +155,16 @@ def initial_positions_lattice(settings):
         A size for the region we created. This can be used to create
         a box.
     """
-    pos_settings = settings['particles-position']
-    ptype = settings.get('particles-type', [0])
-    pname = settings.get('particles-name', ['Ar'])
-    pmass = settings.get('particles-mass', {})
+    pos_settings = settings['particles']['position']
+    ptype = settings['particles'].get('type', [0])
+    pname = settings['particles'].get('name', ['Ar'])
+    pmass = settings['particles'].get('mass', {})
 
     lattice_type = pos_settings['generate'].lower()
     lattice, size = generate_lattice(lattice_type, pos_settings['repeat'],
                                      lcon=pos_settings.get('lcon', None),
                                      density=pos_settings.get('density', None))
-    ndim = settings.get('dimensions', None)
+    ndim = settings['system'].get('dimensions', None)
     if ndim is None:
         ndim = len(size)
     else:
@@ -184,7 +184,7 @@ def initial_positions_lattice(settings):
             particle_mass = pmass[particle_name]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['units'])
+                                                 settings['system']['units'])
         particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
@@ -197,7 +197,7 @@ def initial_positions_lattice(settings):
 
 
 def _get_snapshot_from_file(pos_settings, units):
-    """Helper function to get a snapshot from a file.
+    """Get a configuration snapshot from a file.
 
     This snapshot will be used to set up the initial configuration.
 
@@ -256,7 +256,7 @@ def _get_snapshot_from_file(pos_settings, units):
 
 
 def initial_positions_file(settings):
-    """Function to get initial positions from an input file.
+    """Method to get initial positions from an input file.
 
     Parameters
     ----------
@@ -273,14 +273,14 @@ def initial_positions_file(settings):
     vel_read : boolean
         True if we read velocities from the input file.
     """
-    ndim = settings.get('dimensions', 3)
-    pos_settings = settings['particles-position']
-    ptype = settings.get('particles-type', None)
-    pname = settings.get('particles-name', None)
-    pmass = settings.get('particles-mass', {})
+    ndim = settings['system'].get('dimensions', 3)
+    pos_settings = settings['particles']['position']
+    ptype = settings['particles'].get('type', None)
+    pname = settings['particles'].get('name', None)
+    pmass = settings['particles'].get('mass', {})
     ptypes = {}  # To automatically set particle types based on name.
     snapshot, convert = _get_snapshot_from_file(pos_settings,
-                                                settings['units'])
+                                                settings['system']['units'])
     vel_read = False
     particles = Particles(dim=ndim)
     for i, atomname in enumerate(snapshot['atomname']):
@@ -314,7 +314,7 @@ def initial_positions_file(settings):
             particle_mass = pmass[particle_name]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['units'])
+                                                 settings['system']['units'])
         particles.add_particle(pos,
                                vel, np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
@@ -353,29 +353,31 @@ def create_initial_positions(settings):
         velocities.
     """
     msg = 'Settings used for initial positions: {}'
-    debugtxt = msg.format(settings['particles-position'])
+    debugtxt = msg.format(settings['particles']['position'])
     logger.debug(debugtxt)
     particles = None
-    if 'generate' in settings['particles-position']:
+    if 'generate' in settings['particles']['position']:
         particles, size = initial_positions_lattice(settings)
         return particles, size, False
-    elif 'file' in settings['particles-position']:
+    elif 'file' in settings['particles']['position']:
         # First check if we need to add a path to the file:
-        filename = settings['particles-position']['file']
-        if not os.path.isfile(filename) and 'exe-path' in settings:
-            filename = os.path.join(settings['exe-path'], filename)
-            settings['particles-position']['file'] = filename
+        filename = settings['particles']['position']['file']
+        if (not os.path.isfile(filename) and
+                'exe-path' in settings['simulation']):
+            filename = os.path.join(settings['simulation']['exe-path'],
+                                    filename)
+            settings['particles']['position']['file'] = filename
         particles, size, vel = initial_positions_file(settings)
         return particles, size, vel
     else:
         msg = 'Unknown settings for initial positions: {}'
-        msgtxt = msg.format(settings['particles-position'])
+        msgtxt = msg.format(settings['particles']['position'])
         logger.error(msgtxt)
         raise ValueError(msgtxt)
 
 
 def create_box(settings, size, dim=3):
-    """Function that will try to set up a box from settings.
+    """Method that will try to set up a box from settings.
 
     Parameters
     ----------
@@ -435,7 +437,7 @@ def create_velocities(system, settings, vel):
     out : boolean
         True if we actually generated velocities.
     """
-    vel_settings = settings.get('particles-velocity', {})
+    vel_settings = settings['particles'].get('velocity', {})
     if vel:
         msg = 'Velocities read from file (temperature: {}).'
         msg = msg.format(system.calculate_temperature())
@@ -475,7 +477,7 @@ def create_velocities(system, settings, vel):
 
 
 def create_system(settings):
-    """Function that will set up a system from settings.
+    """Method that will set up a system from settings.
 
     In order to set up the system, there are several things we might
     need to do:
@@ -498,8 +500,8 @@ def create_system(settings):
     """
     particles, size, vel = create_initial_positions(settings)
     box = create_box(settings, size, dim=particles.dim)
-    system = System(temperature=settings.get('temperature', None),
-                    units=settings['units'], box=box)
+    system = System(temperature=settings['system']['temperature'],
+                    units=settings['system']['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
     vel_gen = create_velocities(system, settings, vel)

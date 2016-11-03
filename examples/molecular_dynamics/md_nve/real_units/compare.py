@@ -4,7 +4,7 @@
 The outcome of the md_nve.py simulation should be independent (to numerical
 precision) of the units used. This script will test that by comparing:
 
-- the output in `thermo.txt`
+- the output in `thermo.dat`
 
 - the generated trajectory, `traj.gro`
 
@@ -18,6 +18,7 @@ import numpy as np
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
 from pyretis.inout.writers.traj import read_gromacs_file
+from pyretis.inout.settings import parse_settings_file
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 from matplotlib import pyplot as plt
@@ -47,7 +48,7 @@ def compare_traj(traj1, traj2):
     print('Comparing with filecmp...')
     result = filecmp.cmp(traj1, traj2)
     if result is True:
-        result_string = 'Files are equal!'
+        result_string = 'Files are equal! :-)'
     else:
         result_string = 'Files are NOT equal!'
     print('Result: {}'.format(result_string))
@@ -67,16 +68,14 @@ def compare_traj(traj1, traj2):
 
 
 if __name__ == '__main__':
-    UNIT = 'lj'
-    with open('unit.txt', 'r') as fileh:
-        for lines in fileh:
-            UNIT = lines.strip()
+    settings = parse_settings_file('settings.rst')
+    UNIT = settings['system']['units']
     create_conversion_factors('lj')
     create_conversion_factors(UNIT)
     generate_system_conversions('lj', UNIT)
     compare_traj('../traj.gro', 'traj.gro')
-    ljunits = np.loadtxt('../thermo.txt')
-    other_units = np.loadtxt('thermo.txt')
+    ljunits = np.loadtxt('../thermo.dat')
+    other_units = np.loadtxt('thermo.dat')
     # convert other_units:
     other_units[:, 1] *= CONVERT['temperature'][UNIT, 'lj']
     other_units[:, 2:5] *= CONVERT['energy'][UNIT, 'lj']
@@ -93,17 +92,17 @@ if __name__ == '__main__':
     ax1.plot([], [], label='Total', lw=0, alpha=0)
 
     ax1.plot(ljunits[:, 0], ljunits[:, 2], label=ljlab,
-             ls='-', lw=7, alpha=0.7, color='darkblue')
+             ls='-', lw=7, alpha=0.8)
     ax1.plot(ljunits[:, 0], ljunits[:, 3], label=ljlab,
-             ls='-', lw=7, alpha=0.8, color='darkgreen')
+             ls='-', lw=7, alpha=0.8)
     ax1.plot(ljunits[:, 0], ljunits[:, 4], label=ljlab,
-             ls='-', lw=7, alpha=0.8, color='orange')
+             ls='-', lw=7, alpha=0.8)
     ax1.plot(other_units[:, 0], other_units[:, 2], label=unilab,
-             ls='--', lw=3, alpha=0.8, color='magenta')
+             ls='--', lw=3, alpha=0.8)
     ax1.plot(other_units[:, 0], other_units[:, 3], label=unilab,
-             ls='--', lw=3, alpha=0.8, color='0.1')
+             ls='--', lw=3, alpha=0.8)
     ax1.plot(other_units[:, 0], other_units[:, 4], label=unilab,
-             ls='--', lw=3, alpha=0.8, color='red')
+             ls='--', lw=3, alpha=0.8)
     ax1.set_xlabel('Step no.')
     ax1.set_ylabel('Energy per particle')
     leg = ax1.legend(loc='center left', prop={'size': 'small'}, ncol=3)
@@ -125,4 +124,5 @@ if __name__ == '__main__':
     ax3.legend(loc='lower right', prop={'size': 'small'})
     fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95,
                          left=0.08, wspace=0.2)
+    fig1.savefig('compare.png')
     plt.show()

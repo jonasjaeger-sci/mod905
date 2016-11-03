@@ -4,7 +4,7 @@
 """Definition of numerical integrators.
 
 These integrators are typically used to integrate and propagate
-Newtons equations of motion in time, the dynamics in molecular dynamics.
+Newtons equations of motion in time, the "dynamics" in molecular dynamics!
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,14 +59,9 @@ def integrator_factory(settings):
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    integrator_map = {'velocityverlet': {'cls': VelocityVerlet,
-                                         'args': ['timestep']},
-                      'verlet': {'cls': Verlet,
-                                 'args': ['timestep']},
-                      'langevin': {'cls': Langevin,
-                                   'args': ['timestep', 'gamma'],
-                                   'kwargs': {'rgen', 'seed',
-                                              'high-friction'}}}
+    integrator_map = {'velocityverlet': {'cls': VelocityVerlet},
+                      'verlet': {'cls': Verlet},
+                      'langevin': {'cls': Langevin}}
     return generic_factory(settings, integrator_map, name='integrator')
 
 
@@ -88,15 +83,15 @@ class Integrator(object):
         by the integrator (NVE, NVT, stochastic, ...).
     """
 
-    def __init__(self, delta_t, desc='Generic integrator', dynamics=''):
+    def __init__(self, timestep, desc='Generic integrator', dynamics=''):
         """Initialization of the integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step for the integrator.
+        timestep : float
+            The time step for the integrator in internal units.
         """
-        self.delta_t = delta_t
+        self.delta_t = timestep
         self.desc = desc
         self.dynamics = dynamics
 
@@ -144,7 +139,7 @@ class Integrator(object):
         path : object like `Path` from `pyretis.core.Path`.
             This is the path we use to fill in phase-space point.
             We are here not returning a new path - this since we want
-            to delegte the creation of the path (type) to the method
+            to delegate the creation of the path (type) to the method
             that is running `propagate`.
         system : object like `System` from `pyretis.core.system`.
             The system object gives the initial state for the
@@ -157,10 +152,14 @@ class Integrator(object):
         thermo : boolean
             If True, we will do some extra calculation of energies.
         """
-        status = 'Generating path...'
+        if reverse:
+            status = 'Generating backward path...'
+        else:
+            status = 'Generating forward path...'
         logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
+        system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
         while True:
             orderp = system.calculate_order()
@@ -191,7 +190,7 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
-        msg = 'Propagate done: "{}" (success: {}'.format(status, success)
+        msg = 'Propagate done: "{}" (success: {})'.format(status, success)
         logger.debug(msg)
         return success, status
 
@@ -232,17 +231,17 @@ class Verlet(Integrator):
         Squared time step: `delta_t**2`
     """
 
-    def __init__(self, delta_t, desc='The verlet integrator'):
+    def __init__(self, timestep, desc='The verlet integrator'):
         """Initiate the Verlet integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step
+        timestep : float
+            The time step in internal units.
         desc : string
             Description of the integrator
         """
-        super(Verlet, self).__init__(delta_t, desc=desc, dynamics='NVE')
+        super(Verlet, self).__init__(timestep, desc=desc, dynamics='NVE')
         self.half_idt = 0.5 / self.delta_t
         self.delta_t2 = self.delta_t**2
         self.previous_pos = None
@@ -292,22 +291,22 @@ class VelocityVerlet(Integrator):
     delta_t : float
         The time step.
     half_delta_t : float
-        Half of timestep
+        Half of timestep.
     desc : string
         Description of the integrator.
     """
 
-    def __init__(self, delta_t, desc='The velocity verlet integrator'):
+    def __init__(self, timestep, desc='The velocity verlet integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step.
+        timestep : float
+            The time step in internal units.
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerlet, self).__init__(delta_t, desc=desc,
+        super(VelocityVerlet, self).__init__(timestep, desc=desc,
                                              dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
@@ -401,7 +400,7 @@ class Langevin(Integrator):
     Consider replacing this one as it seems somewhat slow.
     """
 
-    def __init__(self, delta_t, gamma, rgen=None, seed=0, high_friction=False,
+    def __init__(self, timestep, gamma, rgen=None, seed=0, high_friction=False,
                  desc='Langevin integrator'):
         """Initiate the Langevin integrator.
 
@@ -414,8 +413,8 @@ class Langevin(Integrator):
 
         Parameters
         ----------
-        delta_t : float
-            The time step.
+        timestep : float
+            The time step in internal units.
         gamma : float
             The gamma parameter for the Langevin integrator
         rgen : object like `RandomGenerator` from `.random_gen`.
@@ -431,7 +430,7 @@ class Langevin(Integrator):
         desc : string
             Description of the integrator.
         """
-        super(Langevin, self).__init__(delta_t, desc=desc,
+        super(Langevin, self).__init__(timestep, desc=desc,
                                        dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction

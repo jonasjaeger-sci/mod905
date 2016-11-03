@@ -160,7 +160,7 @@ class FileIO(object):
     def __del__(self):
         """Close a file in case the object is deleted.
 
-        This function will just close the file in case the program
+        This method will just close the file in case the program
         crashes or exits in some other way. It is used here as it's not
         so nice to add a with statement to the main script running the
         simulation.

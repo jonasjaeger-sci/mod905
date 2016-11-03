@@ -21,9 +21,9 @@ __all__ = ['create_force_field']
 
 
 def create_potentials(settings):
-    """Function to create potential functions from simulations settings.
+    """Method to create potential functions from simulations settings.
 
-    This function will basically loop over the given potential settings
+    This method will basically loop over the given potential settings
     and just run `create_potential` for each setting.
 
     Parameters
@@ -33,12 +33,17 @@ def create_potentials(settings):
 
     Returns
     -------
-    out : list
+    out[0] : list
         A list of potential functions.
+    out[1] : list
+        A list of parameters for the potential functions.
     """
-    potentials = settings.get('potentials', [])
-    ndim = settings.get('dimensions', None)
-    out = []
+    potentials = settings.get('potential', [])
+    try:
+        ndim = settings['system']['dimensions']
+    except KeyError:
+        ndim = None
+    out_pot, out_par = [], []
     for i, pot_settings in enumerate(potentials):
         potential_function = create_potential(settings, pot_settings)
         if potential_function is None:
@@ -53,14 +58,15 @@ def create_potentials(settings):
                 msgtxt = msg.format(ndim, i, pdim)
                 logger.error(msgtxt)
                 raise ValueError(msgtxt)
-        out.append(potential_function)
-    return out
+        out_pot.append(potential_function)
+        out_par.append(pot_settings.get('parameter', None))
+    return out_pot, out_par
 
 
 def create_force_field(settings):
-    """Function to create a force field from input settings.
+    """Method to create a force field from input settings.
 
-    This function will create the required potential functions with the
+    This method will create the required potential functions with the
     specified parameters from `settings`.
 
     Parameters
@@ -73,13 +79,11 @@ def create_force_field(settings):
     out : object like `ForceField` from `pyretis.forcefield.forcefield`.
         This object represents the force field.
     """
-    ffsettings = settings.get('forcefield', {'desc': 'pyretis force field'})
     try:
-        desc = ffsettings['desc']
+        desc = settings['forcefield']['description']
     except KeyError:
         desc = None
-    potentials = create_potentials(settings)
-    pot_param = settings.get('potential-parameters', None)
+    potentials, pot_param = create_potentials(settings)
     ffield = ForceField(desc=desc, potential=potentials, params=pot_param)
     msg = ['Created force field:']
     msg.append('{}'.format(ffield))

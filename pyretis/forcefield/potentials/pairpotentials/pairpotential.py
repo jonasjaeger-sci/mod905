@@ -25,7 +25,7 @@ __all__ = ['mixing_parameters', 'generate_pair_interactions']
 def _check_pair_parameters(parameters):
     """This will just check that the required parameters are given.
 
-    If the parameters are not given, we will just set them do default
+    If the parameters are not given, we will just set them to default
     values.
 
     Parameters
@@ -39,8 +39,6 @@ def _check_pair_parameters(parameters):
     `parameters` with default values.
     """
     for pair in parameters:
-        if pair == 'mixing':
-            continue
         for key in ('epsilon', 'sigma'):
             if key not in parameters[pair]:
                 msg = '{} for {} not given. Set to 0.0'.format(key, pair)
@@ -56,20 +54,21 @@ def _check_pair_parameters(parameters):
             logger.info(msg)
 
 
-def generate_pair_interactions(parameters):
+def generate_pair_interactions(parameters, mixing):
     """Function to generate pair parameters from atom parameters.
 
     The parameters are given as a dictionary where the keys are
-    either just string -- which defines atom parameters -- or tuples
+    either just integers -- which defines atom parameters -- or tuples
     which define pair interactions.
 
     Parameters
     ----------
     parameters : dict
         This dict contain the atom parameters.
+    mixing : string
+        Determines how we should mix pair interactions.
     """
     _check_pair_parameters(parameters)
-    mixing = parameters.get('mixing', None)
     atoms = []
     pair_param = {}
     for key in parameters:

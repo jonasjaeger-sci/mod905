@@ -191,7 +191,6 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
         output = [None for path_ensemble in ensembles]
         idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
                                                      relative)
-        # just to TIS for the ensemble we picked:
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
                                                        integrator, rgen,
                                                        settings['tis'], cycle)
@@ -201,21 +200,17 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     null_move(path_ensemble, cycle)
-                    output[idx] = ['nullmove']
+                    output[idx] = ['nullmove', 'ACC']
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
-            #msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
-            #logger.info(msgtxt)
             accept, trial, status = make_tis_step_ensemble(path_ensemble,
                                                            system,
                                                            integrator,
                                                            rgen,
                                                            settings['tis'],
                                                            cycle)
-            #msgtxt = 'Move accepted: {} -> "{}"'.format(accept, status)
-            #logger.info(msgtxt)
-            output.append(['tis', accept, trial, status])
+            output.append(['tis', status, trial, accept])
     return output
 
 
@@ -275,18 +270,18 @@ def retis_moves(ensembles, system, integrator, rgen,
         for idx in range(scheme, len(ensembles) - 1, 2):
             status = retis_swap(ensembles, idx, system,
                                 integrator, settings, cycle)
-            output[idx] = ['swap', status]
-            output[idx+1] = ['swap', status]
+            output[idx] = ['swap', status, idx+1]
+            output[idx+1] = ['swap', status, idx]
         if settings['retis']['nullmoves']:
             if len(ensembles) % 2 != scheme:  # missed last
                 # this is perhaps strange but it's equal to:
                 # (scheme == 0 and len(ensembles) % 2 != 0) or
                 # (scheme == 1 and len(ensembles) % 2 == 0)
                 null_move(ensembles[-1], cycle)
-                output[-1] = ['nullmove']
+                output[-1] = ['nullmove', 'ACC']
             if scheme == 1:  # we did not include [0^-]
                 null_move(ensembles[0], cycle)
-                output[0] = ['nullmove']
+                output[0] = ['nullmove', 'ACC']
     else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
         status = retis_swap(ensembles, idx, system, integrator,
@@ -297,7 +292,7 @@ def retis_moves(ensembles, system, integrator, rgen,
                     output[idxo] = ['swap', status]
                 else:
                     null_move(path_ensemble, cycle)
-                    output[idxo] = ['nullmove']
+                    output[idxo] = ['nullmove', 'ACC']
     return output
 
 
@@ -423,10 +418,10 @@ def retis_swap_zero(ensembles, system, integrator,
     ensemble1 = ensembles[1]
     # 1) Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
+    logger.debug('Creating path for [0^-]')
     pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
@@ -440,6 +435,7 @@ def retis_swap_zero(ensembles, system, integrator,
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
+    logger.debug('Creating path for [0^+]')
     # This path will be generated starting from the LAST point of [0^-] which
     # should be on the right side of the interface. We will also add the
     # SECOND LAST point from [0^-] which should be on the left side of the
@@ -450,7 +446,6 @@ def retis_swap_zero(ensembles, system, integrator,
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
     system.particles.vel = np.copy(vel)
     system.particles.pos = np.copy(pos)
-    system.potential_and_force()  # update forces and potential
     integrator.propagate(path_tmp, system, ensemble1.interfaces,
                          reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
@@ -495,7 +490,7 @@ def null_move(path_ensemble, cycle):
         last accepted path.
     """
     msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
-    logger.info(msg)
+    logger.debug(msg)
     path = path_ensemble.last_path
     path.set_move('00')
     path_ensemble.add_path_data(path, 'ACC', cycle=cycle)

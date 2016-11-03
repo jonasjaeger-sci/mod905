@@ -16,23 +16,31 @@ from pyretis.inout import create_output
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
-settings = {'task': 'md-nve',
-            'units': 'lj',
-            'temperature': 2.0,
-            'integrator': {'class': 'velocityverlet', 'timestep': 0.002},
-            'steps': 1000,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1},
-                               'filename': 'traj.gro'}],
-            'potentials': [{'class': 'PairLennardJonesCutnp', 'shift': True,
-                            'dim': 3}],
-            'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
-                                          'rcut': 2.5}}],
-            'particles-position': {'generate': 'fcc', 'repeat': [3, 3, 3],
-                                   'density': 0.9},
-            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
-                                   'seed': 0}}
+settings = {}
+settings['simulation'] = {'task': 'md-nve',
+                          'steps': 1000}
+settings['system'] = {'units': 'lj',
+                      'temperature': 2.0,
+                      'dimensions': 3}
+settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.002}
+settings['output'] = {'backup': False,
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 1}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp',
+                          'parameter': {0: {'sigma': 1,
+                                            'epsilon': 1,
+                                            'factor': 2.5}},
+                          'shift': True}]
+settings['particles'] = {'position': {'generate': 'fcc',
+                                      'repeat': [3, 3, 3],
+                                      'density': 0.9},
+                         'velocity': {'generate': 'maxwell',
+                                      'momentum': True,
+                                      'seed': 0}}
 
-create_conversion_factors(settings['units'])
+create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
@@ -42,7 +50,7 @@ simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
 table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header)
+thermo_file = FileIO('thermo.dat', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]

@@ -27,7 +27,7 @@ traj.py
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-get_file_object
+get_writer
     Opens a file for reading given a file type and file name.
 
 read_xyz_file
@@ -73,31 +73,29 @@ PathTable
 from __future__ import absolute_import
 import logging
 # pyretis imports
+from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
 from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import CrossWriter, EnergyWriter, OrderWriter
-from pyretis.core.common import initiate_instance
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-_CLASS_MAP = {'cross': {'class': CrossWriter},
-              'order': {'class': OrderWriter},
-              'energy': {'class': EnergyWriter},
-              'trajgro': {'class': TrajGRO, 'args': [('units', 'lj')]},
-              'trajxyz': {'class': TrajXYZ, 'args': [('units', 'lj')]},
-              'pathensemble': {'class': PathEnsembleWriter,
-                               'args': [('ensemble', '000'),
-                                        ('interfaces', None)]},
-              'thermotable': {'class': ThermoTable},
-              'pathtable': {'class': PathTable}}
+_CLASS_MAP = {'cross': CrossWriter,
+              'order': OrderWriter,
+              'energy': EnergyWriter,
+              'trajgro': TrajGRO,
+              'trajxyz': TrajXYZ,
+              'pathensemble': PathEnsembleWriter,
+              'thermotable': ThermoTable,
+              'pathtable': PathTable}
 
 
-def get_file_object(file_type, settings=None):
+def get_writer(file_type, settings=None):
     """Return a file object which can be used for loading files.
 
     This is a convenience function to return an instance of a `Writer`
@@ -110,6 +108,9 @@ def get_file_object(file_type, settings=None):
     ----------
     file_type : string
         The desired file type
+    settings : dict
+        A dict of settings we might need to pass for to the writer.
+        This can for instance be the units for a trajectory writer.
 
     Returns
     -------
@@ -118,52 +119,19 @@ def get_file_object(file_type, settings=None):
 
     Examples
     --------
-    >>> from pyretis.inout.writers import get_file_object
-    >>> crossfile = get_file_object('cross')
+    >>> from pyretis.inout.writers import get_writer
+    >>> crossfile = get_writer('cross')
     >>> print(crossfile)
     >>> for block in crossfile.load('cross.dat'):
     >>>     print(len(block['data']))
     """
     try:
-        return get_writer(file_type, settings=settings)
+        cls = _CLASS_MAP[file_type]
+        if settings is None:
+            return initiate_instance(cls, {})
+        else:
+            return initiate_instance(cls, settings)
     except KeyError:
         msg = 'Unknown file type {} requested. Ignored'.format(file_type)
-        logger.error(msg)
-        return None
-
-
-def get_writer(writer_type, settings=None):
-    """This method is intented as a factory method for writers.
-
-    Parameters
-    ----------
-    writer_type : string
-        This string defines the class we want to initiate
-    settings : dict, optional
-        Additional settings that might be required for the
-        initialization of the class.
-    """
-    try:
-        writer = _CLASS_MAP[writer_type]
-        cls = writer['class']
-        args = writer.get('args', None)
-        kwargs = writer.get('kwargs', None)
-        if args is not None:
-            if settings is None:
-                arg_val = [arg[1] for arg in args]
-            else:
-                arg_val = [settings.get(arg[0], arg[1]) for arg in args]
-        else:
-            arg_val = None
-        if kwargs is not None:
-            kwarg_val = {}
-            if settings is not None:
-                for key in kwargs:
-                    kwarg_val[key] = settings.get(key, kwargs[key])
-        else:
-            kwarg_val = None
-        return initiate_instance(cls, args=arg_val, kwargs=kwarg_val)
-    except KeyError:
-        msg = 'Ignored creating unknown writer "{}"!'.format(writer_type)
         logger.error(msg)
         return None

@@ -20,10 +20,10 @@ Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 read_xyz_file
-    A function for reading snapshots from a xyz file.
+    A method for reading snapshots from a xyz file.
 
 read_gromacs_file
-    A function for reading snapshots from a gromacs GRO file.
+    A method for reading snapshots from a gromacs GRO file.
 """
 import logging
 import numpy as np
@@ -35,7 +35,7 @@ logger.addHandler(logging.NullHandler())
 
 # define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
-_GRO_VEL_FMT = _GRO_FMT[:-1] + '{7:8.4f}{8:8.4f}{9:8.4f}'
+_GRO_VEL_FMT = _GRO_FMT + '{7:8.4f}{8:8.4f}{9:8.4f}'
 _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 _XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
@@ -45,10 +45,10 @@ __all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
 
 
 def _adjust_coordinate(coord):
-    """Function to adjust the dimensionality of coordinates.
+    """Method to adjust the dimensionality of coordinates.
 
     A lot of the different formats expects us to have 3 dimensional
-    data. This function just adds dummy dimensions equal to zero.
+    data. This method just adds dummy dimensions equal to zero.
 
     Parameters
     ----------
@@ -151,7 +151,7 @@ class TrajXYZ(Writer):
     def generate_output(self, system, header=None):
         """Write a configuration in xyz-format.
 
-        This is a function for writing a configuration in xyz-format.
+        This is a method for writing a configuration in xyz-format.
         It is similar to `write_frame` and it's meant for convenience:
         atom names will not have to be specified and we are using
         the `system` to access (the positions of) the particles.
@@ -215,6 +215,9 @@ class TrajGRO(Writer):
         `nm/ps`.
     frame : integer
         The number of frames written.
+    write_vel : boolean
+        Determines if we should write the velocity in addition to the
+        positions.
 
     References
     ----------
@@ -224,11 +227,12 @@ class TrajGRO(Writer):
     """
     heading = 'Trajectory output. Frame: {}'
 
-    def __init__(self, units):
+    def __init__(self, units, write_vel):
         """Initiate the gromacs writer."""
         super(TrajGRO, self).__init__('TrajGRO', header=None)
         self.atomnames = []
         self.frame = 0  # number of frames written
+        self.write_vel = write_vel
         try:
             self.convert_pos = CONVERT['length'][units, 'nm']
             self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
@@ -312,10 +316,10 @@ class TrajGRO(Writer):
         self.frame += 1
         return buff
 
-    def generate_output(self, system, header=None, write_vel=False):
+    def generate_output(self, system, header=None):
         """Write a configuration in gromacs format.
 
-        This is a function for writing a configuration in GRO-format.
+        This is a method for writing a configuration in GRO-format.
         It is similar to `write_frame` and it's meant for convenience:
         atom names will not have to be specified and we are using a
         `system` object to access the positions and velocities.
@@ -326,15 +330,13 @@ class TrajGRO(Writer):
             The system object with the positions to write
         header : string, optional
             Header to use for writing the frame.
-        write_vel : boolean, optional
-            If true, velocities will be written
 
         Yields
         ------
         out : string
             The lines in the XYZ-snapshot.
         """
-        velocity = None if not write_vel else system.particles.vel
+        velocity = None if not self.write_vel else system.particles.vel
         for lines in self.gro_format(system.particles.npart,
                                      system.particles.pos,
                                      velocity,
@@ -395,9 +397,9 @@ class TrajGRO(Writer):
 
 
 def read_gromacs_file(filename):
-    """A function for reading gromacs GRO files.
+    """A method for reading gromacs GRO files.
 
-    This function will read a gromacs file and yield the different
+    This method will read a gromacs file and yield the different
     snapshots found in the file.
 
     Parameters
@@ -461,9 +463,9 @@ def read_gromacs_file(filename):
 
 
 def read_xyz_file(filename):
-    """A function for reading files in xyz format.
+    """A method for reading files in xyz format.
 
-    This function will read a xyz file and yield the different snapshots
+    This method will read a xyz file and yield the different snapshots
     found in the file.
 
     Parameters
@@ -519,7 +521,7 @@ def read_xyz_file(filename):
 def write_xyz_file(filename, pos, names=None, header=None):
     """Write a single configuration in xyz-format.
 
-    This is just a simple function to write a single xyz
+    This is just a simple method to write a single xyz
     configuration to a file. It will NOT convert positions and assumes
     that these are given in correct units. This method is intended as a
     lightweight alternative to `TrajXYZ`.

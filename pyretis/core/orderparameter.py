@@ -17,6 +17,9 @@ OrderParameter
 OrderParameterPosition
     A class for a simple position dependent order parameter.
 
+OrderParameterDistance
+    A class for a particle-particle distance order parameter.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -50,15 +53,10 @@ def order_factory(settings):
     out : object like `OrderParameter`.
         An object representing the orderparameter.
     """
-    factory_map = {'orderparameter': {'cls': OrderParameter,
-                                      'args': ['name']},
-                   'orderparameterposition': {'cls': OrderParameterPosition,
-                                              'args': ['name', 'index'],
-                                              'kwargs': {'dim', 'periodic'}},
-                   'orderparameterdistance': {'cls': OrderParameterDistance,
-                                              'args': ['name', 'index'],
-                                              'kwargs': {'periodic'}}}
-    return generic_factory(settings, factory_map, name='order parameter')
+    factory_map = {'orderparameter': {'cls': OrderParameter},
+                   'orderparameterposition': {'cls': OrderParameterPosition},
+                   'orderparameterdistance': {'cls': OrderParameterDistance}}
+    return generic_factory(settings, factory_map, name='orderparameter')
 
 
 class OrderParameter(object):

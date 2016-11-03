@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the GPLV3 License. See LICENSE for more info.
-"""Functions and classes for input/output of path data.
+"""Methods and classes for input/output of path data.
 
 This module defines classes for writing path ensemble data.
 
@@ -41,7 +41,7 @@ def _line_to_path_object(line):
 
     Note
     ----
-    TODO: This function is considered for deletion - is it going to be
+    TODO: This method is considered for deletion - is it going to be
     useful or are we always going to create path data (rather than Path
     objects) when we read files? It might be useful in the future for
     restart files.

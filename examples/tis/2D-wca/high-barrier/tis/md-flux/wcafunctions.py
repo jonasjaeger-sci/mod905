@@ -120,20 +120,20 @@ class WCAPotential(PotentialFunction):
                 vcut = 0.0
         self.params['offset'] = vcut
 
-    def potential(self, particles, box):
+    def potential(self, system):
         """Calculate the potential energy for the Lennard-Jones interaction.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System`
+            The system we are operating on.
 
         Returns
         -------
         The potential energy as a float.
         """
+        particles = system.particles
+        box = system.box
         v_pot = wcaforces.potential2D(particles.pos,
                                       box.length,
                                       box.ilength,
@@ -149,7 +149,7 @@ class WCAPotential(PotentialFunction):
                                       particles.npart)
         return v_pot
 
-    def force(self, particles, box):
+    def force(self, system):
         """Calculate the force for the Lennard-Jones interaction.
 
         We also calculate the virial here, since the force
@@ -157,16 +157,16 @@ class WCAPotential(PotentialFunction):
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System`
+            The system we are operating on.
 
         Returns
         -------
         The force as a numpy.array of the same shape as the positions
         in `particles.pos`.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros_like(particles.pos)
         virial = np.zeros((box.dim, box.dim))
         wcaforces.force2D(particles.pos,
@@ -185,17 +185,15 @@ class WCAPotential(PotentialFunction):
                           particles.npart, box.dim)
         return forces, virial
 
-    def potential_and_force(self, particles, box):
+    def potential_and_force(self, system):
         """Calculate potential and force for the Lennard-Jones interaction.
 
         Since the force is evaluated, the virial is also calculated.
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
-            The particle list.
-        box : object like `Box` from `pyretis.core.box`
-            Representation of the box used in the simulation.
+        system : object like `System`
+            The system we are operating on.
 
         Note
         ----
@@ -216,6 +214,8 @@ class WCAPotential(PotentialFunction):
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
         """
+        particles = system.particles
+        box = system.box
         forces = np.zeros_like(particles.pos)
         virial = np.zeros((box.dim, box.dim))
         vpot = wcaforces.force_and_pot2D(particles.pos,

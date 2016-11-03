@@ -10,7 +10,7 @@ check_settings
     Check that required simulation settings are actually given.
 
 import_from
-    A function to dynamically import functions/classes etc. from user
+    A method to dynamically import method/classes etc. from user
     specified modules.
 """
 import sys
@@ -32,11 +32,11 @@ __all__ = ['check_settings', 'import_from',
 
 
 def import_from(module_path, function_name):
-    """Function to import a function/class from a module.
+    """Method to import a method/class from a module.
 
-    This function will dynamically import a specified function/object
+    This method will dynamically import a specified method/object
     from a module and return it. If the module can not be imported or
-    if we can't find the function/class in the module we will raise
+    if we can't find the method/class in the module we will raise
     exceptions.
 
     Parameters
@@ -44,7 +44,7 @@ def import_from(module_path, function_name):
     module_path : string
         The path/filename to load from.
     function_name : string
-        The name of the function/class to load.
+        The name of the method/class to load.
 
     Returns
     -------
@@ -75,15 +75,14 @@ def import_from(module_path, function_name):
             spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
         logger.debug(msg)
-        try:
-            return getattr(module, function_name)
-        except AttributeError:
-            msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                           module_path)
-            logger.critical(msg)
-            raise ValueError(msg)
-    except ImportError:
+        return getattr(module, function_name)
+    except (ImportError, IOError):
         msg = 'Could not import module: {}'.format(module_path)
+        logger.critical(msg)
+        raise ValueError(msg)
+    except AttributeError:
+        msg = 'Could not import "{}" from "{}"'.format(function_name,
+                                                       module_path)
         logger.critical(msg)
         raise ValueError(msg)
 
@@ -91,11 +90,11 @@ def import_from(module_path, function_name):
 def check_settings(settings, required):
     """Check that required simulation settings are actually given.
 
-    This function will look for required settings in the given
+    This method will look for required settings in the given
     `settings`. If one or more keys from the given `required` list of
-    strings are not found, this function will return False. Otherwise
+    strings are not found, this method will return False. Otherwise
     if will return True. Typically, and exception should be raised if
-    False is returned, this is handled outside the function in case
+    False is returned, this is handled outside the method in case
     someone wants to add some magic handling of missing settings.
 
     Parameters
@@ -124,7 +123,11 @@ def check_settings(settings, required):
 
 def create_external(settings, key, factory, required_methods,
                     key_settings=None):
-    """Function to create order parameters from settings.
+    """Method to create objects from settings.
+
+    This method will handle creation of objects from settings. The
+    requested objects can be pyretis internals or defined in external
+    modules.
 
     Parameters
     ----------
@@ -157,15 +160,15 @@ def create_external(settings, key, factory, required_methods,
         try:
             key_settings = settings[key]
         except KeyError:
-            msg = 'No {} settings found!'.format(key)
-            logger.critical(msg)
+            msg = 'No {} settings found. Skipping set-up.'.format(key)
+            logger.debug(msg)
             return None
     module = key_settings.get('module', None)
     klass = None
     try:
         klass = key_settings['class']
     except KeyError:
-        msg = 'No {} "class" specified!'.format(key)
+        msg = 'No "{}" setting "class" specified!'.format(key)
         logger.critical(msg)
         raise ValueError(msg)
     if module is None:
@@ -178,8 +181,9 @@ def create_external(settings, key, factory, required_methods,
         if os.path.isfile(module):
             obj = import_from(module, klass)
         else:
-            if 'exe-path' in settings:
-                module = os.path.join(settings['exe-path'], module)
+            if 'exe-path' in settings['simulation']:
+                module = os.path.join(settings['simulation']['exe-path'],
+                                      module)
                 obj = import_from(module, klass)
             else:
                 msg = 'Could not find module "{}" for {}!'.format(module, key)
@@ -198,13 +202,11 @@ def create_external(settings, key, factory, required_methods,
                                                                  function)
                     logger.critical(msg)
                     raise ValueError(msg)
-        return initiate_instance(obj,
-                                 args=key_settings.get('args', None),
-                                 kwargs=key_settings.get('kwargs', None))
+        return initiate_instance(obj, key_settings)
 
 
 def create_orderparameter(settings):
-    """Function to create order parameters from settings.
+    """Method to create order parameters from settings.
 
     Parameters
     ----------
@@ -221,7 +223,7 @@ def create_orderparameter(settings):
 
 
 def create_integrator(settings):
-    """Function to create an integrator from settings.
+    """Method to create an integrator from settings.
 
     Parameters
     ----------
@@ -238,7 +240,7 @@ def create_integrator(settings):
 
 
 def create_potential(settings, key_settings):
-    """Function to create a potential from settings.
+    """Method to create a potential from settings.
 
     Parameters
     ----------
@@ -252,6 +254,6 @@ def create_potential(settings, key_settings):
     out : object like `PotentialFunction` from `pyretis.forcefield`.
         This object represents the order parameter.
     """
-    return create_external(settings, 'potentials', potential_factory,
+    return create_external(settings, 'potential', potential_factory,
                            ['force', 'potential', 'potential_and_force'],
                            key_settings=key_settings)
