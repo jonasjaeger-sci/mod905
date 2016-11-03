@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2016, pyretis Development Team.
 # Distributed under the GPLV3 License. See LICENSE for more info.
-"""This is a simple RETIS example for the CECAM workshop.
+"""This is a simple RETIS example animating the algorithm.
 
 You can play with the interfaces, the potential parameters,
 the temperature, the ratio of the different RETIS moves etc.
@@ -19,17 +19,15 @@ from matplotlib import pylab as plt
 from matplotlib import animation
 from matplotlib import gridspec as gridspec
 
-
+INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 20000,
-                          'interfaces': [-0.9, -0.8, -0.7, -0.6,
-                                         -0.5, -0.4, -0.3, 1.0]}
+                          'steps': 150,
+                          'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
-# Selection of the interfaces to use:
 # Basic settings for the Langevin integrator:
 SETTINGS['integrator'] = {'class': 'Langevin',
                           'gamma': 0.3,
@@ -60,12 +58,9 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
                      'nullmoves': True,
                      'swapsimul': True}
 
-# and some settings for the analysis
-ANALYSIS = {'ngrid': 101}
-
 # For convenience:
 TIMESTEP = SETTINGS['integrator']['timestep']
-INTERFACES = SETTINGS['simulation']['interfaces']
+ANALYSIS = {'ngrid': 100}
 
 # Set up for plotting:
 mpl.rc('font', size=14, family='serif')
@@ -137,15 +132,13 @@ def get_path(path):
 
 
 def matplotlib_setup():
-    """A method to do some MPL set up & animation preparation"""
+    """A method to do some MPL set up & animation preparation."""
     new_fig = plt.figure(figsize=(12, 6))
     grid = gridspec.GridSpec(3, 4)
     ax1 = new_fig.add_subplot(grid[:, :2])
     ax2 = new_fig.add_subplot(grid[0, 2:])
     ax3 = new_fig.add_subplot(grid[1:, 2:])
     axes = (ax1, ax2, ax3)
-    #if COLORS is not None:
-    #    ax1.set_color_cycle(COLORS)
     plot_patches = {'paths': [],
                     'prob': [],
                     'matched': None,
@@ -209,35 +202,35 @@ def matplotlib_setup():
     return new_fig, plot_patches, axes
 
 
-def analyse_prob(ensemble, props, i, step):
-    """Update running estimates for probability
+def analyse_prob(ensemble, props, idx, step):
+    """Update running estimates for probability.
 
     Parameters
     ----------
     ensemble : object
-        The ensemble to analyse
+        The ensemble to analyse.
     props : dict
-        A dictionary for storing properties we calculate
-    i : int
+        A dictionary for storing properties we calculate.
+    idx : int
         An index for the path ensemble.
     step : int
-        The current simulation step
+        The current simulation step.
     """
     orderp = ensemble.last_path.ordermax[0]
     success = 1 if orderp > ensemble.detect else 0
-    prun = props['prun'][i]
+    prun = props['prun'][idx]
     if len(prun) == 0:
         prun.append(success)
     else:
         npath = step + 1
         prun.append(float(success + prun[-1] * (npath-1)) / float(npath))
-    props['orderp'][i].append(orderp)
-    orderparam = np.array(props['orderp'][i])
+    props['orderp'][idx].append(orderp)
+    orderparam = np.array(props['orderp'][idx])
     ordermax = min(orderparam.max(), max(ensemble.interfaces))
     ordermin = ensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(orderparam, ordermin, ordermax,
                                              ANALYSIS['ngrid'])
-    props['pcross'][i] = (lamb, pcross)
+    props['pcross'][idx] = (lamb, pcross)
 
 
 def update(frame, simulation, plot_patches, prop, axes):
@@ -251,8 +244,8 @@ def update(frame, simulation, plot_patches, prop, axes):
         The simulation we are running.
     plot_patches : dict of objects
         This dict contains the lines, text boxes etc. from matplotlib
-        which we will use to diplay our data.
-    prop : dict
+        which we will use to display our data.
+    prop : dict of objects
         A dict with results from the simulation.
     axes : tuple
         This tuple contains the axes used for plotting.
@@ -260,7 +253,7 @@ def update(frame, simulation, plot_patches, prop, axes):
     Returns
     -------
     out : list
-        list of the patches to be drawn
+        list of the patches to be drawn.
     """
     patches = []
     if not simulation.is_finished():
@@ -292,11 +285,9 @@ def update(frame, simulation, plot_patches, prop, axes):
         fluxx, fluxy = plot_patches['fluxline'].get_data()
         fluxx = np.append(fluxx, fluxx[-1] + 1)
         fluxy = np.append(fluxy, flux)
-    
         plot_patches['fluxline'].set_data(fluxx, fluxy)
         axes[1].set_xlim(0, step+1)
         axes[1].set_ylim(0, 1.1*fluxy.max())
-        #ax2.set_xlim(0, frame)
         patches.append(plot_patches['fluxline'])
         if 'retis' in result:
             for i, move in enumerate(result['retis']):
@@ -335,7 +326,7 @@ def update(frame, simulation, plot_patches, prop, axes):
         print('# Current rate constant estimate: {}'.format(kab))
         return patches
     else:
-        print('Simulation is done')
+        print('# Simulation is done (frame = {})'.format(frame))
         return patches
 
 
@@ -354,13 +345,13 @@ def main():
     prop['orderp'] = [[] for _ in INTERFACES]
     prop['prun'] = [[] for _ in INTERFACES]
     prop['pcross'] = [[] for _ in INTERFACES]
-    anim = animation.FuncAnimation(fig, update,
-                                   frames=SETTINGS['simulation']['steps']+1,
-                                   fargs=[simulation, plot_patches, prop,
-                                          axes],
-                                   repeat=False,
-                                   interval=10,
-                                   blit=False)
+    _ = animation.FuncAnimation(fig, update,
+                                frames=SETTINGS['simulation']['steps']+1,
+                                fargs=[simulation, plot_patches, prop,
+                                       axes],
+                                repeat=False,
+                                interval=10,
+                                blit=False)
     plt.show()
 
 if __name__ == '__main__':

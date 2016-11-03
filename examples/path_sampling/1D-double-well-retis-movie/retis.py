@@ -3,8 +3,8 @@
 # Distributed under the GPLV3 License. See LICENSE for more info.
 """This is a simple RETIS example.
 
-Here we do nothing fancy, we will just get to know
-some of the objects in pyretis.
+This example will just consider a simple 1D potential where we
+aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
@@ -15,14 +15,13 @@ from pyretis.inout.settings import (create_force_field,
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 import numpy as np
 
+INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
                           'steps': 20000,
-                          'interfaces': [-0.9, -0.8, -0.7,
-                                         -0.6, -0.5, -0.4,
-                                         -0.3, 1.0]}
+                          'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
@@ -57,7 +56,6 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
 
 # For convenience:
 TIMESTEP = SETTINGS['integrator']['timestep']
-INTERFACES = SETTINGS['simulation']['interfaces']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
 
@@ -83,7 +81,7 @@ def set_up_system(settings):
     return sys
 
 
-def step_txt(ensembles, retis_result):
+def step_txt(ensembles, retis_result, prun):
     """A function to return some text information about the RETIS step.
 
     Parameters
@@ -92,6 +90,8 @@ def step_txt(ensembles, retis_result):
         The different path ensembles we are simulating.
     retis_result : list of lists
         The results from a RETIS simulation step.
+    prun : list of floats
+        The running average for the ensemble crossing probabilities.
 
     Returns
     -------
@@ -105,15 +105,19 @@ def step_txt(ensembles, retis_result):
         name_of_move = result[0]
         accepted = result[1]
         line = []
-        line.append('{}: {}'.format(name, name_of_move))
         if name_of_move == 'swap':
             name2 = ensembles[result[2]].ensemble_name
-            line.append('{}'.format(name2))
+            move = '{} {},'.format(name_of_move, name2)
         elif name_of_move == 'tis':
             trial_path = result[2]
             tis_move = trial_path.generated[0]
-            line.append('({})'.format(tis_move))
-        line.append(': {}'.format(accepted))
+            move = '{} ({}),'.format(name_of_move, tis_move)
+        else:
+            move = '{},'.format(name_of_move)
+        line.append('{}: {:11s}'.format(name, move))
+        line.append('{},'.format(accepted))
+        if i > 0:
+            line.append('p = {:<8.6g}'.format(prun[i]))
         txt.append(' '.join(line))
     return txt
 
@@ -209,10 +213,9 @@ def analyse_path_ensembles(ensembles, step, variables):
         A dictionary with computed initial flux, crossing probability and
         errors in these.
     """
-    calc = {'flux': 0.0, 'fluxe': 0.0,
-            'pcross': 0.0,
-            'pcrosse': float('inf'),
-            'kab': 0.0}
+    calc = {'flux': 0, 'fluxe': 0,
+            'pcross': 0, 'pcrosse': float('inf'),
+            'kab': 0, 'kabe': float('inf')}
     length0 = variables['length0']
     length1 = variables['length1']
     length0.add(ensembles[0].last_path.length)
@@ -220,8 +223,6 @@ def analyse_path_ensembles(ensembles, step, variables):
     flux = 1.0 / ((length0.mean + length1.mean - 4.0) * TIMESTEP)
     calc['flux'] = flux
     variables['flux'].append(flux)
-    #calc['fluxe'] = flux**2 * TIMESTEP * np.sqrt(length0.variance +
-    #                                             length1.variance)
     fluxe = simple_block(variables['flux'], ANALYSIS['nblock'])
     calc['fluxe'] = fluxe
     accprob = 1.0
@@ -245,16 +246,20 @@ def analyse_path_ensembles(ensembles, step, variables):
         matched_prob.extend(pcross[idx] * accprob)
         accprob *= prun
     if matched_lamb[-1] < INTERFACES[-1]:
-        pcross = 0.0
+        pcross = 0
         pcrosse = float('inf')
     else:
         pcross = matched_prob[-1]
         variables['match'].append(pcross)
-        print('match')
         pcrosse = simple_block(variables['match'], ANALYSIS['nblock'])
     calc['pcross'] = pcross
     calc['pcrosse'] = pcrosse
     calc['kab'] = flux * pcross
+    if pcross == 0 or flux == 0:
+        calc['kabe'] = float('inf')
+    else:
+        calc['kabe'] = calc['kab'] * np.sqrt(pcrosse**2 / pcross**2 +
+                                             fluxe**2 / flux**2)
     return calc
 
 
@@ -273,7 +278,6 @@ def main():
                  'length1': Property('Path length in [0^+]'),
                  'flux': [],
                  'match': [],
-                 #'crossing': Property('Crossing probability'),
                  'orderp': [None for _ in INTERFACES],
                  'prun': [None for _ in INTERFACES],
                  'lamb': [None for _ in INTERFACES],
@@ -294,11 +298,13 @@ def main():
         step = result['cycle']['step']
         print('\n# Current cycle: {}'.format(step))
         anr = analyse_path_ensembles(ensembles, step, variables)
-        retis_txt = step_txt(ensembles, result['retis'])
+        retis_txt = step_txt(ensembles, result['retis'], variables['prun'])
         for line in retis_txt:
             print('# {}'.format(line))
-        print('# Flux: {flux} +- {fluxe}'.format(**anr))
-        print('# Crossing probability: {pcross} +- {pcrosse}'.format(**anr))
+        print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
+        print(('# Crossing probability: {pcross:<8.6g} +-'
+              '{pcrosse:<8.6g}').format(**anr))
+        print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
         print('')
 
 
