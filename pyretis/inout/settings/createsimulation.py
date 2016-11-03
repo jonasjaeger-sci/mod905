@@ -16,7 +16,7 @@ create_simulation
 """
 from __future__ import absolute_import
 import logging
-from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.random_gen import create_random_generator
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
@@ -91,29 +91,6 @@ def create_mdflux_simulation(settings, system):
     return SimulationMDFlux(system, integ, sim['interfaces'],
                             steps=sim['steps'],
                             startcycle=sim.get('startcycle', 0))
-
-
-def create_random_generator(settings):
-    """This will initiate a random generator.
-
-    Parameters
-    ----------
-    settings : dict
-        This is the dict used for creating the random generator.
-        Currently, we will actually just look for a seed value.
-
-    Returns
-    -------
-    out : object like `RandomGenerator`
-        The random generator created.
-    """
-    if 'seed' not in settings:
-        seed = 0
-        msg = 'No seed given, setting it to "0"'
-        logger.info(msg)
-    else:
-        seed = settings['seed']
-    return RandomGenerator(seed=seed)
 
 
 def create_umbrellaw_simulation(settings, system):

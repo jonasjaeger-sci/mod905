@@ -671,3 +671,30 @@ class MockRandomGenerator(RandomGeneratorBase):
         vel = self.normal(loc=0.0, scale=sigma_v,
                           size=system.particles.vel.shape)
         return vel, sigma_v
+
+
+def create_random_generator(settings):
+    """This will initiate a random generator.
+
+    Parameters
+    ----------
+    settings : dict
+        This is the dict used for creating the random generator.
+        Currently, we will actually just look for a seed value.
+
+    Returns
+    -------
+    out : object like `RandomGenerator`
+        The random generator created.
+    """
+    if 'seed' not in settings:
+        seed = 0
+        msg = 'No seed given, setting it to "0"'
+        logger.info(msg)
+    else:
+        seed = settings['seed']
+    rgen = settings.get('rgen', None)
+    if rgen is not None and rgen == 'mock':
+        return MockRandomGenerator(seed=seed)
+    else:
+        return RandomGenerator(seed=seed)
