@@ -187,7 +187,7 @@ def matplotlib_setup():
     ax1.set_ylim(-2, 2)
     ax1.set_xlim(-1.5, 1.5)
 
-    plot_patches['fluxline'] = ax2.plot([-1], [0], lw=3, ls='-',
+    plot_patches['fluxline'] = ax2.plot([0], [0], lw=3, ls='-',
                                         color='#4C72B0')[0]
     ax2.set_ylim(0, 1)
     ax2.set_xlim(0, 1)
