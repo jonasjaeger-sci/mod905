@@ -19,7 +19,6 @@ from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.core.simulation.simulation import Simulation
-from pyretis.core.random_gen import RandomGenerator
 from pyretis.core.tis import (make_tis_step_ensemble,
                               initiate_path_ensemble)
 from pyretis.core.retis import make_retis_step
@@ -55,7 +54,7 @@ class SimulationSingleTIS(Simulation):
         (shooting moves etc.).
     """
 
-    def __init__(self, system, integrator, path_ensemble,
+    def __init__(self, system, integrator, path_ensemble, rgen,
                  tis_settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
@@ -70,6 +69,8 @@ class SimulationSingleTIS(Simulation):
             This is used for storing results for the simulation. It
             is also used for defining the interfaces for this
             simulation.
+        rgen : object like `RandomGenerator`.
+            This is the random generator to use in the simulation.
         tis_settings : dict
             This dict contains TIS specific settings, in particular we
             expect that the following keys are defined:
@@ -94,6 +95,7 @@ class SimulationSingleTIS(Simulation):
         super(SimulationSingleTIS, self).__init__(steps=steps,
                                                   startcycle=startcycle)
         self.system = system
+        self.rgen = rgen
         self.system.potential_and_force()  # make sure forces are defined.
         self.integrator = integrator
         self.path_ensemble = path_ensemble
@@ -106,8 +108,6 @@ class SimulationSingleTIS(Simulation):
             self.tis_settings['sigma_v'] = (self.tis_settings['sigma_v'] *
                                             np.sqrt(system.particles.imass))
             self.tis_settings['aimless'] = False
-        # create a random generator for TIS moves etc.:
-        self.rgen = RandomGenerator(seed=self.tis_settings['seed'])
 
     def step(self):
         """Perform a TIS simulation step.
@@ -167,7 +167,7 @@ class SimulationRETIS(Simulation):
     ----------
     """
 
-    def __init__(self, system, integrator, path_ensembles,
+    def __init__(self, system, integrator, path_ensembles, rgen,
                  tis_settings, retis_settings, steps=0, startcycle=0):
         """Initialization of the RETIS simulation.
 
@@ -181,6 +181,8 @@ class SimulationRETIS(Simulation):
         path_ensembles : list of objects like `PathEnsemble`.
             This is used for storing results for the different path
             ensembles.
+        rgen : object like `RandomGenerator`.
+            This object is the random generator to use in the simulation.
         tis_settings : dict
             This dict contains TIS specific settings, in particular we
             expect that the following keys are defined:
@@ -223,6 +225,7 @@ class SimulationRETIS(Simulation):
         self.integrator = integrator
         self.path_ensembles = path_ensembles
         self.settings = {'tis': tis_settings, 'retis': retis_settings}
+        self.rgen = rgen
         # check for shooting:
         local_tis = self.settings['tis']
         if local_tis['sigma_v'] < 0.0:
@@ -231,8 +234,6 @@ class SimulationRETIS(Simulation):
             local_tis['sigma_v'] = (local_tis['sigma_v'] *
                                     np.sqrt(system.particles.imass))
             local_tis['aimless'] = False
-        # create a random generator for TIS moves etc.:
-        self.rgen = RandomGenerator(seed=local_tis['seed'])
 
     def initiate_ensemble(self, ensemble):
         """Method to initiate a given ensemble.

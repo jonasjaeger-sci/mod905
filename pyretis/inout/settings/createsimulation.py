@@ -93,6 +93,29 @@ def create_mdflux_simulation(settings, system):
                             startcycle=sim.get('startcycle', 0))
 
 
+def create_random_generator(settings):
+    """This will initiate a random generator.
+
+    Parameters
+    ----------
+    settings : dict
+        This is the dict used for creating the random generator.
+        Currently, we will actually just look for a seed value.
+
+    Returns
+    -------
+    out : object like `RandomGenerator`
+        The random generator created.
+    """
+    if 'seed' not in settings:
+        seed = 0
+        msg = 'No seed given, setting it to "0"'
+        logger.info(msg)
+    else:
+        seed = settings['seed']
+    return RandomGenerator(seed=seed)
+
+
 def create_umbrellaw_simulation(settings, system):
     """This will set up and create a Umbrella Window simulation.
 
@@ -109,15 +132,7 @@ def create_umbrellaw_simulation(settings, system):
         The object(s) representing the simulation(s) to run.
     """
     sim = settings['simulation']
-    try:
-        rgen = sim['rgen']
-    except KeyError:
-        msg = 'No random generator specified, will initiate one.'
-        logger.info(msg)
-        if 'seed' not in sim:
-            msg = 'No random seed given. Will just use "0"'
-            logger.warning(msg)
-        rgen = RandomGenerator(seed=sim.get('seed', 0))
+    rgen = create_random_generator(sim)
     return UmbrellaWindowSimulation(system, sim['umbrella'],
                                     sim['over'], rgen,
                                     sim['maxdx'],
@@ -195,9 +210,11 @@ def _create_tis_single_simulation(settings, system):
         path_ensemble = settings['path-ensemble']
     else:
         path_ensemble = create_path_ensemble(settings)
+    rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
     return SimulationSingleTIS(system, integ,
                                path_ensemble,
+                               rgen,
                                settings['tis'],
                                steps=sim['steps'],
                                startcycle=sim.get('startcycle', 0))
@@ -226,8 +243,10 @@ def create_retis_simulation(settings, system):
     sim = settings['simulation']
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
                                               include_zero=True)
+    rgen = create_random_generator(settings['tis'])
     return SimulationRETIS(system, integ,
                            path_ensembles,
+                           rgen,
                            settings['tis'],
                            settings['retis'],
                            steps=sim['steps'],

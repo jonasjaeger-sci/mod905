@@ -18,6 +18,9 @@ RandomGenerator
 
 ReservoirSampler
     A class for reservoir sampling.
+
+MockRandomGenerator
+    A non-random number generator which is useful for testing.
 """
 from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
@@ -30,7 +33,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['RandomGenerator', 'ReservoirSampler']
+__all__ = ['RandomGenerator', 'ReservoirSampler', 'MockRandomGenerator']
 
 
 class RandomGeneratorBase(object):
