@@ -465,7 +465,7 @@ class MockRandomGenerator(RandomGeneratorBase):
                      0.31168372, 0.05072849, 0.44876368, 0.94301709]
         self.length = len(self.rgen)
         self.randint = self.seed
-        logger.warning('You are using a "mock" random generator!\n')
+        logger.critical('You are using a "mock" random generator!\n')
 
     def rand(self, shape=1):
         """Draw random numbers in [0, 1).
