@@ -298,7 +298,6 @@ def main():
         print('Info about the initial path:')
         print(ensemble.last_path)
         print('')
-    force_counter = 0
     # The force counter will just count the number for
     # force evaluations for generating a path, it will not include
     # the force evaluation that might be performed prior to propagation,
@@ -313,14 +312,13 @@ def main():
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result['retis'],
                                     variables['prun'])
-        force_counter += force
         for line in retis_txt:
             print('# {}'.format(line))
         print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
         print(('# Crossing probability: {pcross:<8.6g} +-'
                '{pcrosse:<8.6g}').format(**anr))
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
-        print('# No. of force evaluations: {:g}'.format(force_counter))
+        print('# No. of force evaluations: {:g}'.format(force))
         print('')
 
 
