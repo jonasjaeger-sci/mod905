@@ -20,7 +20,7 @@ INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 200,
+                          'steps': 20000,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}

@@ -26,7 +26,7 @@ PCROSS_LOG = False
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 150,
+                          'steps': 20000,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
