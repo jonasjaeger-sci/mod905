@@ -21,6 +21,7 @@ Complete list of examples:
     :maxdepth: 2
     :numbered:
 
+    examples-molmod-2016.rst
     examples-cecam-2016.rst
     examples-mc.rst
     examples-md.rst
