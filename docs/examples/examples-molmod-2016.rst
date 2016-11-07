@@ -16,13 +16,18 @@ The potential is given by
 By plotting this potential, we see that we have two states
 (at :math:`x=-1` and :math:`x=1`) separated by a barrier (at :math:`x=0`):
 
-.. figure:: ../img/examples/thumbnails/tis-1d-pot.png
+.. figure:: ../img/examples/1dpot.png
     :class: img-responsive center-block
     :alt: The 1D potential example
+    :scale: 75%
     :align: center
 
     The potential energy as a function of the position. We have two
-    stable states separated by a barrier.
+    stable states (at x = -1 and x = 1) separated by a barrier (at x = 0).
+    In addition, three paths are shown. One is reactive while the two others
+    are not able to escape the state at x = -1. Using the RETIS method, we can
+    generate such paths which gives information about the reaction rate and
+    the mechanism. The vertical dotted lines show two RETIS interfaces.
 
 Using the RETIS algorithm, we will compute the rate constant for
 the transition between the two states. We will also try to position
@@ -387,8 +392,8 @@ simulations to see how the method works in practice.
    remove it? Investigate this using the ``retis_movie.py``
    script and setting the frequency of swapping moves to 0. Here,
    you can run 200 steps and compare with the output from the
-   previous question. (Use the same 8 interfaces and set
-   ``PCROSS_LOG = TRUE``).
+   previous question. Use the same 8 interfaces and set
+   ``PCROSS_LOG = TRUE``.
 
 
 
