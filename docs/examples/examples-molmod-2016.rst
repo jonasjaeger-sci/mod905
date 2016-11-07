@@ -135,23 +135,27 @@ a location on your computer and execute it by running
 
 .. code-block:: bash
 
-   python retis.py > output.txt 
+   python retis.py > name_of_file.txt 
 
-which should print out some text similar to the image shown below:
+which should display a progress bar showing estimating the time left for your
+simulation. In addition, text output from the simulation is written to the
+file ``name_of_file.txt``:
 
 .. figure:: ../img/examples/retistxt.png
     :class: img-responsive center-block
-    :scale: 75%
+    :scale: 60%
     :alt: The 1D potential example, text output.
     :align: left
 
-    Sample output from the text based RETIS script. After each completed
+    Sample output from the text based RETIS script. The top terminal is
+    running the simulation where the progress meter is displayed. The lower
+    terminal is inspecting the output file. After each completed
     RETIS cycle the script outputs the cycle number, and then some results
     for each ensemble. The ensemble names are given in the first
-    column (green color), the type of move executed is shown in the next
-    column (orange color), the status after the move (blue color) and the
-    current estimate of the crossing probability for each ensemble
-    (purple color). Then the current estimates for the flux, the crossing
+    column, the type of move executed is shown in the next
+    column, the status after the move and the
+    current estimate of the crossing probability (:math:`P_\mathrm{cross}`) for each ensemble
+    in the two following columns. Then the current estimates for the flux, the crossing
     probability and the rate constant is outputted. Finally
     the number of force evaluations are given.
 
@@ -404,11 +408,11 @@ For instance, if we set the interfaces to
 
 .. code-block:: bash
 
-   # Flux: 0.293853 +- 0.00723067
-   # Crossing probability: 1.37741e-06 +-4.64538e-06
-   # K_AB: 4.04757e-07 +- 1.36509e-06
+   # Flux: 0.285125 +- 0.00956114
+   # Crossing probability: 8.10682e-07 +-4.9152e-07
+   # K_AB: 2.31146e-07 +- 1.40359e-07
 
-with a total number of force evaluations equal to: 1900606. As you can
+with a total number of force evaluations equal to about 3.9 million. As you can
 see there are rather lager uncertainties as 2000 is in fact a small
 number of steps. In this part of the exercise, we will see if we
 can improve the situation and our goal is to lower (if possible)
@@ -425,8 +429,8 @@ some suggestions:
 * After having found a set of interfaces you are happy with, run a
   longer simulation (2000 steps) with the ``retis.py`` script
   and report your results to the teaching assistant. How does your
-  results compare to the results
-  given above. Are you able to perform better?
+  results compare to the results given above. Are you able to perform better?
+  Note: It will take around 7-8 minutes to complete the 2000 cycles.
 
 
 References
