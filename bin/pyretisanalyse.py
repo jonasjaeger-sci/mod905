@@ -38,7 +38,7 @@ from pyretis.inout.common import (check_python_version,
                                   print_to_screen,
                                   PyretisLogFormatter)
 from pyretis.inout.report import generate_report
-from pyretis.inout.settings import parse_settings_file
+from pyretis.inout.settings import parse_settings_file, is_single_tis
 
 
 # Hard-coded patters for report outputs:
@@ -98,12 +98,12 @@ def write_file(outname, report_txt):
     return outname
 
 
-def create_reports(setts, analysis_results, report_path):
+def create_reports(settings, analysis_results, report_path):
     """Create some reports to display the output.
 
     Parameters
     ----------
-    setts : dict
+    settings : dict
         Settings for analysis (and the simulation).
     analysis_results : dict
         Results from the analysis.
@@ -115,14 +115,18 @@ def create_reports(setts, analysis_results, report_path):
     out : string
         The reprot files created
     """
-    pfix = None
-    if setts['task'] == 'tis-single':
-        pfix = PATH_DIR_FMT.format(setts['ensemble'])
-    for report_type in setts['report']:
-        report, ext = generate_report(setts['task'], analysis_results,
+    #pfix = None
+    if is_single_tis(settings):
+        task = 'tis-single'
+        pfix = PATH_DIR_FMT.format(settings['simulation']['ensemble'])
+    else:
+        task = settings['simulation']['task']
+        pfix = None
+    for report_type in settings['analysis']['report']:
+        report, ext = generate_report(task, analysis_results,
                                       output=report_type)
         if report is not None:
-            reportfile = get_report_name(setts['task'], ext, prefix=pfix,
+            reportfile = get_report_name(task, ext, prefix=pfix,
                                          path=report_path)
             write_file(reportfile, report)
             yield reportfile
@@ -207,14 +211,17 @@ if __name__ == '__main__':
         settings = parse_settings_file(inputfile)
         # override exe-path to the one we are executing in now:
         settings['simulation']['exe-path'] = runpath
-        create_conversion_factors(settings['units'], **settings['units-base'])
+        #print(settings['unit-system'])
+        units = settings['system']['units']
+        #create_conversion_factors(settings['system']['units'],
+        #                          **settings['unit-system'])
         # set derived properties:
-        settings['beta'] = 1.0 / (settings['temperature'] *
-                                  CONSTANTS['kB'][settings['units']])
-        settings['report-dir'] = report_dir
+        settings['system']['beta'] = (settings['system']['temperature'] *
+                                      CONSTANTS['kB'][units])**-1
+        settings['analysis']['report-dir'] = report_dir
         msg_dir = make_dirs(report_dir)
         print_to_screen(msg_dir)
-        task = settings['task']
+        task = settings['simulation']['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
         results = run_analysis(settings)
         print_to_screen('Analysis done.')

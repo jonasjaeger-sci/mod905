@@ -516,3 +516,45 @@ def write_settings_file(settings, outfile, backup=True):
     with open(outfile, 'w') as fileh:
         txt = settings_to_text(settings)
         fileh.write(txt)
+
+
+def copy_settings(settings):
+    """Return a copy of the given settings.
+
+    Parameters
+    ----------
+    settings : dict of dicts
+        A dictionary which we will return a copy of.
+
+    Returns
+    -------
+    lsetting : dict of dicts
+        A copy of the settings.
+    """
+    lsetting = {}
+    for sec in settings:  # this is common for all simulations:
+        lsetting[sec] = {}
+        if sec == 'potential':
+            lsetting[sec] = [j for j in settings[sec]]
+        else:
+            for key in settings[sec]:
+                lsetting[sec][key] = settings[sec][key]
+    return lsetting
+
+
+def is_single_tis(settings):
+    """Return True if settings define a single TIS simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        This is the settings for the simulation.
+
+    Returns
+    -------
+    out : boolean
+        True if the settings define a single TIS simulation, False
+        otherwise.
+    """
+    return (settings['simulation']['task'] == 'tis' and
+            len(settings['simulation']['interfaces']) <= 3)

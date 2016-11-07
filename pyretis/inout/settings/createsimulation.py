@@ -26,6 +26,7 @@ from pyretis.core.pathensemble import (PathEnsemble,
                                        PATH_DIR_FMT,
                                        create_path_ensembles)
 from pyretis.inout.settings.common import create_integrator
+from pyretis.inout.settings.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -142,18 +143,11 @@ def create_tis_simulations(settings, system):
     interfaces = settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
-    if len(interfaces) <= 3:
+    if is_single_tis(settings):
         return _create_tis_single_simulation(settings, system)
     else:
         for i, middle in enumerate(interfaces[:-1]):
-            lsetting = {}
-            for sec in settings:  # this is common for all simulations:
-                lsetting[sec] = {}
-                if sec == 'potential':
-                    lsetting[sec] = [j for j in settings[sec]]
-                else:
-                    for key in settings[sec]:
-                        lsetting[sec][key] = settings[sec][key]
+            lsetting = copy_settings(settings)
             lsetting['simulation']['interfaces'] = [reactant, middle, product]
             lsetting['simulation']['ensemble'] = i + 1
             lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)

@@ -52,7 +52,8 @@ from pyretis.inout.settings import (parse_settings_file,
                                     create_system,
                                     create_force_field,
                                     create_orderparameter,
-                                    create_simulation)
+                                    create_simulation,
+                                    is_single_tis)
 
 
 _DATE_FMT = '%d.%m.%Y %H:%M:%S'
@@ -348,7 +349,7 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    if len(settings_tis['simulation']['interfaces']) <= 3:
+    if is_single_tis(settings_tis):
         run_tis_single_simulation(settings_sim, settings_tis,
                                   progress=progress)
     else:

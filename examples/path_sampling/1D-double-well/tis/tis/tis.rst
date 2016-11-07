@@ -4,7 +4,7 @@ TIS 1D example
 Simulation
 ----------
 task = tis
-steps = 20000
+steps = 20001
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
