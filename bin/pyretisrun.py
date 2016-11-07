@@ -495,7 +495,7 @@ if __name__ == '__main__':
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
             settings['particles']['npart'] = system.particles.npart
-        outfile = '_out-{}'.format(inputfile)
+        outfile = 'out.{}'.format(inputfile)
         outpath = os.path.join(basepath, outfile)
         print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
         write_settings_file(settings, outpath,
