@@ -14,13 +14,14 @@ from pyretis.inout.settings import (create_force_field,
                                     create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 import numpy as np
+from tqdm import tqdm
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 20000,
+                          'steps': 2000,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -101,6 +102,11 @@ def step_txt(ensembles, retis_result, prun):
     """
     txt = []
     force = 0  # counter for force evaluations
+    # The force counter will just count the number of
+    # force evaluations for generating a path, it will not include
+    # the force evaluation that might be performed prior to propagation,
+    # i.e. the initial force evaluation since this can be stored in memory,
+    # along the path -> i.e. we can avoid it.
     for i, result in enumerate(retis_result):
         ensemble = ensembles[i]
         name = ensemble.ensemble_name
@@ -298,29 +304,22 @@ def main():
         print('Info about the initial path:')
         print(ensemble.last_path)
         print('')
-    force_counter = 0
-    # The force counter will just count the number for
-    # force evaluations for generating a path, it will not include
-    # the force evaluation that might be performed prior to propagation,
-    # i.e. the initial force evaluation since this can be stored in memory,
-    # along the path.
 
     # Run the rest of the simulation.
-    while not simulation.is_finished():
-        result = simulation.step()
+    for result in tqdm(simulation.run(), initial=1,
+                       total=SETTINGS['simulation']['steps']):
         step = result['cycle']['step']
         print('# Current cycle: {}'.format(step))
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result['retis'],
                                     variables['prun'])
-        force_counter += force
         for line in retis_txt:
             print('# {}'.format(line))
         print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
         print(('# Crossing probability: {pcross:<8.6g} +-'
                '{pcrosse:<8.6g}').format(**anr))
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
-        print('# No. of force evaluations: {:g}'.format(force_counter))
+        print('# No. of force evaluations: {:g}'.format(force))
         print('')
 
 
