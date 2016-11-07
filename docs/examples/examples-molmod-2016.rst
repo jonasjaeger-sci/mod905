@@ -135,7 +135,7 @@ a location on your computer and execute it by running
 
 .. code-block:: bash
 
-   python retis.py
+   python retis.py > output.txt 
 
 which should print out some text similar to the image shown below:
 
@@ -400,7 +400,7 @@ For instance, if we set the interfaces to
      
     INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
-``steps`` to 1000 and the frequencies to 0.5, the output will be similar to:
+``steps`` to 2000 and the frequencies to 0.5, the output will be similar to:
 
 .. code-block:: bash
 
@@ -409,7 +409,7 @@ For instance, if we set the interfaces to
    # K_AB: 4.04757e-07 +- 1.36509e-06
 
 with a total number of force evaluations equal to: 1900606. As you can
-see there are rather lager uncertainties as 1000 is in fact a small
+see there are rather lager uncertainties as 2000 is in fact a small
 number of steps. In this part of the exercise, we will see if we
 can improve the situation and our goal is to lower (if possible)
 the number of force evaluations and the uncertainty. Here, you
@@ -423,7 +423,7 @@ some suggestions:
   the results.
 
 * After having found a set of interfaces you are happy with, run a
-  longer simulation (1000 steps) with the ``retis.py`` script
+  longer simulation (2000 steps) with the ``retis.py`` script
   and report your results to the teaching assistant. How does your
   results compare to the results
   given above. Are you able to perform better?
