@@ -304,7 +304,6 @@ def main():
         print('Info about the initial path:')
         print(ensemble.last_path)
         print('')
-
     # Run the rest of the simulation.
     for result in tqdm(simulation.run(), initial=1,
                        total=SETTINGS['simulation']['steps']):
