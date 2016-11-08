@@ -57,27 +57,27 @@ class Plotter(object):
         self.out_dir = out_dir
 
     @abstractmethod
-    def plot_flux(self, results):
+    def output_flux(self, results):
         """Function that plots flux results."""
         return
 
     @abstractmethod
-    def plot_energy(self, results, energies):
+    def output_energy(self, results, energies):
         """Function that plots energy results."""
         return
 
     @abstractmethod
-    def plot_orderp(self, results, orderdata):
+    def output_orderp(self, results, orderdata):
         """Function that plots order parameter results."""
         return
 
     @abstractmethod
-    def plot_path(self, path_ensemble, results, idetect):
+    def output_path(self, results, path_ensemble):
         """Function that plots path ensemble results."""
         return
 
     @abstractmethod
-    def plot_total_probability(self, path_ensembles, detect, matched):
+    def output_matched_probability(self, path_ensembles, detect, matched):
         """Function that plots the overall probability for path ensembles."""
         return
 

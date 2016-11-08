@@ -55,7 +55,7 @@ References
 """
 from pyretis.inout.settings.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
-
+from .txt_plotting import TxtPlotter
 
 __all__ = ['create_plotter']
 

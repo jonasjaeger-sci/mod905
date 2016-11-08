@@ -121,7 +121,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \sqrt{\sigma_{i} \times \sigma_{j}}`
 
-       * :math:`r_{\text{cut},ij} = \sqrt{r_{\text{cut},i} \times r_{\text{cut},j}}`
+       * :math:`r_{\text{c},ij} = \sqrt{r_{\text{c},i} \times r_{\text{c},j}}`
 
     2. Arithmetic:
 
@@ -129,7 +129,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
 
-       * :math:`r_{\text{cut},ij} = \frac{r_{\text{cut},i} \times r_{\text{cut},j}}{2}`
+       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times r_{\text{c},j}}{2}`
 
     3. Sixthpower
 
@@ -137,7 +137,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times \sigma_{j}^6}{2} \right)^{1/6}`
 
-       * :math:`r_{\text{cut},ij} = \left(\frac{r_{\text{cut},i}^6 \times r_{\text{cut},j}^6}{2}\right)^{1/6}`
+       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times r_{\text{c},j}^6}{2}\right)^{1/6}`
 
 
     Parameters

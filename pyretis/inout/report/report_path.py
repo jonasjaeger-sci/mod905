@@ -500,7 +500,7 @@ def _table_summary(report, fmt='rst'):
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Summary of main results',
                                          ['Property', 'Value',
-                                          'Relative error ($\%$)'],
+                                          r'Relative error ($\%$)'],
                                          fixnum={1, 2})
     else:
         table_str = generate_rst_table(table, 'Summary of main results',

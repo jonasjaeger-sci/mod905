@@ -13,14 +13,13 @@ analyse_file
     Method to analyse a file. For example, it can be used as
 
     >>> from pyretis.inout.analysisio import analyse_file
-    >>> analyse_func = analyse_file('cross', 'cross.dat')
-    >>> out, fig, txt = analyse_func(settings)
+    >>> result, raw_data = analyse_file('cross', 'cross.dat', settings)
 
-    It wraps around the different analysis methods which can be called
-    by
+    To output the results, for instance by plotting, one can do:
 
-    >>> from pyretis.inout.analysisio import analyse_and_output_cross
-    >>> out, fig, txt = analyse_and_output_cross(settings, rawdata)
+    >>> figures = output_results(file_type, plotter, result, raw_data)
+    >>> txt_file = output_results(file_type, txt_plotter, result, raw_data)
+
 
 run_analysis_files
     Methods to the analysis on a set of files. It will create some
@@ -35,13 +34,9 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble, match_probabilities,
                               retis_flux, retis_rate)
-from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
-                                                  txt_flux_output,
-                                                  txt_orderp_output,
-                                                  txt_path_output,
-                                                  txt_matched_probability)
 from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
+from pyretis.inout.plotting import TxtPlotter
 from pyretis.inout.report import generate_report
 from pyretis.inout.settings.settings import SECTIONS, copy_settings
 from pyretis.inout.settings import is_single_tis
@@ -53,11 +48,10 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['analyse_file', 'run_analysis_files']
 
 
-_FILE_LOAD = {'cross': True,
-              'order': True,
-              'energy': True,
-              'pathensemble': False}
-
+_ANALYSIS_FUNCTIONS = {'cross': analyse_flux,
+                       'order': analyse_orderp,
+                       'energy': analyse_energies,
+                       'pathensemble': analyse_path_ensemble}
 
 # Input files for analysis
 FILES = {'md-flux': {'cross': 'cross.dat',
@@ -85,11 +79,18 @@ def run_analysis(settings):
     """
     sim = settings['simulation']
     sim_task = sim['task']
+    report_dir = settings['analysis'].get('report-dir', None)
+    plotter = create_plotter(settings['analysis']['plot'],
+                             out_dir=report_dir)
+    backup = settings['output'].get('backup', SECTIONS['output']['backup'])
+    txt_plotter = TxtPlotter(settings['analysis']['txt-output'],
+                             backup=backup,
+                             out_dir=report_dir)
     if sim_task in set(('retis', 'tis')):
         if sim_task == 'tis':
-            return run_tis_analysis(settings)
+            return run_tis_analysis(settings, plotter, txt_plotter)
         elif sim_task == 'retis':
-            return run_retis_analysis(settings)
+            return run_retis_analysis(settings, plotter, txt_plotter)
 
 
 def get_path_ensemble_files(ensemble, settings, detect,
@@ -123,8 +124,8 @@ def get_path_ensemble_files(ensemble, settings, detect,
     sim_task = settings['simulation']['task']
     lsetting = copy_settings(settings)
     lsetting['simulation']['interfaces'] = interfaces
-    lsetting['detect'] = detect
-    lsetting['ensemble'] = ensemble
+    lsetting['simulation']['detect'] = detect
+    lsetting['simulation']['ensemble'] = ensemble
     files = []
     for file_type in FILES[sim_task]:
         filename = os.path.join(PATH_DIR_FMT.format(ensemble),
@@ -201,39 +202,60 @@ def print_value_error(heading, value, rel_error):
     print_to_screen(msgtxt)
 
 
-def run_tis_analysis(settings):
+def run_single_tis_analysis(settings, plotter, txt_plotter):
+    """Run the analysis for a single TIS ensemble.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to use for an analysis/simulation.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
+
+    Returns
+    -------
+    out : list or dict or similar
+        The output from the analysis.
+    """
+    sim = settings['simulation']
+    sett, files = get_path_ensemble_files(sim['ensemble'],
+                                          settings,
+                                          sim['detect'],
+                                          sim['interfaces'])
+    msgtxt = 'Analysing ensemble {}'.format(sim['ensemble'])
+    print_to_screen(msgtxt)
+    print_to_screen()
+    result = run_analysis_files(sett, files, plotter, txt_plotter)
+    report_txt = generate_report('tis-single', result,
+                                 output='txt')[0]
+    print_to_screen(''.join(report_txt))
+    print_to_screen()
+    return result
+
+
+def run_tis_analysis(settings, plotter, txt_plotter):
     """Run the analysis for TIS.
 
     Parameters
     ----------
     settings : dict
-        The settings to use for an analysis/simulation
-    all_settings : list of dicts
-        `all_settings[i]` contains information for analysing a
-        specific path ensemble.
-    all_files : list of lists
-        `all_files[i]` contains the paths for the files to be analysed.
+        The settings to use for an analysis/simulation.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
+
+    Returns
+    -------
+    out : list or dict or similar
+        The output from the analysis.
     """
-    sim = settings['simulation']
-    results = {'cross': None,
-               'pathensemble': [],
-               'matched': None}
     if is_single_tis(settings):
-        sett, files = get_path_ensemble_files(sim['ensemble'],
-                                              settings,
-                                              sim['detect'],
-                                              sim['interfaces'])
-        msgtxt = 'Analysing ensemble {}'.format(sim['ensemble'])
-        print_to_screen(msgtxt)
-        print_to_screen()
-        result = run_analysis_files(sett, files)
-        #results['pathensemble'].append(result['pathensemble'])
-        report_txt = generate_report('tis-single', result,
-                                     output='txt')[0]
-        print_to_screen(''.join(report_txt))
-        print_to_screen()
-        return result
+        return run_single_tis_analysis(settings, plotter, txt_plotter)
     else:
+        results = {'cross': None, 'pathensemble': [], 'matched': None}
         all_settings, all_files = get_path_simulation_files(settings)
         nens = len(all_settings) - 1
         for i, (sett, files) in enumerate(zip(all_settings, all_files)):
@@ -246,40 +268,42 @@ def run_tis_analysis(settings):
                 msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
                 print_to_screen(msgtxt)
                 print_to_screen()
-                result = run_analysis_files(sett, files)
+                result = run_analysis_files(sett, files, plotter, txt_plotter)
                 results['pathensemble'].append(result['pathensemble'])
                 report_txt = generate_report('tis-single', result,
                                              output='txt')[0]
                 print_to_screen(''.join(report_txt))
                 print_to_screen()
         # match probabilities:
-        out, fig, txt = analyse_and_output_matched(settings,
-                                                   results['pathensemble'])
+        out, fig, txt = analyse_and_output_matched(results['pathensemble'],
+                                                   plotter, txt_plotter)
         results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
         print_to_screen('Overall results')
         print_to_screen('===============')
-        print_to_screen('')
+        print_to_screen()
         print_value_error('TIS Crossing probability',
                           out['prob'], out['relerror'])
         return results
 
 
-def run_retis_analysis(sim_settings):
+def run_retis_analysis(settings, plotter, txt_plotter):
     """Run the analysis for RETIS.
 
     Parameters
     ----------
-    sim_settings : dict
-        The settings to use for an analysis/simulation
-    all_settings : list of dicts
-        `all_settings[i]` contains information for analysing a
-        specific path ensemble.
-    all_files : list of lists
-        `all_files[i]` contains the paths for the files to be analysed.
+    settings : dict
+        The settings to use for an analysis/simulation.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
     """
-    units = sim_settings['units']
-    create_conversion_factors(units, **sim_settings['units-base'])
-    all_settings, all_files = get_path_simulation_files(sim_settings)
+    units = settings['system']['units']
+    if 'unit-system' in settings:
+        create_conversion_factors(units, **settings['unit-system'])
+    else:
+        create_conversion_factors(units)
+    all_settings, all_files = get_path_simulation_files(settings)
     results = {'cross': None,
                'pathensemble': [],
                'matched': None}
@@ -290,25 +314,25 @@ def run_retis_analysis(sim_settings):
         print_to_screen(msgtxt)
         print_to_screen()
         if i == 0:
-            result = run_analysis_files(sett, files)
+            result = run_analysis_files(sett, files, plotter, txt_plotter)
             results['pathensemble0'] = result['pathensemble']
             report_txt = generate_report('retis0', result, output='txt')[0]
             print_to_screen(''.join(report_txt))
             print_to_screen()
         else:
-            result = run_analysis_files(sett, files)
+            result = run_analysis_files(sett, files, plotter, txt_plotter)
             results['pathensemble'].append(result['pathensemble'])
             report_txt = generate_report('tis-single', result,
                                          output='txt')[0]
             print_to_screen(''.join(report_txt))
             print_to_screen()
     # match probabilities:
-    out, fig, txt = analyse_and_output_matched(sim_settings,
-                                               results['pathensemble'])
+    out, fig, txt = analyse_and_output_matched(results['pathensemble'],
+                                               plotter, txt_plotter)
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
     flux, flux_error = retis_flux(results['pathensemble0'],
                                   results['pathensemble'][0],
-                                  sim_settings['integrator']['timestep'])
+                                  settings['integrator']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
     results['fluxc'] = {'value': flux / CONVERT['time'][units, 'ns'],
@@ -322,19 +346,19 @@ def run_retis_analysis(sim_settings):
                         'error': rate_error, 'unit': 'ns'}
     print_to_screen('Overall results')
     print_to_screen('===============')
-    print_to_screen('')
+    print_to_screen()
     print_value_error('RETIS Crossing probability',
                       out['prob'], out['relerror'])
-    print_to_screen('')
+    print_to_screen()
     print_value_error('Initial flux (units 1/{})'.format(units), flux,
                       flux_error)
-    print_to_screen('')
+    print_to_screen()
     print_value_error('Rate constant (units 1/{})'.format(units), rate,
                       rate_error)
     return results
 
 
-def run_analysis_files(settings, files):
+def run_analysis_files(settings, files, plotter, txt_plotter):
     """Run the analysis on a collection of files.
 
     Parameters
@@ -346,47 +370,24 @@ def run_analysis_files(settings, files):
     files : list of tuples
         This list contains the raw files to be analysed. The
         tuples are on format ('filetype', 'filename').
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
 
     Returns
     -------
     The results from the analysis.
     """
-    report_dir = settings['analysis'].get('report-dir', None)
-    plotter = create_plotter(settings['analysis']['plot'],
-                             out_dir=report_dir)
-    txtout = settings['analysis']['txt-output']
     results = {}
     for (file_type, file_name) in files:
-        analyse_func = analyse_file(file_type, file_name)
-        out, figures, txtfile = analyse_func(settings, plotter=plotter,
-                                             txt=txtout)
-        results[file_type] = {'out': out,
+        result, raw_data = analyse_file(file_type, file_name, settings)
+        figures = output_results(file_type, plotter, result, raw_data)
+        txt_file = output_results(file_type, txt_plotter, result, raw_data)
+        results[file_type] = {'out': result,
                               'figures': figures,
-                              'txtfile': txtfile}
+                              'txtfile': txt_file}
     return results
-
-
-def select_analyse_function(what):
-    """A function to select the analyse function to use.
-
-    Just for convenience, it will select the function to use for the
-    analysis based on a given string.
-
-    Parameters
-    ----------
-    what : string
-        Selects the analysis function.
-
-    Returns
-    -------
-    out : function
-        The function to use for the analysis.
-    """
-    function_map = {'cross': analyse_and_output_cross,
-                    'order': analyse_and_output_orderp,
-                    'energy': analyse_and_output_energy,
-                    'pathensemble': analyse_and_output_path}
-    return function_map.get(what, None)
 
 
 def read_first_block(fileobj, file_name):
@@ -423,7 +424,36 @@ def read_first_block(fileobj, file_name):
         return first_block['data']
 
 
-def analyse_file(file_type, file_name):
+def output_results(file_type, plotter, result, rawdata):
+    """Helper function to plot the results.
+
+    Parameters
+    ----------
+    file_type : string
+        This determines what we are going to plot.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+            This is the object that handles the plotting.
+    result : list of lists/dicts etc.
+        This contains the results from a specific analysis.
+    rawdata : list of floats, lists, objects, etc.
+        These are the raw data using in the analysis.
+
+    Returns
+    -------
+    out : list of strings
+        These are the files that the plotter created.
+    """
+    if file_type == 'cross':
+        return plotter.output_flux(result)
+    elif file_type == 'orderp':
+        return plotter.output_orderp(result, rawdata)
+    elif file_type == 'energy':
+        return plotter.output_energy(result, rawdata)
+    elif file_type == 'pathensemble':
+        return plotter.output_path(result, rawdata)
+
+
+def analyse_file(file_type, file_name, settings):
     """Run analysis on the given file.
 
     This function is included for convenience so that we can call an
@@ -441,293 +471,39 @@ def analyse_file(file_type, file_name):
         This is the type of file we are to analyse.
     file_name : string
         The file name to open.
-
-    Returns
-    -------
-    out : function
-        A function which can be used to do the analysis.
-    """
-    def wrapper(settings, plotter=None, txt=None):
-        """Wrapper to run analysis on first block in input file only.
-
-        Parameters
-        ----------
-        settings : dict
-            This dict contains settings which dictates how the
-            analysis should be performed and information on how the
-            simulation was performed.
-        plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-            This is the object that handles the plotting.
-        txt : dict
-            If txt is different from None it is assumed to contain the
-            format for the text files and backup settings.
-        """
-        function = select_analyse_function(file_type)
-        if file_type in ('energy', 'order', 'cross'):
-            raw_data = read_first_block(get_writer(file_type), file_name)
-            return function(settings, raw_data, plotter=plotter, txt=txt)
-        elif file_type == 'pathensemble':
-            fileobj = PathEnsembleFile(file_name,
-                                       settings['simulation']['ensemble'],
-                                       settings['simulation']['interfaces'],
-                                       detect=settings['simulation']['detect'])
-            return function(settings, fileobj, plotter=plotter, txt=txt)
-        else:
-            msgtxt = 'Unknown file type "{}" requested!'.format(file_type)
-            logger.error(msgtxt)
-            raise ValueError(msgtxt)
-    return wrapper
-
-
-def check_output(function):
-    """A decorator for checking outputs for the analyse functions.
-
-    Outputs can either be specified explicitly or implicitly by the
-    analysis settings. Here we create a decorator that will set up
-    output if nothing is specified. We handle plotters and txt output
-    slightly differently since the plotter needs to have objects
-    created and the txt output is just a string specifying the file
-    extension.
-
-    For plotters:
-
-    - If a plotter is explicitly given with the `plotter` keyword then
-      we use that one.
-
-    - If not explicitly given, we try to create a plotter from given
-      analysis settings. If the analysis settings specify that no
-      plotter should be created we leave `plotter` equal to None.
-
-    For text output:
-
-    - Text output is specified with a dictionary. if the text output
-      is not explicitly specified here, we check if it is defined by the
-      analysis settings by looking for the keyword `txt-output`.
-      If this is given we just look for the keys `fmt` which specifies
-      the format and 'backup' which determines if we should do backups
-      or not.
-
-    Parameters
-    ----------
-    function : A callable function
-        The function to decorate
-
-    Returns
-    -------
-    out : A callable function
-        The decorated function which will not run if we have not
-        specified any outputs.
-    """
-    def wrapper(settings, rawdata, plotter=None, txt=None):
-        """The actual wrapper. It will check that one of plotter/txt is given.
-
-        Parameters
-        ----------
-        settings : dict
-            This dict contains settings for the analysis and it should
-            also contain information on how the simulation was performed.
-        rawdata : iterable, or similar
-            This is the raw data which is processed.
-        plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-            This is the object that handles the plotting.
-        txt : dict
-            If `txt` is different from None it is assumed to contain
-            the format for the text files and backup settings.
-
-        Returns
-        -------
-        out[0] : dict
-            This dict contains the results from the analysis
-        out[1] : list of dicts
-            Dict with the figure files created (if any).
-        out[2] : list of strings
-            List with the text files created (if any).
-        """
-        analysis = settings['analysis']
-        txtout = None
-        if plotter is None:
-            plotter = create_plotter(analysis['plot'],
-                                     out_dir=analysis.get('report-dir', None))
-        txt = analysis['txt-output']
-        if plotter is None and txt is None:
-            msg = 'No output selected. Skipping analysis!'
-            logger.warning(msg)
-            return None, None, None
-        if txt is not None:  # just make sure we specify the things we need:
-            default = SECTIONS['analysis']['txt-output']
-            try:
-                txtout = {'fmt': txt,
-                          'backup': settings['output']['backup']}
-            except AttributeError:
-                txtout = default
-                msgtxt = ('Malformed "txt-output" setting: "{}".'
-                          ' Assuming "{}"')
-                msgtxt = msgtxt.format(txt, txtout)
-                logger.critical(msgtxt)
-        return function(settings, rawdata, plotter=plotter, txt=txtout)
-    return wrapper
-
-
-@check_output
-def analyse_and_output_cross(settings, rawdata, plotter=None, txt=None):
-    """Analyse crossing data and output the results.
-
-    Parameters
-    ----------
     settings : dict
-        This dict contains settings for the analysis and it should
-        also contain information on how the simulation was performed.
-    rawdata : iterable
-        This is the raw data which is processed.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txt : dict
-        If `txt` is different from None it is assumed to contain the
-        format for the text files and backup settings.
+        This dict contains settings which dictates how the
+        analysis should be performed and information on how the
+        simulation was performed.
 
     Returns
     -------
-    out[0] : dict
-        This dict contains the results from the analysis
-    out[1] : list of dicts
-        Dict with the figure files created (if any).
-    out[2] : list of strings
-        List with the text files created (if any).
+    results : list/dict
+        The output from the analysis
+    raw_data : list, numpy.array or other type of object.
+        The raw data used in the analysis.
     """
-    figures, outtxt = None, None
-    result = analyse_flux(rawdata, settings)
-    if plotter is not None:
-        figures = plotter.plot_flux(result)
-    if txt is not None:
-        report_dir = settings['analysis'].get('report-dir', None)
-        outtxt = txt_flux_output(result, out_fmt=txt['fmt'],
-                                 backup=txt['backup'],
-                                 path=report_dir)
-    return result, figures, outtxt
+    function = _ANALYSIS_FUNCTIONS.get(file_type, None)
+    if function is None:
+        msgtxt = 'Unknown file type "{}" requested!'.format(file_type)
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
+    results, raw_data = None, None
+    if file_type in ('energy', 'order', 'cross'):
+        # Read the first block of raw data and analyse it:
+        raw_data = read_first_block(get_writer(file_type), file_name)
+        results = function(raw_data, settings)
+    elif file_type == 'pathensemble':
+        # Create a PathEnsembleFile object to use for the analysis.
+        raw_data = PathEnsembleFile(file_name,
+                                    settings['simulation']['ensemble'],
+                                    settings['simulation']['interfaces'],
+                                    detect=settings['simulation']['detect'])
+        results = function(raw_data, settings)
+    return results, raw_data
 
 
-@check_output
-def analyse_and_output_orderp(settings, rawdata, plotter=None, txt=None):
-    """Analyse and output order parameter data.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains settings for the analysis and should also
-        contain information on how the simulation was performed.
-    rawdata : iterable, or similar
-        This is the raw data which is processed.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txt : dict
-        If txt is different from None it is assumed to contain the
-        format for the text files and backup settings.
-
-    Returns
-    -------
-    out[0] : dict
-        This dict contains the results from the analysis
-    out[1] : list of dicts
-        Dict with the figure files created (if any).
-    out[2] : list of strings
-        List with the text files created (if any).
-    """
-    figures, outtxt = None, None
-    result = analyse_orderp(rawdata, settings)
-    if plotter is not None:
-        figures = plotter.plot_orderp(result, rawdata)
-    if txt is not None:
-        report_dir = settings['analysis'].get('report-dir', None)
-        outtxt = txt_orderp_output(result, rawdata, out_fmt=txt['fmt'],
-                                   backup=txt['backup'],
-                                   path=report_dir)
-    return result, figures, outtxt
-
-
-@check_output
-def analyse_and_output_energy(settings, rawdata, plotter=None, txt=None):
-    """Analyse and output energy data.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains settings for the analysis and information
-        on how the simulation was performed.
-    rawdata : iterable, or similar
-        This is the raw data which is processed.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txt : dict
-        If txt is different from None it is assumed to contain the
-        format for the text files and backup settings.
-
-    Returns
-    -------
-    out[0] : dict
-        This dict contains the results from the analysis
-    out[1] : list of dicts
-        Dict with the figure files created (if any).
-    out[2] : list of strings
-        List with the text files created (if any).
-    """
-    figures, outtxt = None, None
-    result = analyse_energies(rawdata, settings)
-    if plotter is not None:
-        figures = plotter.plot_energy(result, rawdata)
-    if txt is not None:
-        report_dir = settings['analysis'].get('report-dir', None)
-        outtxt = txt_energy_output(result, rawdata, out_fmt=txt['fmt'],
-                                   backup=txt['backup'],
-                                   path=report_dir)
-    return result, figures, outtxt
-
-
-@check_output
-def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
-    """Analyse and output path data.
-
-    This will run the path analysis and output the results.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains settings for the analysis and information
-        on how the simulation was performed.
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we will analyse. This can also be a
-        object like `PathEnsembleFile` from `pyretis.inout.writers`.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
-        This is the object that handles the plotting.
-    txt : dict
-        If txt is different from None it is assumed to contain the
-        format for the text files and backup settings.
-
-    Returns
-    -------
-    out[0] : dict
-        This dict contains the results from the analysis
-    out[1] : list of dicts
-        Dict with the figure files created (if any).
-    out[2] : list of strings
-        List with the text files created (if any).
-    """
-    figures, outtxt = None, None
-    idetect = path_ensemble.detect
-    result = analyse_path_ensemble(path_ensemble, settings['analysis'],
-                                   idetect)
-    if plotter is not None:
-        figures = plotter.plot_path(path_ensemble, result, idetect)
-    if txt is not None:
-        report_dir = settings['analysis'].get('report-dir', None)
-        outtxt = txt_path_output(path_ensemble, result, idetect,
-                                 out_fmt=txt['fmt'],
-                                 backup=txt['backup'],
-                                 path=report_dir)
-    return result, figures, outtxt
-
-
-@check_output
-def analyse_and_output_matched(settings, raw_data, plotter=None, txt=None):
+def analyse_and_output_matched(raw_data, plotter, txt_plotter):
     """Analyse and output matched probability,
 
     This will calculate the over-all crossing probability by combining
@@ -735,14 +511,12 @@ def analyse_and_output_matched(settings, raw_data, plotter=None, txt=None):
 
     Parameters
     ----------
-    settings : dict
-        This dict contains settings for the analysis and information
-        on how the simulation was performed.
-    plotter : object like `MplPlotter` from `pyretis.inout.plotting`.
+    raw_data : list, numpy.array or other type of object.
+        The raw data used in the analysis.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
         This is the object that handles the plotting.
-    txt : dict
-        If txt is different from None it is assumed to contain the
-        format for the text files and backup settings.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
 
     Returns
     -------
@@ -753,20 +527,16 @@ def analyse_and_output_matched(settings, raw_data, plotter=None, txt=None):
     out[2] : list of strings
         A list with the text files created (if any).
     """
-    figures, outtxt = None, None
-    path_results, path_ensembles_name, detect = [], [], []
+    path_results, ensemble_names, detect = [], [], []
     for ensemble in raw_data:
         path_results.append(ensemble['out'])
-        path_ensembles_name.append(ensemble['out']['ensemble'])
+        ensemble_names.append(ensemble['out']['ensemble'])
         detect.append(ensemble['out']['detect'])
     result = match_probabilities(path_results, detect)
-    if plotter is not None:
-        figures = plotter.plot_total_probability(path_ensembles_name, detect,
+    figures = plotter.output_matched_probability(ensemble_names,
+                                                 detect,
                                                  result)
-    if txt is not None:
-        report_dir = settings['analysis'].get('report-dir', None)
-        outtxt = txt_matched_probability(path_ensembles_name, detect, result,
-                                         out_fmt=txt['fmt'],
-                                         backup=txt['backup'],
-                                         path=report_dir)
+    outtxt = txt_plotter.output_matched_probability(ensemble_names,
+                                                    detect,
+                                                    result)
     return result, figures, outtxt

@@ -47,9 +47,10 @@ def analyse_energies(energies, settings):
         results[key] = analyse_data(energies[key], settings)
     # For the energy analysis it is also useful to add some
     # theoretical distributions:
-    alp = (0.5 * settings['npart'] * settings['dimensions'])
-    scale = {'ekin': 1.0 / settings['beta'],
-             'temp': settings['temperature'] / alp}
+    alp = (0.5 * settings['particles']['npart'] *
+           settings['system']['dimensions'])
+    scale = {'ekin': 1.0 / settings['system']['beta'],
+             'temp': settings['sytem']['temperature'] / alp}
     for key in scale:
         if key in results:
             dist = results[key]['distribution']

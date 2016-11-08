@@ -402,7 +402,7 @@ def _create_shoot_histograms(shoot_stats, bins):
     return histograms, scale
 
 
-def analyse_path_ensemble_object(path_ensemble, settings, idetect):
+def analyse_path_ensemble_object(path_ensemble, settings):
     """Analyse a path ensemble object.
 
     This function will make use of the different analysis functions and
@@ -417,7 +417,8 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
         The path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
-        Here we make use of the keys:
+        Here we make use of the following keys from the
+        analysis section:
 
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
@@ -429,8 +430,6 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         * `bins`: The number of bins to use for creating histograms.
-    idetect : float
-        Interface to use to check is a path is successful or not.
 
     Returns
     -------
@@ -444,6 +443,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     `_shoot_analysis`.
     """
     result = {}
+    analysis = settings['analysis']
     if path_ensemble.nstats['npath'] != len(path_ensemble.paths):
         msg = ' '.join(['The number of paths stored in path ensemble does not',
                         'correspond to the number of paths seen by the path',
@@ -452,10 +452,10 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
         logger.warning(msg)
     # first analysis is pcross as a function of lambda:
     pcross, lamb = _pcross_lambda(path_ensemble,
-                                  ngrid=settings['ngrid'])
+                                  ngrid=analysis['ngrid'])
     result['pcross'] = [lamb, pcross]
     # next get the running average of the crossing probability
-    prun, pdata = _running_pcross(path_ensemble, idetect)
+    prun, pdata = _running_pcross(path_ensemble, path_ensemble.detect)
     result['prun'] = prun
     try:
         result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
@@ -465,17 +465,17 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
         result['cycle'] = np.arange(len(prun))
     # next, the error analysis:
     result['blockerror'] = block_error_corr(pdata,
-                                            maxblock=settings['maxblock'],
-                                            blockskip=settings['blockskip'])
+                                            maxblock=analysis['maxblock'],
+                                            blockskip=analysis['blockskip'])
 
     # next length-analysis:
     hist1, hist2, _ = _get_path_distribution(path_ensemble,
-                                             bins=settings['bins'])
+                                             bins=analysis['bins'])
     result['pathlength'] = (hist1, hist2)
     # next, shoots:
     # move so that the analysis returns histograms and scale...
     hist3, scale = _shoot_analysis(path_ensemble,
-                                   bins=settings['bins'])
+                                   bins=analysis['bins'])
     result['shoots'] = [hist3, scale]
     # finally add some simple efficiency metrics:
     result['efficiency'] = [path_ensemble.get_acceptance_rate(),
@@ -487,7 +487,7 @@ def analyse_path_ensemble_object(path_ensemble, settings, idetect):
     return result
 
 
-def analyse_path_ensemble(path_ensemble, settings, idetect):
+def analyse_path_ensemble(path_ensemble, settings):
     """Analyse a path ensemble.
 
     This function will make use of the different analysis functions and
@@ -517,8 +517,6 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
           to `maxblock`, i.e. it will use block lengths equal to `1`,
           `1+n`, `1+2n`, etc.
         * `bins`: The number of bins to use for creating histograms.
-    idetect : float
-        Interface to use to check is a path is successful or not.
 
     Returns
     -------
@@ -536,12 +534,13 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     .. [wikimov] Wikipedia, "Moving Average",
        http://en.wikipedia.org/wiki/Moving_average
     """
+    detect = path_ensemble.detect
     if path_ensemble.ensemble == 0:
-        return analyse_path_ensemble0(path_ensemble, settings, idetect)
+        return analyse_path_ensemble0(path_ensemble, settings)
     ensemble = path_ensemble.ensemble
     result = {'prun': [],
               'cycle': [],
-              'detect': idetect,
+              'detect': detect,
               'ensemble': path_ensemble.ensemble_name,
               'ensembleid': ensemble,
               'interfaces': [i for i in path_ensemble.interfaces]}
@@ -561,7 +560,7 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
             weights.append(1)
             orderparam.append(path['ordermax'][0])
             length_acc.append(path['length'])
-            success = 1 if path['ordermax'][0] > idetect else 0
+            success = 1 if path['ordermax'][0] > detect else 0
             pdata.append(success)  # Store data for block analysis
         else:  # just increase the weigths
             weights[-1] += 1
@@ -585,28 +584,29 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     result['cycle'] = np.array(result['cycle'])
     result['prun'] = np.array(result['prun'])
     # 2) lambda pcross:
+    analysis = settings['analysis']
     orderparam = np.array(orderparam)
     ordermax = min(orderparam.max(), max(path_ensemble.interfaces))
     pcross, lamb = _pcross_lambda_cumulative(orderparam,
                                              path_ensemble.interfaces[1],
                                              ordermax,
-                                             settings['ngrid'],
+                                             analysis['ngrid'],
                                              weights=weights)
 
     result['pcross'] = [lamb, pcross]
     # 3) block error analysis:
     result['blockerror'] = block_error_corr(data=np.repeat(pdata, weights),
-                                            maxblock=settings['maxblock'],
-                                            blockskip=settings['blockskip'])
+                                            maxblock=analysis['maxblock'],
+                                            blockskip=analysis['blockskip'])
     # 4) length analysis:
     hist1 = histogram_and_avg(np.repeat(length_acc, weights),
-                              settings['bins'], density=True)
+                              analysis['bins'], density=True)
     hist2 = histogram_and_avg(np.array(length_all),
-                              settings['bins'], density=True)
+                              analysis['bins'], density=True)
     result['pathlength'] = (hist1, hist2)
     # 5) shoots analysis:
     result['shoots'] = _create_shoot_histograms(shoot_stats,
-                                                settings['bins'])
+                                                analysis['bins'])
     # 6) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
                             float(npath) * hist2[2][0]]
@@ -616,10 +616,11 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     # extra analysis for the [0^+] ensemble in case we will determine
     # the initial flux:
     if ensemble == 1:
-        result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
-                                                                weights),
-                                                 maxblock=settings['maxblock'],
-                                                 blockskip=settings['blockskip'])
+        lengtherr = block_error_corr(data=np.repeat(length_acc,
+                                                    weights),
+                                     maxblock=analysis['maxblock'],
+                                     blockskip=analysis['blockskip'])
+        result['lengtherror'] = lengtherr
         lenge2 = result['lengtherror'][4] * hist1[2][0] / (hist1[2][0]-2.)
         result['fluxlength'] = [hist1[2][0]-2.0, lenge2,
                                 lenge2 * (hist1[2][0]-2.)]
@@ -628,11 +629,39 @@ def analyse_path_ensemble(path_ensemble, settings, idetect):
     return result
 
 
-def analyse_path_ensemble0(path_ensemble, settings, idetect):
-    """Analyse the [0^-] ensemble"""
+def analyse_path_ensemble0(path_ensemble, settings):
+    """Analyse the [0^-] ensemble.
+
+    Parameters
+    ----------
+    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
+        from `pyretis.core.pathensemble` or from
+        `pyretis.inout.writers.pathfile`.
+        This is the path ensemble to analyse.
+    settings : dict
+        This dictionary contains settings for the analysis.
+        We make use of the following keys:
+
+        * `ngrid`: The number of grid points for calculating the
+          crossing probability as a function of the order parameter.
+        * `maxblock`: The max length of the blocks for the block error
+          analysis. Note that this will maximum be equal the half the
+          length of the data, see `block_error` in `.analysis`.
+        * `blockskip`: Can be used to skip certain block lengths.
+          A `blockskip` equal to `n` will consider every n'th block up
+          to `maxblock`, i.e. it will use block lengths equal to `1`,
+          `1+n`, `1+2n`, etc.
+        * `bins`: The number of bins to use for creating histograms.
+
+    Returns
+    -------
+    result : dict
+        The results from the analysis on this ensemble.
+    """
+    detect = path_ensemble.detect
     ensemble = path_ensemble.ensemble
     result = {'cycle': [],
-              'detect': idetect,
+              'detect': detect,
               'ensemble': path_ensemble.ensemble_name,
               'ensembleid': ensemble,
               'interfaces': [i for i in path_ensemble.interfaces]}
@@ -654,21 +683,22 @@ def analyse_path_ensemble0(path_ensemble, settings, idetect):
         # update the shoot stats, this will only be done for shooting moves
         _update_shoot_stats(shoot_stats, path)
     # Perform the different analysis tasks:
+    analysis = settings['analysis']
     result['cycle'] = np.array(result['cycle'])
     # 1) length analysis:
     hist1 = histogram_and_avg(np.repeat(length_acc, weights),
-                              settings['bins'], density=True)
+                              analysis['bins'], density=True)
     hist2 = histogram_and_avg(np.array(length_all),
-                              settings['bins'], density=True)
+                              analysis['bins'], density=True)
     result['pathlength'] = (hist1, hist2)
     # 2) block error of lengths:
     result['lengtherror'] = block_error_corr(data=np.repeat(length_acc,
                                                             weights),
-                                             maxblock=settings['maxblock'],
-                                             blockskip=settings['blockskip'])
+                                             maxblock=analysis['maxblock'],
+                                             blockskip=analysis['blockskip'])
     # 3) shoots analysis:
     result['shoots'] = _create_shoot_histograms(shoot_stats,
-                                                settings['bins'])
+                                                analysis['bins'])
     # 4) Add some simple efficiency metrics:
     result['efficiency'] = [float(nacc) / float(npath),
                             float(npath) * hist2[2][0]]

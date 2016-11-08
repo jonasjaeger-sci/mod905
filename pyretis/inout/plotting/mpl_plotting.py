@@ -143,7 +143,7 @@ class MplPlotter(Plotter):
             mpl_savefig(canvas[key], full_path, self.backup)
         return outputfiles
 
-    def plot_flux(self, results):
+    def output_flux(self, results):
         """Function to plot flux results using `mpl_plot_flux`.
 
         The parameters for this method is described in `mpl_plot_flux`.
@@ -173,7 +173,7 @@ class MplPlotter(Plotter):
                                 'errflux': local_err})
         return outputfiles
 
-    def plot_energy(self, results, energies):
+    def output_energy(self, results, energies):
         """Function to plot energy results using `mpl_plot_energy`.
 
         The parameters for this method is described in
@@ -187,7 +187,7 @@ class MplPlotter(Plotter):
         canvas = mpl_plot_energy(results, energies)
         return self._print_figures_to_file(canvas)
 
-    def plot_orderp(self, results, orderdata):
+    def output_orderp(self, results, orderdata):
         """Function to plot order parameter using `mpl_plot_orderp`.
 
         The parameters for this method is described in
@@ -201,7 +201,7 @@ class MplPlotter(Plotter):
         canvas = mpl_plot_orderp(results, orderdata)
         return self._print_figures_to_file(canvas)
 
-    def plot_path(self, path_ensemble, results, idetect):
+    def output_path(self, results, path_ensemble):
         """Function to plot path results using `mpl_plot_path`.
 
         The parameters for this method is described in `mpl_plot_path`.
@@ -211,10 +211,10 @@ class MplPlotter(Plotter):
         out : dict
             This dict contains the files created by the plotting.
         """
-        canvas = mpl_plot_path(path_ensemble, results, idetect)
+        canvas = mpl_plot_path(results, path_ensemble)
         return self._print_figures_to_file(canvas)
 
-    def plot_total_probability(self, path_ensembles, detect, matched):
+    def output_matched_probability(self, path_ensembles, detect, matched):
         """Function to plot matched probabilities with `mpl_plot_matched`
 
         The parameters for this method is described in
@@ -689,17 +689,15 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
     return canvas, canvas_scale
 
 
-def mpl_plot_path(path_ensemble, results, idetect):
+def mpl_plot_path(results, path_ensemble):
     """Plot all figures from the path analysis.
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-        This is the path ensemble we have analyzed.
     results : dict
         This dict contains the result from the analysis.
-    idetect : float
-        This is the interface used for the detection in the analysis.
+    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+        This is the path ensemble we have analyzed.
 
     Returns
     -------
@@ -709,15 +707,16 @@ def mpl_plot_path(path_ensemble, results, idetect):
     """
     ens = path_ensemble.ensemble_name
     ens_simplified = path_ensemble.ensemble_name_simple
+    detect = path_ensemble.detect
     canvas = {}
     out = {}
     for key in PATHFILES:
         out[key] = PATHFILES[key].format(ens_simplified)
     if 'pcross' in results:
-        # First plot `pcross` vs `lambda` with the `idetect` surface:
+        # First plot `pcross` vs `lambda` with the `detect` surface:
         series = [{'type': 'xy', 'x': results['pcross'][0],
                    'y': results['pcross'][1]}]
-        series.append({'type': 'vline', 'x': idetect, 'ls': '--',
+        series.append({'type': 'vline', 'x': detect, 'ls': '--',
                        'alpha': 0.8})
         figset = {'xlabel': r'Order parameter ($\lambda$)',
                   'ylabel': 'Probability',
@@ -754,7 +753,8 @@ def mpl_plot_path(path_ensemble, results, idetect):
         figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
                   'title': title.format(ens, results['lengtherror'][4],
                                         results['lengtherror'][6])}
-        canvas[out['lengtherror']] = mpl_simple_plot(series, fig_settings=figset)
+        canvas[out['lengtherror']] = mpl_simple_plot(series,
+                                                     fig_settings=figset)
 
     # Plot length-histogram:
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'

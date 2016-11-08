@@ -115,7 +115,6 @@ def create_reports(settings, analysis_results, report_path):
     out : string
         The reprot files created
     """
-    #pfix = None
     if is_single_tis(settings):
         task = 'tis-single'
         pfix = PATH_DIR_FMT.format(settings['simulation']['ensemble'])
@@ -204,8 +203,8 @@ if __name__ == '__main__':
     try:
         hello_world(inputfile, report_dir)
         if not os.path.isfile(inputfile):
-            errtxt = ('No simulation input file!'
-                      ' "{}" is not a file!'.format(inputfile))
+            errtxt = ('Could not open input'
+                      ' "{}"'.format(inputfile))
             raise ValueError(errtxt)
         print_to_screen('Reading input settings for analysis.')
         settings = parse_settings_file(inputfile)

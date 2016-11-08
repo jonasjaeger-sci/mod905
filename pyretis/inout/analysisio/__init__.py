@@ -18,9 +18,6 @@ analysisio.py
     The methods defined here can also be used to run an analysis on
     output files from pyretis.
 
-analysistxt.py
-    Methods and classes for text based output from the analysis.
-
 __init__.py
     This file, handles imports for pyretis.
 
