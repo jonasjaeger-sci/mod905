@@ -72,7 +72,7 @@ class Plotter(object):
         return
 
     @abstractmethod
-    def plot_path(self, path_ensemble, results, idetect):
+    def plot_path(self, results, path_ensemble):
         """Function that plots path ensemble results."""
         return
 

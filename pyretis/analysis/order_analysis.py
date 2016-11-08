@@ -54,7 +54,7 @@ def analyse_orderp(orderdata, settings):
         else:
             result = analyse_data(data, settings)
             if i == 1:  # assume that we want the MSD analysis here:
-                ndt = settings.get('maxordermsd')
+                ndt = settings['analysis']['maxordermsd']
                 result['msd'] = mean_square_displacement(data, ndt=ndt)
             results.append(result)
     return results

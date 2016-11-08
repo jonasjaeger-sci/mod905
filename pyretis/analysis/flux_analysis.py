@@ -42,8 +42,9 @@ def analyse_flux(fluxdata, settings):
         This dict contains the results from the flux analysis.
         The keys are defined in the `results` variable.
     """
-    end_step = settings['endcycle']
+    end_step = settings['simulation']['endcycle']
     time_step = settings['integrator']['timestep']
+    interfaces = [i for i in settings['simulation']['interfaces']]
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
                'neffcross': [],  # number of effective crossings
@@ -51,7 +52,7 @@ def analyse_flux(fluxdata, settings):
                'flux': [],  # store raw flux data
                'runflux': [],  # running average of flux
                'errflux': [],  # block error analysis
-               'interfaces': [i for i in settings['interfaces']],
+               'interfaces': interfaces,
                'totalcycle': end_step,  # store total number of cycles
                'cross_time': [],  # steps per crossing
                'neffc/nc': [],  # Effective crossings per crossing
@@ -66,16 +67,18 @@ def analyse_flux(fluxdata, settings):
     results['ncross'] = ret[1]
     results['neffcross'] = ret[2]
     results['times'] = ret[3]
+    analysis = settings['analysis']
     for i in range(len(results['interfaces'])):
         time, ncross, flux = _calculate_flux(results['eff_cross'][i],
                                              results['times']['OA'],
-                                             settings['skipcross'], time_step)
+                                             analysis['skipcross'],
+                                             time_step)
         results['flux'].append(np.column_stack((time, ncross, flux)))
         # now it's also a good time to obtain running averages etc.:
         results['runflux'].append(running_average(flux))
         block_error = block_error_corr(flux,
-                                       maxblock=settings['maxblock'],
-                                       blockskip=settings['blockskip'])
+                                       maxblock=analysis['maxblock'],
+                                       blockskip=analysis['blockskip'])
         results['errflux'].append(block_error)
 
     # do some additional statistics:
