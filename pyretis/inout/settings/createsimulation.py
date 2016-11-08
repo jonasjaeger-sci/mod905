@@ -16,7 +16,7 @@ create_simulation
 """
 from __future__ import absolute_import
 import logging
-from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.random_gen import create_random_generator
 from pyretis.core.simulation.md_simulation import (SimulationNVE,
                                                    SimulationMDFlux)
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
@@ -26,6 +26,7 @@ from pyretis.core.pathensemble import (PathEnsemble,
                                        PATH_DIR_FMT,
                                        create_path_ensembles)
 from pyretis.inout.settings.common import create_integrator
+from pyretis.inout.settings.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -109,15 +110,7 @@ def create_umbrellaw_simulation(settings, system):
         The object(s) representing the simulation(s) to run.
     """
     sim = settings['simulation']
-    try:
-        rgen = sim['rgen']
-    except KeyError:
-        msg = 'No random generator specified, will initiate one.'
-        logger.info(msg)
-        if 'seed' not in sim:
-            msg = 'No random seed given. Will just use "0"'
-            logger.warning(msg)
-        rgen = RandomGenerator(seed=sim.get('seed', 0))
+    rgen = create_random_generator(sim)
     return UmbrellaWindowSimulation(system, sim['umbrella'],
                                     sim['over'], rgen,
                                     sim['maxdx'],
@@ -150,18 +143,11 @@ def create_tis_simulations(settings, system):
     interfaces = settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
-    if len(interfaces) <= 3:
+    if is_single_tis(settings):
         return _create_tis_single_simulation(settings, system)
     else:
         for i, middle in enumerate(interfaces[:-1]):
-            lsetting = {}
-            for sec in settings:  # this is common for all simulations:
-                lsetting[sec] = {}
-                if sec == 'potential':
-                    lsetting[sec] = [j for j in settings[sec]]
-                else:
-                    for key in settings[sec]:
-                        lsetting[sec][key] = settings[sec][key]
+            lsetting = copy_settings(settings)
             lsetting['simulation']['interfaces'] = [reactant, middle, product]
             lsetting['simulation']['ensemble'] = i + 1
             lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)
@@ -195,9 +181,11 @@ def _create_tis_single_simulation(settings, system):
         path_ensemble = settings['path-ensemble']
     else:
         path_ensemble = create_path_ensemble(settings)
+    rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
     return SimulationSingleTIS(system, integ,
                                path_ensemble,
+                               rgen,
                                settings['tis'],
                                steps=sim['steps'],
                                startcycle=sim.get('startcycle', 0))
@@ -226,8 +214,10 @@ def create_retis_simulation(settings, system):
     sim = settings['simulation']
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
                                               include_zero=True)
+    rgen = create_random_generator(settings['tis'])
     return SimulationRETIS(system, integ,
                            path_ensembles,
+                           rgen,
                            settings['tis'],
                            settings['retis'],
                            steps=sim['steps'],

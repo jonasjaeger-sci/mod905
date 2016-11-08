@@ -20,11 +20,13 @@ from matplotlib import animation
 from matplotlib import gridspec as gridspec
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
+PCROSS_LOG = True
+PCROSS_LOG = False
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 150,
+                          'steps': 20000,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -65,6 +67,7 @@ ANALYSIS = {'ngrid': 100}
 # Set up for plotting:
 mpl.rc('font', size=14, family='serif')
 mpl.rc('lines', color='#262626')
+mpl.rc('savefig', directory=None)
 NINT = len(INTERFACES)
 CMAP = plt.get_cmap('Set1')
 COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
@@ -138,9 +141,12 @@ def matplotlib_setup():
     ax1 = new_fig.add_subplot(grid[:, :2])
     ax2 = new_fig.add_subplot(grid[0, 2:])
     ax3 = new_fig.add_subplot(grid[1:, 2:])
+    if not PCROSS_LOG:
+        axp = ax3.twinx()
     axes = (ax1, ax2, ax3)
     plot_patches = {'paths': [],
                     'prob': [],
+                    'prob2': [],
                     'matched': None,
                     'fluxline': None,
                     'txtmove': [],
@@ -153,8 +159,15 @@ def matplotlib_setup():
         ax3.axvline(x=pos, lw=2, ls=':', color='#262626')
         newline, = ax1.plot([], [], lw=3, ls='-', color=COLORS[i])
         plot_patches['paths'].append(newline)
-        newlinep, = ax3.plot([], [], lw=3, ls='-', color=newline.get_color())
-        plot_patches['prob'].append(newlinep)
+        if PCROSS_LOG:
+            newlinep2, = ax3.plot([], [], lw=3, ls='-',
+                                  color=newline.get_color())
+            plot_patches['prob2'].append(newlinep2)
+        else:
+            newlinep, = ax3.plot([], [], lw=3, ls='-',
+                                 color=newline.get_color())
+            plot_patches['prob'].append(newlinep)
+
         newscat = ax1.scatter(None, None, s=75, marker='o',
                               color=newline.get_color())
         plot_patches['start'].append(newscat)
@@ -180,25 +193,39 @@ def matplotlib_setup():
                                         backgroundcolor='w', fontsize=14)
     ax1.set_xlabel(r'Order parameter ($\lambda$)')
     ax1.set_ylabel(r'Velocity ($\dot{\lambda}$)')
-    axp = ax3.twinx()
-    axp.set_yscale('log')
-    plot_patches['matched'] = axp.plot([], [], lw=6, ls='-', color='#262626',
-                                       zorder=0, alpha=0.7)[0]
+    if PCROSS_LOG:
+        ax3.set_yscale('log')
+        plot_patches['matched'] = ax3.plot([], [], lw=6, ls='-',
+                                           color='#262626',
+                                           zorder=0, alpha=0.7)[0]
+        ax3.set_xlim(-1, 1.05)
+        ax3.set_ylim(1e-7, 1)
+    else:
+        axp.set_yscale('log')
+        plot_patches['matched'] = axp.plot([], [], lw=6, ls='-',
+                                           color='#262626',
+                                           zorder=0, alpha=0.7)[0]
+        ax3.set_xlim(-1, 1.05)
+        axp.set_ylim(1e-7, 1)
+        ax3.set_ylim(0, 1)
+    ax3.set_xlabel(r'$\lambda$')
+    ax3.set_ylabel(r'Probability')
+
     ax1.set_ylim(-2, 2)
     ax1.set_xlim(-1.5, 1.5)
 
-    plot_patches['fluxline'] = ax2.plot([-1], [0], lw=3, ls='-',
+    plot_patches['fluxline'] = ax2.plot([0], [0], lw=3, ls='-',
                                         color='#4C72B0')[0]
     ax2.set_ylim(0, 1)
     ax2.set_xlim(0, 1)
     ax2.set_ylabel('Flux')
     ax2.set_xlabel('Cycles completed')
-    ax3.set_ylim(0, 1)
-    ax3.set_xlim(-1, 1.05)
-    axp.set_ylim(1e-7, 1)
-    ax3.set_xlabel(r'$\lambda$')
-    ax3.set_ylabel(r'Probability')
-    new_fig.set_tight_layout(True)
+    ax2.locator_params(axis='y', nbins=4)
+    if PCROSS_LOG:
+        new_fig.subplots_adjust(left=0.1, bottom=0.15, right=0.95, top=0.95,
+                                wspace=0.5, hspace=0.5)
+    else:
+        new_fig.set_tight_layout(True)
     return new_fig, plot_patches, axes
 
 
@@ -276,9 +303,10 @@ def update(frame, simulation, plot_patches, prop, axes):
                 prop['length0+'].add(ensemble.last_path.length)
             if i > 0:
                 analyse_prob(ensemble, prop, i, step)
-                plot_patches['prob'][i].set_data(prop['pcross'][i][0],
-                                                 prop['pcross'][i][1])
-                patches.append(plot_patches['prob'][i])
+                if not PCROSS_LOG:
+                    plot_patches['prob'][i].set_data(prop['pcross'][i][0],
+                                                     prop['pcross'][i][1])
+                    patches.append(plot_patches['prob'][i])
 
         flux = 1.0 / ((prop['length0-'].mean + prop['length0+'].mean - 4.0) *
                       TIMESTEP)
@@ -313,6 +341,10 @@ def update(frame, simulation, plot_patches, prop, axes):
             idx = np.where(lamb <= ensemble.detect)[0]
             matched_lamb.extend(lamb[idx])
             matched_prob.extend(pcross[idx] * accprob)
+            if PCROSS_LOG:
+                prob2 = prop['pcross'][i][1]*accprob
+                plot_patches['prob2'][i].set_data(prop['pcross'][i][0], prob2)
+                patches.append(plot_patches['prob2'][i])
             accprob *= prop['prun'][i][-1]
         plot_patches['matched'].set_data(matched_lamb, matched_prob)
         patches.append(plot_patches['matched'])

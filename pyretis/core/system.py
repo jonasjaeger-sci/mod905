@@ -20,7 +20,7 @@ from pyretis.core.units import CONSTANTS
 from pyretis.core.particles import Particles
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)
-from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.random_gen import create_random_generator
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -292,7 +292,7 @@ class System(object):
         return pot, force, viri
 
     def evaluate_force(self):
-        """Evaluate the forces on the particles.
+        """Evaluate forces on the particles.
 
         Returns
         -------
@@ -352,12 +352,11 @@ class System(object):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `.random_gen`.
-            This is the random generator which handles the drawing of
-            velocities. If not given, a `RandomGenerator` object will
-            be created with a given `seed` (see below).
+        rgen : string or None
+            This string can be used to select a particular random
+            generator. Typically this is only useful for testing.
         seed : int, optional
-            Seed for the `RandomGenerator` in case `rgen` is not given.
+            Seed for the `RandomGenerator` in case.
         momentum : boolean, optional
             Determines if the momentum should be reset.
         temperature : float, optional
@@ -371,8 +370,8 @@ class System(object):
             Does not return anything, but updates
             `system.particles.vel`.
         """
-        if rgen is None:
-            rgen = RandomGenerator(seed=seed)
+        rgen_settings = {'seed': seed, 'rgen': rgen}
+        rgen = create_random_generator(rgen_settings)
         if temperature is None:
             temperature = self.temperature['set']
         dof = self.temperature['dof']

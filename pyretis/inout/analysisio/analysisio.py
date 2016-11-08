@@ -43,7 +43,8 @@ from pyretis.inout.analysisio.analysistxt import (txt_energy_output,
 from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.report import generate_report
-from pyretis.inout.settings.settings import KEYWORDS
+from pyretis.inout.settings.settings import SECTIONS, copy_settings
+from pyretis.inout.settings import is_single_tis
 from pyretis.inout.writers import get_writer, PathEnsembleFile
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -68,12 +69,12 @@ FILES = {'md-flux': {'cross': 'cross.dat',
          'retis': {'pathensemble': 'pathensemble.dat'}}
 
 
-def run_analysis(sim_settings):
+def run_analysis(settings):
     """Run a predefined analysis task.
 
     Parameters
     ----------
-    sim_settings : dict
+    settings : dict
         Simulation settings and settings for the analysis.
 
     Returns
@@ -82,26 +83,16 @@ def run_analysis(sim_settings):
         A dictionary with the results from the analysis. This dict
         can be used to generate a report.
     """
-    sim_task = sim_settings['task']
+    sim = settings['simulation']
+    sim_task = sim['task']
     if sim_task in set(('retis', 'tis')):
         if sim_task == 'tis':
-            return run_tis_analysis(sim_settings)
+            return run_tis_analysis(settings)
         elif sim_task == 'retis':
-            return run_retis_analysis(sim_settings)
-    else:
-        raw_data = []
-        add_outdir = sim_task in set(('tis-single',))
-        for file_type in FILES[sim_task]:
-            filename = FILES[sim_task][file_type]
-            if add_outdir:
-                filename = os.path.join(sim_settings['output']['directory'],
-                                        filename)
-            if os.path.isfile(filename):
-                raw_data.append((file_type, filename))
-        return run_analysis_files(sim_settings, raw_data)
+            return run_retis_analysis(settings)
 
 
-def get_path_ensemble_files(ensemble, sim_settings, detect,
+def get_path_ensemble_files(ensemble, settings, detect,
                             interfaces):
     """This method will return files for a single path ensemble.
 
@@ -113,7 +104,7 @@ def get_path_ensemble_files(ensemble, sim_settings, detect,
     ----------
     ensemble : int
         This is the integer representing the ensemble.
-    sim_settings : dict
+    settings : dict
         The settings to use for an analysis/simulation
     detect : float or None
         The interface use for detecting if a path is successful for not.
@@ -129,20 +120,18 @@ def get_path_ensemble_files(ensemble, sim_settings, detect,
         The tuples in this list are the files which can be analysed
         further, using the settings in `out[0]`.
     """
-    sim_task = sim_settings['task']
-    local_settings = {}
-    for key in sim_settings:
-        local_settings[key] = sim_settings[key]
-    local_settings['detect'] = detect
-    local_settings['interfaces'] = interfaces
-    local_settings['ensemble'] = ensemble
+    sim_task = settings['simulation']['task']
+    lsetting = copy_settings(settings)
+    lsetting['simulation']['interfaces'] = interfaces
+    lsetting['detect'] = detect
+    lsetting['ensemble'] = ensemble
     files = []
     for file_type in FILES[sim_task]:
         filename = os.path.join(PATH_DIR_FMT.format(ensemble),
                                 FILES[sim_task][file_type])
         if os.path.isfile(filename):
             files.append((file_type, filename))
-    return local_settings, files
+    return lsetting, files
 
 
 def get_path_simulation_files(sim_settings):
@@ -176,10 +165,10 @@ def get_path_simulation_files(sim_settings):
     """
     # Check if we can do flux analysis:
     all_files, all_settings = [], []
-    interfaces = sim_settings['interfaces']
+    interfaces = sim_settings['simulation']['interfaces']
     reactant = interfaces[0]
     product = interfaces[-1]
-    if sim_settings['task'] == 'tis':
+    if sim_settings['simulation']['task'] == 'tis':
         all_files.append(None)
         all_settings.append(None)
     else:  # just add the 0 ensemble
@@ -212,12 +201,12 @@ def print_value_error(heading, value, rel_error):
     print_to_screen(msgtxt)
 
 
-def run_tis_analysis(sim_settings):
+def run_tis_analysis(settings):
     """Run the analysis for TIS.
 
     Parameters
     ----------
-    sim_settings : dict
+    settings : dict
         The settings to use for an analysis/simulation
     all_settings : list of dicts
         `all_settings[i]` contains information for analysing a
@@ -225,37 +214,54 @@ def run_tis_analysis(sim_settings):
     all_files : list of lists
         `all_files[i]` contains the paths for the files to be analysed.
     """
-    all_settings, all_files = get_path_simulation_files(sim_settings)
+    sim = settings['simulation']
     results = {'cross': None,
                'pathensemble': [],
                'matched': None}
-    nens = len(all_settings) - 1
-    for i, (sett, files) in enumerate(zip(all_settings, all_files)):
-        if i == 0:
-            msgtxt = ('Initial flux is not calculated here.\n'
-                      'Remember to calculate this separately!')
-            logger.info(msgtxt)
-            print_to_screen(msgtxt)
-        else:
-            msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-            print_to_screen(msgtxt)
-            print_to_screen()
-            result = run_analysis_files(sett, files)
-            results['pathensemble'].append(result['pathensemble'])
-            report_txt = generate_report('tis-single', result,
-                                         output='txt')[0]
-            print_to_screen(''.join(report_txt))
-            print_to_screen()
-    # match probabilities:
-    out, fig, txt = analyse_and_output_matched(sim_settings,
-                                               results['pathensemble'])
-    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-    print_to_screen('Overall results')
-    print_to_screen('===============')
-    print_to_screen('')
-    print_value_error('TIS Crossing probability',
-                      out['prob'], out['relerror'])
-    return results
+    if is_single_tis(settings):
+        sett, files = get_path_ensemble_files(sim['ensemble'],
+                                              settings,
+                                              sim['detect'],
+                                              sim['interfaces'])
+        msgtxt = 'Analysing ensemble {}'.format(sim['ensemble'])
+        print_to_screen(msgtxt)
+        print_to_screen()
+        result = run_analysis_files(sett, files)
+        #results['pathensemble'].append(result['pathensemble'])
+        report_txt = generate_report('tis-single', result,
+                                     output='txt')[0]
+        print_to_screen(''.join(report_txt))
+        print_to_screen()
+        return result
+    else:
+        all_settings, all_files = get_path_simulation_files(settings)
+        nens = len(all_settings) - 1
+        for i, (sett, files) in enumerate(zip(all_settings, all_files)):
+            if i == 0:
+                msgtxt = ('Initial flux is not calculated here.\n'
+                          'Remember to calculate this separately!')
+                logger.info(msgtxt)
+                print_to_screen(msgtxt)
+            else:
+                msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+                print_to_screen(msgtxt)
+                print_to_screen()
+                result = run_analysis_files(sett, files)
+                results['pathensemble'].append(result['pathensemble'])
+                report_txt = generate_report('tis-single', result,
+                                             output='txt')[0]
+                print_to_screen(''.join(report_txt))
+                print_to_screen()
+        # match probabilities:
+        out, fig, txt = analyse_and_output_matched(settings,
+                                                   results['pathensemble'])
+        results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+        print_to_screen('Overall results')
+        print_to_screen('===============')
+        print_to_screen('')
+        print_value_error('TIS Crossing probability',
+                          out['prob'], out['relerror'])
+        return results
 
 
 def run_retis_analysis(sim_settings):
@@ -345,9 +351,10 @@ def run_analysis_files(settings, files):
     -------
     The results from the analysis.
     """
-    report_dir = settings.get('report-dir', None)
-    plotter = create_plotter(settings['plot'], out_dir=report_dir)
-    txtout = settings['txt-output']
+    report_dir = settings['analysis'].get('report-dir', None)
+    plotter = create_plotter(settings['analysis']['plot'],
+                             out_dir=report_dir)
+    txtout = settings['analysis']['txt-output']
     results = {}
     for (file_type, file_name) in files:
         analyse_func = analyse_file(file_type, file_name)
@@ -460,9 +467,10 @@ def analyse_file(file_type, file_name):
             raw_data = read_first_block(get_writer(file_type), file_name)
             return function(settings, raw_data, plotter=plotter, txt=txt)
         elif file_type == 'pathensemble':
-            fileobj = PathEnsembleFile(file_name, settings['ensemble'],
-                                       settings['interfaces'],
-                                       detect=settings.get('detect', None))
+            fileobj = PathEnsembleFile(file_name,
+                                       settings['simulation']['ensemble'],
+                                       settings['simulation']['interfaces'],
+                                       detect=settings['simulation']['detect'])
             return function(settings, fileobj, plotter=plotter, txt=txt)
         else:
             msgtxt = 'Unknown file type "{}" requested!'.format(file_type)
@@ -535,20 +543,21 @@ def check_output(function):
         out[2] : list of strings
             List with the text files created (if any).
         """
+        analysis = settings['analysis']
         txtout = None
         if plotter is None:
-            plotter = create_plotter(settings['plot'],
-                                     out_dir=settings.get('report-dir', None))
-        txt = settings['txt-output']
+            plotter = create_plotter(analysis['plot'],
+                                     out_dir=analysis.get('report-dir', None))
+        txt = analysis['txt-output']
         if plotter is None and txt is None:
             msg = 'No output selected. Skipping analysis!'
             logger.warning(msg)
             return None, None, None
         if txt is not None:  # just make sure we specify the things we need:
-            default = KEYWORDS['txt-output']['default']
+            default = SECTIONS['analysis']['txt-output']
             try:
-                txtout = {'fmt': txt.get('fmt', default['fmt']),
-                          'backup': txt.get('backup', default['backup'])}
+                txtout = {'fmt': txt,
+                          'backup': settings['output']['backup']}
             except AttributeError:
                 txtout = default
                 msgtxt = ('Malformed "txt-output" setting: "{}".'
@@ -590,9 +599,10 @@ def analyse_and_output_cross(settings, rawdata, plotter=None, txt=None):
     if plotter is not None:
         figures = plotter.plot_flux(result)
     if txt is not None:
+        report_dir = settings['analysis'].get('report-dir', None)
         outtxt = txt_flux_output(result, out_fmt=txt['fmt'],
                                  backup=txt['backup'],
-                                 path=settings.get('report-dir', None))
+                                 path=report_dir)
     return result, figures, outtxt
 
 
@@ -622,16 +632,15 @@ def analyse_and_output_orderp(settings, rawdata, plotter=None, txt=None):
     out[2] : list of strings
         List with the text files created (if any).
     """
-    if 'units-out' in settings:
-        logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     result = analyse_orderp(rawdata, settings)
     if plotter is not None:
         figures = plotter.plot_orderp(result, rawdata)
     if txt is not None:
+        report_dir = settings['analysis'].get('report-dir', None)
         outtxt = txt_orderp_output(result, rawdata, out_fmt=txt['fmt'],
                                    backup=txt['backup'],
-                                   path=settings.get('report-dir', None))
+                                   path=report_dir)
     return result, figures, outtxt
 
 
@@ -666,9 +675,10 @@ def analyse_and_output_energy(settings, rawdata, plotter=None, txt=None):
     if plotter is not None:
         figures = plotter.plot_energy(result, rawdata)
     if txt is not None:
+        report_dir = settings['analysis'].get('report-dir', None)
         outtxt = txt_energy_output(result, rawdata, out_fmt=txt['fmt'],
                                    backup=txt['backup'],
-                                   path=settings.get('report-dir', None))
+                                   path=report_dir)
     return result, figures, outtxt
 
 
@@ -701,18 +711,18 @@ def analyse_and_output_path(settings, path_ensemble, plotter=None, txt=None):
     out[2] : list of strings
         List with the text files created (if any).
     """
-    if 'units-out' in settings:
-        logger.warning('Change of units is not implemented yet!')
     figures, outtxt = None, None
     idetect = path_ensemble.detect
-    result = analyse_path_ensemble(path_ensemble, settings, idetect)
+    result = analyse_path_ensemble(path_ensemble, settings['analysis'],
+                                   idetect)
     if plotter is not None:
         figures = plotter.plot_path(path_ensemble, result, idetect)
     if txt is not None:
+        report_dir = settings['analysis'].get('report-dir', None)
         outtxt = txt_path_output(path_ensemble, result, idetect,
                                  out_fmt=txt['fmt'],
                                  backup=txt['backup'],
-                                 path=settings.get('report-dir', None))
+                                 path=report_dir)
     return result, figures, outtxt
 
 
@@ -754,8 +764,9 @@ def analyse_and_output_matched(settings, raw_data, plotter=None, txt=None):
         figures = plotter.plot_total_probability(path_ensembles_name, detect,
                                                  result)
     if txt is not None:
+        report_dir = settings['analysis'].get('report-dir', None)
         outtxt = txt_matched_probability(path_ensembles_name, detect, result,
                                          out_fmt=txt['fmt'],
                                          backup=txt['backup'],
-                                         path=settings.get('report-dir', None))
+                                         path=report_dir)
     return result, figures, outtxt

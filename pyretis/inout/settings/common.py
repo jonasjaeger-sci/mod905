@@ -6,8 +6,20 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+create_external
+    Method to create objects from settings.
+
 check_settings
     Check that required simulation settings are actually given.
+
+create_integrator
+    Method to create an integrator from settings.
+
+create_orderparameter
+    Method to create order parameters from settings.
+
+create_potential
+    Method to create a potential from settings.
 
 import_from
     A method to dynamically import method/classes etc. from user
@@ -26,9 +38,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['check_settings', 'import_from',
-           'create_orderparameter', 'create_integrator',
-           'create_potential']
+__all__ = ['create_external', 'check_settings', 'import_from',
+           'create_orderparameter', 'create_integrator', 'create_potential']
 
 
 def import_from(module_path, function_name):

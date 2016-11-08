@@ -447,7 +447,7 @@ def create_velocities(system, settings, vel):
             msg = 'Will overwrite velocities already set.'
             logger.warning(msg)
         gen_settings = {'distribution': vel_settings['generate']}
-        for key in ('seed', 'momentum', 'temperature'):
+        for key in ('seed', 'momentum', 'temperature', 'rgen'):
             try:
                 gen_settings[key] = vel_settings[key]
             except KeyError:

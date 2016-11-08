@@ -32,7 +32,7 @@ from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.core.common import generic_factory
-from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.random_gen import create_random_generator
 from pyretis.core.particlefunctions import calculate_thermo_path
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -417,13 +417,11 @@ class Langevin(Integrator):
             The time step in internal units.
         gamma : float
             The gamma parameter for the Langevin integrator
-        rgen : object like `RandomGenerator` from `.random_gen`.
-            This is the class that will handle the random number
-            generation for us. If not given, a `RandomGenerator` will
-            be created here.
+        rgen : string
+            This string can be used to pick a particular random
+            generator, which is useful for testing.
         seed : integer, optional.
-            A seed which can be used if a `RandomGenerator` is to be
-            created here.
+            A seed for the random generator.
         high_friction : boolean
             Determines if we are in the high_friction limit and should
             do the over-damped version.
@@ -434,14 +432,8 @@ class Langevin(Integrator):
                                        dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
-        if rgen is None:
-            msg = ['Langevin Integrator: Initiated new random generator']
-            msg += ['Seed was set to: {}'.format(seed)]
-            msgtxt = '\n'.join(msg)
-            logger.debug(msgtxt)
-            self.rgen = RandomGenerator(seed=seed)
-        else:
-            self.rgen = rgen
+        rgen_settings = {'seed': seed, 'rgen': rgen}
+        self.rgen = create_random_generator(rgen_settings)
         self.param_high = {'sigma': None, 'bddt': None}
         self.param_iner = {'c0': None, 'a1': None, 'a2': None,
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
