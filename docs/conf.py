@@ -31,7 +31,6 @@ sys.path.append(os.path.abspath('ext'))
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon', # api
               'sphinx.ext.todo',
-              #'sphinx.ext.mathjax',
               'sphinx.ext.imgmath',
               'sphinx.ext.viewcode',
               'bootstrap']

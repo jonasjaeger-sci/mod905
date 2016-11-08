@@ -16,6 +16,8 @@ The potential is given by
 By plotting this potential, we see that we have two states
 (at :math:`x=-1` and :math:`x=1`) separated by a barrier (at :math:`x=0`):
 
+.. _fig1dpot:
+
 .. figure:: ../img/examples/1dpot.png
     :class: img-responsive center-block
     :alt: The 1D potential example
@@ -146,6 +148,8 @@ which should display a progress bar showing estimating the time left for your
 simulation. In addition, text output from the simulation is written to the
 file ``name_of_file.txt``:
 
+.. _figretistxt:
+
 .. figure:: ../img/examples/retistxt.png
     :class: img-responsive center-block
     :scale: 60%
@@ -159,14 +163,103 @@ file ``name_of_file.txt``:
     for each ensemble. The ensemble names are given in the first
     column, the type of move executed is shown in the next
     column, the status after the move and the
-    current estimate of the crossing probability (:math:`P_\mathrm{cross}`) for each ensemble
-    in the two following columns. Then the current estimates for the flux, the crossing
-    probability and the rate constant is outputted. Finally
+    current estimate of the crossing probability
+    (:math:`P_\mathrm{cross}`) for each ensemble
+    in the two following columns. Then the current estimates for the flux,
+    the crossing probability and the rate constant is outputted. Finally
     the number of force evaluations are given.
 
-As show in figures above, we make use of some abbreviations to describe the type
-of moves we are making and the outcome of these moves. These abbreviations
-are described in the table below.
+
+The RETIS method which is used in this exercise
+aim
+to calculate
+the rate
+constant :math:`k_{\text{AB}}` for the transition
+between the two states shown in :numref:`fig1dpot`.
+This is accomplished by generating reactive trajectories
+connecting the reactant state and the product state.
+We define these two states using two interfaces (the vertical lines
+in :numref:`fig1dpot`) which we label :math:`\lambda_\text{A}` and
+:math:`\lambda_\text{B}` respectively. That is, left of
+:math:`\lambda_\text{A}` corresponds to the reactant state and
+right of :math:`\lambda_\text{B}` corresponds to the product state.
+Since the probability for the actual crossing can be very small, we
+introduce several more interfaces which help us
+obtain the crossing probability. These interfaces
+define the so-called path
+ensembles, labeled :math:`[0^-], [0^+], [1^+], \ldots`
+and so on as shown in :numref:`figretistxt`.
+The path ensemble :math:`[i^+]` contain
+trajectories that start at :math:`\lambda_\text{A}`, then cross
+an intermediate interface :math:`\lambda_i` before
+reaching :math:`\lambda_\text{B}` or
+returning to :math:`\lambda_\text{A}`. As you may have noticed, there
+is a special path ensemble labeled :math:`[0^-]` which contains paths
+that start at 
+:math:`\lambda_\text{A}`, then go in the opposite direction (i.e. to
+the left of :math:`\lambda_\text{A}`) before returning to
+:math:`\lambda_\text{A}`. This ensemble is used to calculate how
+often we cross :math:`\lambda_\text{A}` and head towards the
+product state at :math:`\lambda_\text{B}`. 
+Now, if we know how often we cross :math:`\lambda_\text{A}` and head
+for the product state
+and the probability of reaching this state
+given that we crossed :math:`\lambda_\text{A}`
+then the rate constant can be
+obtained according to
+
+.. math::
+   
+   k_{\text{AB}} = f_{\text{A}}  \prod_{i=1}^{n-1} P_{\text{A}} (i+1|i)
+
+where :math:`f_{\text{A}}` is the initial flux
+and 
+:math:`P_{\text{A}} (i+1|i)` are intermediate
+crossing probabilities,
+obtained using the different path ensembles.
+The initial flux is obtained using the path lengths in
+ensembles :math:`[0^-]` and :math:`[0^+]` as
+
+.. math::
+
+   f_{\text{A}} = (\langle t_{\text{path}}^{[0^-]} \rangle + 
+   \langle t_{\text{path}}^{[0^+]} \rangle)^{-1}
+
+where :math:`\langle t_{\text{path}}^{[k]} \rangle` denotes the
+average path length in ensemble :math:`[k]`.
+The intermediate probability :math:`P_{\text{A}} (i+1|i)`
+is the probability of path
+reaching the next (:math:`i+1`) interface given that it originated
+in :math:`\lambda_\text{A}`, ended in :math:`\lambda_\text{A}`
+or :math:`\lambda_\text{B}` and had at least one crossing with
+:math:`\lambda_\text{i}`. This probability can be
+obtained
+as the fraction of
+paths in the :math:`[i^+]` ensemble that
+cross :math:`\lambda_{i+1}`. It is these
+probabilities that are labeled :math:`P_\text{cross}`
+in :numref:`figretistxt`.
+
+The optimal number of path ensembles
+to use in a RETIS simulation is a trade off between not having
+to do too many path simulations and not having too small crossing
+probabilities (the :math:`P_\text{cross}`-values in :numref:`figretistxt`).
+By making some basic assumptions on the path lengths etc. one can
+establish a theoretical optimum which should be obtained
+when all crossing probabilities are around 0.2
+(the derivation of this can be found in Ref. [6]_).  However, the assumptions
+are never completely valid is realistic systems. Hence,
+the optimum is presumably close to having all probabilities equal to 0.2
+but not exactly (but somewhere in the range 0.1 til 0.9).
+
+As stated above, the RETIS method generate
+reactive trajectories connecting the initial and final state
+using the moves shown in :numref:`figretistxt` and
+described in :numref:`tabmoves`. 
+The outcome of each attempted RETIS move is given a
+three letter abbreviation as described in :numref:`tababbrev`. 
+
+.. _tabmoves:
 
 .. table:: Abbreviations for the RETIS moves
 
@@ -183,6 +276,8 @@ are described in the table below.
     |  ``tis (tr)``  | A TIS time-reversal move      |
     +----------------+-------------------------------+
 
+.. _tababbrev:
+
 .. table:: Abbreviations for the RETIS statuses
 
     +----------------+--------------------------------------------+
@@ -195,19 +290,28 @@ are described in the table below.
     |                | interface and not the left one, i.e. we    |
     |                | reached the *Wrong Interface*              |
     +----------------+--------------------------------------------+
-    | ``BTL``        | When integrating backward in time for a    |
-    |                | shooting move, the backward trajectory     |
-    |                | will have a maximum length determined      |
-    |                | by the RETIS algorithm.                    | 
-    |                | ``BTL`` means that we did                  |  
-    |                | reach any interfaces before we exceeded    |
-    |                | the maximum path length.                   |
+    | ``BTL``        | When integrating backward in time for      |
+    |                | a shooting move, the backward trajectory   |
+    |                | will have a maximum length determined by   |
+    |                | the RETIS algorithm in order to obey       |
+    |                | detailed balance. This maximum varies each |
+    |                | time: it is the old path length divided    |
+    |                | by a random number between 0 and 1.        |
+    |                | ``BTL`` means that we did not reach any    |
+    |                | of the outer most interfaces before we     |
+    |                | exceeded this maximum path length.         |
     +----------------+--------------------------------------------+
     | ``BTX``        | We also have a maximum length for          |
     |                | trajectories in order to limit the memory  |
     |                | the trajectories use. ``BTX`` means that   |
     |                | the trajectory length exceeded this limit  |
-    |                | before we reached a interface.             |
+    |                | before we reached a interface. This limit  |
+    |                | implies that we ignore very long           |
+    |                | trajectories and, therefore, it will       |
+    |                | result in a systematic error. The number   |
+    |                | of ``BTX`` or ``FTX`` occurrences can be   |
+    |                | reduced by increasing the parameter        |
+    |                | ``maxlength`` in the input script.         |
     +----------------+--------------------------------------------+
     | ``FTL``        | Similar to ``BTL`` in the **Forward**      |
     |                | direction.                                 |
@@ -215,9 +319,16 @@ are described in the table below.
     | ``FTX``        | Similar to ``BTX`` in the **Forward**      |
     |                | diretion.                                  |
     +----------------+--------------------------------------------+
-    | ``NCR``        | No crossing with middle interface. This    |
-    |                | can happen when we attempt swapping move   |
+    | ``NCR``        | No crossing with the interface which has   |
+    |                | to be crossed in order to be part of the   |
+    |                | specific path ensemble. This can happen    |
+    |                | when we attempt swapping move or when the  |
+    |                | shooting move goes backward and forward in |
+    |                | time to the left interface without making  |
+    |                | sufficient progress along the reaction     |
+    |                | coordinate.                                |
     +----------------+--------------------------------------------+
+
 
 
 Now, hopefully you are able to execute the two example scripts we will
@@ -450,3 +561,5 @@ References
        Advances in Chemical Physics, 151, pp. 27 - 60, 2012, http://dx.doi.org/10.1002/9781118309513.ch2
 
 .. [5] https://arxiv.org/abs/1101.0927
+
+.. [6] http://dx.doi.org/10.1016/j.jcp.2004.11.003
