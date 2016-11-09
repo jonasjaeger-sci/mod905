@@ -1,4 +1,4 @@
-F2PY = f2py3.5
+F2PY = f2py
 F2PY_FLAGS = --fcompiler=gfortran
 
 MODULE=ljfortran

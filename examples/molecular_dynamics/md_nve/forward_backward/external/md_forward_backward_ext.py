@@ -47,7 +47,7 @@ settings['potential'] = [{'class': klass[USE],
                                             'epsilon': 1,
                                             'factor': 2.5}},
                           'shift': True}]
-settings['particles'] = {'position': {'file': 'initial2.gro'},
+settings['particles'] = {'position': {'file': 'initial.gro'},
                          'velocity': {'generate': 'maxwell',
                                       'momentum': True,
                                       'seed': 0}}
