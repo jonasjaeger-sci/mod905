@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from codecs import open as openc
 import os
-from setuptools import setup, find_packages
 import subprocess
+from setuptools import setup, find_packages
 
 
 def get_long_description():
@@ -38,8 +38,12 @@ def get_long_description():
 MAJOR = 0
 MINOR = 11
 MICRO = 0
+DEV = 0
 ISRELEASED = False
-VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
+if not ISRELEASED:
+    VERSION = '{:d}.{:d}.{:d}.dev{:d}'.format(MAJOR, MINOR, MICRO, DEV)
+else:
+    VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
 VERSION_FILE = os.path.join('pyretis', 'version.py')
 VERSION_TXT = '''# -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
@@ -52,11 +56,11 @@ short_version = '{0:s}'
 version = '{0:s}'
 full_version = '{1:s}'
 git_revision = '{2:s}'
-git_describe = '{3:s}'
+git_version = '{3:s}'
 release = {4:}
 
 if not release:
-    version = full_version
+    version = git_version
 '''
 
 
@@ -70,11 +74,8 @@ def get_git_version():
     git_revision : string
         The git revision, it the git revision could not be determined,
         a 'Unknown' will be returned.
-    git_describe : string
-        The output from git describe.
     """
     git_revision = 'Unknown'
-    git_describe = 'Unknown'
     try:
         env = {}
         for key in ('SYSTEMROOT', 'PATH'):
@@ -85,21 +86,13 @@ def get_git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        
         out = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                stdout=subprocess.PIPE,
                                env=env).communicate()[0]
         git_revision = out.strip().decode('ascii')
-        
-        out = subprocess.Popen(['git', 'describe', '--long'],
-                               stdout=subprocess.PIPE,
-                               env=env).communicate()[0]
-        git_describe = out.strip().decode('ascii')
     except OSError:
         git_revision = 'Unknown'
-        git_describe = 'Unknown'
-
-    return git_revision, git_describe
+    return git_revision
 
 
 def get_version_info():
@@ -115,24 +108,24 @@ def get_version_info():
         The git revision number.
     """
     if os.path.exists('.git'):
-        git_revision, git_describe = get_git_version()
+        git_revision = get_git_version()
     elif os.path.exists(VERSION_FILE):
         try:
             from pyretis.version import git_revision
-            from pyretis.version import git_describe
         except ImportError:
             raise ImportError('Unable to import git_revision. Try removing '
                               'pyretis/version.py and the build directory '
                               'before building.')
     else:
         git_revision = 'Unknown'
-        git_describe = 'Unknown'
     if not ISRELEASED:
-        print(git_describe)
-        full_version = ''.join([VERSION, '.dev0+', git_revision[:7]])
+        git_version = ''.join([VERSION.split('dev')[0],
+                               'dev{:d}+'.format(DEV),
+                               git_revision[:7]])
     else:
-        full_version = VERSION
-    return full_version, git_revision, git_describe
+        git_version = VERSION
+    full_version = VERSION
+    return full_version, git_revision, git_version
 
 
 def write_version_py():
@@ -140,9 +133,9 @@ def write_version_py():
 
     This method is adapted from Numpy's setup.py.
     """
-    full_version, git_revision, git_describe = get_version_info()
+    full_version, git_revision, git_version = get_version_info()
     version_txt = VERSION_TXT.format(VERSION, full_version,
-                                     git_revision, git_describe, ISRELEASED)
+                                     git_revision, git_version, ISRELEASED)
     with open(VERSION_FILE, 'wt') as vfile:
         try:  # will work in python 3
             vfile.write(version_txt)
