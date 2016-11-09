@@ -21,7 +21,7 @@ INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 2000,
+                          'steps': 100,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -305,6 +305,7 @@ def main():
         print(ensemble.last_path)
         print('')
     # Run the rest of the simulation.
+    ftot = 0
     for result in tqdm(simulation.run(), initial=1,
                        total=SETTINGS['simulation']['steps']):
         step = result['cycle']['step']
@@ -312,6 +313,7 @@ def main():
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result['retis'],
                                     variables['prun'])
+        ftot += force
         for line in retis_txt:
             print('# {}'.format(line))
         print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
@@ -320,6 +322,7 @@ def main():
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
         print('# No. of force evaluations: {:g}'.format(force))
         print('')
+    print('# Total number of force evaluations: {}'.format(ftot))
 
 
 if __name__ == '__main__':
