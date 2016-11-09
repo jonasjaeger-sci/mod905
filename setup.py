@@ -52,7 +52,8 @@ short_version = '{0:s}'
 version = '{0:s}'
 full_version = '{1:s}'
 git_revision = '{2:s}'
-release = {3:}
+git_describe = '{3:s}'
+release = {4:}
 
 if not release:
     version = full_version
@@ -62,15 +63,18 @@ if not release:
 def get_git_version():
     """Method to obtain the git revision as a string.
 
-    This method is taken from Numpy's setup.py
+    This method is adapted from Numpy's setup.py
 
     Returns
     -------
     git_revision : string
         The git revision, it the git revision could not be determined,
         a 'Unknown' will be returned.
+    git_describe : string
+        The output from git describe.
     """
     git_revision = 'Unknown'
+    git_describe = 'Unknown'
     try:
         env = {}
         for key in ('SYSTEMROOT', 'PATH'):
@@ -81,20 +85,27 @@ def get_git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
+        
         out = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                stdout=subprocess.PIPE,
                                env=env).communicate()[0]
         git_revision = out.strip().decode('ascii')
+        
+        out = subprocess.Popen(['git', 'describe', '--long'],
+                               stdout=subprocess.PIPE,
+                               env=env).communicate()[0]
+        git_describe = out.strip().decode('ascii')
     except OSError:
         git_revision = 'Unknown'
+        git_describe = 'Unknown'
 
-    return git_revision
+    return git_revision, git_describe
 
 
 def get_version_info():
     """Return the version number for pyretis.
 
-    This method is taken from Numpy's setup.py.
+    This method is adapted from Numpy's setup.py.
 
     Returns
     -------
@@ -104,31 +115,34 @@ def get_version_info():
         The git revision number.
     """
     if os.path.exists('.git'):
-        git_revision = get_git_version()
+        git_revision, git_describe = get_git_version()
     elif os.path.exists(VERSION_FILE):
         try:
             from pyretis.version import git_revision
+            from pyretis.version import git_describe
         except ImportError:
             raise ImportError('Unable to import git_revision. Try removing '
                               'pyretis/version.py and the build directory '
                               'before building.')
     else:
         git_revision = 'Unknown'
+        git_describe = 'Unknown'
     if not ISRELEASED:
+        print(git_describe)
         full_version = ''.join([VERSION, '.dev0+', git_revision[:7]])
     else:
         full_version = VERSION
-    return full_version, git_revision
+    return full_version, git_revision, git_describe
 
 
 def write_version_py():
     """Create a file with the version info for pyretis.
 
-    This method is taken from Numpy's setup.py.
+    This method is adapted from Numpy's setup.py.
     """
-    full_version, git_revision = get_version_info()
+    full_version, git_revision, git_describe = get_version_info()
     version_txt = VERSION_TXT.format(VERSION, full_version,
-                                     git_revision, ISRELEASED)
+                                     git_revision, git_describe, ISRELEASED)
     with open(VERSION_FILE, 'wt') as vfile:
         try:  # will work in python 3
             vfile.write(version_txt)
