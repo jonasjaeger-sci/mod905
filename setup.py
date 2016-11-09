@@ -170,4 +170,4 @@ setup(name='pyretis',
                         'jinja2>=2.7.2',
                         'docutils>=0.11',
                         'tqdm>=4.7.0'],
-      scripts=['bin/pyretisrun.py'])
+      scripts=['bin/pyretisrun.py', 'bin/pyretisanalyse.py'])
