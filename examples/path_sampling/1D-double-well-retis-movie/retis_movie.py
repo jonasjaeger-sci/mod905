@@ -26,7 +26,7 @@ PCROSS_LOG = False
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 20000,
+                          'steps': 150,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -62,7 +62,7 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
 
 # For convenience:
 TIMESTEP = SETTINGS['integrator']['timestep']
-ANALYSIS = {'ngrid': 100}
+ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
 # Set up for plotting:
 mpl.rc('font', size=14, family='serif')
@@ -74,6 +74,8 @@ COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
 TXTCOLOR = {'SW': '#006BA4', 'NU': '#FF800E',
             'TR': '#ABABAB', 'SH': '#595959'}
 
+
+FTOT = 0
 
 def set_up_system(settings):
     """Just a method to help set up the system.
@@ -132,6 +134,202 @@ def get_path(path):
             pos.append(point[1][0])
             vel.append(point[2][0])
     return np.array(order), np.array(pos), np.array(vel)
+
+
+def step_txt(ensembles, retis_result, prun):
+    """A function to return some text information about the RETIS step.
+
+    Parameters
+    ----------
+    ensembles : list of enemble objects
+        The different path ensembles we are simulating.
+    retis_result : list of lists
+        The results from a RETIS simulation step.
+    prun : list of floats
+        The running average for the ensemble crossing probabilities.
+
+    Returns
+    -------
+    out : list of strings
+        Each string contains information about the move performed
+        in a ensemble.
+    """
+    txt = []
+    force = 0  # counter for force evaluations
+    # The force counter will just count the number of
+    # force evaluations for generating a path, it will not include
+    # the force evaluation that might be performed prior to propagation,
+    # i.e. the initial force evaluation since this can be stored in memory,
+    # along the path -> i.e. we can avoid it.
+    for i, result in enumerate(retis_result):
+        ensemble = ensembles[i]
+        name = ensemble.ensemble_name
+        name_of_move = result[0]
+        accepted = result[1]
+        line = []
+        if name_of_move == 'swap':
+            name2 = ensembles[result[2]].ensemble_name
+            move = '{} {},'.format(name_of_move, name2)
+            if i == 0 or (i == 1 and result[2] == 0):
+                force += ensemble.paths[-1]['length'] - 2
+        elif name_of_move == 'tis':
+            trial_path = result[2]
+            tis_move = trial_path.generated[0]
+            move = '{} ({}),'.format(name_of_move, tis_move)
+            if tis_move == 'sh':
+                force += ensemble.paths[-1]['length'] - 1
+        else:
+            move = '{},'.format(name_of_move)
+        line.append('{}: {:11s}'.format(name, move))
+        line.append('{},'.format(accepted))
+        if i > 0:
+            line.append('p = {:<8.6g}'.format(prun[i]))
+        txt.append(' '.join(line))
+    return txt, force
+
+
+def probability_path_ensemble(ensemble, step, prun, orderp):
+    """Update running estimates of probabilities for an ensemble.
+
+    Parameters
+    ----------
+    ensemble : object
+        The ensemble to analyse
+    step : int
+        The current simulation step.
+    prun : float
+        Current running estimate for the crossing probability
+        for this ensemble.
+    orderp : numpy.array
+        The maximum order parameters for all accepted paths.
+    variables : dict of objects
+        This dict contains variables we can use for updating derived data
+        for the different path ensembles.
+
+    Returns
+    -------
+    prun : float
+        Updated running average for the crossing probability.
+    ordernew : numpy.array
+        Updated list of all order parameters seen.
+    lamb : numpy.array
+        Coordinates used for obtaining the crossing probability
+        as a function of the order parameter.
+    pcross : numpy.array
+        The crossing probability as a function of the order
+        parameter.
+    """
+    ordermax = ensemble.last_path.ordermax[0]
+    success = 1 if ordermax > ensemble.detect else 0
+    if prun is None:
+        prun = success
+    else:
+        npath = step + 1
+        prun = float(success + prun * (npath - 1)) / float(npath)
+    if orderp is None:
+        ordernew = np.array([ordermax])
+    else:
+        ordernew = np.append(orderp, ordermax)
+    ordermax = min(max(ordernew), max(ensemble.interfaces))
+    ordermin = ensemble.interfaces[1]
+    pcross, lamb = _pcross_lambda_cumulative(ordernew, ordermin, ordermax,
+                                             ANALYSIS['ngrid'])
+    return prun, ordernew, lamb, pcross
+
+
+def simple_block(data, nblock):
+    """Block error analysis for running average."""
+    length = len(data)
+    if length < nblock:
+        return float('inf')
+    skip, _ = divmod(len(data), nblock)
+    run_avg = []
+    block_avg = []
+    for i in range(nblock):
+        idx = (i + 1) * skip - 1
+        run_avg.append(data[idx])
+        if i == 0:
+            block_avg.append(run_avg[i])
+        else:
+            block_avg.append((i + 1)*run_avg[i] - i*run_avg[i-1])
+    var = sum([(x - data[-1])**2 for x in block_avg]) / (nblock - 1)
+    err = np.sqrt(var / nblock)
+    return err
+
+
+def analyse_path_ensembles(ensembles, step, variables):
+    """Calculate some properties for the path ensembles.
+
+    Here we obtain the crossing probabilities and the initial flux.
+
+    Parameters
+    ----------
+    ensembles : a list of PathEnsemble objects
+        These objects contain information about accepted paths for the
+        different path ensembles.
+    step : integer
+        The current step number.
+    variables : dict of objects
+        This dict contains variables we can use for updating derived data
+        for the different path ensembles.
+
+    Returns
+    -------
+    out : dict of floats
+        A dictionary with computed initial flux, crossing probability and
+        errors in these.
+    """
+    calc = {'flux': 0, 'fluxe': 0,
+            'pcross': 0, 'pcrosse': float('inf'),
+            'kab': 0, 'kabe': float('inf')}
+    length0 = variables['length0']
+    length1 = variables['length1']
+    length0.add(ensembles[0].last_path.length)
+    length1.add(ensembles[1].last_path.length)
+    flux = 1.0 / ((length0.mean + length1.mean - 4.0) * TIMESTEP)
+    calc['flux'] = flux
+    variables['flux'].append(flux)
+    fluxe = simple_block(variables['flux'], ANALYSIS['nblock'])
+    calc['fluxe'] = fluxe
+    accprob = 1.0
+    matched_prob = []
+    matched_lamb = []
+    for i, ensemble in enumerate(ensembles):
+        if i == 0:
+            continue
+        prun = variables['prun'][i]
+        orderp = variables['orderp'][i]
+        prun, ordernew, lamb, pcross = probability_path_ensemble(ensemble,
+                                                                 step,
+                                                                 prun,
+                                                                 orderp)
+        variables['orderp'][i] = ordernew
+        variables['prun'][i] = prun
+        variables['pcross'][i] = pcross
+        variables['lamb'][i] = lamb
+        idx = np.where(lamb <= ensemble.detect)[0]
+        matched_lamb.extend(lamb[idx])
+        matched_prob.extend(pcross[idx] * accprob)
+        variables['pcross2'][i] = pcross*accprob
+        accprob *= prun
+    variables['mlamb'] = matched_lamb
+    variables['mpcross'] = matched_prob
+    if matched_lamb[-1] < INTERFACES[-1]:
+        pcross = 0
+        pcrosse = float('inf')
+    else:
+        pcross = matched_prob[-1]
+        variables['match'].append(pcross)
+        pcrosse = simple_block(variables['match'], ANALYSIS['nblock'])
+    calc['pcross'] = pcross
+    calc['pcrosse'] = pcrosse
+    calc['kab'] = flux * pcross
+    if pcross == 0 or flux == 0:
+        calc['kabe'] = float('inf')
+    else:
+        calc['kabe'] = calc['kab'] * np.sqrt(pcrosse**2 / pcross**2 +
+                                             fluxe**2 / flux**2)
+    return calc
 
 
 def matplotlib_setup():
@@ -260,7 +458,7 @@ def analyse_prob(ensemble, props, idx, step):
     props['pcross'][idx] = (lamb, pcross)
 
 
-def update(frame, simulation, plot_patches, prop, axes):
+def update(frame, simulation, plot_patches, variables, axes):
     """Method to run the simulation and update plots.
 
     Parameters
@@ -272,7 +470,7 @@ def update(frame, simulation, plot_patches, prop, axes):
     plot_patches : dict of objects
         This dict contains the lines, text boxes etc. from matplotlib
         which we will use to display our data.
-    prop : dict of objects
+    variables : dict of objects
         A dict with results from the simulation.
     axes : tuple
         This tuple contains the axes used for plotting.
@@ -285,9 +483,26 @@ def update(frame, simulation, plot_patches, prop, axes):
     patches = []
     if not simulation.is_finished():
         result = simulation.step()
+        if 'retis' not in result:
+            return patches
         step = result['cycle']['step']
-        print('\n# Current cycle: {}'.format(step))
-        for i, ensemble in enumerate(simulation.path_ensembles):
+        ensembles = simulation.path_ensembles
+        print('# Current cycle: {}'.format(step))
+        anr = analyse_path_ensembles(ensembles, step, variables)
+        retis_txt, force = step_txt(ensembles, result['retis'],
+                                    variables['prun'])
+        global FTOT
+        FTOT += force
+        for line in retis_txt:
+            print('# {}'.format(line))
+        print('# Flux: {flux:<8.6g} +- {fluxe:<8.6g}'.format(**anr))
+        print(('# Crossing probability: {pcross:<8.6g} +-'
+               '{pcrosse:<8.6g}').format(**anr))
+        print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
+        print('# No. of force evaluations: {:g}'.format(force))
+        print('')
+
+        for i, ensemble in enumerate(ensembles):
             _, pos, vel = get_path(ensemble.last_path)
             plot_patches['paths'][i].set_data(pos, vel)
             patches.append(plot_patches['paths'][i])
@@ -297,22 +512,15 @@ def update(frame, simulation, plot_patches, prop, axes):
             plot_patches['end'][i].set_offsets((pos[-1], vel[-1]))
             plot_patches['end'][i].set_visible(True)
             patches.append(plot_patches['end'][i])
-            if i == 0:
-                prop['length0-'].add(ensemble.last_path.length)
-            elif i == 1:
-                prop['length0+'].add(ensemble.last_path.length)
             if i > 0:
-                analyse_prob(ensemble, prop, i, step)
                 if not PCROSS_LOG:
-                    plot_patches['prob'][i].set_data(prop['pcross'][i][0],
-                                                     prop['pcross'][i][1])
+                    plot_patches['prob'][i].set_data(variables['lamb'][i],
+                                                     variables['pcross'][i])
                     patches.append(plot_patches['prob'][i])
 
-        flux = 1.0 / ((prop['length0-'].mean + prop['length0+'].mean - 4.0) *
-                      TIMESTEP)
         fluxx, fluxy = plot_patches['fluxline'].get_data()
         fluxx = np.append(fluxx, fluxx[-1] + 1)
-        fluxy = np.append(fluxy, flux)
+        fluxy = np.append(fluxy, anr['flux'])
         plot_patches['fluxline'].set_data(fluxx, fluxy)
         axes[1].set_xlim(0, step+1)
         axes[1].set_ylim(0, 1.1*fluxy.max())
@@ -331,34 +539,20 @@ def update(frame, simulation, plot_patches, prop, axes):
         patches.append(plot_patches['txtcycle'])
 
         # match probabilities:
-        matched_lamb = []
-        matched_prob = []
-        accprob = 1.0
         for i, ensemble in enumerate(simulation.path_ensembles):
             if i == 0:
                 continue
-            lamb, pcross = prop['pcross'][i]
-            idx = np.where(lamb <= ensemble.detect)[0]
-            matched_lamb.extend(lamb[idx])
-            matched_prob.extend(pcross[idx] * accprob)
             if PCROSS_LOG:
-                prob2 = prop['pcross'][i][1]*accprob
-                plot_patches['prob2'][i].set_data(prop['pcross'][i][0], prob2)
+                prob2 = variables['pcross2'][i]
+                plot_patches['prob2'][i].set_data(variables['lamb'][i], prob2)
                 patches.append(plot_patches['prob2'][i])
-            accprob *= prop['prun'][i][-1]
-        plot_patches['matched'].set_data(matched_lamb, matched_prob)
+        plot_patches['matched'].set_data(variables['mlamb'],
+                                         variables['mpcross'])
         patches.append(plot_patches['matched'])
-        print('# Current flux estimate: {}'.format(flux))
-        if matched_lamb[-1] < INTERFACES[-1]:
-            pcr = 0.0
-        else:
-            pcr = matched_prob[-1]
-        kab = flux * pcr
-        print('# Current P_cross estimate: {}'.format(pcr))
-        print('# Current rate constant estimate: {}'.format(kab))
         return patches
     else:
         print('# Simulation is done (frame = {})'.format(frame))
+        print('# Total number of force evaluations: {}'.format(FTOT))
         return patches
 
 
@@ -371,15 +565,21 @@ def main():
     print(simulation)
     print('# GENERATING INITIAL PATHS')
     fig, plot_patches, axes = matplotlib_setup()
-    prop = {}
-    prop['length0-'] = Property(desc='Average path length for [0^-]')
-    prop['length0+'] = Property(desc='Average path length for [0^+]')
-    prop['orderp'] = [[] for _ in INTERFACES]
-    prop['prun'] = [[] for _ in INTERFACES]
-    prop['pcross'] = [[] for _ in INTERFACES]
+    variables = {'length0': Property('Path length in [0^-]'),
+                 'length1': Property('Path length in [0^+]'),
+                 'flux': [],
+                 'match': [],
+                 'orderp': [None for _ in INTERFACES],
+                 'prun': [None for _ in INTERFACES],
+                 'lamb': [None for _ in INTERFACES],
+                 'mlamb': [None for _ in INTERFACES],
+                 'pcross': [None for _ in INTERFACES],
+                 'mpcross': [None for _ in INTERFACES],
+                 'pcross2': [None for _ in INTERFACES]}
+
     _ = animation.FuncAnimation(fig, update,
                                 frames=SETTINGS['simulation']['steps']+1,
-                                fargs=[simulation, plot_patches, prop,
+                                fargs=[simulation, plot_patches, variables,
                                        axes],
                                 repeat=False,
                                 interval=10,
