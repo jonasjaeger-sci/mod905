@@ -36,7 +36,7 @@ def get_long_description():
 
 # For setting version. This is copied from Numpy's setup.py.
 MAJOR = 0
-MINOR = 10
+MINOR = 11
 MICRO = 0
 ISRELEASED = False
 VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
