@@ -175,7 +175,7 @@ def step_txt(ensembles, retis_result, prun):
         elif name_of_move == 'tis':
             trial_path = result[2]
             tis_move = trial_path.generated[0]
-            move = '{} ({}),'.format(name_of_move, tis_move)
+            move = '{} ({}),'.format(name_of_move, tis_move)
             if tis_move == 'sh':
                 force += ensemble.paths[-1]['length'] - 1
         else:
@@ -499,7 +499,7 @@ def update(frame, simulation, plot_patches, variables, axes):
         print(('# Crossing probability: {pcross:<8.6g} +-'
                '{pcrosse:<8.6g}').format(**anr))
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
-        print('# No. of force evaluations: {:g}'.format(force))
+        print('# No. of force evaluations: {:g}'.format(force))
         print('')
 
         for i, ensemble in enumerate(ensembles):

@@ -8,6 +8,7 @@ aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
+from __future__ import print_function
 from pyretis.core import System, Box
 from pyretis.core.properties import Property
 from pyretis.inout.settings import (create_force_field,
@@ -21,7 +22,7 @@ INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 SETTINGS = {}
 # Basic settings for the simulation:
 SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 100,
+                          'steps': 150,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
@@ -121,7 +122,7 @@ def step_txt(ensembles, retis_result, prun):
         elif name_of_move == 'tis':
             trial_path = result[2]
             tis_move = trial_path.generated[0]
-            move = '{} ({}),'.format(name_of_move, tis_move)
+            move = '{} ({}),'.format(name_of_move, tis_move)
             if tis_move == 'sh':
                 force += ensemble.paths[-1]['length'] - 1
         else:
@@ -320,7 +321,7 @@ def main():
         print(('# Crossing probability: {pcross:<8.6g} +-'
                '{pcrosse:<8.6g}').format(**anr))
         print('# K_AB: {kab:<8.6g} +- {kabe:<8.6g}'.format(**anr))
-        print('# No. of force evaluations: {:g}'.format(force))
+        print('# No. of force evaluations: {:g}'.format(force))
         print('')
     print('# Total number of force evaluations: {}'.format(ftot))
 
