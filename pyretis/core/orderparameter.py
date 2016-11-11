@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This file contains classes to represent order parameters.
 
 The order parameters are assumed to all be completely determined
@@ -6,31 +8,32 @@ by the system properties and they will all return at least two
 values - the order parameter and the rate of change in the order
 parameter (i.e. its velocity).
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- OrderParameter: Base class for the order parameters.
+OrderParameter
+    Base class for the order parameters.
 
-- OrderParameterPosition: A class for a simple position dependent order
-  parameter.
+OrderParameterPosition
+    A class for a simple position dependent order parameter.
 
-- OrderParameterParse: A class for order parameters which can be parsed
-  from a input string.
+OrderParameterDistance
+    A class for a particle-particle distance order parameter.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- order_factory: A method to create order parameters from settings.
+order_factory
+    A method to create order parameters from settings.
 """
-from __future__ import division  # for StringFunctionParser
 import logging
-import operator
 import numpy as np
-# imports for StringFunctionParser:
-from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group,
-                       Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+from pyretis.core.common import generic_factory
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['OrderParameter', 'OrderParameterPosition', 'OrderParameterParse',
+__all__ = ['OrderParameter', 'OrderParameterPosition',
            'order_factory']
 
 
@@ -47,31 +50,13 @@ def order_factory(settings):
 
     Returns
     -------
-    out[0] : object
-        This object represents the orderparameter and will be one of the
-        classes defined in `pyretis.core.orderparameter`.
+    out : object like `OrderParameter`.
+        An object representing the orderparameter.
     """
-    try:
-        klass = settings['class'].lower()
-    except KeyError:
-        msg = 'No order parameter class given. No order parameter created!'
-        logging.critical(msg)
-        return None
-    if klass == 'orderparameter':
-        return OrderParameter(settings['name'])
-    elif klass == 'orderparameterposition':
-        return OrderParameterPosition(settings['name'],
-                                      settings['index'],
-                                      dim=settings.get('dim', 'x'),
-                                      periodic=settings.get('periodic', False))
-    elif klass == 'orderparameterparse':
-        return OrderParameterParse(settings['name'],
-                                   settings['orderp'],
-                                   settings['ordervel'])
-    else:
-        msg = 'Unknown order parameter: {}'.format(settings['class'])
-        logging.critical(msg)
-        return None
+    factory_map = {'orderparameter': {'cls': OrderParameter},
+                   'orderparameterposition': {'cls': OrderParameterPosition},
+                   'orderparameterdistance': {'cls': OrderParameterDistance}}
+    return generic_factory(settings, factory_map, name='orderparameter')
 
 
 class OrderParameter(object):
@@ -201,7 +186,7 @@ class OrderParameter(object):
         """
         if not callable(func):
             msg = 'The given function is not callable, it will not be added!'
-            logging.warning(msg)
+            logger.warning(msg)
             return False
         else:
             self.extra.append(func)
@@ -260,7 +245,7 @@ class OrderParameterPosition(OrderParameter):
             self.dim = dims[dim]
         except KeyError:
             msg = 'Unknown dimension {} requested'.format(dim)
-            logging.critical(msg)
+            logger.critical(msg)
             raise
 
     def calculate(self, system):
@@ -282,14 +267,13 @@ class OrderParameterPosition(OrderParameter):
         out : float
             The order parameter.
         """
-        pos = system.particles.pos[self.index]
+        particles = system.particles
+        pos = particles.pos[self.index]
+        lmb = pos[self.dim]
         if self.periodic:
-            box = system.box
-            pos = box.pbc_wrap(pos)
-        if system.get_dim() == 1:
-            return pos
+            return system.box.pbc_coordinate_dim(lmb, self.dim)
         else:
-            return pos[self.dim]
+            return lmb
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.
@@ -306,53 +290,56 @@ class OrderParameterPosition(OrderParameter):
         out : float
             The velocity of the order parameter
         """
-        vel = system.particles.vel[self.index]
-        if system.get_dim() == 1:
-            return vel
-        else:
-            return vel[self.dim]
+        particles = system.particles
+        vel = particles.vel[self.index]
+        return vel[self.dim]
 
 
-class OrderParameterParse(OrderParameter):
-    """OrderParameterParse(OrderParameter).
+class OrderParameterDistance(OrderParameter):
+    """OrderParameterDistance(OrderParameter).
 
-    This class defines a simple order parameter that is
-    parsed from a text string given by the user. The reason
-    for putting this into a object rather than as a functionality
-    to the OrderParameter function is just to limit the possibility
-    of parsing to one object only.
+    This class defines a very simple order parameter which is just
+    the scalar distance between two particles.
 
     Attributes
     ----------
     name : string
-        Human readable name for the order parameter.
-    orderparser : object of type `StringFunctionParser`
-        This is used for parsing a string to a order parameter.
-    ordervelparser : object of type `StringFunctionParser`
-        This is used for parsing a string to a velocity for the order
-        parameter.
+        A human readable name for the order parameter
+    index : tuple of integers
+        These are the indices used for the two particles.
+        `system.particles.pos[index[0]]` and
+        `system.particles.pos[index[1]]` will be used.
+    periodic : boolean
+        This determines if periodic boundaries should be applied to
+        the position or not.
     """
 
-    def __init__(self, name, orderstr, ordervelstr):
-        """Initialize `OrderParameterParse`.
+    def __init__(self, name, index, periodic=True):
+        """Initialize `OrderParameterDistance`.
 
         Parameters
         ----------
         name : string
-            The name for the order parameter.
-        orderstr : string
-            This is the string representing the order parameter.
-        ordervelstr : string
-            This is the string representing the velocity of the order
-            parameter.
+            The name for the order parameter
+        index : tuple of ints
+            This is the indices of the atom we will use the position of.
+        periodic : boolean, optional
+            This determines if periodic boundary conditions should be
+            applied to the position.
         """
-        description = 'Parsed order parameter'
-        super(OrderParameterParse, self).__init__(name, desc=description)
-        self.orderparser = StringFunctionParser(string_function=orderstr)
-        self.ordervelparser = StringFunctionParser(string_function=ordervelstr)
+        pbc = 'Periodic' if periodic else 'Non-periodic'
+        description = '{} distance particles {} and {}'.format(pbc,
+                                                               index[0],
+                                                               index[1])
+        super(OrderParameterDistance, self).__init__(name, desc=description)
+        self.periodic = periodic
+        self.index = index
 
     def calculate(self, system):
         """Calculate the order parameter.
+
+        Here, the order parameter is just the distance between two
+        particles.
 
         Parameters
         ----------
@@ -367,10 +354,17 @@ class OrderParameterParse(OrderParameter):
         out : float
             The order parameter.
         """
-        return self.orderparser.evaluate(system=system)
+        particles = system.particles
+        delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
+        if self.periodic:
+            delta = system.box.pbc_dist_coordinate(delta)
+        return np.sqrt(np.dot(delta, delta))
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.
+
+        For this order parameter it is given by the time derivative of
+        the distance vector.
 
         Parameters
         ----------
@@ -380,296 +374,12 @@ class OrderParameterParse(OrderParameter):
         Returns
         -------
         out : float
-            The velocity of the order parameter.
+            The velocity of the order parameter
         """
-        return self.ordervelparser.evaluate(system=system)
-
-    def add_orderparameter(self, strfunc):
-        """Add an extra order parameter to calculate.
-
-        Here, we assume that the function is given as a string, which we
-        will parse.
-
-        Parameters
-        ----------
-        strfunc : string
-            Extra function for calculation of an extra order parameter.
-            It is assumed to accept a `pyretis.core.system.System`
-            object as its parameter.
-        """
-        func = StringFunctionParser(string_function=strfunc)
-        if not callable(func):
-            msg = 'The given function is not callable, it will not be added!'
-            logging.warning(msg)
-            return False
-        self.extra.append(func)
-
-
-class StringFunctionParser(object):
-    """Class StringFunctionParser(object).
-
-    This class defines a simple parser for user-defined order
-    parameters.
-
-    It is based on fourFn.py, see:
-    http://pyparsing.wikispaces.com/file/view/fourFn.py
-
-    Attributes
-    ----------
-    pars : object of type `Forward` from `pyparsing`
-        `Forward` is a subclass of `ParseElementEnhance` and is used
-        here for the actual parsing.
-    operators : dict
-        This dict defines the different operators that can be used.
-    functs : dict
-        This dict defines the different scalar functions that can be
-        used.
-    system_functs : set
-        This set defines the different functions that will make use of
-        the system object.
-    system : object like `System` from `pyretis.core.system`
-        This object is used to access system properties, e.g. particles
-        and the box.
-    string_function : string
-        String representation of the function that we wish to evaluate.
-    """
-
-    def __init__(self, string_function=None):
-        """Initiate `StringFunctionParser`.
-
-        Parameters
-        ----------
-        string_function : string, optional
-            This is the string that defines the function we wish to use.
-        """
-        self.exprstack = []
-        self.pars = self._initiate_parser()
-
-        self.operators = {'+': operator.add,
-                          '-': operator.sub,
-                          '*': operator.mul,
-                          '/': operator.truediv,
-                          '^': operator.pow,
-                          ',': lambda x, y: (x, y)}
-
-        self.functs = {'sin': np.sin,
-                       'cos': np.cos,
-                       'tan': np.tan,
-                       'abs': np.abs,
-                       'sign': np.sign,
-                       'sqrt': np.sqrt}
-
-        self.system_functs = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'distance',
-                              'distance_pbc', 'pbc_x', 'pbc_y', 'pbc_z']
-
-        self.system = None
-
-        if string_function is not None:
-            self.parse_function(string_function)
-        else:
-            self.string_function = None
-
-    def system_function(self, function, args):
-        """Handle calls that need to invoke 'system' functions.
-
-        Parameters
-        ----------
-        function : string
-            This is the function that should be called. It will need
-            to be one of the strings defined in `self.system_functs`.
-        args : string
-            These are the arguments that should be passed to function.
-        """
-        xyz = {'x': 0, 'y': 1, 'z': 2}
-        particles = self.system.particles
-        retval = None
-        if function[:8] == 'distance':
-            i, j = int(args[0]), int(args[1])
-            dist = particles.pos[i] - particles.pos[j]
-            if function[-4:] == '_pbc':
-                dist = self.system.box.pbc_dist_coordinate(dist)
-            retval = dist
-        elif function[:3] == 'pbc':
-            dim = xyz[function[-1]]
-            retval = self.system.box.pbc_coordinate_dim(args, dim)
-        else:
-            # simple look-up of velocity or position
-            idx = int(args)
-            if function[0] == 'v':
-                dim = xyz[function[1]]
-                coord = particles.vel[idx]
-            else:
-                dim = xyz[function[0]]
-                coord = particles.pos[idx]
-            if self.system.get_dim() == 1:
-                retval = coord
-            else:
-                retval = coord[dim]
-        return retval
-
-    def push_first(self, toks):
-        """Append parsed string elements to the stack.
-
-        Parameters
-        ----------
-        toks: list of strings
-            Tokens, toks[0] is to be added.
-
-        Returns
-        -------
-        out : None
-            Returns `None`, but updates `self.exprstack`.
-
-        Note
-        ----
-        The function can also be defined as
-        `push_first(self, strg, loc, toks)` where `strg` is the original
-        string being parsed and `loc` is the location of the matching
-        substring.
-        """
-        self.exprstack.append(toks[0])
-
-    def push_uminus(self, toks):
-        """Push to the expression stack.
-
-        `push_uminus` is similar to `push_first`, however `push_uminus`
-        is needed for handling expressions like `-x`.
-
-        Parameters
-        ----------
-        toks: list of strings
-            The tokens, `toks[0]` is to be added.
-
-        Returns
-        -------
-        out : None
-            Returns `None`, but updates `self.exprstack`.
-
-        Note
-        ----
-        The function can also be defined as
-        `push_first(self, strg, loc, toks)` where `strg` is the original
-        string being parsed and `loc` is the location of the matching
-        substring.
-        """
-        if toks and toks[0] == '-':
-            self.exprstack.append('unary -')
-
-    def evaluate_stack(self, stack):
-        """Evaluate the expression stack recursively.
-
-        Here, we also might pass the system in case we need to
-        use it for accessing positions, velocities etc.
-
-        Parameters
-        ----------
-        stack : list
-            This is the list of operations/expressions to execute
-        """
-        oper = stack.pop()
-        result = 0.0
-        if oper == 'unary -':
-            result = -self.evaluate_stack(stack)
-        else:
-            if oper in "+-*/^,":
-                op2 = self.evaluate_stack(stack)
-                op1 = self.evaluate_stack(stack)
-                result = self.operators[oper](op1, op2)
-            elif oper == "PI":
-                result = np.pi  # 3.1415926535
-            elif oper == "E":
-                result = np.e  # 2.718281828
-            elif oper in self.functs:
-                result = self.functs[oper](self.evaluate_stack(stack))
-            elif oper in self.system_functs:
-                result = self.system_function(oper, self.evaluate_stack(stack))
-            elif oper[0].isalpha():
-                result = 0  # TODO: Check if this can be made into 0.0
-            else:
-                result = float(oper)
-        return result
-
-    def parse_function(self, string_function):
-        """Parse the string and set up the expression stack.
-
-        Parameters
-        ----------
-        string_function : string, optional
-            This is the string that defines the function we wish to use.
-        """
-        self.exprstack = []
-        self.pars.parseString(string_function, True)
-        self.string_function = string_function
-
-    def evaluate(self, system=None):
-        """Evaluate the expression, assuming that is has been parsed.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            The system object is used to access particles and
-            also the box. Here we set `self.system` to point to this
-            object as it is a convenient way of accessing the required
-            parameters.
-        """
-        if self.string_function is None or len(self.exprstack) < 1:
-            return None
-        else:
-            self.system = system
-            return self.evaluate_stack(self.exprstack[:])
-
-    def __call__(self, system=None):
-        """Function to call `self.evaluate`."""
-        return self.evaluate(system=system)
-
-    def _initiate_parser(self):
-        """Helper function to initiate the parser."""
-        point = Literal('.')
-        exp = CaselessLiteral('E')
-        fnumber = Combine(Word('+-' + nums, nums) +
-                          Optional(point + Optional(Word(nums))) +
-                          Optional(exp + Word('+-' + nums, nums)))
-        ident = Word(alphas, alphas + nums + "_$")
-        plus = Literal('+')
-        minus = Literal('-')
-        mult = Literal('*')
-        div = Literal('/')
-        comma = Literal(',')
-        lpar = Literal('(').suppress()
-        rpar = Literal(')').suppress()
-        lbra = Literal('[').suppress()
-        rbra = Literal(']').suppress()
-        addop = plus | minus | comma
-        multop = mult | div
-        expop = Literal('^')
-        # pylint: disable=C0103
-        pi = CaselessLiteral('PI')
-        # pylint: enable=C0103
-        expr = Forward()
-        atom = ((Optional(oneOf('- +')) +
-                 (pi | exp | fnumber | ident +
-                  ((lpar + expr + rpar) |
-                   (lbra + expr + rbra))).setParseAction(self.push_first))
-                | Optional(oneOf('- +')) +
-                Group(lpar + expr + rpar)).setParseAction(self.push_uminus)
-
-        factor = Forward()
-        # Forward implements __lshift__ so that x << y will update x
-        # therefore we here disable pylint warnings:
-        # pylint: disable=W0106
-        factor << atom + ZeroOrMore((expop +
-                                     factor).setParseAction(self.push_first))
-        term = factor + ZeroOrMore((multop +
-                                    factor).setParseAction(self.push_first))
-        expr << term + ZeroOrMore((addop +
-                                   term).setParseAction(self.push_first))
-        # pylint: enable=W0106
-        return expr
-
-    def __str__(self):
-        """Return a simple string representation of the parser."""
-        msg = ['{}:'.format(self.__class__.__name__)]
-        msg += ['Function: {}'.format(self.string_function)]
-        msg += ['Expression stack:']
-        msg += ['{}'.format(self.exprstack)]
-        return '\n'.join(msg)
+        particles = system.particles
+        delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
+        if self.periodic:
+            delta = system.box.pbc_dist_coordinate(delta)
+        lamb = np.sqrt(np.dot(delta, delta))
+        delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
+        return np.dot(delta, delta_v) / lamb

@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+# *- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 r"""This module defines natural constants and unit conversions.
 
 This module defines some natural constants and conversions between units
@@ -11,14 +13,16 @@ pyretis input and output.
 
 All numerical values are from the National Institute of Standards and
 Technology and can be accessed through a web interface
-http://physics.nist.gov/constants or in plain text [NIST]_.
+http://physics.nist.gov/constants or in plain text. [7]_
 
 Internally, all computations are carried out in units which are defined
 by a length scale, an energy scale and a mass scale. This means that
-the time scale is given by these choice. Typically will the input to
-pyretis be in a more human-readable form (e.g. femtoseconds) which is
-converted to the internal units when pyretis is setting up a new
-simulation.
+the time scale is given by these choice. The input to pyretis is
+assumed to be in these internal units. There is one exception to
+this and that is initial configurations given by certain file types
+that define a particular unit (for instance the xyz-files which uses
+Ångström as the length unit). These will be converted to internal
+units by pyretis.
 
 Charges are typically given (in the input) in units of the electron
 charge. The internal unit for charge is not yet implemented, but one
@@ -35,22 +39,22 @@ the section on :ref:`unit systems <unit-conversions-systems>`.
 
 Natural constants
 ~~~~~~~~~~~~~~~~~
-The keys for `CONSTANTS` defines the natural constant and its units,
-for instance `CONSTANTS['kB']['J/K']` is the Boltzmann constants in
-units of Joule per Kelvin. The currently defined natural constants are
+The keys for ``CONSTANTS`` defines the natural constant and its units,
+for instance ``CONSTANTS['kB']['J/K']`` is the Boltzmann constants in
+units of Joule per Kelvin. The currently defined natural constants are:
 
-- ``kB`` : The Boltzmann constant [KB]_.
+- ``kB`` : The Boltzmann constant. [1]_
 
-- ``NA`` : The Avogadro constant [NA]_.
+- ``NA`` : The Avogadro constant. [2]_
 
-- ``e`` : The elementary charge [E]_.
+- ``e`` : The elementary charge. [3]_
 
-- ``c0`` : The velocity of light in vacuum [C0]_.
+- ``c0`` : The velocity of light in vacuum. [4]_
 
-- ``mu0``: Vacuum permeability [M0]_.
+- ``mu0``: Vacuum permeability. [5]_
 
 - ``e0``: Vacuum permittivity (or permittivity of free space or electric
-  constant) [E0]_.
+  constant). [6]_
 
 
 .. _unit-conversions:
@@ -59,16 +63,14 @@ Unit conversions
 ~~~~~~~~~~~~~~~~
 For defining the different unit conversions a simple set of base
 conversions are defined. These represent some common units that are
-convenient for input and output. For each dimension [#]_ we define some
+convenient for input and output. For each dimension [12]_ we define some
 units and the conversion between these. The base units are:
 
-- Charge
-
+Charge:
   * ``e``: Electron charge.
   * ``C``: Coulomb.
 
-- Energy
-
+Energy:
   * ``kcal``: Kilocalorie.
   * ``kcal/mol``: Kilocalorie per mol.
   * ``J``: Joule.
@@ -77,37 +79,31 @@ units and the conversion between these. The base units are:
   * ``eV``: Electronvolt.
   * ``hartree``: Hartree (atomic unit of energy).
 
-- Force
-
+Force:
   * ``N``: Newton.
   * ``pN``: Piconewton.
   * ``dyn``: Dyne.
 
-- Length
-
+Length:
   * ``A``: Ångström.
   * ``nm``: Nanometre.
   * ``bohr``: Bohr radius.
   * ``m``: Meter.
 
-- Mass
-
+Mass:
   * ``g/mol``: Grams per mol, numerically equal to the atomic mass unit.
   * ``g``: Gram.
   * ``kg``: Kilogram.
 
-- Pressure
-
+Pressure:
   * ``Pa``: Pascal.
   * ``bar``: Bar.
   * ``atm``: Atmosphere.
 
-- Temperature
-
+Temperature:
   * ``K``: Kelvin.
 
-- Time
-
+Time:
   * ``s``: Second.
   * ``ps``: Picosecond.
   * ``fs``: Femtosecond
@@ -115,8 +111,7 @@ units and the conversion between these. The base units are:
   * ``us``: Microsecond.
   * ``ms``: Millisecond.
 
-- Velocity
-
+Velocity:
   * ``m/s``: Meter per second.
   * ``nm/ps``: Nanometer per picosecond.
   * ``A/fs``: Ångström per femtosecond.
@@ -132,25 +127,25 @@ The following system of units are defined for pyretis:
 
 - ``lj``: A Lennard-Jones type of units.
 
-- ``real``: A system of units similar to the [LAMMPS]_ unit real.
+- ``real``: A system of units similar to the LAMMPS unit real. [8]_
 
-- ``metal``: A system of units similar to the [LAMMPS]_ unit metal.
+- ``metal``: A system of units similar to the LAMMPS unit metal. [8]_
 
-- ``au``: Atomic units [ATOMUNITS]_.
+- ``au``: Atomic units. [9]_
 
-- ``electron``: A system of units similar to the [LAMMPS]_ unit
-  electron.
+- ``electron``: A system of units similar to the LAMMPS unit
+  electron. [8]_
 
-- ``si``: A system of units similar to the [LAMMPS]_ unit si.
+- ``si``: A system of units similar to the LAMMPS unit si. [8]_
 
 - ``gromacs``: A system of units similar to the units used
-  by [GROMACS]_.
+  by GROMACS. [10]_
 
 
 The defining units for the Lennard-Jones units (``lj``) are typically
 based on the Lennard-Jones parameters for one of the components, e.g.
 :math:`\varepsilon`, :math:`\sigma` and the atomic mass
-of argon (119.8 kB, 3.405 Å, 39.948 g/mol [ROWLEY]_). The defining
+of argon (119.8 kB, 3.405 Å, 39.948 g/mol). [11]_ The defining
 units for the other systems are given in the table below:
 
 
@@ -173,71 +168,72 @@ units for the other systems are given in the table below:
   +-------------+--------------+-------------+--------------------+
 
 
-The input units for the different energy systems are given in the table
-below. For the ``lj`` system all input units are in reduced quantities.
+These units are also used for the input and defines the time unit.
 Further, all system of units expect an input temperature in Kelvin
 (``K``) and all systems, with the exception of ``si``, expects a
 charge in units of electron charges. The ``si`` system uses here
-Coulomb as it's unit for charge. The time unit ``at`` given below
-for ``au`` is the atomic time unit which is not explicitly shown
-here, but it's implicitly given by the energy, length
-and mass unit (``at`` is approximately 2.41888433e-17 s).
+Coulomb as it's unit for charge. The time units for the different
+energy systems are given in the table below.
 
 
-.. table:: Input units for energy systems
+.. table:: Time units and velocity conversions for energy systems
 
-  +-------------+----------+--------+---------------+----------+------+
-  | System name | Energy   | Length | Mass          | Velocity | Time |
-  +=============+==========+========+===============+==========+======+
-  | real        | kcal/mol |  Å     | g/mol         | Å/fs     | fs   |
-  +-------------+----------+--------+---------------+----------+------+
-  | metal       | eV       |  Å     | g/mol         | Å/ps     | ps   |
-  +-------------+----------+--------+---------------+----------+------+
-  | au          | hartree  | bohr   | electron mass | bohr/at  | at   |
-  +-------------+----------+--------+---------------+----------+------+
-  | electron    | hartree  | bohr   | g/mol (amu)   | bohr/fs  | fs   |
-  +-------------+----------+--------+---------------+----------+------+
-  | si          | J        | m      | kg            | m/s      | s    |
-  +-------------+----------+--------+---------------+----------+------+
-  | gromacs     | kJ/mol   | nm     | g/mol         | nm/ps    | ps   |
-  +-------------+----------+--------+---------------+----------+------+
-
-
-.. rubric:: Footnotes
-
-.. [#] Note that 'dimension' here is, strictly speaking, not a true
-       dimension, for instance we define conversions for the dimension
-       `velocity` which in reality is composed of the dimensions
-       `length` and `time`.
+  +-------------+----------------------+
+  | System name | Time unit            |
+  +=============+======================+
+  | real        | 48.8882129084 fs     |
+  +-------------+----------------------+
+  | metal       | 10.1805056505 fs     |
+  +-------------+----------------------+
+  | au          |  0.0241888423521 fs  |
+  +-------------+----------------------+
+  | electron    | 1.03274987345 fs     |
+  +-------------+----------------------+
+  | si          | 1.0 s                |
+  +-------------+----------------------+
+  | gromacs     | 1.0 ps               |
+  +-------------+----------------------+
 
 
-References
-----------
+The interpretation here is that if you are for instance using the system
+``real`` and would like to have a time step equal to 0.5 fs, then the
+input time step should be ``0.5 fs / 48.8882129084 fs`` which is
+approximately ``0.010227``.
 
-.. [KB] https://en.wikipedia.org/wiki/Boltzmann_constant
 
-.. [NA] https://en.wikipedia.org/wiki/Avogadro_constant
+References and footnotes
+------------------------
 
-.. [E] https://en.wikipedia.org/wiki/Elementary_charge
+.. [1] https://en.wikipedia.org/wiki/Boltzmann_constant
 
-.. [C0] https://en.wikipedia.org/wiki/Speed_of_light
+.. [2] https://en.wikipedia.org/wiki/Avogadro_constant
 
-.. [M0] https://en.wikipedia.org/wiki/Vacuum_permeability
+.. [3] https://en.wikipedia.org/wiki/Elementary_charge
 
-.. [E0] https://en.wikipedia.org/wiki/Vacuum_permittivity
+.. [4] https://en.wikipedia.org/wiki/Speed_of_light
 
-.. [NIST] National Institute of Standards and Technology,
+.. [5] https://en.wikipedia.org/wiki/Vacuum_permeability
+
+.. [6] https://en.wikipedia.org/wiki/Vacuum_permittivity
+
+.. [7] National Institute of Standards and Technology,
    http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 
-.. [LAMMPS] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
+.. [8] The LAMMPS manual, http://lammps.sandia.gov/doc/units.html
 
-.. [ROWLEY] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
+.. [9] https://en.wikipedia.org/wiki/Atomic_units
+
+.. [10] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
+   http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
+
+.. [11] Rowley et al., J. Comput. Phys., vol. 17, pp. 401-414, 1975,
    doi: http://dx.doi.org/10.1016/0021-9991
 
-.. [ATOMUNITS] https://en.wikipedia.org/wiki/Atomic_units
+.. [12] Note that 'dimension' here is, strictly speaking, not a true
+        dimension, for instance we define conversions for the dimension
+        `velocity` which in reality is composed of the dimensions
+        `length` and `time`.
 
-.. [GROMACS] The GROMACS manual, tables 2.1 and 2.2 on page. 8,
-   http://manual.gromacs.org/documentation/5.1.1/manual-5.1.1.pdf
 
 Examples
 --------
@@ -246,7 +242,7 @@ Examples
 {('A', 'nm'): 0.1, ('A', 'bohr'): 1.8897261254578281, ('A', 'm'): 1e-10}
 >>> from pyretis.core.units import create_conversion_factors
 >>> create_conversion_factors('lj', length=(3.405, 'A'), energy=(119.8, 'kB'),
-...                           mass=(39.948, 'g/mol'), charge_unit='e')
+...                           mass=(39.948, 'g/mol'), charge='e')
 >>> print(CONVERT['length']['bohr', 'nm'])
 0.052917721067
 >>> print(CONVERT['length']['lj', 'nm'])
@@ -255,7 +251,7 @@ Examples
 0.155411809301
 >>> create_conversion_factors('cgs', length=(0.01, 'm'),
 ...                           energy=(1.0e-7, 'J'),
-...                           mass=(1.0, 'g'), charge_unit='e')
+...                           mass=(1.0, 'g'), charge='e')
 >>> print(round(CONVERT['force']['cgs', 'dyn'], 2))
 1.0
 >>> print(round(CONVERT['time']['cgs', 's'], 2))
@@ -265,7 +261,8 @@ from __future__ import print_function
 import logging
 from collections import deque
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['generate_conversion_factors', 'generate_inverse',
@@ -458,7 +455,7 @@ def _generate_conversion_for_dim(conv_dict, dim, unit):
         _add_conversion_and_inverse(convertdim, value, unit, unit_to)
 
 
-def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
+def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
     u"""Create conversions for a system of units from fundamental units.
 
     This will create a system of units from the three fundamental units
@@ -479,7 +476,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     mass : tuple
         This is the mass unit. The form is assumed to be `(value, unit)`
         where unit is one of the known mass units, 'g/mol', 'kg', 'g'.
-    charge_unit : string, optional
+    charge : string, optional
         This selects the base charge. It can be 'C' or 'e' for Coulomb
         or the electron charge. This will determine how we treat
         Coulomb's constant.
@@ -524,7 +521,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
     value = CONSTANTS['kB'][unit] / kboltz
     _add_conversion_and_inverse(CONVERT['temperature'], value, unit, 'K')
     # convert permittivity:
-    if charge_unit == 'C':
+    if charge == 'C':
         CONSTANTS['e0'][unit] = CONSTANTS['e0']['F/m']
     else:
         CONSTANTS['e0'][unit] = (CONSTANTS['e0']['F/m'] *
@@ -532,9 +529,9 @@ def generate_conversion_factors(unit, distance, energy, mass, charge_unit='e'):
                                  (CONVERT['force']['N', unit] *
                                   CONVERT['length']['m', unit]**2))
     value = np.sqrt(4.0 * np.pi * CONSTANTS['e0'][unit])
-    _add_conversion_and_inverse(CONVERT['charge'], value, unit, charge_unit)
+    _add_conversion_and_inverse(CONVERT['charge'], value, unit, charge)
     # convert [charge] * V/A to force, in case it's needed in the future:
-    #qE = CONVERT['energy']['J', unit] / CONVERT['charge']['C', 'e']
+    # qE = CONVERT['energy']['J', unit] / CONVERT['charge']['C', 'e']
     _generate_conversion_for_dim(CONVERT, 'charge', unit)
 
 
@@ -790,7 +787,7 @@ def read_conversions(filename='units.txt', select_units=None):
             except ValueError:
                 msg = 'Skipping line "{}" in {}'.format(lines.strip(),
                                                         filename)
-                logging.warning(msg)
+                logger.warning(msg)
                 continue
             if dim not in convert:
                 convert[dim] = {}
@@ -850,7 +847,7 @@ def _check_input_unit(unit, dim, input_unit):
 
 
 def create_conversion_factors(unit, length=None, energy=None, mass=None,
-                              charge_unit=None):
+                              charge=None):
     """Helper function to set up conversion factors for a system of units.
 
     Parameters
@@ -869,7 +866,7 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
         This is the mass unit given as (float, string) where the
         float is the numerical value and the string the unit,
         e.g. `(1.0, g/mol)`.
-    charge_unit : string
+    charge : string
         This is the unit of charge given as a string, e.g. 'e' or 'C'.
 
     Returns
@@ -884,18 +881,63 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
     length = _check_input_unit(unit, 'length', length)
     energy = _check_input_unit(unit, 'energy', energy)
     mass = _check_input_unit(unit, 'mass', mass)
-    if charge_unit is None:
+    if charge is None:
         try:
-            charge_unit = UNIT_SYSTEMS[unit]['charge']
+            charge = UNIT_SYSTEMS[unit]['charge']
         except KeyError:
             msg = 'Undefined charge unit for {}'.format(unit)
             raise ValueError(msg)
     else:
-        if not charge_unit in UNITS['charge']:
-            msg = 'Unknown charge unit "{}" requested.'.format(charge_unit)
+        if charge not in UNITS['charge']:
+            msg = 'Unknown charge unit "{}" requested.'.format(charge)
             raise ValueError(msg)
-    generate_conversion_factors(unit, length, energy, mass,
-                                charge_unit=charge_unit)
+    generate_conversion_factors(unit, length, energy, mass, charge=charge)
+
+
+def units_from_settings(settings):
+    """Helper method to set up units from given input settings.
+
+    Parameters
+    ----------
+    settings : dict
+        A dict defining the units.
+
+    Returns
+    -------
+    msg : string
+        Just a string with some information about the units
+        created. This can be used for printing out some info to
+        the user.
+    """
+    unit = settings['system']['units'].lower()
+    if 'unit-system' in settings:
+        try:
+            unit2 = settings['unit-system']['name'].lower()
+        except KeyError:
+            msg = 'Could not find "name" setting for section "unit-system"!'
+            logger.critical(msg)
+            raise ValueError(msg)
+        if not unit2 == unit:
+            msg = 'Inconsistent unit settings "{}" != "{}"'.format(unit, unit2)
+            logger.critical(msg)
+            raise ValueError(msg)
+        setts = {}
+        for key in ('length', 'energy', 'mass', 'charge'):
+            try:
+                setts[key] = settings['unit-system'][key]
+            except KeyError:
+                msg = 'Could not find "{}" for section "unit-system"!'
+                msg = msg.format(key)
+                logger.error(msg)
+                raise ValueError(msg)
+        msg = 'Creating (custom) unit system: "{}"'.format(unit)
+        logger.debug(msg)
+        create_conversion_factors(unit, **setts)
+    else:
+        msg = 'Creating unit: "{}"'.format(unit)
+        logger.debug(msg)
+        create_conversion_factors(unit)
+    return msg
 
 
 if __name__ == '__main__':
@@ -913,28 +955,28 @@ if __name__ == '__main__':
         create_conversion_factors(uni, length=NEW_UNITS[uni]['length'],
                                   energy=NEW_UNITS[uni]['energy'],
                                   mass=NEW_UNITS[uni]['mass'],
-                                  charge_unit=NEW_UNITS[uni]['charge'])
+                                  charge=NEW_UNITS[uni]['charge'])
     # Units can be stored by:
-    #write_conversions()
+    # write_conversions()
     # and loaded by:
-    #ccc = read_conversions(units='metal')
-    #for key in ccc:
-    #    print(key)
-    #    for key2 in ccc[key]:
-    #        print(key2, ccc[key][key2])
+    # ccc = read_conversions(units='metal')
+    # for key in ccc:
+    #     print(key)
+    #     for key2 in ccc[key]:
+    #         print(key2, ccc[key][key2])
     # just write out a table:
     for uni in NEW_UNITS:
         print_table(uni)
     # Also add some conversions between systems:
-    #print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
-    #print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
-    #print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
-    #print(bfs_convert(CONVERT['length'], 'lj', 'real'))
-    #print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
+    # print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
+    # print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['length'], 'lj', 'real'))
+    # print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
     # To generate conversions between different systems:
-    #for sys1 in UNIT_SYSTEMS:
-    #    for sys2 in UNIT_SYSTEMS:
-    #        if sys1 != sys2:
-    #            generate_system_conversions(sys1, sys2)
-    #for uni in UNIT_SYSTEMS:
+    # for sys1 in UNIT_SYSTEMS:
+    #     for sys2 in UNIT_SYSTEMS:
+    #         if sys1 != sys2:
+    #             generate_system_conversions(sys1, sys2)
+    # for uni in UNIT_SYSTEMS:
     #    print_table(uni, system=True)

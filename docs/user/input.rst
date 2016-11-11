@@ -1,52 +1,135 @@
 .. _user-guide-input:
 
-Running pyretis with input files
-================================
+The pyretis input file
+======================
 
 pyretis simulations can be set up and run with a simple input file.
-This input file defines a simulation by setting
-:ref:`keywords <user-keywords>`
-explicitly, while all undefined keywords will be
-given :ref:`default <input-default>` values.
+The input file defines a simulation by setting values for
+keywords which are organized into
+:ref:`sections <user-section>`. All keywords/sections that are not
+explicitly set will assume :ref:`default <input-default>`
+values. 
 
 After the input script has been created, a pyretis simulation can
-be evoked by running
+be evoked by running the ``pyretisrun`` application, 
 
 .. code-block:: bash
 
-    $ pyretis -i <input>
+    $ pyretisrun -i <input>
+
+Here, we will discuss
+the :ref:`structure of the input file <user-guide-input-structure>`
+and some of the :ref:`sections <user-guide-input-sections>`
+the input file is organized into. We refer to the
+:ref:`pyretisrun documentation <user-guide-application>`
+for more information about the usage of the ``pyretisrun`` application.
 
 
-Which will run your simulation, create the requested output and
-write a simulation log both to the screen and to a file  pyretis.log.
+.. _user-guide-input-structure:
 
 Structure of the input file
 ---------------------------
 
-The input file consist of keywords with corredponding values.
-A keyword is identified with by being enclosed by ``:``, example:
+The input file is organized into **sections** and for each
+section, **keywords** are used to define your settings.
+The syntax for setting keywords is ``keyword = setting``,
+and sections are marked by the section title followed by a
+underline of dashes ``--------``, for example:
 
-.. code-block:: python
+.. code-block:: rst
 
-   task = md-nve
+    Simulation settings
+    -------------------
+    task = md-nve
+    steps = 100
 
-   integrator = {'name': 'velocityverlet', 'timestep': 0.002}
+
+which sets the two keywords ``task`` and ``steps`` for the
+``Simulation`` section. When specifying a section, only the
+first word in the section title is used to
+identify the title internally in pyretis. This means that you can
+just as well write the following:
+
+.. code-block:: rst
+
+    Simulation 
+    ----------
+    task = md-nve
+    steps = 100
+
+or add any text you like, e.g.: 
+
+.. code-block:: rst
+
+    Simulation master plan
+    ----------------------
+    task = md-nve
+    steps = 100
+
+Both this two examples with define keywords for the ``Simulation`` section.
 
 
-Other than keywords, the format of the input file is relatively free.
-You can for instance order things as you prefer and the input is case insensitive:
+The format of the input file is relatively free,
+you can for instance order things within sections as
+you prefer and the input is in general **case insensitive**:
 
-.. code-block:: python
+.. code-block:: rst
 
+    Simulation settings
+    -------------------
     task = md-nve
     units = lj
-    # is identical to:
+    
+which is identical to:
+
+.. code-block:: rst
+
+    Simulation settings
+    -------------------
     UNITS = lj
     tAsK = md-nve
 
-You can also add other text and comments to structure the input file:
+Note that the values set by the keywords might be
+**case sensitive**. Some examples:
 
-.. code-block:: python
+- When using external python modules and classes, for instance:
+
+  .. code-block:: rst
+
+      Integrator settings
+      -------------------
+      class = MyExternalClass
+      module = filename.py
+
+  Here, the values given for the ``class`` and the ``module`` keywords are
+  **case sensitive**. 
+
+- When referring to external files, for instance:
+   
+  .. code-block:: rst
+
+      Particles settings
+      ------------------
+      position = {'file': 'myfile.gro'}
+
+  Here, we are referring to a file named ``myfile.gro``,
+  and pyretis will expect this file to be present with exactly
+  this file name.     
+
+- When defining your own system of units:
+
+  .. code-block:: rst
+
+      Unit-system
+      -----------
+      length = (1.0, 'm')
+
+  Here, we are using a unit of 1 metre which is identified with
+  a ``'m'`` and not a ``'M'``.
+
+You can also add text and comments to structure the input file:
+
+.. code-block:: rst
 
     Simulation settings
     -------------------
@@ -54,73 +137,137 @@ You can also add other text and comments to structure the input file:
     units = lj
 
     # More settings:
+
     System settings
     ---------------
     temperature = 1.0
 
+Comments are marked as starting with a ``'#'`` and all following text
+will be ignored, i.e.
 
-The most important input settings
----------------------------------
+.. code-block:: rst
 
-This is a short list of the most important settings. For the
-complete list, please consult the section listing 
-:ref:`all keywords <user-keywords>` which also gives a more complete
-description of the usage of the keywords with several examples.
+    task = md-nve  # set up and run a md-nve simulation not TIS this time.
 
-* units
-    Specify the units to use.
+is effectively the same as writing, 
 
-    Examples:
+.. code-block:: rst
 
-    .. code-block:: python
+    task = md-nve
 
-        units = lj  # Select Lennard-Jones units
+Summarized:
 
-* task
-    Specify the kind of simulation to run.
+* The input file is organized into ``sections`` where ``keywords`` are set:
 
-    Example:
+   .. code-block:: rst
 
-    .. code-block:: python
+       SectionTitle
+       ------------
+       keyword = value
 
-        task = md-nve
+* Comments are marked with a ``#``.
 
-    Note that the different tasks require setting of different keywords as
-    described in the detailed description of the :ref:`task keyword <user-keywords-task>`.
+* Input is in general not case sensitive unless you are referring to
+  files and python classes.
 
-* integrator
-    Specify which integrator we should use and sets parameters for the
-    integrator.
+.. _user-guide-input-sections:
 
-    Example:
+The sections in the input file
+------------------------------
 
-    .. code-block:: python
+The pyretis input file is structured with sections. The most
+commonly used sections are:
 
-        integrator = {'name': 'Langevin',
-                      'timestep': 0.002,
-                      'gamma': 0.3,
-                      'seed': 0,
-                      'high-friction': False}
+* :ref:`Simulation <user-section-simulation>`:
+  The simulation section defines what kind of simulation we
+  are to perform.
 
-.. _user-keywords:
+  .. code-block:: rst
 
-All pyretis keywords
---------------------
+      Simulation 
+      ----------
+      task = md-nve
+      steps = 100
 
-The pyretis keywords are:
+* :ref:`System <user-section-system>`:
+  The system section defins the simulation system.
+  This can for instance define the ``units``
+  to use or set a
+  target ``temperature`` for the system:
 
-* :ref:`box <user-keywords-box>`: for setting up the simulation box
-* :ref:`integrator <user-keywords-integrator>`: for selecting the integration routine
-* :ref:`orderparameter <user-keywords-task>`: for selecting the order parameter
-* :ref:`particles-position <user-keywords-particles>`: for setting the initial particle positions
-* :ref:`particles-velocity <user-keywords-particles>`: for setting the initial particle velocities
-* :ref:`particle-mass <user-keywords-particles>`: for setting the masses of the particles
-* :ref:`task <user-keywords-task>`: for selecting what kind of simulation to run
-* :ref:`units <user-keywords-units>`: for selecting units to use for input/output
+  .. code-block:: rst 
+    
+      System settings
+      ---------------
+      units = real
+      temperature = 300.0
+
+* :ref:`Particles <user-section-particles>`:
+  The particles section is used to define the
+  initial state of the system, for instance by reading it from
+  a file.
+
+  .. code-block:: rst 
+    
+      Particles settings
+      ------------------
+      position = {'file': 'configtag.xyz'}
+
+* :ref:`Force field <user-section-forcefield>`:
+  The force field is defined by the force field section and one or more
+  potential sections.
+
+  .. code-block:: rst 
+
+      Forcefield settings
+      -------------------
+      description = Lennard Jones test
+
+      potential
+      ---------
+      class = PairLennardJonesCutnp
+      shift = True
+      parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
+
+      potential
+      ---------
+      class = DoubleWellWCA
+      parameter types = [(0, 0)]
+      parameter rzero = 1.122462048309373
+      parameter height = 6.0
+      parameter width = 0.25
+
+* :ref:`Order parameter <user-section-orderparameter>`:
+  Defines the order parameter to use.
+
+  .. code-block:: rst 
+
+      Orderparameter
+      --------------
+      class = OrderParameterPosition
+      name = Position
+      index = 0
+      dim = x
+      periodic = False
+
+* :ref:`Integrator <user-section-integrator>`:
+  Selects the integrator to use
+
+  .. code-block:: rst 
+ 
+      Integrator settings
+      -------------------
+      class = VelocityVerlet
+      timestep = 0.002
+
+For a complete description of all sections, please see
+this :ref:`overview <user-section>`.
 
 .. _input-default:
 
 Default settings
 ----------------
 
-This is the default input settings:
+In case a keyword is not specified and the selected task requires the use
+of that keyword, a default value is used. These default settings
+are as follows:

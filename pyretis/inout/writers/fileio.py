@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Module defining the base classes for file writers.
 
 This module defines a class that is useful for writing data
 to the disk. The typical usage in pyretis is to write the output from
 a `Writer` to a file.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- FileIO: A generic class for handling output to files.
+FileIO
+    A generic class for handling output to files.
 """
 import os
 import logging
@@ -156,7 +160,7 @@ class FileIO(object):
     def __del__(self):
         """Close a file in case the object is deleted.
 
-        This function will just close the file in case the program
+        This method will just close the file in case the program
         crashes or exits in some other way. It is used here as it's not
         so nice to add a with statement to the main script running the
         simulation.

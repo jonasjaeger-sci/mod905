@@ -1,11 +1,29 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module handles random number generation.
 
 It derives most of the random number procedures from `RandomState` in
 `numpy.random` and defines a class which used `RandomState` to generate
 pseudo-random numbers.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RandomGeneratorBase
+    An abstract base class for random number generators.
+
+RandomGenerator
+    A class representing a random number generator.
+
+ReservoirSampler
+    A class for reservoir sampling.
+
+MockRandomGenerator
+    A non-random number generator which is useful for testing.
 """
 from __future__ import absolute_import
+from abc import ABCMeta, abstractmethod
 import logging
 import numpy as np
 from numpy.random import RandomState
@@ -15,44 +33,34 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['RandomGenerator', 'ReservoirSampler']
+__all__ = ['RandomGenerator', 'ReservoirSampler', 'MockRandomGenerator']
 
 
-class RandomGenerator(object):
-    """RandomGenerator(object) - A random number generator.
+class RandomGeneratorBase(object):
+    """RandomGeneratorBase - A base class for the generators
 
-    This class that defines a random number generator. It will use
-    `numpy.random.RandomState` for the actual generation, and we refer
-    to the numpy documentation [1]_. Here we could inherit from
-    RandomState but here we do not wish (?) to inherit from an old-style
-    class. That is the cause of some small functions here that will
-    actually just call the corresponding function from `RandomState`.
+    This is a base class for random number generators. It does not
+    actually implement a generator.
 
     Attributes
     ----------
-    rgen : object like `RandomState`
-        This is a container for the Mersenne Twister pseudo-random
-        number generator as implemented in numpy [#]_.
-
-    References
-    ----------
-
-    .. [#] The NumPy documentation on RandomState,
-       http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
+    seed : int
+        A seed for the generator
     """
 
-    def __init__(self, seed=None):
-        """Initiate the random number generator.
+    __metaclass__ = ABCMeta
 
-        If a seed is given, the random number generator will be seeded.
+    def __init__(self, seed=0):
+        """Initiate the random number generator.
 
         Parameters
         ----------
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        self.rgen = RandomState(seed=seed)
+        self.seed = seed
 
+    @abstractmethod
     def rand(self, shape=1):
         """Draw random numbers in [0, 1).
 
@@ -66,9 +74,10 @@ class RandomGenerator(object):
         out : float
             Pseudo random number in [0, 1)
         """
-        return self.rgen.rand(shape)
+        return
 
-    def random_integers(self, low, high):
+    @abstractmethod
+    def random_integers(self, low, high, size=None):
         """Draw random integers in [low, high].
 
         Parameters
@@ -77,14 +86,18 @@ class RandomGenerator(object):
             This is the lower limit
         high : int
             This is the upper limit
+        size : int or tuple of ints, optional
+            Output shape. Default is None, in which case a
+            single value is returned.
 
         Returns
         -------
         out : int
-            This is a pseudo random integer in [low, high]
+            The pseudo random integers in [low, high].
         """
-        return self.rgen.random_integers(low, high)
+        return
 
+    @abstractmethod
     def normal(self, loc=0.0, scale=1.0, size=None):
         """Return values from a normal distribution.
 
@@ -103,16 +116,11 @@ class RandomGenerator(object):
         out : float, numpy.array of floats
             The random numbers generated
         """
-        return self.rgen.normal(loc=loc, scale=scale, size=size)
+        return
 
+    @abstractmethod
     def multivariate_normal(self, mean, cov, cho=None, size=1):
         """Draw numbers from a multi-variate distribution.
-
-        This is an attempt on speeding up the call of
-        `RandomState.multivariate_normal` if we need to call it over and
-        over again. Such repeated calling will do a SVD repeatedly,
-        which is wasteful. In this function, this transform can be
-        supplied and it is only estimated if it's not explicitly given.
 
         Parameters
         ----------
@@ -130,17 +138,8 @@ class RandomGenerator(object):
         -------
         out : float or numpy.array of floats size
             The random numbers drawn.
-
-        See also
-        --------
-        numpy.random.multivariate_normal
         """
-        if cho is None:
-            cho = np.linalg.cholesky(cov)
-        norm = self.normal(loc=0.0, scale=1.0, size=2*size)
-        norm = norm.reshape(size, 2)
-        meanm = np.array([mean, ] * size)
-        return meanm + np.dot(norm, cho.T)
+        return
 
     def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
                                        dof, selection=None, momentum=True):
@@ -217,6 +216,137 @@ class RandomGenerator(object):
         vel = self.normal(loc=0.0, scale=sigma_v,
                           size=system.particles.vel.shape)
         return vel, sigma_v
+
+
+class RandomGenerator(RandomGeneratorBase):
+    """RandomGenerator(RandomGeneratorBase) - A random number generator.
+
+    This class that defines a random number generator. It will use
+    `numpy.random.RandomState` for the actual generation, and we refer
+    to the numpy documentation [1]_. Here we could inherit from
+    RandomState but here we do not wish (?) to inherit from an old-style
+    class. That is the cause of some small functions here that will
+    actually just call the corresponding function from `RandomState`.
+
+    Attributes
+    ----------
+    seed : int
+        A seed for the pseudo-random generator.
+    rgen : object like `RandomState`
+        This is a container for the Mersenne Twister pseudo-random
+        number generator as implemented in numpy [#]_.
+
+    References
+    ----------
+
+    .. [#] The NumPy documentation on RandomState,
+       http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
+    """
+
+    def __init__(self, seed=0):
+        """Initiate the random number generator.
+
+        If a seed is given, the random number generator will be seeded.
+
+        Parameters
+        ----------
+        seed : int, optional
+            An integer used for seeding the generator if needed.
+        """
+        super(RandomGenerator, self).__init__(seed=seed)
+        self.rgen = RandomState(seed=seed)
+
+    def rand(self, shape=1):
+        """Draw random numbers in [0, 1).
+
+        Parameters
+        ----------
+        shape : int
+            Number of numbers to draw
+
+        Returns
+        -------
+        out : float
+            Pseudo random number in [0, 1)
+        """
+        return self.rgen.rand(shape)
+
+    def random_integers(self, low, high, size=None):
+        """Draw random integers in [low, high].
+
+        Parameters
+        ----------
+        low : int
+            This is the lower limit
+        high : int
+            This is the upper limit
+        size : int or tuple of ints, optional
+            Output shape. Default is None, in which case a
+            single value is returned.
+
+        Returns
+        -------
+        out : int
+            The pseudo random integers in [low, high].
+        """
+        return self.rgen.random_integers(low, high, size=size)
+
+    def normal(self, loc=0.0, scale=1.0, size=None):
+        """Return values from a normal distribution.
+
+        Parameters
+        ----------
+        loc : float, optional
+            The mean of the distribution
+        scale : float, optional
+            The standard deviation of the distribution
+        size : int, tuple of ints, optional
+            Output shape, i.e. how many values to generate. Default is
+            None which is just a single value.
+
+        Returns
+        -------
+        out : float, numpy.array of floats
+            The random numbers generated
+        """
+        return self.rgen.normal(loc=loc, scale=scale, size=size)
+
+    def multivariate_normal(self, mean, cov, cho=None, size=1):
+        """Draw numbers from a multi-variate distribution.
+
+        This is an attempt on speeding up the call of
+        `RandomState.multivariate_normal` if we need to call it over and
+        over again. Such repeated calling will do a SVD repeatedly,
+        which is wasteful. In this function, this transform can be
+        supplied and it is only estimated if it's not explicitly given.
+
+        Parameters
+        ----------
+        mean : numpy array (1D, 2)
+            Mean of the N-dimensional array
+        cov : numpy array (2D, (2, 2))
+            Covariance matrix of the distribution.
+        cho : numpy.array (2D, (2, 2)), optional
+            Cholesky factorization of cov. If not given,
+            it will be calculated here.
+        size : int, optional.
+            Number of samples to do.
+
+        Returns
+        -------
+        out : float or numpy.array of floats size
+            The random numbers drawn.
+
+        See also
+        --------
+        numpy.random.multivariate_normal
+        """
+        if cho is None:
+            cho = np.linalg.cholesky(cov)
+        norm = self.normal(loc=0.0, scale=1.0, size=2*size)
+        norm = norm.reshape(size, 2)
+        meanm = np.array([mean, ] * size)
+        return meanm + np.dot(norm, cho.T)
 
 
 class ReservoirSampler(object):
@@ -308,3 +438,164 @@ class ReservoirSampler(object):
         ret = self.reservoir[self.ret_idx]
         self.ret_idx += 1
         return ret
+
+
+class MockRandomGenerator(RandomGeneratorBase):
+    """MockRandomGenerator - A "fake" random generator.
+
+    This class represents a random generator that can be used for
+    testing algorithms. It will simply return numbers from a
+    small list of pseudo-random numbers. This class is only useful
+    for testing algorithms on different systems. It should *NEVER*
+    be used for actual production runs!
+    """
+    def __init__(self, seed=0):
+        """Initiate the random number generator.
+
+        Parameters
+        ----------
+        seed : int, optional
+            An integer used for seeding the generator if needed.
+        """
+        super(MockRandomGenerator, self).__init__(seed=seed)
+        self.rgen = [0.78008018, 0.04459916, 0.76596775, 0.97676713,
+                     0.53799598, 0.98657116, 0.36343553, 0.55356511,
+                     0.03172585, 0.48984682, 0.73416687, 0.98453452,
+                     0.55129902, 0.40598753, 0.59448394, 0.26823255,
+                     0.31168372, 0.05072849, 0.44876368, 0.94301709]
+        self.length = len(self.rgen)
+        self.randint = self.seed
+        logger.critical('You are using a "mock" random generator!\n')
+
+    def rand(self, shape=1):
+        """Draw random numbers in [0, 1).
+
+        Parameters
+        ----------
+        shape : int
+            Number of numbers to draw
+
+        Returns
+        -------
+        out : float
+            Pseudo random number in [0, 1)
+        """
+        numbers = []
+        for _ in range(shape):
+            if self.seed >= self.length:
+                self.seed = 0
+            numbers.append(self.rgen[self.seed])
+            self.seed += 1
+        return np.array(numbers)
+
+    def random_integers(self, low, high, size=None):
+        """Return random integers in [low, high].
+
+        Parameters
+        ----------
+        low : int
+            This is the lower limit
+        high : int
+            This is the upper limit
+        size : int or tuple of ints, optional
+            Output shape. Default is None, in which case a
+            single value is returned.
+
+
+        Returns
+        -------
+        out : int
+            This is a pseudo random integer in [low, high]
+        """
+        if size is not None:
+            logger.warning('The mock generator does not use a size variable')
+        idx = self.rand()*(high-low+1)
+        return int(idx) + low
+
+    def normal(self, loc=0.0, scale=1.0, size=None):
+        """Return values from a normal distribution.
+
+        Parameters
+        ----------
+        loc : float, optional
+            The mean of the distribution
+        scale : float, optional
+            The standard deviation of the distribution
+        size : int, tuple of ints, optional
+            Output shape, i.e. how many values to generate. Default is
+            None which is just a single value.
+
+        Returns
+        -------
+        out : float, numpy.array of floats
+            The random numbers generated
+        """
+        if size is None:
+            return self.rand(shape=1)
+        else:
+            numbers = np.zeros(size)
+            for i in np.nditer(numbers, op_flags=['readwrite']):
+                i[...] = self.rand(shape=1)[0]
+            return numbers
+
+    def multivariate_normal(self, mean, cov, cho=None, size=1):
+        """Draw numbers from a multi-variate distribution.
+
+        This is an attempt on speeding up the call of
+        `RandomState.multivariate_normal` if we need to call it over and
+        over again. Such repeated calling will do a SVD repeatedly,
+        which is wasteful. In this function, this transform can be
+        supplied and it is only estimated if it's not explicitly given.
+
+        Parameters
+        ----------
+        mean : numpy array (1D, 2)
+            Mean of the N-dimensional array
+        cov : numpy array (2D, (2, 2))
+            Covariance matrix of the distribution.
+        cho : numpy.array (2D, (2, 2)), optional
+            Cholesky factorization of cov. If not given,
+            it will be calculated here.
+        size : int, optional.
+            Number of samples to do.
+
+        Returns
+        -------
+        out : float or numpy.array of floats size
+            The random numbers drawn.
+
+        See also
+        --------
+        numpy.random.multivariate_normal
+        """
+        norm = self.normal(loc=0.0, scale=1.0, size=2*size)
+        norm = norm.reshape(size, 2)
+        meanm = np.array([mean, ] * size)
+        return 0.01*(meanm + norm)
+
+
+def create_random_generator(settings):
+    """This will initiate a random generator.
+
+    Parameters
+    ----------
+    settings : dict
+        This is the dict used for creating the random generator.
+        Currently, we will actually just look for a seed value.
+
+    Returns
+    -------
+    out : object like `RandomGenerator`
+        The random generator created.
+    """
+    if 'seed' not in settings:
+        seed = 0
+        msg = 'No seed given, setting it to "0"'
+        logger.info(msg)
+    else:
+        seed = settings['seed']
+    rgen = settings.get('rgen', None)
+    if rgen is not None and rgen == 'mock':
+        return MockRandomGenerator(seed=seed)
+    else:
+        return RandomGenerator(seed=seed)

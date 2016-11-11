@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
-"""This file contains functions for analysis of order parameter."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Module defining functions for analysis of order parameters.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+analyse_orderp
+    Run a simple order parameter analysis.
+"""
 from __future__ import absolute_import
 from pyretis.analysis.analysis import analyse_data, mean_square_displacement
 
@@ -45,7 +54,7 @@ def analyse_orderp(orderdata, settings):
         else:
             result = analyse_data(data, settings)
             if i == 1:  # assume that we want the MSD analysis here:
-                ndt = settings.get('maxordermsd')
+                ndt = settings['analysis']['maxordermsd']
                 result['msd'] = mean_square_displacement(data, ndt=ndt)
             results.append(result)
     return results

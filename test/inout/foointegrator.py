@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Dummy integrator for tests."""
 from pyretis.core.integrators import Integrator
 
@@ -9,15 +11,15 @@ __all__ = []
 class FooIntegrator(Integrator):
     """FooIntegrator(Integrator) - Dummy integrator for tests."""
 
-    def __init__(self, timestep, parameter=0.0,
-                 desc='Dummy test integrataor'):
+    def __init__(self, timestep, extra=0.0,
+                 desc='Dummy test integrator'):
         super(FooIntegrator, self).__init__(timestep, desc=desc,
                                             dynamics=None)
-        self.parameter = parameter
+        self.extra = extra
 
     def integration_step(self, system):
         """Perform the integration step."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class BarIntegrator(object):

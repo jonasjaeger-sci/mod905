@@ -1,35 +1,53 @@
 # -*- coding: utf-8 -*-
-"""This module defines common functions for the settings handling.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""This module defines common methods for the settings handling.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- check_settings: Check that required simulation settings are actually
-  given.
+create_external
+    Method to create objects from settings.
 
-- import_from : A function to dynamically import functions/classes
-  etc. from user specified modules.
+check_settings
+    Check that required simulation settings are actually given.
+
+create_integrator
+    Method to create an integrator from settings.
+
+create_orderparameter
+    Method to create order parameters from settings.
+
+create_potential
+    Method to create a potential from settings.
+
+import_from
+    A method to dynamically import method/classes etc. from user
+    specified modules.
 """
 import sys
 import importlib
 import imp
 import logging
 import os
+from pyretis.core.common import initiate_instance
 from pyretis.core.integrators import integrator_factory
 from pyretis.core.orderparameter import order_factory
+from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['check_settings', 'import_from', 'initiate_instance',
-           'create_orderparameter', 'create_integrator']
+__all__ = ['create_external', 'check_settings', 'import_from',
+           'create_orderparameter', 'create_integrator', 'create_potential']
 
 
 def import_from(module_path, function_name):
-    """Function to import a function/class from a module.
+    """Method to import a method/class from a module.
 
-    This function will dynamically import a specified function/object
+    This method will dynamically import a specified method/object
     from a module and return it. If the module can not be imported or
-    if we can't find the function/class in the module we will raise
+    if we can't find the method/class in the module we will raise
     exceptions.
 
     Parameters
@@ -37,7 +55,7 @@ def import_from(module_path, function_name):
     module_path : string
         The path/filename to load from.
     function_name : string
-        The name of the function/class to load.
+        The name of the method/class to load.
 
     Returns
     -------
@@ -55,78 +73,39 @@ def import_from(module_path, function_name):
     .. [#] http://bugs.python.org/issue21436
     """
     try:
-        # sad news, imp is deprecated for python 3.5
-        # we need to check if we are using python3.5 or earlier
         module_name = os.path.basename(module_path)
         module_name = os.path.splitext(module_name)[0]
+        # imp is deprecated for python 3.5 -> we need to check if we are
+        # using python3.5 or earlier:
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
-            spec = importlib.util.spec_from_file_location(module_name, # pylint: disable=no-member
+            spec = importlib.util.spec_from_file_location(module_name,  # pylint: disable=no-member
                                                           module_path)
             module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
             spec.loader.exec_module(module)
         msg = 'Imported module: {}'.format(module)
-        logger.info(msg)
-        try:
-            return getattr(module, function_name)
-        except AttributeError:
-            msg = 'Could not import "{}" from "{}"'.format(function_name,
-                                                           module_path)
-            logger.critical(msg)
-            raise ValueError(msg)
-    except ImportError:
+        logger.debug(msg)
+        return getattr(module, function_name)
+    except (ImportError, IOError):
         msg = 'Could not import module: {}'.format(module_path)
         logger.critical(msg)
         raise ValueError(msg)
-
-
-def initiate_instance(klass, args=None, kwargs=None):
-    """Function to initiate a class with optional arguments.
-
-    Parameters
-    ----------
-    klass : class
-        The class to initiate.
-    args : list, optional
-        Positional arguments to `klass.__init__()`.
-    kwargs : dict, optional
-        The keyword arguments to `klass.__init__()`
-
-    Returns
-    -------
-    out : instance of `klass`
-        Here, we just return the initiated instance of the given class.
-    """
-    if args is None:
-        if kwargs is None:
-            msg = 'Initiated {} without arguments.'.format(klass)
-            logger.info(msg)
-            return klass()
-        else:
-            msg = 'Initiated {} with keyword arguments.'.format(klass)
-            logger.info(msg)
-            return klass(**kwargs)
-    else:
-        if kwargs is None:
-            msg = 'Initiated {}  with positional arguments.'.format(klass)
-            logger.info(msg)
-            return klass(*args)
-        else:
-            msg = 'Initiated {} with positional and keyword arguments.'
-            msg = msg.format(klass)
-            logger.info(msg)
-            return klass(*args, **kwargs)
+    except AttributeError:
+        msg = 'Could not import "{}" from "{}"'.format(function_name,
+                                                       module_path)
+        logger.critical(msg)
+        raise ValueError(msg)
 
 
 def check_settings(settings, required):
     """Check that required simulation settings are actually given.
 
-    This function will look for required settings in the given
+    This method will look for required settings in the given
     `settings`. If one or more keys from the given `required` list of
-    strings are not found, this function will return False. Otherwise
+    strings are not found, this method will return False. Otherwise
     if will return True. Typically, and exception should be raised if
-    False is returned, this is handled outside the function in case
+    False is returned, this is handled outside the method in case
     someone wants to add some magic handling of missing settings.
 
     Parameters
@@ -153,8 +132,13 @@ def check_settings(settings, required):
     return result, not_found
 
 
-def create_external(settings, key, factory, required_methods):
-    """Function to create order parameters from settings.
+def create_external(settings, key, factory, required_methods,
+                    key_settings=None):
+    """Method to create objects from settings.
+
+    This method will handle creation of objects from settings. The
+    requested objects can be pyretis internals or defined in external
+    modules.
 
     Parameters
     ----------
@@ -168,24 +152,34 @@ def create_external(settings, key, factory, required_methods):
     required_methods : list of strings
         The methods we need to have if creating an object from external
         files.
+    key_settings : dict
+        This dictionary contains the settings for specific key we
+        are processing. If this is not given, we will try to obtain
+        these settings by `settings[key]`. The reason why we make it
+        possible to pass these as settings is in case we are processing
+        a key which does not give a simple setting, but a list of settings.
+        It that case `settings[key]` will give a list to process. That list
+        is iterated somewhere else and `key_settings` can then be used to
+        process these elements.
 
     Returns
     -------
     out : object
         This object represents the class we are requesting here.
     """
-    try:
-        key_settings = settings[key]
-    except KeyError:
-        msg = 'No {} settings found!'.format(key)
-        logger.critical(msg)
-        return None
+    if key_settings is None:
+        try:
+            key_settings = settings[key]
+        except KeyError:
+            msg = 'No {} settings found. Skipping set-up.'.format(key)
+            logger.debug(msg)
+            return None
     module = key_settings.get('module', None)
     klass = None
     try:
         klass = key_settings['class']
     except KeyError:
-        msg = 'No {} "class" specified!'.format(key)
+        msg = 'No "{}" setting "class" specified!'.format(key)
         logger.critical(msg)
         raise ValueError(msg)
     if module is None:
@@ -198,8 +192,9 @@ def create_external(settings, key, factory, required_methods):
         if os.path.isfile(module):
             obj = import_from(module, klass)
         else:
-            if 'exe-path' in settings:
-                module = os.path.join(settings['exe-path'], module)
+            if 'exe-path' in settings['simulation']:
+                module = os.path.join(settings['simulation']['exe-path'],
+                                      module)
                 obj = import_from(module, klass)
             else:
                 msg = 'Could not find module "{}" for {}!'.format(module, key)
@@ -218,13 +213,11 @@ def create_external(settings, key, factory, required_methods):
                                                                  function)
                     logger.critical(msg)
                     raise ValueError(msg)
-        return initiate_instance(obj,
-                                 args=key_settings.get('args', None),
-                                 kwargs=key_settings.get('kwargs', None))
+        return initiate_instance(obj, key_settings)
 
 
 def create_orderparameter(settings):
-    """Function to create order parameters from settings.
+    """Method to create order parameters from settings.
 
     Parameters
     ----------
@@ -241,7 +234,7 @@ def create_orderparameter(settings):
 
 
 def create_integrator(settings):
-    """Function to create simulations from settings.
+    """Method to create an integrator from settings.
 
     Parameters
     ----------
@@ -255,3 +248,23 @@ def create_integrator(settings):
     """
     return create_external(settings, 'integrator', integrator_factory,
                            ['integration_step'])
+
+
+def create_potential(settings, key_settings):
+    """Method to create a potential from settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dictionary contains the settings for the simulation.
+    key_settings : dict
+        Settings for the potential we are creating.
+
+    Returns
+    -------
+    out : object like `PotentialFunction` from `pyretis.forcefield`.
+        This object represents the order parameter.
+    """
+    return create_external(settings, 'potential', potential_factory,
+                           ['force', 'potential', 'potential_and_force'],
+                           key_settings=key_settings)

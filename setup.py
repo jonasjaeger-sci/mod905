@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """
 pyretis - A simulation package for rare event simulations.
 Copyright (C) 2015  The pyretis team
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,12 +16,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from codecs import open as openc
 import os
-import re
 from setuptools import setup, find_packages
 
 
@@ -33,21 +33,10 @@ def get_long_description():
     return long_description
 
 
-def find_version(*file_paths):
-    """Look for the version in __init__.py of pyretis."""
-    here = os.path.abspath(os.path.dirname(__file__))
-    dirname = os.path.join(here, *file_paths)
-    with openc(dirname, encoding='utf-8') as fileinit:
-        version_file = fileinit.read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError('Unable to find version string.')
-
+FULL_VERSION = '0.2.0.dev0'  # copied from version.py generated.
 
 setup(name='pyretis',
-      version=find_version('pyretis', '__init__.py'),
+      version=FULL_VERSION,
       description='A simulation package for rare events',
       long_description=get_long_description(),
       url='http://www.pyretis.org',
@@ -71,7 +60,10 @@ setup(name='pyretis',
                    'Topic :: Scientific/Engineering :: Physics'],
       keywords='simulation TIS RETIS',
       packages=find_packages(exclude=['docs']),
-      install_requires=['numpy>=1.6.0', 'scipy>=0.13.3',
-                        'matplotlib>=1.1', 'jinja2>=2.7.2',
-                        'docutils>=0.11'],
-      scripts=['bin/pyretisrun.py'])
+      install_requires=['numpy>=1.6.0',
+                        'scipy>=0.13.3',
+                        'matplotlib>=1.1',
+                        'jinja2>=2.7.2',
+                        'docutils>=0.11',
+                        'tqdm>=4.7.0'],
+      scripts=['bin/pyretisrun.py', 'bin/pyretisanalyse.py'])

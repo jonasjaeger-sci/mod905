@@ -1,39 +1,52 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """
 #######
 pyretis
 #######
 
-This is pyretis - a library/simulation package for performing rare event
-simulations with python.
+This file is part of pyretis - a simulation package for rare events.
 
-pyretis structure
-~~~~~~~~~~~~~~~~~
+Pyretis is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-Modules:
+Pyretis is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-- __init__.py: This is the main pyretis module. It will import useful
-  sub-packages and define the version number.
+You should have received a copy of the GNU General Public License
+along with pyretis.  If not, see `<http://www.gnu.org/licenses/>`_.
 
-Sub-Packages:
 
-- core: The core classes and functions used for running the rare
-  event simulations. This includes classes defining the system,
-  a system box, simulations etc.
+pyretis documentation
+---------------------
 
-- forcefield: This package define forcefields and how they are
-  calculated.
+The documentation for pyretis is avaiable either docstrings provided
+with the code and from `the pyretis homepage <http://www.pyretis.org>`_.
 
-- tools: This package defines some functions which can be useful for
-  setting up simple systems, for example functions for generating
-  lattices.
+pyretis sub-packages
+--------------------
 
-- inout: This package defines the io for the pyretis program.
-  This includes generating output from the analysis and reading
-  input-files etc.
-
-- analysis: This package defines the analysis tools for calculating
-  crossing probabilities, rates etc.
+analysis
+    Analysis tools for calculating crossing probabilities, rates etc.
+core
+    Core classes and functions for running the rare event simulations.
+    This includes classes defining the system, particles, simulations
+    etc.
+forcefield
+    This package define force fields and potentials functions.
+inout
+    This package defines the input output operations for pyretis.
+    This includes generating output from the analysis and reading
+    input-files etc.
+tools
+    This package defines some functions which can be useful for
+    setting up simple systems, for example functions for generating
+    lattices.
 """
 from __future__ import absolute_import
 # pyretis imports:
@@ -41,8 +54,7 @@ from . import core
 from . import forcefield
 from . import analysis
 from . import tools
-__version__ = '0.1.0'
-__version_details__ = 'pre-release'
+from .version import version as __version__
 __program_name__ = 'pyretis'
 __url__ = 'http://www.pyretis.org'
 __git_url__ = 'https://gitlab.com/andersle/pyretis'

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package defines analysis tools for the pyretis program.
 
 The analysis tools are intended to be used for analysis of the
@@ -7,69 +9,82 @@ package is in post-processing of the results from a simulation (or
 several simulations).
 
 Package structure
-~~~~~~~~~~~~~~~~~
+-----------------
 
-Modules:
+Modules
+~~~~~~~
 
-- __init__.py: Imports from the other modules. The function to
-  analyse results from MD flux simulations is defined here since it will
-  make use of analysis tools from `energy_analysis.py` and
-  `order_analysis.py`.
+__init__.py
+    This file, imports from the other modules. The method to analyse
+    results from MD flux simulations is defined here since it will
+    make use of analysis tools from `energy_analysis.py` and
+    `order_analysis.py`.
 
-- analysis.py: Defines functions for numerical analysis.
+analysis.py
+    General methods for numerical analysis.
 
-- energy_analysis.py: Defines functions useful for analysing the
-  energy output.
+energy_analysis.py
+    Defines methods useful for analysing the energy output.
 
-- histogram.py: Defines functions useful for generating histograms.
+histogram.py
+    Defines methods useful for generating histograms.
 
-- order_analysis.py: Defines functions useful for analysis of order
-  parameters.
+order_analysis.py
+    Defines methods useful for analysis of order parameters.
 
-- path_analysis.py: Defines functions for analysis of path ensembles.
+path_analysis.py
+    Defines methods for analysis of path ensembles.
 
-Important functions defined in this module:
+Important methods defined in this package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- analyse_energies: Analyse energy data from a simulation.
-  It will calculate a running average, a distribution and do a block
-  error analysis.
+analyse_energies
+    Analyse energy data from a simulation. It will calculate a running
+    average, a distribution and do a block error analysis.
 
-- analyse_flux: Analyse flux data from a MD flux simulation.
-  It will calculate a running average, a distribution and do a block
-  error analysis.
+analyse_flux
+    Analyse flux data from a MD flux simulation. It will calculate a
+    running average, a distribution and do a block error analysis.
 
-- analyse_orderp: Analyse order parameter data.
-  It will calculate a running average, a distribution and do a block
-  error analysis. In addition if will analyse the mean square
-  displacement (if requested).
+analyse_orderp
+    Analyse order parameter data. It will calculate a running average,
+    a distribution and do a block error analysis. In addition if will
+    analyse the mean square displacement (if requested).
 
-- analyse_path_ensemble: Analyse the results from a single path
-  ensemble. It will calculate a running average of the probabilities,
-  a crossing probability, perform an block error analysis, analyse
-  lengths of paths, type of Monte Carlo moves and calculate an
-  efficiency.
+analyse_path_ensemble:
+    Analyse the results from a single path ensemble. It will calculate
+    a running average of the probabilities, a crossing probability,
+    perform an block error analysis, analyse lengths of paths,
+    type of Monte Carlo moves and calculate an efficiency.
 
-- match_probabilities: Function to match probabilities from several
-  path simulations. Useful for obtaining the overall crossing
-  probability.
+match_probabilities
+    Method to match probabilities from several path simulations.
+    Useful for obtaining the overall crossing probability.
 
-- histogram: Generates histogram, basically a wrapper around numpy's
-  ``histogram``.
+histogram
+    Generates histogram, basically a wrapper around
+    numpy's ``histogram``.
 
-- match_all_histograms: Function to match histograms from
-  umbrella simulations.
+match_all_histograms
+    Method to match histograms from umbrella simulations.
+
+retis_flux
+    To obtain initial flux for RETIS simulations.
+
+retis_rate
+    To obtain rate constant for RETIS simulations.
 """
 from .analysis import running_average, block_error, block_error_corr
 from .energy_analysis import analyse_energies
 from .flux_analysis import analyse_flux
 from .histogram import histogram, match_all_histograms
 from .order_analysis import analyse_orderp
-from .path_analysis import analyse_path_ensemble, match_probabilities
+from .path_analysis import (analyse_path_ensemble, match_probabilities,
+                            retis_flux, retis_rate)
 
 
-def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
-                    simulation_settings):
-    """Function to analyse the output from a MD-flux simulation.
+def analyse_md_flux(crossdata, energydata, orderdata, settings):
+    """Method to analyse the output from a MD-flux simulation.
 
     The obtained results will be returned as a convenient structure for
     plotting or reporting.
@@ -82,11 +97,9 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         This is the raw data for the energies.
     orderdata : numpy.array
         This is the raw data for the order parameter.
-    analysis_settings : dict
-        This dict contains settings for running the analysis (e.g block
-        length for error analysis).
-    simulation_settings : dict
-        This dict contains settings from the simulation (interfaces,
+    settings : dict
+        The settings for the analysis (e.g block length for error
+        analysis) and some settings from the simulation (interfaces,
         time step etc.).
 
     Returns
@@ -96,8 +109,7 @@ def analyse_md_flux(crossdata, energydata, orderdata, analysis_settings,
         dictionary. This dict can be used further for plotting or for
         generating reports.
     """
-    results = {'flux': analyse_flux(crossdata, analysis_settings,
-                                    simulation_settings),
-               'energy': analyse_energies(energydata, analysis_settings),
-               'order': analyse_orderp(orderdata, analysis_settings)}
+    results = {'flux': analyse_flux(crossdata, settings),
+               'energy': analyse_energies(energydata, settings),
+               'order': analyse_orderp(orderdata, settings)}
     return results

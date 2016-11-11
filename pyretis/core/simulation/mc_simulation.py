@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of simulation objects for Monte Carlo simulations.
 
 This module defines some classes and functions for performing
 Monte Carlo simulations.
 
-Important classes and functions defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- UmbrellaWindowSimulation: Defines a simulation for performing umbrella
-  window simulations. Several umbrella window simulations can be joined
-  to perform a umbrella simulation.
+UmbrellaWindowSimulation
+    Defines a simulation for performing umbrella window simulations.
+    Several umbrella window simulations can be joined to perform a
+    umbrella simulation.
 """
 from __future__ import absolute_import
-import logging
 import numpy as np
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.core.simulation.simulation import Simulation
-logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 __all__ = ['UmbrellaWindowSimulation']
@@ -89,12 +91,12 @@ class UmbrellaWindowSimulation(Simulation):
         mincycle : int, optional.
             The *MINIMUM* number of cycles to perform. Note that in the
             base `Simulation` class this is the *MAXIMUM* number of
-            cycles to perform. The meaning is redefined by redefining
-            the `self.simulation_finished` function.
+            cycles to perform. The meaning is redefined in this class
+            by overriding `self.simulation_finished`.
         startcycle : int, optional.
             The current simulation cycle, i.e. where we start.
         """
-        super(UmbrellaWindowSimulation, self).__init__(endcycle=mincycle,
+        super(UmbrellaWindowSimulation, self).__init__(steps=mincycle,
                                                        startcycle=startcycle)
         self.umbrella = umbrella
         self.overlap = overlap

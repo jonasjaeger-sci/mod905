@@ -13,6 +13,7 @@ Subpackages
 -----------
 
 .. toctree::
+    :maxdepth: 2
 
     pyretis.core.simulation
 
@@ -26,6 +27,7 @@ List of submodules
 * :ref:`pyretis.core.particlefunctions <api-core-particlefunctions>`
 * :ref:`pyretis.core.particles <api-core-particles>`
 * :ref:`pyretis.core.path <api-core-path>`
+* :ref:`pyretis.core.pathensemble <api-core-pathensemble>`
 * :ref:`pyretis.core.properties <api-core-properties>`
 * :ref:`pyretis.core.random_gen <api-core-random_gen>`
 * :ref:`pyretis.core.retis <api-core-retis>`
@@ -75,11 +77,6 @@ pyretis.core.orderparameter module
     :undoc-members:
     :show-inheritance:
 
-.. autoclass:: StringFunctionParser
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. _api-core-particlefunctions:
 
 pyretis.core.particlefunctions module
@@ -107,6 +104,16 @@ pyretis.core.path module
 ------------------------
 
 .. automodule:: pyretis.core.path
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-core-pathensemble:
+
+pyretis.core.pathensemble module
+--------------------------------
+
+.. automodule:: pyretis.core.pathensemble
     :members:
     :undoc-members:
     :show-inheritance:

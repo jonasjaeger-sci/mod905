@@ -1,13 +1,22 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This file contain a class to represent a collection of particles.
 
 The class for particles is in reality a simplistic particle list which
 stores positions, velocities, masses etc. and is used for representing
 the particles in the simulations.
+
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Particles (:py:class:`pyretis.core.particles.Particles`)
+    Class for a list of particles.
 """
 import logging
 import numpy as np
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Particles']
@@ -63,7 +72,7 @@ class Particles(object):
         self.imass = None
         self.name = None
         self.ptype = None
-        self.virial = None
+        self.virial = np.zeros((dim, dim))
         self.dim = dim
 
     def empty_list(self):
@@ -88,7 +97,7 @@ class Particles(object):
         self.imass = None
         self.name = None
         self.ptype = None
-        self.virial = None
+        self.virial = np.zeros_like(self.virial)
 
     def get_dim(self):
         """Function to get the dimensionality"""
@@ -137,7 +146,7 @@ class Particles(object):
             self.force = np.copy(phasepoint['force'])
         except KeyError:
             msg = 'Setting particle pos & vel without setting forces'
-            logging.warning(msg)
+            logger.warning(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):
@@ -167,11 +176,15 @@ class Particles(object):
         if self.npart == 0:
             self.name = [name]
             self.ptype = np.array(ptype, dtype=np.int16)
-            self.pos = pos
-            self.vel = vel
-            self.force = force
-            self.mass = np.array([mass])
-            self.imass = np.array([1.0/mass])
+            self.pos = np.zeros((1, self.dim))
+            self.pos[0] = pos
+            self.vel = np.zeros((1, self.dim))
+            self.vel[0] = vel
+            self.force = np.zeros((1, self.dim))
+            self.force[0] = force
+            self.mass = np.zeros((1, 1))  # column matrix
+            self.mass[0] = mass
+            self.imass = 1.0 / self.mass
         else:
             self.name.append(name)
             self.ptype = np.append(self.ptype, ptype)
@@ -249,6 +262,6 @@ class Particles(object):
     def __str__(self):
         """Print out basic info about the particle list."""
         msg = ['Particles: {}'.format(self.npart)]
-        msg += ['Types: {}'.format(set(self.ptype))]
+        msg += ['Types: {}'.format(np.unique(self.ptype))]
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)

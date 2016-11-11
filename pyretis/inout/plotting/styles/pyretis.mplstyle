@@ -1,11 +1,12 @@
-# this is the retis mpl style.
+# This is the pyretis mpl style.
 
 axes.edgecolor: 262626
 axes.labelcolor: 262626
 axes.labelsize: medium
+axes.titlesize: x-small
 axes.grid: False
-axes.color_cycle: 4C72B0, 55A868, C44E52, 8172B2, CCB974, 64B5CD
-#axes.prop_cycle: cycler('color', ['4C72B0', '55A868', 'C44E52', '8172B2', 'CCB974', '64B5CD'])
+axes.formatter.limits: -4, 4
+axes.prop_cycle: cycler('color', ['4C72B0', '55A868', 'C44E52', '8172B2', 'CCB974', '64B5CD'])
 
 figure.subplot.left: 0.15
 figure.subplot.right: 0.95
@@ -23,6 +24,7 @@ legend.numpoints: 1
 legend.scatterpoints: 1
 legend.handlelength: 1.5
 legend.handleheight: 0.5
+legend.fontsize: x-small
 
 lines.linewidth: 2
 lines.color: 262626

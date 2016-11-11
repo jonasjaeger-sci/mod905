@@ -1,31 +1,41 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definition of numerical integrators.
 
 These integrators are typically used to integrate and propagate
-Newtons equations of motion in time, the dynamics in molecular dynamics.
+Newtons equations of motion in time, the "dynamics" in molecular dynamics!
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Integrator: The base class for integrators
+Integrator (:py:class:`pyretis.core.integrators.Integrator`)
+    The base class for integrators
 
-- Verlet: A Verlet integrator
+Verlet (:py:class:`pyretis.core.integrators.Verlet`)
+    A Verlet integrator
 
-- VelocityVerlet: A Velocity Verlet integrator
+VelocityVerlet (:py:class:`pyretis.core.integrators.VelocityVerlet`)
+    A Velocity Verlet integrator
 
-- Langevin: A Langevin integrator
+Langevin (:py:class:`pyretis.core.integrators.Langevin`)
+    A Langevin integrator
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- integrator_factory: A function to set up and create an integrator from
-  simulation settings.
+integrator_factory (:py:func:`pyretis.core.integrators.integrator_factory`)
+    Method for setting up and creating an integrator from
+    simulation settings.
 """
 from __future__ import absolute_import
 import logging
 import numpy as np
-from pyretis.core.random_gen import RandomGenerator
-from pyretis.core.particlefunctions import calculate_thermo
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+from pyretis.core.common import generic_factory
+from pyretis.core.random_gen import create_random_generator
+from pyretis.core.particlefunctions import calculate_thermo_path
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin',
@@ -45,30 +55,14 @@ def integrator_factory(settings):
 
     Returns
     -------
-    out[0] : object
+    out : object like `Integrator`.
         This object represents the integrator and will be one of the
         classes defined in `pyretis.core.integrators`.
     """
-    try:
-        klass = settings['class'].lower()
-    except KeyError:
-        msg = 'No integrator class given. No integrator created!'
-        logging.critical(msg)
-        return None
-    if klass == 'velocityverlet':
-        return VelocityVerlet(settings['timestep'])
-    elif klass == 'verlet':
-        return Verlet(settings['timestep'])
-    elif klass == 'langevin':
-        return Langevin(settings['timestep'],
-                        settings['gamma'],
-                        rgen=settings.get('rgen', None),
-                        seed=settings.get('seed', 0),
-                        high_friction=settings['high-friction'])
-    else:
-        msg = 'Unknown integrator {}'.format(settings['class'])
-        logging.critical(msg)
-        return None
+    integrator_map = {'velocityverlet': {'cls': VelocityVerlet},
+                      'verlet': {'cls': Verlet},
+                      'langevin': {'cls': Langevin}}
+    return generic_factory(settings, integrator_map, name='integrator')
 
 
 class Integrator(object):
@@ -89,15 +83,15 @@ class Integrator(object):
         by the integrator (NVE, NVT, stochastic, ...).
     """
 
-    def __init__(self, delta_t, desc='Generic integrator', dynamics=''):
+    def __init__(self, timestep, desc='Generic integrator', dynamics=''):
         """Initialization of the integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step for the integrator.
+        timestep : float
+            The time step for the integrator in internal units.
         """
-        self.delta_t = delta_t
+        self.delta_t = timestep
         self.desc = desc
         self.dynamics = dynamics
 
@@ -128,8 +122,8 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def propagate(self, path, system, interfaces, order_function,
-                  reverse=False):
+    def propagate(self, path, system, interfaces,
+                  reverse=False, thermo=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -145,7 +139,7 @@ class Integrator(object):
         path : object like `Path` from `pyretis.core.Path`.
             This is the path we use to fill in phase-space point.
             We are here not returning a new path - this since we want
-            to delegte the creation of the path (type) to the method
+            to delegate the creation of the path (type) to the method
             that is running `propagate`.
         system : object like `System` from `pyretis.core.system`.
             The system object gives the initial state for the
@@ -153,23 +147,27 @@ class Integrator(object):
             reset to the initial state when the integration is done.
         interfaces : list of floats.
             These interfaces define the stopping criterion.
-        order_function : object like `OrderParameter` from
-            `.orderparameter` This object is callable and takes the
-            `System` as it's argument and returns a tuple where the
-            first item is equal to the order parameter.
         reverse : boolean
             If True, the system will be propagated backwards in time.
+        thermo : boolean
+            If True, we will do some extra calculation of energies.
         """
-        status = 'Generating path...'
+        if reverse:
+            status = 'Generating backward path...'
+        else:
+            status = 'Generating forward path...'
+        logger.debug(status)
         success = False
         initial_system = system.particles.get_phase_point()
+        system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
         while True:
-            orderp = order_function(system)
+            orderp = system.calculate_order()
+            energy = calculate_thermo_path(system) if thermo else None
             add = path.append(orderp,
                               system.particles.pos,
                               system.particles.vel,
-                              calculate_thermo(system))
+                              energy)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -177,11 +175,11 @@ class Integrator(object):
                     status = 'Could not add for unknown reason'
                 success = False
                 break
-            if orderp[0] < left:
+            if path.ordermin[0] < left:
                 status = 'Crossed left interface!'
                 success = True
                 break
-            elif orderp[0] > right:
+            elif path.ordermax[0] > right:
                 status = 'Crossed right interface!'
                 success = True
                 break
@@ -192,6 +190,8 @@ class Integrator(object):
             else:
                 self(system)
         system.particles.set_phase_point(initial_system)
+        msg = 'Propagate done: "{}" (success: {})'.format(status, success)
+        logger.debug(msg)
         return success, status
 
     def __call__(self, system):
@@ -231,17 +231,17 @@ class Verlet(Integrator):
         Squared time step: `delta_t**2`
     """
 
-    def __init__(self, delta_t, desc='The verlet integrator'):
+    def __init__(self, timestep, desc='The verlet integrator'):
         """Initiate the Verlet integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step
+        timestep : float
+            The time step in internal units.
         desc : string
             Description of the integrator
         """
-        super(Verlet, self).__init__(delta_t, desc=desc, dynamics='NVE')
+        super(Verlet, self).__init__(timestep, desc=desc, dynamics='NVE')
         self.half_idt = 0.5 / self.delta_t
         self.delta_t2 = self.delta_t**2
         self.previous_pos = None
@@ -291,22 +291,22 @@ class VelocityVerlet(Integrator):
     delta_t : float
         The time step.
     half_delta_t : float
-        Half of timestep
+        Half of timestep.
     desc : string
         Description of the integrator.
     """
 
-    def __init__(self, delta_t, desc='The velocity verlet integrator'):
+    def __init__(self, timestep, desc='The velocity verlet integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
-        delta_t : float
-            The time step.
+        timestep : float
+            The time step in internal units.
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerlet, self).__init__(delta_t, desc=desc,
+        super(VelocityVerlet, self).__init__(timestep, desc=desc,
                                              dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
@@ -400,7 +400,7 @@ class Langevin(Integrator):
     Consider replacing this one as it seems somewhat slow.
     """
 
-    def __init__(self, delta_t, gamma, rgen=None, seed=0, high_friction=False,
+    def __init__(self, timestep, gamma, rgen=None, seed=0, high_friction=False,
                  desc='Langevin integrator'):
         """Initiate the Langevin integrator.
 
@@ -413,31 +413,27 @@ class Langevin(Integrator):
 
         Parameters
         ----------
-        delta_t : float
-            The time step.
+        timestep : float
+            The time step in internal units.
         gamma : float
             The gamma parameter for the Langevin integrator
-        rgen : object like `RandomGenerator` from `.random_gen`.
-            This is the class that will handle the random number
-            generation for us. If not given, a `RandomGenerator` will
-            be created here.
+        rgen : string
+            This string can be used to pick a particular random
+            generator, which is useful for testing.
         seed : integer, optional.
-            A seed which can be used if a `RandomGenerator` is to be
-            created here.
+            A seed for the random generator.
         high_friction : boolean
             Determines if we are in the high_friction limit and should
             do the over-damped version.
         desc : string
             Description of the integrator.
         """
-        super(Langevin, self).__init__(delta_t, desc=desc,
+        super(Langevin, self).__init__(timestep, desc=desc,
                                        dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
-        if rgen is None:
-            self.rgen = RandomGenerator(seed=seed)
-        else:
-            self.rgen = rgen
+        rgen_settings = {'seed': seed, 'rgen': rgen}
+        self.rgen = create_random_generator(rgen_settings)
         self.param_high = {'sigma': None, 'bddt': None}
         self.param_iner = {'c0': None, 'a1': None, 'a2': None,
                            'b1': None, 'b2': None, 'mean': None, 'cov': None}
@@ -484,10 +480,10 @@ class Langevin(Integrator):
             self.param_iner['cho'] = []
 
             for imass in imasses:
-                sig_ri2 = ((self.delta_t * imass / (beta * self.gamma)) *
+                sig_ri2 = ((self.delta_t * imass[0] / (beta * self.gamma)) *
                            (2. - (3. - 4.*exp_gdt + exp_gdt**2) / gammadt))
-                sig_vi2 = ((1.0 - exp_gdt**2) * imass / beta)
-                cov_rvi = (imass/(beta * self.gamma)) * (1.0 - exp_gdt)**2
+                sig_vi2 = ((1.0 - exp_gdt**2) * imass[0] / beta)
+                cov_rvi = (imass[0]/(beta * self.gamma)) * (1.0 - exp_gdt)**2
                 cov_matrix = np.array([[sig_ri2, cov_rvi],
                                        [cov_rvi, sig_vi2]])
                 self.param_iner['cov'].append(cov_matrix)
@@ -567,13 +563,8 @@ class Langevin(Integrator):
             for i, (meani, covi, choi) in enumerate(zip(mean, cov, cho)):
                 randxv = self.rgen.multivariate_normal(meani, covi, cho=choi,
                                                        size=ndim)
-                # special case for just a single particle:
-                if system.particles.npart == 1:
-                    pos_rand = randxv[:, 0]
-                    vel_rand = randxv[:, 1]
-                else:
-                    pos_rand[i] = randxv[:, 0]
-                    vel_rand[i] = randxv[:, 1]
+                pos_rand[i] = randxv[:, 0]
+                vel_rand[i] = randxv[:, 1]
         particles.pos += (self.param_iner['a1'] * particles.vel +
                           self.param_iner['a2'] * particles.force + pos_rand)
 

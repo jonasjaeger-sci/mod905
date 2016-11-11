@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """A module defining a generic writer for tables.
 
 The tables are defined with a set of variables (`keys`) and some rules
@@ -6,8 +8,18 @@ for formatting. The table writer is similar to the other writer but can
 be made more generic and is more suited for creating output that will be
 displayed on screen.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+TxtTable
+    A class for generating table output.
+
+PathTable
+    A class for table-like output from path simulations.
+
+ThermoTable
+    A class for thermodynamic output, useful for output from
+    MD-simulations.
 """
 import logging
 # pyretis imports:
@@ -21,15 +33,15 @@ __all__ = ['TxtTable', 'PathTable', 'ThermoTable']
 
 
 # Tables can be defined and created as follows:
-#tabl = {'title': 'Energy output',
-#        'var': ['step', 'temp', 'vpot',
-#                'ekin', 'etot', 'press'],
-#        'format': {'labels': ['Step', 'Temp', 'Pot',
+# tabl = {'title': 'Energy output',
+#         'var': ['step', 'temp', 'vpot',
+#                 'ekin', 'etot', 'press'],
+#         'format': {'labels': ['Step', 'Temp', 'Pot',
 #                              'Kin', 'Tot', 'Press'],
-#                   'width': (10, 12),
-#                   'spacing': 2,
-#                   'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
-#table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
+#                    'width': (10, 12),
+#                    'spacing': 2,
+#                    'row_fmt': ['{:> 10d}', '{:> 12.6g}']}}
+# table = TxtTable(tabl['var'], tabl['title'], **tabl['format'])
 
 
 def _fill_list(the_list, length, fillvalue=None):
@@ -186,7 +198,7 @@ class PathTable(TxtTable):
     def generate_output(self, step, path_ensemble):
         """Generate the output for the PathTable.
 
-        Here we overload the `generate_output` function in `TxtTable`
+        Here we overload the `generate_output` method in `TxtTable`
         in order to write path ensemble statistics to (presumably)
         the screen.
 

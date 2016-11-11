@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Classes and functions for paths.
 
 The classes and functions defined in this module are useful for
 representing paths.
 
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- PathBase: A base class for paths.
+PathBase
+    A base class for paths.
 
-- Path: Class for a generic path that stores all possible information.
+Path
+    Class for a generic path that stores all possible information.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- paste_paths: Function for joining two paths, one is in a backward time
-  direction and the other is in the forward time direction.
+paste_paths
+    Function for joining two paths, one is in a backward time
+    direction and the other is in the forward time direction.
 """
 import logging
 import numpy as np
@@ -89,8 +96,8 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
             # Note that now there is a chance of truncating the path while
             # pasting!
             maxlen = max(path_back.maxlen, path_forw.maxlen)
-            msg = 'Unequal maxlen - setting equal to {}'.format(maxlen)
-            logging.warning(msg)
+            msg = 'Unequal length: Using {} for the new path!'.format(maxlen)
+            logger.warning(msg)
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = path_back.empty_path(maxlen=maxlen, time_origin=time_origin)
     for phasepoint in path_back.trajectory(reverse=True):
@@ -98,7 +105,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         if not app:
             msg = 'Truncated while pasting backwards at: {}'
             msg = msg.format(new_path.length)
-            logging.warning(msg)
+            logger.warning(msg)
             return new_path
     first = True
     for phasepoint in path_forw.trajectory():
@@ -108,7 +115,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         app = new_path.append(*phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(new_path.length)
-            logging.warning(msg)
+            logger.warning(msg)
             return new_path
     return new_path
 
@@ -314,7 +321,7 @@ class PathBase(object):
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
         """
         if self.length < 1:
-            logging.warning('Path is empty!')
+            logger.warning('Path is empty!')
             return None, None, None, None
         ordermax, ordermin = self.ordermax[0], self.ordermin[0]
         cross = [ordermin < interpos <= ordermax for interpos in interfaces]
@@ -350,7 +357,7 @@ class PathBase(object):
             end = 'R'
         else:
             end = None
-            logger.info('Undefined end point.')
+            logger.debug('Undefined end point.')
         return end
 
     def get_start_point(self, left, right):
@@ -378,7 +385,7 @@ class PathBase(object):
             start = 'R'
         else:
             start = None
-            logger.info('Undefined starting point.')
+            logger.debug('Undefined starting point.')
         return start
 
     def get_shooting_point(self):
@@ -420,7 +427,7 @@ class PathBase(object):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -466,15 +473,8 @@ class PathBase(object):
                      'status': status,
                      'length': self.length}
 
-        if self.ordermax is not None:
-            path_info['ordermax'] = tuple(self.ordermax)
-        else:
-            path_info['ordermax'] = (0.0, 0)
-
-        if self.ordermin is not None:
-            path_info['ordermin'] = tuple(self.ordermin)
-        else:
-            path_info['ordermin'] = (0.0, 0)
+        path_info['ordermax'] = tuple(self.ordermax)
+        path_info['ordermin'] = tuple(self.ordermin)
 
         start, end, middle, _ = self.check_interfaces(interfaces)
         path_info['interface'] = (start, middle, end)
@@ -532,24 +532,18 @@ class PathBase(object):
             app = self.append(*phasepoint)
             if not app:
                 msg = 'Truncated path while +=: {}'.format(self.length)
-                logging.warning(msg)
+                logger.warning(msg)
                 return self
         return self
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse a path and return the reverse path as a new path.
 
         This will simply reverse a path and return the reversed path as
-        a new `Path` object. An `order_func` can be specified here if
-        we have to recalculate the order parameter. But that will
-        probably only happen if we are crazy.
-
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
+        a new `Path` object. Note that currently, recalculating
+        order parameters have not been implemented!  Typically, reversing
+        will not change the order parameter, but it might change the
+        velocity for the order parameter and so on.
 
         Returns
         -------
@@ -559,18 +553,16 @@ class PathBase(object):
         new_path = self.empty_path()
         for phasepoint in self.trajectory(reverse=True):
             pos = phasepoint[1]
-            vel = phasepoint[2]
             energy = phasepoint[3]
-            if vel is not None:
-                vel *= -1
-            if order_func and pos is not None:
-                orderp = order_func(pos, vel)
+            if phasepoint[2] is not None:
+                vel = phasepoint[2] * -1
             else:
-                orderp = phasepoint[0]
+                vel = phasepoint[2]
+            orderp = phasepoint[0]
             app = new_path.append(orderp, pos, vel, energy)
             if not app:
                 msg = 'Could not reverse path'
-                logging.error(msg)
+                logger.error(msg)
                 return None
         return new_path
 
@@ -578,15 +570,15 @@ class PathBase(object):
         """Return a simple string representation of the Path."""
         msg = ['Path with length {} (max: {})'.format(self.length,
                                                       self.maxlen)]
-        msg += ['\tOrder parameter max: {}'.format(self.ordermax)]
-        msg += ['\tOrder parameter min: {}'.format(self.ordermin)]
+        msg += ['Order parameter max: {}'.format(self.ordermax)]
+        msg += ['Order parameter min: {}'.format(self.ordermin)]
         if self.length > 0:
-            msg += ['\tStart {}'.format(self.order[0][0])]
-            msg += ['\tEnd {}'.format(self.order[-1][0])]
+            msg += ['Start {}'.format(self.order[0][0])]
+            msg += ['End {}'.format(self.order[-1][0])]
         if self.status:
-            msg += ['\tStatus: {}'.format(_STATUS[self.status])]
+            msg += ['Status: {}'.format(_STATUS[self.status])]
         if self.generated:
-            msg += ['\tGenerated: {}'.format(_GENERATED[self.generated[0]])]
+            msg += ['Generated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
 
     def empty_path(self, **kwargs):
@@ -659,7 +651,7 @@ class Path(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -699,8 +691,8 @@ class Path(PathBase):
             self.length += 1
             return True
         else:
-            msg = 'Path length exceeded! Could not append to path!'
-            logging.info(msg)
+            msg = 'Max length exceeded! Could not append to path!'
+            logger.debug(msg)
             return False
 
     def get_shooting_point(self):
@@ -792,7 +784,7 @@ class ReservoirPath(PathBase):
         Parameters
         ----------
         idx : int
-            Index for phase-pase point to return.
+            Index for phase-space point to return.
 
         Returns
         -------
@@ -833,7 +825,7 @@ class ReservoirPath(PathBase):
             return True
         else:
             msg = 'Path length exceeded! Could not append to path!'
-            logging.info(msg)
+            logger.debug(msg)
             return False
 
     def get_shooting_point(self):
@@ -902,26 +894,19 @@ class ReservoirPath(PathBase):
                               time_origin=time_origin,
                               res_length=res_length)
 
-    def reverse(self, order_func=None):
+    def reverse(self):
         """Reverse the path with addinional handling for the reservoir.
 
         This method will call `PathBase.reverse()` but will also do
         some extra reverse handling since we here have to reverse
         indices in the reservoir of shooting points.
 
-        Parameters
-        ----------
-        order_func : function, optional
-            In case the order parameter should be re-calculated for the
-            reverse path, the function `order_func` can be specified to
-            do this.
-
         Returns
         -------
         path : object like `PathBase`.
             This is basically a copy of `self`, just reversed.
         """
-        path = super(ReservoirPath, self).reverse(order_func=order_func)
+        path = super(ReservoirPath, self).reverse()
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]

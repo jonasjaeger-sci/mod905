@@ -8,53 +8,49 @@ from __future__ import print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
-from pyretis.core import Box, System
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import create_simulation
-from pyretis.forcefield import ForceField
-from pyretis.forcefield.potentials import PairLennardJonesCutnp
+from pyretis.inout.settings import (create_simulation, create_force_field,
+                                    create_system)
 from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout import create_output
-from pyretis.tools import generate_lattice
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
-# define potential function(s) and force field:
-create_conversion_factors('lj')
-LJPARAMETERS = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
-POTENTIAL = PairLennardJonesCutnp(dim=3, shift=True)
-
 # simulation settings:
-settings = {'task': 'md-nve',
-            'units': 'lj',
-            'integrator': {'class': 'velocityverlet', 'timestep': 0.002},
-            'endcycle': 1000,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1},
-                               'filename': 'traj.gro'}],
-            'generate-vel': {'seed': 0, 'momentum': True,
-                             'distribution': 'maxwell'}}
+settings = {}
+settings['simulation'] = {'task': 'md-nve',
+                          'steps': 1000}
+settings['system'] = {'units': 'lj',
+                      'temperature': 2.0,
+                      'dimensions': 3}
+settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.002}
+settings['output'] = {'backup': False,
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 1}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp',
+                          'parameter': {0: {'sigma': 1,
+                                            'epsilon': 1,
+                                            'factor': 2.5}},
+                          'shift': True}]
+settings['particles'] = {'position': {'generate': 'fcc',
+                                      'repeat': [3, 3, 3],
+                                      'density': 0.9},
+                         'velocity': {'generate': 'maxwell',
+                                      'momentum': True,
+                                      'seed': 0}}
 
-
-# set up a lattice and create a box
-lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-box = Box(size, periodic=[True, True, True])
-ljsystem = System(temperature=2.0, units='lj', box=box)
-ljsystem.forcefield = ForceField(potential=[POTENTIAL],
-                                 params=[LJPARAMETERS])
-for pos in lattice:
-    ljsystem.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
-msg = 'Created fcc grid with {} atoms.'
+create_conversion_factors(settings['system']['units'])
+print('# Creating system from settings.')
+ljsystem = create_system(settings)
+ljsystem.forcefield = create_force_field(settings)
+msg = '# Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
-
-if 'generate-vel' in settings:
-    ljsystem.generate_velocities(**settings['generate-vel'])
-    msg = 'Generated temperatures with average: {}'
-    print(msg.format(ljsystem.calculate_temperature()))
-
 simulation_nve = create_simulation(settings, ljsystem)
 
 # set up extra output:
 table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header)
+thermo_file = FileIO('thermo.dat', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]
@@ -68,8 +64,8 @@ for result in simulation_nve.run():
     store_results.append(result['thermo'])
     for task in output_tasks:
         task.output(result)
-# the rest is now just plotting:
-# as an example, do some plotting:
+# We are now done with the actual simulation. Let us now do some
+# simple plotting of energies:
 mpl_set_style()  # load pyretis style
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]

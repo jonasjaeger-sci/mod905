@@ -1,19 +1,48 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This package contains functions for setting up plotters.
 
 Specifically it defines colors, color schemes and a function
 for selecting a plotter.
+
 Here we also hard-code some color schemes which may be useful for
-the plotting: the colorblind 10 scheme [cb10]_, the deep color scheme
-from the seaborn project [deep]_ and the husl color scheme [husl]_.
+the plotting:
 
-Important functions defined here:
+* the colorblind 10 scheme [cb10]_,
 
-- create_plotter: Function to create a plotter.
+* the deep color scheme from the seaborn project [deep]_ and
+
+* the husl color scheme [husl]_.
+
+Package structure
+-----------------
+
+Modules
+~~~~~~~
+
+__init__.py
+    This file, handles imports for pyretis and defines some colors
+    and the method for creating a plotter.
+
+mpl_plotting.py
+    Methods for generating plots using matplotlib.
+
+plotting.py
+    Definition of a generic base class for the plotter(s).
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+create_plotter
+    Method to create a plotter.
 
 Folders
+~~~~~~~
 
-- styles: This folder contains style files for matplotlib.
+styles
+    This folder contains style files for matplotlib which are used by
+    pyretis.
 
 References
 ~~~~~~~~~~
@@ -24,8 +53,9 @@ References
           http://stanford.edu/~mwaskom/software/seaborn/index.html
 .. [husl] The husl color scheme, http://www.husl-colors.org/
 """
+from pyretis.inout.settings.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
-
+from .txt_plotting import TxtPlotter
 
 __all__ = ['create_plotter']
 
@@ -54,7 +84,7 @@ COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                             '#cc79f4', '#f45bf1', '#f565cc', '#f66bad']}
 
 
-def create_plotter(plot_settings):
+def create_plotter(plot_settings, out_dir=None):
     """Function to create a plotter.
 
     The input plot settings is assumed to be a dictionary which we use
@@ -68,6 +98,10 @@ def create_plotter(plot_settings):
         These are the settings to create the plotter from. Here, we
         look for the keys `plotter`, `output` and `style` which defines
         the plotter to use, the output format and the style to use.
+    out_dir : string, optional
+        This string selects if and where the output should be written
+        to. It's mainly used for internal purposes to save the report
+        files to a specific directory.
 
     Returns
     -------
@@ -77,15 +111,17 @@ def create_plotter(plot_settings):
     if plot_settings is None:
         return None
     try:
-        plotter = plot_settings.get('plotter', 'mpl')
-        out_fmt = plot_settings.get('output', 'png')
-        style = plot_settings.get('style', 'pyretis')
-        backup = plot_settings.get('backup', True)
+        default = SECTIONS['analysis']['plot']
+        plotter = plot_settings.get('plotter', default['plotter'])
+        out_fmt = plot_settings.get('output', default['output'])
+        style = plot_settings.get('style', default['style'])
+        backup = plot_settings.get('backup', SECTIONS['output']['backup'])
     except AttributeError:
         # Malformed input settings
         return None
     if plotter.lower() in ['mpl', 'matplotlib']:
-        return MplPlotter(out_fmt, backup=backup, style=style)
+        return MplPlotter(out_fmt, backup=backup, style=style,
+                          out_dir=out_dir)
     else:
         msg = 'Unknown plotter: {}'.format(plotter)
         raise ValueError(msg)

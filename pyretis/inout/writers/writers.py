@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Module for handling input and output of data.
 
 The input and output of data are handled by writers who are responsible
@@ -6,9 +8,11 @@ for turning raw data from pyretis into an output (in some form).
 Note that the writers are not responsible for actually writing the
 output to the screen or to files - this is done by an output task.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Writer: A generic class for the writers.
+Writer
+    A generic class for the writers.
 """
 import logging
 import numpy as np
@@ -72,11 +76,10 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
                     block_label='#'):
     """Open a file and try to read as many lines as possible.
 
-    This function will read a file using the given `line_parser`.
+    This method will read a file using the given `line_parser`.
     If the given `line_parser` fails at a line in the file,
-    `read_some_lines` will stop here.
-
-    This function will read data in blocks and yield a block when a new
+    `read_some_lines` will stop here. Further, this method
+    will read data in blocks and yield a block when a new
     block is found. A special string (`block_label`) is assumed to
     identify the start of blocks.
 
@@ -294,8 +297,8 @@ class CrossWriter(Writer):
 
         See Also
         --------
-        `check_crossing` in `pyretis.core.path` for definition of the
-        tuples in `cross`.
+        `check_crossing` in `pyretis.core.path` calculates the tuple
+        `cross` which is used in this routine.
 
         Note
         ----

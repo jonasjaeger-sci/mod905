@@ -19,8 +19,7 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
-
+sys.path.append(os.path.abspath('ext'))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -29,12 +28,12 @@ import sphinx_bootstrap_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.napoleon', # api
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-]
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.napoleon', # api
+              'sphinx.ext.todo',
+              'sphinx.ext.imgmath',
+              'sphinx.ext.viewcode',
+              'bootstrap']
 
 # Napoleon settings
 napoleon_numpy_docstring = True
@@ -48,8 +47,9 @@ napoleon_use_rtype = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# number figures please
+# Number figures please!
 numfig = True
+numfig_secnum_depth = 1
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -128,26 +128,29 @@ todo_include_todos = False
 #html_theme = 'sphinx_rtd_theme'
 html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
-
+html_translator_class = 'bootstrap.HTMLTranslator'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
-#html_theme_options = {
-    #'sticky_navigation': True # Set to False to disable the sticky nav while scrolling.
-#    'logo_only': True, # if we have a html_logo below, this shows /only/ the logo with no title text
-#}
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
     'navbar_title': "",
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Site",
     # Render the next and previous page links in navbar. (Default: true)
-    'navbar_sidebarrel': True,
+    'navbar_sidebarrel': False,
+    'navbar_links': [#("About", "about/index"),
+                     ("Installing", "user/install"),
+                     ("Getting started", "user/getting-started"),
+                     #("Examples", "examples/index"),
+                     ("Input file sections", "user/section/sections"),
+                     #("API", "api/pyretis"),
+                     #("Developer guide", "developer/index")],
+                    ],
     # Render the current pages TOC in the navbar. (Default: true)
     'navbar_pagenav': True,
     # Tab name for the current pages TOC. (Default: "Page")
-    'navbar_pagenav_name': "Contents",
+    'navbar_pagenav_name': "Page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': 2,
@@ -168,25 +171,18 @@ html_theme_options = {
     'navbar_fixed_top': "true",
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "nav",
+    'source_link_position': "footer",
     # Bootswatch (http://bootswatch.com/) theme.
-    'bootswatch_theme': "yeti",
+    'bootswatch_theme': "flatly",
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
     'bootstrap_version': "3",
 }
 
 
-
-
-
-
-# Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
-
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = 'pyretis'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -238,10 +234,10 @@ html_static_path = ['_static']
 #html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
+html_show_sphinx = True
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#html_show_copyright = True
+html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the

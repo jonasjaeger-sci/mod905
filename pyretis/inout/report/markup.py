@@ -1,21 +1,27 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Some common functions for generating simple tables and numbers.
 
 This module contains some common functions for the generation of
 reports. The functions defined here are typically used to format
 numbers and generate tables for the reports.
 
-Important functions defined here:
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- generate_rst_table: Generate reStructuredText for a table.
+generate_rst_table
+    Generate reStructuredText for a table.
 
-- generate_latex_table: Generate latex code for a table.
+generate_latex_table
+    Generate latex code for a table.
 
-- latexify_number: Change exponential notation into something nicer
-  for latex.
+latexify_number
+    Change exponential notation into something nicer for latex.
 
-- mathexify_number: Change exponential notation into something nicer for
-  reStructuredText.
+mathexify_number
+    Change exponential notation into something nicer for
+    reStructuredText.
 """
 from __future__ import absolute_import
 

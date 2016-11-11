@@ -1,0 +1,9 @@
+Results for [0^-]
+=================
+
+@{{ tables['interfaces0'] }}@
+
+@{{ tables['path0'] }}@
+
+Average path length for flux calculation: @{{ numbers['fluxlength'] }}@
+(Relative error: @{{ numbers['fluxlengtherror'] }}@ %)

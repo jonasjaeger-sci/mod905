@@ -41,10 +41,11 @@ umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:
-settings = {'task': 'umbrellawindow',
-            'rgen': RandomGenerator(seed=RANDSEED),
-            'mincycle': 10000,
-            'maxdx': 0.1}
+settings = {}
+settings['simulation'] = {'task': 'umbrellawindow',
+                          'rgen': RandomGenerator(seed=RANDSEED),
+                          'mincycle': 10000,
+                          'maxdx': 0.1}
 
 trajectory, energy = [], []  # to store all trajectories & energies
 # we run all the umbrella simulations by looping over
@@ -56,9 +57,9 @@ for i, umbrella in enumerate(umbrellas):
     # Move rectangular potential to correct place:
     potential_rw.set_parameters({'left': umbrella[0], 'right': umbrella[1]})
     mysystem.potential()  # recalculate potential energy
-    settings['umbrella'] = umbrella
-    #calculate position we must cross for this window:
-    settings['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
+    settings['simulation']['umbrella'] = umbrella
+    # Calculate position we must cross for this window:
+    settings['simulation']['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
     # Create the umbrella simulation :-)
     simulation = create_simulation(settings, mysystem)
     print(simulation)
@@ -108,8 +109,12 @@ fig2 = plt.figure()
 ax2 = fig2.add_subplot(111)
 XPOT = np.linspace(-2, 2, 1000)
 free = -np.log(hist_avg) / mysystem.temperature['beta']  # free energy
-# set up unbiased potential
-VPOT = np.array([forcefield.evaluate_potential(pos=xi) for xi in XPOT])
+# Plot the unbiased potential:
+VPOT = []
+for xi in XPOT:
+    mysystem.particles.pos = xi
+    VPOT.append(forcefield.evaluate_potential(mysystem))
+VPOT = np.array(VPOT)
 free += (VPOT.min() - free.min())
 ax2.plot(XPOT, VPOT, 'blue', lw=3, label='Unbiased potential', alpha=0.5)
 ax2.plot(bin_x, free, lw=7, alpha=0.5, color='green', label='Free energy')

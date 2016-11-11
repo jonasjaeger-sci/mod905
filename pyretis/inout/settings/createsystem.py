@@ -1,8 +1,34 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """This module handles the set-up of initial positions and a box.
 
 The initial positions can either be generated on a lattice, or it can
 be read from a file.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+create_box
+    Create a simulation box from simulation settings.
+
+create_initial_positions
+    Get initial positions based on settings. This will either be
+    read from a file or generated on a lattice.
+
+create_system
+    Set up a system from given settings. This method will probably
+    also need to set/get the initial positions and velocities for
+    the particles and set up the simulation box.
+
+create_velocities
+    Create velocities from settings for a system with particles.
+
+initial_positions_file
+    Get initial positions from a file.
+
+initial_positions_lattice
+    Get initial positions by generating a lattice.
 """
 import logging
 import os
@@ -52,7 +78,7 @@ PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
                   'Th': 232.0377, 'Pa': 231.03588, 'U': 238.02891}
 
 
-# variable that defines some information for reading input files:
+# Variable that defines some information for reading input files:
 # TODO: Move this to the place where the file readers are defined?
 READFILE = {'xyz': {'reader': read_xyz_file,
                     'units': {'length': 'A', 'velocity': 'A/fs'}},
@@ -61,9 +87,9 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 
 
 def list_get(input_list, index):
-    """Function to get an item from a list that handles out-of bounds errors.
+    """Method to get an item from a list that handles out-of bounds errors.
 
-    This function is intended to be used when we are picking items from
+    This method is intended to be used when we are picking items from
     a list and possibly we want a number of items which is larger than
     the number of items in the list. Here, we then just return the last
     element.
@@ -82,7 +108,7 @@ def list_get(input_list, index):
 
 
 def _guess_particle_mass(particle_no, particle_type, unit):
-    """Function that will try to guess a particle mass from it's type.
+    """Method that will try to guess a particle mass from it's type.
 
     Parameters
     ----------
@@ -111,10 +137,10 @@ def _guess_particle_mass(particle_no, particle_type, unit):
 
 
 def initial_positions_lattice(settings):
-    """Function to generate initial positions based on given settings.
+    """Method to generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
-    as dictated by `settings['units']`.
+    as dictated by `settings['system']['units']`.
 
     Parameters
     ----------
@@ -129,16 +155,25 @@ def initial_positions_lattice(settings):
         A size for the region we created. This can be used to create
         a box.
     """
-    pos_settings = settings['particles-position']
-    ptype = settings.get('particles-type', [0])
-    pname = settings.get('particles-name', ['Ar'])
-    pmass = settings.get('particles-mass', {})
+    pos_settings = settings['particles']['position']
+    ptype = settings['particles'].get('type', [0])
+    pname = settings['particles'].get('name', ['Ar'])
+    pmass = settings['particles'].get('mass', {})
 
     lattice_type = pos_settings['generate'].lower()
     lattice, size = generate_lattice(lattice_type, pos_settings['repeat'],
                                      lcon=pos_settings.get('lcon', None),
                                      density=pos_settings.get('density', None))
-    ndim = settings.get('dimensions', len(size))
+    ndim = settings['system'].get('dimensions', None)
+    if ndim is None:
+        ndim = len(size)
+    else:
+        if ndim != len(size):
+            msg = ['Inconsistent dimensions: settings gives {}D'.format(ndim),
+                   'Generated lattice is {}D!'.format(len(size))]
+            msgtxt = '\n'.join(msg)
+            logger.error(msgtxt)
+            raise ValueError(msgtxt)
     particles = Particles(dim=ndim)
     for i, pos in enumerate(lattice):
         particle_type = list_get(ptype, i)
@@ -149,7 +184,7 @@ def initial_positions_lattice(settings):
             particle_mass = pmass[particle_name]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['units'])
+                                                 settings['system']['units'])
         particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
@@ -162,7 +197,7 @@ def initial_positions_lattice(settings):
 
 
 def _get_snapshot_from_file(pos_settings, units):
-    """Helper function to get a snapshot from a file.
+    """Get a configuration snapshot from a file.
 
     This snapshot will be used to set up the initial configuration.
 
@@ -221,7 +256,7 @@ def _get_snapshot_from_file(pos_settings, units):
 
 
 def initial_positions_file(settings):
-    """Function to get initial positions from an input file.
+    """Method to get initial positions from an input file.
 
     Parameters
     ----------
@@ -238,14 +273,14 @@ def initial_positions_file(settings):
     vel_read : boolean
         True if we read velocities from the input file.
     """
-    ndim = settings.get('dimensions', 3)
-    pos_settings = settings['particles-position']
-    ptype = settings.get('particles-type', None)
-    pname = settings.get('particles-name', None)
-    pmass = settings.get('particles-mass', {})
+    ndim = settings['system'].get('dimensions', 3)
+    pos_settings = settings['particles']['position']
+    ptype = settings['particles'].get('type', None)
+    pname = settings['particles'].get('name', None)
+    pmass = settings['particles'].get('mass', {})
     ptypes = {}  # To automatically set particle types based on name.
     snapshot, convert = _get_snapshot_from_file(pos_settings,
-                                                settings['units'])
+                                                settings['system']['units'])
     vel_read = False
     particles = Particles(dim=ndim)
     for i, atomname in enumerate(snapshot['atomname']):
@@ -262,7 +297,7 @@ def initial_positions_file(settings):
         else:
             vel = np.array(vel) * convert['velocity']
             vel_read = True
-        # Get particle type from the atom names or for input list:
+        # Get particle type from the atom names or from input list:
         if ptype is None:
             if atomname not in ptypes:
                 ptypes[atomname] = len(ptypes)
@@ -273,14 +308,13 @@ def initial_positions_file(settings):
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        #particle_name = particle_name.lower()
-        # infer mass from the input masses, or try to get it
-        # from the periodic table
+        # Infer mass from the input masses, or try to get it
+        # from the periodic table:
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
             particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['units'])
+                                                 settings['system']['units'])
         particles.add_particle(pos,
                                vel, np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
@@ -298,8 +332,8 @@ def initial_positions_file(settings):
 def create_initial_positions(settings):
     """Set up the initial positions from the given settings.
 
-    The settings can specify the initial positions as a file, as a
-    string or to be generated on a lattice.
+    The settings can specify the initial positions as a file or
+    to be generated on a lattice by pyretis.
 
     Parameters
     ----------
@@ -318,31 +352,32 @@ def create_initial_positions(settings):
         zeros. This is only True if we have read from a file with
         velocities.
     """
-    msg = 'Settings used for initial potisions:\n{}'
-    debugtxt = msg.format(settings['particles-position'])
-    #logger.info('Creating initial positions:')
+    msg = 'Settings used for initial positions: {}'
+    debugtxt = msg.format(settings['particles']['position'])
     logger.debug(debugtxt)
     particles = None
-    if 'generate' in settings['particles-position']:
+    if 'generate' in settings['particles']['position']:
         particles, size = initial_positions_lattice(settings)
         return particles, size, False
-    elif 'file' in settings['particles-position']:
+    elif 'file' in settings['particles']['position']:
         # First check if we need to add a path to the file:
-        filename = settings['particles-position']['file']
-        if not os.path.isfile(filename) and 'exe-path' in settings:
-            filename = os.path.join(settings['exe-path'], filename)
-            settings['particles-position']['file'] = filename
+        filename = settings['particles']['position']['file']
+        if (not os.path.isfile(filename) and
+                'exe-path' in settings['simulation']):
+            filename = os.path.join(settings['simulation']['exe-path'],
+                                    filename)
+            settings['particles']['position']['file'] = filename
         particles, size, vel = initial_positions_file(settings)
         return particles, size, vel
     else:
         msg = 'Unknown settings for initial positions: {}'
-        msgtxt = msg.format(settings['particles-position'])
+        msgtxt = msg.format(settings['particles']['position'])
         logger.error(msgtxt)
         raise ValueError(msgtxt)
 
 
-def create_box(settings, size):
-    """Function that will try to set up a box from settings.
+def create_box(settings, size, dim=3):
+    """Method that will try to set up a box from settings.
 
     Parameters
     ----------
@@ -351,6 +386,9 @@ def create_box(settings, size):
     size : list of floats
         If no box settings are given, we can still create a box,
         inferred from the positions of the particles.
+    dim : integer
+        Number of dimensions for the box. This is used only as a last
+        resort when no information about the box is given.
 
     Returns
     -------
@@ -365,11 +403,18 @@ def create_box(settings, size):
         debugtxt = 'Settings used:\n{}'.format(settings['box'])
         logger.debug(debugtxt)
     else:
-        box = Box(size=size)
-        msgtxt = msg.format('from initial positions', box)
-        logger.info(msgtxt)
-        msgwarn = 'The box was assumed periodic in ALL directions.'
-        logger.warning(msgwarn)
+        if size is not None:
+            box = Box(size=size)
+            msgtxt = msg.format('from initial positions', box)
+            logger.info(msgtxt)
+            msgwarn = 'The box was assumed periodic in all directions.'
+            logger.warning(msgwarn)
+        else:
+            box = Box(periodic=[False]*dim)
+            msgtxt = msg.format('without specifications', box)
+            logger.info(msgtxt)
+            msgwarn = 'The box was assumed *nonperiodic* in all directions.'
+            logger.warning(msgwarn)
     return box
 
 
@@ -392,9 +437,9 @@ def create_velocities(system, settings, vel):
     out : boolean
         True if we actually generated velocities.
     """
-    vel_settings = settings.get('particles-velocity', {})
+    vel_settings = settings['particles'].get('velocity', {})
     if vel:
-        msg = 'Velocities already set corresponds to a temperature: {}'
+        msg = 'Velocities read from file (temperature: {}).'
         msg = msg.format(system.calculate_temperature())
         logger.info(msg)
     if 'generate' in vel_settings:
@@ -402,7 +447,7 @@ def create_velocities(system, settings, vel):
             msg = 'Will overwrite velocities already set.'
             logger.warning(msg)
         gen_settings = {'distribution': vel_settings['generate']}
-        for key in ('seed', 'momentum', 'temperature'):
+        for key in ('seed', 'momentum', 'temperature', 'rgen'):
             try:
                 gen_settings[key] = vel_settings[key]
             except KeyError:
@@ -415,12 +460,24 @@ def create_velocities(system, settings, vel):
         msg = msg.format(gen_settings)
         logger.debug(msg)
         return True
+    elif 'scale' in vel_settings:
+        target = vel_settings['scale']
+        # just set the velocities to some temperature for now
+        # the scaling is done later by calling system.extra_setup()
+        gen_settings = {'distribution': 'maxwell',
+                        'momentum': system.particles.npart != 1,
+                        'temperature': settings['temperature']}
+        system.generate_velocities(**gen_settings)
+        msg = 'Scaling velocities to total energy {}'.format(target)
+        logger.debug(msg)
+        system.post_setup.append(('rescale_velocities', (target,)))
+        return True
     else:
         return False
 
 
 def create_system(settings):
-    """Function that will set up a system from settings.
+    """Method that will set up a system from settings.
 
     In order to set up the system, there are several things we might
     need to do:
@@ -442,9 +499,9 @@ def create_system(settings):
         The system object we create here.
     """
     particles, size, vel = create_initial_positions(settings)
-    box = create_box(settings, size)
-    system = System(temperature=settings.get('temperature', None),
-                    units=settings['units'], box=box)
+    box = create_box(settings, size, dim=particles.dim)
+    system = System(temperature=settings['system']['temperature'],
+                    units=settings['system']['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
     vel_gen = create_velocities(system, settings, vel)

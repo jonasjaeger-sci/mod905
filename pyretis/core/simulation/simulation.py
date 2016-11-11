@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
 """Definitions of generic simulation objects.
 
 This module defines the generic simulation object. This is the base
 class for all other simulations.
 
-Important classes and functions defined here
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Simulation: Object defining a generic simulation.
+Simulation
+    Object defining a generic simulation.
 """
 from __future__ import absolute_import
 import logging
 from .simulation_task import SimulationTask
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['Simulation']
@@ -43,21 +48,18 @@ class Simulation(object):
         This is the system the simulation will act on.
     """
 
-    def __init__(self, endcycle=0, startcycle=0):
+    def __init__(self, steps=0, startcycle=0):
         """Initialization of the simulation.
 
         Parameters
         ----------
+        steps : int, optional.
+            The number of simulation steps to perform.
         startcycle : int, optional.
             The cycle we start the simulation on, can be useful if
             restarting.
-        endcycle : int, optional.
-            This number represents the cycle number where the simulation
-            should end. It some simulations (e.g. MD) this would be the
-            number of steps to perform, in other simulations this could
-            be the minimum or maximum number of cycles to perform.
         """
-        self.cycle = {'step': startcycle, 'end': endcycle,
+        self.cycle = {'step': startcycle, 'end': startcycle + steps,
                       'start': startcycle, 'stepno': 0}
         self.task = []
         self.first_step = True
@@ -196,7 +198,7 @@ class Simulation(object):
             return True
         except AssertionError:
             msg = 'Could not add task: {}'.format(task)
-            logging.warning(msg)
+            logger.warning(msg)
             return False
 
     def run(self, output=None):

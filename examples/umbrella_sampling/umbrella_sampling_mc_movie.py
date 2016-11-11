@@ -15,12 +15,12 @@ from umbrella_sampling_mc import (trajectory, energy, umbrellas, n_umb, VPOT,
 # Create very simple animation:
 fig = plt.figure()
 axs = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
-# re-plot the potential:
-line, = axs.plot(XPOT, VPOT, lw=3, color='blue')
 # plot the line we have to cross:
 linec = axs.axvline(x=-10, lw=2, ls=':', color='black')
 # plot the umbrella region
 axv = axs.axvspan(xmin=-10, xmax=-10, color="blue", alpha=0.1)
+# re-plot the potential:
+line, = axs.plot(XPOT, VPOT, lw=3, color='blue')
 # plot the particle:
 scat = axs.scatter(-10, -10, s=150, c='green')
 
@@ -71,7 +71,8 @@ def update(frame):
                        [umpos2, 1.0], [umpos2, 0.0],
                        [umpos1, 0.0]])
     axv.set_xy(region)
-    return scat, axv, linec
+    line.set_ydata(VPOT)
+    return scat, axv, linec, line
 
 anim = animation.FuncAnimation(fig, update, np.arange(len(traj_data)),
                                init_func=init, interval=25, blit=True,

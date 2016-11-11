@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Convenience functions for pair potentials."""
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""This module defines some helper functions for pair potentials.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mixing_parameters
+    Definition of mixing rules which are used in some force fields
+    for generating cross interactions.
+
+generate_pair_interactions
+    Function to generate pair parameters from atom parameters.
+"""
 import itertools
 import logging
 import numpy as np
@@ -13,7 +25,7 @@ __all__ = ['mixing_parameters', 'generate_pair_interactions']
 def _check_pair_parameters(parameters):
     """This will just check that the required parameters are given.
 
-    If the parameters are not given, we will just set them do default
+    If the parameters are not given, we will just set them to default
     values.
 
     Parameters
@@ -27,8 +39,6 @@ def _check_pair_parameters(parameters):
     `parameters` with default values.
     """
     for pair in parameters:
-        if pair == 'mixing':
-            continue
         for key in ('epsilon', 'sigma'):
             if key not in parameters[pair]:
                 msg = '{} for {} not given. Set to 0.0'.format(key, pair)
@@ -38,26 +48,27 @@ def _check_pair_parameters(parameters):
             factor = parameters[pair].get('factor', 0.0)
             rcut = factor * parameters[pair]['sigma']
             parameters[pair]['rcut'] = rcut
-            msg = ('rcut for {} not given. Using factor to set it to:'
+            msg = ('rcut for {} not given. Using factor to set it to: '
                    '{} * {} = {}')
             msg = msg.format(pair, parameters[pair]['sigma'], factor, rcut)
-            logger.warning(msg)
+            logger.info(msg)
 
 
-def generate_pair_interactions(parameters):
+def generate_pair_interactions(parameters, mixing):
     """Function to generate pair parameters from atom parameters.
 
     The parameters are given as a dictionary where the keys are
-    either just string -- which defines atom parameters -- or tuples
+    either just integers -- which defines atom parameters -- or tuples
     which define pair interactions.
 
     Parameters
     ----------
     parameters : dict
         This dict contain the atom parameters.
+    mixing : string
+        Determines how we should mix pair interactions.
     """
     _check_pair_parameters(parameters)
-    mixing = parameters.get('mixing', None)
     atoms = []
     pair_param = {}
     for key in parameters:
@@ -110,7 +121,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \sqrt{\sigma_{i} \times \sigma_{j}}`
 
-       * :math:`r_{\text{cut},ij} = \sqrt{r_{\text{cut},i} \times r_{\text{cut},j}}`
+       * :math:`r_{\text{c},ij} = \sqrt{r_{\text{c},i} \times r_{\text{c},j}}`
 
     2. Arithmetic:
 
@@ -118,7 +129,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
 
-       * :math:`r_{\text{cut},ij} = \frac{r_{\text{cut},i} \times r_{\text{cut},j}}{2}`
+       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times r_{\text{c},j}}{2}`
 
     3. Sixthpower
 
@@ -126,7 +137,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times \sigma_{j}^6}{2} \right)^{1/6}`
 
-       * :math:`r_{\text{cut},ij} = \left(\frac{r_{\text{cut},i}^6 \times r_{\text{cut},j}^6}{2}\right)^{1/6}`
+       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times r_{\text{c},j}^6}{2}\right)^{1/6}`
 
 
     Parameters

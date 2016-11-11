@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Functions and classes for input/output of path data.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Methods and classes for input/output of path data.
 
 This module defines classes for writing path ensemble data.
 
-Important classes defined here:
+Important classes defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- PathEnsembleWriter: Writing/reading of path ensemble data.
+PathEnsembleWriter
+    Writing/reading of path ensemble data.
 
-- PathEnsembleFile : Reading of path ensemble data. Mainly used for
-  analysis.
-
+PathEnsembleFile
+    Reading of path ensemble data. Mainly used for analysis.
 """
 import logging
 # pyretis imports:
 from pyretis.core.path import PathBase
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
-
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -39,7 +41,7 @@ def _line_to_path_object(line):
 
     Note
     ----
-    TODO: This function is considered for deletion - is it going to be
+    TODO: This method is considered for deletion - is it going to be
     useful or are we always going to create path data (rather than Path
     objects) when we read files? It might be useful in the future for
     restart files.
@@ -174,10 +176,10 @@ class PathEnsembleWriter(Writer):
                         yield path_data
         except IOError as error:
             msg = 'I/O error ({}): {}'.format(error.errno, error.strerror)
-            logging.critical(msg)
+            logger.critical(msg)
         except Exception as error:
             msg = 'Error: {}'.format(error)
-            logging.critical(msg)
+            logger.critical(msg)
             raise
 
     def generate_output(self, cycle, path_ensemble, path=None):
@@ -238,7 +240,12 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
     This class is intended to mimic the `PathEnsemble` class but
     using files. It overloads the `get_paths()` from the PathEnsemble
     so that the analysis can be run on this object in the same way
-    that it is run on a `PathEnsemble` object.
+    that it is run on a `PathEnsemble` object. This object is included
+    as a convenient way of interacting with a path ensemble file
+    without having to load the entire file into memory. The
+    `PathensembleWriter` does not include a reference to a file name
+    but we do that in this class. We can then use the `load()` function
+    to iterate over paths in the file.
 
     Attributes
     ----------

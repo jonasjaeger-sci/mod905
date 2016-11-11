@@ -11,11 +11,11 @@ List of submodules
 
 * :ref:`pyretis.inout.settings.common <api-inout-settings-common>`
 * :ref:`pyretis.inout.settings.createforcefield <api-inout-settings-createforcefield>`
-* :ref:`pyretis.inout.settings.createorderparameter <api-inout-settings-createorderparameter>`
 * :ref:`pyretis.inout.settings.createoutput <api-inout-settings-createoutput>`
 * :ref:`pyretis.inout.settings.createsimulation <api-inout-settings-createsimulation>`
 * :ref:`pyretis.inout.settings.createsystem <api-inout-settings-createsystem>`
 * :ref:`pyretis.inout.settings.settings <api-inout-settings-settings>`
+
 
 .. _api-inout-settings-common:
 
@@ -27,15 +27,6 @@ pyretis.inout.settings.common module
     :undoc-members:
     :show-inheritance:
 
-.. _api-inout-settings-createorderparameter:
-
-pyretis.inout.settings.createorderparameter module
---------------------------------------------------
-
-.. automodule:: pyretis.inout.settings.createorderparameter
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 .. _api-inout-settings-createoutput:
 

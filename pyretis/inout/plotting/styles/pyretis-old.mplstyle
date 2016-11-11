@@ -1,0 +1,51 @@
+# This is the pyretis mpl style for older version of matplotlib < 1.5
+
+axes.edgecolor: 262626
+axes.labelcolor: 262626
+axes.labelsize: medium
+axes.titlesize: x-small
+axes.grid: False
+axes.formatter.limits: -4, 4
+axes.color_cycle: 4C72B0, 55A868, C44E52, 8172B2, CCB974, 64B5CD
+
+figure.subplot.left: 0.15
+figure.subplot.right: 0.95
+figure.subplot.bottom: 0.15
+figure.subplot.top: 0.93
+
+font.family: serif
+font.serif: Times
+font.size: 20
+
+grid.color: 262626
+grid.linestyle: :
+
+legend.numpoints: 1
+legend.scatterpoints: 1
+legend.handlelength: 1.5
+legend.handleheight: 0.5
+legend.fontsize: x-small
+
+lines.linewidth: 2
+lines.color: 262626
+
+patch.linewidth: 1.0
+patch.facecolor: 4C72B0
+patch.edgecolor: 262626
+patch.antialiased: True
+
+savefig.directory: None
+savefig.format: pdf
+
+text.color: 262626
+text.usetex: True
+
+xtick.major.pad: 6
+xtick.color: 262626
+xtick.labelsize: medium
+
+ytick.major.pad: 6
+ytick.color: 262626
+ytick.labelsize: medium
+
+image.cmap: copper

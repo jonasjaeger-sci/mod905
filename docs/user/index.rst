@@ -4,19 +4,16 @@
 User Guide
 ##########
 
-.. htmlonly::
-
-    :Release: |version|
-    :Date: |today|
-
 .. toctree::
     :maxdepth: 2
 
     intro.rst
+    install.rst
     getting-started.rst
     input.rst
+    application.rst
     units.rst
     intro-api.rst
-    Reference list for keywords <keywords/keywords.rst>
+    Input reference for sections <section/sections.rst>
     errors.rst
 
