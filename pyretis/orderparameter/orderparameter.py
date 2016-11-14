@@ -19,44 +19,15 @@ OrderParameterPosition
 
 OrderParameterDistance
     A class for a particle-particle distance order parameter.
-
-Important methods defined here
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-order_factory
-    A method to create order parameters from settings.
 """
 import logging
 import numpy as np
-from pyretis.core.common import generic_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['OrderParameter', 'OrderParameterPosition',
-           'order_factory']
-
-
-def order_factory(settings):
-    """Create order parameters according to the given settings.
-
-    This function is included as a convenient way of setting up and
-    selecting the order parameter.
-
-    Parameters
-    ----------
-    settings : dict
-        This defines how we set up and select the order parameter.
-
-    Returns
-    -------
-    out : object like `OrderParameter`.
-        An object representing the orderparameter.
-    """
-    factory_map = {'orderparameter': {'cls': OrderParameter},
-                   'orderparameterposition': {'cls': OrderParameterPosition},
-                   'orderparameterdistance': {'cls': OrderParameterDistance}}
-    return generic_factory(settings, factory_map, name='orderparameter')
+           'OrderParameterDistance']
 
 
 class OrderParameter(object):

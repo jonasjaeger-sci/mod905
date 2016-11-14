@@ -39,10 +39,16 @@ core
     etc.
 forcefield
     This package define force fields and potentials functions.
+integrators
+    A package defining integrators which can be used to
+    evolve the dynamics/solve Newton's equations of motion.
 inout
     This package defines the input output operations for pyretis.
     This includes generating output from the analysis and reading
     input-files etc.
+orderparameter
+    Definition of classes for order parameters. Defines the base class
+    for order parameters.
 tools
     This package defines some functions which can be useful for
     setting up simple systems, for example functions for generating
@@ -51,10 +57,14 @@ tools
 from __future__ import absolute_import
 # pyretis imports:
 from . import core
+from . import integrators
+from . import orderparameter
 from . import forcefield
 from . import analysis
 from . import tools
 from .version import version as __version__
+
+
 __program_name__ = 'pyretis'
 __url__ = 'http://www.pyretis.org'
 __git_url__ = 'https://gitlab.com/andersle/pyretis'

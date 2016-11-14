@@ -5,7 +5,7 @@
 """
 import logging
 import numpy as np
-from pyretis.core.orderparameter import OrderParameter
+from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

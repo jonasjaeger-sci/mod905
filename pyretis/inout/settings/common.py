@@ -31,8 +31,8 @@ import imp
 import logging
 import os
 from pyretis.core.common import initiate_instance
-from pyretis.core.integrators import integrator_factory
-from pyretis.core.orderparameter import order_factory
+from pyretis.integrators import integrator_factory
+from pyretis.orderparameter import order_factory
 from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -226,7 +226,7 @@ def create_orderparameter(settings):
 
     Returns
     -------
-    out : object like `OrderParameter` from `pyretis.core.orderparameter`.
+    out : object like `OrderParameter` from `pyretis.orderparameter`.
         This object represents the order parameter.
     """
     return create_external(settings, 'orderparameter', order_factory,
@@ -243,7 +243,7 @@ def create_integrator(settings):
 
     Returns
     -------
-    out : object like `Integrator` from `pyretis.core.integrators`.
+    out : object like `Integrator` from `pyretis.integrators`.
         This object represents the integrator.
     """
     return create_external(settings, 'integrator', integrator_factory,

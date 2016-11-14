@@ -2,7 +2,7 @@
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the GPLV3 License. See LICENSE for more info.
 """Dummy order parameter for running tests."""
-from pyretis.core.orderparameter import OrderParameter
+from pyretis.orderparameter import OrderParameter
 
 
 __all__ = []

@@ -23,10 +23,10 @@ from pyretis.inout.settings.settings import (parse_settings_file,
                                              settings_to_text)
 from pyretis.inout.settings.createsystem import create_initial_positions
 from pyretis.core.units import create_conversion_factors, CONVERT
-from pyretis.core.integrators import Verlet, VelocityVerlet, Langevin
-from pyretis.core.orderparameter import (OrderParameter,
-                                         OrderParameterPosition,
-                                         OrderParameterDistance)
+from pyretis.integrators import Verlet, VelocityVerlet, Langevin
+from pyretis.orderparameter import (OrderParameter,
+                                    OrderParameterPosition,
+                                    OrderParameterDistance)
 from pyretis.forcefield.potentials import (PairLennardJonesCut,
                                            PairLennardJonesCutnp,
                                            DoubleWellWCA,

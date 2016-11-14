@@ -2,7 +2,7 @@
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the GPLV3 License. See LICENSE for more info.
 """Dummy integrator for tests."""
-from pyretis.core.integrators import Integrator
+from pyretis.integrators import Integrator
 
 
 __all__ = []

@@ -5,10 +5,10 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core.orderparameter import (OrderParameter,
-                                         OrderParameterPosition,
-                                         OrderParameterDistance,
-                                         order_factory)
+from pyretis.orderparameter import order_factory
+from pyretis.orderparameter.orderparameter import (OrderParameter,
+                                                   OrderParameterPosition,
+                                                   OrderParameterDistance)
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)

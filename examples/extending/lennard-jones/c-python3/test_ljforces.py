@@ -62,7 +62,7 @@ def run_calculations(system, parameters):
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
     forcefieldnp = ForceField(potential=[potentialnp],
                               params=[parameters],
-                              desc='Python (Numpy)')
+                              desc='Python (numpy)')
     system.forcefield = forcefieldnp
     print('Evaluating with: {}'.format(forcefieldnp.print_potentials()))
     vpotnp, forcesnp, virialnp = system.potential_and_force()

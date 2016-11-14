@@ -17,15 +17,8 @@ __init__.py
 box.py (:py:mod:`pyretis.core.box`)
     Definition of the simulation box class.
 
-integrators.py (:py:mod:`pyretis.core.integrators`)
-    This module defines integrators which can be used to
-    evolve the dynamics/solve Newton's equations of motion.
-
 montecarlo.py (:py:mod:`pyretis.core.montecarlo`)
     This module defines functions for performing Monte Carlo moves.
-
-orderparameter.py (:py:mod:`pyretis.core.orderparameter`)
-    Definition of classes for order parameters.
 
 particlefunctions.py (:py:mod:`pyretis.core.particlefunctions`)
     Functions that operate on (a selection of) particles, for instance
@@ -102,10 +95,6 @@ PathEnsemble (:py:class:`pyretis.core.pathensemble.PathEnsemble`)
 RandomGenerator (:py:class:`pyretis.core.random_gen.RandomGenerator`)
     A class for generating random numbers.
 
-OrderParameter (:py:class:`pyretis.core.orderparameter.OrderParameter`)
-    A general class for order parameters. Prototype for all other
-    order parameters.
-
 Simulation (:py:mod:`pyretis.core.simulation`)
     A sub-package defining the simulations. There is also a
     class named ``Simulation`` which defines a generic simulation.
@@ -118,4 +107,3 @@ from .particles import Particles
 from .path import Path
 from .pathensemble import PathEnsemble
 from .random_gen import RandomGenerator
-from .orderparameter import OrderParameter, OrderParameterPosition

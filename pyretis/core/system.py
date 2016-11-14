@@ -59,7 +59,7 @@ class System(object):
         and potential calculation.
     order_function : object like `OrderParameter` from `.orderparameter`
         Defines the an order parameter to use for the system. See
-        :py:mod:`pyretis.core.orderparameter` for the definition
+        :py:mod:`pyretis.orderparameter` for the definition
         of order parameters.
     units : string
         Units to use for the system/simulation. Should match the defined

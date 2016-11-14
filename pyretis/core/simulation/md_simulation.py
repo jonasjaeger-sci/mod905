@@ -39,7 +39,7 @@ class SimulationNVE(Simulation):
     ----------
     system : object like `System` from `pyretis.core.system`
         This is the system the simulation will act on.
-    integrator : object like `pyretis.core.integrator.Integrator`
+    integrator : object like `pyretis.integrators.Integrator`
         This integrator defines how to propagate the system in time.
         The integrator must have integrator.dynamics == 'NVE' in order
         for it to be usable in this simulation.
@@ -56,7 +56,7 @@ class SimulationNVE(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating.
-        integrator : object like `Integrator` from `pyretis.core.integrators`
+        integrator : object like `Integrator` from `pyretis.integrators`
             This is the integrator that is used to propagate the system
             in time.
         steps : int, optional.
@@ -110,7 +110,7 @@ class SimulationMDFlux(Simulation):
     ----------
     system : object like `System` from `pyretis.core.system`
         This is the system the simulation will act on.
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+    integrator : object like `Integrator` from `pyretis.integrators`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -129,7 +129,7 @@ class SimulationMDFlux(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`.
             This is the system we are investigating
-        integrator : object like `Integrator` from `pyretis.core.integrators`.
+        integrator : object like `Integrator` from `pyretis.integrators`.
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats.

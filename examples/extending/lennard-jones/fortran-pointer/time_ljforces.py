@@ -53,10 +53,9 @@ def test_function(function, system, repeat=3, number=5):
 
 
 if __name__ == '__main__':
-    parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                  'mixing': 'geometric'}
+    parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     # set up potentials:
-    potential = PairLennardJonesCutFp(dim=3, shift=True)
+    potential = PairLennardJonesCutFp(dim=3, shift=True, mixing='geometric')
     potential.set_parameters(parameters)
 
     results = []

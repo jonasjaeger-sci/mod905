@@ -9,7 +9,7 @@ Newtons equations of motion in time, the dynamics in molecular dynamics.
 from __future__ import absolute_import
 import logging
 import numpy as np
-from pyretis.core.integrators import Integrator
+from pyretis.integrators import Integrator
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

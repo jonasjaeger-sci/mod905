@@ -15,24 +15,30 @@ from pyretis.inout.settings import (create_system, create_simulation,
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
-settings = {'task': 'md-nve',
-            'units': 'lj',
-            'integrator': {'class': 'VelocityVerletF', 'args': [0.002],
-                           'module': 'vvintegratorf.py'},
-            'steps': 1000,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1},
-                               'filename': 'traj.gro'}],
-            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
-                                   'seed': 0},
-            'temperature': 2.0,
-            'potentials': [{'class': 'PairLennardJonesCutnp', 'dim': 3,
-                            'shift': True}],
-            'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
-                                          'rcut': 2.5}}],
-            'particles-position': {'generate': 'fcc', 'repeat': [3, 3, 3],
-                                   'density': 0.9}}
-
-create_conversion_factors(settings['units'])
+settings = {}
+settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
+settings['system'] = {'units': 'lj', 'temperature': 2.0,
+                      'dimensions': 3}
+settings['integrator'] = {'class': 'VelocityVerletF',
+                          'delta_t': 0.002,
+                          'module': 'vvintegratorf.py'}
+settings['output'] = {'backup': False,
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 1}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp', 'dim': 3,
+                          'shift': True,
+                          'parameter': {0: {'sigma': 1,
+                                            'epsilon': 1,
+                                            'factor': 2.5}}}]
+settings['particles'] = {'position': {'generate': 'fcc',
+                                      'repeat': [3, 3, 3],
+                                      'density': 0.9},
+                         'velocity': {'generate': 'maxwell',
+                                      'momentum': True,
+                                      'seed': 0}}
+create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)

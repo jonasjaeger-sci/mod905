@@ -68,7 +68,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         Keys are the pairs (particle types) that may interact.
     """
 
-    def __init__(self, dim=3, shift=True,
+    def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential (fortran)'):
         """Initiate the Lennard-Jones potential.
 
@@ -78,8 +78,11 @@ class PairLennardJonesCutF(PairLennardJonesCut):
             The dimensionality to use.
         shift : boolean
             Determines if the potential should be shifted or not.
+        mixing : string
+            Determines how we should mix potential parameters.
         """
-        super(PairLennardJonesCutF, self).__init__(dim=dim, desc=desc)
+        super(PairLennardJonesCutF, self).__init__(dim=dim, desc=desc,
+                                                   mixing=mixing)
         self.ntype = 0
 
     def set_parameters(self, parameters):
@@ -94,7 +97,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
             The input base parameters
         """
         self.params = {}
-        pair_param = generate_pair_interactions(parameters)
+        pair_param = generate_pair_interactions(parameters, self.mixing)
         self.ntype = max(int(np.sqrt(len(pair_param))), 2)
         self._lj1 = np.zeros((self.ntype, self.ntype))
         self._lj2 = np.zeros_like(self._lj1)

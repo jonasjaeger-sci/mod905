@@ -12,7 +12,7 @@ import numpy as np
 from pyretis.core.simulation import Simulation
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
-from pyretis.core.integrators import VelocityVerlet
+from pyretis.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.core.particlefunctions import calculate_thermo
 from ljpotentialf import PairLennardJonesCutF
@@ -25,11 +25,10 @@ def set_up_simulation():
     box = Box(size)
     ljsystem = System(box=box, units='lj')
 
-    ljpot = PairLennardJonesCutF(shift=True)
+    ljpot = PairLennardJonesCutF(shift=True, mixing='geometric')
     lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                      1: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
-                     2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
-                     'mixing': 'geometric'}
+                     2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5}}
     forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
     ljsystem.forcefield = forcefield
     # read initial position and velocity:

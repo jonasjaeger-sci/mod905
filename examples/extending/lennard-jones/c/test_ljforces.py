@@ -62,7 +62,7 @@ def run_calculations(system, parameters):
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
     forcefieldnp = ForceField(potential=[potentialnp],
                               params=[parameters],
-                              desc='Python (Numpy)')
+                              desc='Python (numpy)')
     system.forcefield = forcefieldnp
     print('Evaluating with: {}'.format(forcefieldnp.print_potentials()))
     vpotnp, forcesnp, virialnp = system.potential_and_force()
@@ -104,8 +104,7 @@ class LennardJonesTest(unittest.TestCase):
         print('\nTesting for a two-component mixture')
         system = set_up_initial_state()
         param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5},
-                 'mixing': 'geometric'}
+                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5}}
         idx = [i for i in range(system.particles.npart)]
         idx2 = np.random.choice(idx, size=int(system.particles.npart * 0.5),
                                 replace=False)
@@ -133,11 +132,10 @@ class LennardJonesTest(unittest.TestCase):
 
     def test_lj_multi_mix(self):
         """Test for multi-mixture."""
-        ncomp = np.random.random_integers(3, high=10)
+        ncomp = np.random.randint(3, 11)
         print('\nTesting for a {}-component mixture'.format(ncomp))
         system = set_up_initial_state()
-        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 'mixing': 'geometric'}
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
         maxcut = 0.5 * min(system.box.length)
         self.assertGreaterEqual(maxcut, param[0]['rcut'])
 

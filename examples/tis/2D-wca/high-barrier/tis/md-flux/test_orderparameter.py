@@ -17,7 +17,7 @@ import numpy as np
 from pyretis.core import Particles, Box, System
 from pyretis.core.units import create_conversion_factors
 from wcafunctions import WCAOrderParameter
-from pyretis.core.orderparameter import OrderParameterDistance
+from pyretis.orderparameter import OrderParameterDistance
 
 
 class WCAOrderTest(unittest.TestCase):

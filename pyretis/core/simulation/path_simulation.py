@@ -37,7 +37,7 @@ class SimulationSingleTIS(Simulation):
 
     Attributes
     ----------
-    integrator : object like `Integrator` from `pyretis.core.integrators`
+    integrator : object like `Integrator` from `pyretis.integrators`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -62,7 +62,7 @@ class SimulationSingleTIS(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating.
-        integrator : object like `Integrator` from `pyretis.core.integrators`
+        integrator : object like `Integrator` from `pyretis.integrators`
             This is the integrator that is used to propagate the system
             in time.
         path_ensemble : object like `PathEnsemble` from `pyretis.core.path`.
@@ -175,7 +175,7 @@ class SimulationRETIS(Simulation):
         ----------
         system : object like `System` from `pyretis.core.system`
             This is the system we are investigating.
-        integrator : object like `Integrator` from `pyretis.core.integrators`
+        integrator : object like `Integrator` from `pyretis.integrators`
             This is the integrator that is used to propagate the system
             in time.
         path_ensembles : list of objects like `PathEnsemble`.
