@@ -84,9 +84,9 @@ Combined results
 The overall matched probability is shown in the left figure below
 and the indivitual matched probabilities are shown in the right figure:
 
-.. image:: @{{ figures['matched']}}@
-   :width: 45%
 .. image:: @{{ figures['total'] }}@
+   :width: 45%
+.. image:: @{{ figures['matched']}}@
    :width: 45%
 
 The overall crossing probability is:
