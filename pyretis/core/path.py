@@ -23,6 +23,7 @@ paste_paths
     Function for joining two paths, one is in a backward time
     direction and the other is in the forward time direction.
 """
+from abc import ABCMeta, abstractmethod
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -215,6 +216,8 @@ class PathBase(object):
         in the variable `_STATUS`
     """
 
+    __metaclass__ = ABCMeta
+
     def __init__(self, rgen, maxlen=None, time_origin=0):
         """Initialize the Path object.
 
@@ -388,6 +391,7 @@ class PathBase(object):
             logger.debug('Undefined starting point.')
         return start
 
+    @abstractmethod
     def get_shooting_point(self):
         """Return a shooting point from the path.
 
@@ -404,8 +408,9 @@ class PathBase(object):
         idx : int
             The shooting point index.
         """
-        raise NotImplementedError
+        return
 
+    @abstractmethod
     def trajectory(self, reverse=False):
         """Iterate over the phase-space points in the path.
 
@@ -419,8 +424,9 @@ class PathBase(object):
         out : tuple
             The phase-space points in the path.
         """
-        raise NotImplementedError
+        return
 
+    @abstractmethod
     def phasepoint(self, idx):
         """Return a specific phase point.
 
@@ -434,8 +440,9 @@ class PathBase(object):
         out : tuple
             A phase-space point in the path.
         """
-        raise NotImplementedError
+        return
 
+    @abstractmethod
     def append(self, orderp, pos, vel, energy):
         """Append a new phase point to the path.
 
@@ -454,7 +461,7 @@ class PathBase(object):
         energy : dict
             A dict with energy terms for the phase point.
         """
-        raise NotImplementedError
+        return
 
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
@@ -581,6 +588,7 @@ class PathBase(object):
             msg += ['Generated: {}'.format(_GENERATED[self.generated[0]])]
         return '\n'.join(msg)
 
+    @abstractmethod
     def empty_path(self, **kwargs):
         """Return an empty path of same class as the current one.
 
@@ -594,7 +602,7 @@ class PathBase(object):
         out : object like `PathBase`.
             A new empty path.
         """
-        raise NotImplementedError
+        return
 
 
 class Path(PathBase):
@@ -912,3 +920,131 @@ class ReservoirPath(PathBase):
             idx = self.length - 1 - point[0]
             path.reservoir.append((idx, np.copy(point[1]), np.copy(point[2])))
         return path
+
+
+class PathExternal(PathBase):
+    """PathExternal(PathBase) - representation of paths.
+
+    This class represents a path, however in this case we do not load all
+    positions and velocities into the path object. We only store the order
+    parameters and possibly energies while the positions and velocities
+    are to be loaded from files.
+    """
+
+    def __init__(self, rgen, maxlen=None, time_origin=0):
+        """Initialize the Path object.
+
+        Parameters
+        ----------
+        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+            This is the random generator that will be used.
+        maxlen : int, optional
+            This is the max-length of the path. The default value,
+            None, is just a path of arbitrary length.
+        time_origin : int, optional
+            This can be used to store the shooting point of a parent
+            trajectory.
+        """
+        super(PathExternal, self).__init__(rgen, maxlen=maxlen,
+                                           time_origin=time_origin)
+
+    def trajectory(self, reverse=False):
+        """Iterate over the phase-space points in the path.
+
+        Parameters
+        ----------
+        reverse : boolean
+            If this is True, we iterate in the reverse direction.
+
+        Yields
+        ------
+        out : tuple
+            The phase-space points in the path.
+        """
+        if reverse:
+            for i in range(self.length - 1, -1, -1):
+                yield (self.order[i], None, None, self.energy[i])
+        else:
+            for i in range(self.length):
+                yield (self.order[i], None, None, self.energy[i])
+
+    def phasepoint(self, idx):
+        """Return a specific phase point.
+
+        Parameters
+        ----------
+        idx : int
+            Index for phase-space point to return.
+
+        Returns
+        -------
+        out : tuple
+            A phase-space point in the path.
+        """
+        return (self.order[idx], self.traj[idx][0], self.traj[idx][1],
+                self.energy[idx])
+
+    def append(self, orderp, pos, vel, energy):
+        """Append a new phase point to the path.
+
+        We will here append a new phase-space point to the path.
+        The phase point is assumed to be given by positions and
+        velocities with a corresponding order parameter and energy.
+
+        Parameters
+        ----------
+        orderp : list of floats
+            This variable is the order parameter for the given point.
+            `orderp[0]` is the actual order parameter used in path
+            sampling methods while `orderp[1:]` can represent other
+            order parameters for instance is `orderp[1]` typically the
+            velocity of `orderp[0]`.
+        pos : numpy.array
+            The positions of the particles,
+        vel: numpy.array
+            The velocities of the particles.
+        energy : dict
+            A dict with energy terms for the phase point.
+        """
+        if self.maxlen is None or self.length < self.maxlen:
+            self.order.append(orderp)
+            self._update_orderp(orderp[0], self.length)
+            self.energy.append(energy)
+            self.traj.append([np.copy(pos), np.copy(vel)])
+            self.length += 1
+            return True
+        else:
+            msg = 'Max length exceeded! Could not append to path!'
+            logger.debug(msg)
+            return False
+
+    def get_shooting_point(self):
+        """Return a shooting point from the path.
+
+        This will simply draw a shooting point from the path at
+        random. All points can be selected with equal probability with
+        the exception of the end points which are not considered.
+
+        Returns
+        -------
+        phasepoint : tuple
+            `phasepoint[0]` is the order parameter (as a tuple) and the
+            two next items are the positions and velocities.
+        idx : int
+            The shooting point index.
+        """
+        idx = self.rgen.random_integers(1, self.length - 2)
+        return self.order[idx], self.traj[idx][0], self.traj[idx][1], idx
+
+    def empty_path(self, **kwargs):
+        """Return an empty path of same class as the current one.
+
+        Returns
+        -------
+        out : object like `PathBase`.
+            A new empty path.
+        """
+        maxlen = kwargs.get('maxlen', self.maxlen)
+        time_origin = kwargs.get('time_origin', self.time_origin)
+        return self.__class__(self.rgen, maxlen=maxlen,
+                              time_origin=time_origin)
