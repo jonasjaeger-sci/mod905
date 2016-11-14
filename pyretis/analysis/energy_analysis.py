@@ -50,7 +50,7 @@ def analyse_energies(energies, settings):
     alp = (0.5 * settings['particles']['npart'] *
            settings['system']['dimensions'])
     scale = {'ekin': 1.0 / settings['system']['beta'],
-             'temp': settings['sytem']['temperature'] / alp}
+             'temp': settings['system']['temperature'] / alp}
     for key in scale:
         if key in results:
             dist = results[key]['distribution']

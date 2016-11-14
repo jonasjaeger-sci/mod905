@@ -253,13 +253,14 @@ def analyse_data(data, settings):
         This dict contains the results.
     """
     result = {}
+    asett = settings['analysis']
     # 1) Do the running average
     result['running'] = running_average(data)
     # 2) Obtain distributions:
-    result['distribution'] = histogram_and_avg(data, settings['bins'],
+    result['distribution'] = histogram_and_avg(data, asett['bins'],
                                                density=True)
     # 3) Do the block error analysis:
     result['blockerror'] = block_error_corr(data,
-                                            maxblock=settings['maxblock'],
-                                            blockskip=settings['blockskip'])
+                                            maxblock=asett['maxblock'],
+                                            blockskip=asett['blockskip'])
     return result

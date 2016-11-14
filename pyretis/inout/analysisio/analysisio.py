@@ -53,6 +53,7 @@ _ANALYSIS_FUNCTIONS = {'cross': analyse_flux,
                        'energy': analyse_energies,
                        'pathensemble': analyse_path_ensemble}
 
+
 # Input files for analysis
 FILES = {'md-flux': {'cross': 'cross.dat',
                      'energy': 'energy.dat',
@@ -77,6 +78,9 @@ def run_analysis(settings):
         A dictionary with the results from the analysis. This dict
         can be used to generate a report.
     """
+    runners = {'retis': run_retis_analysis,
+               'tis': run_tis_analysis,
+               'md-flux': run_mdflux_analysis}
     sim = settings['simulation']
     sim_task = sim['task']
     report_dir = settings['analysis'].get('report-dir', None)
@@ -86,11 +90,13 @@ def run_analysis(settings):
     txt_plotter = TxtPlotter(settings['analysis']['txt-output'],
                              backup=backup,
                              out_dir=report_dir)
-    if sim_task in set(('retis', 'tis')):
-        if sim_task == 'tis':
-            return run_tis_analysis(settings, plotter, txt_plotter)
-        elif sim_task == 'retis':
-            return run_retis_analysis(settings, plotter, txt_plotter)
+    if sim_task in runners.keys():
+        runner = runners[sim_task]
+        return runner(settings, plotter, txt_plotter)
+    else:
+        msgtxt = 'Unknown analysis task "{}" requested!'.format(sim_task)
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
 
 
 def get_path_ensemble_files(ensemble, settings, detect,
@@ -228,8 +234,7 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
     print_to_screen(msgtxt)
     print_to_screen()
     result = run_analysis_files(sett, files, plotter, txt_plotter)
-    report_txt = generate_report('tis-single', result,
-                                 output='txt')[0]
+    report_txt = generate_report('tis-single', result, output='txt')[0]
     print_to_screen(''.join(report_txt))
     print_to_screen()
     return result
@@ -358,6 +363,40 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     return results
 
 
+def run_mdflux_analysis(settings, plotter, txt_plotter):
+    """Run the analysis for the md flux simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to use for an analysis/simulation.
+    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the plotting.
+    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+        This is the object that handles the text output.
+
+    Returns
+    -------
+    out : list or dict or similar
+        The output from the analysis.
+    """
+    sim = settings['simulation']
+    sim_task = sim['task']
+    files = []
+    for file_type in FILES[sim_task]:
+        filename = FILES[sim_task][file_type]
+        if os.path.isfile(filename):
+            files.append((file_type, filename))
+    msgtxt = 'Running analysis of a MD flux simulation...'
+    print_to_screen(msgtxt)
+    print_to_screen()
+    result = run_analysis_files(settings, files, plotter, txt_plotter)
+    report_txt = generate_report('md-flux', result, output='txt')[0]
+    print_to_screen(''.join(report_txt))
+    print_to_screen()
+    return result
+
+
 def run_analysis_files(settings, files, plotter, txt_plotter):
     """Run the analysis on a collection of files.
 
@@ -444,7 +483,7 @@ def output_results(file_type, plotter, result, rawdata):
     """
     if file_type == 'cross':
         return plotter.output_flux(result)
-    elif file_type == 'orderp':
+    elif file_type == 'order':
         return plotter.output_orderp(result, rawdata)
     elif file_type == 'energy':
         return plotter.output_energy(result, rawdata)
