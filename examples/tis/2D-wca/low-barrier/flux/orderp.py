@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class OrderParameterDist(OrderParameter):
-    """OrderParameterDist(OrderParameter).
+class OrderParameterWCAJCP1(OrderParameter):
+    """OrderParameterWCAJCP1(OrderParameter).
 
     This class defines a very simple order parameter which is just
     the scalar distance between two particles.
@@ -30,7 +30,7 @@ class OrderParameterDist(OrderParameter):
     """
 
     def __init__(self, name, index, periodic=True):
-        """Initialize `OrderParameterDist`.
+        """Initialize the order parameter.
 
         Parameters
         ----------
@@ -46,7 +46,7 @@ class OrderParameterDist(OrderParameter):
         description = '{} distance particles {} and {}'.format(pbc,
                                                                index[0],
                                                                index[1])
-        super(OrderParameterDist, self).__init__(name, desc=description)
+        super(OrderParameterWCAJCP1, self).__init__(name, desc=description)
         self.periodic = periodic
         self.index = index
 
@@ -73,7 +73,33 @@ class OrderParameterDist(OrderParameter):
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
         if self.periodic:
             delta = system.box.pbc_dist_coordinate(delta)
-        return np.sqrt(np.dot(delta, delta))
+        r = np.sqrt(np.dot(delta, delta))
+        dx = delta
+        dv = particles.vel[self.index[1]] - particles.vel[self.index[0]]
+        dxdv = np.dot(dx, dv) / r
+        m1 = particles.mass[self.index[0]]
+        m2 = particles.mass[self.index[1]]
+        m = m1 * m2 / (m1 + m2)
+        potential_func = None
+        for potential in system.forcefield.potential:
+            if potential.__class__.__name__ == 'DoubleWellWCA':
+                potential_func = potential
+                break
+        if potential_func is None:
+            return r
+        if r < 1.2:
+            E = potential_func.potential(system) + 0.5 * m * (dxdv)**2
+            orderp = 1.19
+            if E < 1.5:
+                orderp = 1.18 - (1.5 - E) / 0.5 * 0.02
+        elif r > 1.42:
+            E = potential_func.potential(system) + 0.5 * m * (dxdv)**2
+            orderp = 1.43
+            if E < 5.0:
+                orderp = 1.44 + (5.0 - E) / 0.5 * 0.02
+        else:
+            orderp = r
+        return float(orderp)
 
     def calculate_velocity(self, system):
         """Calculate the time derivative of the order parameter.

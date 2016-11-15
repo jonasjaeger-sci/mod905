@@ -3,8 +3,8 @@ MD flux simulation
 
 units = lj
 task = md-flux
-steps = 100000
-interfaces = [1.24]
+steps = 10000000
+interfaces = [1.34]
 
 integrator = {'class': 'velocityverlet', 'timestep': 0.002}
 
@@ -28,7 +28,8 @@ particles-mass = {'A': 1.0, 'B': 1.0}
 Force field settings
 --------------------
 
-forcefield = {'desc': '2D double well + wca'}
+forcefield = {'desc': '2D double well + WCA'}
+
 potentials = [{'class': 'PairLennardJonesCutnp', 'shift': True, 'dim': 2},
               {'class': 'DoubleWellWCA', 'dim': 2}]
 
@@ -40,8 +41,8 @@ potential-parameters = [{'mixing': 'geometric',
 Order parameter
 ---------------
 
-orderparameter = {'class': 'OrderParameterDist',
-                  'args': ['Position', (7,8)],
+orderparameter = {'class': 'OrderParameterWCAJCP1',
+                  'args': ['Distance', (7,8)],
                   'kwargs': {'periodic': True},
                   'module': 'orderp.py'}
 
