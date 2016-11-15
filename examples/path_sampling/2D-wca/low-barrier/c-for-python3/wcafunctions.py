@@ -4,9 +4,13 @@ import logging
 import numpy as np
 # pyretis imports
 from pyretis.forcefield import PotentialFunction
-from pyretis.core import OrderParameter
+from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+# Just to handle imports of the library:
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     import wcaforces
 except ImportError:
@@ -14,16 +18,9 @@ except ImportError:
            '\nPlease compile with: "python setup.py build_ext --inplace"')
     logger.critical(MSG)
     raise ImportError(MSG)
-try:
-    import wcalambda
-except ImportError:
-    MSG = ('Could not import external C library for order parameter.'
-           '\nPlease compile with "python setup.py build_ext --inplace"!')
-    logger.critical(MSG)
-    raise ImportError(MSG)
 
 
-__all__ = ['WCAPotential', 'WCAOrderParameter']
+__all__ = ['WCAPotential']
 
 
 class WCAPotential(PotentialFunction):
@@ -237,146 +234,3 @@ class WCAPotential(PotentialFunction):
                                          self.params['rcut2'],
                                          particles.npart, box.dim)
         return vpot, forces, virial
-
-
-class WCAOrderParameter(OrderParameter):
-    """WCAOrderParameter(OrderParamete).
-
-    This class represents the order parameter for the WCA example.
-    This is the order parameter for the high barrier case and it's
-    simply the bond length.
-
-    Attributes
-    ----------
-    index : tuple of ints
-        The index for the particles to use.
-    """
-
-    def __init__(self, index):
-        """Set up the order parameter.
-
-        Parameters
-        ----------
-        index : tuple of ints
-            The index for the particles to use.
-        """
-        super(WCAOrderParameter, self).__init__('wca high barrier',
-                                                desc='WCA order parameter')
-        self.index = index
-
-    def calculate(self, system):
-        """Calculate the order parameter and return it.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The order parameter.
-        """
-        particles = system.particles
-        lamb = wcalambda.orderp(particles.pos,
-                                system.box.length,
-                                system.box.ilength,
-                                self.index[1], self.index[0])
-        return lamb
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter.
-        """
-        particles = system.particles
-        lambv = wcalambda.orderv(particles.pos,
-                                 particles.vel,
-                                 system.box.length,
-                                 system.box.ilength,
-                                 self.index[1], self.index[0])
-        return lambv
-
-
-class WCAOrderParameterp(OrderParameter):
-    """WCAOrderParameterp(OrderParamete).
-
-    This class represents the order parameter for the WCA example.
-    This is the order parameter for the high barrier case and it's
-    simply the bond length. This is just a pure python implementation.
-
-    Attributes
-    ----------
-    index : tuple of ints
-        The index for the particles to use.
-    """
-
-    def __init__(self, index):
-        """Set up the order parameter.
-
-        Parameters
-        ----------
-        index : tuple of ints
-            The index for the particles to use.
-        """
-        super(WCAOrderParameterp, self).__init__('wca high barrier',
-                                                 desc='WCA order parameter')
-        self.index = index
-
-    def calculate(self, system):
-        """Calculate the order parameter and return it.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The order parameter.
-        """
-        particles = system.particles
-        delta = system.box.pbc_dist_coordinate(particles.pos[self.index[1]] -
-                                               particles.pos[self.index[0]])
-        return np.sqrt(np.dot(delta, delta))
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter.
-        """
-        particles = system.particles
-        delta = system.box.pbc_dist_coordinate(particles.pos[self.index[1]] -
-                                               particles.pos[self.index[0]])
-        delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
-        lamb = np.sqrt(np.dot(delta, delta))
-        return np.dot(delta, delta_v) / lamb

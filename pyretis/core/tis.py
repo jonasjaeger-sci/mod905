@@ -453,6 +453,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
         msgtxt = 'Initial path is in the wrong direction: Reversing it!'
         logger.info(msgtxt)
         initial_path = initial_path.reverse()
+        initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
     elif end == start:  # case 2
         msgtxt = ('Initial path start & end at wrong interface.' +
@@ -655,5 +656,6 @@ def _fix_path_by_tis(initial_path, system, interfaces,
             else:
                 logger.error('Unknown start condition (should be R/L')
                 raise ValueError('Unknown start condition (should be R/L)')
+    initial_path.generated = ('ki', 0, 0, 0)
     initial_path.status = 'ACC'
     return initial_path

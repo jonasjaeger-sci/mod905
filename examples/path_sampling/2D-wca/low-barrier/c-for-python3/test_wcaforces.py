@@ -37,10 +37,9 @@ def set_up_initial_state():
 
 
 def set_up_python_forcefield():
-    wca_pot = PairLennardJonesCutnp(dim=2, shift=True)
+    wca_pot = PairLennardJonesCutnp(dim=2, shift=True, mixing='geometric')
     wca_params = {0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  'mixing': 'geometric'}
+                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}}
     dwca_pot = DoubleWellWCA(dim=2)
     dwca_params = {'types': [(1, 1)],
                    'rzero': 1.0 * (2.0**(1.0/6.0)),
