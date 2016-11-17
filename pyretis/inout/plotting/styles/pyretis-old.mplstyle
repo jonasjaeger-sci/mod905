@@ -14,8 +14,7 @@ figure.subplot.bottom: 0.15
 figure.subplot.top: 0.93
 
 font.family: serif
-font.serif: Times
-font.size: 20
+font.size: 18
 
 grid.color: 262626
 grid.linestyle: :
@@ -38,7 +37,7 @@ savefig.directory: None
 savefig.format: pdf
 
 text.color: 262626
-text.usetex: True
+text.usetex: False
 
 xtick.major.pad: 6
 xtick.color: 262626
@@ -48,4 +47,4 @@ ytick.major.pad: 6
 ytick.color: 262626
 ytick.labelsize: medium
 
-image.cmap: copper
+image.cmap: Spectral
