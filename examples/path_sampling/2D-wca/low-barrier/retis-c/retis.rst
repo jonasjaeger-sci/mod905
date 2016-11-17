@@ -75,7 +75,7 @@ Orderparameter
 --------------
 
 class = OrderParameterWCAJCP1
-module = ../orderp.py
+module = ../c-for-python3/orderp.py
 name = WCAJCP1
 index = (7,8)
 periodic = True

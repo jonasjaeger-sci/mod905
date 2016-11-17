@@ -118,7 +118,7 @@ class WCAPotential(PotentialFunction):
         self.params['offset'] = vcut
 
     def potential(self, system):
-        """Calculate the potential energy for the Lennard-Jones interaction.
+        """Calculate the potential energy for the WCA interaction.
 
         Parameters
         ----------
@@ -144,6 +144,31 @@ class WCAPotential(PotentialFunction):
                                       self.params['offset'],
                                       self.params['rcut2'],
                                       particles.npart)
+        return v_pot
+    
+    def potential_well(self, system):
+        """Calculate the potential energy for the well only.
+
+        Parameters
+        ----------
+        system : object like `System`
+            The system we are operating on.
+
+        Returns
+        -------
+        The potential energy as a float.
+        """
+        particles = system.particles
+        box = system.box
+        v_pot = wcaforces.potential2DWCA(particles.pos,
+                                         box.length,
+                                         box.ilength,
+                                         self.params['rwidth'],
+                                         self.params['width2'],
+                                         self.params['height'],
+                                         self.params['idxi'],
+                                         self.params['idxj'],
+                                         particles.npart)
         return v_pot
 
     def force(self, system):

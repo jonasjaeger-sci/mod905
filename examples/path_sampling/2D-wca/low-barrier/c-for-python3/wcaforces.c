@@ -5,12 +5,14 @@
 
 // Forward function declaration.
 static PyObject *potential2D(PyObject *self, PyObject *args); 
+static PyObject *potential2DWCA(PyObject *self, PyObject *args); 
 static PyObject *force2D(PyObject *self, PyObject *args); 
 static PyObject *force_and_pot2D(PyObject *self, PyObject *args); 
 
 // Method table:
 static PyMethodDef methods[] = {
   { "potential2D", potential2D, METH_VARARGS, "Calculate potential energy."},
+  { "potential2DWCA", potential2DWCA, METH_VARARGS, "Calculate double well potential."},
   { "force2D", force2D, METH_VARARGS, "Calculate force."},
   { "force_and_pot2D", force_and_pot2D, METH_VARARGS, "Calculate force and potential energy."},
   { NULL, NULL, 0, NULL } /* Sentinel */
@@ -87,6 +89,39 @@ static PyObject *potential2D(PyObject *self, PyObject *args) {
         }
     }
   }
+  PyObject *ret = Py_BuildValue("d", vpot);
+  return ret;
+}
+
+static PyObject *potential2DWCA(PyObject *self, PyObject *args) {
+  npy_int64 posi, posj, npart;
+  npy_float64 rwidth, width2, height;
+  PyArrayObject *p_pos, *p_box, *p_ibox; 
+  npy_float64 delr, d1, d2;
+  __m128d dr, drsq;
+
+  // Parse arguments. 
+  if (!PyArg_ParseTuple(args, "O!O!O!dddlll",
+                        &PyArray_Type, &p_pos,
+                        &PyArray_Type, &p_box,
+                        &PyArray_Type, &p_ibox,
+                        &rwidth, &width2, &height,
+                        &posi, &posj, &npart)){
+    return NULL;
+  }
+  // Get underlying arrays from numpy arrays. 
+  __m128d *pos = (__m128d*)PyArray_DATA(p_pos);
+  npy_float64 *box = (npy_float64*)PyArray_DATA(p_box);
+  npy_float64 *ibox = (npy_float64*)PyArray_DATA(p_ibox);
+  // Calculate the contribution from the bond:
+  dr =_mm_sub_pd(pos[posi], pos[posj]);
+  dr[0] = pbc_dist(dr[0], box[0], ibox[0]);
+  dr[1] = pbc_dist(dr[1], box[1], ibox[1]);
+  drsq = _mm_dp_pd(dr, dr, 0x71);
+  delr = sqrt(drsq[0]);
+  d1 = pow(delr - rwidth, 2);
+  d2 = pow(1.0 - (d1 / width2),2);
+  npy_float64 vpot = height * d2;
   PyObject *ret = Py_BuildValue("d", vpot);
   return ret;
 }

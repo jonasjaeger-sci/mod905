@@ -50,6 +50,17 @@ def set_up_python_forcefield():
     return forcefield
 
 
+def set_up_python_forcefield_well():
+    dwca_pot = DoubleWellWCA(dim=2)
+    dwca_params = {'types': [(1, 1)],
+                   'rzero': 1.0 * (2.0**(1.0/6.0)),
+                   'height': 15.0, 'width': 0.5}
+    forcefield = ForceField(potential=[dwca_pot],
+                            params=[dwca_params],
+                            desc='pyretis implementation')
+    return forcefield
+
+
 def set_up_c_forcefield():
     wca_pot_c = WCAPotential()
     wca_paramsc = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.**(1./6.),
@@ -95,6 +106,15 @@ class WCATest(unittest.TestCase):
             self.assertTrue(virialok)
             forceok = np.allclose(force_virial[i][0], force_virial[j][0])
             self.assertTrue(forceok)
+    
+    def test_wca_well(self):
+        """Test evaluation of the well only."""
+        system = set_up_initial_state()
+        forcefield_python = set_up_python_forcefield_well()
+        forcefield_c = set_up_c_forcefield()
+        vpot1 = forcefield_python.evaluate_potential(system)
+        vpot2 = forcefield_c.potential[0].potential_well(system)
+        self.assertAlmostEqual(vpot1, vpot2)
 
 
 if __name__ == '__main__':
