@@ -38,7 +38,7 @@ initial_path = kick
 Particles
 ---------
 
-position = {'file': 'initial.xyz'}
+position = {'file': '../initial.xyz'}
 
 velocity = {'scale': 25.0}
 

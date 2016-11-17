@@ -26,7 +26,7 @@ timestep = 0.002
 Particles
 ---------
 
-position = {'file': 'initial.xyz'}
+position = {'file': '../initial.xyz'}
 
 velocity = {'scale': 25.0}
 
