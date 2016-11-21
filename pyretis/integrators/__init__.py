@@ -30,6 +30,7 @@ integrator_factory
 from pyretis.core.common import generic_factory
 from .integrator import Integrator
 from .internal_integrators import Verlet, VelocityVerlet, Langevin
+from .external_integrators import ExternalScript
 
 
 def integrator_factory(settings):
