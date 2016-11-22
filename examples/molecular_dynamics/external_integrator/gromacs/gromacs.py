@@ -11,12 +11,16 @@ In order to interface an external program the following
 methods are needed:
 """
 # Just to handle imports relative to this file
+import logging
 import sys
 import os
 import subprocess
 import numpy as np
 from pyretis.integrators import ExternalScript
 from pyretis.inout.writers.traj import read_gromacs_file
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
+
 # These are for the __main__.
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import create_system
@@ -33,12 +37,21 @@ class GromacsScript(ExternalScript):
 
     Attributes
     ----------
+    exe : string
+        The command for executing GROMACS. Note that we are assuming
+        that we are using version 5 of GROMACS.
     """
 
-    def __init__(self):
-        """Initiate the script."""
-        super(GromacsScript, self).__init__('GROMASC example script')
-        self.exe = 'gmx_5.1.4'
+    def __init__(self, exe):
+        """Initiate the script.
+
+        Parameters
+        ----------
+        exe : string
+            The GROMACS executable.
+        """
+        super(GromacsScript, self).__init__('GROMASC script')
+        self.exe = exe
         self.input_path = 'ext_input'
 
         input_files = {'configuration': 'conf.gro',
@@ -69,13 +82,34 @@ class GromacsScript(ExternalScript):
         mdp = self.input_files['input']
         topol = self.input_files['topology']
         tpr = '{}.tpr'.format(deffnm)
-        cmd = '{} grompp -f {} -c {} -p {} -o {}'.format(self.exe,
-                                                         mdp,
-                                                         config,
-                                                         topol,
-                                                         tpr)
-        exe = subprocess.check_call(cmd, shell=True)
+        cmd = [self.exe, 'grompp', '-f', mdp, '-c', config,
+               '-p', topol, '-o', tpr]
+        self.execute_command(cmd)
         return tpr
+
+    def execute_command(self, cmd, inputs=None):
+        """Method that will execute a command.
+
+        We are here executing a command and then waiting until it
+        finishes.
+
+        Parameters
+        ----------
+        cmd : list of strings
+            The command to execute.
+        inputs : string
+            Possible input to give to the command.
+        """
+        if inputs is None:
+            msg = 'Executing "{}"'.format(cmd)
+            logger.info(msg)
+        else:
+            msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
+            logger.info(msg)
+        exe = subprocess.Popen(cmd, stdin=subprocess.PIPE, 
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, shell=False)
+        out = exe.communicate(input=inputs)
 
     def propagate(self):
         pass
@@ -102,11 +136,9 @@ class GromacsScript(ExternalScript):
             The name of the GROMACS check point file created.
         """
         confout = '{}.gro'.format(deffnm)
-        cmd = '{} mdrun -s {} -deffnm {}'.format(self.exe,
-                                                 tprfile,
-                                                 deffnm)
+        cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm]
         cpt_file = '{}.cpt'.format(deffnm)
-        exe = subprocess.check_call(cmd, shell=True)
+        self.execute_command(cmd)
         return cpt_file, confout
 
     def execute_mdrun_continue(self, tprfile, cptfile, deffnm):
@@ -128,11 +160,9 @@ class GromacsScript(ExternalScript):
         confout = '{}.gro'.format(deffnm)
         if os.path.isfile(confout):
             os.remove(confout)
-        cmd = '{} mdrun -s {} -cpi {} -append -deffnm {}'.format(self.exe,
-                                                                 tprfile,
-                                                                 cptfile,
-                                                                 deffnm)
-        exe = subprocess.check_call(cmd, shell=True)
+        cmd = [self.exe, 'mdrun', '-s', tprfile, '-cpi', cptfile,
+               '-append', '-deffnm', deffnm]
+        self.execute_command(cmd)
         return confout
 
     def extend_gromacs(self, tprfile, time):
@@ -153,11 +183,9 @@ class GromacsScript(ExternalScript):
         tpxout = 'ext_{}'.format(tprfile)
         if os.path.isfile(tpxout):
             os.remove(tpxout)
-        cmd = '{} convert-tpr -s {} -extend {} -o {}'.format(self.exe,
-                                                             tprfile,
-                                                             time,
-                                                             tpxout)
-        exe = subprocess.check_call(cmd, shell=True)
+        cmd = [self.exe, 'convert-tpr', '-s', tprfile,
+               '-extend', '{}'.format(time), '-o', tpxout]
+        self.execute_command(cmd)
         return tpxout
 
     def execute_until(self, initial, system, settings, orderp):
@@ -228,11 +256,11 @@ class GromacsScript(ExternalScript):
         This will only proberly work in the frames in the .trr are
         separated uniformly.
         """
-        cmd = 'echo 0 | {} trjconv -f {} -s {} -o {} -b {} -dump {}'
-        cmd = cmd.format(self.exe, trr_file, tpr_file, out_file,
-                         (idx-1) * time_step, idx*time_step)
-        exe = subprocess.check_call(cmd, shell=True)
-        return exe
+        cmd = [self.exe, 'trjconv', '-f', trr_file, '-s', tpr_file,
+               '-o', out_file, '-b', '{}'.format((idx-1) * time_step),
+               '-dump', '{}'.format(idx*time_step)]
+        self.execute_command(cmd, inputs=b'0')
+        return None
 
     def calculate_order_parameter(self, orderp, system, filename):
         """Calculate the order parameter from a given file.
@@ -251,7 +279,7 @@ class GromacsScript(ExternalScript):
         -------
         out : float
             The order parameter.
-        """ 
+        """
         snapshot = None
         for snapshot in read_gromacs_file(filename):
             pass
@@ -297,7 +325,7 @@ class GromacsScript(ExternalScript):
 
     def read_input(self):
         pass
-    
+
     def write_input(self, outputfile, nsteps, timestep):
         infile = self.input_files['input']
         with open(outputfile, 'w') as fileout:
@@ -317,24 +345,24 @@ class GromacsScript(ExternalScript):
 if __name__ == '__main__':
     # Run a test:
     settings = {}
-    
+
     settings['system'] = {'units': 'gromacs',
                           'temperature': 300,
                           'dimensions': 3}
-    
+
     settings['particles'] = {'position': {'file': 'ext_input/conf.gro'}}
-    
+
     settings['orderparameter'] = {'class': 'Position',
                                   'index': 1472,
                                   'name': 'Gromacs distance',
                                   'periodic': True,
                                   'dim': 'z'}
     create_conversion_factors(settings['system']['units'])
-    
+
     system = create_system(settings)
     orderp = create_orderparameter(settings)
 
-    gro = GromacsScript()
+    gro = GromacsScript('gmx_5.1.4')
     md_settings = {'steps': 20, 'subcycles': 5, 'timestep': 0.002}
     gro.execute_until('initial.gro', system, md_settings, orderp)
     gro.get_trr_frame('test2.trr', 'test2.tpr', 10, 0.002, 'output.gro')
