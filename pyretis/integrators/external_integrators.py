@@ -24,8 +24,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['ExternalScript']
 
 
-class ExternalScript(object):
-    """ExternalScript(object).
+class ExternalScript(metaclass=ABCMeta):
+    """ExternalScript(metaclass=ABCMeta).
 
     This class defines the interface to external programs. This
     interface will define how we interact with the external programs
@@ -38,8 +38,6 @@ class ExternalScript(object):
         script. This can for instance be what program we are
         interfacing.
     """
-
-    __metaclass__ = ABCMeta  # Python2.
 
     def __init__(self, description):
         """Initialization of the script.
@@ -57,15 +55,20 @@ class ExternalScript(object):
     def execute_external(self):
         """Execute the external software."""
         return
-    
+
     @abstractmethod
     def propagate(self):
         """Execute the external software until a condition is met."""
         return
 
     @abstractmethod
-    def read_configuration(self):
-        """Read output configuration from external software."""
+    def read_configuration(self, filename):
+        """Read output configuration from external software.
+
+        Parameters
+        ----------
+        filename : string
+            The file to open and read a configuration from."""
         return
 
     @abstractmethod
@@ -82,12 +85,14 @@ class ExternalScript(object):
     def write_input(self, outputfile, nsteps):
         """Write input file for external software.
 
+        Here we will just update the number of steps to run.
+
         Parameters
         ----------
         outputfile : string
             The path of the file to write.
         nsteps : integer
-            The number of steps to set.
+            The number of steps to set in the file.
         """
         return
 
