@@ -187,7 +187,10 @@ class GromacsScript(ExternalScript):
         cpt_file = None
         confout = None
         ext_tpr = None
-        all_order = []
+        order = self.calculate_order_parameter(orderp,
+                                               system,
+                                               initial)
+        all_order = [order]
         for i in range(settings['steps']):
             if i == 0:
                 tpr = self.execute_grompp(initial, name)
@@ -204,8 +207,35 @@ class GromacsScript(ExternalScript):
                 all_order.append(order)
         print(all_order)
 
+    def get_trr_frame(self, trr_file, tpr_file, idx, time_step, out_file):
+        """Extract a frame from a .trr file.
+
+        Parameters
+        ----------
+        trr_file : string
+            The GROMACS .trr file to open.
+        tpr_file : string
+            The GROMACS .tpr file for the system.
+        idx : integer
+            The frame number we look for.
+        time_step : float
+            The time step used in the simulation.
+        out_file : string
+            The file to dump to.
+
+        Note
+        ----
+        This will only proberly work in the frames in the .trr are
+        separated uniformly.
+        """
+        cmd = 'echo 0 | {} trjconv -f {} -s {} -o {} -b {} -dump {}'
+        cmd = cmd.format(self.exe, trr_file, tpr_file, out_file,
+                         (idx-1) * time_step, idx*time_step)
+        exe = subprocess.check_call(cmd, shell=True)
+        return exe
+
     def calculate_order_parameter(self, orderp, system, filename):
-        """Method to calculate the order parameter from a given file.
+        """Calculate the order parameter from a given file.
 
         Parameters
         ----------
@@ -305,5 +335,6 @@ if __name__ == '__main__':
     orderp = create_orderparameter(settings)
 
     gro = GromacsScript()
-    md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
+    md_settings = {'steps': 20, 'subcycles': 5, 'timestep': 0.002}
     gro.execute_until('initial.gro', system, md_settings, orderp)
+    gro.get_trr_frame('test2.trr', 'test2.tpr', 10, 0.002, 'output.gro')
