@@ -12,7 +12,7 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_force_field,
                                     create_system)
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout import create_output
+from pyretis.inout.settings import create_output
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:

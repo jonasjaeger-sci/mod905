@@ -12,26 +12,16 @@ methods are needed:
 """
 # Just to handle imports relative to this file
 import logging
-import sys
 import os
-import subprocess
 import numpy as np
 from pyretis.integrators import ExternalScript
 from pyretis.inout.writers.traj import read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
-# These are for the __main__.
-from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import create_system
-from pyretis.inout.settings import create_orderparameter
 
-# Just so that we find the files:
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
-
-class GromacsScript(ExternalScript):
-    """GromacsScript(ExternalScript).
+class GromacsExt(ExternalScript):
+    """GromacsExt(ExternalScript).
 
     This class defines the interface to GROMACS.
 
@@ -50,7 +40,7 @@ class GromacsScript(ExternalScript):
         exe : string
             The GROMACS executable.
         """
-        super(GromacsScript, self).__init__('GROMASC script')
+        super(GromacsExt, self).__init__('GROMASC script')
         self.exe = exe
         self.input_path = 'ext_input'
 
@@ -86,36 +76,6 @@ class GromacsScript(ExternalScript):
                '-p', topol, '-o', tpr]
         self.execute_command(cmd)
         return tpr
-
-    def execute_command(self, cmd, inputs=None):
-        """Method that will execute a command.
-
-        We are here executing a command and then waiting until it
-        finishes.
-
-        Parameters
-        ----------
-        cmd : list of strings
-            The command to execute.
-        inputs : string
-            Possible input to give to the command.
-        """
-        if inputs is None:
-            msg = 'Executing "{}"'.format(cmd)
-            logger.info(msg)
-        else:
-            msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
-            logger.info(msg)
-        exe = subprocess.Popen(cmd, stdin=subprocess.PIPE, 
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, shell=False)
-        out = exe.communicate(input=inputs)
-
-    def propagate(self):
-        pass
-
-    def execute_external(self):
-        pass
 
     def execute_mdrun(self, tprfile, deffnm):
         """Method to execute GROMACS.
@@ -222,10 +182,10 @@ class GromacsScript(ExternalScript):
         for i in range(settings['steps']):
             if i == 0:
                 tpr = self.execute_grompp(initial, name)
-                cpt_file, confout = gro.execute_mdrun(tpr, name)
+                cpt_file, confout = self.execute_mdrun(tpr, name)
             else:
-                ext_tpr = gro.extend_gromacs(tpr, ext_time)
-                confout = gro.execute_mdrun_continue(ext_tpr, cpt_file, name)
+                ext_tpr = self.extend_gromacs(tpr, ext_time)
+                confout = self.execute_mdrun_continue(ext_tpr, cpt_file, name)
                 # move ext_tpr to tpr so that we can extend even more:
                 os.rename(ext_tpr, tpr)
             if confout is not None:
@@ -233,7 +193,7 @@ class GromacsScript(ExternalScript):
                                                        system,
                                                        confout)
                 all_order.append(order)
-        print(all_order)
+        return all_order
 
     def get_trr_frame(self, trr_file, tpr_file, idx, time_step, out_file):
         """Extract a frame from a .trr file.
@@ -262,39 +222,8 @@ class GromacsScript(ExternalScript):
         self.execute_command(cmd, inputs=b'0')
         return None
 
-    def calculate_order_parameter(self, orderp, system, filename):
-        """Calculate the order parameter from a given file.
-
-        Parameters
-        ----------
-        orderp : object like `pyretis.orderparameter.OrderParameter`
-            The object responsible for calculating the order parameter.
-        system : object like `pyretis.core.system`
-            The object the order parameter is acting on.
-        filename : string
-            The file with the configuration for which we want to
-            calculate the order parameter.
-
-        Returns
-        -------
-        out : float
-            The order parameter.
-        """
-        snapshot = None
-        for snapshot in read_gromacs_file(filename):
-            pass
-        xyz = np.column_stack((snapshot['x'],
-                               snapshot['y'],
-                               snapshot['z']))
-        vel = np.column_stack((snapshot['vx'],
-                               snapshot['vy'],
-                               snapshot['vz']))
-        system.particles.pos = xyz
-        system.particles.vel = vel
-        return orderp.calculate(system)
-
     def read_configuration(self, filename):
-        """Method to read output from GROMACS.
+        """Method to read output from GROMACS .gro files.
 
         Parameters
         ----------
@@ -326,43 +255,18 @@ class GromacsScript(ExternalScript):
     def read_input(self):
         pass
 
-    def write_input(self, outputfile, nsteps, timestep):
-        infile = self.input_files['input']
-        with open(outputfile, 'w') as fileout:
-            with open(infile, 'r') as filein:
-                for lines in filein:
-                    if lines.startswith('nsteps') and lines.find('=') != -1:
-                        fileout.write('nsteps = {}\n'.format(nsteps))
-                    elif lines.startswith('dt') and lines.find('=') != -1:
-                        fileout.write('dt = {}\n'.format(timestep))
-                    else:
-                        fileout.write(lines)
+    def write_input(self, outputfile, nsteps):
+        #infile = self.input_files['input']
+        #with open(outputfile, 'w') as fileout:
+        #    with open(infile, 'r') as filein:
+        #        for lines in filein:
+        #            if lines.startswith('nsteps') and lines.find('=') != -1:
+        #                fileout.write('nsteps = {}\n'.format(nsteps))
+        #            elif lines.startswith('dt') and lines.find('=') != -1:
+        #                fileout.write('dt = {}\n'.format(timestep))
+        #            else:
+        #                fileout.write(lines)
+        pass
 
     def read_output(self):
         pass
-
-
-if __name__ == '__main__':
-    # Run a test:
-    settings = {}
-
-    settings['system'] = {'units': 'gromacs',
-                          'temperature': 300,
-                          'dimensions': 3}
-
-    settings['particles'] = {'position': {'file': 'ext_input/conf.gro'}}
-
-    settings['orderparameter'] = {'class': 'Position',
-                                  'index': 1472,
-                                  'name': 'Gromacs distance',
-                                  'periodic': True,
-                                  'dim': 'z'}
-    create_conversion_factors(settings['system']['units'])
-
-    system = create_system(settings)
-    orderp = create_orderparameter(settings)
-
-    gro = GromacsScript('gmx_5.1.4')
-    md_settings = {'steps': 20, 'subcycles': 5, 'timestep': 0.002}
-    gro.execute_until('initial.gro', system, md_settings, orderp)
-    gro.get_trr_frame('test2.trr', 'test2.tpr', 10, 0.002, 'output.gro')

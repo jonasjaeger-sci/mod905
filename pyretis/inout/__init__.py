@@ -64,6 +64,5 @@ create_output_task
 generate_report
     A function to generate reports from analysis output(s).
 """
-from __future__ import absolute_import
-from .report import generate_report
-from .settings import create_output
+#from __future__ import absolute_import
+#from .settings import create_output

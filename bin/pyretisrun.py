@@ -39,7 +39,7 @@ from pyretis import __url__ as URL
 from pyretis import __cite__ as CITE
 from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
-from pyretis.inout import create_output
+from pyretis.inout.settings import create_output
 from pyretis.inout.common import (check_python_version,
                                   LOG_DEBUG_FMT,
                                   LOG_FMT,

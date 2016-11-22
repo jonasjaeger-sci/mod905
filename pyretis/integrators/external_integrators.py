@@ -17,6 +17,7 @@ ExternalScript
 from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
 import logging
+import subprocess
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -52,23 +53,21 @@ class ExternalScript(metaclass=ABCMeta):
         self.description = description
 
     @abstractmethod
-    def execute_external(self):
-        """Execute the external software."""
-        return
-
-    @abstractmethod
-    def propagate(self):
-        """Execute the external software until a condition is met."""
-        return
-
-    @abstractmethod
     def read_configuration(self, filename):
         """Read output configuration from external software.
 
         Parameters
         ----------
         filename : string
-            The file to open and read a configuration from."""
+            The file to open and read a configuration from.
+
+        Returns
+        -------
+        xyz : numpy.array
+            The positions found in the given filename.
+        vel : numpy.array
+            The velocities found in the given filename.
+        """
         return
 
     @abstractmethod
@@ -100,6 +99,62 @@ class ExternalScript(metaclass=ABCMeta):
     def read_output(self):
         """Generic method for reading output from external software."""
         return
+
+    @staticmethod
+    def execute_command(cmd, inputs=None):
+        """Method that will execute a command.
+
+        We are here executing a command and then waiting until it
+        finishes.
+
+        Parameters
+        ----------
+        cmd : list of strings
+            The command to execute.
+        inputs : string
+            Possible input to give to the command.
+
+        Returns
+        -------
+        out[0] : tuple of strings
+            The output (stdout, stderr) from the command.
+        out[1] : int
+            The return code of the command.
+        """
+        if inputs is None:
+            msg = 'Executing "{}"'.format(cmd)
+            logger.info(msg)
+        else:
+            msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
+            logger.info(msg)
+        exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, shell=False)
+        out = exe.communicate(input=inputs)
+        return out, exe.returncode
+
+    def calculate_order_parameter(self, orderp, system, filename):
+        """Calculate order parameter from configuration in a file.
+
+        Parameters
+        ----------
+        orderp : object like `pyretis.orderparameter.OrderParameter`
+            The object responsible for calculating the order parameter.
+        system : object like `pyretis.core.system`
+            The object the order parameter is acting on.
+        filename : string
+            The file with the configuration for which we want to
+            calculate the order parameter.
+
+        Returns
+        -------
+        out : float
+            The calculated order parameter.
+        """
+        xyz, vel = self.read_configuration(filename)
+        system.particles.pos = xyz
+        system.particles.vel = vel
+        return orderp.calculate(system)
 
     def __str__(self):
         """Return the string description of the integrator."""
