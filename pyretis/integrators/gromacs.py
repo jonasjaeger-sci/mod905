@@ -242,7 +242,7 @@ class GromacsExt(ExternalScript):
         self.execute_command(cmd)
         return tpxout
 
-    def execute_until(self, initial, system, settings):
+    def execute_until(self, initial, system, settings, reverse=False):
         """Propagate until condition is met.
 
         Parameters
@@ -261,18 +261,24 @@ class GromacsExt(ExternalScript):
             A list containing the order parameters and the path to the
             file containing the trajectory.
         """
-        name = 'tmpf'
+        if reverse:
+            name = 'tmpb'
+            initial_conf = 'rev_{}'.format(initial)
+            self.reverse_velocities(initial, initial_conf)
+        else:
+            name = 'tmpf'
+            initial_conf = initial
         ext_time = settings['subcycles'] * settings['timestep']
         tpr = None
         cpt_file = None
         confout = None
         ext_tpr = None
         order = self.calculate_order_parameter(system,
-                                               initial)
+                                               initial_conf)
         all_order = [order]
         for i in range(settings['steps']):
             if i == 0:
-                tpr = self.execute_grompp(initial, name)
+                tpr = self.execute_grompp(initial_conf, name)
                 cpt_file, confout = self.execute_mdrun(tpr, name)
             else:
                 ext_tpr = self.extend_gromacs(tpr, ext_time)
@@ -283,7 +289,9 @@ class GromacsExt(ExternalScript):
                 order = self.calculate_order_parameter(system,
                                                        confout)
                 all_order.append(order)
-        return all_order
+        trajectory = '{}.trr'.format(name)
+        tpr = '{}.tpr'.format(name)
+        return trajectory, tpr, all_order
 
     def get_trr_frame(self, trr_file, tpr_file, idx, time_step, out_file):
         """Extract a frame from a .trr file.
@@ -331,7 +339,8 @@ class GromacsExt(ExternalScript):
         _, xyz, vel = read_gromos96_file(filename)
         return xyz, vel
 
-    def reverse_velocities(self, filename, outfile):
+    @staticmethod
+    def reverse_velocities(filename, outfile):
         """Method to reverse velocity in a given snapshot.
 
         Parameters
