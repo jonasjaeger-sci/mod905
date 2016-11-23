@@ -60,8 +60,8 @@ nstlog                   = 5
 nstcalcenergy            = 5
 nstenergy                = 5
 ; Output frequency and precision for .xtc file
-nstxout-compressed       = 5
-compressed-x-precision   = 1000000
+nstxout-compressed       = 0
+compressed-x-precision   = 1000
 ; This selects the subset of atoms for the compressed
 ; trajectory file. You can select multiple groups. By
 ; default, all atoms will be written.

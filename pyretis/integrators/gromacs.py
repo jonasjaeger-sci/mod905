@@ -335,6 +335,22 @@ class GromacsExt(ExternalScript):
         _, xyz, vel = read_gromos96_file(filename)
         return xyz, vel
 
+    def reverse_velocities(self, filename, outfile):
+        """Method to reverse velocity in a given snapshot.
+
+        Parameters
+        ----------
+        filename : string
+            The configuration to reverse velocities in.
+        outfile : string
+            The output file for storing the configuration with
+            reversed velocities.
+        """
+        txt, xyz, vel = read_gromos96_file(filename)
+        write_gromos96_file(outfile, txt, xyz, -vel)
+        return None
+        
+        
     def write_configuration(self):
         """Method to write config for GROMACS."""
         pass

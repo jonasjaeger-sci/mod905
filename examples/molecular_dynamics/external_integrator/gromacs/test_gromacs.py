@@ -37,7 +37,14 @@ if __name__ == '__main__':
     system = create_system(settings)
     orderp = create_orderparameter(settings)
 
-    gro = GromacsExt('gmx_5.1.4')
+    input_dir = 'ext_input'
+
+    input_files = {'configuration': 'conf.gro',
+                   'input': 'grompp.mdp',
+                   'topology': 'topol.top'}
+
+    gro = GromacsExt('gmx_5.1.4', input_dir, input_files)
     md_settings = {'steps': 20, 'subcycles': 5, 'timestep': 0.002}
-    gro.execute_until('initial.gro', system, md_settings, orderp)
+    gro.execute_until('initial.g96', system, md_settings, orderp)
     gro.get_trr_frame('test2.trr', 'test2.tpr', 10, 0.002, 'output.gro')
+    gro.get_trr_frame('test2.trr', 'test2.tpr', 10, 0.002, 'output.g96')

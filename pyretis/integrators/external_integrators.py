@@ -132,6 +132,10 @@ class ExternalScript(metaclass=ABCMeta):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, shell=False)
         out = exe.communicate(input=inputs)
+        if exe.returncode != 0:
+            msg = out[1].decode('utf-8')
+            logger.critical(msg)
+            raise RuntimeError(msg)
         return out, exe.returncode
 
     def calculate_order_parameter(self, orderp, system, filename):
