@@ -52,8 +52,9 @@ class ExternalScript(metaclass=ABCMeta):
         """
         self.description = description
 
+    @staticmethod
     @abstractmethod
-    def read_configuration(self, filename):
+    def read_configuration(filename):
         """Read output configuration from external software.
 
         Parameters

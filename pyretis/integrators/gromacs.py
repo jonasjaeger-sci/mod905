@@ -15,7 +15,6 @@ import logging
 import os
 import numpy as np
 from pyretis.integrators import ExternalScript
-from pyretis.inout.writers.traj import read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -154,7 +153,7 @@ class GromacsExt(ExternalScript):
         Parameters
         ----------
         config : string
-            The path to the GROMACS gro file to use as input.
+            The path to the GROMACS config file to use as input.
         deffnm : string
             A string used to name the GROMACS files.
 
@@ -189,8 +188,9 @@ class GromacsExt(ExternalScript):
         cpt_file : string
             The name of the GROMACS check point file created.
         """
-        confout = '{}.gro'.format(deffnm)
-        cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm]
+        confout = '{}.g96'.format(deffnm)
+        cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm,
+               '-c', confout]
         cpt_file = '{}.cpt'.format(deffnm)
         self.execute_command(cmd)
         return cpt_file, confout
@@ -211,11 +211,11 @@ class GromacsExt(ExternalScript):
         deffnm : string
             To give the GROMACS simulation a name.
         """
-        confout = '{}.gro'.format(deffnm)
+        confout = '{}.g96'.format(deffnm)
         if os.path.isfile(confout):
             os.remove(confout)
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-cpi', cptfile,
-               '-append', '-deffnm', deffnm]
+               '-append', '-deffnm', deffnm, '-c', confout]
         self.execute_command(cmd)
         return confout
 
@@ -316,8 +316,9 @@ class GromacsExt(ExternalScript):
         self.execute_command(cmd, inputs=b'0')
         return None
 
-    def read_configuration(self, filename):
-        """Method to read output from GROMACS .gro files.
+    @staticmethod
+    def read_configuration(filename):
+        """Method to read output from GROMACS .g96 files.
 
         Parameters
         ----------
@@ -331,15 +332,7 @@ class GromacsExt(ExternalScript):
         vel : numpy.array
             The velocities.
         """
-        snapshot = None
-        for snapshot in read_gromacs_file(filename):
-            pass
-        xyz = np.column_stack((snapshot['x'],
-                               snapshot['y'],
-                               snapshot['z']))
-        vel = np.column_stack((snapshot['vx'],
-                               snapshot['vy'],
-                               snapshot['vz']))
+        _, xyz, vel = read_gromos96_file(filename)
         return xyz, vel
 
     def write_configuration(self):
