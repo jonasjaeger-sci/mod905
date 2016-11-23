@@ -289,9 +289,7 @@ class GromacsExt(ExternalScript):
                 order = self.calculate_order_parameter(system,
                                                        confout)
                 all_order.append(order)
-        trajectory = '{}.trr'.format(name)
-        tpr = '{}.tpr'.format(name)
-        return trajectory, tpr, all_order
+        return '{}.trr'.format(name), '{}.tpr'.format(name), all_order
 
     def get_trr_frame(self, trr_file, tpr_file, idx, time_step, out_file):
         """Extract a frame from a .trr file.
