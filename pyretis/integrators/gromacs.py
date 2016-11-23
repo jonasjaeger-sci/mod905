@@ -20,6 +20,88 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
+def read_gromos96_file(filename):
+    """Read a single configuration g96 file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to read.
+
+    Returns
+    -------
+    rawdata : dict of list of strings
+        This is the raw data read from the file grouped into sections.
+        Note that this does not include the actual positions and
+        velocities as these are returned separately.
+    xyz : numpy.array
+        The positions.
+    vel : numpy.array
+        The velocities.
+    """
+    _len = 15
+    _pos = 24
+    rawdata = {'TITLE': [], 'POSITION': [], 'VELOCITY': [], 'BOX': []}
+    section = None
+    with open(filename, 'r') as gromosfile:
+        for lines in gromosfile:
+            new_section = False
+            stripline = lines.strip()
+            if stripline == 'END':
+                continue
+            for key in rawdata:
+                if stripline == key:
+                    new_section = True
+                    section = key
+                    break
+            if new_section:
+                continue
+            rawdata[section].append(lines.rstrip())
+    txtdata = {}
+    xyzdata = {}
+    for key in ('POSITION', 'VELOCITY'):
+        txtdata[key] = []
+        xyzdata[key] = []
+        for line in rawdata[key]:
+            txt = line[:_pos]
+            txtdata[key].append(txt)
+            pos = [float(line[i:i+_len]) for i in range(_pos, 4*_len, _len)]
+            xyzdata[key].append(pos)
+        xyzdata[key] = np.array(xyzdata[key])
+    rawdata['POSITION'] = txtdata['POSITION']
+    rawdata['VELOCITY'] = txtdata['VELOCITY']
+    return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY']
+
+
+def write_gromos96_file(filename, raw, xyz, vel):
+    """Write configuration in GROMACS g96 format.
+
+    Parameters
+    ----------
+    filename : string
+        The name of the file to create.
+    raw : dict of lists of strings
+        This contains the raw data read from a .g96 file.
+    xyz : numpy.array
+        The positions to write.
+    vel : numpy.array
+        The velocities to write.
+    """
+    _keys = ('TITLE', 'POSITION', 'VELOCITY', 'BOX')
+    _fmt = '{0:}{1:15.9f}{2:15.9f}{3:15.9f}\n'
+    with open(filename, 'w') as outfile:
+        for key in _keys:
+            outfile.write('{}\n'.format(key))
+            for i, line in enumerate(raw[key]):
+                if key == 'POSITION':
+                    outfile.write(_fmt.format(line, *xyz[i]))
+                elif key == 'VELOCITY':
+                    outfile.write(_fmt.format(line, *vel[i]))
+                else:
+                    outfile.write('{}\n'.format(line))
+            outfile.write('END\n')
+
+
 class GromacsExt(ExternalScript):
     """GromacsExt(ExternalScript).
 
@@ -30,26 +112,38 @@ class GromacsExt(ExternalScript):
     exe : string
         The command for executing GROMACS. Note that we are assuming
         that we are using version 5 of GROMACS.
+    input_path : string
+        The directory where the input files are stored.
+    input_files : dict of strings
+        The names of the input files. We expect to find the keys
+        ``'configuration'``, ``'input'`` ``'topology'``.
     """
 
-    def __init__(self, exe):
+    def __init__(self, exe, input_path, input_files):
         """Initiate the script.
 
         Parameters
         ----------
         exe : string
             The GROMACS executable.
+        input_path : string
+            The path to where the input files are stored.
+        input_files : dict
+            This dictionary contains the names of the input files.
         """
         super(GromacsExt, self).__init__('GROMASC script')
         self.exe = exe
-        self.input_path = 'ext_input'
-
-        input_files = {'configuration': 'conf.gro',
-                       'input': 'grompp.mdp',
-                       'topology': 'topol.top'}
+        self.input_path = input_path
         self.input_files = {}
         for key, val in input_files.items():
             self.input_files[key] = os.path.join(self.input_path, val)
+        keys = ('configuration', 'input', 'topology')
+        for key in keys:
+            if key not in self.input_files:
+                msg = ('Gromacs integrator is missing '
+                       'input file "{}"').format(key)
+                logger.error(msg)
+                raise ValueError(msg)
 
     def execute_grompp(self, config, deffnm):
         """Method to execute the GROMACS preprocessor.
@@ -256,16 +350,6 @@ class GromacsExt(ExternalScript):
         pass
 
     def write_input(self, outputfile, nsteps):
-        #infile = self.input_files['input']
-        #with open(outputfile, 'w') as fileout:
-        #    with open(infile, 'r') as filein:
-        #        for lines in filein:
-        #            if lines.startswith('nsteps') and lines.find('=') != -1:
-        #                fileout.write('nsteps = {}\n'.format(nsteps))
-        #            elif lines.startswith('dt') and lines.find('=') != -1:
-        #                fileout.write('dt = {}\n'.format(timestep))
-        #            else:
-        #                fileout.write(lines)
         pass
 
     def read_output(self):
