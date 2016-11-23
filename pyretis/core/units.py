@@ -141,6 +141,8 @@ The following system of units are defined for pyretis:
 - ``gromacs``: A system of units similar to the units used
   by GROMACS. [10]_
 
+- ``reduced``: A reduced system of units.
+
 
 The defining units for the Lennard-Jones units (``lj``) are typically
 based on the Lennard-Jones parameters for one of the components, e.g.
@@ -289,6 +291,7 @@ CONSTANTS['e0'] = {'F/m': 1.0 / (CONSTANTS['mu0']['H/m'] *
 # Set value of kB in the system of units we have defined.
 # These values will be used in the simulations.
 CONSTANTS['kB']['lj'] = 1.0
+CONSTANTS['kB']['reduced'] = 1.0
 CONSTANTS['kB']['si'] = CONSTANTS['kB']['J/K']
 CONSTANTS['kB']['real'] = CONSTANTS['kB']['kcal/mol/K']
 CONSTANTS['kB']['metal'] = CONSTANTS['kB']['eV/K']
@@ -371,7 +374,8 @@ CONVERT['force']['N', 'dyn'] = 1.0e5
 
 # Definitions for systems of units:
 UNIT_SYSTEMS = {'lj': {}, 'real': {}, 'metal': {}, 'au': {},
-                'electron': {}, 'si': {}, 'gromacs': {}}
+                'electron': {}, 'si': {}, 'gromacs': {},
+                'reduced': {}}
 """A dictionary containing basic information about the different
 unit systems. E.g. `UNIT_SYSTEMS['lj']['length']` contains the length
 unit for the `'lj'` unit system."""
@@ -379,6 +383,10 @@ UNIT_SYSTEMS['lj'] = {'length': (3.405, 'A'),
                       'energy': (119.8, 'kB'),
                       'mass': (39.948, 'g/mol'),
                       'charge': 'e'}
+UNIT_SYSTEMS['reduced'] = {'length': (1, 'A'),
+                           'energy': (1, 'kB'),
+                           'mass': (1.0, 'g/mol'),
+                           'charge': 'e'}
 UNIT_SYSTEMS['real'] = {'length': (1.0, 'A'),
                         'energy': (1.0, 'kcal/mol'),
                         'mass': (1.0, 'g/mol'),
