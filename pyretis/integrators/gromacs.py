@@ -242,7 +242,7 @@ class GromacsExt(ExternalScript):
         self.execute_command(cmd)
         return tpxout
 
-    def execute_until(self, initial, system, settings, orderp):
+    def execute_until(self, initial, system, settings):
         """Propagate until condition is met.
 
         Parameters
@@ -254,8 +254,6 @@ class GromacsExt(ExternalScript):
         settings : dict
             This dictionary contains settings used for the
             simulation.
-        orderp : object like `pyretis.orderparameter.OrderParameter`
-            The object responsible for calculating the order parameter.
 
         Returns
         -------
@@ -263,14 +261,13 @@ class GromacsExt(ExternalScript):
             A list containing the order parameters and the path to the
             file containing the trajectory.
         """
-        name = 'test2'
+        name = 'tmpf'
         ext_time = settings['subcycles'] * settings['timestep']
         tpr = None
         cpt_file = None
         confout = None
         ext_tpr = None
-        order = self.calculate_order_parameter(orderp,
-                                               system,
+        order = self.calculate_order_parameter(system,
                                                initial)
         all_order = [order]
         for i in range(settings['steps']):
@@ -283,8 +280,7 @@ class GromacsExt(ExternalScript):
                 # move ext_tpr to tpr so that we can extend even more:
                 os.rename(ext_tpr, tpr)
             if confout is not None:
-                order = self.calculate_order_parameter(orderp,
-                                                       system,
+                order = self.calculate_order_parameter(system,
                                                        confout)
                 all_order.append(order)
         return all_order
@@ -349,8 +345,7 @@ class GromacsExt(ExternalScript):
         txt, xyz, vel = read_gromos96_file(filename)
         write_gromos96_file(outfile, txt, xyz, -vel)
         return None
-        
-        
+
     def write_configuration(self):
         """Method to write config for GROMACS."""
         pass

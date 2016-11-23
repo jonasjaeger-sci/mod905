@@ -138,13 +138,11 @@ class ExternalScript(metaclass=ABCMeta):
             raise RuntimeError(msg)
         return out, exe.returncode
 
-    def calculate_order_parameter(self, orderp, system, filename):
+    def calculate_order_parameter(self, system, filename):
         """Calculate order parameter from configuration in a file.
 
         Parameters
         ----------
-        orderp : object like `pyretis.orderparameter.OrderParameter`
-            The object responsible for calculating the order parameter.
         system : object like `pyretis.core.system`
             The object the order parameter is acting on.
         filename : string
@@ -159,7 +157,7 @@ class ExternalScript(metaclass=ABCMeta):
         xyz, vel = self.read_configuration(filename)
         system.particles.pos = xyz
         system.particles.vel = vel
-        return orderp.calculate(system)
+        return system.calculate_order()
 
     def __str__(self):
         """Return the string description of the integrator."""
