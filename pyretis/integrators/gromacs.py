@@ -352,16 +352,3 @@ class GromacsExt(ExternalScript):
         txt, xyz, vel = read_gromos96_file(filename)
         write_gromos96_file(outfile, txt, xyz, -vel)
         return None
-
-    def write_configuration(self):
-        """Method to write config for GROMACS."""
-        pass
-
-    def read_input(self):
-        pass
-
-    def write_input(self, outputfile, nsteps):
-        pass
-
-    def read_output(self):
-        pass

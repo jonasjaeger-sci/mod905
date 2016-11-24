@@ -56,21 +56,12 @@ tools
 """
 from __future__ import absolute_import
 # pyretis imports:
+from .version import version as __version__
+from . import info
 from . import core
 from . import integrators
 from . import orderparameter
 from . import forcefield
-from . import analysis
 from . import tools
-from .version import version as __version__
-
-
-__program_name__ = 'pyretis'
-__url__ = 'http://www.pyretis.org'
-__git_url__ = 'https://gitlab.com/andersle/pyretis'
-__cite__ = """
-[1] A. A., B. B and C. C., Journal Name, 42, pp. 101--102
-    doi: doi/number/here
-[2] A. A. and B. B, Journal Name, 43, pp. 101-102
-    doi: doi/number/here
-"""
+from . import analysis
+from . import inout

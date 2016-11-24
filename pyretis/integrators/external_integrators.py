@@ -14,10 +14,11 @@ ExternalScript
     The base class for external scripts. This defines the actual
     interface to external programs.
 """
-from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
+import re
 import logging
 import subprocess
+#from pyretis.inout.settings.settings import look_for_keyword
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -71,35 +72,38 @@ class ExternalScript(metaclass=ABCMeta):
         """
         return
 
-    @abstractmethod
-    def write_configuration(self):
-        """Write input configuration for external software."""
-        return
+    @staticmethod
+    def modify_input(sourcefile, outputfile, settings, delim='='):
+        """Modify input file for external software.
 
-    @abstractmethod
-    def read_input(self):
-        """Read input file for external software."""
-        return
-
-    @abstractmethod
-    def write_input(self, outputfile, nsteps):
-        """Write input file for external software.
-
-        Here we will just update the number of steps to run.
+        Here we assume that the input file has a syntax consiting of
+        ``keyword = setting``. We will only replace settings for
+        the keywords we find in the file that is also inside the
+        ``settings`` dictionary.
 
         Parameters
         ----------
+        sourcefile : string
+            The path of the file to use for creating the output.
         outputfile : string
             The path of the file to write.
-        nsteps : integer
-            The number of steps to set in the file.
+        settings : dict
+            A dictionary with settings to write.
+        delim : string
+            The delimiter used for separation keywords from settings
         """
-        return
-
-    @abstractmethod
-    def read_output(self):
-        """Generic method for reading output from external software."""
-        return
+        reg = re.compile(r'(.*?){}'.format(delim))
+        with open(sourcefile, 'r') as infile, open(outputfile, 'w') as outfile:
+            for line in infile:
+                to_write = line
+                key = reg.match(line)
+                if key:
+                    keyword = ''.join([key.group(1), delim])
+                    keyword_strip = key.group(1).strip()
+                    if keyword_strip in settings:
+                        to_write = '{} {}\n'.format(keyword,
+                                                    settings[keyword_strip])
+                outfile.write(to_write)
 
     @staticmethod
     def execute_command(cmd, inputs=None):

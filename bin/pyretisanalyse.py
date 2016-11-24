@@ -25,9 +25,7 @@ import os
 import sys
 # pyretis library imports:
 from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as NAME
-from pyretis import __url__ as URL
-from pyretis import __cite__ as CITE
+from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import create_conversion_factors, CONSTANTS
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.analysisio.analysisio import run_analysis
@@ -142,7 +140,7 @@ def hello_world(infile, reportdir):
         String showing the location of where we write the output.
     """
     pyversion = sys.version.split()[0]
-    msg = ['{} analysis version {} (Python version: {})'.format(NAME,
+    msg = ['{} analysis version {} (Python version: {})'.format(PROGRAM_NAME,
                                                                 VERSION,
                                                                 pyversion)]
     msg += ['Input file: {}'.format(infile)]
@@ -154,11 +152,11 @@ def hello_world(infile, reportdir):
 
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
-    msgtxt = 'End of {} analysis execution.'.format(NAME)
+    msgtxt = 'End of {} analysis execution.'.format(PROGRAM_NAME)
     logger.info(msgtxt)
     print_to_screen(msgtxt)
     # display some references:
-    references = ['{} references:'.format(NAME)]
+    references = ['{} references:'.format(PROGRAM_NAME)]
     references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
@@ -174,12 +172,12 @@ def bye_bye_world():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=NAME)
+    parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
-                        help=('Location of {} input file'.format(NAME)),
+                        help=('Location of {} input file'.format(PROGRAM_NAME)),
                         required=True)
     parser.add_argument('-V', '--version', action='version',
-                        version='{} {}'.format(NAME, VERSION))
+                        version='{} {}'.format(PROGRAM_NAME, VERSION))
     args_dict = vars(parser.parse_args())
 
     inputfile = args_dict['input']

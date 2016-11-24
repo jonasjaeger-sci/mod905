@@ -47,7 +47,7 @@ if __name__ == '__main__':
                    'topology': 'topol.top'}
 
     gro = GromacsExt('gmx_5.1.4', input_dir, input_files)
-    md_settings = {'steps': 10, 'subcycles': 5, 'timestep': 0.002}
+    md_settings = {'steps': 1000, 'subcycles': 5, 'timestep': 0.002}
     steps = md_settings['steps'] * md_settings['subcycles']
     trrf, tprf, orderf = gro.execute_until('initial.g96', system,
                                            md_settings, reverse=False)

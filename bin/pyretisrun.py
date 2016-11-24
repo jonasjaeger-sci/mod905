@@ -34,9 +34,7 @@ import sys
 import tqdm  # for a nice progress bar
 # pyretis library imports:
 from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as NAME
-from pyretis import __url__ as URL
-from pyretis import __cite__ as CITE
+from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.settings import create_output
@@ -142,10 +140,10 @@ def print_and_loginfo(msgtxt):
 def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
     timeend = datetime.datetime.now().strftime(_DATE_FMT)
-    msgtxt = 'End of {} execution: {}'.format(NAME, timeend)
+    msgtxt = 'End of {} execution: {}'.format(PROGRAM_NAME, timeend)
     print_and_loginfo(msgtxt)
     # display some references:
-    references = ['{} references:'.format(NAME)]
+    references = ['{} references:'.format(PROGRAM_NAME)]
     references.append(('-')*len(references[0]))
     for line in CITE.split('\n'):
         if line:
@@ -404,16 +402,16 @@ _RUNNERS = {'md-flux': run_md_flux_simulation,
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=NAME)
+    parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
-                        help='Location of {} input file'.format(NAME),
+                        help='Location of {} input file'.format(PROGRAM_NAME),
                         required=True)
     parser.add_argument('-V', '--version', action='version',
-                        version='{} {}'.format(NAME, VERSION))
+                        version='{} {}'.format(PROGRAM_NAME, VERSION))
     parser.add_argument('-f', '--log_file',
                         help='Specify log file to write',
                         required=False,
-                        default='{}.log'.format(NAME.lower()))
+                        default='{}.log'.format(PROGRAM_NAME.lower()))
     parser.add_argument('-l', '--log_level',
                         help='Specify log level for log file',
                         required=False,

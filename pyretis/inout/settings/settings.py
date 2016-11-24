@@ -20,8 +20,7 @@ import logging
 import pprint
 import re
 from pyretis.inout.common import create_backup
-from pyretis import __program_name__ as NAME
-from pyretis import __url__ as URL
+from pyretis.info import PROGRAM_NAME, URL
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -31,7 +30,7 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 
 MAX_POT = 99  # For practical reasons, just limit this.
 SECTIONS = OrderedDict()
-TITLE = '{} input settings'.format(NAME)
+TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
 

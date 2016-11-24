@@ -31,7 +31,7 @@ from docutils.writers.html4css1 import HTMLTranslator
 import jinja2
 # pyretis imports:
 from pyretis import __version__ as VERSION
-from pyretis import __program_name__ as PROGRAM_NAME
+from pyretis.info import PROGRAM_NAME
 from pyretis.inout.report.markup import latexify_number
 from pyretis.inout.report.report_md import generate_report_mdflux
 from pyretis.inout.report.report_path import (generate_report_retis,
