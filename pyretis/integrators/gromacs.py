@@ -309,7 +309,7 @@ class GromacsExt(ExternalScript):
 
         Note
         ----
-        This will only proberly work in the frames in the .trr are
+        This will only properly work in the frames in the .trr are
         separated uniformly.
         """
         cmd = [self.exe, 'trjconv', '-f', trr_file, '-s', tpr_file,
@@ -317,6 +317,35 @@ class GromacsExt(ExternalScript):
                '-dump', '{}'.format(idx*time_step)]
         self.execute_command(cmd, inputs=b'0')
         return None
+
+    def prepare_shooting_point(self, idx, time_step, input_files, output_file):
+        """Method to create initial configuration for a shooting move.
+
+        Parameters
+        ----------
+        idx : integer
+            The index for the shooting point.
+        time_step : float
+            The time step used in GROMACS
+        input_files : dict of strings
+            These are the input files we need to get the shooting point.
+        output_file : string
+            Where to store the configuration to use for shooting.
+        """
+        # Collect the configuration:
+        tmp_config = 'shooting.g96'
+        self.get_trr_frame(input_files['trr'], input_files['tpr'],
+                           idx, time_step, tmp_config)
+        # Create output file to generate velocities:
+        settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
+        tmp_mdp = 'genvel.mdp'
+        self.modify_input(self.input_files['input'], tmp_file_mdp, settings,
+                          delim='=')
+        # Run grompp for this input file:
+        tpr = self.execute_grompp(tmp_config, 'genvel')
+        # Run gromacs for this tpr file:   
+        cpt_file, confout = self.execute_mdrun(tpr, 'genvel')
+        # Copy back the g96 file with velocities:
 
     @staticmethod
     def read_configuration(filename):
