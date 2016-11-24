@@ -144,7 +144,7 @@ class GromacsExt(ExternalScript):
                 logger.error(msg)
                 raise ValueError(msg)
 
-    def execute_grompp(self, config, deffnm):
+    def execute_grompp(self, mdp_file, config, deffnm):
         """Method to execute the GROMACS preprocessor.
 
         This step is unique to GROMACS and is included here
@@ -152,6 +152,8 @@ class GromacsExt(ExternalScript):
 
         Parameters
         ----------
+        mdp_file : string
+            The path to the mdp file.
         config : string
             The path to the GROMACS config file to use as input.
         deffnm : string
@@ -162,10 +164,9 @@ class GromacsExt(ExternalScript):
         tpr : string
             The tpr file which was created by the GROMACS preprocessor.
         """
-        mdp = self.input_files['input']
         topol = self.input_files['topology']
         tpr = '{}.tpr'.format(deffnm)
-        cmd = [self.exe, 'grompp', '-f', mdp, '-c', config,
+        cmd = [self.exe, 'grompp', '-f', mdp_file, '-c', config,
                '-p', topol, '-o', tpr]
         self.execute_command(cmd)
         return tpr
@@ -278,7 +279,8 @@ class GromacsExt(ExternalScript):
         all_order = [order]
         for i in range(settings['steps']):
             if i == 0:
-                tpr = self.execute_grompp(initial_conf, name)
+                tpr = self.execute_grompp(self.input_files['input'],
+                                          initial_conf, name)
                 cpt_file, confout = self.execute_mdrun(tpr, name)
             else:
                 ext_tpr = self.extend_gromacs(tpr, ext_time)
@@ -329,6 +331,8 @@ class GromacsExt(ExternalScript):
             The time step used in GROMACS
         input_files : dict of strings
             These are the input files we need to get the shooting point.
+            Here we expect to find keys for the trajectory .trr file
+            (key: ``trr``) and a .tpr file (key: ``tpr``).
         output_file : string
             Where to store the configuration to use for shooting.
         """
@@ -339,11 +343,11 @@ class GromacsExt(ExternalScript):
         # Create output file to generate velocities:
         settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
         tmp_mdp = 'genvel.mdp'
-        self.modify_input(self.input_files['input'], tmp_file_mdp, settings,
+        self.modify_input(self.input_files['input'], tmp_mdp, settings,
                           delim='=')
         # Run grompp for this input file:
-        tpr = self.execute_grompp(tmp_config, 'genvel')
-        # Run gromacs for this tpr file:   
+        tpr = self.execute_grompp(tmp_mdp, tmp_config, 'genvel')
+        # Run gromacs for this tpr file:
         cpt_file, confout = self.execute_mdrun(tpr, 'genvel')
         # Copy back the g96 file with velocities:
 

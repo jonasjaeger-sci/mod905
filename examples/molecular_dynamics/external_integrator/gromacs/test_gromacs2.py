@@ -48,19 +48,6 @@ if __name__ == '__main__':
 
     gro = GromacsExt('gmx_5.1.4', input_dir, input_files)
     md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
-    steps = md_settings['steps'] * md_settings['subcycles']
-    trrf, tprf, orderf = gro.execute_until('initial.g96', system,
-                                           md_settings, reverse=False)
-    gro.get_trr_frame(trrf, tprf, steps, md_settings['timestep'], 'last.g96')
-    trrb, tprb, orderb = gro.execute_until('last.g96', system,
-                                           md_settings, reverse=True)
-    gro.get_trr_frame(trrb, tprb, steps, md_settings['timestep'], 'first.g96')
-    
-    box = Box([2.384999990, 2.384999990, 2.384999990])
-    txt1, xyz1, vel1 = read_gromos96_file('first.g96')
-    txt0, xyz0, vel0 = read_gromos96_file('initial.g96')
-    delta = xyz1 - xyz0
-    delta = box.pbc_dist_matrix(delta)
-    rsq = np.einsum('ij, ij->i', delta, delta)
-    mse = rsq.mean()
-    print('Average distance between initial.g96 and first.g96: {}'.format(mse))
+    input_files = {'trr': 'tmpf.trr', 'tpr': 'tmpf.tpr'}
+    gro.prepare_shooting_point(100*5, md_settings['timestep'], input_files,
+                               'out.txt')
