@@ -10,9 +10,10 @@ which performs molecular dynamics.
 In order to interface an external program the following
 methods are needed:
 """
-# Just to handle imports relative to this file
 import logging
 import os
+import shutil
+import tempfile
 import numpy as np
 from pyretis.integrators import ExternalScript
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -132,7 +133,7 @@ class GromacsExt(ExternalScript):
         """
         super(GromacsExt, self).__init__('GROMASC script')
         self.exe = exe
-        self.input_path = input_path
+        self.input_path = os.path.join(os.getcwd(), input_path)
         self.input_files = {}
         for key, val in input_files.items():
             self.input_files[key] = os.path.join(self.input_path, val)
@@ -144,7 +145,7 @@ class GromacsExt(ExternalScript):
                 logger.error(msg)
                 raise ValueError(msg)
 
-    def execute_grompp(self, mdp_file, config, deffnm):
+    def execute_grompp(self, mdp_file, config, deffnm, exe_dir=None):
         """Method to execute the GROMACS preprocessor.
 
         This step is unique to GROMACS and is included here
@@ -158,6 +159,9 @@ class GromacsExt(ExternalScript):
             The path to the GROMACS config file to use as input.
         deffnm : string
             A string used to name the GROMACS files.
+        exe_dir : string or None
+            If different from None, this selects a working directory
+            for grompp.
 
         Returns
         -------
@@ -168,10 +172,10 @@ class GromacsExt(ExternalScript):
         tpr = '{}.tpr'.format(deffnm)
         cmd = [self.exe, 'grompp', '-f', mdp_file, '-c', config,
                '-p', topol, '-o', tpr]
-        self.execute_command(cmd)
+        self.execute_command(cmd, cwd=exe_dir)
         return tpr
 
-    def execute_mdrun(self, tprfile, deffnm):
+    def execute_mdrun(self, tprfile, deffnm, exe_dir):
         """Method to execute GROMACS.
 
         This method is intended as the initial ``gmx mdrun`` executed.
@@ -183,6 +187,9 @@ class GromacsExt(ExternalScript):
             The .tpr file to use for executing GROMACS.
         deffnm : string
             To give the GROMACS simulation a name.
+        exe_dir : string or None
+            If different from None, mdrun will be executed in
+            this directory.
 
         Returns
         -------
@@ -193,10 +200,10 @@ class GromacsExt(ExternalScript):
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm,
                '-c', confout]
         cpt_file = '{}.cpt'.format(deffnm)
-        self.execute_command(cmd)
+        self.execute_command(cmd, cwd=exe_dir)
         return cpt_file, confout
 
-    def execute_mdrun_continue(self, tprfile, cptfile, deffnm):
+    def execute_mdrun_continue(self, tprfile, cptfile, deffnm, exe_dir):
         """Method to continue the execution of GROMACS.
 
         Here, we assume that we have already executed ``gmx mdrun`` and
@@ -211,16 +218,19 @@ class GromacsExt(ExternalScript):
             run.
         deffnm : string
             To give the GROMACS simulation a name.
+        exe_dir : string or None
+            If different from None, mdrun will be executed in
+            this directory.
         """
         confout = '{}.g96'.format(deffnm)
         if os.path.isfile(confout):
             os.remove(confout)
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-cpi', cptfile,
                '-append', '-deffnm', deffnm, '-c', confout]
-        self.execute_command(cmd)
+        self.execute_command(cmd, cwd=exe_dir)
         return confout
 
-    def extend_gromacs(self, tprfile, time):
+    def extend_gromacs(self, tprfile, time, exe_dir):
         """Method to extend a GROMACS simulation.
 
         Parameters
@@ -229,6 +239,9 @@ class GromacsExt(ExternalScript):
             The file to read for extending.
         time : float
             The time (in ps) to extend the simulation by.
+        exe_dir : string or None
+            If different from None, mdrun will be executed in
+            this directory.
 
         Returns
         -------
@@ -240,7 +253,7 @@ class GromacsExt(ExternalScript):
             os.remove(tpxout)
         cmd = [self.exe, 'convert-tpr', '-s', tprfile,
                '-extend', '{}'.format(time), '-o', tpxout]
-        self.execute_command(cmd)
+        self.execute_command(cmd, cwd=exe_dir)
         return tpxout
 
     def execute_until(self, initial, system, settings, reverse=False):
@@ -280,11 +293,12 @@ class GromacsExt(ExternalScript):
         for i in range(settings['steps']):
             if i == 0:
                 tpr = self.execute_grompp(self.input_files['input'],
-                                          initial_conf, name)
-                cpt_file, confout = self.execute_mdrun(tpr, name)
+                                          initial_conf, name, exe_dir=None)
+                cpt_file, confout = self.execute_mdrun(tpr, name, exe_dir=None)
             else:
-                ext_tpr = self.extend_gromacs(tpr, ext_time)
-                confout = self.execute_mdrun_continue(ext_tpr, cpt_file, name)
+                ext_tpr = self.extend_gromacs(tpr, ext_time, exe_dir=None)
+                confout = self.execute_mdrun_continue(ext_tpr, cpt_file, name,
+                                                      exe_dir=None)
                 # move ext_tpr to tpr so that we can extend even more:
                 os.rename(ext_tpr, tpr)
             if confout is not None:
@@ -317,7 +331,7 @@ class GromacsExt(ExternalScript):
         cmd = [self.exe, 'trjconv', '-f', trr_file, '-s', tpr_file,
                '-o', out_file, '-b', '{}'.format((idx-1) * time_step),
                '-dump', '{}'.format(idx*time_step)]
-        self.execute_command(cmd, inputs=b'0')
+        self.execute_command(cmd, inputs=b'0', cwd=None)
         return None
 
     def prepare_shooting_point(self, idx, time_step, input_files, output_file):
@@ -335,21 +349,33 @@ class GromacsExt(ExternalScript):
             (key: ``trr``) and a .tpr file (key: ``tpr``).
         output_file : string
             Where to store the configuration to use for shooting.
+
+        Returns
+        -------
+        output_file : string
+            The name of the file created.
         """
-        # Collect the configuration:
-        tmp_config = 'shooting.g96'
-        self.get_trr_frame(input_files['trr'], input_files['tpr'],
-                           idx, time_step, tmp_config)
-        # Create output file to generate velocities:
-        settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
-        tmp_mdp = 'genvel.mdp'
-        self.modify_input(self.input_files['input'], tmp_mdp, settings,
-                          delim='=')
-        # Run grompp for this input file:
-        tpr = self.execute_grompp(tmp_mdp, tmp_config, 'genvel')
-        # Run gromacs for this tpr file:
-        cpt_file, confout = self.execute_mdrun(tpr, 'genvel')
-        # Copy back the g96 file with velocities:
+        prevdir = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Collect the configuration:
+            tmp_config = os.path.join(tmp_dir, 'for_shooting.g96')
+            self.get_trr_frame(input_files['trr'], input_files['tpr'],
+                               idx, time_step, tmp_config)
+            # Create output file to generate velocities:
+            settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
+            tmp_mdp = os.path.join(tmp_dir, 'genvel.mdp')
+            self.modify_input(self.input_files['input'], tmp_mdp, settings,
+                              delim='=')
+            # Run grompp for this input file:
+            tpr = self.execute_grompp(tmp_mdp, tmp_config, 'genvel',
+                                      exe_dir=tmp_dir)
+            # Run gromacs for this tpr file:
+            _, confout = self.execute_mdrun(tpr, 'genvel', exe_dir=tmp_dir)
+            confout = os.path.join(tmp_dir, confout)
+            # Copy back the g96 file with velocities:
+            dest = os.path.join(prevdir, output_file)
+            shutil.move(confout, dest)
+        return output_file
 
     @staticmethod
     def read_configuration(filename):

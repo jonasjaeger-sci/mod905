@@ -106,7 +106,7 @@ class ExternalScript(metaclass=ABCMeta):
                 outfile.write(to_write)
 
     @staticmethod
-    def execute_command(cmd, inputs=None):
+    def execute_command(cmd, cwd=None, inputs=None):
         """Method that will execute a command.
 
         We are here executing a command and then waiting until it
@@ -116,7 +116,9 @@ class ExternalScript(metaclass=ABCMeta):
         ----------
         cmd : list of strings
             The command to execute.
-        inputs : string
+        cwd : string or None
+            The current working directory to set for the command.
+        inputs : string or None
             Possible input to give to the command.
 
         Returns
@@ -134,7 +136,9 @@ class ExternalScript(metaclass=ABCMeta):
             logger.info(msg)
         exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, shell=False)
+                               stderr=subprocess.PIPE,
+                               shell=False,
+                               cwd=cwd)
         out = exe.communicate(input=inputs)
         if exe.returncode != 0:
             msg = out[1].decode('utf-8')

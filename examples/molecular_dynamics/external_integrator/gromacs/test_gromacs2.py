@@ -50,4 +50,4 @@ if __name__ == '__main__':
     md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
     input_files = {'trr': 'tmpf.trr', 'tpr': 'tmpf.tpr'}
     gro.prepare_shooting_point(100*5, md_settings['timestep'], input_files,
-                               'out.txt')
+                               'for_shooting.g96')
