@@ -29,7 +29,7 @@ from __future__ import absolute_import
 import logging
 import os
 # pyretis imports
-from pyretis.core.units import CONVERT, create_conversion_factors
+from pyretis.core.units import create_conversion_factors
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble, match_probabilities,
@@ -340,15 +340,10 @@ def run_retis_analysis(settings, plotter, txt_plotter):
                                   settings['integrator']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
-    results['fluxc'] = {'value': flux / CONVERT['time'][units, 'ns'],
-                        'error': flux_error,
-                        'unit': 'ns'}
     rate, rate_error = retis_rate(out['prob'], out['relerror'],
                                   flux, flux_error)
     results['rate'] = {'value': rate, 'error': rate_error,
                        'unit': units}
-    results['ratec'] = {'value': rate / CONVERT['time'][units, 'ns'],
-                        'error': rate_error, 'unit': 'ns'}
     print_to_screen('Overall results')
     print_to_screen('===============')
     print_to_screen()

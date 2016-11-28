@@ -153,8 +153,8 @@ def generate_report_retis(analysis, output='rst'):
                          'summary': None},
               'numbers': {'pcross': None, 'perr': None, 'simt': None,
                           'teff': None, 'opteff': None, 'flux': None,
-                          'fluxc': None, 'flux-err': None, 'fluxc-err': None},
-              'text': {'flux-unit': None, 'fluxc-unit': None}}
+                          'flux-err': None},
+              'text': {'flux-unit': None}}
     results = analysis['pathensemble']
     result0 = analysis['pathensemble0']
     figures = report['figures']
@@ -174,20 +174,13 @@ def generate_report_retis(analysis, output='rst'):
     numbers['flux'] = format_number(analysis['flux']['value'], 0.1, 100)
     numbers['flux-err'] = format_number(analysis['flux']['error'] * 100,
                                         0.1, 100)
-    numbers['fluxc'] = format_number(analysis['fluxc']['value'], 0.1, 100)
-    numbers['fluxc-err'] = format_number(analysis['fluxc']['error'] * 100,
-                                         0.1, 100)
     numbers['rate'] = format_number(analysis['rate']['value'], 0.1, 100)
     numbers['rate-err'] = format_number(analysis['rate']['error'] * 100,
                                         0.1, 100)
-    numbers['ratec'] = format_number(analysis['ratec']['value'], 0.1, 100)
-    numbers['ratec-err'] = format_number(analysis['ratec']['error'] * 100,
-                                         0.1, 100)
     numbers['simt'] = format_number(matched_out['simtime'], 0.1, 100)
     numbers['teff'] = format_number(matched_out['eff'], 0.1, 100)
     numbers['opteff'] = format_number(matched_out['opteff'], 0.1, 100)
     report['text']['flux-unit'] = analysis['flux']['unit']
-    report['text']['fluxc-unit'] = analysis['fluxc']['unit']
     # Get tables:
     tables = report['tables']
     tables['interfaces0'] = _table_interface0([result0], fmt=output)[1]
@@ -492,11 +485,7 @@ def _table_summary(report, fmt='rst'):
              ['Flux (1/{})'.format(text['flux-unit']), numbers['flux'],
               numbers['flux-err']],
              ['Rate constant (1/{})'.format(text['flux-unit']),
-              numbers['rate'], numbers['rate-err']],
-             ['Flux (1/{})'.format(text['fluxc-unit']), numbers['fluxc'],
-              numbers['fluxc-err']],
-             ['Rate constant (1/{})'.format(text['fluxc-unit']),
-              numbers['ratec'], numbers['ratec-err']]]
+              numbers['rate'], numbers['rate-err']]]
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Summary of main results',
                                          ['Property', 'Value',
