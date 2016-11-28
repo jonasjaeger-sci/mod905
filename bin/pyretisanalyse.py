@@ -26,7 +26,7 @@ import sys
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
-from pyretis.core.units import create_conversion_factors, CONSTANTS
+from pyretis.core.units import CONSTANTS
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.analysisio.analysisio import run_analysis
 from pyretis.inout.common import (check_python_version,
@@ -154,6 +154,7 @@ def bye_bye_world():
     """Method to print out the goodbye message for pyretis."""
     msgtxt = 'End of {} analysis execution.'.format(PROGRAM_NAME)
     logger.info(msgtxt)
+    print_to_screen('')
     print_to_screen(msgtxt)
     # display some references:
     references = ['{} references:'.format(PROGRAM_NAME)]
@@ -221,7 +222,7 @@ if __name__ == '__main__':
         task = settings['simulation']['task']
         print_to_screen('Will run analysis for task "{}"'.format(task))
         results = run_analysis(settings)
-        print_to_screen('Analysis done.')
+        print_to_screen('')
         for outfile in create_reports(settings, results, report_dir):
             relfile = os.path.relpath(outfile, start=runpath)
             print_to_screen('Report created: {}'.format(relfile))

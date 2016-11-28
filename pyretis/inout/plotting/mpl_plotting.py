@@ -683,9 +683,10 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
                                  'label': '{}'.format(key), 'alpha': 0.8})
         except KeyError:
             continue
-    title = r'Ensemble ${0}$'.format(ensemble)
-    canvas = mpl_simple_plot(series, fig_settings={'title': title})
-    canvas_scale = mpl_simple_plot(series_scale, fig_settings={'title': title})
+    figset = {'xlabel': 'Order parameter', 'ylabel': 'Frequency',
+              'title': r'Ensemble ${0}$'.format(ensemble)}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_scale = mpl_simple_plot(series_scale, fig_settings=figset)
     return canvas, canvas_scale
 
 
