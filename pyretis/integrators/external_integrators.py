@@ -18,7 +18,6 @@ from abc import ABCMeta, abstractmethod
 import re
 import logging
 import subprocess
-#from pyretis.inout.settings.settings import look_for_keyword
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -39,9 +38,13 @@ class ExternalScript(metaclass=ABCMeta):
         Short string which a description about the external
         script. This can for instance be what program we are
         interfacing.
+    time_step : float
+        The time step used in the GROMACS MD simulation.
+    subcycles : integer
+        The number of steps each GROMACS MD run is composed of.
     """
 
-    def __init__(self, description):
+    def __init__(self, description, exe, time_step, subcycles):
         """Initialization of the script.
 
         Parameters
@@ -50,11 +53,18 @@ class ExternalScript(metaclass=ABCMeta):
             Short string which a description about the external
             script. This can for instance be what program we are
             interfacing.
+        time_step : float
+            The time step used in the GROMACS MD simulation.
+        subcycles : integer
+            The number of steps each GROMACS MD run is composed of.
         """
         self.description = description
+        self.exe = exe
+        self.time_step = time_step
+        self.subcycles = subcycles
 
     @staticmethod
-    @abstractmethod
+    #@abstractmethod
     def read_configuration(filename):
         """Read output configuration from external software.
 
@@ -119,7 +129,9 @@ class ExternalScript(metaclass=ABCMeta):
         cwd : string or None
             The current working directory to set for the command.
         inputs : string or None
-            Possible input to give to the command.
+            Possible input to give to the command. This are not arguments
+            but more akin to keystrokes etc. that the external command
+            may take.
 
         Returns
         -------
@@ -134,6 +146,7 @@ class ExternalScript(metaclass=ABCMeta):
         else:
             msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
             logger.info(msg)
+        print(' '.join(cmd))
         exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,

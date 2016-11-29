@@ -70,6 +70,9 @@ def read_gromos96_file(filename):
         xyzdata[key] = np.array(xyzdata[key])
     rawdata['POSITION'] = txtdata['POSITION']
     rawdata['VELOCITY'] = txtdata['VELOCITY']
+    if len(rawdata['VELOCITY']) == 0:
+        # No velicities were found in the input file.
+        xyzdata['VELOCITY'] = np.zeros_like(xyzdata['POSITION'])
     return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY']
 
 
@@ -117,9 +120,13 @@ class GromacsExt(ExternalScript):
     input_files : dict of strings
         The names of the input files. We expect to find the keys
         ``'configuration'``, ``'input'`` ``'topology'``.
+    time_step : float
+        The time step used in the GROMACS MD simulation.
+    subcycles : integer
+        The number of steps each GROMACS MD run is composed of.
     """
 
-    def __init__(self, exe, input_path, input_files):
+    def __init__(self, exe, input_path, input_files, time_step, subcycles):
         """Initiate the script.
 
         Parameters
@@ -130,9 +137,13 @@ class GromacsExt(ExternalScript):
             The path to where the input files are stored.
         input_files : dict
             This dictionary contains the names of the input files.
+        time_step : float
+            The time step used in the GROMACS MD simulation.
+        subcycles : integer
+            The number of steps each GROMACS MD run is composed of.
         """
-        super(GromacsExt, self).__init__('GROMASC script')
-        self.exe = exe
+        super(GromacsExt, self).__init__('GROMASC external script', exe,
+                                         time_step, subcycles)
         self.input_path = os.path.join(os.getcwd(), input_path)
         self.input_files = {}
         for key, val in input_files.items():
@@ -165,15 +176,17 @@ class GromacsExt(ExternalScript):
 
         Returns
         -------
-        tpr : string
-            The tpr file which was created by the GROMACS preprocessor.
+        out_files : dict
+            This dict contains files that were created by the GROMACS
+            preprocessor.
         """
         topol = self.input_files['topology']
         tpr = '{}.tpr'.format(deffnm)
         cmd = [self.exe, 'grompp', '-f', mdp_file, '-c', config,
                '-p', topol, '-o', tpr]
         self.execute_command(cmd, cwd=exe_dir)
-        return tpr
+        out_files = {'tpr': tpr, 'mdout': 'mdout.mdp'}
+        return out_files
 
     def execute_mdrun(self, tprfile, deffnm, exe_dir):
         """Method to execute GROMACS.
@@ -193,15 +206,18 @@ class GromacsExt(ExternalScript):
 
         Returns
         -------
-        cpt_file : string
-            The name of the GROMACS check point file created.
+        out_files : dict
+            This dict contains the output files created by mdrun.
+            Note that we here hard code the file names.
         """
         confout = '{}.g96'.format(deffnm)
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm,
                '-c', confout]
-        cpt_file = '{}.cpt'.format(deffnm)
         self.execute_command(cmd, cwd=exe_dir)
-        return cpt_file, confout
+        out_files = {'conf': confout}
+        for key in ('cpt', 'edr', 'log', 'trr'):
+            out_files[key] = '{}.{}'.format(deffnm, key)
+        return out_files
 
     def execute_mdrun_continue(self, tprfile, cptfile, deffnm, exe_dir):
         """Method to continue the execution of GROMACS.
@@ -221,6 +237,12 @@ class GromacsExt(ExternalScript):
         exe_dir : string or None
             If different from None, mdrun will be executed in
             this directory.
+
+        Returns
+        -------
+        out_files : dict
+            The output files created/appended by GROMACS when we
+            continue the simulation.
         """
         confout = '{}.g96'.format(deffnm)
         if os.path.isfile(confout):
@@ -228,7 +250,10 @@ class GromacsExt(ExternalScript):
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-cpi', cptfile,
                '-append', '-deffnm', deffnm, '-c', confout]
         self.execute_command(cmd, cwd=exe_dir)
-        return confout
+        out_files = {'conf': confout}
+        for key in ('cpt', 'edr', 'log', 'trr'):
+            out_files[key] = '{}.{}'.format(deffnm, key)
+        return out_files
 
     def extend_gromacs(self, tprfile, time, exe_dir):
         """Method to extend a GROMACS simulation.
@@ -245,8 +270,8 @@ class GromacsExt(ExternalScript):
 
         Returns
         -------
-        tpxout : string
-            The tpr file created that extends the simulation.
+        out_files : dict
+            The files created by GROMACS when we extend.
         """
         tpxout = 'ext_{}'.format(tprfile)
         if os.path.isfile(tpxout):
@@ -254,7 +279,8 @@ class GromacsExt(ExternalScript):
         cmd = [self.exe, 'convert-tpr', '-s', tprfile,
                '-extend', '{}'.format(time), '-o', tpxout]
         self.execute_command(cmd, cwd=exe_dir)
-        return tpxout
+        out_files = {'tpr': tpxout}
+        return out_files
 
     def execute_until(self, initial, system, settings, reverse=False):
         """Propagate until condition is met.
@@ -271,43 +297,72 @@ class GromacsExt(ExternalScript):
 
         Returns
         -------
-        out : list
-            A list containing the order parameters and the path to the
-            file containing the trajectory.
+        out_files : dict
+            Files generated by GROMACS.
+        all_order : list
+            A list containing the order parameters, indexes (for
+            finding configurations inside trajectory files) and
+            the path to the file containing the trajectory.
         """
+        EXE_DIR = 'trajf'
         if reverse:
-            name = 'tmpb'
-            initial_conf = 'rev_{}'.format(initial)
+            name = 'trajB_new'
+            # basepath = os.path.dirname(initial)
+            localfile = os.path.basename(initial)
+            initial_conf = os.path.join(EXE_DIR, 'rev_{}'.format(localfile))
             self.reverse_velocities(initial, initial_conf)
         else:
-            name = 'tmpf'
+            name = 'trajF_new'
             initial_conf = initial
-        ext_time = settings['subcycles'] * settings['timestep']
-        tpr = None
-        cpt_file = None
-        confout = None
-        ext_tpr = None
+
+        print('Initial conf:', initial_conf)
+
+        ext_time = self.time_step * self.subcycles
+
         order = self.calculate_order_parameter(system,
                                                initial_conf)
-        all_order = [order]
+        print(order)
+        tpr_file = None
+        cpt_file = None
+        all_order = [order, 0, '{}.trr'.format(name)]
         for i in range(settings['steps']):
             if i == 0:
-                tpr = self.execute_grompp(self.input_files['input'],
-                                          initial_conf, name, exe_dir=None)
-                cpt_file, confout = self.execute_mdrun(tpr, name, exe_dir=None)
+                out_grompp = self.execute_grompp(self.input_files['input'],
+                                                 initial_conf,
+                                                 name,
+                                                 exe_dir=EXE_DIR)
+                tpr_file = out_grompp['tpr']
+                out_mdrun = self.execute_mdrun(tpr_file,
+                                               name, exe_dir=EXE_DIR)
+                cpt_file = out_mdrun['cpt']
             else:
-                ext_tpr = self.extend_gromacs(tpr, ext_time, exe_dir=None)
-                confout = self.execute_mdrun_continue(ext_tpr, cpt_file, name,
-                                                      exe_dir=None)
-                # move ext_tpr to tpr so that we can extend even more:
-                os.rename(ext_tpr, tpr)
-            if confout is not None:
+                out_grompp = self.extend_gromacs(tpr_file, ext_time, exe_dir=EXE_DIR)
+                ext_tpr_file = out_grompp['tpr']
+                out_mdrun = self.execute_mdrun_continue(ext_tpr_file, cpt_file, name,
+                                                        exe_dir=EXE_DIR)
+                # Move extended tpr so that we can continue extending:
+                os.replace(os.path.join(EXE_DIR, ext_tpr_file),
+                           os.path.join(EXE_DIR, tpr_file))
+            conf_abs = os.path.join(EXE_DIR, out_mdrun['conf'])
+            if conf_abs is not None:
                 order = self.calculate_order_parameter(system,
-                                                       confout)
-                all_order.append(order)
-        return '{}.trr'.format(name), '{}.tpr'.format(name), all_order
+                                                       conf_abs)
+                all_order.append([order, i+1, '{}.trr'.format(name)])
+                # Remove this file as it's not needed anymore:
+                os.remove(conf_abs)
+        print(all_order)
+        # Call some kind of clean-up and remove the files we will never need:
+        # Remove from the EXE-DIR:
+        # for key in ('mdout.mdp', '{}.log'.format(name),
+        #            '{}_prev.cpt'.format(name)):
+        #    filename = os.path.join(EXE_DIR, key)
+        #    #os.remove(filename)
+        out_files = {}
+        for key in ('trr', 'tpr', 'edr'):
+            out_files[key] = '{}.{}'.format(name, key)
+        return out_files, all_order
 
-    def get_trr_frame(self, trr_file, tpr_file, idx, time_step, out_file):
+    def get_trr_frame(self, trr_file, tpr_file, idx, out_file):
         """Extract a frame from a .trr file.
 
         Parameters
@@ -318,8 +373,6 @@ class GromacsExt(ExternalScript):
             The GROMACS .tpr file for the system.
         idx : integer
             The frame number we look for.
-        time_step : float
-            The time step used in the simulation.
         out_file : string
             The file to dump to.
 
@@ -328,21 +381,25 @@ class GromacsExt(ExternalScript):
         This will only properly work in the frames in the .trr are
         separated uniformly.
         """
-        cmd = [self.exe, 'trjconv', '-f', trr_file, '-s', tpr_file,
-               '-o', out_file, '-b', '{}'.format((idx-1) * time_step),
-               '-dump', '{}'.format(idx*time_step)]
+        time1 = (idx - 1) * self.time_step * self.subcycles
+        time2 = idx * self.time_step * self.subcycles
+        cmd = [self.exe, 'trjconv',
+               '-f', trr_file,
+               '-s', tpr_file,
+               '-o', out_file,
+               '-b', '{}'.format(time1),
+               '-dump', '{}'.format(time2)]
         self.execute_command(cmd, inputs=b'0', cwd=None)
         return None
 
-    def prepare_shooting_point(self, idx, time_step, input_files, output_file):
+    def prepare_shooting_point(self, idx, input_files, output_file):
         """Method to create initial configuration for a shooting move.
 
         Parameters
         ----------
         idx : integer
-            The index for the shooting point.
-        time_step : float
-            The time step used in GROMACS
+            The index for the shooting point referring to a position
+            in the input .trr file.
         input_files : dict of strings
             These are the input files we need to get the shooting point.
             Here we expect to find keys for the trajectory .trr file
@@ -360,18 +417,19 @@ class GromacsExt(ExternalScript):
             # Collect the configuration:
             tmp_config = os.path.join(tmp_dir, 'for_shooting.g96')
             self.get_trr_frame(input_files['trr'], input_files['tpr'],
-                               idx, time_step, tmp_config)
+                               idx, tmp_config)
             # Create output file to generate velocities:
             settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
             tmp_mdp = os.path.join(tmp_dir, 'genvel.mdp')
             self.modify_input(self.input_files['input'], tmp_mdp, settings,
                               delim='=')
             # Run grompp for this input file:
-            tpr = self.execute_grompp(tmp_mdp, tmp_config, 'genvel',
-                                      exe_dir=tmp_dir)
+            out_grompp = self.execute_grompp(tmp_mdp, tmp_config, 'genvel',
+                                             exe_dir=tmp_dir)
             # Run gromacs for this tpr file:
-            _, confout = self.execute_mdrun(tpr, 'genvel', exe_dir=tmp_dir)
-            confout = os.path.join(tmp_dir, confout)
+            out_mdrun = self.execute_mdrun(out_grompp['tpr'],
+                                           'genvel', exe_dir=tmp_dir)
+            confout = os.path.join(tmp_dir, out_mdrun['conf'])
             # Copy back the g96 file with velocities:
             dest = os.path.join(prevdir, output_file)
             shutil.move(confout, dest)
