@@ -21,12 +21,12 @@ from matplotlib import pyplot as plt
 plt.style.use('bmh')
 
 
-print('Created box:')
+print('Creating box:')
 xyz, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
 box = Box(size=size)
 print(box)
 
-print('Created particles:')
+print('Creating system:')
 system = System(units='lj', box=box, temperature=2.0)
 system.particles = Particles(dim=3)
 for i, pos in enumerate(xyz):
