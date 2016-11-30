@@ -74,42 +74,9 @@ def read_xvg_file(filename):
                     data.append([float(i) for i in lines.split()])
     return np.array(data), legends
         
-    
 
-if __name__ == '__main__':
-    # Run a test:
-    settings = {}
+def test1(gro, external, md_settings):
 
-    settings['system'] = {'units': 'gromacs',
-                          'temperature': 200,
-                          'dimensions': 3}
-
-    settings['particles'] = {'position': {'file': 'ext_input/conf.gro'}}
-
-    settings['orderparameter'] = {'class': 'Position',
-                                  'index': 1472,
-                                  'name': 'Gromacs distance',
-                                  'periodic': True,
-                                  'dim': 'z'}
-    create_conversion_factors(settings['system']['units'])
-
-    system = create_system(settings)
-    system.order_function = create_orderparameter(settings)
-
-    input_dir = 'ext_input'
-
-    input_files = {'configuration': 'conf.g96',
-                   'input': 'grompp.mdp',
-                   'topology': 'topol.top'}
-    
-    exe_path = 'trajf'
-
-    md_settings = {'steps': 200, 'subcycles': 5, 'timestep': 0.002}
-
-    gro = GromacsExt('gmx_5.1.4', input_dir, input_files,
-                     md_settings['timestep'], md_settings['subcycles'])
-
-    external = ExternalScript('For executing commands', None, None, None)
 
     steps = md_settings['steps'] * md_settings['subcycles']
 
@@ -126,7 +93,6 @@ if __name__ == '__main__':
     cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
            '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
            '-nzero', '5']
-
     external.execute_command(cmd, inputs=b'0', cwd=exe_path)
     cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
     external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
@@ -173,13 +139,68 @@ if __name__ == '__main__':
     ax3.set_ylabel('Energy difference')
     ax3.legend()
     plt.show()
+    return out_files
+
+
+if __name__ == '__main__':
+    # Run a test:
+    settings = {}
+
+    settings['system'] = {'units': 'gromacs',
+                          'temperature': 200,
+                          'dimensions': 3}
+
+    settings['particles'] = {'position': {'file': 'ext_input/conf.gro'}}
+
+    settings['orderparameter'] = {'class': 'Position',
+                                  'index': 1472,
+                                  'name': 'Gromacs distance',
+                                  'periodic': True,
+                                  'dim': 'z'}
+    create_conversion_factors(settings['system']['units'])
+
+    system = create_system(settings)
+    system.order_function = create_orderparameter(settings)
+
+    input_dir = 'ext_input'
+
+    input_files = {'configuration': 'conf.g96',
+                   'input': 'grompp.mdp',
+                   'topology': 'topol.top'}
     
+    exe_path = 'trajf'
 
-    #gro.get_trr_frame(trrf, tprf, steps, md_settings['timestep'], 'last.g96')
+    md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
 
-    #trrb, tprb, orderb = gro.execute_until('last.g96', system,
-    #                                       md_settings, reverse=True)
+    gro = GromacsExt('gmx_5.1.4', input_dir, input_files,
+                     md_settings['timestep'], md_settings['subcycles'])
+    
+    external = ExternalScript('For executing commands', None, None, None)
+    #out_files = test1(gro, md_settings, external)    
 
+    out_files = {'trr': 'trajF_new.trr', 'tpr': 'trajF_new.tpr'}
+
+    exe_path = 'trajf'
+    trr = os.path.join(exe_path, out_files['trr'])
+    tpr = os.path.join(exe_path, out_files['tpr'])
+
+    md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
+
+    exe_path = os.path.join(os.getcwd(), 'trajb')
+    
+    initial = os.path.join(exe_path, 'lastf.g96')
+
+    gro.get_trr_frame(trr, tpr, md_settings['steps'], initial)
+
+    out_files, order = gro.execute_until(initial, system,
+                                         md_settings, reverse=True,
+                                         exe_dir=exe_path)
+    cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
+           '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
+           '-nzero', '5']
+    external.execute_command(cmd, inputs=b'0', cwd=exe_path)
+    cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
+    external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
     #gro.get_trr_frame(trrb, tprb, steps, md_settings['timestep'], 'first.g96')
     
     # Compare trajectories

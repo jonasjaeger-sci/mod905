@@ -282,7 +282,8 @@ class GromacsExt(ExternalScript):
         out_files = {'tpr': tpxout}
         return out_files
 
-    def execute_until(self, initial, system, settings, reverse=False):
+    def execute_until(self, initial, system, settings, reverse=False,
+                      exe_dir=None):
         """Propagate until condition is met.
 
         Parameters
@@ -294,6 +295,10 @@ class GromacsExt(ExternalScript):
         settings : dict
             This dictionary contains settings used for the
             simulation.
+        reverse : boolean
+            If True, we will run in the reverse direction.
+        exe_dir : string or None
+            The directory where we will execute GROMACS.
 
         Returns
         -------
@@ -304,24 +309,23 @@ class GromacsExt(ExternalScript):
             finding configurations inside trajectory files) and
             the path to the file containing the trajectory.
         """
-        EXE_DIR = 'trajf'
         if reverse:
+            #EXE_DIR = 'trajb'
             name = 'trajB_new'
-            # basepath = os.path.dirname(initial)
+            basepath = os.path.dirname(initial)
             localfile = os.path.basename(initial)
-            initial_conf = os.path.join(EXE_DIR, 'rev_{}'.format(localfile))
+            initial_conf = os.path.join(basepath, 'rev_{}'.format(localfile))
             self.reverse_velocities(initial, initial_conf)
         else:
+            #EXE_DIR = 'trajf'
             name = 'trajF_new'
             initial_conf = initial
 
-        print('Initial conf:', initial_conf)
 
         ext_time = self.time_step * self.subcycles
 
         order = self.calculate_order_parameter(system,
                                                initial_conf)
-        print(order)
         tpr_file = None
         cpt_file = None
         all_order = [order, 0, '{}.trr'.format(name)]
@@ -330,27 +334,27 @@ class GromacsExt(ExternalScript):
                 out_grompp = self.execute_grompp(self.input_files['input'],
                                                  initial_conf,
                                                  name,
-                                                 exe_dir=EXE_DIR)
+                                                 exe_dir=exe_dir)
                 tpr_file = out_grompp['tpr']
                 out_mdrun = self.execute_mdrun(tpr_file,
-                                               name, exe_dir=EXE_DIR)
+                                               name, exe_dir=exe_dir)
                 cpt_file = out_mdrun['cpt']
             else:
-                out_grompp = self.extend_gromacs(tpr_file, ext_time, exe_dir=EXE_DIR)
+                out_grompp = self.extend_gromacs(tpr_file, ext_time,
+                                                 exe_dir=exe_dir)
                 ext_tpr_file = out_grompp['tpr']
                 out_mdrun = self.execute_mdrun_continue(ext_tpr_file, cpt_file, name,
-                                                        exe_dir=EXE_DIR)
+                                                        exe_dir=exe_dir)
                 # Move extended tpr so that we can continue extending:
-                os.replace(os.path.join(EXE_DIR, ext_tpr_file),
-                           os.path.join(EXE_DIR, tpr_file))
-            conf_abs = os.path.join(EXE_DIR, out_mdrun['conf'])
+                os.replace(os.path.join(exe_dir, ext_tpr_file),
+                           os.path.join(exe_dir, tpr_file))
+            conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
             if conf_abs is not None:
                 order = self.calculate_order_parameter(system,
                                                        conf_abs)
                 all_order.append([order, i+1, '{}.trr'.format(name)])
                 # Remove this file as it's not needed anymore:
                 os.remove(conf_abs)
-        print(all_order)
         # Call some kind of clean-up and remove the files we will never need:
         # Remove from the EXE-DIR:
         # for key in ('mdout.mdp', '{}.log'.format(name),
