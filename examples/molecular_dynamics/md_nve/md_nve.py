@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Example of running a MD NVE simulation.
-This system considered is a simple Lennard-Jones fluid.
+# Copyright (c) 2015, pyretis Development Team.
+# Distributed under the GPLV3 License. See LICENSE for more info.
+"""Example of running a MD simulation using the pyretis library.
+
+The system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from __future__ import print_function
@@ -55,7 +57,6 @@ store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output(settings)]
 # run the simulation :-)
-
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
     for lines in table.generate_output(stepno, result['thermo']):
@@ -64,6 +65,7 @@ for result in simulation_nve.run():
     store_results.append(result['thermo'])
     for task in output_tasks:
         task.output(result)
+
 # We are now done with the actual simulation. Let us now do some
 # simple plotting of energies:
 mpl_set_style()  # load pyretis style
