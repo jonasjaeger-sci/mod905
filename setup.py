@@ -38,7 +38,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.2.0.dev0'  # copied from version.py generated.
+FULL_VERSION = '0.2.0.dev1'  # copied from version.py generated.
 
 setup(name='pyretis',
       version=FULL_VERSION,
