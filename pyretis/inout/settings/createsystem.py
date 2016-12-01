@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the MIT License. See LICENSE for more info.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module handles the set-up of initial positions and a box.
 
 The initial positions can either be generated on a lattice, or it can

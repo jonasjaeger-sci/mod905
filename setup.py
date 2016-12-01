@@ -1,27 +1,24 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the MIT License. See LICENSE for more info.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 pyretis - A simulation package for rare event simulations.
 Copyright (C) 2015  The pyretis team
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This file is part of pyretis.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+pyretis is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+pyretis is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with pyretis. If not, see <http://www.gnu.org/licenses/>
 """
 from codecs import open as openc
 import os
@@ -47,11 +44,12 @@ setup(name='pyretis',
       url='http://www.pyretis.org',
       author='The pyretis team',
       author_email='pyretis@pyretis.org',
-      license='MIT',
+      license='LGPLv3',
       classifiers=['Development Status :: 3 - Alpha',
                    'Environment :: Console',
                    'Intended Audience :: Science/Research',
-                   'License :: OSI Approved :: MIT License',
+                   ('License :: OSI Approved :: '
+                    'GNU Lesser General Public License v3 (LGPLv3)'),
                    'Natural Language :: English',
                    'Operating System :: MacOS :: MacOS X',
                    'Operating System :: POSIX',

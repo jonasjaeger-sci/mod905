@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the MIT License. See LICENSE for more info.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """The sub-package handles input and output for pyretis.
 
 This package is intended for creating various forms of output

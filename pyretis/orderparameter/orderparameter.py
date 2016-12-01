@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the MIT License. See LICENSE for more info.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains classes to represent order parameters.
 
 The order parameters are assumed to all be completely determined
