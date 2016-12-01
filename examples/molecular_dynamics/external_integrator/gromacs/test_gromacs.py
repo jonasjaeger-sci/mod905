@@ -24,7 +24,7 @@ from pyretis.inout.settings import create_orderparameter
 from matplotlib import pyplot as plt
 
 
-def compare_g96_files(file1, file2, box):
+def compare_g96_files(file1, file2, box, negvel=False):
     """Compare two g96 files.
 
     Parameters
@@ -35,6 +35,8 @@ def compare_g96_files(file1, file2, box):
         Second file to open.
     box : object like pyretis.core.box
         This is used to handle the periodic boundaries.
+    negvel : boolean
+        If True, we flip the velocities in file1.
 
     Returns
     -------
@@ -49,7 +51,10 @@ def compare_g96_files(file1, file2, box):
     delta = box.pbc_dist_matrix(delta)
     rsq = np.einsum('ij, ij->i', delta, delta)
     mse_x = rsq.mean()
-    delta_v = vel2 - vel1
+    if negvel:
+        delta_v = vel2 + vel1
+    else:
+        delta_v = vel2 - vel1
     rsq_v = np.einsum('ij, ij->i', delta_v, delta_v)
     mse_v = rsq_v.mean()
     print('MSE positions between {} and {}: {}'.format(file1, file2, mse_x))
@@ -201,14 +206,25 @@ if __name__ == '__main__':
     external.execute_command(cmd, inputs=b'0', cwd=exe_path)
     cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
     external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
-    #gro.get_trr_frame(trrb, tprb, steps, md_settings['timestep'], 'first.g96')
     
-    # Compare trajectories
-    #box = Box([2.384999990, 2.384999990, 2.384999990])
-    #txt1, xyz1, vel1 = read_gromos96_file('first.g96')
-    #txt0, xyz0, vel0 = read_gromos96_file('initial.g96')
-    #delta = xyz1 - xyz0
-    #delta = box.pbc_dist_matrix(delta)
-    #rsq = np.einsum('ij, ij->i', delta, delta)
-    #mse = rsq.mean()
-    #print('Average distance between initial.g96 and first.g96: {}'.format(mse))
+    # compare frames:
+    box = Box([2.384999990, 2.384999990, 2.384999990])
+    forward = 'trajf'
+    all_mse_x = []
+    all_mse_v = []
+    file_forward = []
+    file_backward = []
+    for files in os.listdir(exe_path):
+        if files.endswith('.g96') and files.startswith('frame'):
+            file1 = os.path.join(exe_path, files)
+            file2 = os.path.join(forward, files)
+            file_forward.append(file2)
+            file_backward.append(file1)
+    file_forward = sorted(file_forward)
+    file_backward = sorted(file_backward)
+    for file1, file2 in zip(file_backward, file_forward[::-1]):
+        mse_x, mse_v = compare_g96_files(file1, file2, box, negvel=True)
+        all_mse_x.append(mse_x)
+        all_mse_v.append(mse_v)
+    print('Average MSE positions: {}'.format(np.average(all_mse_x)))
+    print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
