@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Distributed under the MIT License. See LICENSE for more info.
 """A simple test module for parsing a settings input file.
 
 Here we test that we understand the input file and that fail in

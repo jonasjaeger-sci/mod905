@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Distributed under the MIT License. See LICENSE for more info.
 """This package defines the core pyretis tools.
 
 The core tools are intended to set up simulations and run them.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Distributed under the MIT License. See LICENSE for more info.
 """Definitions of simulation objects for path sampling simulations.
 
 This module defines simulations for performing path sampling

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2016, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Distributed under the MIT License. See LICENSE for more info.
 """This is a simple RETIS example.
 
 This example will just consider a simple 1D potential where we
