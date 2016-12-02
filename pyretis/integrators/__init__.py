@@ -18,11 +18,11 @@ integrator.py
 internal.py
     Defines internal pyretis integrators.
 
-external_integrators.py
+external.py
     Defines the interface for external integrators.
 
 gromacs.py
-    Defines an integrator for use with GROMACS version 5.
+    Defines an integrator for use with GROMACS.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,7 +33,7 @@ integrator_factory
 from pyretis.core.common import generic_factory
 from .integrator import Integrator
 from .internal import Verlet, VelocityVerlet, Langevin
-from .external_integrators import ExternalScript
+from .external import ExternalScript
 from .gromacs import GromacsExt
 
 
