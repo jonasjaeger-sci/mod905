@@ -15,7 +15,7 @@ Modules
 integrator.py
     Defines the base integrator class.
 
-internal_integrators.py
+internal.py
     Defines internal pyretis integrators.
 
 external_integrators.py
@@ -32,7 +32,7 @@ integrator_factory
 """
 from pyretis.core.common import generic_factory
 from .integrator import Integrator
-from .internal_integrators import Verlet, VelocityVerlet, Langevin
+from .internal import Verlet, VelocityVerlet, Langevin
 from .external_integrators import ExternalScript
 from .gromacs import GromacsExt
 

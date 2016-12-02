@@ -21,7 +21,7 @@ Bugs and issues
 ---------------
 
 If you find a bug in pyretis, please `create an issue
-<https://gitlab.com/andersle/pyretis/issues>`_ using the following
+<https://gitlab.com/pyretis/pyretis/issues>`_ using the following
 template:
 
 .. code-block:: restructuredtext
@@ -67,7 +67,7 @@ New features
 
 If you are missing some functionality in pyretis you can create
 a new issue in the issue tracker and
-label it as a `feature proposal <https://gitlab.com/andersle/pyretis/issues?label_name=feature+proposal>`_.
+label it as a `feature proposal <https://gitlab.com/pyretis/pyretis/issues?label_name=feature+proposal>`_.
 If you do not have rights to add the ``feature proposal`` label, you can ask one 
 of the core members of the pyretis project to add it for you.
 
