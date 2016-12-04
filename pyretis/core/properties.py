@@ -8,7 +8,7 @@ __all__ = ['Property']
 
 
 class Property(object):
-    """Property(object).
+    """A generic numerical value with standard deviation and average.
 
     A generic object to store values obtained during a simulation.
     It will maintain the mean and variance as values are added using

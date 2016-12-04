@@ -37,7 +37,6 @@ References
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
-from __future__ import print_function
 import logging
 import numpy as np
 from pyretis.core.tis import make_tis_step_ensemble
@@ -67,14 +66,14 @@ def make_retis_step(ensembles, system, integrator, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`
+    ensembles : list of objects like :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `.integrators`
+    integrator : object like :py:class:`pyretis.integrators.Integrator`
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -108,9 +107,9 @@ def _relative_shoots_select(ensembles, rgen, relative):
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`.
+    ensembles : list of objects :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     relative : list of floats
@@ -121,7 +120,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
     -------
     out[0] : integer
         The index of the path ensemble to shoot in.
-    out[1] : object like `PathEnsemble` from `.path`.
+    out[1] : object like :py:class:`PathEnsemble`.
         The selected path ensemble for shooting.
     """
     freq = rgen.rand()
@@ -165,14 +164,14 @@ def retis_tis_moves(ensembles, system, integrator, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`.
+    ensembles : list of objects like :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -236,14 +235,14 @@ def retis_moves(ensembles, system, integrator, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`.
+    ensembles : list of objects like :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `.system`
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -312,16 +311,16 @@ def retis_swap(ensembles, idx, system, integrator,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`.
+    ensembles : list of objects like :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
     idx : integer
         Definition of what path ensembles to swap. We will swap
         `ensembles[idx]` with `ensembles[idx+1]`. If `idx == 0` we have
         case 1) defined above.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -397,12 +396,12 @@ def retis_swap_zero(ensembles, system, integrator,
 
     Parameters
     ----------
-    ensembles : list of objects like `PathEnsemble` from `.path`.
+    ensembles : list of objects like :py:class:`PathEnsemble`.
         This is a list of the ensembles we are using in the RETIS method
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -478,7 +477,7 @@ def null_move(path_ensemble, cycle):
 
     Parameters
     ----------
-    path_ensemble : object like `pyretis.core.path.PathEnsemble`
+    path_ensemble : object like :py:class:`PathEnsemble`.
         This is the path ensemble to update with the null move
     cycle : integer
         The current cycle number

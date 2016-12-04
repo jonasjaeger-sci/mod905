@@ -31,7 +31,7 @@ PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
 
 
 class PathEnsemble(object):
-    """PathEnsemble(object) - representation of a path ensemble.
+    """Representation of a path ensemble.
 
     This class represents a collection of `Paths` in a path ensemble.
     In general paths may be 'long and complicated' so here, we really
@@ -73,7 +73,7 @@ class PathEnsemble(object):
           (from `_STATUS`).
     maxpath : int
         The maximum number of paths to store.
-    last_path : object like `pyretis.core.Path`
+    last_path : object like :py:class:`PathBase`.
         This is the last **accepted** path.
     """
 
@@ -126,7 +126,7 @@ class PathEnsemble(object):
 
         Parameters
         ----------
-        path : object like `Path`
+        path : object like :py:class:`pyretis.core.path.PathBase`.
             This is the object to store data from.
         status : string
             This is the status of the path. Note that the path object
@@ -274,7 +274,7 @@ def create_path_ensembles(interfaces, include_zero=False):
 
     Returns
     -------
-    ensembles : list of objects like `PathEnsemble`.
+    ensembles : list of objects like :py:class:`.PathEnsemble`.
         The generated (empty) path ensemble objects.
     detect : list of floats
         These are interfaces that can be used for an analysis, i.e. for

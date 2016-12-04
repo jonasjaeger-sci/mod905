@@ -31,7 +31,7 @@ __all__ = ['Verlet', 'VelocityVerlet', 'Langevin']
 
 
 class Verlet(Integrator):
-    """Verlet(Integrator).
+    """The Verlet integrator.
 
     This class defines the Verlet integrator.
 
@@ -96,7 +96,7 @@ class Verlet(Integrator):
 
 
 class VelocityVerlet(Integrator):
-    """VelocityVerlet(Integrator).
+    """The Velocity Verlet integrator.
 
     This class defines the Velocity Verlet integrator.
 
@@ -149,7 +149,7 @@ class VelocityVerlet(Integrator):
 
 
 class Langevin(Integrator):
-    """Langevin(Integrator).
+    """The Langevin integrator.
 
     This class defines a Langevin integrator.
 

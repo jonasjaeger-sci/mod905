@@ -21,7 +21,7 @@ __all__ = ['DoubleWellWCA']
 
 
 class DoubleWellWCA(PotentialFunction):
-    r"""DoubleWellWCA(PotentialFunction).
+    r"""A double well potential.
 
     This class defines a n-dimensional Double Well potential.
     The potential energy (:math:`V_\text{pot}`) for a pair of particles

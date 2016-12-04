@@ -61,7 +61,7 @@ _TITLE_SETTINGS = {'loc': 'right'}
 
 
 class MplPlotter(Plotter):
-    """Class MplPlotter(Plotter).
+    """A plotter using matplotlib.
 
     This class defines a plotter. A plotter is just a object that
     supports certain functions which conveniently can be called in

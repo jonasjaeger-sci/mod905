@@ -21,7 +21,7 @@ __all__ = ['ForceField']
 
 
 class ForceField(object):
-    """ForceField(object).
+    """Represents a generic force field.
 
     This class described a generic Force Field.
     A force field is assumed to consist of a number of potential

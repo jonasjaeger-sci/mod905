@@ -36,8 +36,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['RandomGenerator', 'ReservoirSampler', 'MockRandomGenerator']
 
 
-class RandomGeneratorBase(object):
-    """RandomGeneratorBase - A base class for the generators
+class RandomGeneratorBase(metaclass=ABCMeta):
+    """A base class for random number generators.
 
     This is a base class for random number generators. It does not
     actually implement a generator.
@@ -47,8 +47,6 @@ class RandomGeneratorBase(object):
     seed : int
         A seed for the generator
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, seed=0):
         """Initiate the random number generator.
@@ -159,7 +157,7 @@ class RandomGeneratorBase(object):
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
+        particles : object like :py:class:`pyretis.core.particles.Particles`.
             These are the particles to set the velocity of.
         boltzmann : float
             The Boltzmann factor in correct units.
@@ -203,7 +201,7 @@ class RandomGeneratorBase(object):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`pyretis.core.system.System`.
             This is used to determine the temperature parameter(s) and
             the shape (number of particles and dimensionality)
         sigma_v : numpy.array, optional
@@ -219,7 +217,7 @@ class RandomGeneratorBase(object):
 
 
 class RandomGenerator(RandomGeneratorBase):
-    """RandomGenerator(RandomGeneratorBase) - A random number generator.
+    """A random number generator from numpy.
 
     This class that defines a random number generator. It will use
     `numpy.random.RandomState` for the actual generation, and we refer
@@ -232,7 +230,7 @@ class RandomGenerator(RandomGeneratorBase):
     ----------
     seed : int
         A seed for the pseudo-random generator.
-    rgen : object like `RandomState`
+    rgen : object like numpy.random.RandomState.
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy [#]_.
 
@@ -350,7 +348,7 @@ class RandomGenerator(RandomGeneratorBase):
 
 
 class ReservoirSampler(object):
-    """ReservoirSampler - A class for reservoir sampling.
+    """A class representing a reservoir sampler.
 
     The reservoir sampler will maintains a list of `k` items drawn
     randomly from a set of `N > k` items. The list is created and
@@ -362,7 +360,7 @@ class ReservoirSampler(object):
 
     Attributes
     ----------
-    rgen : object like `RandomState`
+    rgen : object like `numpy.random.RandomState`
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy, see the documentation
         of `RandomGenerator`.
@@ -391,7 +389,7 @@ class ReservoirSampler(object):
             An integer used for seeding the generator.
         length : int, optional
             The maximum number of items to store.
-        rgen : object like `RandomGenerator`.
+        rgen : object like :py:class:`RandomGenerator`.
             In case we want to re-use a random generator object.
             If this is specified, the parameter `seed` is ignored.
         """
@@ -441,7 +439,7 @@ class ReservoirSampler(object):
 
 
 class MockRandomGenerator(RandomGeneratorBase):
-    """MockRandomGenerator - A "fake" random generator.
+    """A **mock** random generator, useful **only for testing**.
 
     This class represents a random generator that can be used for
     testing algorithms. It will simply return numbers from a
@@ -585,7 +583,7 @@ def create_random_generator(settings):
 
     Returns
     -------
-    out : object like `RandomGenerator`
+    out : object like :py:class:`RandomGenerator`
         The random generator created.
     """
     if 'seed' not in settings:

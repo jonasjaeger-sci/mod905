@@ -5,7 +5,6 @@ This timing is simply done by evaluating the Leannrd-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors

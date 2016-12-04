@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Example of using a Lennard-Jones potential implemented in Fortran."""
 from __future__ import absolute_import
-from __future__ import print_function
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

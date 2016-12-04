@@ -8,7 +8,6 @@ aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
-from __future__ import print_function
 from pyretis.core import System, Box
 from pyretis.core.properties import Property
 from pyretis.inout.settings import (create_force_field,

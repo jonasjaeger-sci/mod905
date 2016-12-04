@@ -26,7 +26,7 @@ __all__ = ['ExternalScript']
 
 
 class ExternalScript(metaclass=ABCMeta):
-    """ExternalScript(metaclass=ABCMeta).
+    """Base class for interfacing external programs.
 
     This class defines the interface to external programs. This
     interface will define how we interact with the external programs

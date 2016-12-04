@@ -6,7 +6,6 @@
 This module defines some potential functions which are useful
 as simple models.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction

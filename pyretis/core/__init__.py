@@ -17,8 +17,11 @@ __init__.py
 box.py (:py:mod:`pyretis.core.box`)
     Definition of the simulation box class.
 
+common.py (:py:mod:`pyretis.core.common`)
+    Some common core methods, for instance for initiating classes.
+
 montecarlo.py (:py:mod:`pyretis.core.montecarlo`)
-    This module defines functions for performing Monte Carlo moves.
+    This module defines methods for performing Monte Carlo moves.
 
 particlefunctions.py (:py:mod:`pyretis.core.particlefunctions`)
     Functions that operate on (a selection of) particles, for instance

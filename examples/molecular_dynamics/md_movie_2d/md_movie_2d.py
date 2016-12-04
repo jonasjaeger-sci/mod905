@@ -4,7 +4,6 @@ Example of running a MD NVE simulation.
 In this example we animate the output.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
 # pyretis imports:
 from pyretis.core.units import CONVERT, create_conversion_factors

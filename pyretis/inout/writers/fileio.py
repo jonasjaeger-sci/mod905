@@ -23,7 +23,7 @@ __all__ = ['FileIO']
 
 
 class FileIO(object):
-    """FileIO(object) - A generic file writer class.
+    """A generic file writer class.
 
     This class defines a simple object for writing to files.
     Formatting etc. is handled by objects like `Writers` from

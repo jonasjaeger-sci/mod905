@@ -54,14 +54,14 @@ def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `.path`.
+    path_ensemble : object like :py:class:`PathEnsemble`.
         This is the path ensemble to perform the TIS step for.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list.
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the
@@ -75,7 +75,7 @@ def make_tis_step_ensemble(path_ensemble, system, integrator, rgen,
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like `Path` from `.path`.
+    out[1] : object like :py:class:`Path`.
         The generated path.
     out[2] : string
         The status of the path
@@ -107,14 +107,14 @@ def initiate_path_ensemble(path_ensemble, system, integrator, rgen,
 
     Parameters
     ----------
-    path_ensemble : object like `.pathensemble.PathEnsemble`.
+    path_ensemble : object like :py:class:`PathEnsemble`.
         The path ensemble to create an initial path for.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list.
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the
@@ -151,17 +151,17 @@ def make_tis_step(path, system, interfaces, integrator, rgen,
 
     Parameters
     ----------
-    path : object like `Path` from `.path`.
+    path : object like :py:class:`Path`.
         This is the input path which will be used for generating a
         new path.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list.
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         A integrator to use for propagating a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         Random number generator used to determine what TIS move to
         perform.
     tis_settings : dict
@@ -175,7 +175,7 @@ def make_tis_step(path, system, interfaces, integrator, rgen,
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like `Path` from `.path`.
+    out[1] : object like :py:class:`Path`.
         The generated path.
     out[2] : string
         The status of the path
@@ -197,7 +197,7 @@ def _time_reversal(path, interfaces, start_condition):
 
     Parameters
     ----------
-    path : object like `Path` from `.path`.
+    path : object like :py:class:`Path`.
         This is the input path which will be used for generating a
         new path.
     interfaces : list/tuple of floats
@@ -209,7 +209,7 @@ def _time_reversal(path, interfaces, start_condition):
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object like `Path` or `None`
+    out[1] : object like :py:class:`Path`.
         Returns the generated path if something was generated
         `Path` is defined in `.path`.
     out[2] : string
@@ -239,18 +239,18 @@ def _shoot(path, system, interfaces, integrator, rgen,
 
     Parameters
     ----------
-    path : object like `Path` from `.path`.
+    path : object like :py:class:`Path`.
         This is the input path which will be used for generating a
         new path.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the temperature
         and to the particle list.
     interfaces : list/tuple of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         The integrator is used to propagate a path.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     tis_settings : dict
         This contains the settings for TIS. Keys used here:
@@ -265,12 +265,11 @@ def _shoot(path, system, interfaces, integrator, rgen,
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object like `Path` or `None`
+    out[1] : object like :py:class:`Path` or `None`
         Returns the generated path if something was generated.
-        `Path` is defined in `.path`.
     out[2] : string
         Status of the path, this is one of the strings defined in
-        `.path._STATUS`.
+        :py:const:`pyretis.core.path._STATUS`.
     """
     accept, trial_path = False, Path(rgen)  # return values
     # trial_path is just an empty path for now
@@ -283,7 +282,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
-    # kick the timeslice:
+    # kick the time-slice:
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
                           momentum=tis_settings['zero_momentum'],
                           rescale=tis_settings['rescale_energy'])[0]
@@ -380,15 +379,15 @@ def generate_initial_path_kick(system, interfaces, integrator,
 
     Parameters
     ----------
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         This is the system that contains the particles we are
         investigating.
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
@@ -435,7 +434,7 @@ def generate_initial_path_kick(system, interfaces, integrator,
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     start, end, _, _ = initial_path.check_interfaces(interfaces)
-    # ok, now its time to check the path:
+    # OK, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
     # and continue all the way to the end - perfect!
     # 1) we can start at the starting condition, pass the middle
@@ -472,19 +471,19 @@ def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
 
     Parameters
     ----------
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         This is the system that contains the particles we are
         investigating
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     middle : float
         This is the value for the middle interface.
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
 
-        * `zero_momentum`: boolean, determines if the mometum is zeroed
+        * `zero_momentum`: boolean, determines if the momentum is zeroed
         * `rescale_energy`: boolean, determines if energy is rescaled.
 
     Returns
@@ -514,7 +513,7 @@ def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
         # save current state:
         previous = particles.get_phase_point()
         previous['order'] = curr
-        # kick the time slice
+        # kick the time-slice
         _kick_timeslice(system, rgen, aimless=True,
                         momentum=tis_settings['zero_momentum'],
                         rescale=tis_settings['rescale_energy'])
@@ -543,10 +542,10 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
 
     Parameters
     ----------
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         System is used here since we need access to the particle
         list.
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     sigma_v : numpy.array
         These values can be used to set a standard deviation (one for
@@ -597,18 +596,18 @@ def _fix_path_by_tis(initial_path, system, interfaces,
 
     Parameters
     ----------
-    initial_path : object like `Path` from `.path`.
+    initial_path : object like :py:class:`Path`.
         This is the initial path to fix. It starts & ends at the
         wrong interface.
-    system : object like `System` from `.system`.
+    system : object like :py:class:`System`.
         This is the system that contains the particles we are
         investigating
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like `Integrator` from `.integrators`.
+    integrator : object like :py:class:`Integrator`.
         This is the propagator of the simulation
-    rgen : object like `RandomGenerator` from `.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used.
     tis_settings : dict
         Settings for TIS method, here we explicitly use:

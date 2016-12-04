@@ -22,7 +22,7 @@ __all__ = ['Integrator']
 
 
 class Integrator(object):
-    """Integrator(object).
+    """Base class for integrators.
 
     This class defines an integrator. The integrator is assumed to
     act on a system as will typically need to execute the command

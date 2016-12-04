@@ -32,7 +32,7 @@ SOFTWARE.
 pyretis documentation
 ---------------------
 
-The documentation for pyretis is avaiable either docstrings provided
+The documentation for pyretis is available either doc-strings provided
 with the code and from `the pyretis homepage <http://www.pyretis.org>`_.
 
 pyretis sub-packages

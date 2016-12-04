@@ -3,7 +3,8 @@
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module just contains some info for pyretis.
 
-Here we define the name of the program and urls.
+Here we define the name of the program and some other
+relevant info.
 """
 PROGRAM_NAME = 'pyretis'
 URL = 'http://www.pyretis.org'

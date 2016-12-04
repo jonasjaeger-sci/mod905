@@ -12,7 +12,6 @@ System
     the simulation acts and contains information about particles,
     force fields etc.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 # from the pyretis package
@@ -29,11 +28,11 @@ __all__ = ['System']
 
 
 class System(object):
-    """This class defines a generic system for simulation.
+    """This class defines a generic system for simulations.
 
     Attributes
     ----------
-    box : object like `Box` from `pyretis.core.box`
+    box : object like :py:class:`pyretis.core.box.Box`.
         Defines the simulation box.
     temperature : dict
         This dictionary contains information on the temperature. The
@@ -45,7 +44,7 @@ class System(object):
           system.
     v_pot : float
         The potential energy of the system.
-    particles : object like `pyretis.core.particles.Particles`
+    particles : object like :py:class:`pyretis.core.particles.Particles`.
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
     post_setup : list of tuples
@@ -54,10 +53,10 @@ class System(object):
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
         such that ``system.function(*args)`` can be called.
-    forcefield : object like `ForceField` from `pyretis.forcefield`
+    forcefield : object like :py:class:`ForceField`.
         Defines the force field to use and implements the actual force
         and potential calculation.
-    order_function : object like `OrderParameter` from `.orderparameter`
+    order_function : object like :py:class:`OrderParameter`.
         Defines the an order parameter to use for the system. See
         :py:mod:`pyretis.orderparameter` for the definition
         of order parameters.
@@ -71,7 +70,7 @@ class System(object):
 
         Parameters
         ----------
-        box : object like `Box` from `pyretis.core.box`
+        box : object like :py:class:`pyretis.core.box.Box`
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float

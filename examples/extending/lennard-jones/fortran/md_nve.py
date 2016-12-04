@@ -4,7 +4,6 @@
 This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_system,
                                     create_force_field, create_output)

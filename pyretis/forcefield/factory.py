@@ -35,7 +35,7 @@ def potential_factory(settings):
 
     Returns
     -------
-    out[0] : object like `PotentialFunction`.
+    out[0] : object like :py:class:`PotentialFunction`.
         This object represents the potential.
     """
     potential_map = {'doublewell': {'cls': DoubleWell},

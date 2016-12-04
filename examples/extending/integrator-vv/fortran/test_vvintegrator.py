@@ -8,7 +8,6 @@ This test is comparing:
 2) The Fortran implementation.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import unittest
 import numpy as np
 from pyretis.core import System, Box

@@ -40,11 +40,11 @@ class Simulation(object):
 
         Note that `cycle['stepno']` might be different from
         `cycle['step']` since `cycle['start']` might be != 0.
-    task : list of objects like `SimulationTask` from `.simulation_task`
+    task : list of objects like :py:class:`SimulationTask`.
         This is the list of simulation tasks to execute.
     first_step : boolean
         True if the first step has not been executed yet.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`System`.
         This is the system the simulation will act on.
     """
 
@@ -216,7 +216,7 @@ class Simulation(object):
 
         Parameters
         ----------
-        output : list, objects like `OutputTask` from `pyretis.inout.settings`.
+        output : list, objects like :py:class:`OutputTask`.
             If outputs are given, they will be executed here.
 
         Yields

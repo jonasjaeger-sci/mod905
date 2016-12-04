@@ -64,7 +64,7 @@ def _fill_list(the_list, length, fillvalue=None):
 
 
 class TxtTable(Writer):
-    """TxtTable(Writer) - A class for generating table output.
+    """A class for generating table output.
 
     This class handles writing/reading of output data to a table-like
     format.
@@ -172,7 +172,7 @@ class TxtTable(Writer):
 
 
 class PathTable(TxtTable):
-    """PathTable(object) - Special table for path ensembles.
+    """A special table output class for path ensembles.
 
     This object will return a table of text with a header and with
     formatted rows for a path ensemble. The table rows will contain
@@ -227,7 +227,7 @@ class PathTable(TxtTable):
 
 
 class ThermoTable(TxtTable):
-    """Class ThermoTable(TxtTable) - Special table for energy output.
+    """A special text table for energy output.
 
     This object will return a table of text with a header and with
     formatted rows for energy output. Typical use is in MD simulation

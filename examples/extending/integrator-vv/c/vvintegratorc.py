@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Example of using a integration routine implemented in Fortran."""
-from __future__ import absolute_import
-from __future__ import print_function
 import logging
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())

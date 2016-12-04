@@ -5,7 +5,7 @@
 
 This module defines some classes for writing out trajectory data.
 Here we define a class for a simple xyz-format and a class for writing
-in a gromacs format.
+in a GROMACS format.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,7 +78,7 @@ def _adjust_coordinate(coord):
 
 
 class TrajXYZ(Writer):
-    u"""TrajXYZ(Writer) - A class for XYZ files.
+    u"""A class for writing XYZ files.
 
     This class handles writing of a system to a file in a simple xyz
     format.
@@ -199,10 +199,10 @@ class TrajXYZ(Writer):
 
 
 class TrajGRO(Writer):
-    """TrajGRO(Writer) - A class for gromacs GRO files.
+    """A class for writing GROMACS GRO files.
 
-    This class handles writing of a system to a file using the gromacs
-    format. The gromacs format is described in the GROMACS manual [#]_.
+    This class handles writing of a system to a file using the GROMACS 
+    format. The GROMACS format is described in the GROMACS manual [#]_.
 
     Attributes
     ----------
@@ -228,7 +228,7 @@ class TrajGRO(Writer):
     heading = 'Trajectory output. Frame: {}'
 
     def __init__(self, units, write_vel):
-        """Initiate the gromacs writer."""
+        """Initiate the GROMACS writer."""
         super(TrajGRO, self).__init__('TrajGRO', header=None)
         self.atomnames = []
         self.frame = 0  # number of frames written
@@ -317,7 +317,7 @@ class TrajGRO(Writer):
         return buff
 
     def generate_output(self, system, header=None):
-        """Write a configuration in gromacs format.
+        """Write a configuration in GROMACS format.
 
         This is a method for writing a configuration in GRO-format.
         It is similar to `write_frame` and it's meant for convenience:
@@ -397,9 +397,9 @@ class TrajGRO(Writer):
 
 
 def read_gromacs_file(filename):
-    """A method for reading gromacs GRO files.
+    """A method for reading GROMACS GRO files.
 
-    This method will read a gromacs file and yield the different
+    This method will read a GROMACS file and yield the different
     snapshots found in the file.
 
     Parameters

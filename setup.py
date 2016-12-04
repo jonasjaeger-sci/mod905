@@ -35,7 +35,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.2.0.dev1'  # copied from version.py generated.
+FULL_VERSION = '0.2.0.dev2'  # copied from version.py generated.
 
 setup(name='pyretis',
       version=FULL_VERSION,
@@ -53,14 +53,13 @@ setup(name='pyretis',
                    'Natural Language :: English',
                    'Operating System :: MacOS :: MacOS X',
                    'Operating System :: POSIX',
-                   'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.2',
                    'Programming Language :: Python :: 3.3',
                    'Programming Language :: Python :: 3.4',
                    'Programming Language :: Python :: 3.5',
                    'Topic :: Scientific/Engineering :: Physics'],
-      keywords='simulation TIS RETIS',
+      keywords='rare md mc tps simulation tis retis',
       packages=find_packages(exclude=['docs']),
       install_requires=['numpy>=1.6.0',
                         'scipy>=0.13.3',

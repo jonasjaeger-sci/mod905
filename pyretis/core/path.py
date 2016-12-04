@@ -66,9 +66,9 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 
     Parameters
     ----------
-    path_back : object like `Path`.
+    path_back : object like :py:class:`Path`.
         This is the backward trajectory.
-    path_forw : object like `Path`.
+    path_forw : object like :py:class:`Path`.
         This is the forward trajectory.
     overlap : boolean, default is True.
         If true, `path_back` and `path_forw` have a common
@@ -168,8 +168,8 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase(object):
-    """PathBase(object) - base class for representation of paths.
+class PathBase(metaclass=ABCMeta):
+    """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of
     consecutive snapshots (the trajectory) with the corresponding order
@@ -202,7 +202,7 @@ class PathBase(object):
         This is the (current) maximum order parameter for the path.
         `ordermax[0]` is the value, `ordermax[1]` is the index in
         `self.path`.
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`.
+    rgen : object like :py:class:`RandomGenerator`.
         This is the random generator that will be used for the
         paths that required random numbers.
     time_origin : int
@@ -216,14 +216,12 @@ class PathBase(object):
         in the variable `_STATUS`
     """
 
-    __metaclass__ = ABCMeta
-
     def __init__(self, rgen, maxlen=None, time_origin=0):
         """Initialize the Path object.
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`.
+        rgen : object like :py:class:`RandomGenerator`.
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -397,7 +395,7 @@ class PathBase(object):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `random_gen`.
+        rgen : object like :py:class:`RandomGenerator`.
             This object is used to draw a random integer.
 
         Returns
@@ -554,7 +552,7 @@ class PathBase(object):
 
         Returns
         -------
-        new_path : object like `PathBase`
+        new_path : object like :py:class:`PathBase`.
             This is basically a copy of `self`, just reversed.
         """
         new_path = self.empty_path()
@@ -599,14 +597,14 @@ class PathBase(object):
 
         Returns
         -------
-        out : object like `PathBase`.
+        out : object like :py:class:`PathBase`.
             A new empty path.
         """
         return
 
 
 class Path(PathBase):
-    """Path(PathBase) - representation of paths.
+    """A path where the full trajectory is stored in memory.
 
     This class represents a path. A path consist of a series of
     consecutive snapshots (the trajectory) with the corresponding
@@ -619,7 +617,7 @@ class Path(PathBase):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        rgen : object like :py:class:`RandomGenerator`.
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -726,7 +724,7 @@ class Path(PathBase):
 
         Returns
         -------
-        out : object like `PathBase`.
+        out : object like :py:class:`PathBase`.
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -736,7 +734,7 @@ class Path(PathBase):
 
 
 class ReservoirPath(PathBase):
-    """ReservoirPath(PathBase) - representation of paths.
+    """A path where only a subset of points are stored in memory.
 
     This class represents a path. A path consist of a series of
     consecutive snapshots (the trajectory) with the corresponding order
@@ -750,7 +748,7 @@ class ReservoirPath(PathBase):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`.
+        rgen : object like :py:class:`RandomGenerator`.
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -892,7 +890,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        out : object like `PathBase`.
+        out : object like :py:class:`PathBase`.
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -911,7 +909,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        path : object like `PathBase`.
+        path : object like py:class:`PathBase`.
             This is basically a copy of `self`, just reversed.
         """
         path = super(ReservoirPath, self).reverse()
@@ -923,7 +921,7 @@ class ReservoirPath(PathBase):
 
 
 class PathExternal(PathBase):
-    """PathExternal(PathBase) - representation of paths.
+    """A path storing minimal information in memory.
 
     This class represents a path, however in this case we do not load all
     positions and velocities into the path object. We only store the order
@@ -936,7 +934,7 @@ class PathExternal(PathBase):
 
         Parameters
         ----------
-        rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+        rgen : object like :py:class:`RandomGenerator`.
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -1041,7 +1039,7 @@ class PathExternal(PathBase):
 
         Returns
         -------
-        out : object like `PathBase`.
+        out : object like :py:class:`PathBase`.
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)

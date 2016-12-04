@@ -4,7 +4,6 @@ Example of running a MD NVE simulation.
 This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors

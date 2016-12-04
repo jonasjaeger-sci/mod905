@@ -4,7 +4,6 @@ Example of running a MD NVE simulation.
 In this example we re-run a LAMMPS simulation using pyretis.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 from pyretis.core import System, Box
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.simulation import Simulation

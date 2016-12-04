@@ -28,7 +28,7 @@ __all__ = ['TxtPlotter']
 
 
 class TxtPlotter(Plotter):
-    """Class TxtPlotter(Plotter).
+    """A plotter writing text-based output.
 
     This class will just write text-based output. It is similar to the
     matplotlib plotter in the sence that the same functions are supported.

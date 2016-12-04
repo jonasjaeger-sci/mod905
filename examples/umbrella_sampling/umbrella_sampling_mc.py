@@ -7,7 +7,6 @@ In this simulation, we study a particle moving in a one-dimensional
 potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
-from __future__ import print_function
 from pyretis.core import System, RandomGenerator, Box
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField

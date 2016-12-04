@@ -18,7 +18,6 @@ Important classes defined here
 OutputTask
     A class for handling output tasks.
 """
-from __future__ import print_function
 import logging
 # pyretis imports
 from pyretis.inout.common import add_dirname
@@ -131,7 +130,7 @@ _DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
 
 
 class OutputTask(object):
-    """Class OutputTask(object) - Simulation output tasks.
+    """A base class for writing simulation output.
 
     This class will handle a output task for a simulation. The
     output task may be something that should print to the screen or
@@ -294,7 +293,7 @@ class OutputTask(object):
 
 
 class OutputTaskScreen(OutputTask):
-    """Class OutputTaskScreen(object) - Simulation output tasks.
+    """A class for writing simulation output to screen.
 
     This class will handle a output task for a simulation to the screen.
     Note the different handling of the header here -> it is assumed
@@ -357,7 +356,7 @@ class OutputTaskScreen(OutputTask):
 
 
 class OutputTaskFile(OutputTask):
-    """Class OutputTaskFile(object) - Simulation output tasks.
+    """A class for writing simulation output to files.
 
     This class will handle a output task for a simulation to a file.
 

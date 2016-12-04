@@ -3,8 +3,6 @@
 	    tests-silent
 	    tests3
 	    tests-silent3
-	    tests2
-	    tests-silent2
 	    clean
 	    upload-docs
 
@@ -20,12 +18,6 @@ tests3:
 
 tests-silent3:
 	python3 -m unittest discover -s test
-
-tests2:
-	python2.7 -m unittest discover -v -s test
-
-tests-silent2:
-	python2.7 -m unittest discover -s test
 
 clean:
 	find -name \*.pyc -delete

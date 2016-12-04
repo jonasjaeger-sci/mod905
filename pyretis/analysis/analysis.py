@@ -43,7 +43,7 @@ def running_average(data):
 
 
 def _chunks(itera, size):
-    """Yield successive same-sized chunks from `itera`.
+    """Yield successive same-sized chunks from an iterable.
 
     Parameters
     ----------
@@ -59,10 +59,7 @@ def _chunks(itera, size):
 
     Notes
     -----
-    We are here using `range` rather than `xrange`. This is just to ease
-    the transition from python2 to python3. Note that this will probably
-    lead to some inefficiencies for python2 execution. The code is based
-    on one question at Stackoverflow [chunks]_.
+    The code is based on one question at Stackoverflow [chunks]_.
 
     References
     ----------

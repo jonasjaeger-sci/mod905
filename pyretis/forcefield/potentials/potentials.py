@@ -27,7 +27,7 @@ __all__ = ['DoubleWell', 'RectangularWell']
 
 
 class DoubleWell(PotentialFunction):
-    r"""DoubleWell(PotentialFunction).
+    r"""A 1D double well potential.
 
     This class defines a one-dimensional double well potential.
     The potential energy (:math:`V_\text{pot}`) is given by
@@ -143,7 +143,7 @@ class DoubleWell(PotentialFunction):
 
 
 class RectangularWell(PotentialFunction):
-    r"""RectangularWell(PotentialFunction).
+    r"""A 1D rectangular well potential.
 
     This class defines a one-dimensional rectangular well potential.
     The potential energy is zero within the potential well and infinite

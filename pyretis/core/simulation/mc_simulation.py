@@ -30,9 +30,9 @@ def mc_task(rgen, system, maxdx):
 
     Parameters
     ----------
-    rgen : object like `pyretis.core.random_gen.RandomGenerator`
+    rgen : object like :py:class`RandomGenerator`.
         This object is used for generating random numbers.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`pyretis.core.system.System.`
         The system we act on.
     maxdx : float
         Maximum displacement step for the Monte Carlo move.
@@ -54,7 +54,7 @@ class UmbrellaWindowSimulation(Simulation):
 
     Attributes
     ----------
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`pyretis.core.system.System`.
         The system to act on.
     umbrella : list = [float, float]
         The umbrella window.
@@ -65,7 +65,7 @@ class UmbrellaWindowSimulation(Simulation):
         The current simulation cycle.
     mincycle : int
         The MINIMUM number of cycles to perform.
-    rgen : object like `pyretis.core.random_gen.RandomGenerator`
+    rgen : object like :py:class:`RandomGenerator`.
         Object to use for random number generation.
     maxdx : float
         Maximum allowed displacement in the Monte Carlo step.
@@ -77,13 +77,13 @@ class UmbrellaWindowSimulation(Simulation):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`pyretis.core.system.System`.
             The system to act on.
         umbrella : list, [float, float]
             The umbrella window to consider.
         overlap : float
             The position we have to cross before the simulation is done.
-        rgen : object like `pyretis.core.random_gen.RandomGenerator`
+        rgen : object like :py:class:`RandomGenerator`
             Object to use for random number generation.
         maxdx : float
             Defines the maximum movement allowed in the Monte Carlo

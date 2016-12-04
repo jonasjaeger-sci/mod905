@@ -31,7 +31,7 @@ __all__ = ['OrderParameter', 'OrderParameterPosition',
 
 
 class OrderParameter(object):
-    """OrderParameter(object).
+    """Base class for order parameters.
 
     This class represents an order parameter. The order parameter
     is assumed to be a function that can uniquely be determined by
@@ -171,7 +171,7 @@ class OrderParameter(object):
 
 
 class OrderParameterPosition(OrderParameter):
-    """OrderParameterPosition(OrderParameter).
+    """A positional order parameter.
 
     This class defines a very simple order parameter which is just
     the position of a given particle.
@@ -267,7 +267,7 @@ class OrderParameterPosition(OrderParameter):
 
 
 class OrderParameterDistance(OrderParameter):
-    """OrderParameterDistance(OrderParameter).
+    """A distance order parameter.
 
     This class defines a very simple order parameter which is just
     the scalar distance between two particles.

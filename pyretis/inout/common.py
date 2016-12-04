@@ -35,7 +35,6 @@ make_dirs
 print_to_screen
     A method used for printing to screen.
 """
-from __future__ import absolute_import, print_function
 import errno
 import os
 import re
@@ -345,7 +344,7 @@ def check_python_version():
 
 
 class PyretisLogFormatter(logging.Formatter):
-    """Hardcoded formatter for pyretis log file.
+    """Hardcoded formatter for the pyretis log file.
 
     This formatter is using a format of type:
 
@@ -363,7 +362,7 @@ class PyretisLogFormatter(logging.Formatter):
 
 
 class PyretisLogFormatterDebug(logging.Formatter):
-    """Hardcoded formatter for pyretis log.
+    """Hardcoded debug formatter for the pyretis log file.
 
     This formatter is intended for usage when more debugging
     information is needed with a format for logging as:

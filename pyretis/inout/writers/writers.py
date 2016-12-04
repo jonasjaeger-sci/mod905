@@ -13,6 +13,12 @@ Important classes defined here
 
 Writer
     A generic class for the writers.
+
+CrossWriter
+    A class for writing crossing data from flux simulations.
+
+OrderWriter
+    A class for writing out order parameter data.
 """
 import logging
 import numpy as np
@@ -128,7 +134,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
 
 
 class Writer(object):
-    """Writer(object) - A class for creating output from pyretis.
+    """A generic class for writing output from pyretis.
 
     The writer class handles output and input of some data for pyretis.
 
@@ -220,7 +226,7 @@ class Writer(object):
 
 
 class CrossWriter(Writer):
-    """CrossWriter(Writer) - A class for crossing data.
+    """A class for writing crossing data from flux simulations.
 
     This class handles writing/reading of crossing data. The format for
     the crossing file is three columns:
@@ -313,7 +319,7 @@ class CrossWriter(Writer):
 
 
 class EnergyWriter(Writer):
-    """EnergyWriter(Writer) - Handle energy data for pyretis.
+    """A class for writing energy data from pyretis.
 
     This class handles writing/reading of energy data.
     The data is written in 7 columns:
@@ -401,7 +407,7 @@ class EnergyWriter(Writer):
 
 
 class OrderWriter(Writer):
-    """OrderWriter(Writer) - A class for order parameter files.
+    """A class for writing out order parameter data.
 
     This class handles writing/reading of order parameter data.
     The format for the order file is column-based and the columns are:

@@ -5,7 +5,6 @@ This test is comparing the C implementation with the pyretis
 implementation.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import unittest
 import itertools
 import numpy as np

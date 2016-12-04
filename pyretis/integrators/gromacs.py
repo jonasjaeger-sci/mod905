@@ -106,7 +106,7 @@ def write_gromos96_file(filename, raw, xyz, vel):
 
 
 class GromacsExt(ExternalScript):
-    """GromacsExt(ExternalScript).
+    """A class for interfacing GROMACS.
 
     This class defines the interface to GROMACS.
 

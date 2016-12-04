@@ -4,7 +4,7 @@
 """Define the class for a generic potential function.
 
 This module defines the generic class for potential functions.
-This cass is sub-classed in all potential functions.
+This class is sub-classed in all potential functions.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +21,7 @@ __all__ = ['PotentialFunction']
 
 
 class PotentialFunction(object):
-    """PotentialFunction(object).
+    """Base class for a generic potential function.
 
     Generic class for potential functions.
 

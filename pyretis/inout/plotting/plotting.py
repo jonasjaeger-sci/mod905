@@ -18,8 +18,8 @@ from abc import ABCMeta, abstractmethod
 __all__ = ['Plotter']
 
 
-class Plotter(object):
-    """Class Plotter(object).
+class Plotter(metaclass=ABCMeta):
+    """Base class for pyretis plotters.
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which can be called by analysis
@@ -36,8 +36,6 @@ class Plotter(object):
     out_dir : string, optional
         Defines an output directory for the plotter.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, backup=True, plotter_type=None, out_dir=None):
         """Initiate the plotting object.

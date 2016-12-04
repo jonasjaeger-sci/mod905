@@ -9,19 +9,19 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PairLennardJonesCut
-    A class represening a Lennard-Jones 6-12 potential implemented
+    A class representing a Lennard-Jones 6-12 potential implemented
     in pure python.
 
 PairLennardJonesCutnp
-    A class represening a Lennard-Jones 6-12 potential implemented
+    A class representing a Lennard-Jones 6-12 potential implemented
     with usage of numpy.
 """
 from __future__ import absolute_import
 import logging
 import numpy as np
-# pyretis imports
 from pyretis.forcefield.potential import PotentialFunction
 from .pairpotential import generate_pair_interactions
+
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -31,7 +31,7 @@ __all__ = ['PairLennardJonesCut', 'PairLennardJonesCutnp']
 
 
 class PairLennardJonesCut(PotentialFunction):
-    r"""class PairLennardJonesCut(PotentialFunction).
+    r"""Lennard-Jones 6-12 potential in pure Python.
 
     This class implements as simple Lennard-Jones 6-12 potential which
     employs a simple cut-off and can be shifted. The potential energy
@@ -76,7 +76,7 @@ class PairLennardJonesCut(PotentialFunction):
         Calculated as: ``4.0 * epsilon * sigma**6``
     _offset : dict
         Potential values for shifting the potential if requested.
-        This is the potential evaluated at the cutoff.
+        This is the potential evaluated at the cut-off.
     _rcut2 : dict
         Squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
@@ -284,7 +284,7 @@ class PairLennardJonesCut(PotentialFunction):
 
 
 class PairLennardJonesCutnp(PairLennardJonesCut):
-    """class PairLennardJonesCutnp(PairLennardJonesCut).
+    """Lennard-Jones 6-12 potential with numpy.
 
     A Lennard-Jones 6-12 potential with a simple cut-off which can be
     shifted. `PairLennardJonesCutnp` uses numpy for calculations, i.e.

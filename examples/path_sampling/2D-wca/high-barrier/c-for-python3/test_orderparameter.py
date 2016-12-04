@@ -11,7 +11,6 @@ correctly.
 3) A C implementation.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import unittest
 import numpy as np
 from pyretis.core import Particles, Box, System

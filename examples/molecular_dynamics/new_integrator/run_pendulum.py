@@ -3,7 +3,6 @@
 Double pendulum
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
 from pyretis.core import System, Box
 from pyretis.core.units import CONVERT, create_conversion_factors

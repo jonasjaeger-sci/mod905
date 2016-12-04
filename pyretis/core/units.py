@@ -259,7 +259,6 @@ Examples
 >>> print(round(CONVERT['time']['cgs', 's'], 2))
 1.0
 """
-from __future__ import print_function
 import logging
 from collections import deque
 import numpy as np

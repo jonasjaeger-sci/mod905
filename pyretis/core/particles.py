@@ -23,7 +23,7 @@ __all__ = ['Particles']
 
 
 class Particles(object):
-    """Particles(object).
+    """Base class for a collection of particles.
 
     This is a simple particle list. It stores the positions,
     velocities, forces, masses (and inverse masses) and type information

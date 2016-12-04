@@ -24,7 +24,7 @@ optional arguments:
                         the simulation
 """
 # pylint: disable=C0103
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import
 import argparse
 import datetime
 import logging

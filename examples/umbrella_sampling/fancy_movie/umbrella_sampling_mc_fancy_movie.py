@@ -2,7 +2,6 @@
 """
 Example of running a simulation
 """
-from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt

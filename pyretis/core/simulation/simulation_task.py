@@ -9,7 +9,6 @@ Important classes defined here
 SimulationTask
     A class representing a simulation task.
 """
-from __future__ import print_function
 import logging
 from pyretis.core.common import inspect_function
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -101,7 +100,7 @@ def execute_now(step, when):
 
 
 class SimulationTask(object):
-    """Class SimulationTask(object) - Representation of simulation tasks.
+    """Representation of simulation tasks.
 
     This class defines a task object. A task is executed at specific
     points, at regular intervals etc. in a simulation. A task will

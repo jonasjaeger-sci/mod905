@@ -60,7 +60,7 @@ def _line_to_path_object(line):
 
 
 class PathEnsembleWriter(Writer):
-    """PathEnsembleWriter(Writer) - A class for path ensemble data.
+    """A class for writing path ensemble data.
 
     This class handles writing/reading of path ensemble data to a file.
 
@@ -235,7 +235,7 @@ class PathEnsembleWriter(Writer):
 
 
 class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
-    """Class PathEnsembleFile(PathEnsemble, PathEnsembleWriter)
+    """A class for writing path ensemble data to files.
 
     This class is intended to mimic the `PathEnsemble` class but
     using files. It overloads the `get_paths()` from the PathEnsemble

@@ -28,7 +28,7 @@ __all__ = ['Box']
 
 
 class Box(object):
-    """Box(object).
+    """Class representing a rectangular simulation box.
 
     This class defines a simple simulation box. The box will handle
     periodic boundaries if needed. A non-periodic dummy-box can be

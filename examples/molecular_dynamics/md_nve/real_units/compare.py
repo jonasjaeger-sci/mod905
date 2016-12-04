@@ -12,7 +12,6 @@ For the energies, it will create a plot comparing the energies, the pressure
 and the temperature.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import filecmp
 import numpy as np
 from pyretis.core.units import (create_conversion_factors,

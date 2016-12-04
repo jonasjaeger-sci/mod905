@@ -5,7 +5,6 @@ This test is actually running a simulation and then comparing the results
 with output from a similar simulation performed in LAMMPS.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import os
 import unittest
 import numpy as np

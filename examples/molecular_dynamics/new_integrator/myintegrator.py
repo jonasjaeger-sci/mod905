@@ -6,7 +6,6 @@
 These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.integrators import Integrator

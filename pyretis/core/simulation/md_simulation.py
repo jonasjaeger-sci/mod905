@@ -30,16 +30,16 @@ __all__ = ['SimulationNVE', 'SimulationMDFlux']
 
 
 class SimulationNVE(Simulation):
-    """SimulationNVE(Simulation).
+    """A MD NVE simulation class.
 
     This class is used to define a NVE simulation with some additional
     additional tasks/calculations.
 
     Attributes
     ----------
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`pyretis.core.system.System`.
         This is the system the simulation will act on.
-    integrator : object like `pyretis.integrators.Integrator`
+    integrator : object like :py:class:`Integrator`.
         This integrator defines how to propagate the system in time.
         The integrator must have integrator.dynamics == 'NVE' in order
         for it to be usable in this simulation.
@@ -54,9 +54,9 @@ class SimulationNVE(Simulation):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`pyretis.core.system.System`.
             This is the system we are investigating.
-        integrator : object like `Integrator` from `pyretis.integrators`
+        integrator : object like :py:class:`Integrator`.
             This is the integrator that is used to propagate the system
             in time.
         steps : int, optional.
@@ -100,7 +100,7 @@ class SimulationNVE(Simulation):
 
 
 class SimulationMDFlux(Simulation):
-    """SimulationMDFlux(Simulation).
+    """A simulation for obtaining the initial flux for TIS.
 
     This class is used to define a MD simulation where the goal is
     to calculate crossings in order to obtain the initial flux for a TIS
@@ -108,9 +108,9 @@ class SimulationMDFlux(Simulation):
 
     Attributes
     ----------
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`pyretis.core.system.System`.
         This is the system the simulation will act on.
-    integrator : object like `Integrator` from `pyretis.integrators`
+    integrator : object like :py:class:`Integrator`.
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -127,9 +127,9 @@ class SimulationMDFlux(Simulation):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`.
             This is the system we are investigating
-        integrator : object like `Integrator` from `pyretis.integrators`.
+        integrator : object like :py:class:`Integrator`.
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats.
