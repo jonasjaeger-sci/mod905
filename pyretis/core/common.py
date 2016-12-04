@@ -61,8 +61,8 @@ def inspect_function(function):
     This method is intended for usage where we are checking that we can
     call certain function. This method will return arguments and
     keyword arguments a function expects. This method may be fragile -
-    we assume here that we are not really interested in *args and
-    **kwargs and we do not look for more information about these here.
+    we assume here that we are not really interested in args and
+    kwargs and we do not look for more information about these here.
 
     Parameters
     ----------
@@ -76,8 +76,8 @@ def inspect_function(function):
 
         * `args` : list of the positional arguments
         * `kwargs` : list of keyword arguments
-        * `varargs` : list of arguments on form *args
-        * `keywords` : list of arguments on form **kwargs
+        * `varargs` : list of arguments
+        * `keywords` : list of keyword arguments
     """
     out = {'args': [], 'kwargs': [],
            'varargs': [], 'keywords': []}

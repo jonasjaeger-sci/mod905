@@ -73,7 +73,7 @@ class PathEnsemble(object):
           (from `_STATUS`).
     maxpath : int
         The maximum number of paths to store.
-    last_path : object like :py:class:`PathBase`.
+    last_path : object like :py:class:`.path.PathBase`
         This is the last **accepted** path.
     """
 
@@ -126,7 +126,7 @@ class PathEnsemble(object):
 
         Parameters
         ----------
-        path : object like :py:class:`pyretis.core.path.PathBase`.
+        path : object like :py:class:`.path.PathBase`
             This is the object to store data from.
         status : string
             This is the status of the path. Note that the path object
@@ -274,7 +274,7 @@ def create_path_ensembles(interfaces, include_zero=False):
 
     Returns
     -------
-    ensembles : list of objects like :py:class:`.PathEnsemble`.
+    ensembles : list of objects like :py:class:`PathEnsemble`
         The generated (empty) path ensemble objects.
     detect : list of floats
         These are interfaces that can be used for an analysis, i.e. for

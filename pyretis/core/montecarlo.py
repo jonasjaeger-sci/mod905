@@ -33,9 +33,9 @@ def accept_reject_displace(rgen, system, trial):
 
     Parameters
     ----------
-    rgen : object like :py:class:`pyretis.core.random_gen.RandomGenerator`.
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         The random number generator.
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         The system object we are investigating.
     trial : numpy.array
         The the trial position(s)
@@ -69,9 +69,9 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
     Parameters
     ----------
-    rgen : object like :py:class:`pyretis.core.random_gen.RandomGenerator`.
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         The random number generator.
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         The system object we are investigating. This is used
         to access the beta factor.
     dke : float
@@ -98,9 +98,9 @@ def metropolis_accept_reject(rgen, system, deltae):
 
     Parameters
     ----------
-    rgen : object like :py:class:`pyretis.core.random_gen.RandomGenerator`.
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         The random number generator.
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         The system object we are investigating. This is used
         to access the beta factor.
     deltae : float
@@ -136,9 +136,9 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
 
     Parameters
     ----------
-    rgen : object like :py:class:`pyretis.core.random_gen.RandomGenerator`.
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         The random number generator.
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         The system object to operate on
     maxdx : float, optional
         The maximum displacement (default is 0.1).

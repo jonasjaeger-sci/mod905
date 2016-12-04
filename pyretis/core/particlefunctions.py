@@ -69,7 +69,7 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
@@ -101,7 +101,7 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
@@ -129,7 +129,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
@@ -162,7 +162,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     boltzmann : float
         This is the Boltzmann factor/constant in correct units.
@@ -207,7 +207,7 @@ def calculate_linear_momentum(particles, selection=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.
@@ -233,7 +233,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     dim : int
         This is the dimensionality of the system.
@@ -280,7 +280,7 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
@@ -307,7 +307,7 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
@@ -343,7 +343,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
 
     Parameters
     ----------
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         This object is used to access the particles and the box.
     dof : list of floats
         `dof` is the degrees of freedom, typically provided with
@@ -398,7 +398,7 @@ def calculate_thermo_path(system):
 
     Parameters
     ----------
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`.system.System`
         This object is used to access the particles and the box.
 
     Returns
@@ -422,7 +422,7 @@ def reset_momentum(particles, selection=None, dim=None):
 
     Parameters
     ----------
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         This object represent the particles.
     selection : list of integers, optional
         A list with indexes of particles to use in calculation.

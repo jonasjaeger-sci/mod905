@@ -32,7 +32,7 @@ class System(object):
 
     Attributes
     ----------
-    box : object like :py:class:`pyretis.core.box.Box`.
+    box : object like :py:class:`.box.Box`
         Defines the simulation box.
     temperature : dict
         This dictionary contains information on the temperature. The
@@ -44,7 +44,7 @@ class System(object):
           system.
     v_pot : float
         The potential energy of the system.
-    particles : object like :py:class:`pyretis.core.particles.Particles`.
+    particles : object like :py:class:`.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
     post_setup : list of tuples
@@ -53,10 +53,10 @@ class System(object):
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
         such that ``system.function(*args)`` can be called.
-    forcefield : object like :py:class:`ForceField`.
+    forcefield : object like :py:class:`pyretis.forcefield.ForceField`
         Defines the force field to use and implements the actual force
         and potential calculation.
-    order_function : object like :py:class:`OrderParameter`.
+    order_function : object representing the order parameter
         Defines the an order parameter to use for the system. See
         :py:mod:`pyretis.orderparameter` for the definition
         of order parameters.
@@ -70,7 +70,7 @@ class System(object):
 
         Parameters
         ----------
-        box : object like :py:class:`pyretis.core.box.Box`
+        box : object like :py:class:`.box.Box`
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float

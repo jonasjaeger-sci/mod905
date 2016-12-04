@@ -157,7 +157,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        particles : object like :py:class:`pyretis.core.particles.Particles`.
+        particles : object like :py:class:`.particles.Particles`
             These are the particles to set the velocity of.
         boltzmann : float
             The Boltzmann factor in correct units.
@@ -201,7 +201,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`.
+        system : object like :py:class:`.system.System`
             This is used to determine the temperature parameter(s) and
             the shape (number of particles and dimensionality)
         sigma_v : numpy.array, optional
@@ -230,7 +230,7 @@ class RandomGenerator(RandomGeneratorBase):
     ----------
     seed : int
         A seed for the pseudo-random generator.
-    rgen : object like numpy.random.RandomState.
+    rgen : object like `numpy.random.RandomState`
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy [#]_.
 
@@ -389,7 +389,7 @@ class ReservoirSampler(object):
             An integer used for seeding the generator.
         length : int, optional
             The maximum number of items to store.
-        rgen : object like :py:class:`RandomGenerator`.
+        rgen : object like :py:class:`RandomGenerator`
             In case we want to re-use a random generator object.
             If this is specified, the parameter `seed` is ignored.
         """
