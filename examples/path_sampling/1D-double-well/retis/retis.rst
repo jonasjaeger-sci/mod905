@@ -4,12 +4,12 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 2000
+steps = 20000
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 1
 temperature = 0.07
 
