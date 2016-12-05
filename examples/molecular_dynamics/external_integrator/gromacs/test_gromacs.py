@@ -80,8 +80,9 @@ def read_xvg_file(filename):
     return np.array(data), legends
         
 
-def test1(gro, external, md_settings):
+def test1(gro, md_settings, external):
 
+    exe_path = os.path.join(os.getcwd(), 'trajf')
 
     steps = md_settings['steps'] * md_settings['subcycles']
 
@@ -93,7 +94,8 @@ def test1(gro, external, md_settings):
     initial = os.path.join(os.getcwd(), 'initial.g96')
 
     out_files, order = gro.execute_until(initial, system,
-                                         md_settings, reverse=False)
+                                         md_settings, reverse=False,
+                                         exe_dir=exe_path)
 
     cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
            '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
@@ -181,9 +183,9 @@ if __name__ == '__main__':
                      md_settings['timestep'], md_settings['subcycles'])
     
     external = ExternalScript('For executing commands', None, None, None)
-    #out_files = test1(gro, md_settings, external)    
+    out_files = test1(gro, md_settings, external)    
 
-    out_files = {'trr': 'trajF_new.trr', 'tpr': 'trajF_new.tpr'}
+    #out_files = {'trr': 'trajF_new.trr', 'tpr': 'trajF_new.tpr'}
 
     exe_path = 'trajf'
     trr = os.path.join(exe_path, out_files['trr'])
