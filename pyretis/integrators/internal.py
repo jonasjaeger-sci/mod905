@@ -234,7 +234,7 @@ class Langevin(Integrator):
         rgen : string
             This string can be used to pick a particular random
             generator, which is useful for testing.
-        seed : integer, optional.
+        seed : integer, optional
             A seed for the random generator.
         high_friction : boolean
             Determines if we are in the high_friction limit and should

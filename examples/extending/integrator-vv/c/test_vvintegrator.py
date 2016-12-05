@@ -34,9 +34,8 @@ def set_up_initial_state():
     print(msg.format(system.particles.npart))
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
-    forcefieldnp = ForceField(potential=[potentialnp],
-                              params=[parameters],
-                              desc='Python (Numpy)')
+    forcefieldnp = ForceField('Lennard-Jones force field',
+                              potential=[potentialnp], params=[parameters])
     system.forcefield = forcefieldnp
     return system
 

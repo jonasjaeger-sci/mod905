@@ -192,9 +192,9 @@ def update(frame, sim, output_tasks):
     ----------
     frame : int
         The current frame number, supplied by `animation.FuncAnimation`.
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         The simulation we are running.
-    output_tasks : list of objects like `OutputTask`.
+    output_tasks : list of objects like `OutputTask`
         A list of output tasks to perform during the simulation.
 
     Returns

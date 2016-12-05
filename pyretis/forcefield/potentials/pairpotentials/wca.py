@@ -66,7 +66,7 @@ class DoubleWellWCA(PotentialFunction):
         ----------
         dim : int, optional
             Setting for the dimensionality of the potential
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
         super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
@@ -141,7 +141,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system we evaluate the potential in.
 
         Returns
@@ -171,7 +171,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system we evaluate the potential in.
 
         Returns
@@ -211,7 +211,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system we evaluate the potential in.
 
         Returns

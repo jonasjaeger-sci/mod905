@@ -37,9 +37,9 @@ class SimulationNVE(Simulation):
 
     Attributes
     ----------
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`pyretis.core.system.System`
         This is the system the simulation will act on.
-    integrator : object like :py:class:`Integrator`.
+    integrator : object like :py:class:`Integrator`
         This integrator defines how to propagate the system in time.
         The integrator must have integrator.dynamics == 'NVE' in order
         for it to be usable in this simulation.
@@ -54,14 +54,14 @@ class SimulationNVE(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`.
+        system : object like :py:class:`pyretis.core.system.System`
             This is the system we are investigating.
-        integrator : object like :py:class:`Integrator`.
+        integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
-        steps : int, optional.
+        steps : int, optional
             The number of simulation steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """
@@ -108,15 +108,15 @@ class SimulationMDFlux(Simulation):
 
     Attributes
     ----------
-    system : object like :py:class:`pyretis.core.system.System`.
+    system : object like :py:class:`pyretis.core.system.System`
         This is the system the simulation will act on.
-    integrator : object like :py:class:`Integrator`.
+    integrator : object like :py:class:`Integrator`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    leftside_prev : list of booleans.
+    leftside_prev : list of booleans
         These are used to store the previous positions with respect
         to the interfaces.
     """
@@ -127,17 +127,17 @@ class SimulationMDFlux(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`.
+        system : object like :py:class:`pyretis.core.system.System`
             This is the system we are investigating
-        integrator : object like :py:class:`Integrator`.
+        integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
-        interfaces : list of floats.
+        interfaces : list of floats
             These defines the interfaces for which we will check the
             crossing(s).
-        steps : int, optional.
+        steps : int, optional
             The number of steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """

@@ -90,7 +90,7 @@ def prepare_test_system():
     pos = np.array([-1.0])
     vel = np.array([0.78008018])
     system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0, ptype=0)
-    forcefield = ForceField()
+    forcefield = ForceField('Double well force field for testing')
     param = {'a': 1.0, 'b': 2.0, 'c': 0.0}
     pot = DoubleWell()
     forcefield.add_potential(pot, parameters=param)

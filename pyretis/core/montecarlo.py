@@ -142,7 +142,7 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
         The system object to operate on
     maxdx : float, optional
         The maximum displacement (default is 0.1).
-    idx : int, optional.
+    idx : int, optional
         Index of particle to displace. If `idx` is not given, the
         particle is chosen randomly.
 

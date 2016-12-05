@@ -45,7 +45,7 @@ class TestForceField(unittest.TestCase):
         """Test functionality of the ForceField class."""
         system = System()
         system.add_particle(1.0)
-        forcefield = ForceField()
+        forcefield = ForceField('Generic testing force field')
         param1 = {'a': 1.0}
         pot1 = TestPotential()
         forcefield.add_potential(pot1, parameters=param1)

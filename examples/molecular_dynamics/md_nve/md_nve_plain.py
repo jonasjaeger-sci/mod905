@@ -39,7 +39,7 @@ print(system.particles)
 print('Creating force field:')
 potentials = [PairLennardJonesCutnp(dim=3, shift=True, mixing='geometric')]
 parameters = [{0: {'sigma': 1, 'epsilon': 1, 'rcut': 2.5}}]
-ffield = ForceField(desc='Lennard Jones',
+ffield = ForceField('Lennard Jones force field',
                     potential=potentials, params=parameters)
 system.forcefield = ffield
 print(system.forcefield)

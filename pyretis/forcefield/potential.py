@@ -41,10 +41,11 @@ class PotentialFunction(object):
 
         Parameters
         ----------
-        dim : int, optional.
+        dim : int, optional
             Represents the dimensionality.
-        desc : string, optional.
-            Description of the force field.
+        desc : string, optional
+            Description of the potential function. Used to print out
+            information about the potential.
         """
         self.dim = dim
         self.desc = desc

@@ -128,12 +128,12 @@ class PairLennardJonesCutF(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like `System` from `pyretis.core.system`
             The system we are evaluating the potential in.
 
         Returns
         -------
-        v_pot : float.
+        v_pot : float
             The potential energy.
         """
         particles = system.particles
@@ -154,7 +154,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like `System` from `pyretis.core.system`
             The system we are evaluating the force in.
 
         Returns
@@ -181,7 +181,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like `System` from `pyretis.core.system`
             The system we are evaluating the potential and force in.
 
         Note

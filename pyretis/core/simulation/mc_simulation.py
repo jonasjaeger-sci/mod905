@@ -88,12 +88,12 @@ class UmbrellaWindowSimulation(Simulation):
         maxdx : float
             Defines the maximum movement allowed in the Monte Carlo
             moves.
-        mincycle : int, optional.
+        mincycle : int, optional
             The *MINIMUM* number of cycles to perform. Note that in the
             base `Simulation` class this is the *MAXIMUM* number of
             cycles to perform. The meaning is redefined in this class
             by overriding `self.simulation_finished`.
-        startcycle : int, optional.
+        startcycle : int, optional
             The current simulation cycle, i.e. where we start.
         """
         super(UmbrellaWindowSimulation, self).__init__(steps=mincycle,

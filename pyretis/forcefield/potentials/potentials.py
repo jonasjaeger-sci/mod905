@@ -60,13 +60,13 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        a : float, optional.
+        a : float, optional
             Parameter for the potential.
-        b : float, optional.
+        b : float, optional
             Parameter for the potential.
-        c : float, optional.
+        c : float, optional
             Parameter for the potential.
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
         super(DoubleWell, self).__init__(dim=1, desc=desc)
@@ -77,7 +77,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -96,7 +96,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -118,7 +118,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -168,13 +168,13 @@ class RectangularWell(PotentialFunction):
 
         Parameters
         ----------
-        left : float, optional.
+        left : float, optional
             The left boundary of the potential.
-        right : float, optional.
+        right : float, optional
             The right boundary of the potential.
-        largenumber : float, optional.
+        largenumber : float, optional
             The value of the potential outside (left, right).
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         params : dict
             The parameters for this potential.
@@ -201,7 +201,7 @@ class RectangularWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 

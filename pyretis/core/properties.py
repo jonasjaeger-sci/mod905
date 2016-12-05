@@ -31,7 +31,7 @@ class Property(object):
 
     Parameters
     ----------
-    desc : string, optional.
+    desc : string, optional
         Used to set the attribute desc.
 
     Examples

@@ -66,7 +66,7 @@ def inspect_function(function):
 
     Parameters
     ----------
-    function : A callable function.
+    function : callable
         The function to analyse.
 
     Returns

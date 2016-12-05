@@ -50,7 +50,7 @@ def integrator_factory(settings):
 
     Returns
     -------
-    out : object like `Integrator`.
+    out : object like `Integrator`
         This object represents the integrator and will be one of the
         classes defined in `pyretis.integrators`.
     """

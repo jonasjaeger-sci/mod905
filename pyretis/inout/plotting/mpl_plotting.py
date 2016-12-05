@@ -125,7 +125,7 @@ class MplPlotter(Plotter):
 
         Parameters
         ----------
-        canvas : dict of objects like `FigureCanvas` from `matplotlib`.
+        canvas : dict of objects like `FigureCanvas` from `matplotlib`
             `canvas[key]` is assumed to define a figure which we will
             save to a file with a file name defined by `key` and the
             extension defined by `self.out_fmt`.
@@ -382,7 +382,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
     Returns
     -------
-    handle : object like `matplotlib.lines.Line2D`.
+    handle : object like `matplotlib.lines.Line2D`
         A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
@@ -419,7 +419,7 @@ def mpl_simple_plot(series, fig_settings=None):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
         This is the figure we create here.
     """
     fig = Figure()
@@ -475,7 +475,7 @@ def mpl_linecollection_gradient(axs, series):
 
     Returns
     -------
-    handle : object of like `matplotlib.collections.LineCollection`.
+    handle : object of like `matplotlib.collections.LineCollection`
         A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
@@ -515,7 +515,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
     Returns
     -------
-    handle : object of type matplotlib.lines.Line2D
+    handle : object like `matplotlib.lines.Line2D`
         A handle for the plotted line.
 
     Note
@@ -565,7 +565,7 @@ def mpl_line_gradient(series, fig_settings):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
         This is the figure we create here.
 
     Notes
@@ -620,7 +620,7 @@ def mpl_error_plot(series, fig_settings):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
         This is the figure we create here.
     """
     fig = Figure()
@@ -666,9 +666,9 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
 
     Returns
     -------
-    out[0] : object like `FigureCanvas` from `matplotlib`.
+    out[0] : object like `FigureCanvas` from `matplotlib`
         This is the unscaled histogram.
-    out[1] : object like `FigureCanvas` from `matplotlib`.
+    out[1] : object like `FigureCanvas` from `matplotlib`
         This is the scaled histogram.
     """
     series = []
@@ -993,7 +993,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     Parameters
     ----------
-    path_ensembles : list of strings.
+    path_ensembles : list of strings
         This is the name of the path ensembles we have calculated
         the probability for.
     detect : list of floats

@@ -129,7 +129,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns
@@ -327,7 +327,7 @@ class RandomGenerator(RandomGeneratorBase):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns
@@ -554,7 +554,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns

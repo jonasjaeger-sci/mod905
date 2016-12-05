@@ -199,16 +199,16 @@ class System(object):
         ----------
         pos : numpy.array,
             Position of the particle.
-        vel : numpy.array, optional.
+        vel : numpy.array, optional
             Velocity of the particle. If not given numpy.zeros will be
             used.
-        force : numpy.array, optional.
+        force : numpy.array, optional
             Force on the particle. If not given np.zeros will be used.
-        mass : float, optional.
+        mass : float, optional
             Mass of the particle, default is 1.0.
-        name : string, optional.
+        name : string, optional
             Name of the particle, default is '?'.
-        ptype : integer, optional. Particle type.
+        ptype : integer, optional
             Particle type, default is 0.
 
         Returns
@@ -243,10 +243,10 @@ class System(object):
 
         Returns
         -------
-        out[1] : numpy.array.
+        out[1] : numpy.array
             Forces on the particles. Note that `self.particles.force`
             will also be updated.
-        out[2] : float.
+        out[2] : float
             The virial. Note that `self.particles.virial` will be
             updated.
         """
@@ -260,7 +260,7 @@ class System(object):
 
         Returns
         -------
-        out : float.
+        out : float
             The potential energy, note `self.v_pot` is also updated.
         """
         self.v_pot = self.forcefield.evaluate_potential(self)
@@ -277,10 +277,10 @@ class System(object):
         -------
         out[1] : float
             The potential energy, note self.v_pot is also updated.
-        out[2] : numpy.array.
+        out[2] : numpy.array
             Forces on the particles. Note that self.particles.force will
             also be updated.
-        out[3] : float.
+        out[3] : float
             The virial. Note that `self.particles.virial` will also be
             updated.
         """

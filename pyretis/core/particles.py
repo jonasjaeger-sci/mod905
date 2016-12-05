@@ -160,11 +160,11 @@ class Particles(object):
             Velocities of new particle.
         force : numpy.array
             Forces on the new particle.
-        mass : float, optional.
+        mass : float, optional
             The mass of the particle.
-        name : string, optional.
+        name : string, optional
             The name of the particle.
-        ptype : integer, optional.
+        ptype : integer, optional
             The particle type.
 
         Returns

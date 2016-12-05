@@ -29,7 +29,8 @@ ljpot = PairLennardJonesCutnp(shift=True, mixing='geometric')
 lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                  1: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
                  2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5}}
-forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
+forcefield = ForceField('Lennard Jones force field',
+                        potential=[ljpot], params=[lj_parameters])
 
 ljsystem.forcefield = forcefield
 

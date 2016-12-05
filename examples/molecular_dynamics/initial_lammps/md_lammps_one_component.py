@@ -26,8 +26,8 @@ ljsystem = System(box=box, units='lj')
 
 ljpot = PairLennardJonesCutnp(shift=False, mixing='geometric')
 lj_param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
-forcefield = ForceField(potential=[ljpot],
-                        params=[lj_param])
+forcefield = ForceField('Lennard Jones force field',
+                        potential=[ljpot], params=[lj_param])
 ljsystem.forcefield = forcefield
 
 # read initial position and velocity:

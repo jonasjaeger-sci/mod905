@@ -342,7 +342,7 @@ def create_initial_positions(settings):
 
     Returns
     -------
-    out[0] : object like `Particles` from `pyretis.core.particles`.
+    out[0] : object like `Particles` from `pyretis.core.particles`
         The particles we created
     out[1] : list
         The size associated with the particles. Can be used to create a
@@ -392,8 +392,8 @@ def create_box(settings, size, dim=3):
 
     Returns
     -------
-    box : object like `Box` from `pyretis.core.box` or None
-        The box if we managed to create it. Otherwise None.
+    box : object like :py:class:`pyretis.core.box.Box` or None
+        The box if we managed to create it, otherwise None.
     """
     msg = 'Box created {}:\n{}'
     if settings.get('box', None) is not None:
@@ -423,7 +423,7 @@ def create_velocities(system, settings, vel):
 
     Parameters
     ----------
-    system : object like `pyretis.core.system.System`.
+    system : object like `pyretis.core.system.System`
         The system to create velocities for. It's needed since
         we need to know the degrees of freedom.
     settings : dict

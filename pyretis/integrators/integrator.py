@@ -92,16 +92,16 @@ class Integrator(object):
 
         Parameters
         ----------
-        path : object like `Path` from `pyretis.core.Path`.
+        path : object like `Path` from `pyretis.core.Path`
             This is the path we use to fill in phase-space point.
             We are here not returning a new path - this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
-        system : object like `System` from `pyretis.core.system`.
+        system : object like `System` from `pyretis.core.system`
             The system object gives the initial state for the
             integration. The initial state is stored and the system is
             reset to the initial state when the integration is done.
-        interfaces : list of floats.
+        interfaces : list of floats
             These interfaces define the stopping criterion.
         reverse : boolean
             If True, the system will be propagated backwards in time.

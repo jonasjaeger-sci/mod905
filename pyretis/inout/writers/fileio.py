@@ -37,7 +37,7 @@ class FileIO(object):
     oldfile : string
         Determines if we should backup, overwrite or append if a file
         exist with the given `filename`.
-    fileh : object like `file` (`io.IOBase`).
+    fileh : object like `file` (`io.IOBase`)
         The file handle we are using.
     """
     OLDFILE = ('append', 'overwrite', 'backup')

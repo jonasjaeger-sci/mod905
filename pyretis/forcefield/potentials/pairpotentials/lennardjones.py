@@ -170,7 +170,7 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the potential.
 
         Returns
@@ -201,7 +201,7 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the force.
 
         Returns
@@ -236,7 +236,7 @@ class PairLennardJonesCut(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the potential and force.
 
         Note
@@ -311,7 +311,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the potential.
 
         Returns
@@ -347,7 +347,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the force.
 
         Note
@@ -394,7 +394,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`pyretis.core.system.System`
             The system for which we calculate the potential and force.
 
         Note

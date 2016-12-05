@@ -41,7 +41,7 @@ def order_factory(settings):
 
     Returns
     -------
-    out : object like `OrderParameter`.
+    out : object like `OrderParameter`
         An object representing the orderparameter.
     """
     factory_map = {'orderparameter': {'cls': OrderParameter},

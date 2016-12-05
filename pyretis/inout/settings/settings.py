@@ -128,7 +128,7 @@ def parse_primitive(text):
 
     Returns
     -------
-    out[0] : string, dict, list, boolean, etc.
+    out[0] : string, dict, list, boolean, or other type
         The parsed text.
     out[1] : boolean
         True if we managed to parse the text, False otherwise.

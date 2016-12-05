@@ -37,17 +37,17 @@ class SimulationSingleTIS(Simulation):
 
     Attributes
     ----------
-    integrator : object like :py:class:`Integrator`.
+    integrator : object like :py:class:`Integrator`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    path_ensemble : object like :py:class:`PathEnsemble`.
+    path_ensemble : object like :py:class:`PathEnsemble`
         This is used for storing results for the simulation.
-    rgen : object like :py:class:`RandomGenerator`.
+    rgen : object like :py:class:`RandomGenerator`
         This is a random generator used for the generation of paths.
-    system : object like :py:class:`System`.
+    system : object like :py:class:`System`
         This is the system the simulation will act on.
     tis_settings : dict
         This dict contain specific settings for the TIS simulation
@@ -60,16 +60,16 @@ class SimulationSingleTIS(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`System`.
+        system : object like :py:class:`System`
             This is the system we are investigating.
-        integrator : object like :py:class:`Integrator`.
+        integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
-        path_ensemble : object like :py:class:`PathEnsemble`.
+        path_ensemble : object like :py:class:`PathEnsemble`
             This is used for storing results for the simulation. It
             is also used for defining the interfaces for this
             simulation.
-        rgen : object like :py:class:`RandomGenerator`.
+        rgen : object like :py:class:`RandomGenerator`
             This is the random generator to use in the simulation.
         tis_settings : dict
             This dict contains TIS specific settings, in particular we
@@ -86,9 +86,9 @@ class SimulationSingleTIS(Simulation):
             Note that the `make_tis_step_ensemble` method will make
             use of additional keys from `tis_settings`. Please see
             this method for further details.
-        steps : int, optional.
+        steps : int, optional
             The number of simulation steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """
@@ -165,19 +165,19 @@ class SimulationRETIS(Simulation):
 
     Attributes
     ----------
-    system : object like :py:class:`System`.
+    system : object like :py:class:`System`
         This is the system we are investigating.
-    integrator : object like :py:class:`Integrator`.
+    integrator : object like :py:class:`Integrator`
         This is the integrator that is used to propagate the system
         in time.
-    path_ensembles : list of objects like :py:class:`PathEnsemble`.
+    path_ensembles : list of objects like :py:class:`PathEnsemble`
         This is used for storing results for the different path
         ensembles.
     settings : dict
         The settings for the retis simulation. It contains settings
         specific for TIS moves (in key ``'tis'``) and settings
         specific for RETIS (in key ``'retis'``).
-    rgen : object like :py:class:`RandomGenerator`.
+    rgen : object like :py:class:`RandomGenerator`
         This object is the random generator to use in the simulation.
     """
 
@@ -187,15 +187,15 @@ class SimulationRETIS(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`System`.
+        system : object like :py:class:`System`
             This is the system we are investigating.
-        integrator : object like :py:class:`Integrator`.
+        integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
-        path_ensembles : list of objects like :py:class:`PathEnsemble`.
+        path_ensembles : list of objects like :py:class:`PathEnsemble`
             This is used for storing results for the different path
             ensembles.
-        rgen : object like :py:class:`RandomGenerator`.
+        rgen : object like :py:class:`RandomGenerator`
             This object is the random generator to use in the simulation.
         tis_settings : dict
             This dict contains TIS specific settings, in particular we
@@ -221,14 +221,14 @@ class SimulationRETIS(Simulation):
             * `nullmoves`: Should we perform nullmoves.
             * `swapsimul`: Should we just swap a single pair or several
               pairs.
-        steps : int, optional.
+        steps : int, optional
             The number of simulation steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
-        steps : int, optional.
+        steps : int, optional
             The number of simulation steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """
@@ -259,12 +259,12 @@ class SimulationRETIS(Simulation):
 
         Parameters
         ----------
-        ensemble : object like :py:class:`PathEnsemble`.
+        ensemble : object like :py:class:`PathEnsemble`
             The ensemble to initiate.
 
         Returns
         -------
-        out : object like :py:class:`Path`.
+        out : object like :py:class:`Path`
             The initial path created.
         """
         msg = 'Initiating path in {}'.format(ensemble.ensemble_name)

@@ -60,13 +60,13 @@ class Box(object):
 
         Parameters
         ----------
-        size : list.
+        size : list
             The size of the box, can be given with `size[i] = length_i`
             which defines the box-length in dimension `i`. The box will
             then be assumed to have `size[i] = [0, length_i]`.
             Alternatively the boundaries can be defined explicitly:
             `size[i] = [low, high]`.
-        periodic : list, optional.
+        periodic : list, optional
             `periodic[i]` is `True` if periodic boundaries will be
             applied in dimension `i`. Default is `True` for each
             dimension in `size`.
@@ -213,7 +213,7 @@ class Box(object):
 
         Parameters
         ----------
-        distance : numpy.array with shape `(self.dim,)`.
+        distance : numpy.array with shape `(self.dim,)`
             A distance vector.
 
         Returns

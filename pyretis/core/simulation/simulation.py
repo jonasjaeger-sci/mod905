@@ -40,11 +40,11 @@ class Simulation(object):
 
         Note that `cycle['stepno']` might be different from
         `cycle['step']` since `cycle['start']` might be != 0.
-    task : list of objects like :py:class:`SimulationTask`.
+    task : list of objects like :py:class:`SimulationTask`
         This is the list of simulation tasks to execute.
     first_step : boolean
         True if the first step has not been executed yet.
-    system : object like :py:class:`System`.
+    system : object like :py:class:`System`
         This is the system the simulation will act on.
     """
 
@@ -53,9 +53,9 @@ class Simulation(object):
 
         Parameters
         ----------
-        steps : int, optional.
+        steps : int, optional
             The number of simulation steps to perform.
-        startcycle : int, optional.
+        startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """
@@ -91,7 +91,8 @@ class Simulation(object):
 
         Returns
         -------
-        out : True if simulation is finished, False otherwise.
+        out : boolean
+            True if simulation is finished, False otherwise.
         """
         return self.cycle['step'] >= self.cycle['end']
 
@@ -216,7 +217,7 @@ class Simulation(object):
 
         Parameters
         ----------
-        output : list, objects like :py:class:`OutputTask`.
+        output : list of objects like :py:class:`OutputTask`
             If outputs are given, they will be executed here.
 
         Yields

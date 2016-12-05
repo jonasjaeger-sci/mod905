@@ -168,24 +168,25 @@ def block_error_corr(data, maxblock=None, blockskip=1):
 
     Returns
     -------
-    out[0] : numpy.array, `blen`.
-        These contains the block lengths considered.
-    out[1] : numpy.array, `berr`.
-        Estimate of errors as function of block length.
-    out[2] : float, `berr_avg`.
-        Average of the error estimate for blocks
+    out[0] : numpy.array
+        These contains the block lengths considered (`blen`).
+    out[1] : numpy.array
+        Estimate of errors as function of block length (`berr`).
+    out[2] : float
+        Average of the error estimate for blocks (`berr_avg`)
         with ``length > maxblock // 2``.
-    out[3] : numpy.array, `rel_err`.
-        Estimate of relative errors (normalised by the overall average)
-        as a function of block length.
-    out[4] : float, `avg_rel_err`.
-        The average relative error, for blocks
+    out[3] : numpy.array
+        Estimate of relative errors normalised by the overall average
+        as a function of block length (`rel_err`).
+    out[4] : float
+        The average relative error (`avg_rel_err`), for blocks
         with ``length > maxblock // 2``.
-    out[5] : numpy.array, `ncor`.
-        The estimated correlation length as a function of block length.
-    out[6] : float, `avg_ncor`.
+    out[5] : numpy.array
+        The estimated correlation length as a function of block
+        length (`ncor`).
+    out[6] : float
         The average (for blocks with length > maxblock // 2) estimated
-        correlation length.
+        correlation length (`avg_ncor`).
     """
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)

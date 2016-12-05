@@ -76,15 +76,15 @@ def create_force_field(settings):
 
     Returns
     -------
-    out : object like `ForceField` from `pyretis.forcefield.forcefield`.
+    out : object like :py:class:`pyretis.forcefield.forcefield.ForceField`
         This object represents the force field.
     """
     try:
         desc = settings['forcefield']['description']
     except KeyError:
-        desc = None
+        desc = 'Generic force field'
     potentials, pot_param = create_potentials(settings)
-    ffield = ForceField(desc=desc, potential=potentials, params=pot_param)
+    ffield = ForceField(desc, potential=potentials, params=pot_param)
     msg = ['Created force field:']
     msg.append('{}'.format(ffield))
     msgtxt = '\n'.join(msg)

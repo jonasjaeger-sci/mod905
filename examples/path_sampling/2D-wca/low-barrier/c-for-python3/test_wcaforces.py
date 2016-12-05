@@ -43,9 +43,9 @@ def set_up_python_forcefield():
     dwca_params = {'types': [(1, 1)],
                    'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField(potential=[wca_pot, dwca_pot],
-                            params=[wca_params, dwca_params],
-                            desc='pyretis implementation')
+    forcefield = ForceField('Double well force field from pyretis',
+                            potential=[wca_pot, dwca_pot],
+                            params=[wca_params, dwca_params])
     return forcefield
 
 
@@ -54,9 +54,9 @@ def set_up_python_forcefield_well():
     dwca_params = {'types': [(1, 1)],
                    'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField(potential=[dwca_pot],
-                            params=[dwca_params],
-                            desc='pyretis implementation')
+    forcefield = ForceField('Well force field from pyretis',
+                            potential=[dwca_pot],
+                            params=[dwca_params])
     return forcefield
 
 
@@ -65,9 +65,9 @@ def set_up_c_forcefield():
     wca_paramsc = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.**(1./6.),
                    'idxi': 0, 'idxj': 1, 'rzero': 2.0**(1./6),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField(potential=[wca_pot_c],
-                            params=[wca_paramsc],
-                            desc='pyretis+c implementation')
+    forcefield = ForceField('Double well force field, pyretis + c',
+                            potential=[wca_pot_c],
+                            params=[wca_paramsc])
     return forcefield
 
 
@@ -105,7 +105,7 @@ class WCATest(unittest.TestCase):
             self.assertTrue(virialok)
             forceok = np.allclose(force_virial[i][0], force_virial[j][0])
             self.assertTrue(forceok)
-    
+
     def test_wca_well(self):
         """Test evaluation of the well only."""
         system = set_up_initial_state()

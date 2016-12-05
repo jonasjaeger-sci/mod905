@@ -31,13 +31,13 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        l1 : float, optional.
+        l1 : float, optional
             Parameter for the potential.
-        l1 : float, optional.
+        l1 : float, optional
             Parameter for the potential.
         g : float, optional
             Parameter for the potential.
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
         super(DoublePendulumn, self).__init__(dim=2, desc=desc)
@@ -51,7 +51,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -72,7 +72,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -119,7 +119,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 

@@ -25,9 +25,9 @@ potential_dw = DoubleWell(a=1, b=1, c=0.02)
 # and a rectangular well potential
 potential_rw = RectangularWell()
 # do set up the unbiased force field
-forcefield = ForceField(desc='Double well', potential=[potential_dw])
+forcefield = ForceField('Double well', potential=[potential_dw])
 # and the biased
-forcefield_bias = ForceField(desc='Double well with rectangular bias',
+forcefield_bias = ForceField('Double well with rectangular bias',
                              potential=[potential_dw, potential_rw])
 # attach biased force field to the system:
 mysystem.forcefield = forcefield_bias

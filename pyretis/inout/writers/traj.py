@@ -201,7 +201,7 @@ class TrajXYZ(Writer):
 class TrajGRO(Writer):
     """A class for writing GROMACS GRO files.
 
-    This class handles writing of a system to a file using the GROMACS 
+    This class handles writing of a system to a file using the GROMACS
     format. The GROMACS format is described in the GROMACS manual [#]_.
 
     Attributes
@@ -264,9 +264,9 @@ class TrajGRO(Writer):
         kwargs : dict,
             Additional arguments for the GRO file. This may include:
 
-            * residuenum : list of ints, optional
+            * residuenum : list of ints, optional.
               Residue numbers, may be used to group molecules etc.
-            * residuename : list of strings
+            * residuename : list of strings.
               The residue names.
             * atomname : list of strings, optional.
               The atom names.
@@ -350,7 +350,7 @@ class TrajGRO(Writer):
 
         Parameters
         ----------
-        box : object like `pyretis.core.Box`.
+        box : object like `pyretis.core.Box`
             This is the simulation box.
 
         Returns
@@ -530,7 +530,7 @@ def write_xyz_file(filename, pos, names=None, header=None):
     ----------
     filename : string
         The file to create.
-    pos : numpy.array or list-like.
+    pos : numpy.array
        The positions to write.
     names : list, optional
         The atom names.

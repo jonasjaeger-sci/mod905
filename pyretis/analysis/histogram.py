@@ -138,7 +138,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
         This is the bin mid-points of the histograms. Note that we
         assume here that `histo1` and `histo2` are obtained using the
         same number of bins and limits.
-    overlap : object like list (or tuple or numpy.array).
+    overlap : object like list, tuple or numpy.array
         This is the overlapping region.
 
     Returns
@@ -174,7 +174,7 @@ def match_all_histograms(histograms, umbrellas):
     -------
     histograms_s : list of numpy.arrays
         The scaled histograms.
-    scale_factor : list of floats.
+    scale_factor : list of floats
         The scale factors.
     matched_count : numpy.array
         Count for overall matched histogram - a "averaged" histogram.

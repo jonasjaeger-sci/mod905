@@ -37,15 +37,14 @@ class ForceField(object):
         The parameters for the corresponding potential functions.
     """
 
-    def __init__(self, desc='Generic force field', potential=None,
-                 params=None):
+    def __init__(self, desc, potential=None, params=None):
         """Initiate the force field object.
 
         Parameters
         ----------
-        desc : string, optional.
+        desc : string
             Description of the force field.
-        potential : list, optional.
+        potential : list, optional
             Potential functions that the force field is built up from.
         params : list, optional
             Parameters for the potential(s). If too few parameters are
@@ -171,7 +170,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential in.
 
         Returns
@@ -192,7 +191,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential energy and force in.
 
         Returns

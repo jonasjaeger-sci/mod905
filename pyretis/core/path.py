@@ -66,18 +66,18 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 
     Parameters
     ----------
-    path_back : object like :py:class:`Path`.
+    path_back : object like :py:class:`Path`
         This is the backward trajectory.
-    path_forw : object like :py:class:`Path`.
+    path_forw : object like :py:class:`Path`
         This is the forward trajectory.
-    overlap : boolean, default is True.
+    overlap : boolean, default is True
         If true, `path_back` and `path_forw` have a common
         starting-point, that is, the first point in `path_forw` is
         identical to the first point in `path_back`. In time-space this
         means that the first point in `path_forw` is identical to the
         last point in path_back (the backward and forward path started
         at the same location in space).
-    maxlen : float, optional.
+    maxlen : float, optional
         This is the maximum length for the new path. If it's not given,
         it will just be set to the largest of the `maxlen` of the two
         given paths.
@@ -202,7 +202,7 @@ class PathBase(metaclass=ABCMeta):
         This is the (current) maximum order parameter for the path.
         `ordermax[0]` is the value, `ordermax[1]` is the index in
         `self.path`.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`.
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         This is the random generator that will be used for the
         paths that required random numbers.
     time_origin : int
@@ -221,7 +221,7 @@ class PathBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -395,7 +395,7 @@ class PathBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
             This object is used to draw a random integer.
 
         Returns
@@ -552,7 +552,7 @@ class PathBase(metaclass=ABCMeta):
 
         Returns
         -------
-        new_path : object like :py:class:`PathBase`.
+        new_path : object like :py:class:`PathBase`
             This is basically a copy of `self`, just reversed.
         """
         new_path = self.empty_path()
@@ -597,7 +597,7 @@ class PathBase(metaclass=ABCMeta):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`.
+        out : object like :py:class:`PathBase`
             A new empty path.
         """
         return
@@ -617,7 +617,7 @@ class Path(PathBase):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -724,7 +724,7 @@ class Path(PathBase):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`.
+        out : object like :py:class:`PathBase`
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -748,7 +748,7 @@ class ReservoirPath(PathBase):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -890,7 +890,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`.
+        out : object like :py:class:`PathBase`
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)
@@ -909,7 +909,7 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        path : object like :py:class:`PathBase`.
+        path : object like :py:class:`PathBase`
             This is basically a copy of `self`, just reversed.
         """
         path = super(ReservoirPath, self).reverse()
@@ -934,7 +934,7 @@ class PathExternal(PathBase):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -1039,7 +1039,7 @@ class PathExternal(PathBase):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`.
+        out : object like :py:class:`PathBase`
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', self.maxlen)

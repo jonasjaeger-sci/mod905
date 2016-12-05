@@ -171,7 +171,7 @@ def get_tasks(sim_settings, progress=False):
 
     Returns
     -------
-    out : list of objects like `OutputTask`.
+    out : list of objects like `OutputTask`
         Objects that can be used for creating output.
     """
     msgtxt = 'Creating output tasks from settings'
@@ -194,7 +194,7 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -216,7 +216,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -239,7 +239,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -277,7 +277,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -295,7 +295,6 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         sim_settings['output']['directory'] = dirname
         sim_settings['simulation']['ensemble'] = ensemble.ensemble_name
         ensemble_task = get_tasks(sim_settings, progress=progress)
-        #output_tasks.extend(ensemble_task)
         output_tasks.append(ensemble_task)
     print_to_screen('')
     print_and_loginfo('Running RETIS simulation!')
@@ -338,7 +337,7 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
 
     Parameters
     ----------
-    settings_sim : list of dicts or Simulation object.
+    settings_sim : list of dicts or Simulation object
         The settings for the simulations or the actual simulation
         to run.
     settings_tis : dict
@@ -378,7 +377,7 @@ def run_generic_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.

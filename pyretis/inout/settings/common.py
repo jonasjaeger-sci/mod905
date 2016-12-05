@@ -226,7 +226,7 @@ def create_orderparameter(settings):
 
     Returns
     -------
-    out : object like `OrderParameter` from `pyretis.orderparameter`.
+    out : object like `OrderParameter` from `pyretis.orderparameter`
         This object represents the order parameter.
     """
     return create_external(settings, 'orderparameter', order_factory,
@@ -243,7 +243,7 @@ def create_integrator(settings):
 
     Returns
     -------
-    out : object like `Integrator` from `pyretis.integrators`.
+    out : object like `Integrator` from `pyretis.integrators`
         This object represents the integrator.
     """
     return create_external(settings, 'integrator', integrator_factory,
@@ -262,8 +262,8 @@ def create_potential(settings, key_settings):
 
     Returns
     -------
-    out : object like `PotentialFunction` from `pyretis.forcefield`.
-        This object represents the order parameter.
+    out : object like `PotentialFunction` from `pyretis.forcefield`
+        The object representing the potential function.
     """
     return create_external(settings, 'potential', potential_factory,
                            ['force', 'potential', 'potential_and_force'],

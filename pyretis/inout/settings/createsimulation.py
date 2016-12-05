@@ -235,7 +235,7 @@ def create_path_ensemble(settings):
 
     Returns
     -------
-    out : object like `PathEnsemble`.
+    out : object like `PathEnsemble`
         An object that can be used as a path ensemble in simulations.
     """
     interfaces = settings['simulation']['interfaces']
@@ -279,7 +279,7 @@ def create_simulation(settings, system):
 
     Returns
     -------
-    out : object like `Simulation` from `pyretis.core.simulation.simulation`.
+    out : object like `Simulation` from `pyretis.core.simulation.simulation`
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()

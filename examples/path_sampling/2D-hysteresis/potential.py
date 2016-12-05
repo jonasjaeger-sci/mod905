@@ -19,7 +19,7 @@ class Hyst2D(PotentialFunction):
     The potential energy (:math:`V_\text{pot}`) is given by
 
     .. math::
-       
+
        V_\text{pot}(x, y) = \gamma_1 (x^2 + y^2)^2 +
        \gamma_2 \exp(\alpha_1 (x - x_0)^2 + \alpha_2 (y - y_0)^2) +
        \gamma_3 \exp(\beta_1 (x + x_0)^2 + \beta_2(y + y_0)^2)
@@ -50,13 +50,13 @@ class Hyst2D(PotentialFunction):
 
         Parameters
         ----------
-        a : float, optional.
+        a : float, optional
             Parameter for the potential.
-        b : float, optional.
+        b : float, optional
             Parameter for the potential.
-        c : float, optional.
+        c : float, optional
             Parameter for the potential.
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
         super(Hyst2D, self).__init__(dim=2, desc=desc)
@@ -69,7 +69,7 @@ class Hyst2D(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -99,7 +99,7 @@ class Hyst2D(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -121,18 +121,17 @@ class Hyst2D(PotentialFunction):
         bet2 = self.params['beta2']
         x0 = self.params['x0']
         y0 = self.params['y0']
-        term = 4.0 * gam1 * (x**2 + y**2)     
+        term = 4.0 * gam1 * (x**2 + y**2)
         exp1 = gam2 * np.exp(alf1 * (x - x0)**2 + alf2 * (y - y0)**2)
         exp2 = gam3 * np.exp(bet1 * (x + x0)**2 + bet2 * (y + y0)**2)
         forces = np.zeros_like(system.particles.pos)
-        forces[:, 0] = -(x  * term +
+        forces[:, 0] = -(x * term +
                          2.0 * alf1 * (x - x0) * exp1 +
                          2.0 * bet1 * (x + x0) * exp2)
         forces[:, 1] = -(y * term +
                          2.0 * alf2 * (y - y0) * exp1 +
                          2.0 * bet2 * (y + y0) * exp2)
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
-        #print(system.particles.vel)
         return forces, virial
 
     def potential_and_force(self, system):
@@ -140,7 +139,7 @@ class Hyst2D(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -167,16 +166,16 @@ class Hyst2D(PotentialFunction):
         bet2 = self.params['beta2']
         x0 = self.params['x0']
         y0 = self.params['y0']
-        term0 = (x**2 + y**2)     
+        term0 = (x**2 + y**2)
         exp1 = gam2 * np.exp(alf1 * (x - x0)**2 + alf2 * (y - y0)**2)
         exp2 = gam3 * np.exp(bet1 * (x + x0)**2 + bet2 * (y + y0)**2)
         v_pot = gam1 * term0**2 + exp1 + exp2
-        term = 4.0 * gam1 * term0     
+        term = 4.0 * gam1 * term0
         forces = np.zeros_like(system.particles.pos)
-        forces[:,0] = -(x * term +
-                        2.0 * alf1 * (x - x0) * exp1 +
-                        2.0 * bet1 * (x + x0) * exp2)
-        forces[:,1] = -(y * term +
-                        2.0 * alf2 * (y - y0) * exp1 +
-                        2.0 * bet2 * (y + y0) * exp2)
+        forces[:, 0] = -(x * term +
+                         2.0 * alf1 * (x - x0) * exp1 +
+                         2.0 * bet1 * (x + x0) * exp2)
+        forces[:, 1] = -(y * term +
+                         2.0 * alf2 * (y - y0) * exp1 +
+                         2.0 * bet2 * (y + y0) * exp2)
         return v_pot.sum(), forces, virial
