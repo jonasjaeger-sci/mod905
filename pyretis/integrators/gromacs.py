@@ -134,7 +134,7 @@ class GromacsExt(ExternalScript):
         exe : string
             The GROMACS executable.
         input_path : string
-            The path to where the input files are stored.
+            The absolute path to where the input files are stored.
         input_files : dict
             This dictionary contains the names of the input files.
         time_step : float
@@ -144,7 +144,7 @@ class GromacsExt(ExternalScript):
         """
         super(GromacsExt, self).__init__('GROMASC external script', exe,
                                          time_step, subcycles)
-        self.input_path = os.path.join(os.getcwd(), input_path)
+        self.input_path = input_path
         self.input_files = {}
         for key, val in input_files.items():
             self.input_files[key] = os.path.join(self.input_path, val)
@@ -289,8 +289,8 @@ class GromacsExt(ExternalScript):
         Parameters
         ----------
         initial : string
-            The initial positions.
-        system : object like `pyretis.core.system`
+            The initial positions as the full path to a file.
+        system : object like :py:class:`pyretis.core.system.System`
             The object the order parameter is acting on.
         settings : dict
             This dictionary contains settings used for the
@@ -298,7 +298,8 @@ class GromacsExt(ExternalScript):
         reverse : boolean
             If True, we will run in the reverse direction.
         exe_dir : string or None
-            The directory where we will execute GROMACS.
+            The full path of the directory where we will execute
+            GROMACS.
 
         Returns
         -------
@@ -310,14 +311,12 @@ class GromacsExt(ExternalScript):
             the path to the file containing the trajectory.
         """
         if reverse:
-            #EXE_DIR = 'trajb'
             name = 'trajB_new'
             basepath = os.path.dirname(initial)
             localfile = os.path.basename(initial)
             initial_conf = os.path.join(basepath, 'rev_{}'.format(localfile))
             self.reverse_velocities(initial, initial_conf)
         else:
-            #EXE_DIR = 'trajf'
             name = 'trajF_new'
             initial_conf = initial
 

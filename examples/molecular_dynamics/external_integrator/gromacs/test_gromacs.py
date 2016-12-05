@@ -13,14 +13,15 @@ Here we test the following:
 
 3. That we can generate several trajectories.
 """
-import numpy as np
 import os
+import numpy as np
 from pyretis.core import Box
 from pyretis.integrators import GromacsExt, ExternalScript
 from pyretis.integrators.gromacs import read_gromos96_file
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import create_system
 from pyretis.inout.settings import create_orderparameter
+from pyretis.inout.common import make_dirs
 from matplotlib import pyplot as plt
 
 
@@ -77,80 +78,211 @@ def read_xvg_file(filename):
                     pass
                 else:
                     data.append([float(i) for i in lines.split()])
-    return np.array(data), legends
-        
+    data = np.array(data)
+    data_dict = {'step': data[:, 0]}
+    for i, key in enumerate(legends):
+        data_dict[key] = data[:, i+1]
+    return data_dict
 
-def test1(gro, md_settings, external):
 
-    exe_path = os.path.join(os.getcwd(), 'trajf')
+def compare_energies(xvg1, xvg2, reverse=False):
+    """Compare the energy output in two xvg-files.
 
-    steps = md_settings['steps'] * md_settings['subcycles']
+    Parameters
+    ----------
+    xvg1 : string
+        The first file to open.
+    xvg2 : string
+        The second file to open.
+    reverse : boolean
+        If True, we are comparing time reversed results.
+    """
+    print('Reading {}'.format(xvg1))
+    energy1 = read_xvg_file(xvg1)
+    if reverse:
+        for key, val in energy1.items():
+            energy1[key] = val[::-1]
+    print('Data found: {}'.format(energy1.keys()))
+    print('Reading {}'.format(xvg2))
+    energy2 = read_xvg_file(xvg2)
+    print('Data found: {}'.format(energy2.keys()))
+    delta = {}
+    for key in energy1:
+        data1 = energy1[key]
+        if key == 'step':
+            continue
+        if key in energy2:
+            data2 = energy2[key]
+            row = min(len(data1), len(data2))
+            delta[key] = data1[:row] - data2[:row]
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    for key, val in delta.items():
+        ax1.plot(val, label=key)
+    ax1.set_xlabel('Step')
+    ax1.legend()
+    ax1.set_ylabel('Energy difference')
 
-    # Test 1:
-    # We have first performed a plain MD simulation, starting from
-    # initial.g96 for 500 steps. We now do the same with start and
-    # stopping:
 
-    initial = os.path.join(os.getcwd(), 'initial.g96')
+def compare_frames(path1, path2, reverse=False):
+    """Compare frames in two directories.
 
-    out_files, order = gro.execute_until(initial, system,
-                                         md_settings, reverse=False,
-                                         exe_dir=exe_path)
+    Parameters
+    ----------
+    path1 : string
+        Path to folder with frames for first trajectory.
+    path2 : string
+        Path to folder with frames for second trajectory.
+    reverse : boolean
+        If True, we are comparing time reversed results.
+    """
+    box = Box([2.384999990, 2.384999990, 2.384999990])
+    files1 = []
+    files2 = []
+    for files in os.listdir(path1):
+        if files.endswith('.g96') and files.startswith('frame'):
+            files1.append(os.path.join(path1, files))
+            files2.append(os.path.join(path2, files))
+    files1 = sorted(files1)
+    files2 = sorted(files2)
+    if reverse:
+        files1 = reversed(files1)
+    all_mse_x = []
+    all_mse_v = []
+    for file1, file2 in zip(files1, files2):
+        mse_x, mse_v = compare_g96_files(file1, file2, box, negvel=reverse)
+        all_mse_x.append(mse_x)
+        all_mse_v.append(mse_v)
+    print('Average MSE positions: {}'.format(np.average(all_mse_x)))
+    print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+    ax1.set_xlabel('Step')
+    ax1.set_ylabel('MSE position')
+    ax2.set_xlabel('Step')
+    ax2.set_ylabel('MSE velocity')
+    ax1.plot(all_mse_x)
+    ax2.plot(all_mse_v)
+
+def compare_results(path1, path2, out_files, reverse):
+    """Compare gromacs results from simulations in two paths.
+
+    Parameters
+    ----------
+    path1 : string
+        Path to folder with frames for first trajectory.
+    path2 : string
+        Path to folder with frames for second trajectory.
+    out_files : dict
+        A dict with files from the ouput when running the
+        gromacs simulation with pyretis.
+    reverse : boolean
+        If True, we are comparing time reversed results.
+    """
+    external = ExternalScript('For executing commands', None, None, None)
 
     cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
            '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
            '-nzero', '5']
-    external.execute_command(cmd, inputs=b'0', cwd=exe_path)
+    external.execute_command(cmd, inputs=b'0', cwd=path1)
+
     cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
-    external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
+    external.execute_command(cmd, inputs=b'5 6 7 8', cwd=path1)
 
-    # compare frames:
-    box = Box([2.384999990, 2.384999990, 2.384999990])
-    plain_path = 'plain-md'
-    plain_path_frame = os.path.join(plain_path, 'frames')
-    all_mse_x = []
-    all_mse_v = []
-    for files in os.listdir(exe_path):
-        if files.endswith('.g96') and files.startswith('frame'):
-            file1 = os.path.join(exe_path, files)
-            file2 = os.path.join(plain_path_frame, files)
-            mse_x, mse_v = compare_g96_files(file1, file2, box)
-            all_mse_x.append(mse_x)
-            all_mse_v.append(mse_v)
-    print('Average MSE positions: {}'.format(np.average(all_mse_x)))
-    print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
+    compare_frames(path1, os.path.join(path2, 'frames'),
+                   reverse=reverse)
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212)
-    ax1.plot(all_mse_x)
-    ax1.set_xlabel('Step')
-    ax1.set_ylabel('MSE position')
-    ax2.plot(all_mse_v)
-    ax2.set_xlabel('Step')
-    ax2.set_ylabel('MSE velocity')
-
-    energy1, leg1 = read_xvg_file(os.path.join(plain_path, 'energy.xvg'))
-    energy2, leg2 = read_xvg_file(os.path.join(exe_path, 'energy.xvg'))
-    print(leg1, leg2)
-    fig2 = plt.figure()
-    ax3 = fig2.add_subplot(111)
-    nrow1, ncol1 = energy1.shape 
-    nrow2, ncol2 = energy2.shape
-    row = min(nrow1, nrow2)
-    assert ncol1 == ncol2
-    delta = energy1[:row, :] - energy2[:row, :]
-    for i in range(1, ncol1):
-        ax3.plot(delta[:, i], label=leg2[i-1])
-    ax3.set_xlabel('Step')
-    ax3.set_ylabel('Energy difference')
-    ax3.legend()
+    compare_energies(os.path.join(path1, 'energy.xvg'),
+                     os.path.join(path2, 'energy.xvg'),
+                     reverse=reverse)
     plt.show()
-    return out_files
 
 
-if __name__ == '__main__':
-    # Run a test:
+
+def run_forward(gro, system):
+    """Test implementation of gromacs integrator.
+
+    This test will run a gromacs simulation with starting and stopping
+    forward in time and compare the output with the results from a
+    pure gromacs simulation with the same output frequency and other
+    settings.
+
+    Parameters
+    ----------
+    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+        The object which handles gromacs integration.
+    system : object like :py:class:`pyretis.core.system.System`
+        The system we are studying.
+    """
+    exe_path = os.path.join(os.getcwd(), 'trajf')
+    make_dirs(exe_path)
+    plain_path = os.path.join(os.getcwd(), 'plain-md')
+    # Test 1:
+    # We have performed a plain MD simulation with gromacs, starting from
+    # initial.g96 for 1000 steps. We now do the same with start and
+    # stopping:
+    initial = os.path.join(os.getcwd(), 'initial.g96')
+
+    local_settings = {'steps': 1000 // gro.subcycles}
+    out_files, order = gro.execute_until(initial, system,
+                                         local_settings,
+                                         reverse=False,
+                                         exe_dir=exe_path)
+
+    compare_results(exe_path, plain_path, out_files, False)
+    return out_files, order
+
+
+def run_reverse(gro, system):
+    """Test implementation of gromacs integrator.
+
+    This test will run a gromacs simulation with starting and stopping
+    backward in time and compare the output with the results from a
+    gromacs simulation with the same output frequency and other settings.
+
+    Parameters
+    ----------
+    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+        The object which handles gromacs integration.
+    system : object like :py:class:`pyretis.core.system.System`
+        The system we are studying.
+    """
+    exe_path = os.path.join(os.getcwd(), 'trajb')
+    make_dirs(exe_path)
+    plain_path = os.path.join(os.getcwd(), 'plain-md')
+    local_settings = {'steps': 1000 // gro.subcycles}
+    # Extract last frame from the plain-md trr as a starting point:
+    initial = os.path.join(exe_path, 'initial.g96')
+    gro.get_trr_frame(os.path.join(plain_path, 'traj.trr'),
+                      os.path.join(plain_path, 'topol.tpr'),
+                      local_settings['steps'], initial)
+    # Run backwards from this frame:
+    out_files, order = gro.execute_until(initial, system,
+                                         local_settings,
+                                         reverse=True,
+                                         exe_dir=exe_path)
+    compare_results(exe_path, plain_path, out_files, True)
+    return out_files, order
+
+
+
+def do_setup(md_settings):
+    """Do initial setup needed for running the test.
+
+    Parameters
+    ----------
+    md_settings : dict
+        A dict containing settings for the gromacs integrator.
+
+    Returns
+    -------
+    system : object like :py:class`pyretis.core.system.System`
+        A system which we are integrating. It contains information
+        about the order parameter and how to calculate it.
+    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+        The object used for interfacing gromacs.
+    """
     settings = {}
 
     settings['system'] = {'units': 'gromacs',
@@ -169,32 +301,29 @@ if __name__ == '__main__':
     system = create_system(settings)
     system.order_function = create_orderparameter(settings)
 
-    input_dir = 'ext_input'
+    input_dir = os.path.join(os.getcwd(), 'ext_input')
 
     input_files = {'configuration': 'conf.g96',
                    'input': 'grompp.mdp',
                    'topology': 'topol.top'}
-    
-    exe_path = 'trajf'
-
-    md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
-
     gro = GromacsExt('gmx_5.1.4', input_dir, input_files,
                      md_settings['timestep'], md_settings['subcycles'])
-    
-    external = ExternalScript('For executing commands', None, None, None)
-    out_files = test1(gro, md_settings, external)    
+    return system, gro
 
+
+if __name__ == '__main__':
+    md_settings = {'subcycles': 5, 'timestep': 0.002}
+    sys, grom = do_setup(md_settings)
+    #out, orderp = run_forward(grom, sys)
+    out, orderp = run_reverse(grom, sys)
+"""
     #out_files = {'trr': 'trajF_new.trr', 'tpr': 'trajF_new.tpr'}
-
-    exe_path = 'trajf'
-    trr = os.path.join(exe_path, out_files['trr'])
-    tpr = os.path.join(exe_path, out_files['tpr'])
-
-    md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
-
+    #exe_path = 'trajf'
+    #trr = os.path.join(exe_path, out_files['trr'])
+    #tpr = os.path.join(exe_path, out_files['tpr'])
+    #md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
     exe_path = os.path.join(os.getcwd(), 'trajb')
-    
+
     initial = os.path.join(exe_path, 'lastf.g96')
 
     gro.get_trr_frame(trr, tpr, md_settings['steps'], initial)
@@ -208,7 +337,7 @@ if __name__ == '__main__':
     external.execute_command(cmd, inputs=b'0', cwd=exe_path)
     cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
     external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
-    
+
     # compare frames:
     box = Box([2.384999990, 2.384999990, 2.384999990])
     forward = 'trajf'
@@ -230,3 +359,4 @@ if __name__ == '__main__':
         all_mse_v.append(mse_v)
     print('Average MSE positions: {}'.format(np.average(all_mse_x)))
     print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
+"""
