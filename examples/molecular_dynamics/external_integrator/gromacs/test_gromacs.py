@@ -188,7 +188,7 @@ def compare_results(path1, path2, out_files, reverse):
     external.execute_command(cmd, inputs=b'0', cwd=path1)
 
     cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
-    external.execute_command(cmd, inputs=b'5 6 7 8', cwd=path1)
+    external.execute_command(cmd, inputs=b'1 2 3 4 5 6 7 8', cwd=path1)
 
     compare_frames(path1, os.path.join(path2, 'frames'),
                    reverse=reverse)
@@ -314,49 +314,6 @@ def do_setup(md_settings):
 if __name__ == '__main__':
     md_settings = {'subcycles': 5, 'timestep': 0.002}
     sys, grom = do_setup(md_settings)
-    #out, orderp = run_forward(grom, sys)
+    out, orderp = run_forward(grom, sys)
     out, orderp = run_reverse(grom, sys)
-"""
-    #out_files = {'trr': 'trajF_new.trr', 'tpr': 'trajF_new.tpr'}
-    #exe_path = 'trajf'
-    #trr = os.path.join(exe_path, out_files['trr'])
-    #tpr = os.path.join(exe_path, out_files['tpr'])
-    #md_settings = {'steps': 100, 'subcycles': 5, 'timestep': 0.002}
-    exe_path = os.path.join(os.getcwd(), 'trajb')
 
-    initial = os.path.join(exe_path, 'lastf.g96')
-
-    gro.get_trr_frame(trr, tpr, md_settings['steps'], initial)
-
-    out_files, order = gro.execute_until(initial, system,
-                                         md_settings, reverse=True,
-                                         exe_dir=exe_path)
-    cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
-           '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
-           '-nzero', '5']
-    external.execute_command(cmd, inputs=b'0', cwd=exe_path)
-    cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
-    external.execute_command(cmd, inputs=b'5 6 7 8', cwd=exe_path)
-
-    # compare frames:
-    box = Box([2.384999990, 2.384999990, 2.384999990])
-    forward = 'trajf'
-    all_mse_x = []
-    all_mse_v = []
-    file_forward = []
-    file_backward = []
-    for files in os.listdir(exe_path):
-        if files.endswith('.g96') and files.startswith('frame'):
-            file1 = os.path.join(exe_path, files)
-            file2 = os.path.join(forward, files)
-            file_forward.append(file2)
-            file_backward.append(file1)
-    file_forward = sorted(file_forward)
-    file_backward = sorted(file_backward)
-    for file1, file2 in zip(file_backward, file_forward[::-1]):
-        mse_x, mse_v = compare_g96_files(file1, file2, box, negvel=True)
-        all_mse_x.append(mse_x)
-        all_mse_v.append(mse_v)
-    print('Average MSE positions: {}'.format(np.average(all_mse_x)))
-    print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
-"""
