@@ -320,9 +320,7 @@ class GromacsExt(ExternalScript):
             name = 'trajF_new'
             initial_conf = initial
 
-
         ext_time = self.time_step * self.subcycles
-
         order = self.calculate_order_parameter(system,
                                                initial_conf)
         tpr_file = None
@@ -342,7 +340,8 @@ class GromacsExt(ExternalScript):
                 out_grompp = self.extend_gromacs(tpr_file, ext_time,
                                                  exe_dir=exe_dir)
                 ext_tpr_file = out_grompp['tpr']
-                out_mdrun = self.execute_mdrun_continue(ext_tpr_file, cpt_file, name,
+                out_mdrun = self.execute_mdrun_continue(ext_tpr_file,
+                                                        cpt_file, name,
                                                         exe_dir=exe_dir)
                 # Move extended tpr so that we can continue extending:
                 os.replace(os.path.join(exe_dir, ext_tpr_file),

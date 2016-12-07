@@ -79,8 +79,7 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def propagate(self, path, system, interfaces,
-                  reverse=False):
+    def propagate(self, path, system, interfaces, reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -116,7 +115,7 @@ class Integrator(object):
         initial_system = system.particles.get_phase_point()
         system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
-        while True:
+        for _ in range(path.maxlen):
             orderp = system.calculate_order()
             add = path.append(orderp,
                               system.particles.pos,
@@ -139,10 +138,10 @@ class Integrator(object):
                 break
             if reverse:
                 system.particles.vel *= -1.0
-                self(system)
+                self.integration_step(system)
                 system.particles.vel *= -1.0
             else:
-                self(system)
+                self.integration_step(system)
         system.particles.set_phase_point(initial_system)
         msg = 'Propagate done: "{}" (success: {})'.format(status, success)
         logger.debug(msg)
