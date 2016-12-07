@@ -269,7 +269,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
         Status of the path, this is one of the strings defined in
         :py:const:`.path._STATUS`.
     """
-    accept, trial_path = False, Path(rgen)  # return values
+    accept, trial_path = False, path.empty_path()  # return values
     orderp, pos, vel, vpot, idx = path.get_shooting_point()
     system.particles.pos = np.copy(pos)  # REPLACE to work with file names
     system.particles.vel = np.copy(vel)  # REPLACE ---------- "" ---------
@@ -313,7 +313,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
     # since forward path must be at least one step, max for backwards is:
     maxlenb = maxlen - 1
     # generate the backward path:
-    path_back = Path(rgen, maxlen=maxlenb)
+    path_back = path.empty_path(maxlen=maxlenb)
     success_back, _ = integrator.propagate(path_back, system, interfaces,
                                            reverse=True)
 
@@ -335,7 +335,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
         return accept, trial_path, trial_path.status
     # Everything seems fine, propagate forward
     maxlenf = maxlen - path_back.length + 1
-    path_forw = Path(rgen, maxlen=maxlenf)
+    path_forw = path.empty_path(maxlen=maxlenf)
     success_forw, _ = integrator.propagate(path_forw, system, interfaces,
                                            reverse=False)
     path_forw.time_origin = time_shoot

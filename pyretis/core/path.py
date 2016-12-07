@@ -734,8 +734,8 @@ class Path(PathBase):
         out : object like :py:class:`PathBase`
             A new empty path.
         """
-        maxlen = kwargs.get('maxlen', self.maxlen)
-        time_origin = kwargs.get('time_origin', self.time_origin)
+        maxlen = kwargs.get('maxlen', None)
+        time_origin = kwargs.get('time_origin', 0)
         return self.__class__(self.rgen, maxlen=maxlen,
                               time_origin=time_origin)
 
@@ -900,8 +900,8 @@ class ReservoirPath(PathBase):
         out : object like :py:class:`PathBase`
             A new empty path.
         """
-        maxlen = kwargs.get('maxlen', self.maxlen)
-        time_origin = kwargs.get('time_origin', self.time_origin)
+        maxlen = kwargs.get('maxlen', None)
+        time_origin = kwargs.get('time_origin', 0)
         res_length = kwargs.get('res_length', self.res_length)
         return self.__class__(self.rgen, maxlen=maxlen,
                               time_origin=time_origin,
