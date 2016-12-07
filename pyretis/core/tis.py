@@ -272,17 +272,14 @@ def _shoot(path, system, interfaces, integrator, rgen,
         :py:const:`.path._STATUS`.
     """
     accept, trial_path = False, Path(rgen)  # return values
-    # trial_path is just an empty path for now
-    # Select the shooting point from path at random.
-    # We do not include the end point as these are out of bounds - i.e. they
-    # have crossed the interface. See also the documentation for RETIS.
-    orderp, pos, vel, idx = path.get_shooting_point()
-    system.particles.vel = np.copy(vel)
+    orderp, pos, vel, vpot, idx = path.get_shooting_point()
     system.particles.pos = np.copy(pos)
+    system.particles.vel = np.copy(vel)
+    system.v_pot = vpot
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
-    # kick the time-slice:
+    # Modify the velocities:
     dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
                           momentum=tis_settings['zero_momentum'],
                           rescale=tis_settings['rescale_energy'])[0]
@@ -292,7 +289,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(orderp, pos, vel, None)
+        trial_path.append(orderp, pos, vel, vpot)
         accept, trial_path.status = False, 'KOB'
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we much check if we reject it or not:
@@ -301,7 +298,7 @@ def _shoot(path, system, interfaces, integrator, rgen,
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
-            trial_path.append(orderp, pos, vel, None)
+            trial_path.append(orderp, pos, vel, vpot)
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
     # OK: kick was either aimless or it was accepted by Metropolis
@@ -555,9 +552,10 @@ def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
     momentum : boolean, optional
         If True, we reset the linear momentum to zero after kicking.
     rescale : float, optional
-        For some NVE simulations, we can rescale the energy to a fixed
-        value. If `rescale` is a float > 0, we will rescale the energy (after
-        modification of the velocities) to match the given float.
+        In some NVE simulations, we may wish to rescale the energy to
+        a fixed value. If `rescale` is a float > 0, we will rescale
+        the energy (after modification of the velocities) to match the
+        given float.
 
 
     Returns

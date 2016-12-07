@@ -170,8 +170,8 @@ class Particles(object):
         Returns
         -------
         out : None
-            Returns `None`, increments `self.npart` and updates
-            `self.particles`.
+            This method does not return anything, but increments
+            `self.npart` and updates `self.particles`.
         """
         if self.npart == 0:
             self.name = [name]
