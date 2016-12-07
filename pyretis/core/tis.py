@@ -401,14 +401,15 @@ def generate_initial_path_kick(system, interfaces, integrator,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
-    previous, _ = integrator.kick_across_middle(system,
-                                                rgen,
-                                                interfaces[1],
-                                                tis_settings)
-    # Note: current point is stored in system
-    # When the kicking is done, we have two points (`previous` and the
-    # current system.particles).
-    # We then propagate current phase point forward:
+    leftpoint, _ = integrator.kick_across_middle(system,
+                                                 rgen,
+                                                 interfaces[1],
+                                                 tis_settings)
+    # kick_across_middle will return two points, one immediately
+    # left of the interface and one immediately right of the
+    # interface. So we have two points (`leftpoint` and the
+    # current `system.particles`). We then propagate the current
+    # phase point forward:
     maxlen = tis_settings['maxlength']
     path_forw = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_forw, system, interfaces,
@@ -417,8 +418,8 @@ def generate_initial_path_kick(system, interfaces, integrator,
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
         raise ValueError('Forward path not successful.', msg)
-    # And the previous phase point backward:
-    system.particles.set_phase_point(previous)
+    # And we propagate the `leftpoint` backward:
+    system.particles.set_phase_point(leftpoint)
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, interfaces,
                                         reverse=True)
