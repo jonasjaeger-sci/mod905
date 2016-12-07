@@ -11,9 +11,10 @@ Important classes defined here
 Integrator (:py:class:`pyretis.integrators.Integrator`)
     The base class for integrators
 """
-from __future__ import absolute_import
 import logging
-from pyretis.core.particlefunctions import calculate_thermo_path
+from pyretis.core.particlefunctions import (calculate_kinetic_energy,
+                                            reset_momentum)
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -79,7 +80,7 @@ class Integrator(object):
         return self.delta_t > 0.0
 
     def propagate(self, path, system, interfaces,
-                  reverse=False, thermo=False):
+                  reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -105,8 +106,6 @@ class Integrator(object):
             These interfaces define the stopping criterion.
         reverse : boolean
             If True, the system will be propagated backwards in time.
-        thermo : boolean
-            If True, we will do some extra calculation of energies.
         """
         if reverse:
             status = 'Generating backward path...'
@@ -119,11 +118,10 @@ class Integrator(object):
         left, _, right = interfaces
         while True:
             orderp = system.calculate_order()
-            energy = calculate_thermo_path(system) if thermo else None
             add = path.append(orderp,
                               system.particles.pos,
                               system.particles.vel,
-                              energy)
+                              system.v_pot)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -149,6 +147,65 @@ class Integrator(object):
         msg = 'Propagate done: "{}" (success: {})'.format(status, success)
         logger.debug(msg)
         return success, status
+
+    @staticmethod
+    def modify_velocities(system, rgen, sigma_v=None, aimless=True,
+                          momentum=False, rescale=None):
+        """Modify the velocities of the current state.
+
+        This method will modify the velocities of a time slice.
+        And it is part of the integrator since it, conceptually,
+        fits here:  we are acting on the system and modifying it.
+
+        Parameters
+        ----------
+        system : object like :py:class:`core.system.System`
+            System is used here since we need access to the particle
+            list.
+        rgen : object like :py:class:`core.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        sigma_v : numpy.array
+            These values can be used to set a standard deviation (one
+            for each particle) for the generated velocities.
+        aimless : boolean, optional
+            Determines if we should do aimless shooting or not.
+        momentum : boolean, optional
+            If True, we reset the linear momentum to zero after kicking.
+        rescale : float, optional
+            In some NVE simulations, we may wish to rescale the energy to
+            a fixed value. If `rescale` is a float > 0, we will rescale
+            the energy (after modification of the velocities) to match the
+            given float.
+
+        Returns
+        -------
+        dek : float
+            The change in the kinetic energy
+        kin_new : float
+            The new kinetic energy
+        orderp : list of floats
+            The calculated order parameter after modifying the velocities.
+            In some rare cases, the order parameter can depend on the
+            velocity.
+        """
+        particles = system.particles
+        if rescale is not None and rescale is not False and rescale > 0:
+            kin_old = rescale - system.v_pot
+        else:
+            kin_old = calculate_kinetic_energy(particles)[0]
+        if aimless:
+            vel, _ = rgen.draw_maxwellian_velocities(system)
+            particles.vel = vel
+        else:  # soft velocity change, add from Gaussian dist
+            dvel, _ = rgen.draw_maxwellian_velocities(system, sigma_v=sigma_v)
+            particles.vel = particles.vel + dvel
+        if momentum:
+            reset_momentum(particles)
+        if rescale:
+            system.rescale_velocities(rescale)
+        kin_new = calculate_kinetic_energy(particles)[0]
+        dek = kin_new - kin_old
+        return dek, kin_new, system.calculate_order()
 
     def __call__(self, system):
         """To allow calling `Integrator(system)`.

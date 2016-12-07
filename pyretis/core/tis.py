@@ -32,8 +32,6 @@ import logging
 import numpy as np
 from pyretis.core.path import Path, paste_paths
 from pyretis.core.montecarlo import metropolis_accept_reject
-from pyretis.core.particlefunctions import (calculate_kinetic_energy,
-                                            reset_momentum)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -273,18 +271,21 @@ def _shoot(path, system, interfaces, integrator, rgen,
     """
     accept, trial_path = False, Path(rgen)  # return values
     orderp, pos, vel, vpot, idx = path.get_shooting_point()
-    system.particles.pos = np.copy(pos)
-    system.particles.vel = np.copy(vel)
-    system.v_pot = vpot
+    system.particles.pos = np.copy(pos)  # REPLACE to work with file names
+    system.particles.vel = np.copy(vel)  # REPLACE ---------- "" ---------
+    system.v_pot = vpot  # REPLACE to possibly work with file names
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
     # Modify the velocities:
-    dke = _kick_timeslice(system, rgen, aimless=tis_settings['aimless'],
-                          momentum=tis_settings['zero_momentum'],
-                          rescale=tis_settings['rescale_energy'])[0]
+    dek, _, orderp = integrator.modify_velocities(
+        system,
+        rgen,
+        sigma_v=tis_settings['sigma_v'],
+        aimless=tis_settings['aimless'],
+        momentum=tis_settings['zero_momentum'],
+        rescale=tis_settings['rescale_energy'])
     # update the order parameter since it could depend on velocity
-    orderp = system.calculate_order()
     # We now check if the kick was OK or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
@@ -292,9 +293,9 @@ def _shoot(path, system, interfaces, integrator, rgen,
         trial_path.append(orderp, pos, vel, vpot)
         accept, trial_path.status = False, 'KOB'
         return accept, trial_path, trial_path.status
-    # 2) If the kick is not aimless, we much check if we reject it or not:
+    # 2) If the kick is not aimless, we must check if we reject it or not:
     if not tis_settings['aimless']:
-        accept_kick = metropolis_accept_reject(rgen, system, dke)
+        accept_kick = metropolis_accept_reject(rgen, system, dek)
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
@@ -510,10 +511,10 @@ def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
         # save current state:
         previous = particles.get_phase_point()
         previous['order'] = curr
-        # kick the time-slice
-        _kick_timeslice(system, rgen, aimless=True,
-                        momentum=tis_settings['zero_momentum'],
-                        rescale=tis_settings['rescale_energy'])
+        # Modify velocities
+        integrator.modify_velocities(system, rgen, sigma_v=None, aimless=True,
+                                     momentum=tis_settings['zero_momentum'],
+                                     rescale=tis_settings['rescale_energy'])
         # integrate forward one step:
         integrator.integration_step(system)
         # compare previous order parameter and the new one:
@@ -529,60 +530,6 @@ def _kick_across_middle(system, integrator, rgen, middle, tis_settings):
             particles.set_phase_point(previous)
             curr = previous['order']
     return previous, particles.get_phase_point()
-
-
-def _kick_timeslice(system, rgen, sigma_v=None, aimless=True, momentum=False,
-                    rescale=None):
-    """Make a random modification to a time slice.
-
-    This method will modify the velocities of a time slice.
-
-    Parameters
-    ----------
-    system : object like :py:class:`.system.System`
-        System is used here since we need access to the particle
-        list.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
-        This is the random generator that will be used.
-    sigma_v : numpy.array
-        These values can be used to set a standard deviation (one for
-        each particle) for the generated velocities.
-    aimless : boolean, optional
-        Determines if we should do aimless shooting or not.
-    momentum : boolean, optional
-        If True, we reset the linear momentum to zero after kicking.
-    rescale : float, optional
-        In some NVE simulations, we may wish to rescale the energy to
-        a fixed value. If `rescale` is a float > 0, we will rescale
-        the energy (after modification of the velocities) to match the
-        given float.
-
-
-    Returns
-    -------
-    dek : float
-        The change in the kinetic energy
-    kin_new : float
-        The new kinetic energy
-    """
-    particles = system.particles
-    if rescale is not None and rescale is not False and rescale > 0:
-        kin_old = rescale - system.v_pot
-    else:
-        kin_old = calculate_kinetic_energy(particles)[0]
-    if aimless:
-        vel, _ = rgen.draw_maxwellian_velocities(system)
-        particles.vel = vel
-    else:  # soft velocity change, add from Gaussian dist
-        dvel, _ = rgen.draw_maxwellian_velocities(system, sigma_v=sigma_v)
-        particles.vel = particles.vel + dvel
-    if momentum:
-        reset_momentum(particles)
-    if rescale:
-        system.rescale_velocities(rescale)
-    kin_new = calculate_kinetic_energy(particles)[0]
-    dek = kin_new - kin_old
-    return dek, kin_new
 
 
 def _fix_path_by_tis(initial_path, system, interfaces,
