@@ -263,8 +263,8 @@ def _shoot(path, system, interfaces, integrator, rgen,
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object like :py:class:`.path.Path` or `None`
-        Returns the generated path if something was generated.
+    out[1] : object like :py:class:`.path.PathBase`
+        Returns the generated path.
     out[2] : string
         Status of the path, this is one of the strings defined in
         :py:const:`.path._STATUS`.
@@ -285,7 +285,6 @@ def _shoot(path, system, interfaces, integrator, rgen,
         aimless=tis_settings['aimless'],
         momentum=tis_settings['zero_momentum'],
         rescale=tis_settings['rescale_energy'])
-    # update the order parameter since it could depend on velocity
     # We now check if the kick was OK or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
@@ -320,12 +319,14 @@ def _shoot(path, system, interfaces, integrator, rgen,
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
     if not success_back:
-        # something went wrong, most probably the path length was exceeded
+        # Something went wrong, most probably the path length was exceeded
+        # BTL is backward trajectory too long (maxlenb was exceeded)
         accept, trial_path.status = False, 'BTL'
-        trial_path += path_back  # just store path for analysis
-        # BTL is backward trajectory too long (maxlenb "too small")
+        # Add the failed path to trial path for analysis:
+        trial_path += path_back
         if path_back.length == tis_settings['maxlength'] - 1:
-            trial_path.status = 'BTX'  # exceeds maximum memory length
+            # BTX is backward tracejctory longer than maximum memory
+            trial_path.status = 'BTX'
         return accept, trial_path, trial_path.status
     # Backward seems OK so far, check if the ending point is correct:
     if path_back.get_end_point(left, right) != tis_settings['start_cond']:
@@ -352,8 +353,8 @@ def _shoot(path, system, interfaces, integrator, rgen,
         if trial_path.length == tis_settings['maxlength']:
             trial_path.status = 'FTX'  # exceeds "memory"
         return accept, trial_path, trial_path.status
-    # we have made it so far, check if we cross middle interface
-    # finally, check if middle interface was crossed:
+    # We have made it so far, the last check:
+    # Did we cross the middle interface?
     _, _, _, cross = trial_path.check_interfaces(interfaces)
     if not cross[1]:  # not crossed middle
         accept, trial_path.status = False, 'NCR'
