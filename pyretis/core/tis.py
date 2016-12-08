@@ -27,9 +27,7 @@ References
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
 """
-from __future__ import absolute_import
 import logging
-import numpy as np
 from pyretis.core.path import Path, paste_paths
 from pyretis.core.montecarlo import metropolis_accept_reject
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -280,8 +278,8 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     """
     accept, trial_path = False, path.empty_path()  # return values
     orderp, pos, vel, vpot, idx = path.get_shooting_point()
-    system.particles.pos = np.copy(pos)  # REPLACE to work with file names
-    system.particles.vel = np.copy(vel)  # REPLACE ---------- "" ---------
+    system.particles.set_pos(pos)
+    system.particles.set_vel(vel)
     system.v_pot = vpot  # REPLACE to possibly work with file names
     # store info about this point, just in case we have to return
     # before completing a full new path:

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['Particles']
+__all__ = ['Particles', 'ParticlesExt']
 
 
 class Particles(object):
@@ -119,6 +119,30 @@ class Particles(object):
                   'force': np.copy(self.force)}
         return retval
 
+    def set_pos(self, pos):
+        """Set the positions for the particles.
+
+        This will copy the input positions.
+
+        Parameters
+        ----------
+        pos : tuple of (string, int)
+            The positions to set.
+        """
+        self.pos = np.copy(pos)
+
+    def set_vel(self, vel):
+        """Set the velocities for the particles.
+
+        This will copy the input velocities.
+
+        Parameters
+        ----------
+        vel : tuple of (string, int)
+            The velocities to set.
+        """
+        self.vel = np.copy(vel)
+
     def set_phase_point(self, phasepoint):
         """Set the position, velocities (and forces) for the particles.
 
@@ -140,8 +164,8 @@ class Particles(object):
             Returns `None` and updates `self.pos`, `self.vel`
             and `self.force` (if given).
         """
-        self.pos = np.copy(phasepoint['pos'])
-        self.vel = np.copy(phasepoint['vel'])
+        self.set_pos(phasepoint['pos'])
+        self.set_vel(phasepoint['vel'])
         try:
             self.force = np.copy(phasepoint['force'])
         except KeyError:
@@ -265,3 +289,53 @@ class Particles(object):
         msg += ['Types: {}'.format(np.unique(self.ptype))]
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)
+
+
+class ParticlesExt(Particles):
+    """Particles, when positions and velocities are stored in files.
+
+    This represents a particle list for the case where the positions
+    and velocities might be stored in files.
+
+    Attributes
+    ----------
+    pos_file : tuple of (string, int)
+        The location of the file with positions and the index
+        for locating a frame.
+    vel_file : tuple of (string, int)
+        The location of the file with velocities and the index
+        for locating a frame.
+    """
+
+    def __init__(self, dim=1):
+        """Initialize the Particle list.
+
+        Here we just create an empty particle list.
+        """
+        super().__init__(dim=dim)
+        self.pos_file = (None, None)
+        self.vel_file = (None, None)
+
+    def set_pos(self, pos):
+        """Set the positions for the particles.
+
+        This will copy the input positions.
+
+        Parameters
+        ----------
+        pos : tuple of (string, int)
+            The positions to set.
+        """
+        self.pos_file = pos
+
+    def set_vel(self, vel):
+        """Set the velocities for the particles.
+
+        This will copy the input velocities.
+
+        Parameters
+        ----------
+        vel : tuple of (string, int)
+            The velocities to set.
+        """
+        self.vel_file = vel

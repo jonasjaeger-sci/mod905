@@ -38,7 +38,6 @@ References
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
 import logging
-import numpy as np
 from pyretis.core.tis import make_tis_step_ensemble
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -431,8 +430,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # We generate from the first point of the path in [0^+]:
     logger.debug('Creating path for [0^-]')
     pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
-    system.particles.vel = np.copy(vel)
-    system.particles.pos = np.copy(pos)
+    system.particles.set_vel(vel)
+    system.particles.set_pos(pos)
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
@@ -455,8 +454,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     path_tmp = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
     pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
-    system.particles.vel = np.copy(vel)
-    system.particles.pos = np.copy(pos)
+    system.particles.set_vel(vel)
+    system.particles.set_pos(pos)
     integrator.propagate(path_tmp, system, order_function,
                          ensemble1.interfaces, reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
