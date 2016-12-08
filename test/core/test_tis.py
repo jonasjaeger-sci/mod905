@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 from pyretis.core import System, Box
 from pyretis.inout.settings import (create_force_field,
-                                    create_orderparameter, create_simulation)
+                                    create_simulation)
 logging.disable(logging.CRITICAL)
 
 
@@ -63,7 +63,6 @@ def prepare_test_simulation():
     system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
     system.forcefield = create_force_field(settings)
-    system.order_function = create_orderparameter(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     simulation = create_simulation(settings, system)
     # here we do a hack so that the simulation and langevin integrator

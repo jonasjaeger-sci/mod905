@@ -49,7 +49,6 @@ from pyretis.inout.settings import (parse_settings_file,
                                     write_settings_file,
                                     create_system,
                                     create_force_field,
-                                    create_orderparameter,
                                     create_simulation,
                                     is_single_tis)
 
@@ -467,10 +466,6 @@ if __name__ == '__main__':
         system = create_system(settings)
         print_and_loginfo('Creating force field')
         system.forcefield = create_force_field(settings)
-        print_and_loginfo('Creating order parameter')
-        system.order_function = create_orderparameter(settings)
-        if system.order_function is None:
-            print_and_loginfo('-> No order parameter was created!')
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
         simulation = create_simulation(settings, system)

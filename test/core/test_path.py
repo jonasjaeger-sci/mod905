@@ -67,8 +67,8 @@ class PathTest(unittest.TestCase):
             path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
             path_rev.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
 
-        path2 = path.empty_path()
-        path_rev2 = path_rev.empty_path()
+        path2 = path.empty_path(maxlen=maxlen)
+        path_rev2 = path_rev.empty_path(maxlen=maxlen)
 
         self.assertIsInstance(path2, Path)
         self.assertEqual(path.maxlen, path2.maxlen)

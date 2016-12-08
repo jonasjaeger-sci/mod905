@@ -16,7 +16,6 @@ PathEnsembleFile
 """
 import logging
 # pyretis imports:
-from pyretis.core.path import PathBase
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -24,39 +23,6 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PathEnsembleWriter', 'PathEnsembleFile']
-
-
-def _line_to_path_object(line):
-    """Convert a text line to a `Path` object.
-
-    Parameters
-    ----------
-    line : string
-        The line of text to convert.
-
-    Returns
-    -------
-    out : object like `Path` from `pyretis.core.path`
-        The path created from the given input text.
-
-    Note
-    ----
-    TODO: This method is considered for deletion - is it going to be
-    useful or are we always going to create path data (rather than Path
-    objects) when we read files? It might be useful in the future for
-    restart files.
-    """
-    path = PathBase(None)
-    data = line.split()
-    path.ordermin = (float(data[9]), 0)
-    path.ordermax = (float(data[10]), -1)
-    path.path = [None] * int(data[6])
-    path.path[0] = [None, path.ordermin[0]]
-    path.path[-1] = [None, path.ordermax[0]]
-    path.status = str(data[7])
-    path.generated = [str(data[8]), float(data[13]),
-                      int(data[14]), int(data[15])]
-    return path
 
 
 class PathEnsembleWriter(Writer):

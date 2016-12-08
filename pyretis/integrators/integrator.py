@@ -79,7 +79,7 @@ class Integrator(object):
         self.delta_t *= -1.0
         return self.delta_t > 0.0
 
-    def propagate(self, path, system, interfaces, reverse=False):
+    def propagate(self, path, system, orderp, interfaces, reverse=False):
         """Generate a path by integrating until a criterion is met.
 
         This function will generate a path by calling the function
@@ -101,6 +101,8 @@ class Integrator(object):
             The system object gives the initial state for the
             integration. The initial state is stored and the system is
             reset to the initial state when the integration is done.
+        orderp : object like `OrderParameter` from `pyretis.orderparameter`
+            The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
         reverse : boolean
@@ -116,8 +118,8 @@ class Integrator(object):
         system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
         for _ in range(path.maxlen):
-            orderp = system.calculate_order()
-            add = path.append(orderp,
+            order = self.calculate_order(orderp, system)
+            add = path.append(order,
                               system.particles.pos,
                               system.particles.vel,
                               system.v_pot)
@@ -182,10 +184,6 @@ class Integrator(object):
             The change in the kinetic energy
         kin_new : float
             The new kinetic energy
-        orderp : list of floats
-            The calculated order parameter after modifying the velocities.
-            In some rare cases, the order parameter can depend on the
-            velocity.
         """
         particles = system.particles
         if rescale is not None and rescale is not False and rescale > 0:
@@ -204,75 +202,7 @@ class Integrator(object):
             system.rescale_velocities(rescale)
         kin_new = calculate_kinetic_energy(particles)[0]
         dek = kin_new - kin_old
-        return dek, kin_new, system.calculate_order()
-
-    def kick_across_middle(self, system, rgen, middle, tis_settings):
-        """Force a phase point across the middle interface.
-
-        This is accomplished by repeatedly kicking the pahse point so
-        that it crosses the middle interface.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.system.System`
-            This is the system that contains the particles we are
-            investigating
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
-            This is the random generator that will be used.
-        middle : float
-            This is the value for the middle interface.
-        tis_settings : dict
-            This dictionary contains settings for TIS. Explicitly used here:
-
-            * `zero_momentum`: boolean, determines if the momentum is zeroed
-            * `rescale_energy`: boolean, determines if energy is rescaled.
-
-        Returns
-        -------
-        out[0] : dict
-            This dict contains the phase-point just before the interface.
-            It is obtained by calling the `get_phase_point()` of the
-            particles object.
-        out[1] : dict
-            This dict contains the phase-point just after the interface.
-            It is obtained by calling the `get_phase_point()` of the
-            particles object.
-
-        Note
-        ----
-        This function will update the system state so that the
-        `system.particles.get_phase_point() == out[1]`. This is more
-        convenient for the following usage in the
-        `generate_initial_path_kick` function.
-        """
-        # We search for crossing with the middle interface and do this
-        # by sequentially kicking the initial phase point:
-        previous = None
-        particles = system.particles
-        curr = system.calculate_order()[0]
-        while True:
-            # save current state:
-            previous = particles.get_phase_point()
-            previous['order'] = curr
-            # Modify velocities
-            self.modify_velocities(system, rgen, sigma_v=None, aimless=True,
-                                   momentum=tis_settings['zero_momentum'],
-                                   rescale=tis_settings['rescale_energy'])
-            # Integrate forward one step:
-            self.integration_step(system)
-            # Compare previous order parameter and the new one:
-            prev = curr
-            curr = system.calculate_order()[0]
-            if (prev <= middle < curr) or (curr < middle <= prev):
-                # have crossed middle interface, just stop the loop
-                break
-            elif (prev <= curr < middle) or (middle < curr <= prev):
-                # are getting closer, keep the new point
-                pass
-            else:  # we did not get closer, fall back to previous point
-                particles.set_phase_point(previous)
-                curr = previous['order']
-        return previous, particles.get_phase_point()
+        return dek, kin_new
 
     def __call__(self, system):
         """To allow calling `Integrator(system)`.
@@ -290,6 +220,34 @@ class Integrator(object):
             Does not return anything, but will update the particles.
         """
         return self.integration_step(system)
+
+    @staticmethod
+    def calculate_order(order_function, system):
+        """Return the order parameter.
+
+        This method is just to help calculating the order parameter
+        in cases where only the integrator can do it! This creates
+        a uniform behavior for both internal and external integrators.
+        For internal integrators this is not useful in it self, since
+        we could just call  `order.calculate(system)`. But for
+        external integrators, we can not assume that the system is able
+        to calculate the order parameter, this because the state of the
+        system might be stored in a file which only the integrator knows
+        how to read.
+
+        Parameters
+        ----------
+        order_function : object like `OrderParameter`
+            The object used for calculating the order parameter(s).
+        system : object like `pyretis.core.system.System`
+            The system containing the corrent positions and velocities.
+
+        Returns
+        -------
+        out : list of floats
+            The calculated order parameters
+        """
+        return order_function(system)
 
     def __str__(self):
         """Return the string description of the integrator."""

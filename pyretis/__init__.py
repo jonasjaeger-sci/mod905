@@ -63,7 +63,7 @@ tools
 """
 from __future__ import absolute_import
 # pyretis imports:
-from .version import version as __version__
+from .version import VERSION as __version__
 from . import info
 from . import core
 from . import integrators

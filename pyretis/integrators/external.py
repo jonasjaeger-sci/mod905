@@ -64,7 +64,7 @@ class ExternalScript(metaclass=ABCMeta):
         self.subcycles = subcycles
 
     @staticmethod
-    #@abstractmethod
+    @abstractmethod
     def read_configuration(filename):
         """Read output configuration from external software.
 

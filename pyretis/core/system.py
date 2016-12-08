@@ -56,10 +56,6 @@ class System(object):
     forcefield : object like :py:class:`pyretis.forcefield.ForceField`
         Defines the force field to use and implements the actual force
         and potential calculation.
-    order_function : object representing the order parameter
-        Defines the an order parameter to use for the system. See
-        :py:mod:`pyretis.orderparameter` for the definition
-        of order parameters.
     units : string
         Units to use for the system/simulation. Should match the defined
         units in :py:mod:`pyretis.core.units`.
@@ -97,8 +93,6 @@ class System(object):
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = Particles(dim=self.get_dim())  # empty particle list
         self.forcefield = None
-        self.order_function = None
-        self.orderp = None
         self.post_setup = []
 
     def adjust_dof(self, dof):
@@ -223,18 +217,6 @@ class System(object):
             force = np.zeros(dim)
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
-
-    def calculate_order(self):
-        """Calculates and updates the order parameter"""
-        if self.order_function:
-            order = self.order_function.__call__(self)
-            # TODO: Maybe consider if we should create a new object that
-            # is a composition of system, orderparameter and force field,
-            # i.e. newobject.system, newobject.orderparameter, newobject.ff
-            # etc. Then we could do newobject.calculate_order() which does
-            # self.orderparameter(self.system, self.forcefield) for instance...
-            self.orderp = order
-        return self.orderp
 
     def force(self):
         """Update the forces and virial

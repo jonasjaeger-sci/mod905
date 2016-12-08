@@ -54,7 +54,7 @@ class SimulationSingleTIS(Simulation):
         (shooting moves etc.).
     """
 
-    def __init__(self, system, integrator, path_ensemble, rgen,
+    def __init__(self, system, orderp, integrator, path_ensemble, rgen,
                  tis_settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
@@ -62,6 +62,8 @@ class SimulationSingleTIS(Simulation):
         ----------
         system : object like :py:class:`System`
             This is the system we are investigating.
+        orderp : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
         integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
@@ -97,6 +99,7 @@ class SimulationSingleTIS(Simulation):
         self.system = system
         self.rgen = rgen
         self.system.potential_and_force()  # make sure forces are defined.
+        self.orderp = orderp
         self.integrator = integrator
         self.path_ensemble = path_ensemble
         self.interfaces = path_ensemble.interfaces
@@ -121,6 +124,7 @@ class SimulationSingleTIS(Simulation):
         if self.first_step:
             initiate_path_ensemble(self.path_ensemble,
                                    self.system,
+                                   self.orderp,
                                    self.integrator,
                                    self.rgen,
                                    self.tis_settings,
@@ -134,6 +138,7 @@ class SimulationSingleTIS(Simulation):
             self.cycle['stepno'] += 1
             accept, trial, status = make_tis_step_ensemble(self.path_ensemble,
                                                            self.system,
+                                                           self.orderp,
                                                            self.integrator,
                                                            self.rgen,
                                                            self.tis_settings,
@@ -181,7 +186,7 @@ class SimulationRETIS(Simulation):
         This object is the random generator to use in the simulation.
     """
 
-    def __init__(self, system, integrator, path_ensembles, rgen,
+    def __init__(self, system, orderp, integrator, path_ensembles, rgen,
                  tis_settings, retis_settings, steps=0, startcycle=0):
         """Initialization of the RETIS simulation.
 
@@ -189,6 +194,8 @@ class SimulationRETIS(Simulation):
         ----------
         system : object like :py:class:`System`
             This is the system we are investigating.
+        orderp : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
         integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
@@ -236,6 +243,7 @@ class SimulationRETIS(Simulation):
                                               startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
+        self.orderp = orderp
         self.integrator = integrator
         self.path_ensembles = path_ensembles
         self.settings = {'tis': tis_settings, 'retis': retis_settings}
@@ -271,6 +279,7 @@ class SimulationRETIS(Simulation):
         logger.info(msg)
         initiate_path_ensemble(ensemble,
                                self.system,
+                               self.orderp,
                                self.integrator,
                                self.rgen,
                                self.settings['tis'],
@@ -292,6 +301,7 @@ class SimulationRETIS(Simulation):
                 logger.info(msg)
                 initiate_path_ensemble(ensemble,
                                        self.system,
+                                       self.orderp,
                                        self.integrator,
                                        self.rgen,
                                        self.settings['tis'],
@@ -302,6 +312,7 @@ class SimulationRETIS(Simulation):
             self.cycle['stepno'] += 1
             retis_step = make_retis_step(self.path_ensembles,
                                          self.system,
+                                         self.orderp,
                                          self.integrator,
                                          self.rgen,
                                          self.settings,

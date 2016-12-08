@@ -25,7 +25,8 @@ from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
 from pyretis.core.pathensemble import (PathEnsemble,
                                        PATH_DIR_FMT,
                                        create_path_ensembles)
-from pyretis.inout.settings.common import create_integrator
+from pyretis.inout.settings.common import (create_integrator,
+                                           create_orderparameter)
 from pyretis.inout.settings.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -84,12 +85,16 @@ def create_mdflux_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    if integ is None:
-        msgtxt = 'No integrator created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    order_function = create_orderparameter(settings)
+    for fun, lab in zip((integ, order_function),
+                        ('integrator', 'order parameter')):
+        if fun is None:
+            msgtxt = 'No {} created!'.format(lab)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     sim = settings['simulation']
-    return SimulationMDFlux(system, integ, sim['interfaces'],
+    return SimulationMDFlux(system, order_function, integ,
+                            sim['interfaces'],
                             steps=sim['steps'],
                             startcycle=sim.get('startcycle', 0))
 
@@ -173,17 +178,20 @@ def _create_tis_single_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    if integ is None:
-        msgtxt = 'No integrator created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    order_function = create_orderparameter(settings)
+    for fun, lab in zip((integ, order_function),
+                        ('integrator', 'order parameter')):
+        if fun is None:
+            msgtxt = 'No {} created!'.format(lab)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     if 'path-ensemble' in settings:
         path_ensemble = settings['path-ensemble']
     else:
         path_ensemble = create_path_ensemble(settings)
     rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
-    return SimulationSingleTIS(system, integ,
+    return SimulationSingleTIS(system, order_function, integ,
                                path_ensemble,
                                rgen,
                                settings['tis'],
@@ -207,15 +215,18 @@ def create_retis_simulation(settings, system):
         The object representing the simulation to run.
     """
     integ = create_integrator(settings)
-    if integ is None:
-        msgtxt = 'No integrator created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
+    order_function = create_orderparameter(settings)
+    for fun, lab in zip((integ, order_function),
+                        ('integrator', 'order parameter')):
+        if fun is None:
+            msgtxt = 'No {} created!'.format(lab)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     sim = settings['simulation']
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
                                               include_zero=True)
     rgen = create_random_generator(settings['tis'])
-    return SimulationRETIS(system, integ,
+    return SimulationRETIS(system, order_function, integ,
                            path_ensembles,
                            rgen,
                            settings['tis'],

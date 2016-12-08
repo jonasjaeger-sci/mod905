@@ -121,7 +121,7 @@ class SimulationMDFlux(Simulation):
         to the interfaces.
     """
 
-    def __init__(self, system, integrator, interfaces,
+    def __init__(self, system, orderp, integrator, interfaces,
                  steps=0, startcycle=0):
         """Initialization of the MD-Flux simulation.
 
@@ -129,6 +129,8 @@ class SimulationMDFlux(Simulation):
         ----------
         system : object like :py:class:`pyretis.core.system.System`
             This is the system we are investigating
+        orderp : object like :py:class:`pyretis.orderparameter`
+            The class used for calculating the order parameters.
         integrator : object like :py:class:`Integrator`
             This is the integrator that is used to propagate the system
             in time.
@@ -145,14 +147,16 @@ class SimulationMDFlux(Simulation):
                                                startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
+        self.orderp = orderp
         self.integrator = integrator
         self.interfaces = interfaces
         # set up for initial crossing
         self.leftside_prev = None
-        leftside, _ = check_crossing(self.cycle['step'],
-                                     self.system.calculate_order()[0],
-                                     self.interfaces,
-                                     self.leftside_prev)
+        leftside, _ = check_crossing(
+            self.cycle['step'],
+            self.integrator.calculate_order(self.orderp, self.system)[0],
+            self.interfaces,
+            self.leftside_prev)
         self.leftside_prev = leftside
 
     def step(self):
@@ -173,7 +177,8 @@ class SimulationMDFlux(Simulation):
         # collect energy and order parameter, this is done at all steps
         results = {'cycle': self.cycle,
                    'thermo': calculate_thermo(self.system),
-                   'orderp': self.system.calculate_order(),
+                   'orderp': self.integrator.calculate_order(self.orderp,
+                                                             self.system),
                    'traj': self.system}
         # do not check crossing at step 0
         if not self.first_step:
