@@ -7,7 +7,7 @@ In this simulation, we study a particle moving in a one-dimensional
 potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
-from pyretis.core import System, RandomGenerator, Box
+from pyretis.core import System, RandomGenerator, Box, Particles
 from pyretis.inout.settings import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
@@ -18,11 +18,12 @@ from matplotlib import pyplot as plt
 # Define system with a temperature in K
 dummybox = Box(periodic=[False])
 mysystem = System(temperature=500, units='eV/K', box=dummybox)
+mysystem.particles = Particles(dim=mysystem.get_dim())
 # We will only have one particle in the system:
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use
 # a simple double well potential
-potential_dw = DoubleWell()
+potential_dw = DoubleWell(a=1, b=1, c=0.02)
 # and a rectangular well potential
 potential_rw = RectangularWell()
 # do set up the unbiased force field
@@ -35,8 +36,8 @@ mysystem.forcefield = forcefield_bias
 
 # Next we create a list containing the location of the
 # different umbrellas:
-umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
-             [0.3, 0.6], [0.5, 1.0]]
+umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2],
+             [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:

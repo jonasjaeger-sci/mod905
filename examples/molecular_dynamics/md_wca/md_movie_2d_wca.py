@@ -4,7 +4,7 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_output, create_system,
@@ -157,6 +157,7 @@ def plot_dwca_potential():
     fakesize = np.array([[0.0, 10.0], [0.0, 10.0]])
     fakebox = Box(fakesize)
     fakesys = System(units='lj', box=fakebox)
+    fakesys.particles = Particles(dim=system.get_dim())
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     for ri in rpos:

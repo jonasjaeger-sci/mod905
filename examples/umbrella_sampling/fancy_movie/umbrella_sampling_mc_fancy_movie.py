@@ -7,7 +7,7 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
-from pyretis.core import System, RandomGenerator, Box
+from pyretis.core import System, RandomGenerator, Box, Particles
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
@@ -17,6 +17,7 @@ from pyretis.analysis.histogram import histogram, match_all_histograms
 # Define system with a temperature in K
 dummybox = Box(periodic=[False])
 mysystem = System(temperature=500, units='eV/K', box=dummybox)
+mysystem.particles = Particles(dim=mysystem.get_dim())
 # We will only have one particle in the system:
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use

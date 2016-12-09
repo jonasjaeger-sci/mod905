@@ -5,25 +5,26 @@ In this example we re-run a LAMMPS simulation of
 a mixture of 3 Lennard-Jones particles.
 """
 # pylint: disable=C0103
+import os
+import numpy as np
 from pyretis.core.simulation import Simulation
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.core.particlefunctions import calculate_thermo
-import numpy as np
-import os
-# for plotting:
+from pyretis.inout.plotting import mpl_set_style
+# for matplotlib:
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib import gridspec as gridspec
-from pyretis.inout.plotting import mpl_set_style
 
 create_conversion_factors('lj')
 size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
 box = Box(size)
 ljsystem = System(box=box, units='lj')
+ljsystem.particles = Particles(dim=ljsystem.get_dim())
 
 ljpot = PairLennardJonesCutnp(shift=True, mixing='geometric')
 lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
@@ -45,7 +46,7 @@ natoms = {}
 npart = 0.0
 for xyzi, veli, idxi in zip(pos, vel, idx):
     itype = int(idxi) - 1
-    ljsystem.add_particle(name=names[itype], pos=xyzi, vel=veli,
+    ljsystem.add_particle(xyzi, name=names[itype], vel=veli,
                           mass=masses[itype], ptype=itype)
     if not names[itype] in natoms:
         natoms[names[itype]] = 0
