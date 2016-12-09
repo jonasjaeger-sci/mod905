@@ -6,7 +6,7 @@ import logging
 import unittest
 import numpy as np
 from pyretis.integrators import Langevin, VelocityVerlet
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials.potentials import DoubleWell
 logging.disable(logging.CRITICAL)
@@ -87,6 +87,7 @@ def prepare_test_system():
     """Prepare a small system we can integrate."""
     box = Box(periodic=[False])
     system = System(temperature=1.0, units='lj', box=box)
+    system.particles = Particles(system.get_dim())
     pos = np.array([-1.0])
     vel = np.array([0.78008018])
     system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0, ptype=0)

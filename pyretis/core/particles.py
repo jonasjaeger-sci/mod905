@@ -99,10 +99,6 @@ class Particles(object):
         self.ptype = None
         self.virial = np.zeros_like(self.virial)
 
-    def get_dim(self):
-        """Function to get the dimensionality"""
-        return self.dim
-
     def get_phase_point(self):
         """Return a copy of the current phase point.
 
@@ -143,6 +139,18 @@ class Particles(object):
         """
         self.vel = np.copy(vel)
 
+    def set_force(self, force):
+        """Set the forces for the particles.
+
+        This will copy the input forces.
+
+        Parameters
+        ----------
+        vel : tuple of (string, int)
+            The velocities to set.
+        """
+        self.force = np.copy(force)
+
     def set_phase_point(self, phasepoint):
         """Set the position, velocities (and forces) for the particles.
 
@@ -167,7 +175,7 @@ class Particles(object):
         self.set_pos(phasepoint['pos'])
         self.set_vel(phasepoint['vel'])
         try:
-            self.force = np.copy(phasepoint['force'])
+            self.set_force(phasepoint['force'])
         except KeyError:
             msg = 'Setting particle pos & vel without setting forces'
             logger.warning(msg)
@@ -305,6 +313,9 @@ class ParticlesExt(Particles):
     vel_file : tuple of (string, int)
         The location of the file with velocities and the index
         for locating a frame.
+    force_file : tuple of (string, int)
+        The location of the file with forces and the index
+        for locating a frame.
     """
 
     def __init__(self, dim=1):
@@ -315,6 +326,7 @@ class ParticlesExt(Particles):
         super().__init__(dim=dim)
         self.pos_file = (None, None)
         self.vel_file = (None, None)
+        self.force_file = (None, None)
 
     def set_pos(self, pos):
         """Set the positions for the particles.
@@ -339,3 +351,13 @@ class ParticlesExt(Particles):
             The velocities to set.
         """
         self.vel_file = vel
+
+    def set_force(self, force):
+        """Set the forces for the particles.
+
+        Parameters
+        ----------
+        force : tuple of (string, int)
+            The forces to set.
+        """
+        self.force_file = force

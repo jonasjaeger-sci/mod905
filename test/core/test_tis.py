@@ -5,7 +5,7 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.inout.settings import (create_force_field,
                                     create_simulation)
 logging.disable(logging.CRITICAL)
@@ -62,6 +62,7 @@ def prepare_test_simulation():
     box = Box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
+    system.particles = Particles(dim=system.get_dim())
     system.forcefield = create_force_field(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     simulation = create_simulation(settings, system)

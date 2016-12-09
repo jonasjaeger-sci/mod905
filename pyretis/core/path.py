@@ -23,7 +23,7 @@ paste_paths
     Function for joining two paths, one is in a backward time
     direction and the other is in the forward time direction.
 """
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -168,7 +168,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase(metaclass=ABCMeta):
+class PathBase(object):
     """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of

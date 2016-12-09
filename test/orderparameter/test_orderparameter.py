@@ -9,7 +9,7 @@ from pyretis.orderparameter import order_factory
 from pyretis.orderparameter.orderparameter import (OrderParameter,
                                                    OrderParameterPosition,
                                                    OrderParameterDistance)
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
 
@@ -23,6 +23,7 @@ class OrderPositionTest(unittest.TestCase):
         for ndim in [1, 2, 3]:
             box = Box(periodic=[False]*ndim)
             system = System(temperature=1.0, units='lj', box=box)
+            system.particles = Particles(system.get_dim())
             pos = np.random.random(box.dim)
             vel = np.random.random(box.dim)
             system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
@@ -54,6 +55,7 @@ class OrderPositionTest(unittest.TestCase):
             for ndim in [1, 2, 3]:
                 box = Box(periodic=[False]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
+                system.particles = Particles(system.get_dim())
                 for _ in range(10):
                     pos = np.random.random(box.dim)
                     vel = np.random.random(box.dim)
@@ -80,6 +82,7 @@ class OrderPositionTest(unittest.TestCase):
                 size = [[0.0, 1.0] for _ in range(ndim)]
                 box = Box(size, periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
+                system.particles = Particles(system.get_dim())
                 pos = np.random.random(box.dim) * np.ones(box.dim)*disp
                 vel = np.random.random(box.dim)
                 system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
@@ -102,6 +105,7 @@ class OrderPositionTest(unittest.TestCase):
                 size = [[0.0, 1.0] for _ in range(ndim)]
                 box = Box(size, periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
+                system.particles = Particles(system.get_dim())
                 for _ in range(10):
                     pos = np.random.random(box.dim) * np.ones(box.dim)*disp
                     vel = np.random.random(box.dim)
@@ -129,6 +133,7 @@ class OrderDistanceTest(unittest.TestCase):
         for ndim in [1, 2, 3]:
             box = Box(periodic=[False]*ndim)
             system = System(temperature=1.0, units='lj', box=box)
+            system.particles = Particles(system.get_dim())
             for _ in range(2):
                 pos = np.random.random(box.dim)
                 vel = np.random.random(box.dim)
@@ -153,6 +158,7 @@ class OrderDistanceTest(unittest.TestCase):
                 size = [[0.0, 1.0] for _ in range(ndim)]
                 box = Box(size, periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
+                system.particles = Particles(system.get_dim())
                 for _ in range(2):
                     pos = np.random.random(box.dim) + np.ones(box.dim)*disp
                     vel = np.random.random(box.dim)

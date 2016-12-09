@@ -16,6 +16,7 @@ Here we test the following:
 import os
 import numpy as np
 from pyretis.core import Box
+from pyretis.core.particles import ParticlesExt
 from pyretis.integrators import GromacsExt, ExternalScript
 from pyretis.integrators.gromacs import read_gromos96_file
 from pyretis.core.units import create_conversion_factors
@@ -200,7 +201,7 @@ def compare_results(path1, path2, out_files, reverse):
 
 
 
-def run_forward(gro, system):
+def run_forward(gro, system, order_function):
     """Test implementation of gromacs integrator.
 
     This test will run a gromacs simulation with starting and stopping
@@ -225,7 +226,9 @@ def run_forward(gro, system):
     initial = os.path.join(os.getcwd(), 'initial.g96')
 
     local_settings = {'steps': 1000 // gro.subcycles}
-    out_files, order = gro.execute_until(initial, system,
+    system.particles.set_pos((initial, 0))
+    system.particles.set_vel((initial, 0))
+    out_files, order = gro.execute_until(system, order_function,
                                          local_settings,
                                          reverse=False,
                                          exe_dir=exe_path)
@@ -234,7 +237,7 @@ def run_forward(gro, system):
     return out_files, order
 
 
-def run_reverse(gro, system):
+def run_reverse(gro, system, order_function):
     """Test implementation of gromacs integrator.
 
     This test will run a gromacs simulation with starting and stopping
@@ -258,7 +261,9 @@ def run_reverse(gro, system):
                       os.path.join(plain_path, 'topol.tpr'),
                       local_settings['steps'], initial)
     # Run backwards from this frame:
-    out_files, order = gro.execute_until(initial, system,
+    system.particles.set_pos((initial, 0))
+    system.particles.set_vel((initial, 0))
+    out_files, order = gro.execute_until(system, order_function,
                                          local_settings,
                                          reverse=True,
                                          exe_dir=exe_path)
@@ -299,7 +304,14 @@ def do_setup(md_settings):
     create_conversion_factors(settings['system']['units'])
 
     system = create_system(settings)
-    system.order_function = create_orderparameter(settings)
+    # Transition to new particle class
+    particles = ParticlesExt(dim=system.get_dim())
+    for p in system.particles:
+        particles.add_particle(p['pos'], p['vel'], p['force'],
+                               mass=p['mass'], name=p['name'], ptype=p['type'])
+    system.particles = particles
+    # Transition done!
+    order_function = create_orderparameter(settings)
 
     input_dir = os.path.join(os.getcwd(), 'ext_input')
 
@@ -308,12 +320,12 @@ def do_setup(md_settings):
                    'topology': 'topol.top'}
     gro = GromacsExt('gmx_5.1.4', input_dir, input_files,
                      md_settings['timestep'], md_settings['subcycles'])
-    return system, gro
+    return system, order_function, gro
 
 
 if __name__ == '__main__':
     md_settings = {'subcycles': 5, 'timestep': 0.002}
-    sys, grom = do_setup(md_settings)
-    out, orderp = run_forward(grom, sys)
-    out, orderp = run_reverse(grom, sys)
+    sys, order_fun, grom = do_setup(md_settings)
+    out, orderp = run_forward(grom, sys, order_fun)
+    out, orderp = run_reverse(grom, sys, order_fun)
 

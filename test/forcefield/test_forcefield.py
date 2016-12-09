@@ -10,6 +10,7 @@ from __future__ import absolute_import
 import logging
 import unittest
 from pyretis.core.system import System
+from pyretis.core.particles import Particles
 from pyretis.forcefield import ForceField, PotentialFunction
 logging.disable(logging.CRITICAL)
 
@@ -44,6 +45,7 @@ class TestForceField(unittest.TestCase):
     def test_forcefield_class(self):
         """Test functionality of the ForceField class."""
         system = System()
+        system.particles = Particles(dim=system.get_dim())
         system.add_particle(1.0)
         forcefield = ForceField('Generic testing force field')
         param1 = {'a': 1.0}

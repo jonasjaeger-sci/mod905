@@ -16,7 +16,6 @@ import logging
 import numpy as np
 # from the pyretis package
 from pyretis.core.units import CONSTANTS
-from pyretis.core.particles import Particles
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)
 from pyretis.core.random_gen import create_random_generator
@@ -91,7 +90,7 @@ class System(object):
         self._adjust_dof_according_to_box()
         # initialize other variables:
         self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
-        self.particles = Particles(dim=self.get_dim())  # empty particle list
+        self.particles = None
         self.forcefield = None
         self.post_setup = []
 
@@ -417,5 +416,7 @@ class System(object):
                    'Target: {}, Pot = {}'.format(energy, vpot))
             logger.warning(msg)
         else:
+            msg = 'Rescaled energies to Kin = {}'.format(ekin_new)
+            logger.debug(msg)
             alpha = np.sqrt(ekin_new / ekin)
             self.particles.vel = self.particles.vel * alpha

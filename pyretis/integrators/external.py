@@ -14,7 +14,6 @@ ExternalScript
     The base class for external scripts. This defines the actual
     interface to external programs.
 """
-from abc import ABCMeta, abstractmethod
 import re
 import logging
 import subprocess
@@ -25,7 +24,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['ExternalScript']
 
 
-class ExternalScript(metaclass=ABCMeta):
+class ExternalScript(object):
     """Base class for interfacing external programs.
 
     This class defines the interface to external programs. This
@@ -64,7 +63,6 @@ class ExternalScript(metaclass=ABCMeta):
         self.subcycles = subcycles
 
     @staticmethod
-    @abstractmethod
     def read_configuration(filename):
         """Read output configuration from external software.
 
@@ -159,26 +157,25 @@ class ExternalScript(metaclass=ABCMeta):
             raise RuntimeError(msg)
         return out, exe.returncode
 
-    def calculate_order_parameter(self, system, filename):
+    def calculate_order_parameter(self, order_function, system):
         """Calculate order parameter from configuration in a file.
 
         Parameters
         ----------
+        order_function : object like :py:class:`OrderParameter`
+            The class used for calculating the order parameter.
         system : object like `pyretis.core.system`
             The object the order parameter is acting on.
-        filename : string
-            The file with the configuration for which we want to
-            calculate the order parameter.
 
         Returns
         -------
         out : float
             The calculated order parameter.
         """
-        xyz, vel = self.read_configuration(filename)
+        xyz, vel = self.read_configuration(system.particles.pos_file[0])
         system.particles.pos = xyz
         system.particles.vel = vel
-        return system.calculate_order()
+        return order_function(system)
 
     def __str__(self):
         """Return the string description of the integrator."""

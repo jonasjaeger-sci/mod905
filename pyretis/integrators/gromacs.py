@@ -282,16 +282,16 @@ class GromacsExt(ExternalScript):
         out_files = {'tpr': tpxout}
         return out_files
 
-    def execute_until(self, initial, system, settings, reverse=False,
-                      exe_dir=None):
+    def execute_until(self, system, order_function, settings,
+                      reverse=False, exe_dir=None):
         """Propagate until condition is met.
 
         Parameters
         ----------
-        initial : string
-            The initial positions as the full path to a file.
         system : object like :py:class:`pyretis.core.system.System`
             The object the order parameter is acting on.
+        order_function : object like :py:class:`OrderParameter`
+            The class used for calculating the order parameter.
         settings : dict
             This dictionary contains settings used for the
             simulation.
@@ -310,6 +310,7 @@ class GromacsExt(ExternalScript):
             finding configurations inside trajectory files) and
             the path to the file containing the trajectory.
         """
+        initial = system.particles.pos_file[0]
         if reverse:
             name = 'trajB_new'
             basepath = os.path.dirname(initial)
@@ -320,9 +321,12 @@ class GromacsExt(ExternalScript):
             name = 'trajF_new'
             initial_conf = initial
 
+        system.particles.set_pos((initial_conf, None))
+        system.particles.set_vel((initial_conf, None))
+
         ext_time = self.time_step * self.subcycles
-        order = self.calculate_order_parameter(system,
-                                               initial_conf)
+        order = self.calculate_order_parameter(order_function,
+                                               system)
         tpr_file = None
         cpt_file = None
         all_order = [order, 0, '{}.trr'.format(name)]
@@ -348,17 +352,13 @@ class GromacsExt(ExternalScript):
                            os.path.join(exe_dir, tpr_file))
             conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
             if conf_abs is not None:
-                order = self.calculate_order_parameter(system,
-                                                       conf_abs)
+                system.particles.set_pos((conf_abs, None))
+                system.particles.set_vel((conf_abs, None))
+                order = self.calculate_order_parameter(order_function,
+                                                       system)
                 all_order.append([order, i+1, '{}.trr'.format(name)])
                 # Remove this file as it's not needed anymore:
                 os.remove(conf_abs)
-        # Call some kind of clean-up and remove the files we will never need:
-        # Remove from the EXE-DIR:
-        # for key in ('mdout.mdp', '{}.log'.format(name),
-        #            '{}_prev.cpt'.format(name)):
-        #    filename = os.path.join(EXE_DIR, key)
-        #    #os.remove(filename)
         out_files = {}
         for key in ('trr', 'tpr', 'edr'):
             out_files[key] = '{}.{}'.format(name, key)

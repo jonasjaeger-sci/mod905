@@ -64,6 +64,35 @@ __all__ = ['atomic_kinetic_energy_tensor',
            'reset_momentum']
 
 
+def _get_vel_mass(particles, selection=None):
+    """Return velocity and mass for a selection.
+
+    This is just for convenience since we are using this
+    selection a lot.
+
+    Parameters
+    ----------
+    particles : object like :py:class:`.particles.Particles`
+        This object represent the particles.
+    selection : list of integers, optional
+        A list with indexes of particles to use in calculation.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The velocities corresponding to the selection.
+    out[1] : numpy.array
+        The masses corresponding to the selection.
+    """
+    if selection is None:
+        vel = particles.vel
+        mass = particles.mass
+    else:
+        vel = particles.vel[selection]
+        mass = particles.mass[selection]
+    return vel, mass
+
+
 def atomic_kinetic_energy_tensor(particles, selection=None):
     """Return kinetic energy tensors for a particle selection.
 
@@ -84,11 +113,8 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
         and `vel[selection][i]`. The sum of the tensor should equal the
         output from `calculate_kinetic_energy_tensor`.
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    mom = vel*mass
+    vel, mass = _get_vel_mass(particles, selection=selection)
+    mom = vel * mass
     if len(mass) == 1:  # in general: selection != particles.npart
         kin = 0.5*np.outer(mom, vel)
     else:
@@ -143,11 +169,8 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
         output from the `dim` times the averaged output of the
         `kinetic_energy` function defined below.
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    mom = vel*mass
+    vel, mass = _get_vel_mass(particles, selection=selection)
+    mom = vel * mass
     if len(mass) == 1:  # in general: selection != particles.npart
         kin = 0.5*np.outer(mom, vel)
     else:
@@ -185,11 +208,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     out[2] : numpy.array
         The kinetic energy tensor.
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-
+    vel, mass = _get_vel_mass(particles, selection=selection)
     npart = len(mass)  # using mass, since selection may be != particles.npart
     ndof = npart * np.ones(vel[0].shape)
 
@@ -217,11 +236,8 @@ def calculate_linear_momentum(particles, selection=None):
     out : numpy.array
         The array contains the linear momentum for each dimension.
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
-    return np.sum(vel*mass, axis=0)
+    vel, mass = _get_vel_mass(particles, selection=selection)
+    return np.sum(vel * mass, axis=0)
 
 
 def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
@@ -438,10 +454,7 @@ def reset_momentum(particles, selection=None, dim=None):
         particles.
 
     """
-    if selection is None:
-        vel, mass = particles.vel, particles.mass
-    else:
-        vel, mass = particles.vel[selection], particles.mass[selection]
+    vel, mass = _get_vel_mass(particles, selection=selection)
     mom = np.sum(vel * mass, axis=0)
     if dim is not None:
         for i, reset in enumerate(dim):
