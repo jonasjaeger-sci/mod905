@@ -165,13 +165,13 @@ class Integrator(object):
             list.
         rgen : object like :py:class:`core.random_gen.RandomGenerator`
             This is the random generator that will be used.
-        sigma_v : numpy.array
+        sigma_v : numpy.array, optional
             These values can be used to set a standard deviation (one
             for each particle) for the generated velocities.
         aimless : boolean, optional
             Determines if we should do aimless shooting or not.
         momentum : boolean, optional
-            If True, we reset the linear momentum to zero after kicking.
+            If True, we reset the linear momentum to zero after generating.
         rescale : float, optional
             In some NVE simulations, we may wish to rescale the energy to
             a fixed value. If `rescale` is a float > 0, we will rescale
@@ -181,9 +181,9 @@ class Integrator(object):
         Returns
         -------
         dek : float
-            The change in the kinetic energy
+            The change in the kinetic energy.
         kin_new : float
-            The new kinetic energy
+            The new kinetic energy.
         """
         particles = system.particles
         if rescale is not None and rescale is not False and rescale > 0:
