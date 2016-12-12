@@ -33,7 +33,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.imgmath',
               'sphinx.ext.viewcode',
-              'bootstrap']
+              'bootstrap',
+              'pyretisstyle']
 
 # Napoleon settings
 napoleon_numpy_docstring = True
@@ -109,7 +110,9 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'  # think about other options here...
+#pygments_style = 'sphinx'  # think about other options here...
+#pygments_style = 'xcode'  # think about other options here...
+pygments_style = 'pyretisstyle.PyretisStyle'  # think about other options here...
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
