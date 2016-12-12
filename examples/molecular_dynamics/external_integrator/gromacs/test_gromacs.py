@@ -226,8 +226,8 @@ def run_forward(gro, system, order_function):
     initial = os.path.join(os.getcwd(), 'initial.g96')
 
     local_settings = {'steps': 1000 // gro.subcycles}
-    system.particles.set_pos((initial, 0))
-    system.particles.set_vel((initial, 0))
+    system.particles.set_pos((initial, None))
+    system.particles.set_vel((initial, None))
     out_files, order = gro.execute_until(system, order_function,
                                          local_settings,
                                          reverse=False,
@@ -261,8 +261,8 @@ def run_reverse(gro, system, order_function):
                       os.path.join(plain_path, 'topol.tpr'),
                       local_settings['steps'], initial)
     # Run backwards from this frame:
-    system.particles.set_pos((initial, 0))
-    system.particles.set_vel((initial, 0))
+    system.particles.set_pos((initial, None))
+    system.particles.set_vel((initial, None))
     out_files, order = gro.execute_until(system, order_function,
                                          local_settings,
                                          reverse=True,
