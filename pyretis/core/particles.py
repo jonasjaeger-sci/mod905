@@ -361,3 +361,19 @@ class ParticlesExt(Particles):
             The forces to set.
         """
         self.force_file = force
+    
+    def get_phase_point(self):
+        """Return a copy of the current phase point.
+
+        The phase point includes `self.pos` and `self.vel`. In addition
+        it returns the accompanying forces from `self.force`.
+
+        Returns
+        -------
+        out : dict
+            Dictionary with the positions, velocity and forces.
+        """
+        retval = {'pos': self.pos_file,
+                  'vel': self.vel_file,
+                  'force': self.force_file}
+        return retval

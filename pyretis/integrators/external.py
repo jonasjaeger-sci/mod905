@@ -157,7 +157,7 @@ class ExternalScript(object):
             raise RuntimeError(msg)
         return out, exe.returncode
 
-    def calculate_order_parameter(self, order_function, system):
+    def calculate_order(self, order_function, system):
         """Calculate order parameter from configuration in a file.
 
         Parameters

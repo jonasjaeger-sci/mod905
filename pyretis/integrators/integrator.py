@@ -138,6 +138,12 @@ class Integrator(object):
                 status = 'Crossed right interface!'
                 success = True
                 break
+            if path.length == path.maxlen:
+                # Next step will just exceed path length,
+                # no need to actually do it
+                status = 'Max. path length exceeded'
+                success = False
+                break
             if reverse:
                 system.particles.vel *= -1.0
                 self.integration_step(system)
