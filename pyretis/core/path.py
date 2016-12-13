@@ -74,9 +74,9 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         If true, `path_back` and `path_forw` have a common
         starting-point, that is, the first point in `path_forw` is
         identical to the first point in `path_back`. In time-space this
-        means that the first point in `path_forw` is identical to the
-        last point in path_back (the backward and forward path started
-        at the same location in space).
+        means that the *first* point in `path_forw` is identical to the
+        *last* point in `path_back` (the backward and forward path
+        started at the same location in space).
     maxlen : float, optional
         This is the maximum length for the new path. If it's not given,
         it will just be set to the largest of the `maxlen` of the two
@@ -102,7 +102,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     time_origin = path_back.time_origin - path_back.length + 1
     new_path = path_back.empty_path(maxlen=maxlen, time_origin=time_origin)
     for phasepoint in path_back.trajectory(reverse=True):
-        app = new_path.append(*phasepoint)
+        app = new_path.append(phasepoint)
         if not app:
             msg = 'Truncated while pasting backwards at: {}'
             msg = msg.format(new_path.length)
@@ -113,7 +113,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
         if first and overlap:
             first = False
             continue
-        app = new_path.append(*phasepoint)
+        app = new_path.append(phasepoint)
         if not app:
             msg = 'Truncated path at: {}'.format(new_path.length)
             logger.warning(msg)
@@ -229,6 +229,7 @@ class PathBase(object):
         """
         self.order = []
         self.vpot = []
+        self.ekin = []
         self.maxlen = maxlen
         self.length = 0
         self.ordermin = None
@@ -437,23 +438,13 @@ class PathBase(object):
         return
 
     @abstractmethod
-    def append(self, orderp, pos, vel, vpot):
+    def append(self, phasepoint):
         """Append a new phase point to the path.
 
         Parameters
         ----------
-        orderp : list of floats
-            This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path
-            sampling methods while `orderp[1:]` can represent other
-            order parameters for instance is `orderp[1]` typically the
-            velocity of `orderp[0]`.
-        pos : numpy.array
-            The positions of the particles,
-        vel: numpy.array
-            The velocities of the particles.
-        vpot : float
-            The potential energy of this configuration.
+        args : tuple
+            The phase point data to add to the path.
         """
         return
 
@@ -530,7 +521,7 @@ class PathBase(object):
             The updated path object.
         """
         for phasepoint in other.trajectory():
-            app = self.append(*phasepoint)
+            app = self.append(phasepoint)
             if not app:
                 msg = 'Truncated path while +=: {}'.format(self.length)
                 logger.warning(msg)
@@ -553,14 +544,10 @@ class PathBase(object):
         """
         new_path = self.empty_path()
         for phasepoint in self.trajectory(reverse=True):
-            pos = phasepoint[1]
-            vpot = phasepoint[3]
-            if phasepoint[2] is not None:
-                vel = phasepoint[2] * -1
-            else:
-                vel = phasepoint[2]
-            orderp = phasepoint[0]
-            app = new_path.append(orderp, pos, vel, vpot)
+            new_point = {key: val for key, val in phasepoint.items()}
+            if new_point['vel'] is not None:
+                new_point['vel'] = phasepoint['vel'] * -1
+            app = new_path.append(new_point)
             if not app:
                 msg = 'Could not reverse path'
                 logger.error(msg)
@@ -649,12 +636,10 @@ class Path(PathBase):
         """
         if reverse:
             for i in range(self.length - 1, -1, -1):
-                yield (self.order[i], self.pos[i], self.vel[i],
-                       self.vpot[i])
+                yield self.phasepoint(i)
         else:
             for i in range(self.length):
-                yield (self.order[i], self.pos[i], self.vel[i],
-                       self.vpot[i])
+                yield self.phasepoint(i)
 
     def phasepoint(self, idx):
         """Return a specific phase point.
@@ -669,10 +654,12 @@ class Path(PathBase):
         out : tuple
             A phase-space point in the path.
         """
-        return (self.order[idx], self.pos[idx], self.vel[idx],
-                self.vpot[idx])
+        phasepoint = {'order': self.order[idx], 'pos': self.pos[idx],
+                      'vel': self.vel[idx], 'vpot': self.vpot[idx],
+                      'ekin': self.ekin[idx]}
+        return phasepoint
 
-    def append(self, orderp, pos, vel, vpot):
+    def append(self, phasepoint):
         """Append a new phase point to the path.
 
         We will here append a new phase-space point to the path.
@@ -693,13 +680,17 @@ class Path(PathBase):
             The velocities of the particles.
         vpot : float
             The potential energy of the configuration.
+        ekin : float
+            The kinetic energy of the configuration.
         """
         if self.maxlen is None or self.length < self.maxlen:
+            orderp = phasepoint['order']
             self.order.append(orderp)
             self._update_orderp(orderp[0], self.length)
-            self.pos.append(np.copy(pos))
-            self.vel.append(np.copy(vel))
-            self.vpot.append(vpot)
+            self.pos.append(np.copy(phasepoint['pos']))
+            self.vel.append(np.copy(phasepoint['vel']))
+            self.vpot.append(phasepoint['vpot'])
+            self.ekin.append(phasepoint['ekin'])
             self.length += 1
             return True
         else:
@@ -716,15 +707,14 @@ class Path(PathBase):
 
         Returns
         -------
-        phasepoint : tuple
-            `phasepoint[0]` is the order parameter (as a tuple) and the
-            three next items are the positions, velocities and potential.
-        idx : int
+        out[0] : tuple
+            The phase point we selected. The first item are the
+            order parameter(s).
+        out[1] : int
             The shooting point index.
         """
         idx = self.rgen.random_integers(1, self.length - 2)
-        return (self.order[idx], self.pos[idx], self.vel[idx],
-                self.vpot[idx], idx)
+        return self.phasepoint(idx), idx
 
     def empty_path(self, **kwargs):
         """Return an empty path of same class as the current one.
@@ -786,10 +776,10 @@ class ReservoirPath(PathBase):
         """
         if reverse:
             for i in range(self.length - 1, -1, -1):
-                yield self.order[i], None, None, self.vpot[i]
+                yield self.phasepoint(i)
         else:
             for i in range(self.length):
-                yield self.order[i], None, None, self.vpot[i]
+                yield self.phasepoint(i)
 
     def phasepoint(self, idx):
         """Return a specific phase point.
@@ -804,9 +794,11 @@ class ReservoirPath(PathBase):
         out : tuple
             A phase-space point in the path.
         """
-        return self.order[idx], None, None, self.vpot[idx]
+        phasepoint = {'order': self.order[idx], 'pos': None, 'vel': None,
+                      'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
+        return phasepoint
 
-    def append(self, orderp, pos, vel, vpot):
+    def append(self, phasepoint):
         """Append a new phase point to the path.
 
         We will here append a new phase-space point to the path.
@@ -829,9 +821,13 @@ class ReservoirPath(PathBase):
             The potential energy of the configuration.
         """
         if self.maxlen is None or self.length < self.maxlen:
+            orderp = phasepoint['order']
             self.order.append(orderp)
             self._update_orderp(orderp[0], self.length)
-            self.vpot.append(vpot)
+            self.vpot.append(phasepoint['vpot'])
+            self.ekin.append(phasepoint['ekin'])
+            pos = phasepoint['pos']
+            vel = phasepoint['vel']
             if pos is not None and vel is not None:
                 self.add_to_reservoir(self.length + 1, self.length, pos, vel)
             self.length += 1
@@ -853,10 +849,11 @@ class ReservoirPath(PathBase):
 
         Returns
         -------
-        phasepoint : tuple
-            `phasepoint[0]` is the order parameter (as a tuple) and the
-            two next items are the positions and velocities.
-        idx : int
+        out[0] : tuple
+            The order parameter(s).
+        out[1] : dict
+            The phase point.
+        out[2] : int
             The shooting point index.
         """
         if len(self.reservoir) < 1:
@@ -865,7 +862,10 @@ class ReservoirPath(PathBase):
         else:
             item = self.reservoir.pop()
             idx = item[0]
-            return self.order[idx], item[1], item[2], self.vpot[idx], idx
+            phasepoint = {'order': self.order[idx],
+                          'pos': item[1], 'vel': item[2],
+                          'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
+            return phasepoint, idx
 
     def add_to_reservoir(self, items, idx, pos, vel):
         """Try to add a point to the reservoir.

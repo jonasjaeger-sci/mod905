@@ -277,10 +277,10 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
         :py:const:`.path._STATUS`.
     """
     accept, trial_path = False, path.empty_path()  # return values
-    orderp, pos, vel, vpot, idx = path.get_shooting_point()
-    system.particles.set_pos(pos)
-    system.particles.set_vel(vel)
-    system.v_pot = vpot  # REPLACE to possibly work with file names
+    shooting_point, idx = path.get_shooting_point()
+    orderp = shooting_point['order']
+    system.particles.set_particle_state(shooting_point)
+    system.v_pot = shooting_point['vpot']
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
@@ -297,7 +297,7 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     # 1) check if the kick was too violent:
     left, _, right = interfaces
     if not left < orderp[0] < right:  # Kicked outside of boundaries!'
-        trial_path.append(orderp, pos, vel, vpot)
+        trial_path.append(shooting_point)
         accept, trial_path.status = False, 'KOB'
         return accept, trial_path, trial_path.status
     # 2) If the kick is not aimless, we must check if we reject it or not:
@@ -306,7 +306,7 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
         # here call bias if needed
         # ... Insert call to bias ...
         if not accept_kick:  # Momenta Change Rejection
-            trial_path.append(orderp, pos, vel, vpot)
+            trial_path.append(shooting_point)
             accept, trial_path.status = False, 'MCR'  # just to be explicit
             return accept, trial_path, trial_path.status
     # OK: kick was either aimless or it was accepted by Metropolis
@@ -401,18 +401,18 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle,
     -------
     out[0] : dict
         This dict contains the phase-point just before the interface.
-        It is obtained by calling the `get_phase_point()` of the
+        It is obtained by calling the `get_particle_state()` of the
         particles object.
     out[1] : dict
         This dict contains the phase-point just after the interface.
-        It is obtained by calling the `get_phase_point()` of the
+        It is obtained by calling the `get_particle_state()` of the
         particles object.
 
     Note
     ----
     This function will update the system state so that the
-    `system.particles.get_phase_point() == out[1]`. This is more
-    convenient for the following usage in the
+    `system.particles.get_particle_state() == out[1]`.
+    This is more convenient for the following usage in the
     `generate_initial_path_kick` function.
     """
     # We search for crossing with the middle interface and do this
@@ -422,7 +422,7 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle,
     curr = integrator.calculate_order(order_function, system)[0]
     while True:
         # save current state:
-        previous = particles.get_phase_point()
+        previous = particles.get_particle_state()
         previous['order'] = curr
         # Modify velocities
         integrator.modify_velocities(system,
@@ -443,9 +443,9 @@ def _kick_across_middle(system, order_function, integrator, rgen, middle,
             # are getting closer, keep the new point
             pass
         else:  # we did not get closer, fall back to previous point
-            particles.set_phase_point(previous)
+            particles.set_particle_state(previous)
             curr = previous['order']
-    return previous, particles.get_phase_point()
+    return previous, particles.get_particle_state()
 
 
 def generate_initial_path_kick(system, order_function, interfaces, integrator,
@@ -505,7 +505,7 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
         logger.error(msgtxt)
         raise ValueError('Forward path not successful.', msg)
     # And we propagate the `leftpoint` backward:
-    system.particles.set_phase_point(leftpoint)
+    system.particles.set_particle_state(leftpoint)
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, order_function,
                                         interfaces, reverse=True)

@@ -46,7 +46,7 @@ class VVIntegratorTest(unittest.TestCase):
     def test_integrator(self):
         """Test by integrating the equations of motion."""
         system = set_up_initial_state()
-        initial = system.particles.get_phase_point()
+        initial = system.particles.get_particle_state()
         numberofsteps = 20
         simulation = Simulation(steps=numberofsteps)
         integrator = VelocityVerlet(0.0025)
@@ -55,9 +55,9 @@ class VVIntegratorTest(unittest.TestCase):
         simulation.add_task(task_integrate)
         traj = []
         for _ in simulation.run():
-            traj.append(system.particles.get_phase_point())
+            traj.append(system.particles.get_particle_state())
         # repeat with external integrator:
-        system.particles.set_phase_point(initial)
+        system.particles.set_particle_state(initial)
         simulation = Simulation(steps=numberofsteps)
         integrator = VelocityVerletC(0.0025)
         task_integrate = {'func': integrator.integration_step,
@@ -65,7 +65,7 @@ class VVIntegratorTest(unittest.TestCase):
         simulation.add_task(task_integrate)
         traj2 = []
         for _ in simulation.run():
-            traj2.append(system.particles.get_phase_point())
+            traj2.append(system.particles.get_particle_state())
         for trj1, trj2 in zip(traj, traj2):
             posok = np.allclose(trj1['pos'], trj2['pos'])
             self.assertTrue(posok)

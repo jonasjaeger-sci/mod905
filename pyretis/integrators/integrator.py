@@ -114,15 +114,16 @@ class Integrator(object):
             status = 'Generating forward path...'
         logger.debug(status)
         success = False
-        initial_system = system.particles.get_phase_point()
+        initial_system = system.particles.get_particle_state()
         system.potential_and_force()  # make sure forces are set
         left, _, right = interfaces
         for _ in range(path.maxlen):
             order = self.calculate_order(orderp, system)
-            add = path.append(order,
-                              system.particles.pos,
-                              system.particles.vel,
-                              system.v_pot)
+            kin = calculate_kinetic_energy(system.particles)[0]
+            phasepoint = {'order': order, 'pos': system.particles.pos,
+                          'vel': system.particles.vel, 'vpot': system.v_pot,
+                          'ekin': kin}
+            add = path.append(phasepoint)
             if not add:
                 if path.length >= path.maxlen:
                     status = 'Max. path length exceeded'
@@ -141,16 +142,17 @@ class Integrator(object):
             if path.length == path.maxlen:
                 # Next step will just exceed path length,
                 # no need to actually do it
-                status = 'Max. path length exceeded'
-                success = False
-                break
+                #status = 'Max. path length exceeded'
+                #success = False
+                #break
+                pass
             if reverse:
                 system.particles.vel *= -1.0
                 self.integration_step(system)
                 system.particles.vel *= -1.0
             else:
                 self.integration_step(system)
-        system.particles.set_phase_point(initial_system)
+        system.particles.set_particle_state(initial_system)
         msg = 'Propagate done: "{}" (success: {})'.format(status, success)
         logger.debug(msg)
         return success, status

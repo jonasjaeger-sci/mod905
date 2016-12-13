@@ -172,9 +172,12 @@ class ExternalScript(object):
         out : float
             The calculated order parameter.
         """
-        xyz, vel = self.read_configuration(system.particles.pos_file[0])
+        xyz, vel = self.read_configuration(system.particles.config[0])
         system.particles.pos = xyz
-        system.particles.vel = vel
+        if system.particles.vel_rev:
+            system.particles.vel = -vel
+        else:
+            system.particles.vel = vel
         return order_function(system)
 
     def __str__(self):

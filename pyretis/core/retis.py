@@ -429,9 +429,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # 1) Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
     logger.debug('Creating path for [0^-]')
-    pos, vel = ensemble1.last_path.phasepoint(0)[1:3]
-    system.particles.set_vel(vel)
-    system.particles.set_pos(pos)
+    system.particles.set_particle_state(ensemble1.last_path.phasepoint(0))
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
@@ -439,9 +437,9 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
                          ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
     for phasepoint in path_tmp.trajectory(reverse=True):
-        _ = path0.append(*phasepoint)
+        _ = path0.append(phasepoint)
     # And add second point from [0^+] at the end:
-    path0.append(*ensemble1.last_path.phasepoint(1))
+    path0.append(ensemble1.last_path.phasepoint(1))
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
@@ -453,15 +451,13 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # save space for this point by letting maxlen = maxlen-1 here:
     path_tmp = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
-    pos, vel = ensemble0.last_path.phasepoint(-1)[1:3]
-    system.particles.set_vel(vel)
-    system.particles.set_pos(pos)
+    system.particles.set_particle_state(ensemble0.last_path.phasepoint(-1))
     integrator.propagate(path_tmp, system, order_function,
                          ensemble1.interfaces, reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
-    path1.append(*ensemble0.last_path.phasepoint(-2))
+    path1.append(ensemble0.last_path.phasepoint(-2))
     path1 += path_tmp  # add rest of the path
     path1.set_move('s-')
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'

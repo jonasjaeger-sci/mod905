@@ -57,6 +57,10 @@ class Particles(object):
         convenient to be able to access the dimensionality directly
         from the particle list. It is therefore set as an attribute
         here.
+    vpot : float
+        The potential energy of the particles.
+    ekin : float
+        The kinetic energy of the particles.
     """
 
     def __init__(self, dim=1):
@@ -99,7 +103,7 @@ class Particles(object):
         self.ptype = None
         self.virial = np.zeros_like(self.virial)
 
-    def get_phase_point(self):
+    def get_particle_state(self):
         """Return a copy of the current phase point.
 
         The phase point includes `self.pos` and `self.vel`. In addition
@@ -110,10 +114,8 @@ class Particles(object):
         out : dict
             Dictionary with the positions, velocity and forces.
         """
-        retval = {'pos': np.copy(self.pos),
-                  'vel': np.copy(self.vel),
-                  'force': np.copy(self.force)}
-        return retval
+        return {'pos': np.copy(self.pos), 'vel': np.copy(self.vel),
+                'force': np.copy(self.force)}
 
     def set_pos(self, pos):
         """Set the positions for the particles.
@@ -151,11 +153,11 @@ class Particles(object):
         """
         self.force = np.copy(force)
 
-    def set_phase_point(self, phasepoint):
+    def set_particle_state(self, phasepoint):
         """Set the position, velocities (and forces) for the particles.
 
         The function is included here for convenience - it can be used
-        together with `self.get_phase_point()` for easy change of the
+        together with `self.get_particle_state()` for easy change of the
         particle state.
 
         Parameters
@@ -174,11 +176,8 @@ class Particles(object):
         """
         self.set_pos(phasepoint['pos'])
         self.set_vel(phasepoint['vel'])
-        try:
+        if 'force' in phasepoint:
             self.set_force(phasepoint['force'])
-        except KeyError:
-            msg = 'Setting particle pos & vel without setting forces'
-            logger.warning(msg)
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):
@@ -324,9 +323,10 @@ class ParticlesExt(Particles):
         Here we just create an empty particle list.
         """
         super().__init__(dim=dim)
-        self.pos_file = (None, None)
-        self.vel_file = (None, None)
-        self.force_file = (None, None)
+        self.config = (None, None)
+        self.vpot = None
+        self.ekin = None
+        self.vel_rev = None
 
     def set_pos(self, pos):
         """Set the positions for the particles.
@@ -338,7 +338,7 @@ class ParticlesExt(Particles):
         pos : tuple of (string, int)
             The positions to set.
         """
-        self.pos_file = pos
+        self.config = (pos[0], pos[1])
 
     def set_vel(self, vel):
         """Set the velocities for the particles.
@@ -350,19 +350,9 @@ class ParticlesExt(Particles):
         vel : tuple of (string, int)
             The velocities to set.
         """
-        self.vel_file = vel
+        self.vel_rev = vel
 
-    def set_force(self, force):
-        """Set the forces for the particles.
-
-        Parameters
-        ----------
-        force : tuple of (string, int)
-            The forces to set.
-        """
-        self.force_file = force
-    
-    def get_phase_point(self):
+    def get_particle_state(self):
         """Return a copy of the current phase point.
 
         The phase point includes `self.pos` and `self.vel`. In addition
@@ -373,7 +363,29 @@ class ParticlesExt(Particles):
         out : dict
             Dictionary with the positions, velocity and forces.
         """
-        retval = {'pos': self.pos_file,
-                  'vel': self.vel_file,
-                  'force': self.force_file}
-        return retval
+        return {'pos': self.config, 'vel': self.vel_rev, 'vpot': self.vpot,
+                'ekin': self.ekin}
+
+    def set_particle_state(self, phasepoint):
+        """Update the state of particles to the given phase point.
+
+        The function is included here for convenience - it can be used
+        together with `self.get_particle_state()` for easy change of the
+        particle state.
+
+        Parameters
+        ----------
+        phasepoint : dict
+            This dict contains the phase point we wish to set.
+            It contains the positions in the key `'pos'` and the
+            velocities in the key `'vel'`.
+
+        Returns
+        -------
+        out : None
+            Returns `None` and updates `self.pos`, `self.vel`
+        """
+        self.set_pos(phasepoint['pos'])
+        self.set_vel(phasepoint['vel'])
+        self.ekin = phasepoint['ekin']
+        self.vpot = phasepoint['vpot']

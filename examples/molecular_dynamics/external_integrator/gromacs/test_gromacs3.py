@@ -66,7 +66,9 @@ def do_setup(md_settings):
     system.particles = particles
     # Transition done!
     initial = os.path.join(os.getcwd(), 'initial.g96')
-    system.particles.set_pos((initial, None, None))
+    phase_point = {'pos': (initial, None), 'vel': False, 'vpot': None,
+                   'ekin': None}
+    system.particles.set_particle_state(phase_point)
     order_function = create_orderparameter(settings)
 
     input_dir = os.path.join(os.getcwd(), 'ext_input')
@@ -82,15 +84,52 @@ def do_setup(md_settings):
 if __name__ == '__main__':
     md_settings = {'subcycles': 5, 'timestep': 0.002}
     sys, order_fun, grom = do_setup(md_settings)
-    print(sys.particles.pos_file)
+
+    exe_dir = os.path.join(os.getcwd(), '000', 'generate')
+
+    make_dirs(exe_dir)
+
+    print(sys.particles.config)
     grom.modify_velocities(sys, None, sigma_v=None, aimless=True,
                            momentum=False, rescale=None)
-    print(sys.particles.pos_file)
+    print(sys.particles.config)
     from pyretis.core.random_gen import RandomGenerator
     from pyretis.core.pathext import PathExt
     rnd = RandomGenerator()
-    path = PathExt(rnd, maxlen=100, time_origin=0)
+    path = PathExt(rnd, maxlen=30, time_origin=0)
     interfaces = [0.0, 1.0, 1.7]
-    grom.propagate(path, sys, order_fun, interfaces, reverse=False)
+    grom.propagate(path, sys, order_fun, interfaces, reverse=False,
+                   exe_dir=exe_dir)
+
+    pathb = PathExt(rnd, maxlen=10, time_origin=0)
+    interfaces = [0.0, 1.0, 1.7]
+    grom.propagate(pathb, sys, order_fun, interfaces, reverse=True,
+                   exe_dir=exe_dir)
+
+    print('Forward')
     for p in path.trajectory():
         print(p)
+    print('Backward')
+    for p in pathb.trajectory():
+        print(p)
+    from pyretis.core.path import paste_paths
+    new_path = paste_paths(pathb, path, overlap=True, maxlen=100)
+
+    print('Picking a shooting point:')
+    shooting_point, idx = new_path.get_shooting_point()
+    print('Shooting point:', shooting_point)
+    print('Particle state 1:', sys.particles.get_particle_state())
+    sys.particles.set_particle_state(shooting_point)
+    print('Particle state 2:', sys.particles.get_particle_state())
+    dek, _, = grom.modify_velocities(
+        sys,
+        rnd,
+        sigma_v=None,
+        aimless=True,
+        momentum=True,
+        rescale=False)
+    print('Particle state 3:', sys.particles.get_particle_state())
+    #path = PathExt(rnd, maxlen=30, time_origin=0)
+    #interfaces = [0.0, 1.0, 1.7]
+    #grom.propagate(path, sys, order_fun, interfaces, reverse=False,
+    #               exe_dir=exe_dir)
