@@ -144,7 +144,7 @@ class ExternalScript(object):
         else:
             msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
             logger.info(msg)
-        print(' '.join(cmd))
+        # print(' '.join(cmd))
         exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,

@@ -244,7 +244,8 @@ class GromacsExt(ExternalScript):
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-deffnm', deffnm,
                '-c', confout]
         self.execute_command(cmd, cwd=exe_dir)
-        out_files = {'conf': confout}
+        out_files = {'conf': confout,
+                     'cpt_prev': '{}_prev.cpt'.format(deffnm)}
         for key in ('cpt', 'edr', 'log', 'trr'):
             out_files[key] = '{}.{}'.format(deffnm, key)
         return out_files
@@ -331,6 +332,7 @@ class GromacsExt(ExternalScript):
             initial_conf = initial_file
 
         success = False
+        status = 'Generating path'
         left, _, right = interfaces
 
         # Save as a single snapshot file
@@ -404,6 +406,41 @@ class GromacsExt(ExternalScript):
         print(len(energy['potential']))
         system.particles.set_particle_state(initial_state)
         print(system.particles.config)
+        return success, status
+
+    def integration_step(self, system, name, exe_dir=None):
+        """Integrate the given system forward in time.
+
+        Parameters
+        ----------
+        system : object like :py:class:`pyretis.core.system.System`
+            The system we are integrating.
+        exe_dir : string
+            The path to where we will perform the GROMACS simulation.
+        """
+        initial_state = system.particles.get_particle_state()
+        initial_conf = self.dump_frame(system)
+        # Save as a single snapshot file
+        phase_point = {'pos': (initial_conf, None), 'vel': False,
+                       'vpot': None, 'ekin': None}
+        system.particles.set_particle_state(phase_point)
+        out_grompp = self.execute_grompp(self.input_files['input'],
+                                         initial_conf,
+                                         name,
+                                         exe_dir=exe_dir)
+        out_mdrun = self.execute_mdrun(out_grompp['tpr'],
+                                       name, exe_dir=exe_dir)
+        conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
+        phase_point = {'pos': (conf_abs, None),
+                       'vel': False, 'vpot': None, 'ekin': None}
+        system.particles.set_particle_state(phase_point)
+        out_files = {}
+        for key, val in out_grompp.items():
+            out_files[key] = val
+        for key, val in out_mdrun.items():
+            out_files[key] = val
+        return out_files
+        
 
     def get_trr_frame(self, trr_file, tpr_file, idx, out_file):
         """Extract a frame from a .trr file.
@@ -622,4 +659,113 @@ class GromacsExt(ExternalScript):
         else:
             dek = kin_new - kin_old
         return dek, kin_new
+
+    def kick_across_middle(self, system, order_function, rgen, middle,
+                           tis_settings, exe_dir):
+        """Force a phase point across the middle interface.
+
+        This is accomplished by repeatedly kicking the pahse point so
+        that it crosses the middle interface.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.system.System`
+            This is the system that contains the particles we are
+            investigating
+        order_function : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
+        integrator : object like :py:class:`Integrator`
+            The object used for integrating the equations of motion.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        middle : float
+            This is the value for the middle interface.
+        tis_settings : dict
+            This dictionary contains settings for TIS. Explicitly used here:
+
+            * `zero_momentum`: boolean, determines if the momentum is zeroed
+            * `rescale_energy`: boolean, determines if energy is rescaled.
+
+        Returns
+        -------
+        out[0] : dict
+            This dict contains the phase-point just before the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+        out[1] : dict
+            This dict contains the phase-point just after the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+
+        Note
+        ----
+        This function will update the system state so that the
+        `system.particles.get_particle_state() == out[1]`.
+        This is more convenient for the following usage in the
+        `generate_initial_path_kick` function.
+        """
+        # We search for crossing with the middle interface and do this
+        # by sequentially kicking the initial phase point:
+        initial_file = self.dump_frame(system)
+        basepath = os.path.dirname(initial_file)
+        localfile = os.path.basename(initial_file)
+        prev_file = os.path.join(basepath, 'previous.g96')
+        curr_file = os.path.join(basepath, 'current.g96')
+        
+        previous = None
+        particles = system.particles
+        curr = self.calculate_order(order_function, system)[0]
+        while True:
+            print('\nNew loop:')
+            # save current state:
+            previous = particles.get_particle_state()
+            print('Current state:')
+            print(os.path.basename(particles.get_particle_state()['pos'][0]))
+            previous['order'] = curr
+            # Modify velocities
+            self.modify_velocities(system,
+                                   rgen,
+                                   sigma_v=None,
+                                   aimless=True,
+                                   momentum=True,
+                                   rescale=False)
+            print('Modify velocities:')
+            print(os.path.basename(particles.get_particle_state()['pos'][0]))
+            # Integrate forward one step:
+            out_files = self.integration_step(system, 'current', exe_dir=exe_dir)
+            # Remove output files:
+            for key in ('log', 'trr', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
+                filename = os.path.join(exe_dir, out_files[key])
+                if os.path.isfile(filename):
+                    os.remove(filename)
+            print('Integration step:')
+            print(os.path.basename(particles.get_particle_state()['pos'][0]))
+            # Compare previous order parameter and the new one:
+            prev = curr
+            curr = self.calculate_order(order_function, system)[0]
+            if (prev <= middle < curr) or (curr < middle <= prev):
+                # have crossed middle interface, just stop the loop
+                print('Crossed the middle interface')
+                print(os.path.basename(previous['pos'][0]))
+                print(os.path.basename(particles.get_particle_state()['pos'][0]))
+                break
+            elif (prev <= curr < middle) or (middle < curr <= prev):
+                # are getting closer, keep the new point
+                print('Getting closer, moving file')
+                print('move', os.path.basename(curr_file), os.path.basename(prev_file))
+                shutil.move(curr_file, prev_file)
+                phasepoint = particles.get_particle_state()
+                phasepoint['pos'] = (prev_file, None)
+                particles.set_particle_state(phasepoint)
+                print('After move:')
+                print(os.path.basename(particles.get_particle_state()['pos'][0]))
+            else:  # we did not get closer, fall back to previous point
+                particles.set_particle_state(previous)
+                curr = previous['order']
+                filename = os.path.join(exe_dir, out_files['conf'])
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                print('Dit not get closer, fall back to:')
+                print(os.path.basename(particles.get_particle_state()['pos'][0]))
+        return previous, particles.get_particle_state()
 

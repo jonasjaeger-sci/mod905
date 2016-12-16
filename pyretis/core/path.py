@@ -443,7 +443,7 @@ class PathBase(object):
 
         Parameters
         ----------
-        args : tuple
+        phasepoint : tuple
             The phase point data to add to the path.
         """
         return
@@ -528,31 +528,10 @@ class PathBase(object):
                 return self
         return self
 
+    @abstractmethod
     def reverse(self):
-        """Reverse a path and return the reverse path as a new path.
-
-        This will simply reverse a path and return the reversed path as
-        a new `Path` object. Note that currently, recalculating
-        order parameters have not been implemented!  Typically, reversing
-        will not change the order parameter, but it might change the
-        velocity for the order parameter and so on.
-
-        Returns
-        -------
-        new_path : object like :py:class:`PathBase`
-            This is basically a copy of `self`, just reversed.
-        """
-        new_path = self.empty_path()
-        for phasepoint in self.trajectory(reverse=True):
-            new_point = {key: val for key, val in phasepoint.items()}
-            if new_point['vel'] is not None:
-                new_point['vel'] = phasepoint['vel'] * -1
-            app = new_path.append(new_point)
-            if not app:
-                msg = 'Could not reverse path'
-                logger.error(msg)
-                return None
-        return new_path
+        """Reverse a path and return the reverse path as a new path."""
+        return
 
     def __str__(self):
         """Return a simple string representation of the Path."""
@@ -616,8 +595,8 @@ class Path(PathBase):
             This can be used to store the shooting point of a parent
             trajectory.
         """
-        super(Path, self).__init__(rgen, maxlen=maxlen,
-                                   time_origin=time_origin)
+        super().__init__(rgen, maxlen=maxlen,
+                         time_origin=time_origin)
         self.pos = []
         self.vel = []
 
@@ -728,6 +707,32 @@ class Path(PathBase):
         time_origin = kwargs.get('time_origin', 0)
         return self.__class__(self.rgen, maxlen=maxlen,
                               time_origin=time_origin)
+
+    def reverse(self):
+        """Reverse a path and return the reverse path as a new path.
+
+        This will simply reverse a path and return the reversed path as
+        a new `Path` object. Note that currently, recalculating
+        order parameters have not been implemented!  Typically, reversing
+        will not change the order parameter, but it might change the
+        velocity for the order parameter and so on.
+
+        Returns
+        -------
+        new_path : object like :py:class:`PathBase`
+            This is basically a copy of `self`, just reversed.
+        """
+        new_path = self.empty_path()
+        for phasepoint in self.trajectory(reverse=True):
+            new_point = {key: val for key, val in phasepoint.items()}
+            if new_point['vel'] is not None:
+                new_point['vel'] = phasepoint['vel'] * -1
+            app = new_path.append(new_point)
+            if not app:
+                msg = 'Could not reverse path'
+                logger.error(msg)
+                return None
+        return new_path
 
 
 class ReservoirPath(PathBase):

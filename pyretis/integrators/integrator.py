@@ -257,6 +257,82 @@ class Integrator(object):
         """
         return order_function(system)
 
+    def kick_across_middle(self, system, order_function, rgen, middle,
+                           tis_settings):
+        """Force a phase point across the middle interface.
+
+        This is accomplished by repeatedly kicking the pahse point so
+        that it crosses the middle interface.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.system.System`
+            This is the system that contains the particles we are
+            investigating
+        order_function : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        middle : float
+            This is the value for the middle interface.
+        tis_settings : dict
+            This dictionary contains settings for TIS. Explicitly used here:
+
+            * `zero_momentum`: boolean, determines if the momentum is zeroed
+            * `rescale_energy`: boolean, determines if energy is rescaled.
+
+        Returns
+        -------
+        out[0] : dict
+            This dict contains the phase-point just before the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+        out[1] : dict
+            This dict contains the phase-point just after the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+
+        Note
+        ----
+        This function will update the system state so that the
+        `system.particles.get_particle_state() == out[1]`.
+        This is more convenient for the following usage in the
+        `generate_initial_path_kick` function.
+        """
+        # We search for crossing with the middle interface and do this
+        # by sequentially kicking the initial phase point:
+        previous = None
+        particles = system.particles
+        curr = self.calculate_order(order_function, system)[0]
+        while True:
+            # save current state:
+            previous = particles.get_particle_state()
+            previous['order'] = curr
+            # Modify velocities
+            self.modify_velocities(system,
+                                   rgen,
+                                   sigma_v=None,
+                                   aimless=True,
+                                   momentum=tis_settings['zero_momentum'],
+                                   rescale=tis_settings['rescale_energy'])
+            # Integrate forward one step:
+            self.integration_step(system)
+            # Compare previous order parameter and the new one:
+            prev = curr
+            curr = self.calculate_order(order_function, system)[0]
+            if (prev <= middle < curr) or (curr < middle <= prev):
+                # have crossed middle interface, just stop the loop
+                break
+            elif (prev <= curr < middle) or (middle < curr <= prev):
+                # are getting closer, keep the new point
+                pass
+            else:  # we did not get closer, fall back to previous point
+                particles.set_particle_state(previous)
+                curr = previous['order']
+        return previous, particles.get_particle_state()
+
     def __str__(self):
         """Return the string description of the integrator."""
         return self.desc
+
+

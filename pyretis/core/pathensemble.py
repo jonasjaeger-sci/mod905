@@ -20,6 +20,10 @@ create_path_ensembles
     interfaces.
 """
 import logging
+import os
+from pyretis.inout.common import make_dirs
+
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -76,7 +80,8 @@ class PathEnsemble(object):
         This is the last **accepted** path.
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=100):
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=100,
+                 exe_dir=None):
         """Initialize the PathEnsemble object.
 
         Parameters
@@ -86,6 +91,17 @@ class PathEnsemble(object):
         interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
+        detect : float, optional
+            The interface used for detecting successful path in the
+            analysis.
+        maxpath : integer, optional
+            The maximum number of paths to store information for in memory.
+            Note, that this will not influence the analysis as long as
+            you are using the output files when running the analysis.
+        exe_dir : string, optional
+            The base folder where the simulation was executed from.
+            This is used to set up output directories for the path
+            ensemble.
         """
         self.ensemble = ensemble
         self.interfaces = tuple(interfaces)  # Should not change interfaces
@@ -99,6 +115,18 @@ class PathEnsemble(object):
         else:
             self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
         self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
+        path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
+        self.directory = {'path-ensemble': path_dir}
+        for key in ('accepted', 'generate', 'initial'):
+            self.directory[key] = os.path.join(path_dir, key)
+
+    def make_directories(self):
+        """Make temporary directories."""
+        if self.directory['path-ensemble'] is not None:
+            msgtxt = make_dirs(self.directory['path-ensemble'])
+        else:
+            msgtxt = None
+        return msgtxt
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
@@ -115,6 +143,20 @@ class PathEnsemble(object):
         self.paths = []
         for key in self.nstats:
             self.nstats[key] = 0
+
+    def store_path(self, path):
+        """Stores a new accepted path in the path ensemble.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.core.path.PathBase`
+            The path we are going to store.
+
+        Returns
+        -------
+        None, but we update self.last_path
+        """
+        self.last_path = path
 
     def add_path_data(self, path, status, cycle=0):
         """Append data from the given path to `self.path_data`.
@@ -153,7 +195,7 @@ class PathEnsemble(object):
         else:
             path_data = path.get_path_data(status, self.interfaces)
             if path_data['status'] == 'ACC':  # store the path
-                self.last_path = path
+                self.store_path(path)
                 if path_data['generated'][0] == 'sh':
                     self.nstats['nshoot'] += 1
         path_data['cycle'] = cycle  # also store cycle number
@@ -248,6 +290,42 @@ class PathEnsemble(object):
             ratio = float(nacc) / float(npath)
             msg += ['\tRatio accepted/total paths: {}'.format(ratio)]
         return '\n'.join(msg)
+
+
+class PathEnsembleExt(PathEnsemble):
+    """Representation of a path ensemble.
+
+    This class is similar to :py:class:`.PathEnsemble` but it is made
+    to work with external paths. That is, some extra file handling is
+    done when accepting a path.
+    """
+
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=100,
+                 exe_dir=None):
+        """Initialize the PathEnsemble object.
+
+        Parameters
+        ----------
+        ensemble : integer
+            An integer used to identify the ensemble.
+        interfaces : list of floats
+            These are the interfaces specified with the values
+            for the order parameters: [left, middle, right]
+        """
+        super().__init__(ensemble, interfaces, detect=detect,
+                         maxpath=maxpath, exe_dir=exe_dir)
+
+    def make_directories(self):
+        """Make temporary directories."""
+        msgtxt = None
+        for _, val in self.directory:
+            if val is not None:
+                msgtxt = make_dirs(val)
+        return msgtxt
+
+    def store_path(self, path):
+        """Store a path by explicitly moving it."""
+        pass
 
 
 def create_path_ensembles(interfaces, include_zero=False):

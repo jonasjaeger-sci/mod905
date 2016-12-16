@@ -21,7 +21,7 @@ paste_paths
     direction and the other is in the forward time direction.
 """
 import logging
-from pyretis.core.path import PathBase
+from pyretis.core.path import Path
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -29,7 +29,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PathExt']
 
 
-class PathExt(PathBase):
+class PathExt(Path):
     """A path where the full trajectory is stored in memory.
 
     This class represents a path. A path consist of a series of
@@ -59,46 +59,6 @@ class PathExt(PathBase):
         """
         super().__init__(rgen, maxlen=maxlen,
                          time_origin=time_origin)
-        self.pos = []
-        self.vel = []
-
-    def trajectory(self, reverse=False):
-        """Iterate over the phase-space points in the path.
-
-        Parameters
-        ----------
-        reverse : boolean
-            If this is True, we iterate in the reverse direction.
-
-        Yields
-        ------
-        out : tuple
-            The phase-space points in the path.
-        """
-        if reverse:
-            for i in range(self.length - 1, -1, -1):
-                yield self.phasepoint(i)
-        else:
-            for i in range(self.length):
-                yield self.phasepoint(i)
-
-    def phasepoint(self, idx):
-        """Return a specific phase point.
-
-        Parameters
-        ----------
-        idx : int
-            Index for phase-space point to return.
-
-        Returns
-        -------
-        out : tuple
-            A phase-space point in the path.
-        """
-        phasepoint = {'order': self.order[idx], 'pos': self.pos[idx],
-                      'vel': self.vel[idx], 'vpot': self.vpot[idx],
-                      'ekin': self.ekin[idx]}
-        return phasepoint
 
     def append(self, phasepoint):
         """Append a new phase point to the path.
@@ -139,37 +99,6 @@ class PathExt(PathBase):
             msg = 'Max length exceeded! Could not append to path!'
             logger.debug(msg)
             return False
-
-    def get_shooting_point(self):
-        """Return a shooting point from the path.
-
-        This will simply draw a shooting point from the path at
-        random. All points can be selected with equal probability with
-        the exception of the end points which are not considered.
-
-        Returns
-        -------
-        out[0] : tuple
-            The phase point. The first item are the
-            order parameter(s).
-        out[1] : int
-            The shooting point index.
-        """
-        idx = self.rgen.random_integers(1, self.length - 2)
-        return self.phasepoint(idx), idx
-
-    def empty_path(self, **kwargs):
-        """Return an empty path of same class as the current one.
-
-        Returns
-        -------
-        out : object like :py:class:`PathBase`
-            A new empty path.
-        """
-        maxlen = kwargs.get('maxlen', None)
-        time_origin = kwargs.get('time_origin', 0)
-        return self.__class__(self.rgen, maxlen=maxlen,
-                              time_origin=time_origin)
 
     def reverse(self):
         """Return a reversed version of the path.

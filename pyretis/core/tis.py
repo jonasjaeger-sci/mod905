@@ -370,86 +370,8 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
         accept, trial_path.status = True, 'ACC'
     return accept, trial_path, trial_path.status
 
-
-def _kick_across_middle(system, order_function, integrator, rgen, middle,
-                        tis_settings):
-    """Force a phase point across the middle interface.
-
-    This is accomplished by repeatedly kicking the pahse point so
-    that it crosses the middle interface.
-
-    Parameters
-    ----------
-    system : object like :py:class:`.system.System`
-        This is the system that contains the particles we are
-        investigating
-    order_function : object like :py:class:`OrderParameter`
-        The object used for calculating the order parameter.
-    integrator : object like :py:class:`Integrator`
-        The object used for integrating the equations of motion.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
-        This is the random generator that will be used.
-    middle : float
-        This is the value for the middle interface.
-    tis_settings : dict
-        This dictionary contains settings for TIS. Explicitly used here:
-
-        * `zero_momentum`: boolean, determines if the momentum is zeroed
-        * `rescale_energy`: boolean, determines if energy is rescaled.
-
-    Returns
-    -------
-    out[0] : dict
-        This dict contains the phase-point just before the interface.
-        It is obtained by calling the `get_particle_state()` of the
-        particles object.
-    out[1] : dict
-        This dict contains the phase-point just after the interface.
-        It is obtained by calling the `get_particle_state()` of the
-        particles object.
-
-    Note
-    ----
-    This function will update the system state so that the
-    `system.particles.get_particle_state() == out[1]`.
-    This is more convenient for the following usage in the
-    `generate_initial_path_kick` function.
-    """
-    # We search for crossing with the middle interface and do this
-    # by sequentially kicking the initial phase point:
-    previous = None
-    particles = system.particles
-    curr = integrator.calculate_order(order_function, system)[0]
-    while True:
-        # save current state:
-        previous = particles.get_particle_state()
-        previous['order'] = curr
-        # Modify velocities
-        integrator.modify_velocities(system,
-                                     rgen,
-                                     sigma_v=None,
-                                     aimless=True,
-                                     momentum=tis_settings['zero_momentum'],
-                                     rescale=tis_settings['rescale_energy'])
-        # Integrate forward one step:
-        integrator.integration_step(system)
-        # Compare previous order parameter and the new one:
-        prev = curr
-        curr = integrator.calculate_order(order_function, system)[0]
-        if (prev <= middle < curr) or (curr < middle <= prev):
-            # have crossed middle interface, just stop the loop
-            break
-        elif (prev <= curr < middle) or (middle < curr <= prev):
-            # are getting closer, keep the new point
-            pass
-        else:  # we did not get closer, fall back to previous point
-            particles.set_particle_state(previous)
-            curr = previous['order']
-    return previous, particles.get_particle_state()
-
-
 def generate_initial_path_kick(system, order_function, interfaces, integrator,
-                               rgen, tis_settings):
+                               rgen, tis_settings, exe_dir=None):
     """Simple function to generate an initial path.
 
     This function will generate an initial path by repeatedly kicking a
@@ -489,8 +411,11 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
-    leftpoint, _ = _kick_across_middle(system, order_function, integrator,
-                                       rgen, interfaces[1], tis_settings)
+    leftpoint, _ = integrator.kick_across_middle(system,
+                                                 order_function,
+                                                 rgen, interfaces[1],
+                                                 tis_settings,
+                                                 exe_dir)
     # kick_across_middle will return two points, one immediately
     # left of the interface and one immediately right of the
     # interface. So we have two points (`leftpoint` and the
@@ -499,7 +424,7 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     maxlen = tis_settings['maxlength']
     path_forw = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_forw, system, order_function,
-                                        interfaces, reverse=False)
+                                        interfaces, reverse=False, exe_dir=exe_dir)
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -508,7 +433,7 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     system.particles.set_particle_state(leftpoint)
     path_back = Path(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, order_function,
-                                        interfaces, reverse=True)
+                                        interfaces, reverse=True, exe_dir=exe_dir)
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -521,6 +446,8 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     start, end, _, _ = initial_path.check_interfaces(interfaces)
+    for p in initial_path.trajectory():
+        print(p['order'][0])
     # OK, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
     # and continue all the way to the end - perfect!
