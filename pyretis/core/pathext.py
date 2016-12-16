@@ -12,13 +12,6 @@ Important classes defined here
 
 PathExt
     Class for a generic path that stores all possible information.
-
-Important methods defined here
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-paste_paths
-    Function for joining two paths, one is in a backward time
-    direction and the other is in the forward time direction.
 """
 import logging
 from pyretis.core.path import Path

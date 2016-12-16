@@ -19,6 +19,10 @@ generic_factory
 import logging
 import inspect
 import sys
+from pyretis.core.path import Path, ReservoirPath
+from pyretis.core.pathext import PathExt
+
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -234,3 +238,23 @@ def generic_factory(settings, object_map, name='generic'):
         return None
     cls = object_map[klass]['cls']
     return initiate_instance(cls, settings)
+
+
+def get_path_klass(ensemble_type):
+    """Method to return the path class to work with an integrator.
+
+    Parameters
+    ----------
+    ensemble_type : string
+        The type of ensemble we are requesting.
+    """
+    path_map = {'internal': Path,
+                'external': PathExt,
+                'reservoir': ReservoirPath}
+    try:
+        klass = path_map[ensemble_type]
+        return klass
+    except KeyError:
+        msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
+        logger.critical(msg)
+        raise ValueError(msg)

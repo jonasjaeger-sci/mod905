@@ -12,23 +12,20 @@ Important classes defined here
 PathEnsemble
     Class for defining path ensembles.
 
-Important methods defined here
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-create_path_ensembles
-    Method for creating a set of `PathEnsemble` objects from given
-    interfaces.
+PathEnsembleExt
+    Class for defining path ensembles when we are working with
+    paths stored on disk and not in memory only.
 """
 import logging
 import os
-from pyretis.inout.common import make_dirs
+import shutil
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['PathEnsemble', 'create_path_ensembles']
+__all__ = ['PathEnsemble', 'PathEnsembleExt']
 
 
 PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
@@ -115,18 +112,20 @@ class PathEnsemble(object):
         else:
             self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
         self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
-        path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
-        self.directory = {'path-ensemble': path_dir}
-        for key in ('accepted', 'generate', 'initial'):
-            self.directory[key] = os.path.join(path_dir, key)
-
-    def make_directories(self):
-        """Make temporary directories."""
-        if self.directory['path-ensemble'] is not None:
-            msgtxt = make_dirs(self.directory['path-ensemble'])
+        if exe_dir is not None:
+            path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
+            self.directory = {'path-ensemble': path_dir}
+            for key in ('accepted', 'generate', 'initial'):
+                self.directory[key] = os.path.join(path_dir, key)
         else:
-            msgtxt = None
-        return msgtxt
+            self.directory = {'path-ensemble': None,
+                              'accepted': None,
+                              'generate': None,
+                              'initial': None}
+
+    def directories(self):
+        """Yield the directories pyretis should make."""
+        yield self.directory['path-ensemble']
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
@@ -315,62 +314,51 @@ class PathEnsembleExt(PathEnsemble):
         super().__init__(ensemble, interfaces, detect=detect,
                          maxpath=maxpath, exe_dir=exe_dir)
 
-    def make_directories(self):
+    def directories(self):
         """Make temporary directories."""
-        msgtxt = None
-        for _, val in self.directory:
-            if val is not None:
-                msgtxt = make_dirs(val)
-        return msgtxt
+        for key in self.directory:
+            yield self.directory[key]
 
     def store_path(self, path):
-        """Store a path by explicitly moving it."""
-        pass
+        """Store a path by explicitly moving it.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.core.path.PathBase`
+            This is the path object we are going to store.
+        """
+        print('Storing the external path')
+        source = {}
+        new_pos = [None for _ in range(len(path.pos))]
+        for i, phasepoint in enumerate(path.trajectory(reverse=False)):
+            print(phasepoint['pos'])
+            pos_file, idx = phasepoint['pos']
+            if pos_file not in source:
+                localfile = os.path.basename(pos_file)
+                dest = os.path.join(self.directory['accepted'], localfile)
+                source[pos_file] = dest
+            dest = source[pos_file]
+            new_pos[i] = (dest, idx)
+        path.pos = new_pos
+        for src, dest in source.items():
+            shutil.move(src, dest)
+        self.last_path = path
 
 
-def create_path_ensembles(interfaces, include_zero=False):
-    """Create a list of `PathEnsemble` objects given a list of interfaces.
-
-    This function will create and return a set of objects representing
-    path ensembles for a given set of interfaces. This is useful when
-    setting up simulations like RETIS. Here we assume that the given
-    interfaces define the path ensembles as follows:
-    ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``, where ``|``
-    is the specified interface locations in the input `interfaces`.
-    We assume that the reactant is to the left of `interfaces[0]` and
-    that the product is to the right of `interfaces[-1]`. Given ``n``
-    interfaces we generate ``n`` or ``n-1`` path ensembles, the former
-    if we include the [0^-] ensemble.
+def get_path_ensemble_class(ensemble_type):
+    """Method to return the path ensemble class to work with an integrator.
 
     Parameters
     ----------
-    interfaces : list of floats
-        `interfaces[i]` separates the [(i-1)^+] and [i^+] interfaces.
-    include_zero : boolean
-        If `include_zero` is True, we include path ensemble [0^-].
-
-    Returns
-    -------
-    ensembles : list of objects like :py:class:`PathEnsemble`
-        The generated (empty) path ensemble objects.
-    detect : list of floats
-        These are interfaces that can be used for an analysis, i.e. for
-        detection and matching of probabilities.
+    ensemble_type : string
+        The type of ensemble we are requesting.
     """
-    detect = []
-    ensembles = []
-    reactant = interfaces[0]
-    product = interfaces[-1]
-    if include_zero:
-        interface = [-float('inf'), reactant, reactant]
-        path_ensemble = PathEnsemble(0, interface, detect=None)
-        ensembles.append(path_ensemble)
-    for i, middle in enumerate(interfaces[:-1]):
-        interface = [reactant, middle, product]
-        try:
-            detect.append(interfaces[i+1])
-        except IndexError:
-            detect.append(product)
-        path_ensemble = PathEnsemble(i + 1, interface, detect=detect[-1])
-        ensembles.append(path_ensemble)
-    return ensembles, detect
+    path_ensemble_map = {'internal': PathEnsemble,
+                         'external': PathEnsembleExt}
+    try:
+        klass = path_ensemble_map[ensemble_type]
+        return klass
+    except KeyError:
+        msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
+        logger.critical(msg)
+        raise ValueError(msg)

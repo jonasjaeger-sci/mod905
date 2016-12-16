@@ -180,13 +180,12 @@ class GromacsExt(ExternalScript):
         # Generate a tpr file using the input files:
         out_files = self.execute_grompp(self.input_files['input'],
                                         self.input_files['configuration'],
-                                        'topol',
-                                        exe_dir=self.input_path)
+                                        'topol', self.input_path)
 
         self.input_files['tpr'] = os.path.join(self.input_path,
                                                out_files['tpr'])
 
-    def execute_grompp(self, mdp_file, config, deffnm, exe_dir=None):
+    def execute_grompp(self, mdp_file, config, deffnm, exe_dir):
         """Method to execute the GROMACS preprocessor.
 
         This step is unique to GROMACS and is included here
@@ -314,7 +313,7 @@ class GromacsExt(ExternalScript):
         return out_files
 
     def propagate(self, path, system, order_function, interfaces,
-                  reverse=False, exe_dir=None):
+                  reverse=False):
         """Propagate with GROMACS."""
         initial_state = system.particles.get_particle_state()
         print('Start propagate')
@@ -340,7 +339,7 @@ class GromacsExt(ExternalScript):
                        'vpot': None, 'ekin': None}
         system.particles.set_particle_state(phase_point)
         ext_time = self.time_step * self.subcycles
-        
+
         out_files = {}
         for key in ('trr', 'tpr', 'edr'):
             out_files[key] = '{}.{}'.format(name, key)
@@ -352,7 +351,7 @@ class GromacsExt(ExternalScript):
         for i in range(path.maxlen):
             phase_point = {
                 'order': order,
-                'pos': (os.path.join(exe_dir, out_files['trr']), i),
+                'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
                 'vel': reverse, 'vpot': None, 'ekin': None}
             add = path.append(phase_point)
             if not add:
@@ -375,23 +374,32 @@ class GromacsExt(ExternalScript):
                 out_grompp = self.execute_grompp(self.input_files['input'],
                                                  initial_conf,
                                                  name,
-                                                 exe_dir=exe_dir)
+                                                 self.exe_dir)
                 tpr_file = out_grompp['tpr']
+                for key, value in out_grompp.items():
+                    out_files[key] = value
                 out_mdrun = self.execute_mdrun(tpr_file,
-                                               name, exe_dir=exe_dir)
+                                               name, self.exe_dir)
                 cpt_file = out_mdrun['cpt']
+                for key, value in out_mdrun.items():
+                    out_files[key] = value
             else:
                 out_grompp = self.extend_gromacs(tpr_file, ext_time,
-                                                 exe_dir=exe_dir)
+                                                 self.exe_dir)
                 ext_tpr_file = out_grompp['tpr']
+                for key, value in out_grompp.items():
+                    out_files[key] = value
                 out_mdrun = self.execute_mdrun_continue(ext_tpr_file,
                                                         cpt_file, name,
-                                                        exe_dir=exe_dir)
+                                                        self.exe_dir)
+                for key, value in out_mdrun.items():
+                    out_files[key] = value
                 # Move extended tpr so that we can continue extending:
-                os.replace(os.path.join(exe_dir, ext_tpr_file),
-                           os.path.join(exe_dir, tpr_file))
+                os.replace(os.path.join(self.exe_dir, ext_tpr_file),
+                           os.path.join(self.exe_dir, tpr_file))
+                out_files['tpr'] = tpr_file
             # Calculate order parameter using the output config:
-            conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
+            conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
             phase_point = {'pos': (conf_abs, None),
                            'vel': reverse, 'vpot': None, 'ekin': None}
             system.particles.set_particle_state(phase_point)
@@ -400,21 +408,30 @@ class GromacsExt(ExternalScript):
             print(order, system.particles.config)
             print(path)
             print('***')
-        energy = self.get_energies(out_files['edr'], exe_dir=exe_dir)
+        energy = self.get_energies(out_files['edr'], self.exe_dir)
         path.vpot = np.copy(energy['potential'])
         path.ekin = np.copy(energy['kinetic en.'])
         print(len(energy['potential']))
         system.particles.set_particle_state(initial_state)
         print(system.particles.config)
+        for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
+            filename = os.path.join(self.exe_dir, out_files[key])
+            print(filename, os.path.isfile(filename))
+            if os.path.isfile(filename):
+                os.remove(filename)
+        print('Files after propagate:')
+        print(os.listdir(self.exe_dir))
         return success, status
 
-    def integration_step(self, system, name, exe_dir=None):
+    def integration_step(self, system, name, exe_dir):
         """Integrate the given system forward in time.
 
         Parameters
         ----------
         system : object like :py:class:`pyretis.core.system.System`
             The system we are integrating.
+        name : string
+            To name the output files from the GROMACS step.
         exe_dir : string
             The path to where we will perform the GROMACS simulation.
         """
@@ -427,9 +444,9 @@ class GromacsExt(ExternalScript):
         out_grompp = self.execute_grompp(self.input_files['input'],
                                          initial_conf,
                                          name,
-                                         exe_dir=exe_dir)
+                                         exe_dir)
         out_mdrun = self.execute_mdrun(out_grompp['tpr'],
-                                       name, exe_dir=exe_dir)
+                                       name, exe_dir)
         conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
         phase_point = {'pos': (conf_abs, None),
                        'vel': False, 'vpot': None, 'ekin': None}
@@ -440,7 +457,6 @@ class GromacsExt(ExternalScript):
         for key, val in out_mdrun.items():
             out_files[key] = val
         return out_files
-        
 
     def get_trr_frame(self, trr_file, tpr_file, idx, out_file):
         """Extract a frame from a .trr file.
@@ -472,13 +488,15 @@ class GromacsExt(ExternalScript):
         self.execute_command(cmd, inputs=b'0', cwd=None)
         return None
 
-    def get_energies(self, energy_file, exe_dir=None):
+    def get_energies(self, energy_file, exe_dir):
         """Return energies from a GROMACS run.
 
         Parameters
         ----------
         energy_file : string
             The file to read energies from.
+        exe_dir : string
+            The directory where we look for the energy file.
         """
         cmd = [self.exe, 'energy', '-f', energy_file]
         self.execute_command(cmd, inputs=b'Potential\nKinetic-En.',
@@ -563,14 +581,15 @@ class GromacsExt(ExternalScript):
         write_gromos96_file(outfile, txt, xyz, -vel)
         return None
 
-    def dump_frame(self, system):
+    def dump_config(self, config, deffnm='conf'):
         """Extract configuration frame from a system if needed.
-        
+
         Parameters
         ----------
-        system : object like :py:class:`core.system.System`
-            System is used here since we need access to the particle
-            list.
+        config : tuple
+            The configuration given as (filename, index).
+        deffnm : string, optional
+            The base name for the file we dump to.
 
         Returns
         -------
@@ -584,15 +603,24 @@ class GromacsExt(ExternalScript):
         We assume here that we won't be using the velocities in the
         configuration and we do not reverse the velocities.
         """
-        pos_file, idx = system.particles.config
+        pos_file, idx = config
         if idx is None:
             return pos_file
         else:
             basepath = os.path.dirname(pos_file)
-            out_file = os.path.join(basepath, 'conf.g96')
+            out_file = os.path.join(basepath, '{}.g96'.format(deffnm))
             self.get_trr_frame(pos_file, self.input_files['tpr'],
                                idx, out_file)
             return out_file
+
+    def dump_frame(self, system, deffnm='conf'):
+        """Just dump the frame from a system object."""
+        self.dump_config(system.particles.config, deffnm=deffnm)
+
+    def dump_phasepoint(self, phasepoint, deffnm='conf'):
+        """Just dump the frame from a system object."""
+        pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
+        phasepoint['pos'] = (pos_file, phasepoint['pos'][1])
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
                           momentum=False, rescale=None):
@@ -661,7 +689,7 @@ class GromacsExt(ExternalScript):
         return dek, kin_new
 
     def kick_across_middle(self, system, order_function, rgen, middle,
-                           tis_settings, exe_dir):
+                           tis_settings):
         """Force a phase point across the middle interface.
 
         This is accomplished by repeatedly kicking the pahse point so
@@ -711,7 +739,6 @@ class GromacsExt(ExternalScript):
         localfile = os.path.basename(initial_file)
         prev_file = os.path.join(basepath, 'previous.g96')
         curr_file = os.path.join(basepath, 'current.g96')
-        
         previous = None
         particles = system.particles
         curr = self.calculate_order(order_function, system)[0]
@@ -732,10 +759,10 @@ class GromacsExt(ExternalScript):
             print('Modify velocities:')
             print(os.path.basename(particles.get_particle_state()['pos'][0]))
             # Integrate forward one step:
-            out_files = self.integration_step(system, 'current', exe_dir=exe_dir)
+            out_files = self.integration_step(system, 'current', self.exe_dir)
             # Remove output files:
             for key in ('log', 'trr', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
-                filename = os.path.join(exe_dir, out_files[key])
+                filename = os.path.join(self.exe_dir, out_files[key])
                 if os.path.isfile(filename):
                     os.remove(filename)
             print('Integration step:')
@@ -762,10 +789,11 @@ class GromacsExt(ExternalScript):
             else:  # we did not get closer, fall back to previous point
                 particles.set_particle_state(previous)
                 curr = previous['order']
-                filename = os.path.join(exe_dir, out_files['conf'])
+                filename = os.path.join(self.exe_dir, out_files['conf'])
                 if os.path.isfile(filename):
                     os.remove(filename)
                 print('Dit not get closer, fall back to:')
                 print(os.path.basename(particles.get_particle_state()['pos'][0]))
+        print('Done with kicking. Files in self.exe_dir:')
+        print(os.listdir(self.exe_dir))
         return previous, particles.get_particle_state()
-

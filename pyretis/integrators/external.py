@@ -43,6 +43,8 @@ class ExternalScript(object):
         The number of steps each GROMACS MD run is composed of.
     """
 
+    _int_type = 'external'
+
     def __init__(self, description, exe, time_step, subcycles):
         """Initialization of the script.
 
@@ -61,6 +63,12 @@ class ExternalScript(object):
         self.exe = exe
         self.time_step = time_step
         self.subcycles = subcycles
+        self.exe_dir = None
+
+    @property
+    def int_type(self):
+        """Just return the type for the integrator."""
+        return type(self)._int_type
 
     @staticmethod
     def read_configuration(filename):
@@ -78,7 +86,7 @@ class ExternalScript(object):
         vel : numpy.array
             The velocities found in the given filename.
         """
-        return
+        raise NotImplementedError
 
     @staticmethod
     def modify_input(sourcefile, outputfile, settings, delim='='):

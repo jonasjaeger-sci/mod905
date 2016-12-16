@@ -40,6 +40,8 @@ class Integrator(object):
         by the integrator (NVE, NVT, stochastic, ...).
     """
 
+    _int_type = 'internal'
+
     def __init__(self, timestep, desc='Generic integrator', dynamics=''):
         """Initialization of the integrator.
 
@@ -51,6 +53,11 @@ class Integrator(object):
         self.delta_t = timestep
         self.desc = desc
         self.dynamics = dynamics
+
+    @property
+    def int_type(self):
+        """Return information about integrator type."""
+        return type(self)._int_type
 
     def integration_step(self, system):
         """Perform one time step of the integration.
@@ -331,8 +338,10 @@ class Integrator(object):
                 curr = previous['order']
         return previous, particles.get_particle_state()
 
+    def dump_phasepoint(self, phasepoint, deffnm=None):
+        """This method is just for compatibility with external integrators."""
+        return phasepoint
+
     def __str__(self):
         """Return the string description of the integrator."""
         return self.desc
-
-

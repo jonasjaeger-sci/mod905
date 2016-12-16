@@ -16,6 +16,9 @@ PathBase
 Path
     Class for a generic path that stores all possible information.
 
+ReservoirPath
+    A path where only a subset of points are stored in memory.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

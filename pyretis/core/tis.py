@@ -28,8 +28,9 @@ References
    https://dx.doi.org/10.1063%2F1.1562614
 """
 import logging
-from pyretis.core.path import Path, paste_paths
+from pyretis.core.path import paste_paths
 from pyretis.core.montecarlo import metropolis_accept_reject
+from pyretis.core.common import get_path_klass
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -81,6 +82,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, integrator,
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
     msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
     logger.debug(msgtxt)
+    integrator.exe_dir = path_ensemble.directory['generate']
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
                                           order_function,
@@ -134,6 +136,7 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         logger.error('Unknown initiation method')
         raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
+        integrator.exe_dir = path_ensemble.directory['initial']
         initial_path = generate_initial_path_kick(system, order_function,
                                                   path_ensemble.interfaces,
                                                   integrator, rgen,
@@ -370,8 +373,9 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
         accept, trial_path.status = True, 'ACC'
     return accept, trial_path, trial_path.status
 
+
 def generate_initial_path_kick(system, order_function, interfaces, integrator,
-                               rgen, tis_settings, exe_dir=None):
+                               rgen, tis_settings):
     """Simple function to generate an initial path.
 
     This function will generate an initial path by repeatedly kicking a
@@ -414,26 +418,26 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     leftpoint, _ = integrator.kick_across_middle(system,
                                                  order_function,
                                                  rgen, interfaces[1],
-                                                 tis_settings,
-                                                 exe_dir)
+                                                 tis_settings)
     # kick_across_middle will return two points, one immediately
     # left of the interface and one immediately right of the
     # interface. So we have two points (`leftpoint` and the
     # current `system.particles`). We then propagate the current
     # phase point forward:
     maxlen = tis_settings['maxlength']
-    path_forw = Path(rgen, maxlen=maxlen)
+    klass = get_path_klass(integrator.int_type)
+    path_forw = klass(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_forw, system, order_function,
-                                        interfaces, reverse=False, exe_dir=exe_dir)
+                                        interfaces, reverse=False)
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
         raise ValueError('Forward path not successful.', msg)
     # And we propagate the `leftpoint` backward:
     system.particles.set_particle_state(leftpoint)
-    path_back = Path(rgen, maxlen=maxlen)
+    path_back = klass(rgen, maxlen=maxlen)
     success, msg = integrator.propagate(path_back, system, order_function,
-                                        interfaces, reverse=True, exe_dir=exe_dir)
+                                        interfaces, reverse=True)
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -446,8 +450,6 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     start, end, _, _ = initial_path.check_interfaces(interfaces)
-    for p in initial_path.trajectory():
-        print(p['order'][0])
     # OK, now its time to check the path:
     # 0) We can start at the starting condition, pass the middle
     # and continue all the way to the end - perfect!
@@ -522,11 +524,12 @@ def _fix_path_by_tis(initial_path, system, order_function, interfaces,
     """
     left, middle, right = interfaces
     path_ok = False
-    local_tis_settings = {'allowmaxlength': True,
-                          'aimless': True,
-                          'freq': 0.5}
-    for key in ('start_cond', 'maxlength', 'zero_momentum', 'rescale_energy'):
-        local_tis_settings[key] = tis_settings[key]
+    local_tis_settings = {}
+    for key, val in tis_settings.items():
+        local_tis_settings[key] = val
+    local_tis_settings['allowmaxlength'] = True
+    local_tis_settings['aimless'] = True,
+    local_tis_settings['freq'] = 0.5
 
     while not path_ok:
         accept, trial, _ = make_tis_step(initial_path,

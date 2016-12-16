@@ -288,9 +288,10 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     print_and_loginfo('Creating output directories:')
     for ensemble in sim.path_ensembles:
         dirname = ensemble.ensemble_name_simple
-        msg_dir = make_dirs(dirname)
-        msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
-        print_and_loginfo(msgtxt)
+        for ensemble_dir in ensemble.directories():
+            msg_dir = make_dirs(ensemble_dir)
+            msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
+            print_and_loginfo(msgtxt)
         sim_settings['output']['directory'] = dirname
         sim_settings['simulation']['ensemble'] = ensemble.ensemble_name
         ensemble_task = get_tasks(sim_settings, progress=progress)

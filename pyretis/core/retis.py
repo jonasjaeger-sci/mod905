@@ -362,6 +362,7 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
             logger.debug('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
+            # TODO: Add actual physical swapping here.
         else:  # reject:
             status = 'NCR'
             logger.debug('Swap was rejected.')
@@ -433,13 +434,19 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
+    integrator.exe_dir = ensemble0.directory['generate']
     integrator.propagate(path_tmp, system, order_function,
                          ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
     for phasepoint in path_tmp.trajectory(reverse=True):
         _ = path0.append(phasepoint)
     # And add second point from [0^+] at the end:
-    path0.append(ensemble1.last_path.phasepoint(1))
+    phase_point = ensemble1.last_path.phasepoint(1)
+    integrator.dump_phasepoint(phase_point, 'second_new')
+    path0.append(phase_point)
+    #path0.append(ensemble1.last_path.phasepoint(1))
+    # TODO: When working with files, this phasepoint needs to be
+    # TODO: dumped to a new file and added in a safe way to path0 !
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
@@ -452,12 +459,18 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     path_tmp = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
     system.particles.set_particle_state(ensemble0.last_path.phasepoint(-1))
+    integrator.exe_dir = ensemble1.directory['generate']
     integrator.propagate(path_tmp, system, order_function,
                          ensemble1.interfaces, reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
-    path1.append(ensemble0.last_path.phasepoint(-2))
+    phase_point = ensemble0.last_path.phasepoint(-2)
+    integrator.dump_phasepoint(phase_point, 'second_new')
+    path1.append(phase_point)
+    #path1.append(ensemble0.last_path.phasepoint(-2))
+    # TODO: When working with files, this phasepoint needs to be
+    # TODO: dumped to a new file and added in a safe way to path1 !
     path1 += path_tmp  # add rest of the path
     path1.set_move('s-')
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'

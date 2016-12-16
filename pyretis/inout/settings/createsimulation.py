@@ -13,6 +13,16 @@ Important methods defined here
 
 create_simulation
     Method for creating a simulation object from settings.
+
+create_path_ensembles
+    Method for creating a set of objects like
+    :py:class:`pyretis.core.pathensemble.PathEnsemble` from
+    given interfaces.
+
+create_path_ensemble:
+    Create a new object like
+    :py:class:`pyretis.core.pathensemble.PathEnsemble` from
+    simulation settings.
 """
 from __future__ import absolute_import
 import logging
@@ -22,9 +32,8 @@ from pyretis.core.simulation.md_simulation import (SimulationNVE,
 from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
 from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
                                                      SimulationRETIS)
-from pyretis.core.pathensemble import (PathEnsemble,
-                                       PATH_DIR_FMT,
-                                       create_path_ensembles)
+from pyretis.core.pathensemble import (get_path_ensemble_class,
+                                       PATH_DIR_FMT)
 from pyretis.inout.settings.common import (create_integrator,
                                            create_orderparameter)
 from pyretis.inout.settings.settings import copy_settings, is_single_tis
@@ -33,6 +42,106 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_simulation']
+
+
+def create_path_ensemble(settings, ensemble_type):
+    """Create a new path ensemble from simulation settings.
+
+    Parameters
+    ----------
+    settings : dict
+        This dict contains the settings needed to create the path
+        ensemble.
+    ensemble_type : string
+        The kind of ensemble we are creating. This is typically defined
+        by the integrator.
+
+    Returns
+    -------
+    out : object like `PathEnsemble`
+        An object that can be used as a path ensemble in simulations.
+    """
+    interfaces = settings['simulation']['interfaces']
+    exe_dir = settings['simulation']['exe-path']
+    if len(interfaces) != 3:
+        msgtxt = ('Wrong number of interfaces given. Expected 3 '
+                  'got {}'.format(len(interfaces)))
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
+    if 'detect' not in settings['simulation']:
+        detect = interfaces[-1]
+        msgtxt = ('Detect-interface not specified, '
+                  'using "product" interface: {}'.format(detect))
+        logger.warning(msgtxt)
+    else:
+        detect = settings['simulation']['detect']
+    if 'ensemble' not in settings['simulation']:
+        ensemble_name = 1
+        msgtxt = ('Ensemble name not specified, '
+                  'using default ensemble "{}"'.format(ensemble_name))
+        logger.warning(msgtxt)
+    else:
+        ensemble_name = int(settings['simulation']['ensemble'])
+    klass = get_path_ensemble_class(ensemble_type)
+    return klass(ensemble_name, interfaces,
+                 detect=detect, exe_dir=exe_dir)
+
+
+def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
+                          exe_dir=None):
+    """Create a list of `PathEnsemble` objects given a list of interfaces.
+
+    This function will create and return a set of objects representing
+    path ensembles for a given set of interfaces. This is useful when
+    setting up simulations like RETIS. Here we assume that the given
+    interfaces define the path ensembles as follows:
+    ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``, where ``|``
+    is the specified interface locations in the input `interfaces`.
+    We assume that the reactant is to the left of `interfaces[0]` and
+    that the product is to the right of `interfaces[-1]`. Given ``n``
+    interfaces we generate ``n`` or ``n-1`` path ensembles, the former
+    if we include the [0^-] ensemble.
+
+    Parameters
+    ----------
+    interfaces : list of floats
+        `interfaces[i]` separates the [(i-1)^+] and [i^+] interfaces.
+    ensemble_type : string
+        The kind of ensemble we are creating. This is typically defined
+        by the integrator.
+    include_zero : boolean, optional
+        If `include_zero` is True, we include path ensemble [0^-].
+    exe_dir : string, optional
+        This string can be used to tell the path ensemble object
+        where it is executed.
+
+    Returns
+    -------
+    ensembles : list of objects like :py:class:`PathEnsemble`
+        The generated (empty) path ensemble objects.
+    detect : list of floats
+        These are interfaces that can be used for an analysis, i.e. for
+        detection and matching of probabilities.
+    """
+    detect = []
+    ensembles = []
+    reactant = interfaces[0]
+    product = interfaces[-1]
+    klass = get_path_ensemble_class(ensemble_type)
+    if include_zero:
+        interface = [-float('inf'), reactant, reactant]
+        path_ensemble = klass(0, interface, detect=None, exe_dir=exe_dir)
+        ensembles.append(path_ensemble)
+    for i, middle in enumerate(interfaces[:-1]):
+        interface = [reactant, middle, product]
+        try:
+            detect.append(interfaces[i+1])
+        except IndexError:
+            detect.append(product)
+        path_ensemble = klass(i + 1, interface, detect=detect[-1],
+                              exe_dir=exe_dir)
+        ensembles.append(path_ensemble)
+    return ensembles, detect
 
 
 def create_nve_simulation(settings, system):
@@ -188,7 +297,7 @@ def _create_tis_single_simulation(settings, system):
     if 'path-ensemble' in settings:
         path_ensemble = settings['path-ensemble']
     else:
-        path_ensemble = create_path_ensemble(settings)
+        path_ensemble = create_path_ensemble(settings, integ.int_type)
     rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
     return SimulationSingleTIS(system, order_function, integ,
@@ -223,8 +332,11 @@ def create_retis_simulation(settings, system):
             logger.critical(msgtxt)
             raise ValueError(msgtxt)
     sim = settings['simulation']
+    exe_dir = sim['exe-path']
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
-                                              include_zero=True)
+                                              integ.int_type,
+                                              include_zero=True,
+                                              exe_dir=exe_dir)
     rgen = create_random_generator(settings['tis'])
     return SimulationRETIS(system, order_function, integ,
                            path_ensembles,
@@ -233,43 +345,6 @@ def create_retis_simulation(settings, system):
                            settings['retis'],
                            steps=sim['steps'],
                            startcycle=sim.get('startcycle', 0))
-
-
-def create_path_ensemble(settings):
-    """Create a new path ensemble from simulation settings.
-
-    Parameters
-    ----------
-    settings : dict
-        This dict contains the settings needed to create the path
-        ensemble.
-
-    Returns
-    -------
-    out : object like `PathEnsemble`
-        An object that can be used as a path ensemble in simulations.
-    """
-    interfaces = settings['simulation']['interfaces']
-    if len(interfaces) != 3:
-        msgtxt = ('Wrong number of interfaces given. Expected 3 '
-                  'got {}'.format(len(interfaces)))
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
-    if 'detect' not in settings['simulation']:
-        detect = interfaces[-1]
-        msgtxt = ('Detect-interface not specified, '
-                  'using "product" interface: {}'.format(detect))
-        logger.warning(msgtxt)
-    else:
-        detect = settings['simulation']['detect']
-    if 'ensemble' not in settings['simulation']:
-        ensemble_name = 1
-        msgtxt = ('Ensemble name not specified, '
-                  'using default ensemble "{}"'.format(ensemble_name))
-        logger.warning(msgtxt)
-    else:
-        ensemble_name = int(settings['simulation']['ensemble'])
-    return PathEnsemble(ensemble_name, interfaces, detect=detect)
 
 
 def create_simulation(settings, system):
