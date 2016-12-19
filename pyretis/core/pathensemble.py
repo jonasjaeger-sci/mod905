@@ -112,16 +112,14 @@ class PathEnsemble(object):
         else:
             self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
         self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
+        self.directory = {'path-ensemble': None,
+                          'accepted': None,
+                          'generate': None}
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
-            self.directory = {'path-ensemble': path_dir}
-            for key in ('accepted', 'generate', 'initial'):
+            self.directory['path-ensemble'] = path_dir
+            for key in ('accepted', 'generate'):
                 self.directory[key] = os.path.join(path_dir, key)
-        else:
-            self.directory = {'path-ensemble': None,
-                              'accepted': None,
-                              'generate': None,
-                              'initial': None}
 
     def directories(self):
         """Yield the directories pyretis should make."""
@@ -275,6 +273,10 @@ class PathEnsemble(object):
         else:
             return 'L'
 
+    def move_path_to_generated(self, path):
+        """Move a path for temporary storing."""
+        pass
+
     def __str__(self):
         """Return a string with some info about the path ensemble."""
         msg = ['Path ensemble: {}'.format(self.ensemble_name)]
@@ -319,6 +321,31 @@ class PathEnsembleExt(PathEnsemble):
         for key in self.directory:
             yield self.directory[key]
 
+    @staticmethod
+    def _move_path(path, target_dir):
+        """Move a path to a given target directory.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.core.path.PathBase`
+            This is the path object we are going to store.
+        target_dir : string
+            The location were we are moving the path to.
+        """
+        source = {}
+        new_pos = [None for _ in range(len(path.pos))]
+        for i, phasepoint in enumerate(path.trajectory(reverse=False)):
+            pos_file, idx = phasepoint['pos']
+            if pos_file not in source:
+                localfile = os.path.basename(pos_file)
+                dest = os.path.join(target_dir, localfile)
+                source[pos_file] = dest
+            dest = source[pos_file]
+            new_pos[i] = (dest, idx)
+        path.pos = new_pos
+        for src, dest in source.items():
+            shutil.move(src, dest)
+
     def store_path(self, path):
         """Store a path by explicitly moving it.
 
@@ -328,21 +355,25 @@ class PathEnsembleExt(PathEnsemble):
             This is the path object we are going to store.
         """
         print('Storing the external path')
-        source = {}
-        new_pos = [None for _ in range(len(path.pos))]
-        for i, phasepoint in enumerate(path.trajectory(reverse=False)):
-            print(phasepoint['pos'])
-            pos_file, idx = phasepoint['pos']
-            if pos_file not in source:
-                localfile = os.path.basename(pos_file)
-                dest = os.path.join(self.directory['accepted'], localfile)
-                source[pos_file] = dest
-            dest = source[pos_file]
-            new_pos[i] = (dest, idx)
-        path.pos = new_pos
-        for src, dest in source.items():
-            shutil.move(src, dest)
+        self._move_path(path, self.directory['accepted'])
         self.last_path = path
+        print('Could be deleted:')
+        print([x for x in self.list_superficial()])
+
+    def list_superficial(self):
+        """List files in accpeted directory that we do not need."""
+        last = set()
+        for phasepoint in self.last_path.trajectory(reverse=False):
+            pos_file, _ = phasepoint['pos']
+            last.add(pos_file)
+        print(last)
+        for entry in os.scandir(self.directory['accepted']):
+            if entry.is_file() and entry.path not in last:
+                yield entry.path
+
+    def move_path_to_generated(self, path):
+        """Move a path for temporary storing."""
+        self._move_path(path, self.directory['generate'])
 
 
 def get_path_ensemble_class(ensemble_type):

@@ -362,7 +362,12 @@ def retis_swap(ensembles, idx, system, order_function, integrator,
             logger.debug('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
-            # TODO: Add actual physical swapping here.
+            # To avoid overwriting files, we move the paths to the
+            # generate directory here. They will be moved into the
+            # accepted directory by the `add_path_data` below if they
+            # are to be accepted.
+            ensemble1.move_path_to_generated(path1)
+            ensemble2.move_path_to_generated(path2)
         else:  # reject:
             status = 'NCR'
             logger.debug('Swap was rejected.')
@@ -430,11 +435,16 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # 1) Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
     logger.debug('Creating path for [0^-]')
+    print('Before', system.particles.get_particle_state())
     system.particles.set_particle_state(ensemble1.last_path.phasepoint(0))
+    print('Start:', system.particles.get_particle_state())
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
     integrator.exe_dir = ensemble0.directory['generate']
+    print('Starting propagate')
+    print('path_tmp', path_tmp)
+    print('Interfaces', ensemble0.interfaces)
     integrator.propagate(path_tmp, system, order_function,
                          ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
@@ -466,7 +476,7 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
     phase_point = ensemble0.last_path.phasepoint(-2)
-    integrator.dump_phasepoint(phase_point, 'second_new')
+    integrator.dump_phasepoint(phase_point, 'second_last_new')
     path1.append(phase_point)
     #path1.append(ensemble0.last_path.phasepoint(-2))
     # TODO: When working with files, this phasepoint needs to be

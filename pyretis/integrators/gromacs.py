@@ -12,7 +12,6 @@ methods are needed:
 """
 import logging
 import os
-import shutil
 import tempfile
 import numpy as np
 from pyretis.integrators import ExternalScript
@@ -275,8 +274,7 @@ class GromacsExt(ExternalScript):
             continue the simulation.
         """
         confout = '{}.g96'.format(deffnm)
-        if os.path.isfile(confout):
-            os.remove(confout)
+        self.removefile(confout)
         cmd = [self.exe, 'mdrun', '-s', tprfile, '-cpi', cptfile,
                '-append', '-deffnm', deffnm, '-c', confout]
         self.execute_command(cmd, cwd=exe_dir)
@@ -304,8 +302,7 @@ class GromacsExt(ExternalScript):
             The files created by GROMACS when we extend.
         """
         tpxout = 'ext_{}'.format(tprfile)
-        if os.path.isfile(tpxout):
-            os.remove(tpxout)
+        self.removefile(tpxout)
         cmd = [self.exe, 'convert-tpr', '-s', tprfile,
                '-extend', '{}'.format(time), '-o', tpxout]
         self.execute_command(cmd, cwd=exe_dir)
@@ -316,39 +313,57 @@ class GromacsExt(ExternalScript):
                   reverse=False):
         """Propagate with GROMACS."""
         initial_state = system.particles.get_particle_state()
-        print('Start propagate')
-        print(system.particles.config)
+        print('\nStart propagate')
         print(initial_state)
         initial_file = self.dump_frame(system)
+        
         if reverse:
-            name = 'trajB_new'
+            name = 'trajB'
+        else:
+            name = 'trajF'
+        # check if we should reverse the velocities in the dumped file:
+        print('reverse, initial', reverse, initial_state['vel'])
+        if reverse != initial_state['vel']:
+            print('VELOCITIES SHOULD BE REVERSED IN INPUT FILE!')
             basepath = os.path.dirname(initial_file)
             localfile = os.path.basename(initial_file)
-            initial_conf = os.path.join(basepath, 'rev_{}'.format(localfile))
+            initial_conf = os.path.join(basepath, 'r_{}'.format(localfile))
             self.reverse_velocities(initial_file, initial_conf)
         else:
-            name = 'trajF_new'
             initial_conf = initial_file
 
         success = False
         status = 'Generating path'
         left, _, right = interfaces
 
-        # Save as a single snapshot file
+        print('Propagate from', initial_conf)
+        # We always start from a singe snapshot config:
         phase_point = {'pos': (initial_conf, None), 'vel': reverse,
                        'vpot': None, 'ekin': None}
         system.particles.set_particle_state(phase_point)
-        ext_time = self.time_step * self.subcycles
-
-        out_files = {}
-        for key in ('trr', 'tpr', 'edr'):
-            out_files[key] = '{}.{}'.format(name, key)
-
-        tpr_file = None
-        cpt_file = None
-        # Note: Order is calculated after end of each iteration!
         order = self.calculate_order(order_function, system)
+        # In some cases, we don't really have to perform a step as the
+        # initial config might be left/right of the interface in
+        # question. Here, we will perform a step anyway. This is to be
+        # sure that we obtain energies and also a trajectory segment.
+        # So, we manually perform the first step:
+        out_files = {}
+        out_grompp = self.execute_grompp(self.input_files['input'],
+                                         initial_conf,
+                                         name,
+                                         self.exe_dir)
+        tpr_file = out_grompp['tpr']
+        for key, value in out_grompp.items():
+            out_files[key] = value
+        out_mdrun = self.execute_mdrun(tpr_file,
+                                       name, self.exe_dir)
+        for key, value in out_mdrun.items():
+            out_files[key] = value
+        cpt_file = out_mdrun['cpt']
+
+        # Note: Order is calculated after end of each iteration!
         for i in range(path.maxlen):
+            # We first add the current phase point, and then we propagate.
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
@@ -370,21 +385,8 @@ class GromacsExt(ExternalScript):
                 status = 'Max. path length exceeded!'
                 success = False
                 break
-            if i == 0:
-                out_grompp = self.execute_grompp(self.input_files['input'],
-                                                 initial_conf,
-                                                 name,
-                                                 self.exe_dir)
-                tpr_file = out_grompp['tpr']
-                for key, value in out_grompp.items():
-                    out_files[key] = value
-                out_mdrun = self.execute_mdrun(tpr_file,
-                                               name, self.exe_dir)
-                cpt_file = out_mdrun['cpt']
-                for key, value in out_mdrun.items():
-                    out_files[key] = value
-            else:
-                out_grompp = self.extend_gromacs(tpr_file, ext_time,
+            if i > 0:
+                out_grompp = self.extend_gromacs(tpr_file, self.ext_time,
                                                  self.exe_dir)
                 ext_tpr_file = out_grompp['tpr']
                 for key, value in out_grompp.items():
@@ -404,7 +406,7 @@ class GromacsExt(ExternalScript):
                            'vel': reverse, 'vpot': None, 'ekin': None}
             system.particles.set_particle_state(phase_point)
             order = self.calculate_order(order_function, system)
-            os.remove(conf_abs)
+            self.removefile(conf_abs)
             print(order, system.particles.config)
             print(path)
             print('***')
@@ -413,14 +415,9 @@ class GromacsExt(ExternalScript):
         path.ekin = np.copy(energy['kinetic en.'])
         print(len(energy['potential']))
         system.particles.set_particle_state(initial_state)
-        print(system.particles.config)
         for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
             filename = os.path.join(self.exe_dir, out_files[key])
-            print(filename, os.path.isfile(filename))
-            if os.path.isfile(filename):
-                os.remove(filename)
-        print('Files after propagate:')
-        print(os.listdir(self.exe_dir))
+            self.removefile(filename)
         return success, status
 
     def integration_step(self, system, name, exe_dir):
@@ -503,7 +500,7 @@ class GromacsExt(ExternalScript):
                              cwd=exe_dir)
         xvg_file = os.path.join(exe_dir, 'energy.xvg')
         energy = read_xvg_file(xvg_file)
-        os.remove(xvg_file)
+        self.removefile(xvg_file)
         return energy
 
     def prepare_shooting_point(self, input_file, output_file):
@@ -543,7 +540,7 @@ class GromacsExt(ExternalScript):
             energy = self.get_energies(out_mdrun['edr'], exe_dir=tmp_dir)
             # Copy back the g96 file with velocities:
             dest = os.path.join(prevdir, output_file)
-            shutil.move(confout, dest)
+            self.movefile(confout, dest)
         return output_file, energy
 
     @staticmethod
@@ -607,20 +604,20 @@ class GromacsExt(ExternalScript):
         if idx is None:
             return pos_file
         else:
-            basepath = os.path.dirname(pos_file)
-            out_file = os.path.join(basepath, '{}.g96'.format(deffnm))
+            out_file = os.path.join(self.exe_dir, '{}.g96'.format(deffnm))
             self.get_trr_frame(pos_file, self.input_files['tpr'],
                                idx, out_file)
             return out_file
 
     def dump_frame(self, system, deffnm='conf'):
         """Just dump the frame from a system object."""
-        self.dump_config(system.particles.config, deffnm=deffnm)
+        return self.dump_config(system.particles.config, deffnm=deffnm)
 
     def dump_phasepoint(self, phasepoint, deffnm='conf'):
         """Just dump the frame from a system object."""
         pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
-        phasepoint['pos'] = (pos_file, phasepoint['pos'][1])
+        phasepoint['pos'] = (pos_file, None)
+        return phasepoint
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
                           momentum=False, rescale=None):
@@ -734,14 +731,16 @@ class GromacsExt(ExternalScript):
         """
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
-        initial_file = self.dump_frame(system)
-        basepath = os.path.dirname(initial_file)
-        localfile = os.path.basename(initial_file)
-        prev_file = os.path.join(basepath, 'previous.g96')
-        curr_file = os.path.join(basepath, 'current.g96')
-        previous = None
         particles = system.particles
+        initial_file = self.dump_frame(system)
+        # Start with previous.g96 file:
+        prev_file = os.path.join(self.exe_dir, 'previous.g96')
+        self.copyfile(initial_file, prev_file)
+        previous = particles.get_particle_state()
+        previous['pos'] = (prev_file, None)
+        particles.set_particle_state(previous)
         curr = self.calculate_order(order_function, system)[0]
+        curr_file = os.path.join(self.exe_dir, 'current.g96')
         while True:
             print('\nNew loop:')
             # save current state:
@@ -750,22 +749,21 @@ class GromacsExt(ExternalScript):
             print(os.path.basename(particles.get_particle_state()['pos'][0]))
             previous['order'] = curr
             # Modify velocities
+            print('Modify velocities:')
             self.modify_velocities(system,
                                    rgen,
                                    sigma_v=None,
                                    aimless=True,
                                    momentum=True,
                                    rescale=False)
-            print('Modify velocities:')
             print(os.path.basename(particles.get_particle_state()['pos'][0]))
             # Integrate forward one step:
+            print('Integration step:')
             out_files = self.integration_step(system, 'current', self.exe_dir)
             # Remove output files:
             for key in ('log', 'trr', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
                 filename = os.path.join(self.exe_dir, out_files[key])
-                if os.path.isfile(filename):
-                    os.remove(filename)
-            print('Integration step:')
+                self.removefile(filename)
             print(os.path.basename(particles.get_particle_state()['pos'][0]))
             # Compare previous order parameter and the new one:
             prev = curr
@@ -777,21 +775,18 @@ class GromacsExt(ExternalScript):
                 print(os.path.basename(particles.get_particle_state()['pos'][0]))
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
-                # are getting closer, keep the new point
-                print('Getting closer, moving file')
-                print('move', os.path.basename(curr_file), os.path.basename(prev_file))
-                shutil.move(curr_file, prev_file)
-                phasepoint = particles.get_particle_state()
-                phasepoint['pos'] = (prev_file, None)
-                particles.set_particle_state(phasepoint)
+                # Getting closer, keep the new point
+                print('Getting closer!')
+                self.movefile(curr_file, prev_file)
+                # Update file name after moving:
+                particles.set_pos((prev_file, None))
                 print('After move:')
                 print(os.path.basename(particles.get_particle_state()['pos'][0]))
             else:  # we did not get closer, fall back to previous point
                 particles.set_particle_state(previous)
                 curr = previous['order']
                 filename = os.path.join(self.exe_dir, out_files['conf'])
-                if os.path.isfile(filename):
-                    os.remove(filename)
+                self.removefile(filename)
                 print('Dit not get closer, fall back to:')
                 print(os.path.basename(particles.get_particle_state()['pos'][0]))
         print('Done with kicking. Files in self.exe_dir:')

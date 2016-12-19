@@ -17,6 +17,8 @@ ExternalScript
 import re
 import logging
 import subprocess
+import shutil
+import os
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -41,6 +43,9 @@ class ExternalScript(object):
         The time step used in the GROMACS MD simulation.
     subcycles : integer
         The number of steps each GROMACS MD run is composed of.
+    ext_time : float
+        The time to extend simulations by. It is equal to
+        ``time_step * subcycles``. 
     """
 
     _int_type = 'external'
@@ -63,6 +68,7 @@ class ExternalScript(object):
         self.exe = exe
         self.time_step = time_step
         self.subcycles = subcycles
+        self.ext_time = self.time_step * self.subcycles
         self.exe_dir = None
 
     @property
@@ -164,6 +170,24 @@ class ExternalScript(object):
             logger.critical(msg)
             raise RuntimeError(msg)
         return out, exe.returncode
+    
+    @staticmethod
+    def movefile(source, dest):
+        """Move file from source to destination."""
+        print('moving {} -> {}'.format(source, dest))
+        shutil.move(source, dest)
+
+    @staticmethod
+    def copyfile(source, dest):
+        """Copy file from source to destination."""
+        print('copying {} -> {}'.format(source, dest))
+        shutil.copyfile(source, dest)
+
+    @staticmethod
+    def removefile(filename):
+        """Remove a given file if it exist."""
+        if os.path.isfile(filename):
+            os.remove(filename)
 
     def calculate_order(self, order_function, system):
         """Calculate order parameter from configuration in a file.

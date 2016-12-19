@@ -136,7 +136,7 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         logger.error('Unknown initiation method')
         raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
-        integrator.exe_dir = path_ensemble.directory['initial']
+        integrator.exe_dir = path_ensemble.directory['generate']
         initial_path = generate_initial_path_kick(system, order_function,
                                                   path_ensemble.interfaces,
                                                   integrator, rgen,
