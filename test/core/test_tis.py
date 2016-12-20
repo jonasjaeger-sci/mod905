@@ -30,6 +30,7 @@ def prepare_test_simulation():
     # Basic settings for the simulation:
     settings['simulation'] = {'task': 'tis',
                               'steps': 10,
+                              'exe-path': '',
                               'interfaces': [-0.9, -0.9, 1.0]}
     settings['system'] = {'units': 'lj', 'temperature': 0.07}
     # Basic settings for the Langevin integrator:
