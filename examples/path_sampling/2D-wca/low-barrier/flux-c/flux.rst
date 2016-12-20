@@ -1,7 +1,6 @@
 MD flux simulation 2D WCA, low barrier
 ======================================
 
-
 Simulation
 ----------
 task = md-flux
@@ -26,7 +25,6 @@ timestep = 0.002
 
 Particles
 ---------
-
 position = {'file': '../initial.xyz'}
 velocity = {'scale': 9.0}
 mass = {'A': 1.0, 'B': 1.0}
@@ -54,13 +52,11 @@ parameter width = 0.25
 
 Orderparameter
 --------------
-
 class = OrderParameterWCAJCP1
 module = ../c-for-python3/orderp.py
 name = WCAJCP1
 index = (7,8)
 periodic = True
-
 
 Output
 ------

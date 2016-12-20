@@ -9,7 +9,7 @@ interfaces = [1.24]
 
 System settings
 ---------------
-units = lj
+units = reduced
 dimensions = 2
 temperature = 1.0
 
@@ -27,9 +27,7 @@ Particles
 ---------
 
 position = {'file': '../initial.xyz'}
-
 velocity = {'scale': 25.0}
-
 mass = {'A': 1.0, 'B': 1.0}
 name = ['B', 'B', 'A']
 type = [1, 1, 0]
@@ -58,7 +56,6 @@ Orderparameter
 class = WCAOrderParameter
 index = (0, 1)
 module = ../c-for-python3/wcafunctions.py
-
 
 Output
 ------

@@ -57,28 +57,24 @@ description = 2D Double Well + WCA
 
 Potential
 ---------
-class = PairLennardJonesCutnp
+class = WCAPotential
+module = ../c-for-python3/wcafunctions.py
 shift = True
 dim = 2
-mixing = geometric
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'factor': 1.122462048309373}
-parameter 1 = {'sigma': 1.0, 'epsilon': 1.0, 'factor': 1.122462048309373}
-
-Potential
----------
-class = DoubleWellWCA
-dim = 2
+parameter sigma = 1.0
+parameter epsilon = 1.0
+parameter rcut = 1.122462048309373
+parameter idxi = 0
+parameter idxj = 1
 parameter rzero = 1.122462048309373
 parameter height = 15.0
 parameter width = 0.5
-parameter types = [(1, 1)]
 
 Orderparameter
 ---------------
-class = Distance
-name = B-B distance
+class = WCAOrderParameter
 index = (0, 1)
-periodic = True
+module = ../c-for-python3/wcafunctions.py
 
 Output
 ------

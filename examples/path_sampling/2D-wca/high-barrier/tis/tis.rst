@@ -9,7 +9,7 @@ interfaces = [1.24, 1.34, 1.40, 1.46, 1.52, 1.54, 1.64, 1.74]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 2
 temperature = 1.0
 
@@ -39,9 +39,7 @@ Particles
 ---------
 
 position = {'file': '../initial.xyz'}
-
 velocity = {'scale': 25.0}
-
 mass = {'A': 1.0, 'B': 1.0}
 name = ['B', 'B', 'A']
 type = [1, 1, 0]
@@ -68,7 +66,6 @@ parameter height = 15.0
 parameter width = 0.5
 parameter types = [(1, 1)]
 
-                         
 Orderparameter
 ---------------
 class = Distance
@@ -76,11 +73,9 @@ name = B-B distance
 index = (0, 1)
 periodic = True
 
-
 Output
 ------
 backup = False
 energy-file = 10
 order-file = 10
 cross-file = 1
-

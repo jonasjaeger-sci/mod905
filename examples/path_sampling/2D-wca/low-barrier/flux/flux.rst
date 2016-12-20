@@ -1,7 +1,6 @@
 MD flux simulation 2D WCA, low barrier
 ======================================
 
-
 Simulation
 ----------
 task = md-flux
@@ -10,7 +9,7 @@ interfaces = [1.2]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 2
 temperature = 1.0
 
@@ -28,7 +27,7 @@ Particles
 ---------
 
 position = {'file': '../initial.xyz'}
-velocity = {'scale': 9.0}
+velocity = {'scale': 54.0}
 mass = {'A': 1.0, 'B': 1.0}
 name = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'B', 'B']
 type = [0, 0, 0, 0, 0, 0, 0, 1, 1]
@@ -57,13 +56,11 @@ parameter types = [(1, 1)]
 
 Orderparameter
 --------------
-
 class = OrderParameterWCAJCP1
 module = ../orderp.py
 name = WCAJCP1
 index = (7,8)
 periodic = True
-
 
 Output
 ------

@@ -1,16 +1,15 @@
 RETIS simulation 2D WCA, low barrier
 ====================================
 
-
 Simulation
 ----------
 task = retis
-steps = 1000000
+steps = 2500000
 interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 2
 temperature = 1.0
 
@@ -45,7 +44,6 @@ swapsimul = True
 
 Particles
 ---------
-
 position = {'file': '../initial.xyz'}
 velocity = {'scale': 9.0}
 mass = {'A': 1.0, 'B': 1.0}
@@ -73,13 +71,11 @@ parameter width = 0.25
 
 Orderparameter
 --------------
-
 class = OrderParameterWCAJCP1
 module = ../c-for-python3/orderp.py
 name = WCAJCP1
 index = (7,8)
 periodic = True
-
 
 Output
 ------
