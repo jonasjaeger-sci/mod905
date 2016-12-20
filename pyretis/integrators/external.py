@@ -19,6 +19,7 @@ import logging
 import subprocess
 import shutil
 import os
+from pyretis.integrators.integrator import IntegratorBase
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -26,7 +27,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['ExternalScript']
 
 
-class ExternalScript(object):
+class ExternalScript(IntegratorBase):
     """Base class for interfacing external programs.
 
     This class defines the interface to external programs. This
@@ -45,12 +46,13 @@ class ExternalScript(object):
         The number of steps each GROMACS MD run is composed of.
     ext_time : float
         The time to extend simulations by. It is equal to
-        ``time_step * subcycles``. 
+        ``time_step * subcycles``.
+    ext : string
+        Extension for configuration files. It includes the
+        extension separator ".".
     """
 
-    _int_type = 'external'
-
-    def __init__(self, description, exe, time_step, subcycles):
+    def __init__(self, description, time_step, subcycles, ext):
         """Initialization of the script.
 
         Parameters
@@ -63,18 +65,21 @@ class ExternalScript(object):
             The time step used in the GROMACS MD simulation.
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
+        ext : string
+            The file extension for configuration files.
         """
         self.description = description
-        self.exe = exe
         self.time_step = time_step
         self.subcycles = subcycles
         self.ext_time = self.time_step * self.subcycles
         self.exe_dir = None
+        self._int_type = 'external'
+        self.ext = '{}{}'.format(os.extsep, ext)
 
     @property
     def int_type(self):
         """Just return the type for the integrator."""
-        return type(self)._int_type
+        return self._int_type
 
     @staticmethod
     def read_configuration(filename):
@@ -153,12 +158,13 @@ class ExternalScript(object):
             The return code of the command.
         """
         if inputs is None:
-            msg = 'Executing "{}"'.format(cmd)
+            cmd2 = ' '.join(cmd)
+            msg = 'Executing "{}"'.format(cmd2)
             logger.info(msg)
         else:
-            msg = 'Executing "{}" with input "{}"'.format(cmd, inputs)
+            cmd2 = ' '.join(cmd)
+            msg = 'Executing "{}" with input "{}"'.format(cmd2, inputs)
             logger.info(msg)
-        # print(' '.join(cmd))
         exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -170,7 +176,7 @@ class ExternalScript(object):
             logger.critical(msg)
             raise RuntimeError(msg)
         return out, exe.returncode
-    
+
     @staticmethod
     def movefile(source, dest):
         """Move file from source to destination."""
@@ -211,6 +217,169 @@ class ExternalScript(object):
         else:
             system.particles.vel = vel
         return order_function(system)
+
+    def kick_across_middle(self, system, order_function, rgen, middle,
+                           tis_settings):
+        """Force a phase point across the middle interface.
+
+        This is accomplished by repeatedly kicking the pahse point so
+        that it crosses the middle interface.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.system.System`
+            This is the system that contains the particles we are
+            investigating
+        order_function : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
+        integrator : object like :py:class:`Integrator`
+            The object used for integrating the equations of motion.
+        rgen : object like :py:class:`.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        middle : float
+            This is the value for the middle interface.
+        tis_settings : dict
+            This dictionary contains settings for TIS. Explicitly used here:
+
+            * `zero_momentum`: boolean, determines if the momentum is zeroed
+            * `rescale_energy`: boolean, determines if energy is rescaled.
+
+        Returns
+        -------
+        out[0] : dict
+            This dict contains the phase-point just before the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+        out[1] : dict
+            This dict contains the phase-point just after the interface.
+            It is obtained by calling the `get_particle_state()` of the
+            particles object.
+
+        Note
+        ----
+        This function will update the system state so that the
+        `system.particles.get_particle_state() == out[1]`.
+        This is more convenient for the following usage in the
+        `generate_initial_path_kick` function.
+        """
+        # We search for crossing with the middle interface and do this
+        # by sequentially kicking the initial phase point:
+        particles = system.particles
+        initial_file = self.dump_frame(system)
+        # Start with a "previous" file:
+        prev_file = os.path.join(self.exe_dir, 'previous{}'.format(self.ext))
+        self.copyfile(initial_file, prev_file)
+        previous = particles.get_particle_state()
+        previous['pos'] = (prev_file, None)
+        particles.set_particle_state(previous)
+        curr = self.calculate_order(order_function, system)[0]
+        curr_file = os.path.join(self.exe_dir, 'current{}'.format(self.ext))
+        while True:
+            # save current state:
+            previous = particles.get_particle_state()
+            previous['order'] = curr
+            # Modify velocities
+            self.modify_velocities(system,
+                                   rgen,
+                                   sigma_v=None,
+                                   aimless=True,
+                                   momentum=tis_settings['zero_momentum'],
+                                   rescale=tis_settings['rescale_energy'])
+            # Integrate forward one step:
+            out_files = self.integration_step(system, 'current', self.exe_dir)
+            # Remove all out files, but not the config:
+            for key, val in out_files.items():
+                if key != 'conf':
+                    filename = os.path.join(self.exe_dir, val)
+                    self.removefile(filename)
+                self.removefile(filename)
+            # Compare previous order parameter and the new one:
+            prev = curr
+            curr = self.calculate_order(order_function, system)[0]
+            if (prev <= middle < curr) or (curr < middle <= prev):
+                # have crossed middle interface, just stop the loop
+                break
+            elif (prev <= curr < middle) or (middle < curr <= prev):
+                # Getting closer, keep the new point
+                self.movefile(curr_file, prev_file)
+                # Update file name after moving:
+                particles.set_pos((prev_file, None))
+            else:  # we did not get closer, fall back to previous point
+                particles.set_particle_state(previous)
+                curr = previous['order']
+                filename = os.path.join(self.exe_dir, out_files['conf'])
+                self.removefile(filename)
+        print('Done with kicking. Files in self.exe_dir:')
+        print(os.listdir(self.exe_dir))
+        return previous, particles.get_particle_state()
+
+    def extract_frame(self, traj_file, idx, out_file):
+        """Extract a frame from a .trr file.
+
+        Parameters
+        ----------
+        traj_file : string
+            The trajectory file to open.
+        idx : integer
+            The frame number we look for.
+        out_file : string
+            The file to dump to.
+        """
+        raise NotImplementedError
+
+    def propagate(self, path, system, order_function, interfaces,
+                  reverse=False):
+        """Propagate the equations of motion with the external code."""
+        raise NotImplementedError
+
+    def integration_step(self, system, name, exe_dir):
+        """Integrate the given system forward in time."""
+        raise NotImplementedError
+
+    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
+                          momentum=False, rescale=None):
+        """Modify the velocities of the current state."""
+        raise NotImplementedError
+
+    def dump_config(self, config, deffnm='conf'):
+        """Extract configuration frame from a system if needed.
+
+        Parameters
+        ----------
+        config : tuple
+            The configuration given as (filename, index).
+        deffnm : string, optional
+            The base name for the file we dump to.
+
+        Returns
+        -------
+        out : string
+            The file name we dumped to. If we did not in fact dump, this is
+            because the system contains a single frame and we can use it
+            directly. Then we return simply this file name.
+
+        Note
+        ----
+        We assume here that we won't be using the velocities in the
+        configuration and we do not reverse the velocities.
+        """
+        pos_file, idx = config
+        if idx is None:
+            return pos_file
+        else:
+            out_file = os.path.join(self.exe_dir,
+                                    '{}{}'.format(deffnm, self.ext))
+            self.extract_frame(pos_file, idx, out_file)
+            return out_file
+
+    def dump_frame(self, system, deffnm='conf'):
+        """Just dump the frame from a system object."""
+        return self.dump_config(system.particles.config, deffnm=deffnm)
+
+    def dump_phasepoint(self, phasepoint, deffnm='conf'):
+        """Just dump the frame from a system object."""
+        pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
+        phasepoint['pos'] = (pos_file, None)
 
     def __str__(self):
         """Return the string description of the integrator."""

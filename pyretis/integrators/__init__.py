@@ -31,8 +31,7 @@ integrator_factory
     A method to create integrators from settings.
 """
 from pyretis.core.common import generic_factory
-from .integrator import Integrator
-from .internal import Verlet, VelocityVerlet, Langevin
+from .internal import Integrator, Verlet, VelocityVerlet, Langevin
 from .external import ExternalScript
 from .gromacs import GromacsExt
 
@@ -56,5 +55,6 @@ def integrator_factory(settings):
     """
     integrator_map = {'velocityverlet': {'cls': VelocityVerlet},
                       'verlet': {'cls': Verlet},
-                      'langevin': {'cls': Langevin}}
+                      'langevin': {'cls': Langevin},
+                      'gromacs': {'cls': GromacsExt}}
     return generic_factory(settings, integrator_map, name='integrator')
