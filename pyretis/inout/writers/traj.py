@@ -41,7 +41,8 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 _XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
-__all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file']
+__all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file',
+           'write_xyz_file']
 
 
 def _adjust_coordinate(coord):
