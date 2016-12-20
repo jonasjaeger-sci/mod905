@@ -435,16 +435,11 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # 1) Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
     logger.debug('Creating path for [0^-]')
-    print('Before', system.particles.get_particle_state())
     system.particles.set_particle_state(ensemble1.last_path.phasepoint(0))
-    print('Start:', system.particles.get_particle_state())
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
     integrator.exe_dir = ensemble0.directory['generate']
-    print('Starting propagate')
-    print('path_tmp', path_tmp)
-    print('Interfaces', ensemble0.interfaces)
     integrator.propagate(path_tmp, system, order_function,
                          ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
@@ -452,11 +447,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
         _ = path0.append(phasepoint)
     # And add second point from [0^+] at the end:
     phase_point = ensemble1.last_path.phasepoint(1)
-    integrator.dump_phasepoint(phase_point, 'second_new')
+    integrator.dump_phasepoint(phase_point, 'second')
     path0.append(phase_point)
-    #path0.append(ensemble1.last_path.phasepoint(1))
-    # TODO: When working with files, this phasepoint needs to be
-    # TODO: dumped to a new file and added in a safe way to path0 !
     path0.status = 'BTX' if path0.length == maxlen else 'ACC'
     path0.set_move('s+')
     # 2) Generate path for [0^+] from [0^-]:
@@ -476,11 +468,8 @@ def retis_swap_zero(ensembles, system, order_function, integrator,
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
     phase_point = ensemble0.last_path.phasepoint(-2)
-    integrator.dump_phasepoint(phase_point, 'second_last_new')
+    integrator.dump_phasepoint(phase_point, 'second_last')
     path1.append(phase_point)
-    #path1.append(ensemble0.last_path.phasepoint(-2))
-    # TODO: When working with files, this phasepoint needs to be
-    # TODO: dumped to a new file and added in a safe way to path1 !
     path1 += path_tmp  # add rest of the path
     path1.set_move('s-')
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'
