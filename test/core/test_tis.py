@@ -6,7 +6,7 @@ import logging
 import unittest
 import numpy as np
 from pyretis.core import System, Box, Particles
-from pyretis.inout.settings import (create_force_field,
+from pyretis.inout.settings import (create_force_field, create_integrator,
                                     create_simulation)
 logging.disable(logging.CRITICAL)
 
@@ -66,7 +66,9 @@ def prepare_test_simulation():
     system.particles = Particles(dim=system.get_dim())
     system.forcefield = create_force_field(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
-    simulation = create_simulation(settings, system)
+    integrator = create_integrator(settings)
+    kwargs = {'system': system, 'integrator': integrator}
+    simulation = create_simulation(settings, kwargs)
     # here we do a hack so that the simulation and langevin integrator
     # both use the same random generator:
     simulation.rgen = simulation.integrator.rgen

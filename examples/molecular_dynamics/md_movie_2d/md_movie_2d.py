@@ -9,6 +9,7 @@ import numpy as np
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_force_field, create_system,
+                                    create_integrator,
                                     create_output, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -46,7 +47,8 @@ ljsystem.forcefield = create_force_field(settings)
 ljsystem.particles.pos -= (np.average(ljsystem.particles.pos, axis=0) -
                            0.5 * ljsystem.box.length)  # center in box
 print('# Creating simulation from settings.')
-simulation_nve = create_simulation(settings, ljsystem)
+kwargs = {'system': ljsystem, 'integrator': create_integrator(settings)}
+simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
 outputs = [task for task in create_output(settings)]
 size = ljsystem.box.size

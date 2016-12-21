@@ -8,6 +8,7 @@ from pyretis.core import System, Box
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_output, create_system,
+                                    create_integrator,
                                     create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -64,8 +65,8 @@ system.particles.pos[0][0] = THETA1
 system.particles.pos[1][0] = THETA2
 system.particles.vel[0][0] = DTHETA1
 system.particles.vel[1][0] = DTHETA2
-
-simulation = create_simulation(settings, system)
+kwargs = {'system': system, 'integrator': create_integrator(settings)}
+simulation = create_simulation(settings, kwargs)
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
