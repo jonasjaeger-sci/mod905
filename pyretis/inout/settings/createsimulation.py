@@ -34,8 +34,7 @@ from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
                                                      SimulationRETIS)
 from pyretis.core.pathensemble import (get_path_ensemble_class,
                                        PATH_DIR_FMT)
-from pyretis.inout.settings.common import (create_integrator,
-                                           create_orderparameter)
+from pyretis.inout.settings.common import create_orderparameter
 from pyretis.inout.settings.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -144,7 +143,7 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
     return ensembles, detect
 
 
-def create_nve_simulation(settings, system):
+def create_nve_simulation(settings, system, integrator):
     """This will set up and create a NVE simulation.
 
     Parameters
@@ -153,32 +152,25 @@ def create_nve_simulation(settings, system):
         The settings needed to set up the simulation.
     system : object like `System`
         The system we are going to simulate.
+    integrator : object like `pyretis.integrators.integrator.Integrator`
+        The Integrator to use for the simulation.
 
     Returns
     -------
     out : object like `Simulation`
         The object representing the simulation to run.
     """
-    if 'integrator' not in settings:
-        msgtxt = 'No integrator settings found!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
-    integ = create_integrator(settings)
-    if integ is None:
-        msgtxt = 'No integrator created!'
-        logger.critical(msgtxt)
-        raise ValueError(msgtxt)
     sim = settings['simulation']
     for key in ('steps',):
         if key not in sim:
             msgtxt = 'Simulation setting "{}" is missing!'.format(key)
             logger.critical(msgtxt)
             raise ValueError(msgtxt)
-    return SimulationNVE(system, integ, steps=sim['steps'],
+    return SimulationNVE(system, integrator, steps=sim['steps'],
                          startcycle=sim.get('startcycle', 0))
 
 
-def create_mdflux_simulation(settings, system):
+def create_mdflux_simulation(settings, system, integrator):
     """This will set up and create a MD FLUX simulation.
 
     Parameters
@@ -187,22 +179,21 @@ def create_mdflux_simulation(settings, system):
         The settings needed to set up the simulation.
     system : object like `System`
         The system we are going to simulate.
+    integrator : object like `pyretis.integrators.integrator.Integrator`
+        The Integrator to use for the simulation.
 
     Returns
     -------
     out : object like `Simulation`
         The object representing the simulation to run.
     """
-    integ = create_integrator(settings)
     order_function = create_orderparameter(settings)
-    for fun, lab in zip((integ, order_function),
-                        ('integrator', 'order parameter')):
-        if fun is None:
-            msgtxt = 'No {} created!'.format(lab)
-            logger.critical(msgtxt)
-            raise ValueError(msgtxt)
+    if order_function is None:
+        msgtxt = 'No order parameter created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     sim = settings['simulation']
-    return SimulationMDFlux(system, order_function, integ,
+    return SimulationMDFlux(system, order_function, integrator,
                             sim['interfaces'],
                             steps=sim['steps'],
                             startcycle=sim.get('startcycle', 0))
@@ -232,7 +223,7 @@ def create_umbrellaw_simulation(settings, system):
                                     startcycle=sim.get('startcycle', 0))
 
 
-def create_tis_simulations(settings, system):
+def create_tis_simulations(settings, system, integrator):
     """This will set up and create a series of TIS simulations.
 
     This method will for each interface set up a single TIS simulation.
@@ -245,6 +236,8 @@ def create_tis_simulations(settings, system):
         The settings needed to set up the simulation.
     system : object like `System`
         The system we are going to simulate.
+    integrator : object like :py:class:`Integrator`.
+        The integrator to use for the simulation.
 
     Returns
     -------
@@ -258,7 +251,7 @@ def create_tis_simulations(settings, system):
     reactant = interfaces[0]
     product = interfaces[-1]
     if is_single_tis(settings):
-        return _create_tis_single_simulation(settings, system)
+        return _create_tis_single_simulation(settings, system, integrator)
     else:
         for i, middle in enumerate(interfaces[:-1]):
             lsetting = copy_settings(settings)
@@ -273,34 +266,35 @@ def create_tis_simulations(settings, system):
         return sim_settings
 
 
-def _create_tis_single_simulation(settings, system):
+def _create_tis_single_simulation(settings, system, integrator):
     """This will set up and create a single TIS simulation.
 
     Parameters
     ----------
     settings : dict
         The settings needed to set up the simulation.
+    system : object like `pyretis.core.system.System`
+        The system we are integrating.
+    integrator : object like `pyretis.integrators.integrator.Integrator`
+        The Integrator to use for the simulation.
 
     Returns
     -------
     out : object like `Simulation`
         The object representing the simulation to run.
     """
-    integ = create_integrator(settings)
     order_function = create_orderparameter(settings)
-    for fun, lab in zip((integ, order_function),
-                        ('integrator', 'order parameter')):
-        if fun is None:
-            msgtxt = 'No {} created!'.format(lab)
-            logger.critical(msgtxt)
-            raise ValueError(msgtxt)
+    if order_function is None:
+        msgtxt = 'No order parameter created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     if 'path-ensemble' in settings:
         path_ensemble = settings['path-ensemble']
     else:
-        path_ensemble = create_path_ensemble(settings, integ.int_type)
+        path_ensemble = create_path_ensemble(settings, integrator.int_type)
     rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
-    return SimulationSingleTIS(system, order_function, integ,
+    return SimulationSingleTIS(system, order_function, integrator,
                                path_ensemble,
                                rgen,
                                settings['tis'],
@@ -308,7 +302,7 @@ def _create_tis_single_simulation(settings, system):
                                startcycle=sim.get('startcycle', 0))
 
 
-def create_retis_simulation(settings, system):
+def create_retis_simulation(settings, system, integrator):
     """This will set up and create a RETIS simulation.
 
     Parameters
@@ -317,28 +311,27 @@ def create_retis_simulation(settings, system):
         The settings needed to set up the simulation.
     system : object like `System`
         The system we are going to simulate.
+    integrator : object like `pyretis.integrators.integrator.Integrator`
+        The Integrator to use for the simulation.
 
     Returns
     -------
     out : object like `Simulation`
         The object representing the simulation to run.
     """
-    integ = create_integrator(settings)
     order_function = create_orderparameter(settings)
-    for fun, lab in zip((integ, order_function),
-                        ('integrator', 'order parameter')):
-        if fun is None:
-            msgtxt = 'No {} created!'.format(lab)
-            logger.critical(msgtxt)
-            raise ValueError(msgtxt)
+    if order_function is None:
+        msgtxt = 'No order parameter created!'
+        logger.critical(msgtxt)
+        raise ValueError(msgtxt)
     sim = settings['simulation']
     exe_dir = sim['exe-path']
     path_ensembles, _ = create_path_ensembles(sim['interfaces'],
-                                              integ.int_type,
+                                              integrator.int_type,
                                               include_zero=True,
                                               exe_dir=exe_dir)
     rgen = create_random_generator(settings['tis'])
-    return SimulationRETIS(system, order_function, integ,
+    return SimulationRETIS(system, order_function, integrator,
                            path_ensembles,
                            rgen,
                            settings['tis'],
@@ -347,7 +340,7 @@ def create_retis_simulation(settings, system):
                            startcycle=sim.get('startcycle', 0))
 
 
-def create_simulation(settings, system):
+def create_simulation(settings, kwargs):
     """Function to create simulations from settings and system.
 
     This function will set up some common simulation types.
@@ -360,8 +353,15 @@ def create_simulation(settings, system):
     ----------
     settings : dict
         This dictionary contains the settings for the simulation.
-    system : object like `System` from `pyretis.core.system`
-        This is the system for which the simulation will run.
+    kwargs : dict
+        This dict contains objects that might be needed to initialize
+        the simulation for instance:
+
+        * system : object like `System` from `pyretis.core.system`
+            This is the system for which the simulation will run.
+
+        * integrator : object like `pyretis.integrators.integrator.Integrator`
+            The Integrator to use for the simulation.
 
     Returns
     -------
@@ -369,17 +369,37 @@ def create_simulation(settings, system):
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()
-    sim_map = {'md-nve': create_nve_simulation,
-               'md-flux': create_mdflux_simulation,
-               'umbrellawindow': create_umbrellaw_simulation,
-               'tis': create_tis_simulations,
-               'retis': create_retis_simulation}
+
+    sim_map = {
+        'md-nve': {'function': create_nve_simulation,
+                   'args': ('system', 'integrator')},
+        'md-flux': {'function': create_mdflux_simulation,
+                    'args': ('system', 'integrator')},
+        'umbrellawindow': {'function': create_umbrellaw_simulation,
+                           'args': ('system')},
+        'tis': {'function': create_tis_simulations,
+                'args': ('system', 'integrator')},
+        'retis': {'function': create_retis_simulation,
+                  'args': ('system', 'integrator')}
+    }
+
     if sim_type not in sim_map:
         msgtxt = 'Unknown simulation task {}'.format(sim_type)
         logger.error(msgtxt)
         raise ValueError(msgtxt)
     else:
-        simulation = sim_map[sim_type](settings, system)
+        function = sim_map[sim_type]['function']
+        arg_name = sim_map[sim_type]['args']
+        args = []
+        msgtxt = 'Simulation "{}" requires a "{}"'
+        for key in arg_name:
+            if key not in kwargs or kwargs[key] is None:
+                msg = msgtxt.format(sim_type, key)
+                logger.error(msg)
+                raise ValueError(msg)
+            else:
+                args.append(kwargs[key])
+        simulation = function(settings, *args)
         msgtxt = ('Created simulation:\n'
                   '{}'.format(simulation))
         logger.info(msgtxt)
