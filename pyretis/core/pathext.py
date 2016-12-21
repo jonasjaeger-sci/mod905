@@ -53,67 +53,23 @@ class PathExt(Path):
         super().__init__(rgen, maxlen=maxlen,
                          time_origin=time_origin)
 
-    def append(self, phasepoint):
-        """Append a new phase point to the path.
+    def _append_posvel(self, pos, vel):
+        """Add positions and velocities to the path."""
+        self.pos.append(pos)
+        self.vel.append(vel)
 
-        We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and
-        velocities with a corresponding order parameter and energy.
+    @staticmethod
+    def reverse_velocities(vel):
+        """Reverse the velocities.
 
         Parameters
         ----------
-        orderp : list of floats
-            This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path
-            sampling methods while `orderp[1:]` can represent other
-            order parameters for instance is `orderp[1]` typically the
-            velocity of `orderp[0]`.
-        pos : tuple
-            The file with the positions.
-        vel: boolean
-            If True, then this is for a time-reversed configuration.
-            I.e. the velocities should be reversed before they are used.
-        vpot : float
-            The potential energy of the configuration.
-        ekin : float
-            The kinetic energy of the configuration.
-        """
-        if self.maxlen is None or self.length < self.maxlen:
-            orderp = phasepoint['order']
-            self.order.append(orderp)
-            self._update_orderp(orderp[0], self.length)
-            self.pos.append(phasepoint['pos'])
-            self.vel.append(phasepoint['vel'])
-            self.vpot.append(phasepoint['vpot'])
-            self.ekin.append(phasepoint['ekin'])
-            self.length += 1
-            return True
-        else:
-            msg = 'Max length exceeded! Could not append to path!'
-            logger.debug(msg)
-            return False
-
-    def reverse(self):
-        """Return a reversed version of the path.
-
-        This will simply reverse a path and return the reversed path as
-        a new `Path` object. Note that currently, recalculating
-        order parameters have not been implemented!  Typically, reversing
-        will not change the order parameter, but it might change the
-        velocity for the order parameter and so on.
+        vel : boolean
+            The velocities to reverse.
 
         Returns
         -------
-        new_path : object like :py:class:`PathBase`
-            This is basically a copy of `self`, just reversed.
+        out : boolean
+            The reversed velocities.
         """
-        new_path = self.empty_path()
-        for phasepoint in self.trajectory(reverse=True):
-            new_point = {key: val for key, val in phasepoint.items()}
-            new_point['vel'] = not new_point['vel']
-            app = new_path.append(phasepoint)
-            if not app:
-                msg = 'Could not reverse path'
-                logger.error(msg)
-                return None
-        return new_path
+        return not vel

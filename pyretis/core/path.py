@@ -406,7 +406,7 @@ class PathBase(object):
         idx : int
             The shooting point index.
         """
-        return
+        pass
 
     @abstractmethod
     def trajectory(self, reverse=False):
@@ -422,7 +422,7 @@ class PathBase(object):
         out : tuple
             The phase-space points in the path.
         """
-        return
+        pass
 
     @abstractmethod
     def phasepoint(self, idx):
@@ -438,18 +438,49 @@ class PathBase(object):
         out : tuple
             A phase-space point in the path.
         """
-        return
+        pass
 
     @abstractmethod
+    def _append_posvel(self, pos, vel):
+        """Method to append positions and velocities."""
+        pass
+
     def append(self, phasepoint):
         """Append a new phase point to the path.
 
+        We will here append a new phase-space point to the path.
+        The phase point is assumed to be given by positions and
+        velocities with a corresponding order parameter and energy.
+
         Parameters
         ----------
-        phasepoint : tuple
-            The phase point data to add to the path.
+        phasepoint : dict
+            A dictionary with the things to add to the path.
+            We assume that it contains the following keys:
+
+            * 'order': list of floats representing the order parameter(s).
+
+            * pos: the representation of the positions.
+
+            * vel: the representation of velocities.
+
+            * vpot: the potential energy.
+
+            * ekin: the kinetic energy.
         """
-        return
+        if self.maxlen is None or self.length < self.maxlen:
+            orderp = phasepoint['order']
+            self.order.append(orderp)
+            self._update_orderp(orderp[0], self.length)
+            self._append_posvel(phasepoint['pos'], phasepoint['vel'])
+            self.vpot.append(phasepoint['vpot'])
+            self.ekin.append(phasepoint['ekin'])
+            self.length += 1
+            return True
+        else:
+            msg = 'Max length exceeded! Could not append to path!'
+            logger.debug(msg)
+            return False
 
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
@@ -531,10 +562,40 @@ class PathBase(object):
                 return self
         return self
 
+    @staticmethod
     @abstractmethod
+    def reverse_velocities(vel):
+        """Method that handles reversing of velocities."""
+        pass
+
     def reverse(self):
-        """Reverse a path and return the reverse path as a new path."""
-        return
+        """Helper method for reversing the path, indented to be extended."""
+        return self.reverse_trajectory()
+
+    def reverse_trajectory(self):
+        """Reverse a path and return the reverse path as a new path.
+
+        This will simply reverse a path and return the reversed path as
+        a new `Path` object. Note that currently, recalculating
+        order parameters have not been implemented!  Typically, reversing
+        will not change the order parameter, but it might change the
+        velocity for the order parameter and so on.
+
+        Returns
+        -------
+        new_path : object like :py:class:`PathBase`
+            This is basically a copy of `self`, just reversed.
+        """
+        new_path = self.empty_path()
+        for phasepoint in self.trajectory(reverse=True):
+            new_point = {key: val for key, val in phasepoint.items()}
+            new_point['vel'] = self.reverse_velocities(new_point['vel'])
+            app = new_path.append(new_point)
+            if not app:
+                msg = 'Could not reverse path'
+                logger.error(msg)
+                return None
+        return new_path
 
     def __str__(self):
         """Return a simple string representation of the Path."""
@@ -641,44 +702,10 @@ class Path(PathBase):
                       'ekin': self.ekin[idx]}
         return phasepoint
 
-    def append(self, phasepoint):
-        """Append a new phase point to the path.
-
-        We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and
-        velocities with a corresponding order parameter and energy.
-
-        Parameters
-        ----------
-        orderp : list of floats
-            This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path
-            sampling methods while `orderp[1:]` can represent other
-            order parameters for instance is `orderp[1]` typically the
-            velocity of `orderp[0]`.
-        pos : numpy.array
-            The positions of the particles,
-        vel: numpy.array
-            The velocities of the particles.
-        vpot : float
-            The potential energy of the configuration.
-        ekin : float
-            The kinetic energy of the configuration.
-        """
-        if self.maxlen is None or self.length < self.maxlen:
-            orderp = phasepoint['order']
-            self.order.append(orderp)
-            self._update_orderp(orderp[0], self.length)
-            self.pos.append(np.copy(phasepoint['pos']))
-            self.vel.append(np.copy(phasepoint['vel']))
-            self.vpot.append(phasepoint['vpot'])
-            self.ekin.append(phasepoint['ekin'])
-            self.length += 1
-            return True
-        else:
-            msg = 'Max length exceeded! Could not append to path!'
-            logger.debug(msg)
-            return False
+    def _append_posvel(self, pos, vel):
+        """Append positions and velocities to the path."""
+        self.pos.append(np.copy(pos))
+        self.vel.append(np.copy(vel))
 
     def get_shooting_point(self):
         """Return a shooting point from the path.
@@ -711,34 +738,26 @@ class Path(PathBase):
         return self.__class__(self.rgen, maxlen=maxlen,
                               time_origin=time_origin)
 
-    def reverse(self):
-        """Reverse a path and return the reverse path as a new path.
+    @staticmethod
+    def reverse_velocities(vel):
+        """Reverse velocities.
 
-        This will simply reverse a path and return the reversed path as
-        a new `Path` object. Note that currently, recalculating
-        order parameters have not been implemented!  Typically, reversing
-        will not change the order parameter, but it might change the
-        velocity for the order parameter and so on.
+        Parameters
+        ----------
+        vel : np.array or None
+            Velocities to reverse.
 
         Returns
         -------
-        new_path : object like :py:class:`PathBase`
-            This is basically a copy of `self`, just reversed.
-        """
-        new_path = self.empty_path()
-        for phasepoint in self.trajectory(reverse=True):
-            new_point = {key: val for key, val in phasepoint.items()}
-            if new_point['vel'] is not None:
-                new_point['vel'] = phasepoint['vel'] * -1
-            app = new_path.append(new_point)
-            if not app:
-                msg = 'Could not reverse path'
-                logger.error(msg)
-                return None
-        return new_path
+        out : np.array or None
+            The reversed velocities."""
+        if vel is not None:
+            return vel * -1
+        else:
+            return None
 
 
-class ReservoirPath(PathBase):
+class ReservoirPath(Path):
     """A path where only a subset of points are stored in memory.
 
     This class represents a path. A path consist of a series of
@@ -806,44 +825,10 @@ class ReservoirPath(PathBase):
                       'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
         return phasepoint
 
-    def append(self, phasepoint):
-        """Append a new phase point to the path.
-
-        We will here append a new phase-space point to the path.
-        The phase point is assumed to be given by positions and
-        velocities with a corresponding order parameter and energy.
-
-        Parameters
-        ----------
-        orderp : list of floats
-            This variable is the order parameter for the given point.
-            `orderp[0]` is the actual order parameter used in path
-            sampling methods while `orderp[1:]` can represent other
-            order parameters for instance is `orderp[1]` typically the
-            velocity of `orderp[0]`.
-        pos : numpy.array
-            The positions of the particles,
-        vel: numpy.array
-            The velocities of the particles.
-        vpot : float
-            The potential energy of the configuration.
-        """
-        if self.maxlen is None or self.length < self.maxlen:
-            orderp = phasepoint['order']
-            self.order.append(orderp)
-            self._update_orderp(orderp[0], self.length)
-            self.vpot.append(phasepoint['vpot'])
-            self.ekin.append(phasepoint['ekin'])
-            pos = phasepoint['pos']
-            vel = phasepoint['vel']
-            if pos is not None and vel is not None:
-                self.add_to_reservoir(self.length + 1, self.length, pos, vel)
-            self.length += 1
-            return True
-        else:
-            msg = 'Path length exceeded! Could not append to path!'
-            logger.debug(msg)
-            return False
+    def _append_posvel(self, pos, vel):
+        """Append positions and velocities to the path."""
+        if pos is not None and vel is not None:
+            self.add_to_reservoir(self.length + 1, self.length, pos, vel)
 
     def get_shooting_point(self):
         """Return a shooting point from the path.
@@ -927,7 +912,7 @@ class ReservoirPath(PathBase):
         path : object like :py:class:`PathBase`
             This is basically a copy of `self`, just reversed.
         """
-        path = super(ReservoirPath, self).reverse()
+        path = self.reverse_trajectory()
         path.reservoir = []
         for point in self.reservoir:
             idx = self.length - 1 - point[0]
