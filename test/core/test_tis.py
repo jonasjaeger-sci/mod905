@@ -6,7 +6,7 @@ import logging
 import unittest
 import numpy as np
 from pyretis.core import System, Box, Particles
-from pyretis.inout.settings import (create_force_field, create_integrator,
+from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_simulation)
 logging.disable(logging.CRITICAL)
 
@@ -34,12 +34,12 @@ def prepare_test_simulation():
                               'interfaces': [-0.9, -0.9, 1.0]}
     settings['system'] = {'units': 'lj', 'temperature': 0.07}
     # Basic settings for the Langevin integrator:
-    settings['integrator'] = {'class': 'Langevin',
-                              'gamma': 0.3,
-                              'high_friction': False,
-                              'seed': 1,
-                              'rgen': 'mock',
-                              'timestep': 0.002}
+    settings['engine'] = {'class': 'Langevin',
+                          'gamma': 0.3,
+                          'high_friction': False,
+                          'seed': 1,
+                          'rgen': 'mock',
+                          'timestep': 0.002}
     # Potential parameters:
     # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
     settings['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
@@ -66,12 +66,12 @@ def prepare_test_simulation():
     system.particles = Particles(dim=system.get_dim())
     system.forcefield = create_force_field(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
-    integrator = create_integrator(settings)
-    kwargs = {'system': system, 'integrator': integrator}
+    engine = create_engine(settings)
+    kwargs = {'system': system, 'engine': engine}
     simulation = create_simulation(settings, kwargs)
     # here we do a hack so that the simulation and langevin integrator
     # both use the same random generator:
-    simulation.rgen = simulation.integrator.rgen
+    simulation.rgen = simulation.engine.rgen
     system.particles.vel = np.array([[0.78008019924163818]])
     return simulation
 

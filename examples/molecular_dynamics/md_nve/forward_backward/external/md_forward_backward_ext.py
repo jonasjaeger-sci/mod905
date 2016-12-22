@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_force_field,
-                                    create_system, create_integrator)
+                                    create_system, create_engine)
 from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout.settings import create_output
 # for plotting:
@@ -31,7 +31,7 @@ settings['simulation'] = {'task': 'md-nve',
 settings['system'] = {'units': 'lj',
                       'temperature': 2.5,
                       'dimensions': 3}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.002}
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.002}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -54,7 +54,7 @@ create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
-kwargs = {'system': ljsystem, 'integrator': create_integrator(settings)}
+kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
 # set up extra output:
 table = ThermoTable()

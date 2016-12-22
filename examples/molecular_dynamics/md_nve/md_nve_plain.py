@@ -9,7 +9,7 @@ The system considered is a simple Lennard-Jones fluid.
 import numpy as np
 from pyretis.core import Box, Particles, System
 from pyretis.core.simulation import SimulationNVE
-from pyretis.integrators import VelocityVerlet
+from pyretis.engines import VelocityVerlet
 from pyretis.tools import generate_lattice
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
@@ -45,8 +45,8 @@ system.forcefield = ffield
 print(system.forcefield)
 
 print('Creating simulation:')
-integrator = VelocityVerlet(0.002)
-simulation = SimulationNVE(system, integrator, steps=100)
+engine = VelocityVerlet(0.002)
+simulation = SimulationNVE(system, engine, steps=100)
 
 ekin = []
 vpot = []

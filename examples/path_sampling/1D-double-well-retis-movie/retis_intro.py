@@ -8,8 +8,8 @@ some of the objects in pyretis.
 
 Have fun!
 """
-from pyretis.core import System, Box
-from pyretis.inout.settings import (create_force_field,
+from pyretis.core import System, Box, Particles
+from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_orderparameter, create_simulation)
 import numpy as np
 
@@ -22,13 +22,13 @@ SETTINGS['simulation'] = {'task': 'retis',
                                          -0.6, -0.5, -0.4,
                                          -0.3, 1.0]}
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
-SETTINGS['integrator'] = {'class': 'Langevin',
-                          'gamma': 0.3,
-                          'high_friction': False,
-                          'seed': 0,
-                          'timestep': 0.002}
+SETTINGS['engine'] = {'class': 'Langevin',
+                      'gamma': 0.3,
+                      'high_friction': False,
+                      'seed': 0,
+                      'timestep': 0.002}
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
@@ -72,6 +72,7 @@ def set_up_system(settings):
                  units=settings['system']['units'], box=box)
     sys.forcefield = create_force_field(settings)
     sys.order_function = create_orderparameter(settings)
+    sys.particles = Particles(dim=1)
     sys.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     return sys
 
@@ -112,7 +113,8 @@ def main():
     print('# CREATING SYSTEM...')
     system = set_up_system(SETTINGS)
     print('# CREATING SIMULATION...')
-    simulation = create_simulation(SETTINGS, system)
+    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
+    simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
     simulation.step()  # Run the first step of the simulation:
@@ -130,9 +132,9 @@ def main():
     path = ensembles[2].last_path
     first = True
     for i, point in enumerate(path.trajectory()):
-        order = point[0][0]
-        pos = point[1]
-        vel = point[2]
+        order = point['order'][0]
+        pos = point['pos']
+        vel = point['vel']
         if order > -0.8 and first:
             print('First crossing of -0.8 for [1^+]:')
             print('\tStep: {}'.format(i))

@@ -12,8 +12,8 @@ create_external
 check_settings
     Check that required simulation settings are actually given.
 
-create_integrator
-    Method to create an integrator from settings.
+create_engine
+    Method to create an engine from settings.
 
 create_orderparameter
     Method to create order parameters from settings.
@@ -31,7 +31,7 @@ import imp
 import logging
 import os
 from pyretis.core.common import initiate_instance
-from pyretis.integrators import integrator_factory
+from pyretis.engines import engine_factory
 from pyretis.orderparameter import order_factory
 from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -39,7 +39,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_external', 'check_settings', 'import_from',
-           'create_orderparameter', 'create_integrator', 'create_potential']
+           'create_orderparameter', 'create_engine', 'create_potential']
 
 
 def import_from(module_path, function_name):
@@ -233,8 +233,8 @@ def create_orderparameter(settings):
                            ['calculate', 'calculate_velocity'])
 
 
-def create_integrator(settings):
-    """Method to create an integrator from settings.
+def create_engine(settings):
+    """Method to create an engine from settings.
 
     Parameters
     ----------
@@ -243,10 +243,10 @@ def create_integrator(settings):
 
     Returns
     -------
-    out : object like `Integrator` from `pyretis.integrators`
-        This object represents the integrator.
+    out : object like :py:class:`pyretis.engines.engine.EngineBase`
+        This object represents the engine.
     """
-    return create_external(settings, 'integrator', integrator_factory,
+    return create_external(settings, 'engine', engine_factory,
                            ['integration_step'])
 
 

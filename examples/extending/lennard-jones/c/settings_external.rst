@@ -6,8 +6,8 @@ Simulation settings
 task = md-nve
 steps = 1000
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = velocityverlet
 timestep = 0.002
 

@@ -16,7 +16,7 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.tools import generate_lattice
-from pyretis.integrators import VelocityVerlet
+from pyretis.engines import VelocityVerlet
 from vvintegratorc import VelocityVerletC
 
 

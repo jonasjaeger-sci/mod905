@@ -50,6 +50,7 @@ from pyretis.inout.settings import (parse_settings_file,
                                     create_system,
                                     create_force_field,
                                     create_simulation,
+                                    create_engine,
                                     is_single_tis)
 
 
@@ -469,7 +470,9 @@ if __name__ == '__main__':
         system.forcefield = create_force_field(settings)
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
-        simulation = create_simulation(settings, system)
+        engine = create_engine(settings)
+        kwargs = {'system': system, 'engine': engine}
+        simulation = create_simulation(settings, kwargs)
         task = settings['simulation']['task'].lower()
         print_and_loginfo('Will run simulation: "{}"'.format(task))
         runner = _RUNNERS.get(task, run_generic_simulation)

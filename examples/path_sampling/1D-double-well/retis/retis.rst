@@ -17,8 +17,8 @@ Box
 ---
 periodic = [False]
 
-Integrator
-----------
+Engine
+------
 class = Langevin
 timestep = 0.002
 gamma = 0.3

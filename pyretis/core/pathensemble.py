@@ -377,7 +377,7 @@ class PathEnsembleExt(PathEnsemble):
 
 
 def get_path_ensemble_class(ensemble_type):
-    """Method to return the path ensemble class to work with an integrator.
+    """Method to return the path ensemble class to work with an engine.
 
     Parameters
     ----------

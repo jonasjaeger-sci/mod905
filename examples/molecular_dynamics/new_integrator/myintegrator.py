@@ -8,13 +8,13 @@ Newtons equations of motion in time, the dynamics in molecular dynamics.
 """
 import logging
 import numpy as np
-from pyretis.integrators import Integrator
+from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class VVIntegrator(Integrator):
-    """VVIntegrator(Integrator).
+class VVIntegrator(MDEngine):
+    """VVIntegrator(MDEngine).
 
     This class defines the Velocity Verlet integrator.
 
@@ -65,8 +65,8 @@ class VVIntegrator(Integrator):
         particles.vel += self.half_delta_t * particles.force * imass
         return None
 
-class Euler(Integrator):
-    """Euler(Integrator).
+class Euler(MDEngine):
+    """Euler(MDEngine).
 
     This class defines the Euler integrator.
 

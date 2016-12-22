@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Definition of numerical integrators.
+"""Definition of numerical MD integrators.
 
-These integrators are typically used to integrate and propagate
-Newtons equations of motion in time, the "dynamics" in molecular dynamics!
+These integrators are representations of engines for performing
+molecular dynamics. Typically they will propagate Newtons
+equations of motion in time numerically.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Integrator (:py:class:`.Integrator`)
-    Base class for internal integrators.
+MDEngine (:py:class:`.MDEngine`)
+    Base class for internal MDEngines.
 
 Verlet (:py:class:`.Verlet`)
-    A Verlet integrator.
+    A Verlet MD integrator.
 
 VelocityVerlet (:py:class:`.VelocityVerlet`)
-    A Velocity Verlet integrator.
+    A Velocity Verlet MD integrator.
 
 Langevin (:py:class:`.Langevin`)
-    A Langevin integrator.
+    A Langevin MD integrator.
 """
 import logging
 import numpy as np
-from pyretis.integrators.integrator import IntegratorBase
+from pyretis.engines.engine import EngineBase
 from pyretis.core.random_gen import create_random_generator
 from pyretis.core.particlefunctions import (calculate_kinetic_energy,
                                             reset_momentum)
@@ -33,28 +34,29 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['Integrator', 'Verlet', 'VelocityVerlet', 'Langevin']
+__all__ = ['MDEngine', 'Verlet', 'VelocityVerlet', 'Langevin']
 
 
-class Integrator(IntegratorBase):
-    """Base class for internal integrators.
+class MDEngine(EngineBase):
+    """Base class for internal MD integrators.
 
-    This class defines an internal integrator. This class of
-    integrators work with the positions and velocities directly.
-    Here we make use of the system object in order to update forces etc.
+    This class defines an internal MD integrator. This class of
+    integrators work with the positions and velocities of the system
+    object directly. Further, we make use of the system object in
+    order to update forces etc.
 
     Attributes
     ----------
     delta_t : float
         Time step for the integration.
     desc : string
-        Description of the integrator.
+        Description of the MD integrator.
     dynamics : str
         A short string to represent the type of dynamics produced
         by the integrator (NVE, NVT, stochastic, ...).
     """
 
-    def __init__(self, timestep, desc='Generic integrator', dynamics=''):
+    def __init__(self, timestep, desc='Generic MD integrator', dynamics=''):
         """Initialization of the integrator.
 
         Parameters
@@ -65,12 +67,11 @@ class Integrator(IntegratorBase):
         self.delta_t = timestep
         self.desc = desc
         self.dynamics = dynamics
-        self._int_type = 'internal'
 
     @property
-    def int_type(self):
-        """Return information about integrator type."""
-        return self._int_type
+    def engine_type(self):
+        """Return information about engine type."""
+        return 'internal'
 
     def integration_step(self, system):
         """Perform one time step of the integration.
@@ -234,7 +235,7 @@ class Integrator(IntegratorBase):
         return dek, kin_new
 
     def __call__(self, system):
-        """To allow calling `Integrator(system)`.
+        """To allow calling `MDEngine(system)`.
 
         Here, we are just calling `self.integration_step(system)`.
 
@@ -255,13 +256,13 @@ class Integrator(IntegratorBase):
         """Return the order parameter.
 
         This method is just to help calculating the order parameter
-        in cases where only the integrator can do it! This creates
-        a uniform behavior for both internal and external integrators.
-        For internal integrators this is not useful in it self, since
-        we could just call  `order.calculate(system)`. But for
-        external integrators, we can not assume that the system is able
+        in cases where only the engine can do it! This creates
+        a uniform behavior for both internal and external engines.
+        For internal engine this may not be so useful in it self, since
+        we could just call `order.calculate(system)`. But for external
+        engines, we can not assume that the system is able
         to calculate the order parameter, this because the state of the
-        system might be stored in a file which only the integrator knows
+        system might be stored in a file which only the engine knows
         how to read.
 
         Parameters
@@ -361,10 +362,10 @@ class Integrator(IntegratorBase):
         return self.desc
 
 
-class Verlet(Integrator):
-    """The Verlet integrator.
+class Verlet(MDEngine):
+    """The Verlet MD integrator.
 
-    This class defines the Verlet integrator.
+    This class defines the Verlet MD integrator.
 
     Attributes
     ----------
@@ -376,8 +377,8 @@ class Verlet(Integrator):
         Squared time step: `delta_t**2`
     """
 
-    def __init__(self, timestep, desc='The verlet integrator'):
-        """Initiate the Verlet integrator.
+    def __init__(self, timestep, desc='Verlet MD integrator'):
+        """Initiate the Verlet MD integrator.
 
         Parameters
         ----------
@@ -426,8 +427,8 @@ class Verlet(Integrator):
         return None
 
 
-class VelocityVerlet(Integrator):
-    """The Velocity Verlet integrator.
+class VelocityVerlet(MDEngine):
+    """The Velocity Verlet MD integrator.
 
     This class defines the Velocity Verlet integrator.
 
@@ -441,7 +442,7 @@ class VelocityVerlet(Integrator):
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='The velocity verlet integrator'):
+    def __init__(self, timestep, desc='Velocity Verlet MD integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
@@ -479,8 +480,8 @@ class VelocityVerlet(Integrator):
         return None
 
 
-class Langevin(Integrator):
-    """The Langevin integrator.
+class Langevin(MDEngine):
+    """The Langevin MD integrator.
 
     This class defines a Langevin integrator.
 
@@ -546,7 +547,7 @@ class Langevin(Integrator):
     """
 
     def __init__(self, timestep, gamma, rgen=None, seed=0, high_friction=False,
-                 desc='Langevin integrator'):
+                 desc='Langevin MD integrator'):
         """Initiate the Langevin integrator.
 
         Actually, it is very convenient to set some variables for the

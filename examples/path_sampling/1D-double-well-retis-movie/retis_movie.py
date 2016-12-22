@@ -8,9 +8,9 @@ the temperature, the ratio of the different RETIS moves etc.
 
 Have fun!
 """
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.properties import Property
-from pyretis.inout.settings import (create_force_field,
+from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 import numpy as np
@@ -29,13 +29,13 @@ SETTINGS['simulation'] = {'task': 'retis',
                           'steps': 150,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
-SETTINGS['integrator'] = {'class': 'Langevin',
-                          'gamma': 0.3,
-                          'high_friction': False,
-                          'seed': 0,
-                          'timestep': 0.002}
+SETTINGS['engine'] = {'class': 'Langevin',
+                      'gamma': 0.3,
+                      'high_friction': False,
+                      'seed': 0,
+                      'timestep': 0.002}
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
@@ -61,7 +61,7 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
                      'swapsimul': True}
 
 # For convenience:
-TIMESTEP = SETTINGS['integrator']['timestep']
+TIMESTEP = SETTINGS['engine']['timestep']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
 # Set up for plotting:
@@ -95,6 +95,7 @@ def set_up_system(settings):
                  units=settings['system']['units'], box=box)
     sys.forcefield = create_force_field(settings)
     sys.order_function = create_orderparameter(settings)
+    sys.particles = Particles(dim=1)
     sys.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     return sys
 
@@ -130,9 +131,9 @@ def get_path(path):
         freq = 20
     for i, point in enumerate(path.trajectory()):
         if i == 0 or i == leng-1 or i % freq == 0:
-            order.append(point[0])
-            pos.append(point[1][0])
-            vel.append(point[2][0])
+            order.append(point['order'])
+            pos.append(point['pos'][0])
+            vel.append(point['vel'][0])
     return np.array(order), np.array(pos), np.array(vel)
 
 
@@ -561,7 +562,8 @@ def main():
     print('# CREATING SYSTEM')
     system = set_up_system(SETTINGS)
     print('# CREATING SIMULATION:')
-    simulation = create_simulation(SETTINGS, system)
+    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
+    simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# GENERATING INITIAL PATHS')
     fig, plot_patches, axes = matplotlib_setup()

@@ -13,8 +13,8 @@ units = lj
 dimensions = 1
 temperature = 0.07
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = Langevin
 timestep = 0.002
 gamma = 0.3

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""
-Example for an external pyretis interface.
+"""A GROMACS external MD integrator interface.
 
-In this example we will interfaces a custom made program
-which performs molecular dynamics.
+This module defines a class for using GROMACS as an external engine.
 
-In order to interface an external program the following
-methods are needed:
+Important classes defined here
+------------------------------
+
+GromacsEngine
+    A class responsible for interfacing GROMACS.
+
 """
 import logging
 import os
 import shlex
 import tempfile
 import numpy as np
-from pyretis.integrators import ExternalScript
+from pyretis.engines.external import ExternalMDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -127,7 +129,7 @@ def read_xvg_file(filename):
     return data_dict
 
 
-class GromacsExt(ExternalScript):
+class GromacsEngine(ExternalMDEngine):
     """A class for interfacing GROMACS.
 
     This class defines the interface to GROMACS.
@@ -486,7 +488,6 @@ class GromacsExt(ExternalScript):
         exe_dir : string
             The path to where we will perform the GROMACS simulation.
         """
-        #initial_state = system.particles.get_particle_state()
         initial_conf = self.dump_frame(system)
         # Save as a single snapshot file
         phase_point = {'pos': (initial_conf, None), 'vel': False,
@@ -589,8 +590,6 @@ class GromacsExt(ExternalScript):
         """Modify the velocities of the current state.
 
         This method will modify the velocities of a time slice.
-        And it is part of the integrator since it, conceptually,
-        fits here:  we are acting on the system and modifying it.
 
         Parameters
         ----------

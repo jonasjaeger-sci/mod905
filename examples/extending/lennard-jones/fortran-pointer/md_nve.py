@@ -6,15 +6,15 @@ This system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_system,
-									create_integrator,
+									create_engine,
                                     create_force_field, create_output)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
 settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
 settings['system'] = {'units': 'lj', 'temperature': 2.0,
                       'dimensions': 3}
-settings['integrator'] = {'class': 'velocityverlet',
-                          'timestep': 0.002}
+settings['engine'] = {'class': 'velocityverlet',
+                      'timestep': 0.002}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -38,7 +38,7 @@ print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 print('# Creating simulation from settings.')
-sim_args = {'system': ljsystem, 'integrator': create_integrator(settings)}
+sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
 output_tasks = [task for task in create_output(settings)]

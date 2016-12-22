@@ -9,7 +9,7 @@ import numpy as np
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.simulation import Simulation
-from pyretis.integrators import VelocityVerlet
+from pyretis.engines import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.core.particlefunctions import calculate_thermo
@@ -43,8 +43,8 @@ ljsystem.potential_and_force()
 # run simulation from this starting point:
 numberofsteps = 1000
 simulationLAMMPS = Simulation(steps=numberofsteps)
-integrator = VelocityVerlet(0.0025)
-task_integrate = {'func': integrator.integration_step,
+engine = VelocityVerlet(0.0025)
+task_integrate = {'func': engine.integration_step,
                   'args': [ljsystem]}
 
 simulationLAMMPS.add_task(task_integrate)

@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 20000
+steps = 1000000
 interfaces = [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.60, 0.65, 0.7, 0.75, 0.8]
 
 System
@@ -17,8 +17,8 @@ Box
 ---
 periodic = [False, False]
 
-Integrator
-----------
+Engine
+------
 class = Langevin
 timestep = 0.002
 gamma = 0.3
@@ -33,7 +33,7 @@ aimless = True
 allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
-sigma_v =  -1
+sigma_v = -1
 seed = 0
 initial_path = kick
 

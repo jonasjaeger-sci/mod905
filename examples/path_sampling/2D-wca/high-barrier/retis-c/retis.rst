@@ -18,8 +18,8 @@ Box
 size = [5.9761430466719681, 5.9761430466719681]
 periodic = [True, True]
 
-Integrator
-----------
+Engine
+------
 class = VelocityVerlet
 timestep = 0.002
 

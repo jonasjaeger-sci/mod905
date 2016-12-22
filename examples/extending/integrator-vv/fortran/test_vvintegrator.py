@@ -16,7 +16,7 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp
 from pyretis.tools import generate_lattice
-from pyretis.integrators import VelocityVerlet
+from pyretis.engines import VelocityVerlet
 from vvintegratorf import VelocityVerletF
 
 
@@ -51,8 +51,8 @@ class VVIntegratorTest(unittest.TestCase):
         initial = system.particles.get_particle_state()
         numberofsteps = 20
         simulation = Simulation(steps=numberofsteps)
-        integrator = VelocityVerlet(0.0025)
-        task_integrate = {'func': integrator.integration_step,
+        engine = VelocityVerlet(0.0025)
+        task_integrate = {'func': engine.integration_step,
                           'args': [system]}
         simulation.add_task(task_integrate)
         traj = []
@@ -61,8 +61,8 @@ class VVIntegratorTest(unittest.TestCase):
         # repeat with external integrator:
         system.particles.set_particle_state(initial)
         simulation = Simulation(steps=numberofsteps)
-        integrator = VelocityVerletF(0.0025)
-        task_integrate = {'func': integrator.integration_step,
+        engine = VelocityVerletF(0.0025)
+        task_integrate = {'func': engine.integration_step,
                           'args': [system]}
         simulation.add_task(task_integrate)
         traj2 = []

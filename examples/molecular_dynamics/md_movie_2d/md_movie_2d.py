@@ -9,7 +9,7 @@ import numpy as np
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_force_field, create_system,
-                                    create_integrator,
+                                    create_engine,
                                     create_output, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -24,7 +24,7 @@ settings['system'] = {'temperature': 1.0, 'dimensions': 2,
 settings['box'] = {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
                    'periodic': [True, True]}
 settings['simulation'] = {'task': 'md-nve', 'steps': 950}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -47,7 +47,7 @@ ljsystem.forcefield = create_force_field(settings)
 ljsystem.particles.pos -= (np.average(ljsystem.particles.pos, axis=0) -
                            0.5 * ljsystem.box.length)  # center in box
 print('# Creating simulation from settings.')
-kwargs = {'system': ljsystem, 'integrator': create_integrator(settings)}
+kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
 outputs = [task for task in create_output(settings)]
@@ -64,7 +64,7 @@ npart = float(npart)
 # In effect animation.FuncAnimation will run the simulation one step,
 # update the plot and display it and continue this loop until the
 # simulation is done.
-timeunit = (settings['integrator']['timestep'] *
+timeunit = (settings['engine']['timestep'] *
             CONVERT['time'][UNIT, 'fs'])
 timeendfs = settings['simulation']['steps'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []

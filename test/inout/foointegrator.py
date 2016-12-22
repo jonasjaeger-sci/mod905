@@ -2,14 +2,14 @@
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Dummy integrator for tests."""
-from pyretis.integrators import Integrator
+from pyretis.engines import MDEngine
 
 
 __all__ = []
 
 
-class FooIntegrator(Integrator):
-    """FooIntegrator(Integrator) - Dummy integrator for tests."""
+class FooIntegrator(MDEngine):
+    """FooIntegrator(MDEngine) - Dummy integrator for tests."""
 
     def __init__(self, timestep, extra=0.0,
                  desc='Dummy test integrator'):

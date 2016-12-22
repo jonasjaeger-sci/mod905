@@ -6,8 +6,8 @@ Simulation settings
 task = md-nve
 steps = 100
 
-Integrator settings
--------------------
+Engine settings
+---------------
 #class = VVIntegrator
 class = Euler
 module = myintegrator.py

@@ -53,8 +53,8 @@ SECTIONS['unit-system'] = {'name': None,
                            'energy': None,
                            'charge': None}
 
-SECTIONS['integrator'] = {'class': None,
-                          'module': None}
+SECTIONS['engine'] = {'class': None,
+                      'module': None}
 
 SECTIONS['box'] = {'size': None,
                    'periodic': None}
@@ -115,7 +115,7 @@ SECTIONS['analysis'] = {'skipcross': 1000,
 
 
 SPECIAL_KEY = set(('parameter', ))
-ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'integrator'))
+ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine'))
 
 
 def parse_primitive(text):

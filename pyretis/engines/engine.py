@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Definition of numerical integrators.
+"""Definition of pyretis engines.
 
-This module defines the base class for integrators.
+This module defines the base class for the engines.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-IntegratorBase (:py:class:`pyretis.integrators.IntegratorBase`)
-    The base class for integrators.
+EngineBase (:py:class:`pyretis.engines.engine.EngineBase`)
+    The base class for engines.
 """
 from abc import ABCMeta, abstractmethod
 import logging
@@ -18,20 +18,21 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['IntegratorBase']
+__all__ = ['EngineBase']
 
 
-class IntegratorBase(metaclass=ABCMeta):
-    """Abstract base class for integrators.
+class EngineBase(metaclass=ABCMeta):
+    """Abstract base class for engines.
 
-    The integrators perform molecular dynamics and they are assumed to
-    act on a system and integrate Newtons equation of motion in time.
+    The engines perform molecular dynamics (or Monte Carolo) and they
+    are assumed to act on a system. Typically they will integrate
+    Newtons equation of motion in time for that system.
     """
 
     @property
     @abstractmethod
-    def int_type(self):
-        """Return information about integrator type."""
+    def engine_type(self):
+        """Return information about engine type."""
         pass
 
     @abstractmethod

@@ -8,7 +8,7 @@ from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_output, create_system,
-                                    create_integrator,
+                                    create_engine,
                                     create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -29,7 +29,7 @@ settings['system'] = {'temperature': 2.0,
 settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
 settings['simulation'] = {'task': 'md-nve',
                           'steps': 1100}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -58,7 +58,7 @@ system.forcefield = create_force_field(settings)
 system.particles.pos -= (np.average(system.particles.pos, axis=0) -
                          0.5 * system.box.length)  # center in box
 print('# Creating simulation from settings.')
-kwargs = {'system': system, 'integrator': create_integrator(settings)}
+kwargs = {'system': system, 'engine': create_engine(settings)}
 simulation = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
 outputs = [task for task in create_output(settings)]
@@ -67,7 +67,7 @@ size = system.box.size
 BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
 # some additional set-up for the animation
-timeunit = (settings['integrator']['timestep'] *
+timeunit = (settings['engine']['timestep'] *
             CONVERT['time'][UNIT, 'fs'])
 timeendfs = settings['simulation']['steps'] * timeunit
 

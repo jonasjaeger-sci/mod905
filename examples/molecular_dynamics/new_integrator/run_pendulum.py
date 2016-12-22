@@ -8,7 +8,7 @@ from pyretis.core import System, Box
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_output, create_system,
-                                    create_integrator,
+                                    create_engine,
                                     create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
@@ -36,12 +36,12 @@ settings['simulation'] = {'task': 'md-nve',
 settings['system'] = {'units': 'gromacs',
                       'temperature': 1.,
                       'dimensions': 2}
-settings['integrator'] = {'class': 'VVIntegrator',
-                          'timestep': 0.005,
-                          'module': 'myintegrator.py'}
-#settings['integrator'] = {'class': 'Euler',
-#                          'timestep': 0.005,
-#                          'module': 'myintegrator.py'}
+settings['engine'] = {'class': 'VVIntegrator',
+                      'timestep': 0.005,
+                      'module': 'myintegrator.py'}
+#settings['engine'] = {'class': 'Euler',
+#                      'timestep': 0.005,
+#                      'module': 'myintegrator.py'}
 settings['output'] = {'backup': False,
                       'write_vel': False,
                       'energy-file': 1,
@@ -65,7 +65,7 @@ system.particles.pos[0][0] = THETA1
 system.particles.pos[1][0] = THETA2
 system.particles.vel[0][0] = DTHETA1
 system.particles.vel[1][0] = DTHETA2
-kwargs = {'system': system, 'integrator': create_integrator(settings)}
+kwargs = {'system': system, 'engine': create_engine(settings)}
 simulation = create_simulation(settings, kwargs)
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')

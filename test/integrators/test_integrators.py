@@ -5,7 +5,7 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.integrators import Langevin, VelocityVerlet
+from pyretis.engines import Langevin, VelocityVerlet
 from pyretis.core import System, Box, Particles
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials.potentials import DoubleWell

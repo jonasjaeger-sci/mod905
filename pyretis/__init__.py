@@ -46,9 +46,9 @@ core
     etc.
 forcefield
     This package define force fields and potentials functions.
-integrators
-    A package defining integrators which can be used to
-    evolve the dynamics/solve Newton's equations of motion.
+engines
+    A package defining engines which can be used to
+    evolve the dynamics/solve Newton's equations of motion in time.
 inout
     This package defines the input output operations for pyretis.
     This includes generating output from the analysis and reading
@@ -66,7 +66,7 @@ from __future__ import absolute_import
 from .version import VERSION as __version__
 from . import info
 from . import core
-from . import integrators
+from . import engines
 from . import orderparameter
 from . import forcefield
 from . import tools

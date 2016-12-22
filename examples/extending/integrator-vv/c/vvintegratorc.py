@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # pyretis imports
-from pyretis.integrators import Integrator
+from pyretis.engines import MDEngine
 try:
     import vvintegrator
 except ImportError:
@@ -17,8 +17,8 @@ except ImportError:
 __all__ = ['VelocityVerletC']
 
 
-class VelocityVerletC(Integrator):
-    """VelocityVerletC(Integrator).
+class VelocityVerletC(MDEngine):
+    """VelocityVerletC(MDEngine).
 
     This class defines the Velocity Verlet integrator.
 

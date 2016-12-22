@@ -10,7 +10,7 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SimulationNVE
-    Definition of a simple NVE simulation. The integrator
+    Definition of a simple NVE simulation. The engine
     used for this simulation must have dynamics equal to NVE.
 
 SimulationMDFlux
@@ -39,13 +39,13 @@ class SimulationNVE(Simulation):
     ----------
     system : object like :py:class:`pyretis.core.system.System`
         This is the system the simulation will act on.
-    integrator : object like :py:class:`Integrator`
-        This integrator defines how to propagate the system in time.
-        The integrator must have integrator.dynamics == 'NVE' in order
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for integrating the equations of motion.
+        The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
     """
 
-    def __init__(self, system, integrator, steps=0, startcycle=0):
+    def __init__(self, system, engine, steps=0, startcycle=0):
         """Initialization of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
@@ -56,7 +56,7 @@ class SimulationNVE(Simulation):
         ----------
         system : object like :py:class:`pyretis.core.system.System`
             This is the system we are investigating.
-        integrator : object like :py:class:`Integrator`
+        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         steps : int, optional
@@ -69,12 +69,12 @@ class SimulationNVE(Simulation):
                                             startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
-        self.integrator = integrator
-        if self.integrator.dynamics.lower() != 'nve':
-            msg = 'Inconsistent integrator {} for NVE dynamics!'
-            msg = msg.format(integrator.desc)
+        self.engine = engine
+        if self.engine.dynamics.lower() != 'nve':
+            msg = 'Inconsistent MD integrator {} for NVE dynamics!'
+            msg = msg.format(engine.desc)
             logger.warning(msg)
-        task_integrate = {'func': self.integrator.integration_step,
+        task_integrate = {'func': self.engine.integration_step,
                           'args': [self.system]}
         task_thermo = {'func': calculate_thermo,
                        'args': [system],
@@ -94,8 +94,8 @@ class SimulationNVE(Simulation):
         msg = ['NVE simulation']
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['Integrator: {}'.format(self.integrator)]
-        msg += ['Time step: {}'.format(self.integrator.delta_t)]
+        msg += ['MD engine: {}'.format(self.engine)]
+        msg += ['Time step: {}'.format(self.engine.delta_t)]
         return '\n'.join(msg)
 
 
@@ -110,7 +110,7 @@ class SimulationMDFlux(Simulation):
     ----------
     system : object like :py:class:`pyretis.core.system.System`
         This is the system the simulation will act on.
-    integrator : object like :py:class:`Integrator`
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -121,7 +121,7 @@ class SimulationMDFlux(Simulation):
         to the interfaces.
     """
 
-    def __init__(self, system, orderp, integrator, interfaces,
+    def __init__(self, system, orderp, engine, interfaces,
                  steps=0, startcycle=0):
         """Initialization of the MD-Flux simulation.
 
@@ -131,7 +131,7 @@ class SimulationMDFlux(Simulation):
             This is the system we are investigating
         orderp : object like :py:class:`pyretis.orderparameter`
             The class used for calculating the order parameters.
-        integrator : object like :py:class:`Integrator`
+        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats
@@ -148,13 +148,13 @@ class SimulationMDFlux(Simulation):
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.orderp = orderp
-        self.integrator = integrator
+        self.engine = engine
         self.interfaces = interfaces
         # set up for initial crossing
         self.leftside_prev = None
         leftside, _ = check_crossing(
             self.cycle['step'],
-            self.integrator.calculate_order(self.orderp, self.system)[0],
+            self.engine.calculate_order(self.orderp, self.system)[0],
             self.interfaces,
             self.leftside_prev)
         self.leftside_prev = leftside
@@ -173,12 +173,12 @@ class SimulationMDFlux(Simulation):
         if not self.first_step:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
-            self.integrator.integration_step(self.system)
+            self.engine.integration_step(self.system)
         # collect energy and order parameter, this is done at all steps
         results = {'cycle': self.cycle,
                    'thermo': calculate_thermo(self.system),
-                   'orderp': self.integrator.calculate_order(self.orderp,
-                                                             self.system),
+                   'orderp': self.engine.calculate_order(self.orderp,
+                                                         self.system),
                    'traj': self.system}
         # do not check crossing at step 0
         if not self.first_step:
@@ -197,6 +197,6 @@ class SimulationMDFlux(Simulation):
         msg = ['MD-flux simulation']
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['Integrator: {}'.format(self.integrator)]
-        msg += ['Time step: {}'.format(self.integrator.delta_t)]
+        msg += ['Dynamics engine: {}'.format(self.engine)]
+        msg += ['Time step: {}'.format(self.engine.delta_t)]
         return '\n'.join(msg)

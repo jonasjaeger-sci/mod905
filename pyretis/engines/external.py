@@ -19,16 +19,16 @@ import logging
 import subprocess
 import shutil
 import os
-from pyretis.integrators.integrator import IntegratorBase
+from pyretis.engines.engine import EngineBase
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['ExternalScript']
+__all__ = ['ExternalMDEngine']
 
 
-class ExternalScript(IntegratorBase):
-    """Base class for interfacing external programs.
+class ExternalMDEngine(EngineBase):
+    """Base class for interfacing external engines (programs).
 
     This class defines the interface to external programs. This
     interface will define how we interact with the external programs
@@ -41,9 +41,11 @@ class ExternalScript(IntegratorBase):
         script. This can for instance be what program we are
         interfacing.
     time_step : float
-        The time step used in the GROMACS MD simulation.
+        The time step used for the external engine.
     subcycles : integer
-        The number of steps each GROMACS MD run is composed of.
+        The number of steps the external step is composed of. That is
+        each external step is really composed of ``subcycles``
+        number of iterations.
     ext_time : float
         The time to extend simulations by. It is equal to
         ``time_step * subcycles``.
@@ -53,7 +55,10 @@ class ExternalScript(IntegratorBase):
     """
 
     def __init__(self, description, time_step, subcycles, ext):
-        """Initialization of the script.
+        """Initialization of the external engine.
+
+        Here we just set up some common properties which are useful
+        for the execution.
 
         Parameters
         ----------
@@ -62,9 +67,10 @@ class ExternalScript(IntegratorBase):
             script. This can for instance be what program we are
             interfacing.
         time_step : float
-            The time step used in the GROMACS MD simulation.
+            The time step used in the simulation.
         subcycles : integer
-            The number of steps each GROMACS MD run is composed of.
+            The number of steps each external interation run is
+            composed of.
         ext : string
             The file extension for configuration files.
         """
@@ -73,13 +79,12 @@ class ExternalScript(IntegratorBase):
         self.subcycles = subcycles
         self.ext_time = self.time_step * self.subcycles
         self.exe_dir = None
-        self._int_type = 'external'
         self.ext = '{}{}'.format(os.extsep, ext)
 
     @property
-    def int_type(self):
-        """Just return the type for the integrator."""
-        return self._int_type
+    def engine_type(self):
+        """Just return the type for the engine."""
+        return 'external'
 
     @staticmethod
     def read_configuration(filename):
@@ -232,8 +237,6 @@ class ExternalScript(IntegratorBase):
             investigating
         order_function : object like :py:class:`OrderParameter`
             The object used for calculating the order parameter.
-        integrator : object like :py:class:`Integrator`
-            The object used for integrating the equations of motion.
         rgen : object like :py:class:`.random_gen.RandomGenerator`
             This is the random generator that will be used.
         middle : float
@@ -309,8 +312,6 @@ class ExternalScript(IntegratorBase):
                 curr = previous['order']
                 filename = os.path.join(self.exe_dir, out_files['conf'])
                 self.removefile(filename)
-        print('Done with kicking. Files in self.exe_dir:')
-        print(os.listdir(self.exe_dir))
         return previous, particles.get_particle_state()
 
     def extract_frame(self, traj_file, idx, out_file):

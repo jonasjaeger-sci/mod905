@@ -39,7 +39,7 @@ __all__ = ['make_tis_step_ensemble', 'make_tis_step',
            'generate_initial_path_kick']
 
 
-def make_tis_step_ensemble(path_ensemble, system, order_function, integrator,
+def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
                            rgen, tis_settings, cycle):
     """Function to preform TIS step for a path ensemble.
 
@@ -58,8 +58,8 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, integrator,
         and to the particle list.
     order_function : object like :py:class:`OrderParameter`
         The class used for obtaining the order parameter(s).
-    integrator : object like :py:class:`Integrator`
-        A integrator to use for propagating a path.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
@@ -82,12 +82,12 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, integrator,
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
     msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
     logger.debug(msgtxt)
-    integrator.exe_dir = path_ensemble.directory['generate']
+    engine.exe_dir = path_ensemble.directory['generate']
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
                                           order_function,
                                           path_ensemble.interfaces,
-                                          integrator,
+                                          engine,
                                           rgen,
                                           tis_settings)
     if accept:
@@ -100,7 +100,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, integrator,
 
 
 def initiate_path_ensemble(path_ensemble, system, order_function,
-                           integrator, rgen, tis_settings, cycle=0):
+                           engine, rgen, tis_settings, cycle=0):
     """This function will run the initiate for a given ensemble.
 
     This function is intended for convenience. It should handle and
@@ -115,8 +115,8 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         and to the particle list.
     order_function : object like :py:class:`OrderParameter`
         The class used for obtaining the order parameter(s).
-    integrator : object like :py:class:`Integrator`
-        A integrator to use for propagating a path.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
@@ -136,16 +136,16 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         logger.error('Unknown initiation method')
         raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
-        integrator.exe_dir = path_ensemble.directory['generate']
+        engine.exe_dir = path_ensemble.directory['generate']
         initial_path = generate_initial_path_kick(system, order_function,
                                                   path_ensemble.interfaces,
-                                                  integrator, rgen,
+                                                  engine, rgen,
                                                   tis_settings)
         status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle=cycle)
 
 
-def make_tis_step(path, system, order_function, interfaces, integrator, rgen,
+def make_tis_step(path, system, order_function, interfaces, engine, rgen,
                   tis_settings):
     """Perform a TIS step and generate a new path/trajectory.
 
@@ -165,8 +165,8 @@ def make_tis_step(path, system, order_function, interfaces, integrator, rgen,
         The class used for obtaining the order parameter(s).
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    integrator : object like :py:class:`Integrator`
-        A integrator to use for propagating a path.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`RandomGenerator`
         Random number generator used to determine what TIS move to
         perform.
@@ -193,7 +193,7 @@ def make_tis_step(path, system, order_function, interfaces, integrator, rgen,
     else:
         logger.debug('Selected a shooting move.')
         accept, new_path, status = _shoot(path, system, order_function,
-                                          interfaces, integrator, rgen,
+                                          interfaces, engine, rgen,
                                           tis_settings)
     return accept, new_path, status
 
@@ -236,7 +236,7 @@ def _time_reversal(path, interfaces, start_condition):
     return accept, new_path, status
 
 
-def _shoot(path, system, order_function, interfaces, integrator, rgen,
+def _shoot(path, system, order_function, interfaces, engine, rgen,
            tis_settings):
     """Perform a shooting-move.
 
@@ -256,8 +256,8 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     interfaces : list/tuple of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like :py:class:`Integrator`
-        The integrator is used to propagate a path.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`.random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
@@ -288,14 +288,14 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
     # Modify the velocities:
-    dek, _, = integrator.modify_velocities(
+    dek, _, = engine.modify_velocities(
         system,
         rgen,
         sigma_v=tis_settings['sigma_v'],
         aimless=tis_settings['aimless'],
         momentum=tis_settings['zero_momentum'],
         rescale=tis_settings['rescale_energy'])
-    orderp = integrator.calculate_order(order_function, system)
+    orderp = engine.calculate_order(order_function, system)
     # We now check if the kick was OK or not:
     # 1) check if the kick was too violent:
     left, _, right = interfaces
@@ -324,8 +324,8 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     maxlenb = maxlen - 1
     # generate the backward path:
     path_back = path.empty_path(maxlen=maxlenb)
-    success_back, _ = integrator.propagate(path_back, system, order_function,
-                                           interfaces, reverse=True)
+    success_back, _ = engine.propagate(path_back, system, order_function,
+                                       interfaces, reverse=True)
 
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
@@ -348,8 +348,8 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     # Everything seems fine, propagate forward
     maxlenf = maxlen - path_back.length + 1
     path_forw = path.empty_path(maxlen=maxlenf)
-    success_forw, _ = integrator.propagate(path_forw, system, order_function,
-                                           interfaces, reverse=False)
+    success_forw, _ = engine.propagate(path_forw, system, order_function,
+                                       interfaces, reverse=False)
     path_forw.time_origin = time_shoot
     # Now, the forward could have failed by exceeding `maxlenf`,
     # however, it could also fail when we paste together so that
@@ -374,7 +374,7 @@ def _shoot(path, system, order_function, interfaces, integrator, rgen,
     return accept, trial_path, trial_path.status
 
 
-def generate_initial_path_kick(system, order_function, interfaces, integrator,
+def generate_initial_path_kick(system, order_function, interfaces, engine,
                                rgen, tis_settings):
     """Simple function to generate an initial path.
 
@@ -397,8 +397,8 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like :py:class:`Integrator`
-        This is the propagator of the simulation
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`.random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
@@ -415,20 +415,20 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
-    leftpoint, _ = integrator.kick_across_middle(system,
-                                                 order_function,
-                                                 rgen, interfaces[1],
-                                                 tis_settings)
+    leftpoint, _ = engine.kick_across_middle(system,
+                                             order_function,
+                                             rgen, interfaces[1],
+                                             tis_settings)
     # kick_across_middle will return two points, one immediately
     # left of the interface and one immediately right of the
     # interface. So we have two points (`leftpoint` and the
     # current `system.particles`). We then propagate the current
     # phase point forward:
     maxlen = tis_settings['maxlength']
-    klass = get_path_klass(integrator.int_type)
+    klass = get_path_klass(engine.engine_type)
     path_forw = klass(rgen, maxlen=maxlen)
-    success, msg = integrator.propagate(path_forw, system, order_function,
-                                        interfaces, reverse=False)
+    success, msg = engine.propagate(path_forw, system, order_function,
+                                    interfaces, reverse=False)
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -436,8 +436,8 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
     # And we propagate the `leftpoint` backward:
     system.particles.set_particle_state(leftpoint)
     path_back = klass(rgen, maxlen=maxlen)
-    success, msg = integrator.propagate(path_back, system, order_function,
-                                        interfaces, reverse=True)
+    success, msg = engine.propagate(path_back, system, order_function,
+                                    interfaces, reverse=True)
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
@@ -476,7 +476,7 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
         logger.info(msgtxt)
         initial_path = _fix_path_by_tis(initial_path, system,
                                         order_function, interfaces,
-                                        integrator, rgen, tis_settings)
+                                        engine, rgen, tis_settings)
     else:
         logger.error('Could not generate initial path.')
         raise ValueError('Could not generate initial path.')
@@ -484,7 +484,7 @@ def generate_initial_path_kick(system, order_function, interfaces, integrator,
 
 
 def _fix_path_by_tis(initial_path, system, order_function, interfaces,
-                     integrator, rgen, tis_settings):
+                     engine, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
     The fix is performed by making TIS moves and this function is
@@ -503,8 +503,8 @@ def _fix_path_by_tis(initial_path, system, order_function, interfaces,
     interfaces : list of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    integrator : object like :py:class:`Integrator`
-        This is the propagator of the simulation
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to use for propagating a path.
     rgen : object like :py:class:`.random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
@@ -536,7 +536,7 @@ def _fix_path_by_tis(initial_path, system, order_function, interfaces,
                                          system,
                                          order_function,
                                          interfaces,
-                                         integrator,
+                                         engine,
                                          rgen,
                                          local_tis_settings)
         if accept:

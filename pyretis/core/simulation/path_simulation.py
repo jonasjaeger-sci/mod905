@@ -37,7 +37,7 @@ class SimulationSingleTIS(Simulation):
 
     Attributes
     ----------
-    integrator : object like :py:class:`Integrator`
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -54,7 +54,7 @@ class SimulationSingleTIS(Simulation):
         (shooting moves etc.).
     """
 
-    def __init__(self, system, orderp, integrator, path_ensemble, rgen,
+    def __init__(self, system, orderp, engine, path_ensemble, rgen,
                  tis_settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
@@ -64,7 +64,7 @@ class SimulationSingleTIS(Simulation):
             This is the system we are investigating.
         orderp : object like :py:class:`OrderParameter`
             The object used for calculating the order parameter.
-        integrator : object like :py:class:`Integrator`
+        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         path_ensemble : object like :py:class:`PathEnsemble`
@@ -100,7 +100,7 @@ class SimulationSingleTIS(Simulation):
         self.rgen = rgen
         self.system.potential_and_force()  # make sure forces are defined.
         self.orderp = orderp
-        self.integrator = integrator
+        self.engine = engine
         self.path_ensemble = path_ensemble
         self.interfaces = path_ensemble.interfaces
         self.tis_settings = tis_settings
@@ -122,13 +122,14 @@ class SimulationSingleTIS(Simulation):
         """
         results = {}
         if self.first_step:
-            initiate_path_ensemble(self.path_ensemble,
-                                   self.system,
-                                   self.orderp,
-                                   self.integrator,
-                                   self.rgen,
-                                   self.tis_settings,
-                                   self.cycle['step'])
+            initiate_path_ensemble(
+                self.path_ensemble,
+                self.system,
+                self.orderp,
+                self.engine,
+                self.rgen,
+                self.tis_settings,
+                self.cycle['step'])
             trial = self.path_ensemble.last_path
             status = 'ACC'
             accept = True
@@ -136,13 +137,14 @@ class SimulationSingleTIS(Simulation):
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
-            accept, trial, status = make_tis_step_ensemble(self.path_ensemble,
-                                                           self.system,
-                                                           self.orderp,
-                                                           self.integrator,
-                                                           self.rgen,
-                                                           self.tis_settings,
-                                                           self.cycle['step'])
+            accept, trial, status = make_tis_step_ensemble(
+                self.path_ensemble,
+                self.system,
+                self.orderp,
+                self.engine,
+                self.rgen,
+                self.tis_settings,
+                self.cycle['step'])
         results['accept'] = accept
         results['trialpath'] = trial
         results['status'] = status
@@ -157,8 +159,7 @@ class SimulationSingleTIS(Simulation):
         msg += ['Interfaces: {}'.format(self.interfaces)]
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
-        msg += ['Integrator: {}'.format(self.integrator)]
-        msg += ['Time step: {}'.format(self.integrator.delta_t)]
+        msg += ['Engine: {}'.format(self.engine)]
         return '\n'.join(msg)
 
 
@@ -172,7 +173,7 @@ class SimulationRETIS(Simulation):
     ----------
     system : object like :py:class:`System`
         This is the system we are investigating.
-    integrator : object like :py:class:`Integrator`
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         This is the integrator that is used to propagate the system
         in time.
     path_ensembles : list of objects like :py:class:`PathEnsemble`
@@ -186,7 +187,7 @@ class SimulationRETIS(Simulation):
         This object is the random generator to use in the simulation.
     """
 
-    def __init__(self, system, orderp, integrator, path_ensembles, rgen,
+    def __init__(self, system, orderp, engine, path_ensembles, rgen,
                  tis_settings, retis_settings, steps=0, startcycle=0):
         """Initialization of the RETIS simulation.
 
@@ -196,7 +197,7 @@ class SimulationRETIS(Simulation):
             This is the system we are investigating.
         orderp : object like :py:class:`OrderParameter`
             The object used for calculating the order parameter.
-        integrator : object like :py:class:`Integrator`
+        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         path_ensembles : list of objects like :py:class:`PathEnsemble`
@@ -244,7 +245,7 @@ class SimulationRETIS(Simulation):
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.orderp = orderp
-        self.integrator = integrator
+        self.engine = engine
         self.path_ensembles = path_ensembles
         self.settings = {'tis': tis_settings, 'retis': retis_settings}
         self.rgen = rgen
@@ -277,13 +278,14 @@ class SimulationRETIS(Simulation):
         """
         msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
         logger.info(msg)
-        initiate_path_ensemble(ensemble,
-                               self.system,
-                               self.orderp,
-                               self.integrator,
-                               self.rgen,
-                               self.settings['tis'],
-                               self.cycle['step'])
+        initiate_path_ensemble(
+            ensemble,
+            self.system,
+            self.orderp,
+            self.engine,
+            self.rgen,
+            self.settings['tis'],
+            self.cycle['step'])
         return ensemble.last_path
 
     def step(self):
@@ -299,24 +301,26 @@ class SimulationRETIS(Simulation):
             for ensemble in self.path_ensembles:
                 msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
                 logger.info(msg)
-                initiate_path_ensemble(ensemble,
-                                       self.system,
-                                       self.orderp,
-                                       self.integrator,
-                                       self.rgen,
-                                       self.settings['tis'],
-                                       self.cycle['step'])
+                initiate_path_ensemble(
+                    ensemble,
+                    self.system,
+                    self.orderp,
+                    self.engine,
+                    self.rgen,
+                    self.settings['tis'],
+                    self.cycle['step'])
             self.first_step = False
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
-            retis_step = make_retis_step(self.path_ensembles,
-                                         self.system,
-                                         self.orderp,
-                                         self.integrator,
-                                         self.rgen,
-                                         self.settings,
-                                         self.cycle['step'])
+            retis_step = make_retis_step(
+                self.path_ensembles,
+                self.system,
+                self.orderp,
+                self.engine,
+                self.rgen,
+                self.settings,
+                self.cycle['step'])
             results['retis'] = retis_step
         results['cycle'] = self.cycle
         return results

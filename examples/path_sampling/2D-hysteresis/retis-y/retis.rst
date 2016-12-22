@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 20000
+steps = 1000000
 interfaces = [-0.32, -0.21, -0.13, -0.08, -0.03, 0.03, 0.10, 0.20]
 
 System
@@ -17,8 +17,8 @@ Box
 ---
 periodic = [False, False]
 
-Integrator
-----------
+Engine
+------
 class = Langevin
 timestep = 0.002
 gamma = 0.3
