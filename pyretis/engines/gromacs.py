@@ -147,13 +147,13 @@ class GromacsEngine(ExternalMDEngine):
     input_files : dict of strings
         The names of the input files. We expect to find the keys
         ``'configuration'``, ``'input'`` ``'topology'``.
-    time_step : float
+    timestep : float
         The time step used in the GROMACS MD simulation.
     subcycles : integer
         The number of steps each GROMACS MD run is composed of.
     """
 
-    def __init__(self, gmx, mdrun, input_path, input_files, time_step,
+    def __init__(self, gmx, mdrun, input_path, input_files, timestep,
                  subcycles):
         """Initiate the script.
 
@@ -167,12 +167,12 @@ class GromacsEngine(ExternalMDEngine):
             The absolute path to where the input files are stored.
         input_files : dict
             This dictionary contains the names of the input files.
-        time_step : float
+        timestep : float
             The time step used in the GROMACS MD simulation.
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
         """
-        super().__init__('GROMASC external script', time_step,
+        super().__init__('GROMASC external script', timestep,
                          subcycles, 'g96')
 
         self.gmx = gmx
@@ -182,7 +182,7 @@ class GromacsEngine(ExternalMDEngine):
         self.mdrun = mdrun + ' -s {} -deffnm {} -c {}'
         self.mdrunc = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
 
-        self.input_path = input_path
+        self.input_path = os.path.abspath(input_path)
         self.input_files = {}
         for key, val in input_files.items():
             self.input_files[key] = os.path.join(self.input_path, val)
@@ -345,8 +345,8 @@ class GromacsEngine(ExternalMDEngine):
         This will only properly work in the frames in the .trr are
         separated uniformly.
         """
-        time1 = (idx - 1) * self.time_step * self.subcycles
-        time2 = idx * self.time_step * self.subcycles
+        time1 = (idx - 1) * self.timestep * self.subcycles
+        time2 = idx * self.timestep * self.subcycles
         cmd = [self.gmx, 'trjconv',
                '-f', trr_file,
                '-s', self.input_files['tpr'],

@@ -12,6 +12,9 @@ Important classes defined here
 
 Particles (:py:class:`pyretis.core.particles.Particles`)
     Class for a list of particles.
+
+ParticlesExt (:py:class:`pyretis.core.particles.ParticlesExt`)
+    Class for an external particle list.
 """
 import logging
 import numpy as np
@@ -74,7 +77,7 @@ class Particles(object):
         self.force = None
         self.mass = None
         self.imass = None
-        self.name = None
+        self.name = []
         self.ptype = None
         self.virial = np.zeros((dim, dim))
         self.dim = dim
@@ -99,7 +102,7 @@ class Particles(object):
         self.force = None
         self.mass = None
         self.imass = None
-        self.name = None
+        self.name = []
         self.ptype = None
         self.virial = np.zeros_like(self.virial)
 
@@ -389,3 +392,21 @@ class ParticlesExt(Particles):
         self.set_vel(phasepoint['vel'])
         self.ekin = phasepoint['ekin']
         self.vpot = phasepoint['vpot']
+
+
+def get_particle_type(engine_type):
+    """Method to return the path ensemble class to work with an engine.
+
+    Parameters
+    ----------
+    engine_type : string
+        The type of particles we are requesting.
+    """
+    particle_map = {'internal': Particles,
+                    'external': ParticlesExt}
+    try:
+        return particle_map[engine_type]
+    except KeyError:
+        msg = 'Unknown ensemble type "{}" requested.'.format(engine_type)
+        logger.critical(msg)
+        raise ValueError(msg)

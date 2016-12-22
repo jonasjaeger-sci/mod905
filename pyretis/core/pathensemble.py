@@ -387,8 +387,7 @@ def get_path_ensemble_class(ensemble_type):
     path_ensemble_map = {'internal': PathEnsemble,
                          'external': PathEnsembleExt}
     try:
-        klass = path_ensemble_map[ensemble_type]
-        return klass
+        return path_ensemble_map[ensemble_type]
     except KeyError:
         msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
         logger.critical(msg)

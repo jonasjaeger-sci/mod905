@@ -464,13 +464,16 @@ if __name__ == '__main__':
         print_and_loginfo('Initiaizing unit system.')
         msg = units_from_settings(settings)
         print_and_loginfo(msg)
+        engine = create_engine(settings)
+        if engine is not None:
+            msg = 'Created engine "{}" from settings'.format(engine)
+            print_and_loginfo(msg)
         print_and_loginfo('Creating system from settings.')
-        system = create_system(settings)
+        system = create_system(settings, engine=engine)
         print_and_loginfo('Creating force field')
         system.forcefield = create_force_field(settings)
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
-        engine = create_engine(settings)
         kwargs = {'system': system, 'engine': engine}
         simulation = create_simulation(settings, kwargs)
         task = settings['simulation']['task'].lower()

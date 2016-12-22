@@ -37,7 +37,7 @@ import numpy as np
 from pyretis.tools import generate_lattice
 from pyretis.core.box import Box
 from pyretis.core.system import System
-from pyretis.core.particles import Particles
+from pyretis.core.particles import Particles, get_particle_type
 from pyretis.core.units import CONVERT
 from pyretis.inout.writers.traj import read_xyz_file, read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -476,7 +476,7 @@ def create_velocities(system, settings, vel):
         return False
 
 
-def create_system(settings):
+def create_system(settings, engine=None):
     """Method that will set up a system from settings.
 
     In order to set up the system, there are several things we might
@@ -492,19 +492,35 @@ def create_system(settings):
     ----------
     settings : dict
         The dict with the simulation settings
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine to be used for the simulation. This can be given
+        in case we want to choose an external particle list type.
 
     Returns
     -------
     system : object like `system` from `pyretis.core.system`
         The system object we create here.
     """
-    particles, size, vel = create_initial_positions(settings)
+    if engine is None or engine.engine_type == 'internal':
+        particles, size, vel = create_initial_positions(settings)
+    else:
+        # engine is not None and not internal -> external
+        klass = get_particle_type(engine.engine_type)
+        particles = klass(dim=3)
+        phasepoint = {'pos': (engine.input_files['configuration'], 0),
+                      'vel': False, 'ekin': None, 'vpot': None}
+        particles.set_particle_state(phasepoint)
+        size = None
+        vel = None
     box = create_box(settings, size, dim=particles.dim)
     system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
     system.particles = particles
     # figure out what to do with velocities:
-    vel_gen = create_velocities(system, settings, vel)
+    if 'particles' in settings:
+        vel_gen = create_velocities(system, settings, vel)
+    else:
+        vel_gen = False
     if not (vel_gen or vel):
         msg = 'Velocities were not created or read. Just set to zero!'
         logger.warning(msg)

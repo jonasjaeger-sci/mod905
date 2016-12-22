@@ -40,7 +40,7 @@ class ExternalMDEngine(EngineBase):
         Short string which a description about the external
         script. This can for instance be what program we are
         interfacing.
-    time_step : float
+    timestep : float
         The time step used for the external engine.
     subcycles : integer
         The number of steps the external step is composed of. That is
@@ -48,13 +48,13 @@ class ExternalMDEngine(EngineBase):
         number of iterations.
     ext_time : float
         The time to extend simulations by. It is equal to
-        ``time_step * subcycles``.
+        ``timestep * subcycles``.
     ext : string
         Extension for configuration files. It includes the
         extension separator ".".
     """
 
-    def __init__(self, description, time_step, subcycles, ext):
+    def __init__(self, description, timestep, subcycles, ext):
         """Initialization of the external engine.
 
         Here we just set up some common properties which are useful
@@ -66,7 +66,7 @@ class ExternalMDEngine(EngineBase):
             Short string which a description about the external
             script. This can for instance be what program we are
             interfacing.
-        time_step : float
+        timestep : float
             The time step used in the simulation.
         subcycles : integer
             The number of steps each external interation run is
@@ -75,9 +75,9 @@ class ExternalMDEngine(EngineBase):
             The file extension for configuration files.
         """
         self.description = description
-        self.time_step = time_step
+        self.timestep = timestep
         self.subcycles = subcycles
-        self.ext_time = self.time_step * self.subcycles
+        self.ext_time = self.timestep * self.subcycles
         self.exe_dir = None
         self.ext = '{}{}'.format(os.extsep, ext)
 
@@ -185,13 +185,11 @@ class ExternalMDEngine(EngineBase):
     @staticmethod
     def movefile(source, dest):
         """Move file from source to destination."""
-        print('moving {} -> {}'.format(source, dest))
         shutil.move(source, dest)
 
     @staticmethod
     def copyfile(source, dest):
         """Copy file from source to destination."""
-        print('copying {} -> {}'.format(source, dest))
         shutil.copyfile(source, dest)
 
     @staticmethod
@@ -299,15 +297,18 @@ class ExternalMDEngine(EngineBase):
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
+            print(prev, curr, middle)
             if (prev <= middle < curr) or (curr < middle <= prev):
                 # have crossed middle interface, just stop the loop
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point
+                print('Getting closer!')
                 self.movefile(curr_file, prev_file)
                 # Update file name after moving:
                 particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
+                print('Did not get closer...')
                 particles.set_particle_state(previous)
                 curr = previous['order']
                 filename = os.path.join(self.exe_dir, out_files['conf'])
