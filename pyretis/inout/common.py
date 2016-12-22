@@ -333,14 +333,11 @@ def check_python_version():
     """Method that will give a warning about old python version(s)."""
     pyversion = sys.version.split()[0]
     if sys.version_info < (3, 0):
-        warntxt = ('Please upgrade to Python 3.'
-                   '\nPython 2.7 support will be dropped in the near future!')
-        warntxt = warntxt.format(pyversion)
-        logger.warning(warntxt)
-        if sys.version_info < (2.7):
-            msgtxt = ('Your version of Python is NOT and supported.'
-                      ' Please upgrade!')
-            logger.critical(msgtxt)
+        msgtxt = ('Please upgrade to Python 3.'
+                  '\nPython {} is not supported!')
+        msgtxt = msgtxt.format(pyversion)
+        logger.error(msgtxt)
+        raise SystemExit(msgtxt)
 
 
 class PyretisLogFormatter(logging.Formatter):
