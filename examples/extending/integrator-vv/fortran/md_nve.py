@@ -10,6 +10,7 @@ from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout.settings import (create_system, create_simulation,
+                                    create_integrator,
                                     create_force_field, create_output)
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
@@ -42,7 +43,8 @@ print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 print('# Creating simulation from settings.')
-simulation_nve = create_simulation(settings, ljsystem)
+sim_args = {'system': ljsystem, 'integrator': create_integrator(settings)}
+simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
 output_tasks = [task for task in create_output(settings)]
 msg = 'Created fcc grid with {} atoms.'

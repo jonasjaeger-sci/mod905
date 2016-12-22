@@ -9,7 +9,7 @@ import os
 import unittest
 import numpy as np
 from pyretis.core.simulation import Simulation
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.integrators import VelocityVerlet
 from pyretis.forcefield import ForceField
@@ -23,7 +23,7 @@ def set_up_simulation():
     size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
     box = Box(size)
     ljsystem = System(box=box, units='lj')
-
+    ljsystem.particles = Particles(dim=3)
     ljpot = PairLennardJonesCutF(shift=True, mixing='geometric')
     lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                      1: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},

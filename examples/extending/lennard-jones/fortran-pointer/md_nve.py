@@ -6,6 +6,7 @@ This system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_system,
+									create_integrator,
                                     create_force_field, create_output)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
@@ -37,7 +38,8 @@ print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 print('# Creating simulation from settings.')
-simulation_nve = create_simulation(settings, ljsystem)
+sim_args = {'system': ljsystem, 'integrator': create_integrator(settings)}
+simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
 output_tasks = [task for task in create_output(settings)]
 msg = 'Created fcc grid with {} atoms.'

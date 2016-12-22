@@ -6,7 +6,7 @@ This timing is simply done by evaluating the Leannrd-Jones forces
 """
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialf import PairLennardJonesCutF
@@ -24,6 +24,7 @@ def set_up_initial_state(nlattice=5):
     lattice += np.random.randn(npart, 3) * 0.05
     box = Box(size, periodic=[True, True, True])
     sys = System(temperature=1.0, units='lj', box=box)
+    sys.particles = Particles(dim=3)
     for pos in lattice:
         sys.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
     msg = 'Created lattice with {} atoms.'
