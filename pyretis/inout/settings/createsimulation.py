@@ -376,7 +376,7 @@ def create_simulation(settings, kwargs):
         'md-flux': {'function': create_mdflux_simulation,
                     'args': ('system', 'integrator')},
         'umbrellawindow': {'function': create_umbrellaw_simulation,
-                           'args': ('system')},
+                           'args': ('system',)},
         'tis': {'function': create_tis_simulations,
                 'args': ('system', 'integrator')},
         'retis': {'function': create_retis_simulation,

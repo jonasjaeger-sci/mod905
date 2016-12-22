@@ -61,7 +61,8 @@ for i, umbrella in enumerate(umbrellas):
     # Calculate position we must cross for this window:
     settings['simulation']['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
     # Create the umbrella simulation :-)
-    simulation = create_simulation(settings, mysystem)
+    sim_args = {'system': mysystem}
+    simulation = create_simulation(settings, sim_args)
     print(simulation)
     # Also create empy list for storing some data:
     traj, ener = [], []
