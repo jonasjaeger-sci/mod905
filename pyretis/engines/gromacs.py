@@ -10,7 +10,6 @@ Important classes defined here
 
 GromacsEngine
     A class responsible for interfacing GROMACS.
-
 """
 import logging
 import os
@@ -424,6 +423,7 @@ class GromacsEngine(ExternalMDEngine):
         # Note: Order is calculated after end of each iteration!
         for i in range(path.maxlen):
             # We first add the current phase point, and then we propagate.
+            print(left, order[0], right)
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),

@@ -10,18 +10,16 @@ Here we test the following:
 
 2. That we after performing 1, can reverse the velocities
    and end up back at the starting point.
-
-3. That we can generate several trajectories.
 """
 import os
+import subprocess
 import numpy as np
 from pyretis.core import Box
-from pyretis.core.particles import ParticlesExt
-from pyretis.integrators import GromacsExt, ExternalScript
-from pyretis.integrators.gromacs import read_gromos96_file
+from pyretis.core.pathext import PathExt
+from pyretis.engines.gromacs import read_gromos96_file
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import create_system
-from pyretis.inout.settings import create_orderparameter
+from pyretis.inout.settings import (create_system, create_engine,
+                                    create_orderparameter)
 from pyretis.inout.common import make_dirs
 from matplotlib import pyplot as plt
 
@@ -71,9 +69,8 @@ def read_xvg_file(filename):
     with open(filename, 'r') as fileh:
         for lines in fileh:
             if lines.startswith('@ s'):
-                legend = lines.split()[-1]
-                legend.replace('"', '')
-                legends.append(legend)
+                legend = lines.split('legend')[-1].strip()
+                legends.append(legend.replace('"', ''))
             else:
                 if lines.startswith('#') or lines.startswith('@'):
                     pass
@@ -125,6 +122,19 @@ def compare_energies(xvg1, xvg2, reverse=False):
     ax1.set_ylabel('Energy difference')
 
 
+def make_msd_plot(mse_x, mse_v):
+    """Just plot the results."""
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+    ax1.set_xlabel('Step')
+    ax1.set_ylabel('MSE position')
+    ax2.set_xlabel('Step')
+    ax2.set_ylabel('MSE velocity')
+    ax1.plot(mse_x)
+    ax2.plot(mse_v)
+
+
 def compare_frames(path1, path2, reverse=False):
     """Compare frames in two directories.
 
@@ -147,7 +157,7 @@ def compare_frames(path1, path2, reverse=False):
     files1 = sorted(files1)
     files2 = sorted(files2)
     if reverse:
-        files1 = reversed(files1)
+        files1 = files1[::-1]
     all_mse_x = []
     all_mse_v = []
     for file1, file2 in zip(files1, files2):
@@ -156,17 +166,9 @@ def compare_frames(path1, path2, reverse=False):
         all_mse_v.append(mse_v)
     print('Average MSE positions: {}'.format(np.average(all_mse_x)))
     print('Average MSE velocity: {}'.format(np.average(all_mse_v)))
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212)
-    ax1.set_xlabel('Step')
-    ax1.set_ylabel('MSE position')
-    ax2.set_xlabel('Step')
-    ax2.set_ylabel('MSE velocity')
-    ax1.plot(all_mse_x)
-    ax2.plot(all_mse_v)
+    make_msd_plot(all_mse_x, all_mse_v)
 
-def compare_results(path1, path2, out_files, reverse):
+def compare_results(path1, path2, out_files, patho, reverse):
     """Compare gromacs results from simulations in two paths.
 
     Parameters
@@ -178,27 +180,43 @@ def compare_results(path1, path2, out_files, reverse):
     out_files : dict
         A dict with files from the ouput when running the
         gromacs simulation with pyretis.
+    path0 : object like :py:class:`pyretis.core.pathext.PathExt`.
+        The path object.
     reverse : boolean
         If True, we are comparing time reversed results.
     """
-    external = ExternalScript('For executing commands', None, None, None)
-
     cmd = ['gmx_5.1.4', 'trjconv', '-f', out_files['trr'],
            '-s', out_files['tpr'], '-o', 'frame.g96', '-sep',
            '-nzero', '5']
-    external.execute_command(cmd, inputs=b'0', cwd=path1)
-
-    cmd = ['gmx_5.1.4', 'energy', '-f', out_files['edr']]
-    external.execute_command(cmd, inputs=b'1 2 3 4 5 6 7 8', cwd=path1)
+    exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
+                           shell=False,
+                           cwd=path1)
+    _ = exe.communicate(input=b'0')
 
     compare_frames(path1, os.path.join(path2, 'frames'),
                    reverse=reverse)
 
-    compare_energies(os.path.join(path1, 'energy.xvg'),
-                     os.path.join(path2, 'energy.xvg'),
-                     reverse=reverse)
+    xvg2 = os.path.join(path2, 'energy.xvg')
+    energy2 = read_xvg_file(xvg2)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+    if reverse:
+        ekin = patho.ekin[::-1]
+        vpot = patho.vpot[::-1]
+    else:
+        ekin = patho.ekin
+        vpot = patho.vpot
+    ax1.plot(ekin, lw=3, alpha=0.8, label='GromacsExternal')
+    ax1.plot(energy2['Kinetic En.'], lw=2, alpha=0.8, label='Plain GROMACS')
+    ax1.set_ylabel('Kinetic En.')
+    ax1.legend()
+    ax2.plot(vpot, lw=3, alpha=0.8)
+    ax2.plot(energy2['Potential'], lw=2, alpha=0.8)
+    ax2.set_ylabel('Potential')
     plt.show()
-
 
 
 def run_forward(gro, system, order_function):
@@ -215,29 +233,34 @@ def run_forward(gro, system, order_function):
         The object which handles gromacs integration.
     system : object like :py:class:`pyretis.core.system.System`
         The system we are studying.
+
+    Returns
+    -------
+    out[0] : dict
+        Some files created by this method.
+    out[1] : object like :py:class:`pyretis.core.path.pathext.PathExt`.
+        The trajectory created.
     """
     exe_path = os.path.join(os.getcwd(), 'trajf')
     make_dirs(exe_path)
+    gro.exe_dir = exe_path
     plain_path = os.path.join(os.getcwd(), 'plain-md')
     # Test 1:
     # We have performed a plain MD simulation with gromacs, starting from
     # initial.g96 for 1000 steps. We now do the same with start and
     # stopping:
-    initial = os.path.join(os.getcwd(), 'initial.g96')
-
-    local_settings = {'steps': 1000 // gro.subcycles}
-    system.particles.set_pos((initial, None))
-    system.particles.set_vel((initial, None))
-    out_files, order = gro.execute_until(system, order_function,
-                                         local_settings,
-                                         reverse=False,
-                                         exe_dir=exe_path)
-
-    compare_results(exe_path, plain_path, out_files, False)
-    return out_files, order
+    length = 1000 // gro.subcycles + 1
+    path = PathExt(None, maxlen=length)
+    interfaces = [-float('inf'), None, float('inf')]
+    gro.propagate(path, system, order_function,
+                  interfaces, reverse=False)
+    out_files = {'tpr': gro.input_files['tpr'],
+                 'trr': 'trajF.trr'}
+    compare_results(exe_path, plain_path, out_files, path, False)
+    return out_files, path
 
 
-def run_reverse(gro, system, order_function):
+def run_reverse(gro, system, forward_path, order_function):
     """Test implementation of gromacs integrator.
 
     This test will run a gromacs simulation with starting and stopping
@@ -250,35 +273,38 @@ def run_reverse(gro, system, order_function):
         The object which handles gromacs integration.
     system : object like :py:class:`pyretis.core.system.System`
         The system we are studying.
+    forward_path : object like :py:class:`pyretis.core.pathext.PathExt`
+        The forward path generated. Used here to pick the initial point.
+
+    Returns
+    -------
+    out[0] : dict
+        Some files created by this method.
+    out[1] : object like :py:class:`pyretis.core.path.pathext.PathExt`.
+        The trajectory created.
     """
     exe_path = os.path.join(os.getcwd(), 'trajb')
     make_dirs(exe_path)
+    gro.exe_dir = exe_path
     plain_path = os.path.join(os.getcwd(), 'plain-md')
-    local_settings = {'steps': 1000 // gro.subcycles}
-    # Extract last frame from the plain-md trr as a starting point:
-    initial = os.path.join(exe_path, 'initial.g96')
-    gro.get_trr_frame(os.path.join(plain_path, 'traj.trr'),
-                      os.path.join(plain_path, 'topol.tpr'),
-                      local_settings['steps'], initial)
-    # Run backwards from this frame:
-    system.particles.set_pos((initial, None))
-    system.particles.set_vel((initial, None))
-    out_files, order = gro.execute_until(system, order_function,
-                                         local_settings,
-                                         reverse=True,
-                                         exe_dir=exe_path)
-    compare_results(exe_path, plain_path, out_files, True)
-    return out_files, order
+
+    length = 1000 // gro.subcycles + 1
+    path = PathExt(None, maxlen=length)
+
+    phasepoint = forward_path.phasepoint(-1)
+    system.particles.set_particle_state(phasepoint)
+
+    interfaces = [-float('inf'), None, float('inf')]
+    gro.propagate(path, system, order_function,
+                  interfaces, reverse=True)
+    out_files = {'tpr': gro.input_files['tpr'],
+                 'trr': 'trajB.trr'}
+    compare_results(exe_path, plain_path, out_files, path, True)
+    return out_files, path
 
 
-
-def do_setup(md_settings):
+def do_setup():
     """Do initial setup needed for running the test.
-
-    Parameters
-    ----------
-    md_settings : dict
-        A dict containing settings for the gromacs integrator.
 
     Returns
     -------
@@ -301,31 +327,25 @@ def do_setup(md_settings):
                                   'name': 'Gromacs distance',
                                   'periodic': True,
                                   'dim': 'z'}
+    settings['engine'] = {'class': 'gromacs',
+                          'gmx': 'gmx_5.1.4',
+                          'mdrun': 'gmx_5.1.4 mdrun',
+                          'input_path': 'ext_input',
+                          'input_files': {'configuration': 'initial.g96',
+                                          'input': 'grompp.mdp',
+                                          'topology': 'topol.top'},
+                          'timestep': 0.002, 'subcycles': 5}
+
     create_conversion_factors(settings['system']['units'])
-
-    system = create_system(settings)
-    # Transition to new particle class
-    particles = ParticlesExt(dim=system.get_dim())
-    for p in system.particles:
-        particles.add_particle(p['pos'], p['vel'], p['force'],
-                               mass=p['mass'], name=p['name'], ptype=p['type'])
-    system.particles = particles
-    # Transition done!
+    gro = create_engine(settings)
+    system = create_system(settings, engine=gro)
     order_function = create_orderparameter(settings)
-
-    input_dir = os.path.join(os.getcwd(), 'ext_input')
-
-    input_files = {'configuration': 'conf.g96',
-                   'input': 'grompp.mdp',
-                   'topology': 'topol.top'}
-    gro = GromacsExt('gmx_5.1.4', input_dir, input_files,
-                     md_settings['timestep'], md_settings['subcycles'])
     return system, order_function, gro
 
 
 if __name__ == '__main__':
-    md_settings = {'subcycles': 5, 'timestep': 0.002}
-    sys, order_fun, grom = do_setup(md_settings)
-    out, orderp = run_forward(grom, sys, order_fun)
-    out, orderp = run_reverse(grom, sys, order_fun)
-
+    sys, order_fun, grom = do_setup()
+    print('Running forward...')
+    _, pathf = run_forward(grom, sys, order_fun)
+    print('Running backward...')
+    _, _ = run_reverse(grom, sys, pathf, order_fun)

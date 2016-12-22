@@ -10,7 +10,7 @@ sub-classed by all external scripts.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ExternalScript
+ExternalMDEngine
     The base class for external scripts. This defines the actual
     interface to external programs.
 """
