@@ -293,7 +293,6 @@ class ExternalMDEngine(EngineBase):
                 if key != 'conf':
                     filename = os.path.join(self.exe_dir, val)
                     self.removefile(filename)
-                self.removefile(filename)
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
