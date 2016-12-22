@@ -90,6 +90,7 @@ if __name__ == '__main__':
     make_dirs(exe_dir)
 
     print(sys.particles.config)
+    grom.exe_dir = exe_dir
     grom.modify_velocities(sys, None, sigma_v=None, aimless=True,
                            momentum=False, rescale=None)
     print(sys.particles.config)
@@ -98,13 +99,11 @@ if __name__ == '__main__':
     rnd = RandomGenerator()
     path = PathExt(rnd, maxlen=30, time_origin=0)
     interfaces = [0.0, 1.0, 1.7]
-    grom.propagate(path, sys, order_fun, interfaces, reverse=False,
-                   exe_dir=exe_dir)
+    grom.propagate(path, sys, order_fun, interfaces, reverse=False)
 
     pathb = PathExt(rnd, maxlen=10, time_origin=0)
     interfaces = [0.0, 1.0, 1.7]
-    grom.propagate(pathb, sys, order_fun, interfaces, reverse=True,
-                   exe_dir=exe_dir)
+    grom.propagate(pathb, sys, order_fun, interfaces, reverse=True)
 
     print('Forward')
     for p in path.trajectory():
