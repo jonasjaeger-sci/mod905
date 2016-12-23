@@ -370,6 +370,8 @@ class ExternalMDEngine(EngineBase):
         else:
             out_file = os.path.join(self.exe_dir,
                                     '{}{}'.format(deffnm, self.ext))
+            msg = 'Config: {}'.format(config)
+            logger.debug(msg)
             self.extract_frame(pos_file, idx, out_file)
             return out_file
 

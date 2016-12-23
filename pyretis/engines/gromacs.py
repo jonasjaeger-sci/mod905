@@ -344,6 +344,8 @@ class GromacsEngine(ExternalMDEngine):
         This will only properly work in the frames in the .trr are
         separated uniformly.
         """
+        msg = 'Extract TRR frame. idx = {}'.format(idx)
+        logger.debug(msg)
         time1 = (idx - 1) * self.timestep * self.subcycles
         time2 = idx * self.timestep * self.subcycles
         cmd = [self.gmx, 'trjconv',
@@ -377,6 +379,8 @@ class GromacsEngine(ExternalMDEngine):
                   reverse=False):
         """Propagate with GROMACS."""
         initial_state = system.particles.get_particle_state()
+        msg = 'Propagate initial state: {}'.format(initial_state)
+        logger.debug(msg)
         initial_file = self.dump_frame(system)
 
         if reverse:
@@ -395,6 +399,8 @@ class GromacsEngine(ExternalMDEngine):
         success = False
         status = 'Generating path'
         left, _, right = interfaces
+
+        logger.debug('Propagating new path')
 
         # We always start from a singe snapshot config:
         phase_point = {'pos': (initial_conf, None), 'vel': reverse,
@@ -423,7 +429,8 @@ class GromacsEngine(ExternalMDEngine):
         # Note: Order is calculated after end of each iteration!
         for i in range(path.maxlen):
             # We first add the current phase point, and then we propagate.
-            print(left, order[0], right)
+            msg = '{} {} {}'.format(left, order[0], right)
+            logger.debug(msg)
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
