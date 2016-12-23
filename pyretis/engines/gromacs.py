@@ -474,6 +474,10 @@ class GromacsEngine(ExternalMDEngine):
         for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
             filename = os.path.join(self.exe_dir, out_files[key])
             self.removefile(filename)
+        for entry in os.scandir(self.exe_dir):
+            if entry.name.startswith('#') and entry.is_file():
+                filename = os.path.join(self.exe_dir, entry.name)
+                self.removefile(filename)
         return success, status
 
     def integration_step(self, system, name, exe_dir):
