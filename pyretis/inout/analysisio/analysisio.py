@@ -337,7 +337,7 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
     flux, flux_error = retis_flux(results['pathensemble0'],
                                   results['pathensemble'][0],
-                                  settings['integrator']['timestep'])
+                                  settings['engine']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
     rate, rate_error = retis_rate(out['prob'], out['relerror'],

@@ -43,7 +43,7 @@ def analyse_flux(fluxdata, settings):
         The keys are defined in the `results` variable.
     """
     end_step = settings['simulation']['endcycle']
-    time_step = settings['integrator']['timestep']
+    time_step = settings['engine']['timestep']
     interfaces = [i for i in settings['simulation']['interfaces']]
     results = {'eff_cross': [],  # effective crossings times
                'ncross': None,  # number of crossings
