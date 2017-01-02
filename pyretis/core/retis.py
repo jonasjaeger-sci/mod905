@@ -197,13 +197,13 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
                                                        order_function,
                                                        engine, rgen,
                                                        settings['tis'], cycle)
-        output[idx] = ['tis', accept, trial, status]
+        output[idx] = ['tis', status, trial, accept]
         # and do null moves for the others if requested:
         if settings['retis']['nullmoves']:
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
-                    null_move(path_ensemble, cycle)
-                    output[idx] = ['nullmove', 'ACC']
+                    accept, trial, status = null_move(path_ensemble, cycle)
+                    output[idx] = ['nullmove', status, trial, accept]
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
@@ -274,31 +274,34 @@ def retis_moves(ensembles, system, order_function, engine, rgen,
         else:
             scheme = 0 if rgen.rand() < 0.5 else 1
         for idx in range(scheme, len(ensembles) - 1, 2):
-            status = retis_swap(ensembles, idx, system, order_function,
-                                engine, settings, cycle)
-            output[idx] = ['swap', status, idx+1]
-            output[idx+1] = ['swap', status, idx]
+            accept, trial, status = retis_swap(ensembles, idx, system,
+                                               order_function, engine,
+                                               settings, cycle)
+            output[idx] = ['swap', status, trial[0], accept, idx+1]
+            output[idx+1] = ['swap', status, trial[1], accept, idx]
         if settings['retis']['nullmoves']:
             if len(ensembles) % 2 != scheme:  # missed last
                 # this is perhaps strange but it's equal to:
                 # (scheme == 0 and len(ensembles) % 2 != 0) or
                 # (scheme == 1 and len(ensembles) % 2 == 0)
-                null_move(ensembles[-1], cycle)
-                output[-1] = ['nullmove', 'ACC']
+                accept, trial, status = null_move(ensembles[-1], cycle)
+                output[-1] = ['nullmove', status, trial, accept]
             if scheme == 1:  # we did not include [0^-]
-                null_move(ensembles[0], cycle)
-                output[0] = ['nullmove', 'ACC']
+                accept, trial, status = null_move(ensembles[0], cycle)
+                output[0] = ['nullmove', status, trial, accept]
     else:  # just swap two ensembles:
         idx = rgen.random_integers(0, len(ensembles) - 2)
-        status = retis_swap(ensembles, idx, system, order_function,
-                            engine, settings, cycle)
+        accept, trial, status = retis_swap(ensembles, idx, system,
+                                           order_function,
+                                           engine, settings, cycle)
+        output[idx] = ['swap', status, trial[0], accept, idx+1]
+        output[idx+1] = ['swap', status, trial[1], accept, idx]
         if settings['retis']['nullmoves']:
-            for idxo, path_ensemble in enumerate(ensembles):
-                if idxo == idx or idxo == idx + 1:
-                    output[idxo] = ['swap', status]
-                else:
-                    null_move(path_ensemble, cycle)
-                    output[idxo] = ['nullmove', 'ACC']
+            # Do null moves in the rest
+            for i, path_ensemble in enumerate(ensembles):
+                if i != idx and i != idx + 1:
+                    accept, trial, status = null_move(path_ensemble, cycle)
+                    output[i] = ['nullmove', status, trial, accept]
     return output
 
 
@@ -338,8 +341,12 @@ def retis_swap(ensembles, idx, system, order_function, engine,
 
     Returns
     -------
-    out : string
-        The result of the swapping move.
+    out[0] : boolean
+        Should the path be accepted or not?
+    out[1] : list of object like :py:class:`.path.PathBase`
+        The trial paths.
+    out[2] : string
+        The status for the trial paths.
     """
     msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble_name,
                                           ensembles[idx+1].ensemble_name)
@@ -357,15 +364,15 @@ def retis_swap(ensembles, idx, system, order_function, engine,
         cross = path1.check_interfaces(ensemble2.interfaces)[-1]
         # Do the swap
         path1, path2 = path2, path1
-        if cross[1]:  # accept the swap
+        accept = cross[1]
+        if accept:  # accept the swap
             status = 'ACC'
             logger.debug('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
             # To avoid overwriting files, we move the paths to the
             # generate directory here. They will be moved into the
-            # accepted directory by the `add_path_data` below if they
-            # are to be accepted.
+            # accepted directory by the `add_path_data` below.
             ensemble1.move_path_to_generated(path1)
             ensemble2.move_path_to_generated(path2)
         else:  # reject:
@@ -373,7 +380,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
             logger.debug('Swap was rejected.')
         ensemble1.add_path_data(path1, status, cycle=cycle)
         ensemble2.add_path_data(path2, status, cycle=cycle)
-        return status
+        return accept, (path1, path2), status
 
 
 def retis_swap_zero(ensembles, system, order_function, engine,
@@ -475,17 +482,20 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     path1.status = 'FTX' if path1.length == maxlen else 'ACC'
     # Update status, etc
     status = 'ACC'  # we are optimistic and hope that this is the default
+    accept = True
     if path0.status == 'BTX':
         path1.status = 'BTX'
         status = 'BTX'
+        accept = False
         logger.debug('Rejecting path in [0^-], BTX')
     if path1.status == 'FTX':
         path0.status = 'FTX'
         status = 'FTX'
+        accept = False
         logger.debug('Rejecting path in [0^+], FTX')
     ensemble0.add_path_data(path0, status, cycle=cycle)
     ensemble1.add_path_data(path1, status, cycle=cycle)
-    return status
+    return accept, (path0, path1), status
 
 
 def null_move(path_ensemble, cycle):
@@ -503,13 +513,19 @@ def null_move(path_ensemble, cycle):
 
     Returns
     -------
-    out : string
-        The status, which here will be 'ACC' since we just accept the
-        last accepted path.
+    out[0] : boolean
+        Should the path be accepted or not? Here, it's always True
+        since the null move is always accepted.
+    out[1] : object like :py:class:`.path.PathBase`
+        The generated path.
+    out[2] : string
+        The status, which here will be 'ACC', since we just accept
+        the last accepted path again in this move.
     """
     msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
     logger.debug(msg)
+    status = 'ACC'
     path = path_ensemble.last_path
     path.set_move('00')
-    path_ensemble.add_path_data(path, 'ACC', cycle=cycle)
-    return 'ACC'
+    path_ensemble.add_path_data(path, status, cycle=cycle)
+    return True, path, status
