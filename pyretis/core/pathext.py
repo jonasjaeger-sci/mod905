@@ -6,12 +6,13 @@
 The classes and functions defined in this module are useful for
 representing paths.
 
-
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PathExt
-    Class for a generic path that stores all possible information.
+    Class for a external paths. In external paths, the trajectories
+    are stored in external files and the object will only contain the
+    file names so that the external snapshots can be accessed.
 """
 import logging
 from pyretis.core.path import Path
@@ -23,12 +24,12 @@ __all__ = ['PathExt']
 
 
 class PathExt(Path):
-    """A path where the full trajectory is stored in memory.
+    """A path where snapshots are not stored in memory.
 
-    This class represents a path. A path consist of a series of
-    consecutive snapshots (the trajectory) with the corresponding
-    order parameter. Here we store all information for all phase points
-    on the path.
+    This class represents a path where the snapshots are stored
+    on disk and not in memory. This is useful when we are using
+    external engines and do not have to read entire trajectories
+    into memory.
 
     Attributes
     ----------
