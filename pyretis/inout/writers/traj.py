@@ -388,8 +388,8 @@ class TrajGRO(TrajWriter):
             The lines in the GRO-snapshot.
         """
         if len(self.atom_names) != system.particles.npart:
-            self.atom_names = ['X'] * system.particles.npart
-            self.residue_names = ['X'] * system.particles.npart
+            self.atom_names = system.particles.name
+            self.residue_names = self.atom_names
         vel = None if not self.write_vel else system.particles.vel
         box = self.box_lengths(system.box)
         return self.gro_format(step, system.particles.npart,

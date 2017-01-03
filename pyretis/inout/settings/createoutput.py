@@ -54,12 +54,15 @@ _TASK_MAP['traj-gro'] = {
     'target': 'file',
     'result': 'system',
     'when': 'trajectory-file',
+    'settings': {'system': ('units',),
+                 'output': ('write_vel',)},
     'writer': 'trajgro'}
 
 _TASK_MAP['traj-xyz'] = {
     'target': 'file',
     'result': 'system',
     'when': 'trajectory-file',
+    'settings': {'system': ('units',)},
     'writer': 'trajxyz'}
 
 _TASK_MAP['thermo-screen'] = {
@@ -78,6 +81,8 @@ _TASK_MAP['pathensemble'] = {
     'target': 'file',
     'result': 'pathensemble',
     'when': 'pathensemble-file',
+    'settings': {'simulation': ('ensemble',
+                                'interfaces')},
     'writer': 'pathensemble'}
 
 _TASK_MAP['pathensemble-screen'] = {
@@ -102,22 +107,27 @@ _TASK_MAP['path-traj-xyz'] = {
     'target': 'file',
     'result': 'retis',
     'when': 'trajectory-file',
+    'settings': {'system': ('units',)},
     'writer': 'pathtrajxyz'}
 
 _TASK_MAP['path-traj-gro'] = {
     'target': 'file',
     'result': 'retis',
     'when': 'trajectory-file',
+    'settings': {'system': ('units',),
+                 'output': ('write_vel',)},
     'writer': 'pathtrajgro'}
 
 # Predefined outputs for simulations.
 _SIM_OUTPUT = {}
 
 _SIM_OUTPUT['md-nve'] = [
+
     {'type': 'energy',
      'name': 'nve-energy-file',
      'when': {'every': 10},
      'filename': 'energy.dat'},
+
     {'type': 'thermo-file',
      'name': 'nve-thermo-file',
      'when': {'every': 10},
@@ -125,9 +135,7 @@ _SIM_OUTPUT['md-nve'] = [
     {'type': 'traj-gro',
      'name': 'nve-traj-file',
      'when': {'every': 10},
-     'filename': 'traj.gro',
-     'settings': {'system': ('units',),
-                  'output': ('write_vel',)}},
+     'filename': 'traj.gro'},
     {'type': 'thermo-screen',
      'name': 'nve-thermo-screen',
      'when': {'every': 10}}]
@@ -140,9 +148,7 @@ _SIM_OUTPUT['md-flux'] = [
     {'type': 'traj-gro',
      'name': 'flux-traj-file',
      'when': {'every': 10},
-     'filename': 'traj.gro',
-     'settings': {'system': ('units',),
-                  'output': ('write_vel',)}},
+     'filename': 'traj.gro'},
     {'type': 'thermo-screen',
      'name': 'flux-thermo-screen',
      'when': {'every': 10}},
@@ -159,9 +165,7 @@ _SIM_OUTPUT['tis'] = [
     {'type': 'pathensemble',
      'name': 'tis-path-ensemble',
      'when': {'every': 1},
-     'filename': 'pathensemble.dat',
-     'settings': {'simulation': ('ensemble',
-                                 'interfaces')}},
+     'filename': 'pathensemble.dat'},
     {'type': 'pathensemble-screen',
      'name': 'tis-pathensemble-screen',
      'when': {'every': 10}}]
@@ -169,25 +173,20 @@ _SIM_OUTPUT['tis'] = [
 _SIM_OUTPUT['retis'] = [
     {'type': 'pathensemble',
      'name': 'retis-path-ensemble',
-     'settings': {'simulation': ('ensemble',
-                                 'interfaces')},
      'when': {'every': 1},
      'filename': 'pathensemble.dat'},
     {'type': 'path-order',
      'name': 'retis-path-ensemble-orderp',
      'when': {'every': 10},
      'filename': 'order.dat'},
-    # {'type': 'path-traj-xyz',
-    #  'name': 'retis-path-ensemble-traj',
-    #  'when': {'every': 10},
-    #  'settings': {'system': ('units',)},
-    #  'filename': 'traj.xyz'},
-    {'type': 'path-traj-gro',
+    {'type': 'path-traj-xyz',
      'name': 'retis-path-ensemble-traj',
      'when': {'every': 10},
-     'filename': 'traj.gro',
-     'settings': {'system': ('units',),
-                  'output': ('write_vel',)}},
+     'filename': 'traj.xyz'},
+    # {'type': 'path-traj-gro',
+    #  'name': 'retis-path-ensemble-traj',
+    #  'when': {'every': 10},
+    #  'filename': 'traj.gro'},
     {'type': 'path-energy',
      'name': 'retis-path-ensemble-energy',
      'when': {'every': 10},
@@ -422,13 +421,13 @@ class OutputTaskFile(OutputTask):
         return None
 
 
-def create_writer(task, writer_name, settings):
+def create_writer(task_settings, writer_name, settings):
     """Create a writer for an output task
 
     Parameters
     ----------
-    task : dict
-        The output task we are creating output for.
+    task_settings : dict
+        Settings for the output taks/writer we are creating for.
     writer_name : string
         The type of writer we are going to create.
     settings : dict
@@ -441,7 +440,7 @@ def create_writer(task, writer_name, settings):
         The writer to use for formatting output.
     """
     writer_settings = {}
-    req_settings = task.get('settings', {})  # required settings
+    req_settings = task_settings.get('settings', {})  # required settings
     for sec in req_settings:
         for key in req_settings[sec]:
             writer_settings[key] = settings[sec][key]
@@ -464,7 +463,9 @@ def task_from_settings(task, settings):
     out : object like `OutputTask`
         An output task we can use in the simulation
     """
+    print('TASK', task)
     task_settings = _TASK_MAP[task['type']]
+    print('TASK SETTINGS', task)
     when = {'every': settings['output'][task_settings['when']]}
     if when['every'] < 1:
         msg = 'Skipping output task "{}"'.format(task['type'])
@@ -472,7 +473,7 @@ def task_from_settings(task, settings):
         return None
     when = {'every': settings['output'][task_settings['when']]}
     writer_name = task_settings['writer']
-    writer = create_writer(task, writer_name, settings)
+    writer = create_writer(task_settings, writer_name, settings)
     if writer is None:
         msg = 'Could not create writer "{}"'.format(writer_name)
         logger.warning(msg)
