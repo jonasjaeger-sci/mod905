@@ -463,9 +463,7 @@ def task_from_settings(task, settings):
     out : object like `OutputTask`
         An output task we can use in the simulation
     """
-    print('TASK', task)
     task_settings = _TASK_MAP[task['type']]
-    print('TASK SETTINGS', task)
     when = {'every': settings['output'][task_settings['when']]}
     if when['every'] < 1:
         msg = 'Skipping output task "{}"'.format(task['type'])
