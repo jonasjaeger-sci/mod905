@@ -310,7 +310,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         path = sim.initiate_ensemble(ensemble)
         print_and_loginfo('{}'.format(path))
         print_to_screen('')
-        result = {'pathensemble': ensemble, 'cycle': sim.cycle}
+        result = {'pathensemble': ensemble, 'cycle': sim.cycle,
+                  'path': path}
         for out_task in tasks:
             out_task.output(result)
 
@@ -324,7 +325,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         for i, ensemble in enumerate(path_ensembles):
             ensemble_result = {'pathensemble': ensemble,
                                'cycle': result['cycle'],
-                               'retis': result['retis'][i]}
+                               'path': result['retis'][i][2],
+                               'system': result['system']}
             for out_task in output_tasks[i]:
                 out_task.output(ensemble_result)
         if not progress:

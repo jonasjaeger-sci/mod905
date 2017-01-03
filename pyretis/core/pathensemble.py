@@ -417,8 +417,8 @@ class PathEnsembleExt(PathEnsemble):
         """Move a path for temporary storing."""
         self._move_path(path, self.directory['generate'])
 
-    def output_path(self, path, cycle):
-        """Dump a trajectory"""
+    def output_path(self, cycle, path):
+        """Output a trajectory"""
         self._copy_path(path, self.directory['traj'],
                         prefix='{}_'.format(cycle))
 

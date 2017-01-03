@@ -428,7 +428,7 @@ class EnergyPathWriter(EnergyWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, ensemble_results):
+    def generate_output(self, step, path):
         """Format the order parameter data from a path.
 
         Parameters
@@ -443,7 +443,6 @@ class EnergyPathWriter(EnergyWriter):
         out : string
             The strings to be written.
         """
-        path = ensemble_results[2]
         yield '# Cycle: {}, status: {}'.format(step, path.status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -550,7 +549,7 @@ class OrderPathWriter(OrderWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, ensemble_results):
+    def generate_output(self, step, path):
         """Format the order parameter data from a path.
 
         Parameters
@@ -565,7 +564,6 @@ class OrderPathWriter(OrderWriter):
         out : string
             The strings to be written.
         """
-        path = ensemble_results[2]
         yield '# Cycle: {}, status: {}'.format(step, path.status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):

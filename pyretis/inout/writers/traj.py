@@ -163,7 +163,7 @@ class TrajXYZ(TrajWriter):
     """
     out_units = {'pos': 'A', 'vel': None}
 
-    def __init__(self, units, names=None):
+    def __init__(self, units):
         """Initialization of the XYZ writer.
 
         Parameters
@@ -173,8 +173,6 @@ class TrajXYZ(TrajWriter):
             velocities.
         """
         super().__init__('XYZ', False, units, self.out_units)
-        if names is not None:
-            self.atom_names = [name for name in names]
 
     def xyz_format(self, step, npart, pos):
         """Format a single frame using the XYZ format.
@@ -255,8 +253,7 @@ class TrajXYZ(TrajWriter):
 class PathXYZ(TrajXYZ):
     """A class for writing trajectories to XYZ files."""
 
-    def generate_output(self, step, ensemble_results):
-        path = ensemble_results[2]
+    def generate_output(self, step, path):
         yield '# Cycle: {}, status: {}'.format(step, path.status)
         for i, phasepoint in enumerate(path.trajectory()):
             for line in self.xyz_format(i, len(phasepoint['pos']),
@@ -295,7 +292,7 @@ class TrajGRO(TrajWriter):
     """
     out_units = {'pos': 'nm', 'vel': 'nm/ps'}
 
-    def __init__(self, units, write_vel, names=None):
+    def __init__(self, units, write_vel):
         """Initiate the GROMACS writer.
 
         Parameters
@@ -308,10 +305,7 @@ class TrajGRO(TrajWriter):
             Names for labeling atoms.
         """
         super().__init__('GRO', write_vel, units, self.out_units)
-        self.residue_names = []
-        if names is not None:
-            self.atom_names = [name for name in names]
-            self.residue_names = [name for name in names]
+        self.residue_names = self.atom_names
 
     def gro_format(self, step, npart, pos, vel, box_lengths):
         """Apply the GROMACS format to a snapshot.
@@ -448,7 +442,7 @@ class TrajGRO(TrajWriter):
 
 class PathGRO(TrajGRO):
     """A class for writing trajectories to GRO files."""
-
+    
     def generate_output(self, step, ensemble_results):
         path = ensemble_results[2]
         yield '# Cycle: {}, status: {}'.format(step, path.status)

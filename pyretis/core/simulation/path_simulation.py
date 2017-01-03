@@ -322,6 +322,7 @@ class SimulationRETIS(Simulation):
                 self.settings,
                 self.cycle['step'])
             results['retis'] = retis_step
+        results['system'] = self.system
         results['cycle'] = self.cycle
         return results
 

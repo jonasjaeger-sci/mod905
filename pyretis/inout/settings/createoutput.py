@@ -93,26 +93,26 @@ _TASK_MAP['pathensemble-screen'] = {
 
 _TASK_MAP['path-order'] = {
     'target': 'file',
-    'result': 'retis',
+    'result': 'path',
     'when': 'order-file',
     'writer': 'pathorder'}
 
 _TASK_MAP['path-energy'] = {
     'target': 'file',
-    'result': 'retis',
+    'result': 'path',
     'when': 'energy-file',
     'writer': 'pathenergy'}
 
 _TASK_MAP['path-traj-xyz'] = {
     'target': 'file',
-    'result': 'retis',
+    'result': 'path',
     'when': 'trajectory-file',
     'settings': {'system': ('units',)},
     'writer': 'pathtrajxyz'}
 
 _TASK_MAP['path-traj-gro'] = {
     'target': 'file',
-    'result': 'retis',
+    'result': 'path',
     'when': 'trajectory-file',
     'settings': {'system': ('units',),
                  'output': ('write_vel',)},
