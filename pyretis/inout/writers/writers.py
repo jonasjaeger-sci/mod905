@@ -146,6 +146,11 @@ class Writer(object):
     header : string
         A header (or table heading) that gives information about the
         output data.
+    print_header : boolean
+        Determines if we are to print the header or not on the first
+        use of `generate_output`. Note that the behavior can be
+        overridden in child classes so that the print_header is
+        ignored.
     """
 
     def __init__(self, file_type, header=None):
@@ -159,6 +164,8 @@ class Writer(object):
             The header for the output data
         """
         self.file_type = file_type
+        self._header = None
+        self.print_header = True
         if header is not None:
             if 'width' in header:
                 self._header = _make_header(header['labels'],
@@ -167,12 +174,17 @@ class Writer(object):
             else:
                 self._header = header.get('text', None)
         else:
-            self._header = None
+            self.print_header = False
 
     @property
     def header(self):
         """Define the header as a property."""
         return self._header
+
+    @header.setter
+    def header(self, value):
+        """Set the header"""
+        self._header = value
 
     @staticmethod
     def line_parser(line):
@@ -190,7 +202,7 @@ class Writer(object):
         return [float(col) for col in line.split()]
 
     def load(self, filename):
-        """Load entire blocks from the cross file into memory.
+        """Load entire blocks from the file into memory.
 
         In the future, a more intelligent way of handling files like
         this may be in order, but for now the entire file is read as
@@ -220,6 +232,10 @@ class Writer(object):
                          'data': blocks['data']}
             yield data_dict
 
+    def generate_output(self, step, data):
+        """Use the writer to generate output."""
+        raise NotImplementedError
+
     def __str__(self):
         """Return basic info about the writer."""
         return 'Writer: {}'.format(self.file_type)
@@ -246,7 +262,7 @@ class CrossWriter(Writer):
     def __init__(self):
         """Initialize a `CrossWriter`."""
         header = {'labels': ['Step', 'Int', 'Dir'], 'width': [10, 4, 3]}
-        super(CrossWriter, self).__init__('CrossWriter', header=header)
+        super().__init__('CrossWriter', header=header)
 
     @staticmethod
     def line_parser(line):
@@ -332,10 +348,7 @@ class EnergyWriter(Writer):
 
     4) Total energy, should equal the sum of the two previous columns.
 
-    5) Hamiltonian energy, i.e. the conserved quantity for
-       Nose-Hoover dynamics.
-
-    6) Temperature.
+    5) Temperature.
     """
     # format for the energy files, here also as a tuple since this makes
     # convenient for outputting in a specific order:
@@ -344,15 +357,14 @@ class EnergyWriter(Writer):
     def __init__(self):
         """Initialize a `EnergyWriter`."""
         header = {'labels': ['Time', 'Potential', 'Kinetic', 'Total',
-                             'Hamiltonian', 'Temperature'],
+                             'Temperature'],
                   'width': [10, 12]}
-        super(EnergyWriter, self).__init__('EnergyWriter', header=header)
+        super().__init__('EnergyWriter', header=header)
 
     def load(self, filename):
         """Load entire energy blocks into memory.
 
-        (Quote of the day: 'memory is cheap, function calls are
-        expensive'.) In the future, a more intelligent way of handling
+        In the future, a more intelligent way of handling
         files like this may be in order, but for now the entire file is
         read as it's very convenient for the subsequent analysis.
 
@@ -366,7 +378,7 @@ class EnergyWriter(Writer):
         data_dict : dict
             This is the energy data read from the file, stored in
             a dict. This is for convenience, so that each energy term
-            can be accessed by data[key].
+            can be accessed by `data_dict['data'][key]`.
 
         See Also
         --------
@@ -379,12 +391,11 @@ class EnergyWriter(Writer):
                                   'vpot': data[:, 1],
                                   'ekin': data[:, 2],
                                   'etot': data[:, 3],
-                                  'ham': data[:, 4],
-                                  'temp': data[:, 5]}}
+                                  'temp': data[:, 4]}}
             yield data_dict
 
-    def generate_output(self, step, energy):
-        """Create a string with the energy data to be written.
+    def format_data(self, step, energy):
+        """Format a line of data.
 
         Parameters
         ----------
@@ -393,17 +404,50 @@ class EnergyWriter(Writer):
         energy : dict
             This is the energy data stored as a dictionary.
 
+        Returns
+        -------
+        out : string
+            A formatted line of data.
+        """
+        towrite = [self.ENERGY_FMT[0].format(step)]
+        for i, key in enumerate(['vpot', 'ekin', 'etot', 'temp']):
+            value = energy.get(key, 0.0)
+            towrite.append(self.ENERGY_FMT[i + 1].format(value))
+        return ' '.join(towrite)
+
+    def generate_output(self, step, energy):
+        """Yield formatted energy data."""
+        yield self.format_data(step, energy)
+
+
+class EnergyPathWriter(EnergyWriter):
+    """A class for writing out energy data for paths."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__()
+        self.print_header = False
+
+    def generate_output(self, step, ensemble_results):
+        """Format the order parameter data from a path.
+
+        Parameters
+        ----------
+        step : int
+            The cycle number we are creating output for.
+        path : object like :py:class:`pyretis.core.path.PathBase`
+            The path we are creating output for.
+
         Yields
         ------
         out : string
             The strings to be written.
         """
-        towrite = [self.ENERGY_FMT[0].format(step)]
-        for i, key in enumerate(['vpot', 'ekin', 'etot', 'ham',
-                                 'temp']):
-            value = energy.get(key, 0.0)
-            towrite.append(self.ENERGY_FMT[i + 1].format(value))
-        yield ' '.join(towrite)
+        path = ensemble_results[2]
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield self.header
+        for i, phasepoint in enumerate(path.trajectory()):
+            yield self.format_data(i, phasepoint)
 
 
 class OrderWriter(Writer):
@@ -418,19 +462,15 @@ class OrderWriter(Writer):
 
     3) Velocity for main order parameter.
 
-    4) Order parameter ``A``.
+    4) Second order parameter.
 
-    5) Velocity for order parameter ``A``.
+    5) Velocity for second order parameter ``A``.
 
-    6) Order parameter ``B``.
-
-    7) Velocity for order parameter ``B``
-
-    8) ...
+    6) ...
 
     And so on, that is, columns 2, 4, 6, ... are order parameters, while
     columns 3, 5, 7, ... are the corresponding velocities. The first
-    column is always just the time (or step/cycle number).
+    column is always just the time (or step number).
     """
     # format for order files, note that we don't know how many parameters
     # we need to write yet.
@@ -439,7 +479,7 @@ class OrderWriter(Writer):
     def __init__(self):
         """Initialize a `OrderWriter`."""
         header = {'labels': ['Time', 'Orderp', 'Orderv'], 'width': [10, 12]}
-        super(OrderWriter, self).__init__('OrderWriter', header=header)
+        super().__init__('OrderWriter', header=header)
 
     def load(self, filename):
         """Load entire order parameter blocks into memory.
@@ -476,8 +516,8 @@ class OrderWriter(Writer):
                 data_dict['data'].append(data[:, i])
             yield data_dict
 
-    def generate_output(self, step, orderdata):
-        """Generate output for the order parameter data.
+    def format_data(self, step, orderdata):
+        """Format order parameter data.
 
         Parameters
         ----------
@@ -495,4 +535,38 @@ class OrderWriter(Writer):
         for orderp in orderdata:
             towrite.append(self.ORDER_FMT[1].format(orderp))
         out = ' '.join(towrite)
-        yield out
+        return out
+
+    def generate_output(self, step, orderdata):
+        """Yield formatted order parameter data."""
+        yield self.format_data(step, orderdata)
+
+
+class OrderPathWriter(OrderWriter):
+    """A class for writing out order parameter data for paths."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__()
+        self.print_header = False
+
+    def generate_output(self, step, ensemble_results):
+        """Format the order parameter data from a path.
+
+        Parameters
+        ----------
+        step : int
+            The cycle number we are creating output for.
+        path : object like :py:class:`pyretis.core.path.PathBase`
+            The path we are creating output for.
+
+        Yields
+        ------
+        out : string
+            The strings to be written.
+        """
+        path = ensemble_results[2]
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield self.header
+        for i, phasepoint in enumerate(path.trajectory()):
+            yield self.format_data(i, phasepoint['order'])

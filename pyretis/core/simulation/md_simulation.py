@@ -179,7 +179,7 @@ class SimulationMDFlux(Simulation):
                    'thermo': calculate_thermo(self.system),
                    'orderp': self.engine.calculate_order(self.orderp,
                                                          self.system),
-                   'traj': self.system}
+                   'system': self.system}
         # do not check crossing at step 0
         if not self.first_step:
             leftside, cross = check_crossing(self.cycle['step'],

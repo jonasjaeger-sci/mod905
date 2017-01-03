@@ -76,10 +76,13 @@ import logging
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .traj import read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO
+from .traj import (read_xyz_file, read_gromacs_file, TrajXYZ, TrajGRO,
+                   PathXYZ, PathGRO)
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
-from .writers import CrossWriter, EnergyWriter, OrderWriter
+from .writers import (CrossWriter,
+                      EnergyWriter, EnergyPathWriter,
+                      OrderWriter, OrderPathWriter)
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -92,7 +95,11 @@ _CLASS_MAP = {'cross': CrossWriter,
               'trajxyz': TrajXYZ,
               'pathensemble': PathEnsembleWriter,
               'thermotable': ThermoTable,
-              'pathtable': PathTable}
+              'pathtable': PathTable,
+              'pathorder': OrderPathWriter,
+              'pathenergy': EnergyPathWriter,
+              'pathtrajxyz': PathXYZ,
+              'pathtrajgro': PathGRO}
 
 
 def get_writer(file_type, settings=None):

@@ -31,6 +31,39 @@ __all__ = ['PathEnsemble', 'PathEnsembleExt']
 PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
 
 
+@staticmethod
+def _generate_file_names(path, target_dir, prefix=None):
+    """Generate new file names for moving copying paths.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.core.path.PathBase`
+        This is the path object we are going to store.
+    target_dir : string
+        The location were we are moving the path to.
+    prefix : string or None
+        The prefix can be used to prefix the name of the files.
+
+    Returns
+    -------
+    out : list
+        A list with new file names.
+    """
+    source = {}
+    new_pos = [None for _ in range(len(path.pos))]
+    for i, phasepoint in enumerate(path.trajectory(reverse=False)):
+        pos_file, idx = phasepoint['pos']
+        if pos_file not in source:
+            localfile = os.path.basename(pos_file)
+            if prefix is not None:
+                localfile = '{}{}'.format(prefix, localfile)
+            dest = os.path.join(target_dir, localfile)
+            source[pos_file] = dest
+        dest = source[pos_file]
+        new_pos[i] = (dest, idx)
+    return new_pos
+
+
 class PathEnsemble(object):
     """Representation of a path ensemble.
 
@@ -118,7 +151,7 @@ class PathEnsemble(object):
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
             self.directory['path-ensemble'] = path_dir
-            for key in ('accepted', 'generate'):
+            for key in ('accepted', 'generate', 'traj'):
                 self.directory[key] = os.path.join(path_dir, key)
 
     def directories(self):
@@ -175,11 +208,10 @@ class PathEnsemble(object):
             The current cycle number
         """
         if len(self.paths) >= self.maxpath:
+            # Maybe this msg is just confusing.
             msg = ('Exceeded maximum number of paths in ensemble {}!\n'
-                   'The path-data in this path ensemble will be reset.\n'
-                   'Note that this will *NOT* influence the simulation. '
-                   'Remember to use the path ensemble file for an '
-                   'accurate analysis!')
+                   'The path-data in memory will be reset.\n'
+                   'This will *NOT* influence the simulation.')
             msg = msg.format(self.ensemble_name)
             logger.info(msg)
             self.paths = []
@@ -317,13 +349,32 @@ class PathEnsembleExt(PathEnsemble):
                          maxpath=maxpath, exe_dir=exe_dir)
 
     def directories(self):
-        """Make temporary directories."""
+        """Yield the directories pyretis should make."""
         for key in self.directory:
             yield self.directory[key]
 
     @staticmethod
-    def _move_path(path, target_dir):
+    def _move_path(path, target_dir, prefix=None):
         """Move a path to a given target directory.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.core.path.PathBase`
+            This is the path object we are going to store.
+        target_dir : string
+            The location were we are moving the path to.
+        prefix : string or None
+            To give a prefix to the name of moved files.
+        """
+        source = {}
+        new_pos = _generate_file_names(path, target_dir, prefix=prefix)
+        path.pos = new_pos
+        for src, dest in source.items():
+            shutil.move(src, dest)
+
+    @staticmethod
+    def _copy_path(path, target_dir, prefix=None):
+        """Copy a path to a given target directory.
 
         Parameters
         ----------
@@ -333,18 +384,9 @@ class PathEnsembleExt(PathEnsemble):
             The location were we are moving the path to.
         """
         source = {}
-        new_pos = [None for _ in range(len(path.pos))]
-        for i, phasepoint in enumerate(path.trajectory(reverse=False)):
-            pos_file, idx = phasepoint['pos']
-            if pos_file not in source:
-                localfile = os.path.basename(pos_file)
-                dest = os.path.join(target_dir, localfile)
-                source[pos_file] = dest
-            dest = source[pos_file]
-            new_pos[i] = (dest, idx)
-        path.pos = new_pos
+        _ = _generate_file_names(path, target_dir, prefix=prefix)
         for src, dest in source.items():
-            shutil.move(src, dest)
+            shutil.copy(src, dest)
 
     def store_path(self, path):
         """Store a path by explicitly moving it.
@@ -374,6 +416,11 @@ class PathEnsembleExt(PathEnsemble):
     def move_path_to_generated(self, path):
         """Move a path for temporary storing."""
         self._move_path(path, self.directory['generate'])
+
+    def output_path(self, path, cycle):
+        """Dump a trajectory"""
+        self._copy_path(path, self.directory['traj'],
+                        prefix='{}_'.format(cycle))
 
 
 def get_path_ensemble_class(ensemble_type):

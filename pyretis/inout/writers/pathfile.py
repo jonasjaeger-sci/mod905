@@ -74,8 +74,7 @@ class PathEnsembleWriter(Writer):
                              'O-shoot', 'Idx-sh', 'Idx-shN'],
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
-        super(PathEnsembleWriter, self).__init__('PathEnsembleWriter',
-                                                 header=header)
+        super().__init__('PathEnsembleWriter', header=header)
         self.ensemble = ensemble  # Check if this can be deleted
         self.interfaces = interfaces  # Check if this can be deleted
 
@@ -148,11 +147,10 @@ class PathEnsembleWriter(Writer):
             logger.critical(msg)
             raise
 
-    def generate_output(self, cycle, path_ensemble, path=None):
+    def generate_output(self, cycle, path_ensemble):
         """Generate the output for the path ensemble writer
 
-        If the path is not explicitly given, the latest path from the
-        path ensemble will be written.
+        The latest path from the path ensemble will be written.
 
         Parameters
         ----------
@@ -160,19 +158,13 @@ class PathEnsembleWriter(Writer):
             This is the current cycle number.
         path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
             We will write the path defined by PathEnsemble.paths[-1]
-        path : object like `Path` from `pyretis.core.path`
-            This is the path to write to the file.
 
         Yields
         ------
         out : string
             The line(s) to be written
         """
-        if path is None:
-            path_dict = path_ensemble.paths[-1]
-        else:
-            path_dict = path.get_path_data(path.status,
-                                           path_ensemble.interfaces)
+        path_dict = path_ensemble.paths[-1]
 
         interface_list = []
         for val in path_dict['interface']:
@@ -221,8 +213,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
 
     def __init__(self, filename, ensemble, interfaces, detect=None):
         """Initiate the `PathEnsembleFile`."""
-        super(PathEnsembleFile, self).__init__(ensemble, interfaces,
-                                               detect=detect)
+        super().__init__(ensemble, interfaces, detect=detect)
         self.filename = filename
 
     def get_paths(self):

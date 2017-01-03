@@ -72,3 +72,10 @@ dim = x
 index = 0
 name = Position
 periodic = False
+
+Output
+------
+trajectory-file = 0
+energy-file = 0
+order-file = 0
+write_vel = True

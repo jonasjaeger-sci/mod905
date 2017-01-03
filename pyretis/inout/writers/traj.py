@@ -78,7 +78,74 @@ def _adjust_coordinate(coord):
         return adjusted
 
 
-class TrajXYZ(Writer):
+class TrajWriter(Writer):
+    """Generic class for writing system shapshots.
+
+    Attributes
+    ----------
+    atom_names : list
+        These are the atom names used for the output.
+    convert_pos : float
+        Defines the conversion of positions from internal units.
+    covert_vel : float or None
+        Defines the conversion of velocities from internal units.
+    frame : integer
+        The number of frames written.
+    """
+
+    def __init__(self, name, write_vel, units, out_units):
+        """Initialize the writer.
+
+        Parameters
+        ----------
+        name : string
+            Just a name to identify the writer when printing it.
+        write_vel : boolean
+            If True, the writer will attempt to output velocities. This may
+            or may not be supported by the writer.
+        units : string
+            The internal units used in the simulation.
+        out_units : dict of strings
+            The units used in the output from the writer.
+        """
+        super().__init__(name, header=None)
+        self.print_header = False
+        self.atom_names = []
+        self.frame = 0  # number of frames written
+        self.write_vel = write_vel
+        pos_unit = out_units['pos']
+        vel_unit = out_units.get('vel', None)
+        try:
+            self.convert_pos = CONVERT['length'][units, pos_unit]
+        except KeyError:
+            self.convert_pos = 1.0
+            msg = 'Could not get conversion "{} -> {}"'.format(units,
+                                                               pos_unit)
+            logger.warning(msg)
+            msg = 'Position output will be in units: "{}"'.format(units)
+            logger.warning(msg)
+        if vel_unit is not None:
+            try:
+                self.convert_vel = CONVERT['velocity'][units, vel_unit]
+            except KeyError:
+                self.convert_vel = 1.0
+                msg = 'Could not get conversion "{} -> {}"'.format(units,
+                                                                   vel_unit)
+                logger.warning(msg)
+                msg = 'Position output will be in units: "{}"'.format(units)
+                logger.warning(msg)
+
+    def format_snapshot(self, step, system):
+        """Format the snapshot for output."""
+        raise NotImplementedError
+
+    def generate_output(self, step, system):
+        """Generate the snapshot output."""
+        for lines in self.format_snapshot(step, system):
+            yield lines
+
+
+class TrajXYZ(TrajWriter):
     u"""A class for writing XYZ files.
 
     This class handles writing of a system to a file in a simple xyz
@@ -86,7 +153,7 @@ class TrajXYZ(Writer):
 
     Attributes
     ----------
-    atomnames : list
+    atom_names : list
         These are the atom names used for the output.
     convert_pos : float
         Defines the conversion of positions from internal units to
@@ -94,53 +161,45 @@ class TrajXYZ(Writer):
     frame : integer
         The number of frames written.
     """
-    XYZ_FMT = _XYZ_FMT
+    out_units = {'pos': 'A', 'vel': None}
 
-    def __init__(self, units):
-        """Initialization of the XYZ writer."""
-        super(TrajXYZ, self).__init__('TrajXYZ')
-        self.atomnames = []
-        self.frame = 0  # number of frames written
-        try:
-            self.convert_pos = CONVERT['length'][units, 'A']
-        except KeyError:
-            self.convert_pos = 1.0
-            msg = ['Could not get conversion for units "{}"'.format(units)]
-            msg += ['Positions will be in A']
-            msgtxt = '\n'.join(msg)
-            logger.warning(msgtxt)
-
-    def xyz_format(self, npart, pos, names=None, header=None):
-        """Generate output for a configuration in xyz-format.
+    def __init__(self, units, names=None):
+        """Initialization of the XYZ writer.
 
         Parameters
         ----------
-        npart : integer
+        units : string
+            The system of units used internally for positions and
+            velocities.
+        """
+        super().__init__('XYZ', False, units, self.out_units)
+        if names is not None:
+            self.atom_names = [name for name in names]
+
+    def xyz_format(self, step, npart, pos):
+        """Format a single frame using the XYZ format.
+
+        Parameters
+        ----------
+        step : int
+            The current step number.
+        npart : int
             The number of particles.
         pos : numpy.array
-            The positions to write.
-        names : numpy.array, optional
-            Atom names. If atom names are not given, dummy names
-            (`X`) will be generated and used.
-        header : string, optional
-            Header to use for writing the xyz-frame.
+            The positions for the particles.
 
         Returns
         -------
         out : list of strings
-            The data to be written
+            The XYZ formatted snapshot.
         """
         buff = []
         buff.append('{0}'.format(npart))
-        if header is None:
-            header = 'Trajectory output. Frame: {}'.format(self.frame)
-        buff.append('{}'.format(header))
-        if names is None:
-            if len(self.atomnames) != npart:
-                self.atomnames = ['X'] * npart
-            names = self.atomnames
+        buff.append('Snapshot, step: {}'.format(step))
+        if len(self.atom_names) != npart:
+            self.atom_names = ['X'] * npart
         pos = _adjust_coordinate(pos)
-        for namei, posi in zip(names, pos):
+        for namei, posi in zip(self.atom_names, pos):
             out = _XYZ_FMT.format(namei,
                                   posi[0] * self.convert_pos,
                                   posi[1] * self.convert_pos,
@@ -149,31 +208,25 @@ class TrajXYZ(Writer):
         self.frame += 1
         return buff
 
-    def generate_output(self, system, header=None):
-        """Write a configuration in xyz-format.
-
-        This is a method for writing a configuration in xyz-format.
-        It is similar to `write_frame` and it's meant for convenience:
-        atom names will not have to be specified and we are using
-        the `system` to access (the positions of) the particles.
+    def format_snapshot(self, step, system):
+        """Format the given snapshot.
 
         Parameters
         ----------
+        step : int
+            The current simulation step.
         system : object like `System` from `pyretis.core.system`
             The system object with the positions to write
-        header : string, optional
-            Header to use for writing the xyz-frame.
 
-        Yields
-        ------
-        out : string
-            The lines in the XYZ-snapshot.
+        Returns
+        -------
+        out : list of strings
+            The formatted snapshot
         """
-        for lines in self.xyz_format(system.particles.npart,
-                                     system.particles.pos,
-                                     names=system.particles.name,
-                                     header=header):
-            yield lines
+        if len(self.atom_names) != system.particles.npart:
+            self.atom_names = system.particles.names
+        return self.xyz_format(step, system.particles.npart,
+                               system.particles.pos)
 
     def load(self, filename):
         """Read snapshots from the trajectory file.
@@ -199,7 +252,19 @@ class TrajXYZ(Writer):
             yield snapshot
 
 
-class TrajGRO(Writer):
+class PathXYZ(TrajXYZ):
+    """A class for writing trajectories to XYZ files."""
+
+    def generate_output(self, step, ensemble_results):
+        path = ensemble_results[2]
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        for i, phasepoint in enumerate(path.trajectory()):
+            for line in self.xyz_format(i, len(phasepoint['pos']),
+                                        phasepoint['pos']):
+                yield line
+
+
+class TrajGRO(TrajWriter):
     """A class for writing GROMACS GRO files.
 
     This class handles writing of a system to a file using the GROMACS
@@ -207,8 +272,10 @@ class TrajGRO(Writer):
 
     Attributes
     ----------
-    atomnames : list
+    atom_names : list
         These are the atom names used for the output.
+    residue_names : list
+        These are the residue names used for the output.
     convert_pos : float
         Defines the conversion of positions from internal units to `nm`.
     convert_vel : float
@@ -226,125 +293,107 @@ class TrajGRO(Writer):
     .. [#] The GROMACS manual,
        http://manual.gromacs.org/current/online/gro.html
     """
-    heading = 'Trajectory output. Frame: {}'
+    out_units = {'pos': 'nm', 'vel': 'nm/ps'}
 
-    def __init__(self, units, write_vel):
-        """Initiate the GROMACS writer."""
-        super(TrajGRO, self).__init__('TrajGRO', header=None)
-        self.atomnames = []
-        self.frame = 0  # number of frames written
-        self.write_vel = write_vel
-        try:
-            self.convert_pos = CONVERT['length'][units, 'nm']
-            self.convert_vel = CONVERT['velocity'][units, 'nm/ps']
-        except KeyError:
-            self.convert_pos = 1.0
-            self.convert_vel = 1.0
-            msg = ['Could not get conversion for units "{}"'.format(units)]
-            msg += ['Positions will be in nm, velocity in nm/ps']
-            msgtxt = '\n'.join(msg)
-            logger.warning(msgtxt)
-
-    def gro_format(self, npart, pos, vel, box, **kwargs):
-        """Format positions, box and velocities according to the GRO format.
-
-        This method will generate a list of strings which is the GRO
-        format representation of a configuration. Note that velicities
-        do not have to be written (i.e. `vel = None`).
+    def __init__(self, units, write_vel, names=None):
+        """Initiate the GROMACS writer.
 
         Parameters
         ----------
-        npart : integer
-            The number of particles.
-        pos : numpy.array
-            The positions to write.
-        vel : numpy.array or None
-            Velocities to write. If `None`, velocities are not written.
-        box : object like `Box` from `pyretis.core.box`
-            The simulation box, used for box-lengths.
-        kwargs : dict,
-            Additional arguments for the GRO file. This may include:
+        units : string
+            The internal units used in the simulation.
+        write_vel : boolean
+            If True, we will also output velocities
+        names : list of strings, optional
+            Names for labeling atoms.
+        """
+        super().__init__('GRO', write_vel, units, self.out_units)
+        self.residue_names = []
+        if names is not None:
+            self.atom_names = [name for name in names]
+            self.residue_names = [name for name in names]
 
-            * residuenum : list of ints, optional.
-              Residue numbers, may be used to group molecules etc.
-            * residuename : list of strings.
-              The residue names.
-            * atomname : list of strings, optional.
-              The atom names.
-            * atomnum : list of ints, optional.
-              The atomnumbers.
-            * header : string, optional.
-              Header to include in the output file.
+    def gro_format(self, step, npart, pos, vel, box_lengths):
+        """Apply the GROMACS format to a snapshot.
+
+        Parameters
+        ----------
+        step : int
+            The current simulation step.
+        npart : int
+            The number of particles in the snapshot.
+        pos : numpy.array
+            The positions of the particles.
+        vel : numpy.array or None
+            The velocities of the particles.
+        box : list of floats.
+            The simulation box lengths.
 
         Returns
         -------
         out : list of strings
-            The strings which is the GRO representation of the given
-            configuration.
+            The formatted snapshot.
         """
-        atomname = kwargs.get('atomname', ['X'] * npart)
-        residuename = kwargs.get('residuename', atomname)
-        residuenum = kwargs.get('residuenum', None)
-        atomnum = kwargs.get('atomnum', None)
-        header = kwargs.get('header', self.heading.format(self.frame))
-
-        buff = ['{}'.format(header)]
+        buff = ['Snapshot, step: {}'.format(step)]
         buff.append('{}'.format(npart))
-
         pos = _adjust_coordinate(pos)  # in case pos is 1D or 2D
         if vel is not None:
             vel = _adjust_coordinate(vel)  # in case vel is 1D or 2D
-
+        if len(self.atom_names) != npart:
+            self.atom_names = ['X'] * npart
+        if len(self.residue_names) != npart:
+            self.residue_names = ['X'] * npart
         for i in range(npart):
-            residuenr = i + 1 if residuenum is None else residuenum[i]
-            atomnr = i + 1 if atomnum is None else atomnum[i]
+            residuenr = i + 1
+            atomnr = i + 1
             if vel is None:
-                buff.append(_GRO_FMT.format(residuenr, residuename[i],
-                                            atomname[i], atomnr,
+                buff.append(_GRO_FMT.format(residuenr, self.residue_names[i],
+                                            self.atom_names[i], atomnr,
                                             pos[i][0] * self.convert_pos,
                                             pos[i][1] * self.convert_pos,
                                             pos[i][2] * self.convert_pos))
             else:
-                buff.append(_GRO_VEL_FMT.format(residuenr, residuename[i],
-                                                atomname[i], atomnr,
+                buff.append(_GRO_VEL_FMT.format(residuenr,
+                                                self.residue_names[i],
+                                                self.atom_names[i],
+                                                atomnr,
                                                 pos[i][0] * self.convert_pos,
                                                 pos[i][1] * self.convert_pos,
                                                 pos[i][2] * self.convert_pos,
                                                 vel[i][0] * self.convert_vel,
                                                 vel[i][1] * self.convert_vel,
                                                 vel[i][2] * self.convert_vel))
-        buff.append(_GRO_BOX_FMT.format(*self.box_lengths(box)))
+        if box_lengths is None:
+            buff.append(_GRO_BOX_FMT.format(0.0, 0.0, 0.0))
+        else:
+            buff.append(_GRO_BOX_FMT.format(*box_lengths))
         self.frame += 1
         return buff
 
-    def generate_output(self, system, header=None):
-        """Write a configuration in GROMACS format.
+    def format_snapshot(self, step, system):
+        """Format a snapshot in GROMACS format.
 
         This is a method for writing a configuration in GRO-format.
-        It is similar to `write_frame` and it's meant for convenience:
-        atom names will not have to be specified and we are using a
-        `system` object to access the positions and velocities.
 
         Parameters
         ----------
+        step : int
+            The current step number.
         system : object like `System` from `pyretis.core.system`
             The system object with the positions to write
-        header : string, optional
-            Header to use for writing the frame.
 
-        Yields
-        ------
-        out : string
-            The lines in the XYZ-snapshot.
+        Returns
+        -------
+        out : list of strings
+            The lines in the GRO-snapshot.
         """
-        velocity = None if not self.write_vel else system.particles.vel
-        for lines in self.gro_format(system.particles.npart,
-                                     system.particles.pos,
-                                     velocity,
-                                     system.box,
-                                     atomname=system.particles.name,
-                                     header=header):
-            yield lines
+        if len(self.atom_names) != system.particles.npart:
+            self.atom_names = ['X'] * system.particles.npart
+            self.residue_names = ['X'] * system.particles.npart
+        vel = None if not self.write_vel else system.particles.vel
+        box = self.box_lengths(system.box)
+        return self.gro_format(step, system.particles.npart,
+                               system.particles.pos, vel, box)
 
     def box_lengths(self, box):
         """Obtain the box lengths from a object.
@@ -395,6 +444,21 @@ class TrajGRO(Writer):
                 if key in snapshot:
                     snapshot[key] = np.array(snapshot[key]) * convert_vel
             yield snapshot
+
+
+class PathGRO(TrajGRO):
+    """A class for writing trajectories to GRO files."""
+
+    def generate_output(self, step, ensemble_results):
+        path = ensemble_results[2]
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        for i, phasepoint in enumerate(path.trajectory()):
+            vel = None if not self.write_vel else phasepoint['vel']
+            pos = phasepoint['pos']
+            npart = len(pos)
+            box = None
+            for line in self.gro_format(i, npart, pos, vel, box):
+                yield line
 
 
 def read_gromacs_file(filename):

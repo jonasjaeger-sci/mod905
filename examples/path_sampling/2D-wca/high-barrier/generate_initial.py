@@ -8,8 +8,7 @@ from pyretis.inout.writers.traj import write_xyz_file
 filename = 'initial.xyz'
 density = 0.7
 xyz, size = generate_lattice('sq', [5, 5], density=density)
-names = ['A'] * 23
-names.extend(['B', 'B'])
+names = ['B', 'B'] + ['A'] * 23
 print('Generating for density: {}'.format(density))
 print('Box size: {}'.format(size))
 print('Writing file: {}'.format(filename))

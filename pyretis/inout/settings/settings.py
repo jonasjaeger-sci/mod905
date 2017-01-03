@@ -507,7 +507,6 @@ def write_settings_file(settings, outfile, backup=True):
     This will currently fail if objects have made it into the supplied
     ``settings``.
     """
-    # define a ordering of sections to write to the file:
     if backup:
         msg = create_backup(outfile)
         if msg:

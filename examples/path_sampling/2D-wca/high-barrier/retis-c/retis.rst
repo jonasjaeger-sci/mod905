@@ -79,6 +79,7 @@ module = ../c-for-python3/wcafunctions.py
 Output
 ------
 backup = False
-energy-file = 10
-order-file = 10
-cross-file = 1
+energy-file = 0
+order-file = 0
+path-file = 1
+trajectory-file = 0

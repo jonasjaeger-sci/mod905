@@ -30,103 +30,168 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['OutputTask', 'create_output']
 
 
-# Define the known output types:
-_OUTPUT_TYPES = {'energy': {'target': 'file',
-                            'result': 'thermo',
-                            'when': 'energy-file',
-                            'writer': 'energy'},
-                 'orderp': {'target': 'file',
-                            'result': 'orderp',
-                            'when': 'order-file',
-                            'writer': 'order'},
-                 'cross': {'target': 'file',
-                           'result': 'cross',
-                           'when': 'cross-file',
-                           'writer': 'cross'},
-                 'traj-gro': {'target': 'file',
-                              'result': 'traj',
-                              'when': 'trajectory-file',
-                              'writer': 'trajgro'},
-                 'traj-xyz': {'target': 'file',
-                              'result': 'traj',
-                              'when': 'trajectory-file',
-                              'writer': 'trajxyz'},
-                 'thermo-screen': {'target': 'screen',
-                                   'result': 'thermo',
-                                   'when': 'energy-screen',
-                                   'writer': 'thermotable'},
-                 'thermo-file': {'target': 'file',
-                                 'result': 'thermo',
-                                 'when': 'energy-file',
-                                 'writer': 'thermotable'},
-                 'pathensemble': {'target': 'file',
-                                  'result': 'pathensemble',
-                                  'when': 'pathensemble-file',
-                                  'writer': 'pathensemble'},
-                 'pathensemble-screen': {'target': 'screen',
-                                         'result': 'pathensemble',
-                                         'when': 'pathensemble-screen',
-                                         'writer': 'pathtable'}}
-# Define the outputs for simulations.
-_DEFAULT_OUTPUT = {}
-_DEFAULT_OUTPUT['md-nve'] = [{'type': 'energy',
-                              'name': 'nve-energy-file',
-                              'when': {'every': 10},
-                              'filename': 'energy.dat'},
-                             {'type': 'thermo-file',
-                              'name': 'nve-thermo-file',
-                              'when': {'every': 10},
-                              'filename': 'thermo.dat'},
-                             {'type': 'traj-gro',
-                              'name': 'nve-traj-file',
-                              'when': {'every': 10},
-                              'filename': 'traj.gro',
-                              'settings': {'system': ('units',),
-                                           'output': ('write_vel',)},
-                              'header': 'NVE simulation. Step: {}'},
-                             {'type': 'thermo-screen',
-                              'name': 'nve-thermo-screen',
-                              'when': {'every': 10}}]
+# Define the known output tasks
+_TASK_MAP = {}
+_TASK_MAP['energy'] = {
+    'target': 'file',
+    'result': 'thermo',
+    'when': 'energy-file',
+    'writer': 'energy'}
 
-_DEFAULT_OUTPUT['md-flux'] = [{'type': 'energy',
-                               'name': 'flux-energy-file',
-                               'when': {'every': 10},
-                               'filename': 'energy.dat'},
-                              {'type': 'traj-gro',
-                               'name': 'flux-traj-file',
-                               'when': {'every': 10},
-                               'filename': 'traj.gro',
-                               'settings': {'system': ('units',),
-                                            'output': ('write_vel',)},
-                               'header': 'Flux simulation. Step: {}'},
-                              {'type': 'thermo-screen',
-                               'name': 'flux-thermo-screen',
-                               'when': {'every': 10}},
-                              {'type': 'orderp',
-                               'name': 'flux-orderp-file',
-                               'when': {'every': 10},
-                               'filename': 'order.dat'},
-                              {'type': 'cross',
-                               'name': 'flux-cross-file',
-                               'when': {'every': 1},
-                               'filename': 'cross.dat'}]
+_TASK_MAP['orderp'] = {
+    'target': 'file',
+    'result': 'orderp',
+    'when': 'order-file',
+    'writer': 'order'}
 
-_DEFAULT_OUTPUT['tis'] = [{'type': 'pathensemble',
-                           'name': 'tis-path-ensemble',
-                           'when': {'every': 1},
-                           'filename': 'pathensemble.dat',
-                           'settings': {'simulation': ('ensemble',
-                                                       'interfaces')}},
-                          {'type': 'pathensemble-screen',
-                           'name': 'tis-pathensemble-screen',
-                           'when': {'every': 10}}]
+_TASK_MAP['cross'] = {
+    'target': 'file',
+    'result': 'cross',
+    'when': 'cross-file',
+    'writer': 'cross'}
 
-_DEFAULT_OUTPUT['retis'] = [{'type': 'pathensemble',
-                             'name': 'retis-path-ensemble',
-                             'settings': {'simulation': ('ensemble',
-                                                         'interfaces')},
-                             'when': {'every': 1},
-                             'filename': 'pathensemble.dat'}]
+_TASK_MAP['traj-gro'] = {
+    'target': 'file',
+    'result': 'system',
+    'when': 'trajectory-file',
+    'writer': 'trajgro'}
+
+_TASK_MAP['traj-xyz'] = {
+    'target': 'file',
+    'result': 'system',
+    'when': 'trajectory-file',
+    'writer': 'trajxyz'}
+
+_TASK_MAP['thermo-screen'] = {
+    'target': 'screen',
+    'result': 'thermo',
+    'when': 'energy-screen',
+    'writer': 'thermotable'}
+
+_TASK_MAP['thermo-file'] = {
+    'target': 'file',
+    'result': 'thermo',
+    'when': 'energy-file',
+    'writer': 'thermotable'}
+
+_TASK_MAP['pathensemble'] = {
+    'target': 'file',
+    'result': 'pathensemble',
+    'when': 'pathensemble-file',
+    'writer': 'pathensemble'}
+
+_TASK_MAP['pathensemble-screen'] = {
+    'target': 'screen',
+    'result': 'pathensemble',
+    'when': 'pathensemble-screen',
+    'writer': 'pathtable'}
+
+_TASK_MAP['path-order'] = {
+    'target': 'file',
+    'result': 'retis',
+    'when': 'order-file',
+    'writer': 'pathorder'}
+
+_TASK_MAP['path-energy'] = {
+    'target': 'file',
+    'result': 'retis',
+    'when': 'energy-file',
+    'writer': 'pathenergy'}
+
+_TASK_MAP['path-traj-xyz'] = {
+    'target': 'file',
+    'result': 'retis',
+    'when': 'trajectory-file',
+    'writer': 'pathtrajxyz'}
+
+_TASK_MAP['path-traj-gro'] = {
+    'target': 'file',
+    'result': 'retis',
+    'when': 'trajectory-file',
+    'writer': 'pathtrajgro'}
+
+# Predefined outputs for simulations.
+_SIM_OUTPUT = {}
+
+_SIM_OUTPUT['md-nve'] = [
+    {'type': 'energy',
+     'name': 'nve-energy-file',
+     'when': {'every': 10},
+     'filename': 'energy.dat'},
+    {'type': 'thermo-file',
+     'name': 'nve-thermo-file',
+     'when': {'every': 10},
+     'filename': 'thermo.dat'},
+    {'type': 'traj-gro',
+     'name': 'nve-traj-file',
+     'when': {'every': 10},
+     'filename': 'traj.gro',
+     'settings': {'system': ('units',),
+                  'output': ('write_vel',)}},
+    {'type': 'thermo-screen',
+     'name': 'nve-thermo-screen',
+     'when': {'every': 10}}]
+
+_SIM_OUTPUT['md-flux'] = [
+    {'type': 'energy',
+     'name': 'flux-energy-file',
+     'when': {'every': 10},
+     'filename': 'energy.dat'},
+    {'type': 'traj-gro',
+     'name': 'flux-traj-file',
+     'when': {'every': 10},
+     'filename': 'traj.gro',
+     'settings': {'system': ('units',),
+                  'output': ('write_vel',)}},
+    {'type': 'thermo-screen',
+     'name': 'flux-thermo-screen',
+     'when': {'every': 10}},
+    {'type': 'orderp',
+     'name': 'flux-orderp-file',
+     'when': {'every': 10},
+     'filename': 'order.dat'},
+    {'type': 'cross',
+     'name': 'flux-cross-file',
+     'when': {'every': 1},
+     'filename': 'cross.dat'}]
+
+_SIM_OUTPUT['tis'] = [
+    {'type': 'pathensemble',
+     'name': 'tis-path-ensemble',
+     'when': {'every': 1},
+     'filename': 'pathensemble.dat',
+     'settings': {'simulation': ('ensemble',
+                                 'interfaces')}},
+    {'type': 'pathensemble-screen',
+     'name': 'tis-pathensemble-screen',
+     'when': {'every': 10}}]
+
+_SIM_OUTPUT['retis'] = [
+    {'type': 'pathensemble',
+     'name': 'retis-path-ensemble',
+     'settings': {'simulation': ('ensemble',
+                                 'interfaces')},
+     'when': {'every': 1},
+     'filename': 'pathensemble.dat'},
+    {'type': 'path-order',
+     'name': 'retis-path-ensemble-orderp',
+     'when': {'every': 10},
+     'filename': 'order.dat'},
+    # {'type': 'path-traj-xyz',
+    #  'name': 'retis-path-ensemble-traj',
+    #  'when': {'every': 10},
+    #  'settings': {'system': ('units',)},
+    #  'filename': 'traj.xyz'},
+    {'type': 'path-traj-gro',
+     'name': 'retis-path-ensemble-traj',
+     'when': {'every': 10},
+     'filename': 'traj.gro',
+     'settings': {'system': ('units',),
+                  'output': ('write_vel',)}},
+    {'type': 'path-energy',
+     'name': 'retis-path-ensemble-energy',
+     'when': {'every': 10},
+     'filename': 'energy.dat'}]
 
 
 class OutputTask(object):
@@ -152,7 +217,7 @@ class OutputTask(object):
     """
     target = 'undefined'
 
-    def __init__(self, name, result, writer, when, header=None):
+    def __init__(self, name, result, writer, when):
         """Initiate a OutputTask object.
 
         Parameters
@@ -168,73 +233,11 @@ class OutputTask(object):
         when : dict
             Determines when the output should be written. Example:
             `{'every': 10}` will be executed at every 10th step.
-        header: string.
-            Some objects will have a header written each time the we
-            use the write routine. This is for instance used in the
-            trajectory writer to display the current step for a written
-            frame. The given `header` is assumed to contain one '{}'
-            field so that we can insert the current step number.
         """
         self.name = name
         self.result = result
         self.writer = writer
         self.when = when
-        self.header = header
-
-    @classmethod
-    def task_from_settings(cls, task, settings):
-        """Method to create output task from simulation settings.
-
-        Parameters
-        ----------
-        task : dict
-            Settings related to the specific task.
-        settings : dict
-            Settings for the simulation.
-
-        Returns
-        -------
-        out : object like `OutputTask`
-            An output task we can use in the simulation
-        """
-        out = _OUTPUT_TYPES[task['type']]
-        writer_settings = {}
-        req_settings = task.get('settings', {})  # required settings
-        for sec in req_settings:
-            for key in req_settings[sec]:
-                writer_settings[key] = settings[sec][key]
-        writer = get_writer(out['writer'], settings=writer_settings)
-        when = {'every': settings['output'][out['when']]}
-        target = out['target']
-        if target == 'file':
-            prefix = settings['output'].get('prefix', None)
-            if prefix is not None:
-                filename = '{}{}'.format(prefix, task['filename'])
-            else:
-                filename = task['filename']
-            filename = add_dirname(filename,
-                                   settings['output'].get('directory', None))
-            try:
-                old = settings['output']['backup'].lower()
-            except AttributeError:
-                old = 'backup' if settings['output']['backup'] else 'overwrite'
-
-            return OutputTaskFile(task['name'],
-                                  out['result'],
-                                  writer,
-                                  when,
-                                  filename,
-                                  old,
-                                  header=task.get('header', None))
-        elif target == 'screen':
-            return OutputTaskScreen(task['name'],
-                                    out['result'],
-                                    writer,
-                                    when)
-        else:
-            msg = 'Unknown target "{}" ignored!'.format(target)
-            logger.warning(msg)
-            return None
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
@@ -296,8 +299,6 @@ class OutputTaskScreen(OutputTask):
     """A class for writing simulation output to screen.
 
     This class will handle a output task for a simulation to the screen.
-    Note the different handling of the header here -> it is assumed
-    that the writer defines the header and this is the one we will use.
 
     Attributes
     ----------
@@ -328,9 +329,8 @@ class OutputTaskScreen(OutputTask):
         when : dict
             Determines when the task should be executed.
         """
-        super(OutputTaskScreen, self).__init__(name, result, writer,
-                                               when, header=None)
-        self.print_header = True
+        super(OutputTaskScreen, self).__init__(name, result, writer, when)
+        self.print_header = writer.print_header
 
     def write(self, step, result):
         """Ouput the result to screen
@@ -371,16 +371,10 @@ class OutputTaskFile(OutputTask):
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
-    header : string
-        Some objects will have a specific header written each time we
-        use the write routine. This is for instance used in the
-        trajectory writer to display the current step for a written
-        frame.
     """
     target = 'file'
 
-    def __init__(self, name, result, writer, when, filename, backup,
-                 header=None):
+    def __init__(self, name, result, writer, when, filename, backup):
         """Initiate the OutputTaskFile object.
 
         Parameters
@@ -399,24 +393,17 @@ class OutputTaskFile(OutputTask):
         filename : string
             The name of the file to write to.
         backup : string
-            Determines how we should treat old files. Valid strings
-            are given in the
-        header: string.
-            Some objects will have a header written each time the we
-            use the write routine. This is for instance used in the
-            trajectory writer to display the current step.
-            * `oldfile` : string. Determines if we should
-              overwrite/backup/append to old files.
+            Determines how we should treat old files.
         """
-        super(OutputTaskFile, self).__init__(name, result, writer, when,
-                                             header=header)
-        self.print_header = True
+        super(OutputTaskFile, self).__init__(name, result, writer, when)
+        self.print_header = writer.print_header
         self.fileh = FileIO(filename, oldfile=backup)
-        if self.writer.header is not None:
-            self.fileh.write(self.writer.header)
+        if self.print_header:
+            if self.writer.header is not None:
+                self.fileh.write(self.writer.header)
 
     def write(self, step, result):
-        """Ouput the result to screen
+        """Ouput the result.
 
         Parameters
         ----------
@@ -430,25 +417,93 @@ class OutputTaskFile(OutputTask):
         out : boolean
             True if we are printing something, False otherwise.
         """
-        if self.result == 'traj':
-            header = None
-            if self.header is not None:
-                try:
-                    header = self.header.format(step['step'])
-                except IndexError:
-                    # Something went wrong in the format. To save us
-                    # some trouble on the next pass, we just forget
-                    # about it.
-                    msg = ['Could not use specified header in trajectory.']
-                    msg += ['Ignoring']
-                    msgtxt = '\n'.join(msg)
-                    logger.warning(msgtxt)
-                    self.header = None
-            for lines in self.writer.generate_output(result, header=header):
-                self.fileh.write(lines)
+        for lines in self.writer.generate_output(step['step'], result):
+            self.fileh.write(lines)
+        return None
+
+
+def create_writer(task, writer_name, settings):
+    """Create a writer for an output task
+
+    Parameters
+    ----------
+    task : dict
+        The output task we are creating output for.
+    writer_name : string
+        The type of writer we are going to create.
+    settings : dict
+        Simulation settings. Some may be needed to create the
+        writer.
+
+    Returns
+    -------
+    out : object like :py:class:`.writers.Writer`
+        The writer to use for formatting output.
+    """
+    writer_settings = {}
+    req_settings = task.get('settings', {})  # required settings
+    for sec in req_settings:
+        for key in req_settings[sec]:
+            writer_settings[key] = settings[sec][key]
+    writer = get_writer(writer_name, settings=writer_settings)
+    return writer
+
+
+def task_from_settings(task, settings):
+    """Method to create output task from simulation settings.
+
+    Parameters
+    ----------
+    task : dict
+        Settings related to the specific task.
+    settings : dict
+        Settings for the simulation.
+
+    Returns
+    -------
+    out : object like `OutputTask`
+        An output task we can use in the simulation
+    """
+    task_settings = _TASK_MAP[task['type']]
+    when = {'every': settings['output'][task_settings['when']]}
+    if when['every'] < 1:
+        msg = 'Skipping output task "{}"'.format(task['type'])
+        logger.info(msg)
+        return None
+    when = {'every': settings['output'][task_settings['when']]}
+    writer_name = task_settings['writer']
+    writer = create_writer(task, writer_name, settings)
+    if writer is None:
+        msg = 'Could not create writer "{}"'.format(writer_name)
+        logger.warning(msg)
+        return None
+    target = task_settings['target']
+    if target == 'screen':
+        return OutputTaskScreen(task['name'],
+                                task_settings['result'],
+                                writer,
+                                when)
+    elif target == 'file':
+        prefix = settings['output'].get('prefix', None)
+        if prefix is not None:
+            filename = '{}{}'.format(prefix, task['filename'])
         else:
-            for lines in self.writer.generate_output(step['step'], result):
-                self.fileh.write(lines)
+            filename = task['filename']
+        filename = add_dirname(filename,
+                               settings['output'].get('directory', None))
+        try:
+            old = settings['output']['backup'].lower()
+        except AttributeError:
+            old = 'backup' if settings['output']['backup'] else 'overwrite'
+        return OutputTaskFile(task['name'],
+                              task_settings['result'],
+                              writer,
+                              when,
+                              filename,
+                              old)
+    else:
+        msg = 'Unknown target "{}" ignored!'.format(target)
+        logger.warning(msg)
         return None
 
 
@@ -470,8 +525,8 @@ def create_output(settings):
     out : object like `OutputTask`
     """
     sim_task = settings['simulation']['task'].lower()
-    for task in _DEFAULT_OUTPUT.get(sim_task, []):
-        out_task = OutputTask.task_from_settings(task, settings)
+    for task in _SIM_OUTPUT.get(sim_task, []):
+        out_task = task_from_settings(task, settings)
         if out_task is not None:
             msgtxt = 'Output task created: {}'.format(out_task)
             logger.debug(msgtxt)

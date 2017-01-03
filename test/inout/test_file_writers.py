@@ -23,7 +23,7 @@ class WriterTest(unittest.TestCase):
         """Test that we write and read energy files."""
         energy_writer = EnergyWriter()
         energy_reader = EnergyWriter()
-        fields = ['vpot', 'ekin', 'etot', 'ham', 'temp']
+        fields = ['vpot', 'ekin', 'etot', 'temp']
         all_data = []
         with tempfile.NamedTemporaryFile() as temp:
             string = '{}\n'.format(energy_writer.header)
