@@ -61,7 +61,6 @@ tools
     setting up simple systems, for example functions for generating
     lattices.
 """
-from __future__ import absolute_import
 # pyretis imports:
 from .version import VERSION as __version__
 from . import info
