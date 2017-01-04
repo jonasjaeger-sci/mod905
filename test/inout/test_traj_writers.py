@@ -7,10 +7,59 @@ Here we test that we can write and read different output formats.
 """
 import logging
 import unittest
+import os
 import numpy as np
-from pyretis.core.particles import Particles
+from pyretis.core import Box, System, Particles, Path, PathExt
+from pyretis.tools.lattice import generate_lattice
 from pyretis.inout.writers.traj import _adjust_coordinate
+from pyretis.inout.writers import get_writer
 logging.disable(logging.CRITICAL)
+
+
+LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def create_test_system():
+    """Create a system we can use for testing."""
+    xyz, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
+    box = Box(size=size)
+    system = System(units='lj', box=box)
+    system.particles = Particles(dim=3)
+    for xyzi in xyz:
+        system.add_particle(name='Ar', pos=xyzi, vel=np.zeros_like(xyzi))
+    system.particles.vel[-1] = np.array([-1.0, 0.123, 1.0])
+    return system
+
+
+def create_path():
+    """Setup a simple path for a test."""
+    system = create_test_system()
+    system.particles.name = ['X'] * system.particles.npart
+    system.box = Box(size=[123.0, 123.0, 123.0])
+    path = Path(None)
+    phasepoints = []
+    for _ in range(10):
+        pos = np.random.rand(*system.particles.pos.shape)
+        vel = np.random.rand(*pos.shape)
+        vpot = np.random.random()
+        ekin = np.random.random()
+        phasepoint = {'order': [pos[0][0], pos[1][0]], 'pos': pos,
+                      'vel': vel, 'vpot': vpot, 'ekin': ekin}
+        phasepoints.append(phasepoint)
+        path.append(phasepoint)
+    return system, phasepoints, path
+
+
+def generate_snaplines(path_writer, conf_writer, phasepoints, system, path):
+    """Genereate snapshots using path and traj writers."""
+    snapshots = [line for line in path_writer.generate_output(0, path)]
+    length = len([_ for _ in conf_writer.generate_output(0, system)])
+    for i, phasepoint in enumerate(phasepoints):
+        system.particles.set_particle_state(phasepoint)
+        snap = conf_writer.generate_output(i, system)
+        snap2 = snapshots[1+i*length:1+(i+1)*length]
+        for line1, line2 in zip(snap, snap2):
+            yield line1, line2
 
 
 class TrajTest(unittest.TestCase):
@@ -73,6 +122,82 @@ class TrajTest(unittest.TestCase):
         pos = _adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([[1., -1., 0.5],
                                                    [-1., 1., -0.5]])))
+
+    def test_gro_xyz_writer(self):
+        """Test the GROWriter."""
+        system = create_test_system()
+        gro_writer = get_writer('trajgro', {'units': 'lj',
+                                            'write_vel': True})
+        snapshot = gro_writer.generate_output(0, system)
+        correct = os.path.join(LOCAL_DIR, 'generated.gro')
+        with open(correct, 'r') as fileh:
+            for lines1, lines2 in zip(fileh, snapshot):
+                self.assertEqual(lines1.rstrip(), lines2.rstrip())
+
+    def test_xyz_writer(self):
+        """Test the XYZWriter."""
+        system = create_test_system()
+        xyz_writer = get_writer('trajxyz', {'units': 'lj'})
+        snapshot = xyz_writer.generate_output(0, system)
+        correct = os.path.join(LOCAL_DIR, 'generated.xyz')
+        with open(correct, 'r') as fileh:
+            for lines1, lines2 in zip(fileh, snapshot):
+                self.assertEqual(lines1.rstrip(), lines2.rstrip())
+
+    def test_path_gro_writer(self):
+        """Test the path gro writer."""
+        system, phasepoints, path = create_path()
+        path_writer = get_writer('pathtrajgro', {'units': 'lj',
+                                                 'write_vel': True})
+        conf_writer = get_writer('trajgro', {'units': 'lj',
+                                             'write_vel': True})
+        for line1, line2 in generate_snaplines(path_writer, conf_writer,
+                                               phasepoints, system, path):
+            self.assertEqual(line1, line2)
+
+    def test_path_xyz_writer(self):
+        """Test the path xyz writers."""
+        system, phasepoints, path = create_path()
+        path_writer = get_writer('pathtrajxyz', {'units': 'lj'})
+        conf_writer = get_writer('trajxyz', {'units': 'lj'})
+        for line1, line2 in generate_snaplines(path_writer, conf_writer,
+                                               phasepoints, system, path):
+            self.assertEqual(line1, line2)
+
+    def test_path_ext_writer(self):
+        """Test the path ext writer."""
+        path = PathExt(None)
+        phasepoint = {'pos': ('initial.g96', None), 'vel': False,
+                      'order': [np.random.random(), None], 'vpot': None,
+                      'ekin': None}
+        path.append(phasepoint)
+        for i in range(5, 0, -1):
+            phasepoint = {'pos': ('trajB.trr', i), 'vel': True,
+                          'order': [np.random.random(), None], 'vpot': None,
+                          'ekin': None}
+            path.append(phasepoint)
+        for i in range(0, 5):
+            phasepoint = {'pos': ('trajF.trr', i), 'vel': False,
+                          'order': [np.random.random(), None], 'vpot': None,
+                          'ekin': None}
+            path.append(phasepoint)
+        writer = get_writer('pathextwriter')
+        correct = ['# Cycle: 0, status: None',
+                   '#     Step              Filename       index    vel',
+                   '         0           initial.g96           0      1',
+                   '         1             trajB.trr           5     -1',
+                   '         2             trajB.trr           4     -1',
+                   '         3             trajB.trr           3     -1',
+                   '         4             trajB.trr           2     -1',
+                   '         5             trajB.trr           1     -1',
+                   '         6             trajF.trr           0      1',
+                   '         7             trajF.trr           1      1',
+                   '         8             trajF.trr           2      1',
+                   '         9             trajF.trr           3      1',
+                   '        10             trajF.trr           4      1']
+
+        for corr, snap in zip(correct, writer.generate_output(0, path)):
+            self.assertEqual(corr, snap)
 
 
 if __name__ == '__main__':
