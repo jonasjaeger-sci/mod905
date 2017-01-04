@@ -328,7 +328,7 @@ class OutputTaskScreen(OutputTask):
         when : dict
             Determines when the task should be executed.
         """
-        super(OutputTaskScreen, self).__init__(name, result, writer, when)
+        super().__init__(name, result, writer, when)
         self.print_header = writer.print_header
 
     def write(self, step, result):
@@ -394,7 +394,7 @@ class OutputTaskFile(OutputTask):
         backup : string
             Determines how we should treat old files.
         """
-        super(OutputTaskFile, self).__init__(name, result, writer, when)
+        super().__init__(name, result, writer, when)
         self.print_header = writer.print_header
         self.fileh = FileIO(filename, oldfile=backup)
         if self.print_header:
@@ -419,6 +419,52 @@ class OutputTaskFile(OutputTask):
         for lines in self.writer.generate_output(step['step'], result):
             self.fileh.write(lines)
         return None
+
+
+class OutputTaskDependentFile(OutputTaskFile):
+    """A class for handling output where we combine several results.
+
+    Currently, this class is rather specialized and is only used for
+    storing external paths. But it can be made more general in the
+    future if such combinations are needed for other outputs.
+
+    Attributes
+    ----------
+    dependency : string
+        The result we need to combine with `self.result` in some way.
+    """
+    dependency = 'ensemble'
+
+    def output(self, simulation_result):
+        """Output a task given results from a simulation.
+
+        This will output the task using the result found in the
+        `simulation_result` which should be the dictionary returned
+        from a simulation object (e.g. object like `Simulation` from
+        `pyretis.core.simulation.simulation`) after a step.
+        For trajectories, we expect that `simulation_result` contain
+        the key `traj` so we can pass it to the trajectory writer.
+
+        Parameters
+        ----------
+        simulation_result : dict
+            This is the result from a simulation step.
+
+        Returns
+        -------
+        out : boolean
+            True if the writer wrote something, False otherwise.
+        """
+        step = simulation_result['cycle']
+        if not execute_now(step, self.when):
+            return False
+        for res in (self.result, self.dependency):
+            if res not in simulation_result:
+                return False
+        result = simulation_result[self.result]
+        dep = simulation_result[self.dependency]
+        copy = dep.generate_output(step, result)
+        return self.write(step, copy)
 
 
 def create_writer(task_settings, writer_name, settings):
@@ -446,6 +492,55 @@ def create_writer(task_settings, writer_name, settings):
             writer_settings[key] = settings[sec][key]
     writer = get_writer(writer_name, settings=writer_settings)
     return writer
+
+
+def generate_file_name(task, settings):
+    """Generate file name for an output task from settings.
+
+    Parameters
+    ----------
+    task : dict
+        The task we are generating for.
+    settings : dict
+        The input settings
+
+    Returns
+    -------
+    filename : string
+        The file name to use.
+    """
+    prefix = settings['output'].get('prefix', None)
+    if prefix is not None:
+        filename = '{}{}'.format(prefix, task['filename'])
+    else:
+        filename = task['filename']
+    filename = add_dirname(filename,
+                           settings['output'].get('directory', None))
+    return filename
+
+
+def get_backup_settings(settings):
+    """Get backup settings from simulation settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The simulation settings
+
+    Returns
+    -------
+    out : string
+        A string representing the backup settings to use.
+    """
+    try:
+        old = settings['output']['backup'].lower()
+    except AttributeError:
+        msg = '"backup" not found in "output" settings'
+        logger.warning(msg)
+        old = 'backup' if settings['output']['backup'] else 'overwrite'
+        msg = 'Handling backup as "{}"'.format(old)
+        logger.warning(msg)
+    return old
 
 
 def task_from_settings(task, settings):
@@ -477,29 +572,22 @@ def task_from_settings(task, settings):
         logger.warning(msg)
         return None
     target = task_settings['target']
+
     if target == 'screen':
-        return OutputTaskScreen(task['name'],
-                                task_settings['result'],
-                                writer,
-                                when)
+        return OutputTaskScreen(
+            task['name'],
+            task_settings['result'],
+            writer,
+            when)
     elif target == 'file':
-        prefix = settings['output'].get('prefix', None)
-        if prefix is not None:
-            filename = '{}{}'.format(prefix, task['filename'])
-        else:
-            filename = task['filename']
-        filename = add_dirname(filename,
-                               settings['output'].get('directory', None))
-        try:
-            old = settings['output']['backup'].lower()
-        except AttributeError:
-            old = 'backup' if settings['output']['backup'] else 'overwrite'
+        filename = generate_file_name(task, settings)
+        backup_settings = get_backup_settings(settings)
         return OutputTaskFile(task['name'],
                               task_settings['result'],
                               writer,
                               when,
                               filename,
-                              old)
+                              backup_settings)
     else:
         msg = 'Unknown target "{}" ignored!'.format(target)
         logger.warning(msg)

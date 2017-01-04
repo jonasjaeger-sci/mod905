@@ -562,6 +562,13 @@ class PathBase(object):
                 return self
         return self
 
+    def copy_path(self):
+        """Return a copy of the path."""
+        new_path = self.empty_path()
+        for phasepoint in self.trajectory():
+            new_path.append(phasepoint)
+        return new_path
+
     @staticmethod
     @abstractmethod
     def reverse_velocities(vel):

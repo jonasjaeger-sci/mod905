@@ -382,11 +382,19 @@ class PathEnsembleExt(PathEnsemble):
             This is the path object we are going to store.
         target_dir : string
             The location were we are moving the path to.
+
+        Returns
+        -------
+        out : object like py:class:`.path.PathBase`
+            A copy of the input path.
         """
         source = {}
-        _ = _generate_file_names(path, target_dir, prefix=prefix)
+        new_pos = _generate_file_names(path, target_dir, prefix=prefix)
+        path_copy = path.copy_path()
+        path_copy.pos = new_pos
         for src, dest in source.items():
             shutil.copy(src, dest)
+        return path_copy
 
     def store_path(self, path):
         """Store a path by explicitly moving it.
@@ -396,10 +404,8 @@ class PathEnsembleExt(PathEnsemble):
         path : object like :py:class:`.core.path.PathBase`
             This is the path object we are going to store.
         """
-        print('Storing the external path')
         self._move_path(path, self.directory['accepted'])
         self.last_path = path
-        print('Could be deleted:')
         print([x for x in self.list_superficial()])
 
     def list_superficial(self):
@@ -408,7 +414,6 @@ class PathEnsembleExt(PathEnsemble):
         for phasepoint in self.last_path.trajectory(reverse=False):
             pos_file, _ = phasepoint['pos']
             last.add(pos_file)
-        print(last)
         for entry in os.scandir(self.directory['accepted']):
             if entry.is_file() and entry.path not in last:
                 yield entry.path
@@ -417,10 +422,10 @@ class PathEnsembleExt(PathEnsemble):
         """Move a path for temporary storing."""
         self._move_path(path, self.directory['generate'])
 
-    def output_path(self, cycle, path):
-        """Output a trajectory"""
-        self._copy_path(path, self.directory['traj'],
-                        prefix='{}_'.format(cycle))
+    def generate_output(self, cycle, path):
+        """Output a trajectory by making a copy."""
+        return self._copy_path(path, self.directory['traj'],
+                               prefix='{}_'.format(cycle))
 
 
 def get_path_ensemble_class(ensemble_type):
