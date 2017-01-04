@@ -48,6 +48,7 @@ _XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
 __all__ = ['XYZWriter', 'PathXYZWriter', 'GROWriter', 'PathGROWriter',
+           'PathExtWriter',
            'read_gromacs_file', 'read_xyz_file', 'write_xyz_file']
 
 
@@ -228,7 +229,7 @@ class XYZWriter(TrajWriter):
             The formatted snapshot
         """
         if len(self.atom_names) != system.particles.npart:
-            self.atom_names = system.particles.names
+            self.atom_names = system.particles.name
         return self.xyz_format(step, system.particles.npart,
                                system.particles.pos)
 
@@ -262,8 +263,8 @@ class PathXYZWriter(XYZWriter):
     def generate_output(self, step, path):
         yield '# Cycle: {}, status: {}'.format(step, path.status)
         for i, phasepoint in enumerate(path.trajectory()):
-            for line in self.xyz_format(i, len(phasepoint['pos']),
-                                        phasepoint['pos']):
+            npart = len(phasepoint['pos'])
+            for line in self.xyz_format(i, npart, phasepoint['pos']):
                 yield line
 
 
@@ -364,7 +365,7 @@ class GROWriter(TrajWriter):
                                                 vel[i][1] * self.convert_vel,
                                                 vel[i][2] * self.convert_vel))
         if box_lengths is None:
-            buff.append(_GRO_BOX_FMT.format(0.0, 0.0, 0.0))
+            buff.append(_GRO_BOX_FMT.format(123.0, 123.0, 123.0))
         else:
             buff.append(_GRO_BOX_FMT.format(*box_lengths))
         self.frame += 1
@@ -449,8 +450,7 @@ class GROWriter(TrajWriter):
 class PathGROWriter(GROWriter):
     """A class for writing trajectories to GRO files."""
 
-    def generate_output(self, step, ensemble_results):
-        path = ensemble_results[2]
+    def generate_output(self, step, path):
         yield '# Cycle: {}, status: {}'.format(step, path.status)
         for i, phasepoint in enumerate(path.trajectory()):
             vel = None if not self.write_vel else phasepoint['vel']
@@ -461,23 +461,17 @@ class PathGROWriter(GROWriter):
                 yield line
 
 
-class PathEXTWriter(TrajWriter):
-    u"""A class for writing external trajectories.
+class PathExtWriter(Writer):
+    """A class for writing external trajectories.
 
     Attributes
     ----------
-    atom_names : list
-        These are the atom names used for the output.
-    convert_pos : float
-        Defines the conversion of positions from internal units to
-        Ångström.
-    frame : integer
-        The number of frames written.
+    print_header : boolean
+        Determines if we should print the header on the first step.
     """
-    out_units = {'pos': None, 'vel': None}
 
-    def __init__(self, units):
-        """Initialization of the XYZ writer.
+    def __init__(self):
+        """Initialization of the PathExtWriter writer.
 
         Parameters
         ----------
@@ -485,19 +479,21 @@ class PathEXTWriter(TrajWriter):
             The system of units used internally for positions and
             velocities.
         """
-        super().__init__('TrajEXT', True, units, self.out_units)
+        header = {'labels': ['Step', 'Filename', 'index', 'vel'],
+                  'width': [10, 20, 10, 5], 'spacing': 2}
 
-    def format_snapshot(self, step, system):
-        """This function is not really needed for TrajEXT"""
-        pass
+        super().__init__('PathExt', header=header)
+        self.print_header = False
 
-    def generate_output(self, step, ensemble_results):
-        path = ensemble_results[2]
+    def generate_output(self, step, path):
         yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
-            pos = phasepoint['pos']
-            vel = phasepoint['vel']
-            yield '{} {} {}'.format(i, pos, vel)
+            filename, idx = phasepoint['pos']
+            if idx is None:
+                idx = 0
+            vel = -1 if phasepoint['vel'] else 1
+            yield '{:>10}  {:>20s}  {:>10}  {:5}'.format(i, filename, idx, vel)
 
     @staticmethod
     def line_parser(line):

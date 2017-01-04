@@ -77,7 +77,7 @@ from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
 from .traj import (read_xyz_file, read_gromacs_file, XYZWriter, GROWriter,
-                   PathXYZWriter, PathGROWriter)
+                   PathXYZWriter, PathGROWriter, PathExtWriter)
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import (CrossWriter,
@@ -99,7 +99,8 @@ _CLASS_MAP = {'cross': CrossWriter,
               'pathorder': OrderPathWriter,
               'pathenergy': EnergyPathWriter,
               'pathtrajxyz': PathXYZWriter,
-              'pathtrajgro': PathGROWriter}
+              'pathtrajgro': PathGROWriter,
+              'pathextwriter': PathExtWriter}
 
 
 def get_writer(file_type, settings=None):

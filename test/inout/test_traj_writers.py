@@ -123,10 +123,10 @@ class TrajTest(unittest.TestCase):
         self.assertTrue(np.allclose(pos, np.array([[1., -1., 0.5],
                                                    [-1., 1., -0.5]])))
 
-    def test_gro_xyz_writer(self):
+    def test_gro_writer(self):
         """Test the GROWriter."""
         system = create_test_system()
-        gro_writer = get_writer('trajgro', {'units': 'lj',
+        gro_writer = get_writer('trajgro', {'units': None,
                                             'write_vel': True})
         snapshot = gro_writer.generate_output(0, system)
         correct = os.path.join(LOCAL_DIR, 'generated.gro')
@@ -137,7 +137,7 @@ class TrajTest(unittest.TestCase):
     def test_xyz_writer(self):
         """Test the XYZWriter."""
         system = create_test_system()
-        xyz_writer = get_writer('trajxyz', {'units': 'lj'})
+        xyz_writer = get_writer('trajxyz', {'units': None})
         snapshot = xyz_writer.generate_output(0, system)
         correct = os.path.join(LOCAL_DIR, 'generated.xyz')
         with open(correct, 'r') as fileh:
@@ -147,9 +147,9 @@ class TrajTest(unittest.TestCase):
     def test_path_gro_writer(self):
         """Test the path gro writer."""
         system, phasepoints, path = create_path()
-        path_writer = get_writer('pathtrajgro', {'units': 'lj',
+        path_writer = get_writer('pathtrajgro', {'units': None,
                                                  'write_vel': True})
-        conf_writer = get_writer('trajgro', {'units': 'lj',
+        conf_writer = get_writer('trajgro', {'units': None,
                                              'write_vel': True})
         for line1, line2 in generate_snaplines(path_writer, conf_writer,
                                                phasepoints, system, path):
@@ -158,8 +158,8 @@ class TrajTest(unittest.TestCase):
     def test_path_xyz_writer(self):
         """Test the path xyz writers."""
         system, phasepoints, path = create_path()
-        path_writer = get_writer('pathtrajxyz', {'units': 'lj'})
-        conf_writer = get_writer('trajxyz', {'units': 'lj'})
+        path_writer = get_writer('pathtrajxyz', {'units': None})
+        conf_writer = get_writer('trajxyz', {'units': None})
         for line1, line2 in generate_snaplines(path_writer, conf_writer,
                                                phasepoints, system, path):
             self.assertEqual(line1, line2)
