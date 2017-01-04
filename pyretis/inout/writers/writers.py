@@ -194,6 +194,7 @@ class Writer(object):
         ----------
         line : string
             This string represents a line that we will parse.
+
         Returns
         -------
         out : list

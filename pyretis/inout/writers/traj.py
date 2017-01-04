@@ -10,11 +10,17 @@ in a GROMACS format.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TrajXYZ
+XYZWriter
     Writing of coordinates to a file in a xyz format.
 
-TrajGRO
-    Writing of a coordinates to a file in a gromacs format.
+PathXYZWriter
+    Writing of path data to a file in xyz format.
+
+GROWriter
+    Writing of a coordinates to a file in a GROMACS format.
+
+PathGROWriter
+    Writing of path data to a file in GROMACS format.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,7 +29,7 @@ read_xyz_file
     A method for reading snapshots from a xyz file.
 
 read_gromacs_file
-    A method for reading snapshots from a gromacs GRO file.
+    A method for reading snapshots from a GROMACS GRO file.
 """
 import logging
 import numpy as np
@@ -41,8 +47,8 @@ _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
 _XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
 
 
-__all__ = ['TrajXYZ', 'TrajGRO', 'read_gromacs_file', 'read_xyz_file',
-           'write_xyz_file']
+__all__ = ['XYZWriter', 'PathXYZWriter', 'GROWriter', 'PathGROWriter',
+           'read_gromacs_file', 'read_xyz_file', 'write_xyz_file']
 
 
 def _adjust_coordinate(coord):
@@ -121,9 +127,9 @@ class TrajWriter(Writer):
             self.convert_pos = 1.0
             msg = 'Could not get conversion "{} -> {}"'.format(units,
                                                                pos_unit)
-            logger.warning(msg)
+            logger.info(msg)
             msg = 'Position output will be in units: "{}"'.format(units)
-            logger.warning(msg)
+            logger.info(msg)
         if vel_unit is not None:
             try:
                 self.convert_vel = CONVERT['velocity'][units, vel_unit]
@@ -131,9 +137,9 @@ class TrajWriter(Writer):
                 self.convert_vel = 1.0
                 msg = 'Could not get conversion "{} -> {}"'.format(units,
                                                                    vel_unit)
-                logger.warning(msg)
+                logger.info(msg)
                 msg = 'Position output will be in units: "{}"'.format(units)
-                logger.warning(msg)
+                logger.info(msg)
 
     def format_snapshot(self, step, system):
         """Format the snapshot for output."""
@@ -145,7 +151,7 @@ class TrajWriter(Writer):
             yield lines
 
 
-class TrajXYZ(TrajWriter):
+class XYZWriter(TrajWriter):
     u"""A class for writing XYZ files.
 
     This class handles writing of a system to a file in a simple xyz
@@ -172,7 +178,7 @@ class TrajXYZ(TrajWriter):
             The system of units used internally for positions and
             velocities.
         """
-        super().__init__('XYZ', False, units, self.out_units)
+        super().__init__('XYZWriter', False, units, self.out_units)
 
     def xyz_format(self, step, npart, pos):
         """Format a single frame using the XYZ format.
@@ -250,7 +256,7 @@ class TrajXYZ(TrajWriter):
             yield snapshot
 
 
-class PathXYZ(TrajXYZ):
+class PathXYZWriter(XYZWriter):
     """A class for writing trajectories to XYZ files."""
 
     def generate_output(self, step, path):
@@ -261,7 +267,7 @@ class PathXYZ(TrajXYZ):
                 yield line
 
 
-class TrajGRO(TrajWriter):
+class GROWriter(TrajWriter):
     """A class for writing GROMACS GRO files.
 
     This class handles writing of a system to a file using the GROMACS
@@ -304,7 +310,7 @@ class TrajGRO(TrajWriter):
         names : list of strings, optional
             Names for labeling atoms.
         """
-        super().__init__('GRO', write_vel, units, self.out_units)
+        super().__init__('GROWriter', write_vel, units, self.out_units)
         self.residue_names = self.atom_names
 
     def gro_format(self, step, npart, pos, vel, box_lengths):
@@ -440,9 +446,9 @@ class TrajGRO(TrajWriter):
             yield snapshot
 
 
-class PathGRO(TrajGRO):
+class PathGROWriter(GROWriter):
     """A class for writing trajectories to GRO files."""
-    
+
     def generate_output(self, step, ensemble_results):
         path = ensemble_results[2]
         yield '# Cycle: {}, status: {}'.format(step, path.status)
@@ -453,6 +459,61 @@ class PathGRO(TrajGRO):
             box = None
             for line in self.gro_format(i, npart, pos, vel, box):
                 yield line
+
+
+class PathEXTWriter(TrajWriter):
+    u"""A class for writing external trajectories.
+
+    Attributes
+    ----------
+    atom_names : list
+        These are the atom names used for the output.
+    convert_pos : float
+        Defines the conversion of positions from internal units to
+        Ångström.
+    frame : integer
+        The number of frames written.
+    """
+    out_units = {'pos': None, 'vel': None}
+
+    def __init__(self, units):
+        """Initialization of the XYZ writer.
+
+        Parameters
+        ----------
+        units : string
+            The system of units used internally for positions and
+            velocities.
+        """
+        super().__init__('TrajEXT', True, units, self.out_units)
+
+    def format_snapshot(self, step, system):
+        """This function is not really needed for TrajEXT"""
+        pass
+
+    def generate_output(self, step, ensemble_results):
+        path = ensemble_results[2]
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        for i, phasepoint in enumerate(path.trajectory()):
+            pos = phasepoint['pos']
+            vel = phasepoint['vel']
+            yield '{} {} {}'.format(i, pos, vel)
+
+    @staticmethod
+    def line_parser(line):
+        """A simple parser for reading path data.
+
+        Parameters
+        ----------
+        line : string
+            The line to parse.
+
+        Returns
+        -------
+        out : list
+            The columns of data.
+        """
+        return [col for col in line.split()]
 
 
 def read_gromacs_file(filename):
@@ -483,7 +544,7 @@ def read_gromacs_file(filename):
     gro = (5, 5, 5, 5, 8, 8, 8, 8, 8, 8)
     gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
                 'x', 'y', 'z', 'vx', 'vy', 'vz')
-    gro_type = (0, 1, 1, 0, 2, 2, 2, 2, 2, 2)
+    gro_type = (int, str, str, int, float, float, float, float, float, float)
     with open(filename, 'r') as fileh:
         for lines in fileh:
             if read_natoms:
@@ -508,15 +569,12 @@ def read_gromacs_file(filename):
                         # This typically happens if we try to read velocities
                         # and they are not present in the file.
                         break
-                    if gtype == 0:
-                        val = int(val)
-                    elif gtype == 2:
-                        val = float(val)
+                    value = gtype(val)
                     current += i
                     try:
-                        snapshot[key].append(val)
+                        snapshot[key].append(value)
                     except KeyError:
-                        snapshot[key] = [val]
+                        snapshot[key] = [value]
     if len(snapshot) > 1:
         yield snapshot
 
@@ -583,7 +641,7 @@ def write_xyz_file(filename, pos, names=None, header=None):
     This is just a simple method to write a single xyz
     configuration to a file. It will NOT convert positions and assumes
     that these are given in correct units. This method is intended as a
-    lightweight alternative to `TrajXYZ`.
+    lightweight alternative to :py:class:`.XYZWriter`.
 
     Parameters
     ----------
