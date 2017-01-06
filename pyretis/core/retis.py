@@ -90,11 +90,11 @@ def make_retis_step(ensembles, system, order_function, engine, rgen,
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
-        logger.debug('Will execute RETIS swapping moves')
+        logger.info('Performing RETIS swapping move(s).')
         return retis_moves(ensembles, system, order_function, engine,
                            rgen, settings, cycle)
     else:
-        logger.debug('Will execute RETIS TIS moves')
+        logger.info('Performing RETIS TIS move(s)')
         return retis_tis_moves(ensembles, system, order_function, engine,
                                rgen, settings, cycle)
 
@@ -348,9 +348,8 @@ def retis_swap(ensembles, idx, system, order_function, engine,
     out[2] : string
         The status for the trial paths.
     """
-    msg = 'Do swapping: {} <-> {}'.format(ensembles[idx].ensemble_name,
-                                          ensembles[idx+1].ensemble_name)
-    logger.debug(msg)
+    logger.info('Swapping: %s <-> %s', ensembles[idx].ensemble_name,
+                ensembles[idx+1].ensemble_name)
     status = None
     if idx == 0:
         return retis_swap_zero(ensembles, system, order_function, engine,
@@ -367,7 +366,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
         accept = cross[1]
         if accept:  # accept the swap
             status = 'ACC'
-            logger.debug('Swap was accepted.')
+            logger.info('Swap was accepted.')
             path1.set_move('s+')  # came from right
             path2.set_move('s-')  # came from left
             # To avoid overwriting files, we move the paths to the
@@ -377,7 +376,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
             ensemble2.move_path_to_generated(path2)
         else:  # reject:
             status = 'NCR'
-            logger.debug('Swap was rejected.')
+            logger.info('Swap was rejected. (%s)', status)
         ensemble1.add_path_data(path1, status, cycle=cycle)
         ensemble2.add_path_data(path2, status, cycle=cycle)
         return accept, (path1, path2), status
@@ -447,6 +446,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     maxlen = settings['tis']['maxlength']
     path_tmp = ensemble1.last_path.empty_path(maxlen=maxlen-1)
     engine.exe_dir = ensemble0.directory['generate']
+    logger.debug('Propagating for [0^-]')
     engine.propagate(path_tmp, system, order_function,
                      ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
@@ -469,6 +469,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     # We start the generation from the LAST point
     system.particles.set_particle_state(ensemble0.last_path.phasepoint(-1))
     engine.exe_dir = ensemble1.directory['generate']
+    logger.debug('Propagating for [0^+]')
     engine.propagate(path_tmp, system, order_function,
                      ensemble1.interfaces, reverse=False)
     # Ok, now we need to just add the SECOND LAST point from [0^-] as
@@ -522,8 +523,7 @@ def null_move(path_ensemble, cycle):
         The status, which here will be 'ACC', since we just accept
         the last accepted path again in this move.
     """
-    msg = 'Null move for: {}'.format(path_ensemble.ensemble_name)
-    logger.debug(msg)
+    logger.info('Null move for: %s', path_ensemble.ensemble_name)
     status = 'ACC'
     path = path_ensemble.last_path
     path.set_move('00')

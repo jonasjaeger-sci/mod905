@@ -344,8 +344,7 @@ class GromacsEngine(ExternalMDEngine):
         This will only properly work in the frames in the .trr are
         separated uniformly.
         """
-        msg = 'Extract TRR frame. idx = {}'.format(idx)
-        logger.debug(msg)
+        logger.debug('Extracting .trr frame, idx = %i', idx)
         time1 = (idx - 1) * self.timestep * self.subcycles
         time2 = idx * self.timestep * self.subcycles
         cmd = [self.gmx, 'trjconv',
@@ -378,10 +377,12 @@ class GromacsEngine(ExternalMDEngine):
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
         """Propagate with GROMACS."""
+
+        status = 'Propagate w/GROMACS (reverse = {})'.format(reverse)
+        logger.debug(status)
         initial_state = system.particles.get_particle_state()
-        msg = 'Propagate initial state: {}'.format(initial_state)
-        logger.debug(msg)
         initial_file = self.dump_frame(system)
+        logger.debug('Initial state: %s', initial_state)
 
         if reverse:
             name = 'trajB'
@@ -392,15 +393,13 @@ class GromacsEngine(ExternalMDEngine):
             basepath = os.path.dirname(initial_file)
             localfile = os.path.basename(initial_file)
             initial_conf = os.path.join(basepath, 'r_{}'.format(localfile))
+            logger.debug('Reversing velocities in initial config.')
             self.reverse_velocities(initial_file, initial_conf)
         else:
             initial_conf = initial_file
 
         success = False
-        status = 'Generating path'
         left, _, right = interfaces
-
-        logger.debug('Propagating new path')
 
         # We always start from a singe snapshot config:
         phase_point = {'pos': (initial_conf, None), 'vel': reverse,
@@ -426,11 +425,10 @@ class GromacsEngine(ExternalMDEngine):
             out_files[key] = value
         cpt_file = out_mdrun['cpt']
 
-        # Note: Order is calculated after end of each iteration!
+        # Note: Order is calculated AT THE END of each iteration!
         for i in range(path.maxlen):
             # We first add the current phase point, and then we propagate.
-            msg = '{} {} {}'.format(left, order[0], right)
-            logger.debug(msg)
+            logger.debug('Current: %9.5g %9.5g %9.5g', left, order[0], right)
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
@@ -474,10 +472,12 @@ class GromacsEngine(ExternalMDEngine):
             system.particles.set_particle_state(phase_point)
             order = self.calculate_order(order_function, system)
             self.removefile(conf_abs)
+        logger.debug('Obtaining energies for trajectory...')
         energy = self.get_energies(out_files['edr'], self.exe_dir)
         path.vpot = np.copy(energy['potential'])
         path.ekin = np.copy(energy['kinetic en.'])
         system.particles.set_particle_state(initial_state)
+        logger.debug('Removing files...')
         for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
             filename = os.path.join(self.exe_dir, out_files[key])
             self.removefile(filename)
@@ -487,8 +487,8 @@ class GromacsEngine(ExternalMDEngine):
                 self.removefile(filename)
         return success, status
 
-    def integration_step(self, system, name, exe_dir):
-        """Integrate the given system forward in time.
+    def step(self, system, name, exe_dir):
+        """Perform a single step with GROMACS.
 
         Parameters
         ----------
@@ -654,8 +654,7 @@ class GromacsEngine(ExternalMDEngine):
             pass
         if kin_old is None or kin_new is None:
             dek = float('inf')
-            msgtxt = 'External kinetic energy not set!'
-            logger.warning(msgtxt)
+            logger.warning('External kinetic energy is not set...')
         else:
             dek = kin_new - kin_old
         return dek, kin_new

@@ -86,6 +86,25 @@ class ExternalMDEngine(EngineBase):
         """Just return the type for the engine."""
         return 'external'
 
+    def integration_step(self, system):
+        """Perform one time step of the integration.
+
+        For external engines, it does not make much sence to run single
+        steps unless we absolutely have to. We therefor just fail here
+        if someone wants to do that in MD simulations for instance.
+
+        If it's absolutely needed, there is a step() method which
+        is used, for instance in the initialization. It should not
+        be used for MD simulations!
+        """
+        msg = 'External engine does not support "integration_step"!'
+        logger.error(msg)
+        raise NotImplementedError(msg)
+
+    def step(self, system, name, exe_dir):
+        """Perform a single step with the external engine."""
+        raise NotImplementedError
+
     @staticmethod
     def read_configuration(filename):
         """Read output configuration from external software.
@@ -162,14 +181,10 @@ class ExternalMDEngine(EngineBase):
         out[1] : int
             The return code of the command.
         """
-        if inputs is None:
-            cmd2 = ' '.join(cmd)
-            msg = 'Executing "{}"'.format(cmd2)
-            logger.info(msg)
-        else:
-            cmd2 = ' '.join(cmd)
-            msg = 'Executing "{}" with input "{}"'.format(cmd2, inputs)
-            logger.info(msg)
+        cmd2 = ' '.join(cmd)
+        logger.debug('Executing: %s', cmd2)
+        if inputs is not None:
+            logger.debug('With input: %s', inputs)
         exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -185,17 +200,20 @@ class ExternalMDEngine(EngineBase):
     @staticmethod
     def movefile(source, dest):
         """Move file from source to destination."""
+        logger.debug('Moving: %s -> %s', source, dest)
         shutil.move(source, dest)
 
     @staticmethod
     def copyfile(source, dest):
         """Copy file from source to destination."""
+        logger.debug('Copy: %s -> %s', source, dest)
         shutil.copyfile(source, dest)
 
     @staticmethod
     def removefile(filename):
         """Remove a given file if it exist."""
         if os.path.isfile(filename):
+            logger.debug('Removing: %s', filename)
             os.remove(filename)
 
     def calculate_order(self, order_function, system):
@@ -263,6 +281,7 @@ class ExternalMDEngine(EngineBase):
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
         """
+        logger.debug('Running kick across middle with external integrator...')
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
         particles = system.particles
@@ -275,6 +294,7 @@ class ExternalMDEngine(EngineBase):
         particles.set_particle_state(previous)
         curr = self.calculate_order(order_function, system)[0]
         curr_file = os.path.join(self.exe_dir, 'current{}'.format(self.ext))
+        logger.debug('Starting at %9.6g going for %9.6g', curr, middle)
         while True:
             # save current state:
             previous = particles.get_particle_state()
@@ -287,7 +307,7 @@ class ExternalMDEngine(EngineBase):
                                    momentum=tis_settings['zero_momentum'],
                                    rescale=tis_settings['rescale_energy'])
             # Integrate forward one step:
-            out_files = self.integration_step(system, 'current', self.exe_dir)
+            out_files = self.step(system, 'current', self.exe_dir)
             # Remove all out files, but not the config:
             for key, val in out_files.items():
                 if key != 'conf':
@@ -296,18 +316,19 @@ class ExternalMDEngine(EngineBase):
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
-            print(prev, curr, middle)
+            txt = '{} -> {} | {}'.format(prev, curr, middle)
             if (prev <= middle < curr) or (curr < middle <= prev):
+                logger.debug('Crossed middle interface: %s', txt)
                 # have crossed middle interface, just stop the loop
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point
-                print('Getting closer!')
+                logger.debug('Getting closer %s', txt)
                 self.movefile(curr_file, prev_file)
                 # Update file name after moving:
                 particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
-                print('Did not get closer...')
+                logger.debug('Did not get closer %s', txt)
                 particles.set_particle_state(previous)
                 curr = previous['order']
                 filename = os.path.join(self.exe_dir, out_files['conf'])
@@ -331,10 +352,6 @@ class ExternalMDEngine(EngineBase):
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
         """Propagate the equations of motion with the external code."""
-        raise NotImplementedError
-
-    def integration_step(self, system, name, exe_dir):
-        """Integrate the given system forward in time."""
         raise NotImplementedError
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,

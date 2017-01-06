@@ -278,7 +278,7 @@ class SimulationRETIS(Simulation):
         """
         msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
         logger.info(msg)
-        initiate_path_ensemble(
+        return initiate_path_ensemble(
             ensemble,
             self.system,
             self.orderp,
@@ -286,7 +286,6 @@ class SimulationRETIS(Simulation):
             self.rgen,
             self.settings['tis'],
             self.cycle['step'])
-        return ensemble.last_path
 
     def step(self):
         """Perform a RETIS simulation step.
@@ -298,21 +297,17 @@ class SimulationRETIS(Simulation):
         """
         results = {}
         if self.first_step:
+            retis_step = []
             for ensemble in self.path_ensembles:
-                msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
-                logger.info(msg)
-                initiate_path_ensemble(
-                    ensemble,
-                    self.system,
-                    self.orderp,
-                    self.engine,
-                    self.rgen,
-                    self.settings['tis'],
-                    self.cycle['step'])
+                accept, trial, status = self.initiate_ensemble(ensemble)
+                result = ['init', status, trial, accept]
+                retis_step.append(result)
             self.first_step = False
         else:
             self.cycle['step'] += 1
             self.cycle['stepno'] += 1
+            msgtxt = 'RETIS step at cycle {}'.format(self.cycle['stepno'])
+            logger.info(msgtxt)
             retis_step = make_retis_step(
                 self.path_ensembles,
                 self.system,
@@ -321,7 +316,7 @@ class SimulationRETIS(Simulation):
                 self.rgen,
                 self.settings,
                 self.cycle['step'])
-            results['retis'] = retis_step
+        results['retis'] = retis_step
         results['system'] = self.system
         results['cycle'] = self.cycle
         return results

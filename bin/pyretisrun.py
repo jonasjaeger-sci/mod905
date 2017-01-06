@@ -37,7 +37,7 @@ from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
-from pyretis.inout.settings import create_output
+from pyretis.inout.settings import create_output_tasks
 from pyretis.inout.common import (check_python_version,
                                   LOG_DEBUG_FMT,
                                   LOG_FMT,
@@ -158,13 +158,15 @@ def bye_bye_world():
     print_to_screen(urltxt)
 
 
-def get_tasks(sim_settings, progress=False):
+def get_tasks(sim_settings, engine=None, progress=False):
     """Simple function to create tasks from settings.
 
     Parameters
     ----------
     sim_settings : dict
         The simulation settings.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        The engine (if any) specified for the simulation.
     progress : boolean, optional
         If True, we will display a progress bar and we don't need
         to set up writing of results to the screen.
@@ -178,9 +180,12 @@ def get_tasks(sim_settings, progress=False):
     print_to_screen(msgtxt)
     logger.info(msgtxt)
     output_tasks = []
-    for out_task in create_output(sim_settings):
+    for out_task in create_output_tasks(sim_settings, engine=engine):
         if progress and out_task.target == 'screen':
-            pass
+            msgtxt = ('Ignoring "{}" since progress '
+                      'bar is ON'.format(out_task.name))
+            logger.info(msgtxt)
+            print_to_screen(msgtxt)
         else:
             output_tasks.append(out_task)
     return output_tasks
@@ -188,9 +193,6 @@ def get_tasks(sim_settings, progress=False):
 
 def run_md_flux_simulation(sim, sim_settings, progress=False):
     """This will run a md-flux simulation.
-
-    Note that we will try do do a small analysis after the
-    simulation is done.
 
     Parameters
     ----------
@@ -202,7 +204,8 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    output_tasks = get_tasks(sim_settings, progress=progress)
+    output_tasks = get_tasks(sim_settings, engine=sim.engine,
+                             progress=progress)
     print_and_loginfo('Starting MD-Flux simulation')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
@@ -225,7 +228,8 @@ def run_md_simulation(sim, sim_settings, progress=False):
         results to the screen.
     """
     # create output tasks:
-    output_tasks = get_tasks(sim_settings, progress=progress)
+    output_tasks = get_tasks(sim_settings, engine=sim.engine,
+                             progress=progress)
     print_and_loginfo('Starting MD simulation')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
@@ -247,20 +251,34 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
         If True, we will display a progress bar, otherwise we print
         results to the screen.
     """
-    # Ensure that we create an output directory
-    msg_dir = make_dirs(sim_settings['output']['directory'])
-    msgtxt = ('Creating output directory: '
-              '{}'.format(msg_dir))
-    print_and_loginfo(msgtxt)
+    # Ensure that we create the output directory for the ensemble
+    # we are simulating for:
+    ensemble = sim.path_ensemble
+    ensemble_name = ensemble.ensemble_name
+
+    print_and_loginfo('TIS simulation: {}'.format(ensemble_name))
+    print_and_loginfo('Creating output directories...')
+    dirname = ensemble.ensemble_name_simple
+    sim_settings['output']['directory'] = dirname
+    sim_settings['simulation']['ensemble'] = ensemble_name
+    for ensemble_dir in ensemble.directories():
+        msg_dir = make_dirs(ensemble_dir)
+        msgtxt = 'Ensemble {}: {}'.format(ensemble_name, msg_dir)
+        print_and_loginfo(msgtxt)
+
     # Create output tasks:
-    output_tasks = get_tasks(sim_settings, progress=progress)
+    output_tasks = get_tasks(sim_settings, engine=sim.engine,
+                             progress=progress)
+
     print_and_loginfo(None)
-    print_and_loginfo('Starting TIS simulation!')
+    print_and_loginfo('Starting TIS simulation for {}!'.format(ensemble_name))
     print_and_loginfo('Generating initial path...')
+    # We perform the initiation here, before running the full simulation:
     result = sim.step()
     path = result['trialpath']
     print_and_loginfo('Initiated path: {}'.format(path))
     print_and_loginfo(None)
+    # Remember to output results if needed:
     for out_task in output_tasks:
         out_task.output(result)
     # Start the full simulation:
@@ -297,29 +315,35 @@ def run_retis_simulation(sim, sim_settings, progress=False):
             print_and_loginfo(msgtxt)
         sim_settings['output']['directory'] = dirname
         sim_settings['simulation']['ensemble'] = ensemble.ensemble_name
-        ensemble_task = get_tasks(sim_settings, progress=progress)
+        ensemble_task = get_tasks(sim_settings, engine=sim.engine,
+                                  progress=progress)
         output_tasks.append(ensemble_task)
 
     print_to_screen('')
     print_and_loginfo('Running RETIS simulation!')
     print_and_loginfo('Initializing path ensembles...')
-    # Here we explicitly do the initialization. This is just
-    # because we want to print out some info!
-    for tasks, ensemble in zip(output_tasks, path_ensembles):
-        print_and_loginfo('Initiating in {}:'.format(ensemble.ensemble_name))
-        path = sim.initiate_ensemble(ensemble)
+
+    # Here we explicitly run the first step. This is just for output
+    # purposes. This also means that we need to set sim.first_step
+    # explicitly to False after we are done!
+    for i, ensemble in enumerate(path_ensembles):
+        print_and_loginfo('Initiating path in: {}'.format(ensemble.ensemble_name))
+        _, path, _ = sim.initiate_ensemble(ensemble)
+        print_and_loginfo('Initial path is:')
         print_and_loginfo('{}'.format(path))
         print_to_screen('')
-        result = {'pathensemble': ensemble, 'cycle': sim.cycle,
-                  'path': path}
-        for out_task in tasks:
-            out_task.output(result)
+        ensemble_result = {'pathensemble': ensemble,
+                           'cycle': sim.cycle,
+                           'path': path,
+                           'system': sim.system}
+        for out_task in output_tasks[i]:
+            out_task.output(ensemble_result)
 
     sim.first_step = False  # We have done the "first" step now.
     print_and_loginfo('Starting main RETIS simulation!')
 
     tqd = use_tqdm(progress)
-    nsteps = sim.cycle['end'] - sim.cycle['step']
+    nsteps = sim.cycle['end'] - sim.cycle['step'] - 1
     for result in tqd(sim.run(), total=nsteps, desc='RETIS'):
         # Do output for each ensemble:
         for i, ensemble in enumerate(path_ensembles):
@@ -397,7 +421,9 @@ def run_generic_simulation(sim, sim_settings, progress=False):
         results to the screen.
     """
     # create output tasks:
-    output_tasks = get_tasks(sim_settings, progress=progress)
+    output_tasks = get_tasks(sim_settings,
+                             engine=getattr(sim, 'engine', None),
+                             progress=progress)
     print_and_loginfo('Running simulation')
     tqd = use_tqdm(progress)
     for result in tqd(sim.run(), desc='Step'):
@@ -484,8 +510,8 @@ if __name__ == '__main__':
         system.forcefield = create_force_field(settings)
         system.extra_setup()
         print_and_loginfo('Creating simulation from settings.')
-        kwargs = {'system': system, 'engine': engine}
-        simulation = create_simulation(settings, kwargs)
+        keyargs = {'system': system, 'engine': engine}
+        simulation = create_simulation(settings, keyargs)
         task = settings['simulation']['task'].lower()
         print_and_loginfo('Will run simulation: "{}"'.format(task))
         runner = _RUNNERS.get(task, run_generic_simulation)

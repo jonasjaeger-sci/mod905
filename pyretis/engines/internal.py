@@ -129,10 +129,7 @@ class MDEngine(EngineBase):
         reverse : boolean
             If True, the system will be propagated backwards in time.
         """
-        if reverse:
-            status = 'Generating backward path...'
-        else:
-            status = 'Generating forward path...'
+        status = 'Propagate w/internal engine (reverse = {})'.format(reverse)
         logger.debug(status)
         success = False
         initial_system = system.particles.get_particle_state()
@@ -175,8 +172,7 @@ class MDEngine(EngineBase):
             else:
                 self.integration_step(system)
         system.particles.set_particle_state(initial_system)
-        msg = 'Propagate done: "{}" (success: {})'.format(status, success)
-        logger.debug(msg)
+        logger.debug('Propagate done: "%s" (success: %s)', status, success)
         return success, status
 
     @staticmethod

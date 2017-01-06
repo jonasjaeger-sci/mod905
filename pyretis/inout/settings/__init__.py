@@ -34,13 +34,37 @@ settings.py
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-parse_settings_file
+create_engine (:py:func:`.settings.common.create_engine`)
+    Create an engine from input settings.
+
+create_force_field (:py:func:`.createforcefield.create_force_field`)
+    Create a force field from input settings.
+
+create_orderparameter (:py:func:`.common.create_orderparameter`)
+    Create an order parameter from input settings.
+
+create_output_tasks (:py:func:`.createoutput.create_output_tasks`)
+    Create output tasks from input settings.
+
+create_simulation (:py:func:`.createsimulation.create_simulation`)
+    Create a simulation from input settings.
+
+create_system (:py:func:`.createsystem.create_system`)
+    Create a system from input settings.
+
+is_single_tis (:py:func:`.settings.is_single_tis`)
+    A method which determines is input settings represents a
+    single TIS simulation.
+
+parse_settings_file (:py:func:`.settings.parse_settings_file`)
     For parsing input settings from file.
+
+write_settings_file (:py:func:`..settings.write_settings_file`)
+    For writing simulation settings to a file.
 """
-from __future__ import absolute_import
 from .settings import parse_settings_file, write_settings_file, is_single_tis
 from .common import create_orderparameter, create_engine
 from .createsystem import create_system
 from .createsimulation import create_simulation
-from .createoutput import create_output
+from .createoutput import create_output_tasks
 from .createforcefield import create_force_field

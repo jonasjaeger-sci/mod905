@@ -58,7 +58,7 @@ TxtTable
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_output_task
+create_output_tasks
     A function to create output tasks for a simulation.
 
 generate_report

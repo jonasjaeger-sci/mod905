@@ -80,8 +80,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
         The status of the path
     """
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
-    msgtxt = 'TIS move in: {}'.format(path_ensemble.ensemble_name)
-    logger.debug(msgtxt)
+    logger.info('TIS move in: %s', path_ensemble.ensemble_name)
     engine.exe_dir = path_ensemble.directory['generate']
     accept, trial, status = make_tis_step(path_ensemble.last_path,
                                           system,
@@ -91,10 +90,9 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
                                           rgen,
                                           tis_settings)
     if accept:
-        msgtxt = 'The move was accepted'
+        logger.info('The move was accepted!')
     else:
-        msgtxt = 'The move was rejected ({})'.format(status)
-    logger.debug(msgtxt)
+        logger.info('The move was rejected! (%s)', status)
     path_ensemble.add_path_data(trial, status, cycle=cycle)
     return accept, trial, status
 
@@ -128,21 +126,34 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
     cycle : integer, optional
         The cycle number we are initiating at, typically this will be 0
         which is the default value.
+
+    Returns
+    -------
+    out[0] : boolean
+        True if the initial path was accepted
+    out[1] : object like py:class:`.path.PathBase`
+        The initial path.
+    out[2] : string
+        Sthe status of the path.
     """
     tis_settings['start_cond'] = path_ensemble.get_start_condition()
     initial_path = None
     status = ''
-    if tis_settings['initial_path'] not in ['kick']:
+    accept = False
+    if tis_settings['initial_path'] not in ('kick',):
         logger.error('Unknown initiation method')
         raise ValueError('Unknown initiation method')
     if tis_settings['initial_path'] == 'kick':
+        logger.info('Will generate initial path by kicking')
         engine.exe_dir = path_ensemble.directory['generate']
         initial_path = generate_initial_path_kick(system, order_function,
                                                   path_ensemble.interfaces,
                                                   engine, rgen,
                                                   tis_settings)
+        accept = True
         status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle=cycle)
+    return accept, initial_path, status
 
 
 def make_tis_step(path, system, order_function, interfaces, engine, rgen,
@@ -187,11 +198,11 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
         The status of the path
     """
     if rgen.rand() < tis_settings['freq']:
-        logger.debug('Selected a time reversal move.')
+        logger.info('Performing a time reversal move')
         accept, new_path, status = _time_reversal(path, interfaces,
                                                   tis_settings['start_cond'])
     else:
-        logger.debug('Selected a shooting move.')
+        logger.info('Performing a shooting move.')
         accept, new_path, status = _shoot(path, system, order_function,
                                           interfaces, engine, rgen,
                                           tis_settings)
@@ -324,6 +335,7 @@ def _shoot(path, system, order_function, interfaces, engine, rgen,
     maxlenb = maxlen - 1
     # generate the backward path:
     path_back = path.empty_path(maxlen=maxlenb)
+    logger.debug('Propagating backwards for shooting move...')
     success_back, _ = engine.propagate(path_back, system, order_function,
                                        interfaces, reverse=True)
 
@@ -348,6 +360,7 @@ def _shoot(path, system, order_function, interfaces, engine, rgen,
     # Everything seems fine, propagate forward
     maxlenf = maxlen - path_back.length + 1
     path_forw = path.empty_path(maxlen=maxlenf)
+    logger.debug('Propagating forwards for shooting move...')
     success_forw, _ = engine.propagate(path_forw, system, order_function,
                                        interfaces, reverse=False)
     path_forw.time_origin = time_shoot
@@ -415,6 +428,7 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
+    logger.debug('Kicking for initial path generation...')
     leftpoint, _ = engine.kick_across_middle(system,
                                              order_function,
                                              rgen, interfaces[1],
@@ -432,7 +446,7 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
     if not success:
         msgtxt = 'Forward path not successful: {}'.format(msg)
         logger.error(msgtxt)
-        raise ValueError('Forward path not successful.', msg)
+        raise ValueError(msgtxt)
     # And we propagate the `leftpoint` backward:
     system.particles.set_particle_state(leftpoint)
     path_back = klass(rgen, maxlen=maxlen)
@@ -441,7 +455,7 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
     if not success:
         msgtxt = 'Backward path not successful: {}'.format(msg)
         logger.error(msgtxt)
-        raise ValueError('Backward path not successful.', msg)
+        raise ValueError(msgtxt)
     # Merge backward and forward, here we do not set maxlen since
     # both backward and forward may have this length
     initial_path = paste_paths(path_back, path_forw, overlap=False)
@@ -465,15 +479,13 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
         return initial_path
     # Now we do the other cases:
     if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
-        msgtxt = 'Initial path is in the wrong direction: Reversing it!'
-        logger.info(msgtxt)
+        logger.info('Initial path is in the wrong direction. Reversing it!')
         initial_path = initial_path.reverse()
         initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
     elif end == start:  # case 2
-        msgtxt = ('Initial path start & end at wrong interface.' +
-                  '\nRunning TIS to fix it!')
-        logger.info(msgtxt)
+        logger.info('Initial path start/end at wrong interfaces.')
+        logger.info('Will perform TIS moves to try to fix it!')
         initial_path = _fix_path_by_tis(initial_path, system,
                                         order_function, interfaces,
                                         engine, rgen, tis_settings)

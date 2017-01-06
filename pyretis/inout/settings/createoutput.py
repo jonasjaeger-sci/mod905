@@ -9,14 +9,26 @@ simulations.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_output
+create_output_tasks
     Function that sets up output tasks from a dictionary of settings.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 OutputTask
-    A class for handling output tasks.
+    A generic class for handling output tasks.
+
+OutputTaskScreen
+    A class for handling output tasks that will print to the screen.
+
+OutputTaskFile
+    A class for handling output tasks that will write to a file.
+
+OutputTaskFileCombine
+    A class for handling output tasks that will write to a file,
+    but require some special pre-processing of the data to be
+    written. Currently, this is only used to move files physically
+    when storing external paths.
 """
 import logging
 # pyretis imports
@@ -27,11 +39,34 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['OutputTask', 'create_output']
+__all__ = ['OutputTask', 'create_output_tasks']
 
 
-# Define the known output tasks
 _TASK_MAP = {}
+"""Define the known output tasks. The output tasks are
+defined as dictionaries with the following keys:
+
+* target : string
+    "file" or "screen", defines where the task should write to.
+* result : string
+    Determines what item from the result dictionary we are outputting.
+* when : string
+    Determines what input setting from the "output" section is used to
+    define the output frequency. Default values are defined in
+    py:mod:`pyretis.inout.settings.settings` in the definition of the
+    output section.
+* writer : string
+    Selects the writer used for formatting the output. Note that the
+    string must be a valid input string for ``get_writer`` from
+    :py:mod:`pyretis.inout.writers`.
+* settings : dict
+    Additional settings from the input needed to create the writer.
+* engine-type : boolean
+    For some tasks, the output when using external paths may depend
+    on the type of engine used (external vs internal). For instance
+    if we are using an external engine, then the paths must be
+    physically stored, that is: moved to a safe location.
+"""
 _TASK_MAP['energy'] = {
     'target': 'file',
     'result': 'thermo',
@@ -108,89 +143,96 @@ _TASK_MAP['path-traj-xyz'] = {
     'result': 'path',
     'when': 'trajectory-file',
     'settings': {'system': ('units',)},
+    'engine-dependent': True,
     'writer': 'pathtrajxyz'}
 
 _TASK_MAP['path-traj-gro'] = {
     'target': 'file',
     'result': 'path',
     'when': 'trajectory-file',
+    'engine-dependent': True,
     'settings': {'system': ('units',),
                  'output': ('write_vel',)},
     'writer': 'pathtrajgro'}
 
-# Predefined outputs for simulations.
 _SIM_OUTPUT = {}
+"""This dictionary gives a list of predefined output tasks for
+different simulation types. The output tasks are defined as dictionries
+with the following keys:
+
+* type : string
+    This selects the output task, it corresponds to one of the
+    items in ``_TASK_MAP``
+* name : string
+    This is just a unique name given to the task. It is only used
+    for output of task information.
+* filename : string
+    If the task represents a file, this gives the name of the
+    file created.
+"""
 
 _SIM_OUTPUT['md-nve'] = [
-
     {'type': 'energy',
      'name': 'nve-energy-file',
-     'when': {'every': 10},
      'filename': 'energy.dat'},
-
     {'type': 'thermo-file',
      'name': 'nve-thermo-file',
-     'when': {'every': 10},
      'filename': 'thermo.dat'},
     {'type': 'traj-gro',
      'name': 'nve-traj-file',
-     'when': {'every': 10},
      'filename': 'traj.gro'},
     {'type': 'thermo-screen',
-     'name': 'nve-thermo-screen',
-     'when': {'every': 10}}]
+     'name': 'nve-thermo-screen'}
+]
 
 _SIM_OUTPUT['md-flux'] = [
     {'type': 'energy',
      'name': 'flux-energy-file',
-     'when': {'every': 10},
      'filename': 'energy.dat'},
     {'type': 'traj-gro',
      'name': 'flux-traj-file',
-     'when': {'every': 10},
      'filename': 'traj.gro'},
     {'type': 'thermo-screen',
-     'name': 'flux-thermo-screen',
-     'when': {'every': 10}},
+     'name': 'flux-thermo-screen'},
     {'type': 'orderp',
      'name': 'flux-orderp-file',
-     'when': {'every': 10},
      'filename': 'order.dat'},
     {'type': 'cross',
      'name': 'flux-cross-file',
-     'when': {'every': 1},
-     'filename': 'cross.dat'}]
+     'filename': 'cross.dat'}
+]
 
 _SIM_OUTPUT['tis'] = [
     {'type': 'pathensemble',
      'name': 'tis-path-ensemble',
-     'when': {'every': 1},
      'filename': 'pathensemble.dat'},
     {'type': 'pathensemble-screen',
-     'name': 'tis-pathensemble-screen',
-     'when': {'every': 10}}]
+     'name': 'tis-pathensemble-screen'},
+    {'type': 'path-order',
+     'name': 'tis-path-ensemble-orderp',
+     'filename': 'order.dat'},
+    {'type': 'path-traj-xyz',
+     'name': 'tis-path-ensemble-traj',
+     'filename': 'traj.xyz'},
+    {'type': 'path-energy',
+     'name': 'tis-path-ensemble-energy',
+     'filename': 'energy.dat'}
+]
 
 _SIM_OUTPUT['retis'] = [
     {'type': 'pathensemble',
      'name': 'retis-path-ensemble',
-     'when': {'every': 1},
      'filename': 'pathensemble.dat'},
     {'type': 'path-order',
      'name': 'retis-path-ensemble-orderp',
-     'when': {'every': 10},
      'filename': 'order.dat'},
     {'type': 'path-traj-xyz',
      'name': 'retis-path-ensemble-traj',
-     'when': {'every': 10},
      'filename': 'traj.xyz'},
-    # {'type': 'path-traj-gro',
-    #  'name': 'retis-path-ensemble-traj',
-    #  'when': {'every': 10},
-    #  'filename': 'traj.gro'},
     {'type': 'path-energy',
      'name': 'retis-path-ensemble-energy',
-     'when': {'every': 10},
-     'filename': 'energy.dat'}]
+     'filename': 'energy.dat'}
+]
 
 
 class OutputTask(object):
@@ -421,12 +463,15 @@ class OutputTaskFile(OutputTask):
         return None
 
 
-class OutputTaskDependentFile(OutputTaskFile):
+class OutputTaskFileCombine(OutputTaskFile):
     """A class for handling output where we combine several results.
 
     Currently, this class is rather specialized and is only used for
     storing external paths. But it can be made more general in the
     future if such combinations are needed for other outputs.
+    Here we model it as one type of output that applies a function
+    to the result before outputting. Incidentally the function we
+    use to output the result is contained in one of the other results.
 
     Attributes
     ----------
@@ -462,9 +507,9 @@ class OutputTaskDependentFile(OutputTaskFile):
             if res not in simulation_result:
                 return False
         result = simulation_result[self.result]
-        dep = simulation_result[self.dependency]
-        copy = dep.generate_output(step, result)
-        return self.write(step, copy)
+        function = simulation_result[self.dependency]
+        result_ = function.generate_output(step, result)
+        return self.write(step, result_)
 
 
 def create_writer(task_settings, writer_name, settings):
@@ -473,7 +518,7 @@ def create_writer(task_settings, writer_name, settings):
     Parameters
     ----------
     task_settings : dict
-        Settings for the output taks/writer we are creating for.
+        Settings for the output task/writer we are creating for.
     writer_name : string
         The type of writer we are going to create.
     settings : dict
@@ -535,15 +580,13 @@ def get_backup_settings(settings):
     try:
         old = settings['output']['backup'].lower()
     except AttributeError:
-        msg = '"backup" not found in "output" settings'
-        logger.warning(msg)
+        logger.warning('"backup" not found in "output" settings')
         old = 'backup' if settings['output']['backup'] else 'overwrite'
-        msg = 'Handling backup as "{}"'.format(old)
-        logger.warning(msg)
+        logger.warning('Handling backup as %s', old)
     return old
 
 
-def task_from_settings(task, settings):
+def task_from_settings(task, settings, engine=None):
     """Method to create output task from simulation settings.
 
     Parameters
@@ -552,6 +595,10 @@ def task_from_settings(task, settings):
         Settings related to the specific task.
     settings : dict
         Settings for the simulation.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        This object is used to determine if we need to do something
+        special for external engines. If no engine is given, we do
+        not do anything special.
 
     Returns
     -------
@@ -559,19 +606,25 @@ def task_from_settings(task, settings):
         An output task we can use in the simulation
     """
     task_settings = _TASK_MAP[task['type']]
+
     when = {'every': settings['output'][task_settings['when']]}
+
     if when['every'] < 1:
-        msg = 'Skipping output task "{}"'.format(task['type'])
-        logger.info(msg)
+        logger.info('Skipping output task %s (freq < 1)', task['type'])
         return None
-    when = {'every': settings['output'][task_settings['when']]}
+
     writer_name = task_settings['writer']
     writer = create_writer(task_settings, writer_name, settings)
     if writer is None:
-        msg = 'Could not create writer "{}"'.format(writer_name)
-        logger.warning(msg)
+        logger.warning('Could not create writer %s', writer_name)
         return None
+
     target = task_settings['target']
+
+    # Currently there are only two cases: screen and file.
+    # And this will probably not change in the near future,
+    # so we do nothing fancy here. Note: It would be cool
+    # if someone made a new target!
 
     if target == 'screen':
         return OutputTaskScreen(
@@ -582,30 +635,40 @@ def task_from_settings(task, settings):
     elif target == 'file':
         filename = generate_file_name(task, settings)
         backup_settings = get_backup_settings(settings)
-        return OutputTaskFile(task['name'],
-                              task_settings['result'],
-                              writer,
-                              when,
-                              filename,
-                              backup_settings)
+        if engine is None or engine.engine_type == 'internal':
+            klass = OutputTaskFile
+        else:
+            if task_settings.get('engine-dependent', False):
+                klass = OutputTaskFileCombine
+            else:
+                klass = OutputTaskFile
+
+        return klass(task['name'],
+                     task_settings['result'],
+                     writer,
+                     when,
+                     filename,
+                     backup_settings)
     else:
-        msg = 'Unknown target "{}" ignored!'.format(target)
-        logger.warning(msg)
+        logger.warning('Unknown target "%s" ignored.', target)
         return None
 
 
-def create_output(settings):
+def create_output_tasks(settings, engine=None):
     """Generate output tasks from settings and defaults.
 
     This function will return actual objects that can be added to the
-    simulation. It uses `_get_output_tasks` to generate dictionaries
-    for the output tasks which are here converted to objects using
-    `create_output_task`.
+    simulation. It uses `task_from_settings` to generate the output
+    tasks which can be added to a simulation.
 
     Parameters
     ----------
     settings : dict
         These are the settings for the simulation.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        This object is used to determine if we need to do something
+        special for external engines. If no engine is given, we do
+        not do anything special.
 
     Yields
     ------
@@ -613,8 +676,7 @@ def create_output(settings):
     """
     sim_task = settings['simulation']['task'].lower()
     for task in _SIM_OUTPUT.get(sim_task, []):
-        out_task = task_from_settings(task, settings)
+        out_task = task_from_settings(task, settings, engine=engine)
         if out_task is not None:
-            msgtxt = 'Output task created: {}'.format(out_task)
-            logger.debug(msgtxt)
+            logger.debug('Output task created: %s', out_task)
             yield out_task
