@@ -31,7 +31,6 @@ __all__ = ['PathEnsemble', 'PathEnsembleExt']
 PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
 
 
-@staticmethod
 def _generate_file_names(path, target_dir, prefix=None):
     """Generate new file names for moving copying paths.
 
