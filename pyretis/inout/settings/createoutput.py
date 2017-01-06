@@ -478,7 +478,7 @@ class OutputTaskFileCombine(OutputTaskFile):
     dependency : string
         The result we need to combine with `self.result` in some way.
     """
-    dependency = 'ensemble'
+    dependency = 'pathensemble'
 
     def output(self, simulation_result):
         """Output a task given results from a simulation.
