@@ -7,8 +7,7 @@ import numpy as np
 from pyretis.core import System, Box
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_output, create_system,
-                                    create_engine,
+from pyretis.inout.settings import (create_system, create_engine,
                                     create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt

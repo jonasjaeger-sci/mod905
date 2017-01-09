@@ -10,7 +10,7 @@ from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_force_field,
                                     create_system, create_engine)
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout.settings import create_output
+from pyretis.inout.settings import create_output_tasks
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
@@ -51,7 +51,7 @@ table = ThermoTable()
 thermo_file = FileIO('thermo.txt', header=table.header)
 store_results = []
 # also create some other outputs:
-output_tasks = [task for task in create_output(settings)]
+output_tasks = [task for task in create_output_tasks(settings)]
 # run the simulation :-)
 
 for result in simulation_nve.run():

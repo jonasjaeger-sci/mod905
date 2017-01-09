@@ -9,8 +9,8 @@ import numpy as np
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_force_field, create_system,
-                                    create_engine,
-                                    create_output, create_simulation)
+                                    create_engine, create_output_tasks,
+                                    create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -50,7 +50,7 @@ print('# Creating simulation from settings.')
 kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
-outputs = [task for task in create_output(settings)]
+outputs = [task for task in create_output_tasks(settings)]
 size = ljsystem.box.size
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'

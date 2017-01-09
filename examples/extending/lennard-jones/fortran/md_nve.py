@@ -6,8 +6,8 @@ This system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_simulation, create_system,
-                                    create_engine,
-                                    create_force_field, create_output)
+                                    create_engine, create_force_field,
+                                    create_output_tasks)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
 settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
@@ -41,7 +41,7 @@ print('# Creating simulation from settings.')
 sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
-output_tasks = [task for task in create_output(settings)]
+output_tasks = [task for task in create_output_tasks(settings)]
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 # set up extra output:
