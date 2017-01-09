@@ -33,7 +33,6 @@ type = [0]
 
 Forcefield settings
 --------------------
-
 description = Lennard Jones test
 
 Potential
