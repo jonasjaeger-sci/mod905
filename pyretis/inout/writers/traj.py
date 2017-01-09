@@ -39,6 +39,7 @@ read_gromacs_file
     A method for reading snapshots from a GROMACS GRO file.
 """
 import logging
+import os
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
 from pyretis.inout.writers.writers import Writer
@@ -497,10 +498,12 @@ class PathExtWriter(Writer):
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
             filename, idx = phasepoint['pos']
+            filename_short = os.path.basename(filename)
             if idx is None:
                 idx = 0
             vel = -1 if phasepoint['vel'] else 1
-            yield '{:>10}  {:>20s}  {:>10}  {:5}'.format(i, filename, idx, vel)
+            yield '{:>10}  {:>20s}  {:>10}  {:5}'.format(i, filename_short,
+                                                         idx, vel)
 
     @staticmethod
     def line_parser(line):
