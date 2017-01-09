@@ -45,8 +45,11 @@ def _generate_file_names(path, target_dir, prefix=None):
 
     Returns
     -------
-    out : list
+    out[0] : list
         A list with new file names.
+    out[1] : dict
+        A dict which defines the unique "source -> destination" for
+        copy/move operations.
     """
     source = {}
     new_pos = [None for _ in range(len(path.pos))]
@@ -60,7 +63,7 @@ def _generate_file_names(path, target_dir, prefix=None):
             source[pos_file] = dest
         dest = source[pos_file]
         new_pos[i] = (dest, idx)
-    return new_pos
+    return new_pos, source
 
 
 class PathEnsemble(object):
@@ -365,8 +368,8 @@ class PathEnsembleExt(PathEnsemble):
         prefix : string or None
             To give a prefix to the name of moved files.
         """
-        source = {}
-        new_pos = _generate_file_names(path, target_dir, prefix=prefix)
+        new_pos, source = _generate_file_names(path, target_dir,
+                                               prefix=prefix)
         path.pos = new_pos
         for src, dest in source.items():
             shutil.move(src, dest)
@@ -387,8 +390,8 @@ class PathEnsembleExt(PathEnsemble):
         out : object like py:class:`.path.PathBase`
             A copy of the input path.
         """
-        source = {}
-        new_pos = _generate_file_names(path, target_dir, prefix=prefix)
+        new_pos, source = _generate_file_names(path, target_dir,
+                                               prefix=prefix)
         path_copy = path.copy_path()
         path_copy.pos = new_pos
         for src, dest in source.items():

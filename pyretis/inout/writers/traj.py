@@ -489,7 +489,7 @@ class PathExtWriter(Writer):
         header = {'labels': ['Step', 'Filename', 'index', 'vel'],
                   'width': [10, 20, 10, 5], 'spacing': 2}
 
-        super().__init__('PathExt', header=header)
+        super().__init__('PathExtWriter', header=header)
         self.print_header = False
 
     def generate_output(self, step, path):
