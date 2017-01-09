@@ -408,7 +408,6 @@ class PathEnsembleExt(PathEnsemble):
         """
         self._move_path(path, self.directory['accepted'])
         self.last_path = path
-        print([x for x in self.list_superficial()])
 
     def list_superficial(self):
         """List files in accpeted directory that we do not need."""
