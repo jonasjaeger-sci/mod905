@@ -567,6 +567,9 @@ class PathBase(object):
         new_path = self.empty_path()
         for phasepoint in self.trajectory():
             new_path.append(phasepoint)
+        new_path.status = self.status
+        new_path.time_origin = self.time_origin
+        new_path.generated = self.generated
         return new_path
 
     @staticmethod
