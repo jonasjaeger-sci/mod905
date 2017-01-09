@@ -171,7 +171,7 @@ _TASK_MAP['path-traj-ext'] = {
     'result': 'path',
     'when': 'trajectory-file',
     'special': True,
-    'writer': 'pathtextwriter'}
+    'writer': 'pathtrajext'}
 
 _SIM_OUTPUT = {}
 """This dictionary gives a list of predefined output tasks for

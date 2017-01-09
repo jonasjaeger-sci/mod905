@@ -100,7 +100,7 @@ _CLASS_MAP = {'cross': CrossWriter,
               'pathenergy': EnergyPathWriter,
               'pathtrajxyz': PathXYZWriter,
               'pathtrajgro': PathGROWriter,
-              'pathextwriter': PathExtWriter}
+              'pathtrajext': PathExtWriter}
 
 
 def get_writer(file_type, settings=None):
