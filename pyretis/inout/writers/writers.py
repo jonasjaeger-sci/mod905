@@ -17,6 +17,9 @@ Writer
 CrossWriter
     A class for writing crossing data from flux simulations.
 
+EnergyWriter
+    A class for writing energy data.
+
 OrderWriter
     A class for writing out order parameter data.
 """
@@ -257,7 +260,7 @@ class CrossWriter(Writer):
        or `-` for the negative direction. Internally this is converted
        to an integer (`+1` or `-1`).
     """
-    # format for crossing files:
+    # Format for crossing files:
     CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
     def __init__(self):
@@ -351,15 +354,14 @@ class EnergyWriter(Writer):
 
     5) Temperature.
     """
-    # format for the energy files, here also as a tuple since this makes
-    # convenient for outputting in a specific order:
-    ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6g}']
+    # Format for the energy files:
+    ENERGY_FMT = ['{:>10d}'] + 5*['{:>14.6f}']
 
     def __init__(self):
         """Initialize a `EnergyWriter`."""
         header = {'labels': ['Time', 'Potential', 'Kinetic', 'Total',
                              'Temperature'],
-                  'width': [10, 12]}
+                  'width': [10, 14]}
         super().__init__('EnergyWriter', header=header)
 
     def load(self, filename):
@@ -472,7 +474,7 @@ class OrderWriter(Writer):
     columns 3, 5, 7, ... are the corresponding velocities. The first
     column is always just the time (or step number).
     """
-    # format for order files, note that we don't know how many parameters
+    # Format for order files, note that we don't know how many parameters
     # we need to write yet.
     ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 
