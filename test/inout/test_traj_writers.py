@@ -181,7 +181,7 @@ class TrajTest(unittest.TestCase):
                           'order': [np.random.random(), None], 'vpot': None,
                           'ekin': None}
             path.append(phasepoint)
-        writer = get_writer('pathextwriter')
+        writer = get_writer('pathtrajext')
         correct = ['# Cycle: 0, status: None',
                    '#     Step              Filename       index    vel',
                    '         0           initial.g96           0      1',
