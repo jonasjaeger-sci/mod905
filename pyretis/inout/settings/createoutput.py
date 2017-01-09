@@ -48,6 +48,8 @@ defined as dictionaries with the following keys:
 
 * target : string
     "file" or "screen", defines where the task should write to.
+* filename : string
+    A default file name for an output file if writing to a file.
 * result : string
     Determines what item from the result dictionary we are outputting.
 * when : string
@@ -61,32 +63,35 @@ defined as dictionaries with the following keys:
     :py:mod:`pyretis.inout.writers`.
 * settings : dict
     Additional settings from the input needed to create the writer.
-* engine-type : boolean
-    For some tasks, the output when using external paths may depend
-    on the type of engine used (external vs internal). For instance
-    if we are using an external engine, then the paths must be
-    physically stored, that is: moved to a safe location.
+* special : boolean
+    One task is special -- the external path writer. This one needs
+    to physically move paths so that they are stored. This is in fact
+    handled by a special output task and the this keyword shows that.
 """
 _TASK_MAP['energy'] = {
     'target': 'file',
+    'filename': 'energy.dat',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'energy'}
 
 _TASK_MAP['orderp'] = {
     'target': 'file',
+    'filename': 'orderp.dat',
     'result': 'orderp',
     'when': 'order-file',
     'writer': 'order'}
 
 _TASK_MAP['cross'] = {
     'target': 'file',
+    'filename': 'cross.dat',
     'result': 'cross',
     'when': 'cross-file',
     'writer': 'cross'}
 
 _TASK_MAP['traj-gro'] = {
     'target': 'file',
+    'filename': 'traj.gro',
     'result': 'system',
     'when': 'trajectory-file',
     'settings': {'system': ('units',),
@@ -95,6 +100,7 @@ _TASK_MAP['traj-gro'] = {
 
 _TASK_MAP['traj-xyz'] = {
     'target': 'file',
+    'filename': 'traj.xyz',
     'result': 'system',
     'when': 'trajectory-file',
     'settings': {'system': ('units',)},
@@ -108,12 +114,14 @@ _TASK_MAP['thermo-screen'] = {
 
 _TASK_MAP['thermo-file'] = {
     'target': 'file',
+    'filename': 'thermo.dat',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'thermotable'}
 
 _TASK_MAP['pathensemble'] = {
     'target': 'file',
+    'filename': 'pathensemble.dat',
     'result': 'pathensemble',
     'when': 'pathensemble-file',
     'settings': {'simulation': ('ensemble',
@@ -128,32 +136,42 @@ _TASK_MAP['pathensemble-screen'] = {
 
 _TASK_MAP['path-order'] = {
     'target': 'file',
+    'filename': 'order.dat',
     'result': 'path',
     'when': 'order-file',
     'writer': 'pathorder'}
 
 _TASK_MAP['path-energy'] = {
     'target': 'file',
+    'filename': 'energy.dat',
     'result': 'path',
     'when': 'energy-file',
     'writer': 'pathenergy'}
 
 _TASK_MAP['path-traj-xyz'] = {
     'target': 'file',
+    'filename': 'traj.xyz',
     'result': 'path',
     'when': 'trajectory-file',
     'settings': {'system': ('units',)},
-    'engine-dependent': True,
     'writer': 'pathtrajxyz'}
 
 _TASK_MAP['path-traj-gro'] = {
     'target': 'file',
+    'filename': 'traj.gro',
     'result': 'path',
     'when': 'trajectory-file',
-    'engine-dependent': True,
     'settings': {'system': ('units',),
                  'output': ('write_vel',)},
     'writer': 'pathtrajgro'}
+
+_TASK_MAP['path-traj-ext'] = {
+    'target': 'file',
+    'filename': 'traj.dat',
+    'result': 'path',
+    'when': 'trajectory-file',
+    'special': True,
+    'writer': 'pathtextwriter'}
 
 _SIM_OUTPUT = {}
 """This dictionary gives a list of predefined output tasks for
@@ -166,72 +184,54 @@ with the following keys:
 * name : string
     This is just a unique name given to the task. It is only used
     for output of task information.
-* filename : string
-    If the task represents a file, this gives the name of the
-    file created.
 """
 
 _SIM_OUTPUT['md-nve'] = [
     {'type': 'energy',
-     'name': 'nve-energy-file',
-     'filename': 'energy.dat'},
+     'name': 'nve-energy-file'},
     {'type': 'thermo-file',
-     'name': 'nve-thermo-file',
-     'filename': 'thermo.dat'},
+     'name': 'nve-thermo-file'},
     {'type': 'traj-gro',
-     'name': 'nve-traj-file',
-     'filename': 'traj.gro'},
+     'name': 'nve-traj-file'},
     {'type': 'thermo-screen',
      'name': 'nve-thermo-screen'}
 ]
 
 _SIM_OUTPUT['md-flux'] = [
     {'type': 'energy',
-     'name': 'flux-energy-file',
-     'filename': 'energy.dat'},
+     'name': 'flux-energy-file'},
     {'type': 'traj-gro',
-     'name': 'flux-traj-file',
-     'filename': 'traj.gro'},
+     'name': 'flux-traj-file'},
     {'type': 'thermo-screen',
      'name': 'flux-thermo-screen'},
     {'type': 'orderp',
-     'name': 'flux-orderp-file',
-     'filename': 'order.dat'},
+     'name': 'flux-orderp-file'},
     {'type': 'cross',
-     'name': 'flux-cross-file',
-     'filename': 'cross.dat'}
+     'name': 'flux-cross-file'}
 ]
 
 _SIM_OUTPUT['tis'] = [
     {'type': 'pathensemble',
-     'name': 'tis-path-ensemble',
-     'filename': 'pathensemble.dat'},
+     'name': 'tis-path-ensemble'},
     {'type': 'pathensemble-screen',
      'name': 'tis-pathensemble-screen'},
     {'type': 'path-order',
-     'name': 'tis-path-ensemble-orderp',
-     'filename': 'order.dat'},
+     'name': 'tis-path-ensemble-orderp'},
     {'type': 'path-traj-xyz',
-     'name': 'tis-path-ensemble-traj',
-     'filename': 'traj.xyz'},
+     'name': 'tis-path-ensemble-traj'},
     {'type': 'path-energy',
-     'name': 'tis-path-ensemble-energy',
-     'filename': 'energy.dat'}
+     'name': 'tis-path-ensemble-energy'}
 ]
 
 _SIM_OUTPUT['retis'] = [
     {'type': 'pathensemble',
-     'name': 'retis-path-ensemble',
-     'filename': 'pathensemble.dat'},
+     'name': 'retis-path-ensemble'},
     {'type': 'path-order',
-     'name': 'retis-path-ensemble-orderp',
-     'filename': 'order.dat'},
-    {'type': 'path-traj-xyz',
-     'name': 'retis-path-ensemble-traj',
-     'filename': 'traj.xyz'},
+     'name': 'retis-path-ensemble-orderp'},
+    {'type': 'path-traj-{}',
+     'name': 'retis-path-ensemble-traj'},
     {'type': 'path-energy',
-     'name': 'retis-path-ensemble-energy',
-     'filename': 'energy.dat'}
+     'name': 'retis-path-ensemble-energy'}
 ]
 
 
@@ -539,13 +539,13 @@ def create_writer(task_settings, writer_name, settings):
     return writer
 
 
-def generate_file_name(task, settings):
+def generate_file_name(basename, settings):
     """Generate file name for an output task from settings.
 
     Parameters
     ----------
-    task : dict
-        The task we are generating for.
+    basename : string
+        The base file name to use.
     settings : dict
         The input settings
 
@@ -556,9 +556,9 @@ def generate_file_name(task, settings):
     """
     prefix = settings['output'].get('prefix', None)
     if prefix is not None:
-        filename = '{}{}'.format(prefix, task['filename'])
+        filename = '{}{}'.format(prefix, basename)
     else:
-        filename = task['filename']
+        filename = basename
     filename = add_dirname(filename,
                            settings['output'].get('directory', None))
     return filename
@@ -586,6 +586,42 @@ def get_backup_settings(settings):
     return old
 
 
+def get_task_type(task, settings, engine):
+    """Method to do some additional handling for a path task.
+
+    The path task is special since we do very different things for
+    external paths. The set-up required to do this is handled here.
+
+    Parameters
+    ----------
+    task : dict
+        Settings related to the specific task.
+    settings : dict
+        Settings for the simulation.
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        This object is used to determine if we need to do something
+        special for external engines. If no engine is given, we do
+        not do anything special.
+
+    Returns
+    -------
+    out : string
+        The task type we are going to be creating for.
+    """
+    if task['type'] == 'path-traj-{}':
+        if engine is None or engine.engine_type == 'internal':
+            fmt = settings['output'].get('traj-format', 'gro')
+        else:
+            fmt = 'ext'
+        if fmt not in ('gro', 'xyz', 'ext'):
+            msg = 'Unknown trajectory format "{}"'.format(fmt)
+            logger.error(msg)
+            raise ValueError(msg)
+        return task['type'].format(fmt)
+    else:
+        return task['type']
+
+
 def task_from_settings(task, settings, engine=None):
     """Method to create output task from simulation settings.
 
@@ -605,12 +641,12 @@ def task_from_settings(task, settings, engine=None):
     out : object like `OutputTask`
         An output task we can use in the simulation
     """
-    task_settings = _TASK_MAP[task['type']]
+    task_type = get_task_type(task, settings, engine)
+    task_settings = _TASK_MAP[task_type]
 
     when = {'every': settings['output'][task_settings['when']]}
-
     if when['every'] < 1:
-        logger.info('Skipping output task %s (freq < 1)', task['type'])
+        logger.info('Skipping output task %s (freq < 1)', task_type)
         return None
 
     writer_name = task_settings['writer']
@@ -619,13 +655,12 @@ def task_from_settings(task, settings, engine=None):
         logger.warning('Could not create writer %s', writer_name)
         return None
 
-    target = task_settings['target']
-
     # Currently there are only two cases: screen and file.
     # And this will probably not change in the near future,
     # so we do nothing fancy here. Note: It would be cool
     # if someone made a new target!
 
+    target = task_settings['target']
     if target == 'screen':
         return OutputTaskScreen(
             task['name'],
@@ -633,22 +668,19 @@ def task_from_settings(task, settings, engine=None):
             writer,
             when)
     elif target == 'file':
-        filename = generate_file_name(task, settings)
+        filename = generate_file_name(task_settings['filename'], settings)
         backup_settings = get_backup_settings(settings)
-        if engine is None or engine.engine_type == 'internal':
-            klass = OutputTaskFile
+        if task_settings.get('special', False):
+            klass = OutputTaskFileCombine
         else:
-            if task_settings.get('engine-dependent', False):
-                klass = OutputTaskFileCombine
-            else:
-                klass = OutputTaskFile
-
-        return klass(task['name'],
-                     task_settings['result'],
-                     writer,
-                     when,
-                     filename,
-                     backup_settings)
+            klass = OutputTaskFile
+        return klass(
+            task['name'],
+            task_settings['result'],
+            writer,
+            when,
+            filename,
+            backup_settings)
     else:
         logger.warning('Unknown target "%s" ignored.', target)
         return None

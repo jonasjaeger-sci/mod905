@@ -10,6 +10,9 @@ in a GROMACS format.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+TrajWriter
+    Generic class for writing trajectory output.
+
 XYZWriter
     Writing of coordinates to a file in a xyz format.
 
@@ -21,6 +24,10 @@ GROWriter
 
 PathGROWriter
     Writing of path data to a file in GROMACS format.
+
+PathExtWriter
+    A class for writing external paths to file.
+
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
