@@ -353,7 +353,7 @@ class EnergyWriter(Writer):
     """
     # format for the energy files, here also as a tuple since this makes
     # convenient for outputting in a specific order:
-    ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6f}']
+    ENERGY_FMT = ['{:>10d}'] + 5*['{:>12.6g}']
 
     def __init__(self):
         """Initialize a `EnergyWriter`."""
