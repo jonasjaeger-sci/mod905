@@ -424,7 +424,7 @@ class PathEnsembleExt(PathEnsemble):
     def generate_output(self, cycle, path):
         """Output a trajectory by making a copy."""
         return self._copy_path(path, self.directory['traj'],
-                               prefix='{}_'.format(cycle))
+                               prefix='{}_'.format(cycle['step']))
 
 
 def get_path_ensemble_class(ensemble_type):
