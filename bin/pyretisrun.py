@@ -158,13 +158,15 @@ def bye_bye_world():
     print_to_screen(urltxt)
 
 
-def get_tasks(sim_settings, engine=None, progress=False):
+def get_tasks(sim_settings, directory=None, engine=None, progress=False):
     """Simple function to create tasks from settings.
 
     Parameters
     ----------
     sim_settings : dict
         The simulation settings.
+    directory : string
+        The directory where output files should be written.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine (if any) specified for the simulation.
     progress : boolean, optional
@@ -180,7 +182,9 @@ def get_tasks(sim_settings, engine=None, progress=False):
     print_to_screen(msgtxt)
     logger.info(msgtxt)
     output_tasks = []
-    for out_task in create_output_tasks(sim_settings, engine=engine):
+    for out_task in create_output_tasks(sim_settings,
+                                        directory=directory,
+                                        engine=engine):
         if progress and out_task.target == 'screen':
             msgtxt = ('Ignoring "{}" since progress '
                       'bar is ON'.format(out_task.name))
@@ -238,6 +242,20 @@ def run_md_simulation(sim, sim_settings, progress=False):
             out_task.output(result)
 
 
+def create_pathensemble_directories(ensemble):
+    """Create directories for a given path ensemble.
+
+    Parameters
+    ----------
+    ensemble : object like :py:class:`pyretis.core.pathensemble.Pathensemble`
+        The path ensemble to create for.
+    """
+    for ensemble_dir in ensemble.directories():
+        msg_dir = make_dirs(ensemble_dir)
+        msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
+        print_and_loginfo(msgtxt)
+
+
 def run_tis_single_simulation(sim, sim_settings, progress=False):
     """This will run a single TIS simulation.
 
@@ -258,17 +276,15 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     print_and_loginfo('TIS simulation: {}'.format(ensemble_name))
     print_and_loginfo('Creating output directories...')
-    dirname = ensemble.ensemble_name_simple
-    sim_settings['output']['directory'] = dirname
-    sim_settings['simulation']['ensemble'] = ensemble_name
-    for ensemble_dir in ensemble.directories():
-        msg_dir = make_dirs(ensemble_dir)
-        msgtxt = 'Ensemble {}: {}'.format(ensemble_name, msg_dir)
-        print_and_loginfo(msgtxt)
+    create_pathensemble_directories(ensemble)
 
     # Create output tasks:
-    output_tasks = get_tasks(sim_settings, engine=sim.engine,
-                             progress=progress)
+    output_tasks = get_tasks(
+        sim_settings,
+        directory=ensemble.ensemble_name_simple,
+        engine=sim.engine,
+        progress=progress
+    )
 
     print_and_loginfo(None)
     print_and_loginfo('Starting TIS simulation for {}!'.format(ensemble_name))
@@ -284,7 +300,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     # Start the full simulation:
     tqd = use_tqdm(progress)
     nsteps = (sim.cycle['end'] - sim.cycle['step']) - 1  # -1 for init
-    desc = 'TIS Ensemble {}'.format(sim_settings['simulation']['ensemble'])
+    desc = 'TIS Ensemble {}'.format(ensemble_name)
     for result in tqd(sim.run(), total=nsteps, desc=desc):
         for out_task in output_tasks:
             out_task.output(result)
@@ -308,17 +324,14 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     print_and_loginfo('Creating output directories:')
 
     for ensemble in path_ensembles:
-        dirname = ensemble.ensemble_name_simple
-        for ensemble_dir in ensemble.directories():
-            msg_dir = make_dirs(ensemble_dir)
-            msgtxt = 'Ensemble {}: {}'.format(ensemble.ensemble_name, msg_dir)
-            print_and_loginfo(msgtxt)
-        sim_settings['output']['directory'] = dirname
-        sim_settings['simulation']['ensemble'] = ensemble.ensemble_name
-        ensemble_task = get_tasks(sim_settings, engine=sim.engine,
-                                  progress=progress)
+        create_pathensemble_directories(ensemble)
+        ensemble_task = get_tasks(
+            sim_settings,
+            directory=ensemble.ensemble_name_simple,
+            engine=sim.engine,
+            progress=progress
+        )
         output_tasks.append(ensemble_task)
-
     print_to_screen('')
     print_and_loginfo('Running RETIS simulation!')
     print_and_loginfo('Initializing path ensembles...')
@@ -327,7 +340,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     # purposes. This also means that we need to set sim.first_step
     # explicitly to False after we are done!
     for i, ensemble in enumerate(path_ensembles):
-        print_and_loginfo('Initiating path in: {}'.format(ensemble.ensemble_name))
+        name = ensemble.ensemble_name
+        print_and_loginfo('Initiating path in: {}'.format(name))
         _, path, _ = sim.initiate_ensemble(ensemble)
         print_and_loginfo('Initial path is:')
         print_and_loginfo('{}'.format(path))
@@ -437,6 +451,68 @@ _RUNNERS = {'md-flux': run_md_flux_simulation,
             'retis': run_retis_simulation}
 
 
+def set_up_simulation(inputfile, runpath):
+    """This will run all the needed generic set-up.
+
+    Parameters
+    ----------
+    inputfile : string
+        The input file which defines the simulation.
+    runpath : string
+        The base path we are running the simulation from.
+
+    Returns
+    -------
+    runner : method
+        A method which can be used to execute the simulation.
+    sim : object like :py:class:`pyretis.core.simulation.Simulation`
+        The simulation defined by the input file.
+    syst : object like :py:class:`pyretis.core.system.System`
+        The system created.
+    sim_settings : dict
+        The input settings read from the input file.
+    """
+
+    if not os.path.isfile(inputfile):
+        msg = 'No simulation input "{}" found!'.format(inputfile)
+        logger.error(msg)
+        raise ValueError(msg)
+    print_and_loginfo('Reading input settings.')
+    sim_settings = parse_settings_file(inputfile)
+    sim_settings['simulation']['exe-path'] = runpath
+
+    print_and_loginfo(None)
+
+    print_and_loginfo('Initiaizing unit system.')
+    msg = units_from_settings(sim_settings)
+    print_and_loginfo(msg)
+
+    engine = create_engine(sim_settings)
+    if engine is not None:
+        msg = 'Created engine "{}" from settings'.format(engine)
+        print_and_loginfo(msg)
+
+    print_and_loginfo('Creating system from settings.')
+    syst = create_system(sim_settings, engine=engine)
+
+    print_and_loginfo('Creating force field')
+    syst.forcefield = create_force_field(sim_settings)
+    syst.extra_setup()
+
+    print_and_loginfo('Creating simulation from settings.')
+    keyargs = {'system': syst, 'engine': engine}
+    sim = create_simulation(sim_settings, keyargs)
+
+    task = sim_settings['simulation']['task'].lower()
+    print_and_loginfo('Will run simulation: "{}"'.format(task))
+    runner = _RUNNERS.get(task, run_generic_simulation)
+    return runner, sim, syst, sim_settings
+
+
+def main():
+    """The main method for executing pyretis."""
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
@@ -457,14 +533,14 @@ if __name__ == '__main__':
                               'output for the simulation'))
     args_dict = vars(parser.parse_args())
 
-    inputfile = args_dict['input']
-    runpath = os.getcwd()
-    basepath = os.path.dirname(inputfile)
-    localfile = os.path.basename(inputfile)
+    input_file = args_dict['input']
+    # Store directories:
+    run_path = os.getcwd()
+    basepath = os.path.dirname(input_file)
     if not os.path.isdir(basepath):
         basepath = os.getcwd()
 
-    # set up for logging:
+    # Set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
     # Define a console logger. This will log to sys.stderr:
@@ -480,6 +556,8 @@ if __name__ == '__main__':
     fileh.setFormatter(get_formatter(log_level))
     logger.addHandler(fileh)
 
+    # Here, we just check the python version. pyretis should anyway
+    # fail before this for python2.
     check_python_version()
 
     simulation = None
@@ -487,35 +565,13 @@ if __name__ == '__main__':
     settings = {}
 
     try:
-        hello_world(inputfile, basepath, args_dict['log_file'])
-        if not os.path.isfile(inputfile):
-            errtxt = ('No simulation input:'
-                      ' {} is not a file!'.format(inputfile))
-            logger.error(errtxt)
-            raise ValueError(errtxt)
-        print_and_loginfo('Reading input settings.')
-        settings = parse_settings_file(inputfile)
-        settings['simulation']['exe-path'] = runpath
-        print_and_loginfo(None)
-        print_and_loginfo('Initiaizing unit system.')
-        msg = units_from_settings(settings)
-        print_and_loginfo(msg)
-        engine = create_engine(settings)
-        if engine is not None:
-            msg = 'Created engine "{}" from settings'.format(engine)
-            print_and_loginfo(msg)
-        print_and_loginfo('Creating system from settings.')
-        system = create_system(settings, engine=engine)
-        print_and_loginfo('Creating force field')
-        system.forcefield = create_force_field(settings)
-        system.extra_setup()
-        print_and_loginfo('Creating simulation from settings.')
-        keyargs = {'system': system, 'engine': engine}
-        simulation = create_simulation(settings, keyargs)
-        task = settings['simulation']['task'].lower()
-        print_and_loginfo('Will run simulation: "{}"'.format(task))
-        runner = _RUNNERS.get(task, run_generic_simulation)
-        runner(simulation, settings, progress=args_dict['progress'])
+        hello_world(input_file, basepath, args_dict['log_file'])
+        run, simulation, system, settings = set_up_simulation(
+            input_file,
+            run_path
+        )
+        # Run the simulation:
+        run(simulation, settings, progress=args_dict['progress'])
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         logger.error(errtxt)
@@ -523,7 +579,8 @@ if __name__ == '__main__':
         print_to_screen('Please see the LOG for more info.')
         raise
     finally:
-        # write out the simulation settings and add some extra ones:
+        # Write out the simulation settings as they were parsed and
+        # add some additional info:
         if simulation is not None:
             end = getattr(simulation, 'cycle', {'step': None})['step']
             if end is not None:
@@ -531,7 +588,7 @@ if __name__ == '__main__':
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
             settings['particles']['npart'] = system.particles.npart
-        outfile = 'out.{}'.format(inputfile)
+        outfile = 'out.{}'.format(input_file)
         outpath = os.path.join(basepath, outfile)
         print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
         write_settings_file(settings, outpath,

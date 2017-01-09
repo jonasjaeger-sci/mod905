@@ -124,8 +124,6 @@ _TASK_MAP['pathensemble'] = {
     'filename': 'pathensemble.dat',
     'result': 'pathensemble',
     'when': 'pathensemble-file',
-    'settings': {'simulation': ('ensemble',
-                                'interfaces')},
     'writer': 'pathensemble'}
 
 _TASK_MAP['pathensemble-screen'] = {
@@ -539,13 +537,16 @@ def create_writer(task_settings, writer_name, settings):
     return writer
 
 
-def generate_file_name(basename, settings):
+def generate_file_name(basename, directory, settings):
     """Generate file name for an output task from settings.
 
     Parameters
     ----------
     basename : string
         The base file name to use.
+    directory : string
+        A directory to output to. Can be None to output to the
+        current working directory.
     settings : dict
         The input settings
 
@@ -559,8 +560,7 @@ def generate_file_name(basename, settings):
         filename = '{}{}'.format(prefix, basename)
     else:
         filename = basename
-    filename = add_dirname(filename,
-                           settings['output'].get('directory', None))
+    filename = add_dirname(filename, directory)
     return filename
 
 
@@ -580,9 +580,9 @@ def get_backup_settings(settings):
     try:
         old = settings['output']['backup'].lower()
     except AttributeError:
-        logger.warning('"backup" not found in "output" settings')
+        logger.warning('Setting "backup" not found in "output" section.')
         old = 'backup' if settings['output']['backup'] else 'overwrite'
-        logger.warning('Handling backup as %s', old)
+        logger.warning('Handling of existing files is set to: %s', old)
     return old
 
 
@@ -622,7 +622,7 @@ def get_task_type(task, settings, engine):
         return task['type']
 
 
-def task_from_settings(task, settings, engine=None):
+def task_from_settings(task, settings, directory, engine):
     """Method to create output task from simulation settings.
 
     Parameters
@@ -668,7 +668,8 @@ def task_from_settings(task, settings, engine=None):
             writer,
             when)
     elif target == 'file':
-        filename = generate_file_name(task_settings['filename'], settings)
+        filename = generate_file_name(task_settings['filename'], directory,
+                                      settings)
         backup_settings = get_backup_settings(settings)
         if task_settings.get('special', False):
             klass = OutputTaskFileCombine
@@ -686,7 +687,7 @@ def task_from_settings(task, settings, engine=None):
         return None
 
 
-def create_output_tasks(settings, engine=None):
+def create_output_tasks(settings, directory=None, engine=None):
     """Generate output tasks from settings and defaults.
 
     This function will return actual objects that can be added to the
@@ -697,6 +698,8 @@ def create_output_tasks(settings, engine=None):
     ----------
     settings : dict
         These are the settings for the simulation.
+    directory : string
+        The directory to write output files to.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do
@@ -708,7 +711,7 @@ def create_output_tasks(settings, engine=None):
     """
     sim_task = settings['simulation']['task'].lower()
     for task in _SIM_OUTPUT.get(sim_task, []):
-        out_task = task_from_settings(task, settings, engine=engine)
+        out_task = task_from_settings(task, settings, directory, engine)
         if out_task is not None:
             logger.debug('Output task created: %s', out_task)
             yield out_task

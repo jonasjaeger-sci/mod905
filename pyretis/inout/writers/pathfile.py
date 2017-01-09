@@ -53,7 +53,7 @@ class PathEnsembleWriter(Writer):
                 '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
                 '{13:>16.9e} {14:>7d} {15:7d}')
 
-    def __init__(self, ensemble, interfaces):
+    def __init__(self):
         """Initialize the `PathEnsembleWriter`.
 
         Parameters
@@ -75,8 +75,6 @@ class PathEnsembleWriter(Writer):
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
         super().__init__('PathEnsembleWriter', header=header)
-        self.ensemble = ensemble  # Check if this can be deleted
-        self.interfaces = interfaces  # Check if this can be deleted
 
     @staticmethod
     def line_parser(line):
@@ -213,7 +211,8 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
 
     def __init__(self, filename, ensemble, interfaces, detect=None):
         """Initiate the `PathEnsembleFile`."""
-        super().__init__(ensemble, interfaces, detect=detect)
+        PathEnsemble.__init__(self, ensemble, interfaces, detect=detect)
+        PathEnsembleWriter.__init__(self)
         self.filename = filename
 
     def get_paths(self):

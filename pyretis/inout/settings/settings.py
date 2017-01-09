@@ -75,7 +75,6 @@ SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
 
 SECTIONS['output'] = {'backup': False,
-                      'directory': None,
                       'prefix': None,
                       'energy-file': 10,
                       'cross-file': 1,
@@ -446,7 +445,10 @@ def settings_to_text(settings):
         elif section == 'heading':
             txt.append('{}\n\n'.format(settings[section]['text']))
         else:
-            title = '{} settings'.format(section.capitalize())
+            if section in ('tis', 'retis'):
+                title = '{} settings'.format(section.upper())
+            else:
+                title = '{} settings'.format(section.capitalize())
             line = ('-') * len(title)
             raw_data = section_to_text(settings[section])
             txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
