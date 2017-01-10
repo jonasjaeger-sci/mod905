@@ -16,6 +16,7 @@ PathEnsembleExt
     Class for defining path ensembles when we are working with
     paths stored on disk and not in memory only.
 """
+import collections
 import logging
 import os
 import shutil
@@ -112,7 +113,7 @@ class PathEnsemble(object):
         This is the last **accepted** path.
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=100,
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
         """Initialize the PathEnsemble object.
 
@@ -147,9 +148,11 @@ class PathEnsemble(object):
         else:
             self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
         self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
-        self.directory = {'path-ensemble': None,
-                          'accepted': None,
-                          'generate': None}
+        self.directory = collections.OrderedDict()
+        self.directory['path-ensemble'] = None
+        self.directory['accepted'] = None
+        self.directory['generate'] = None
+        self.directory['traj'] = None
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
             self.directory['path-ensemble'] = path_dir
@@ -335,7 +338,7 @@ class PathEnsembleExt(PathEnsemble):
     done when accepting a path.
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=100,
+    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
         """Initialize the PathEnsemble object.
 
