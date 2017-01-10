@@ -310,7 +310,7 @@ class PathEnsemble(object):
         else:
             return 'L'
 
-    def move_path_to_generated(self, path):
+    def move_path_to_generated(self, path, prefix=None):
         """Move a path for temporary storing."""
         pass
 
@@ -422,9 +422,9 @@ class PathEnsembleExt(PathEnsemble):
             if entry.is_file() and entry.path not in last:
                 yield entry.path
 
-    def move_path_to_generated(self, path):
+    def move_path_to_generated(self, path, prefix=None):
         """Move a path for temporary storing."""
-        self._move_path(path, self.directory['generate'])
+        self._move_path(path, self.directory['generate'], prefix=prefix)
 
     def generate_output(self, cycle, path):
         """Output a trajectory by making a copy."""

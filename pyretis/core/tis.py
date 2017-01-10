@@ -147,7 +147,7 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         logger.info('Will generate initial path by kicking')
         engine.exe_dir = path_ensemble.directory['generate']
         initial_path = generate_initial_path_kick(system, order_function,
-                                                  path_ensemble.interfaces,
+                                                  path_ensemble,
                                                   engine, rgen,
                                                   tis_settings)
         accept = True
@@ -387,7 +387,7 @@ def _shoot(path, system, order_function, interfaces, engine, rgen,
     return accept, trial_path, trial_path.status
 
 
-def generate_initial_path_kick(system, order_function, interfaces, engine,
+def generate_initial_path_kick(system, order_function, path_ensemble, engine,
                                rgen, tis_settings):
     """Simple function to generate an initial path.
 
@@ -407,9 +407,8 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
         investigating.
     order_function : object like :py:class:`OrderParameter`
         The class used for obtaining the order parameter(s).
-    interfaces : list of floats
-        These are the interface positions on form
-        `[left, middle, right]`.
+    path_ensemble : object like :py:class:`PathEnsemble`
+        The path ensemble to create an initial path for.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.
     rgen : object like :py:class:`.random_gen.RandomGenerator`
@@ -428,6 +427,7 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
+    interfaces = path_ensemble.interfaces
     logger.debug('Kicking for initial path generation...')
     leftpoint, _ = engine.kick_across_middle(system,
                                              order_function,
@@ -487,7 +487,7 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
         logger.info('Initial path start/end at wrong interfaces.')
         logger.info('Will perform TIS moves to try to fix it!')
         initial_path = _fix_path_by_tis(initial_path, system,
-                                        order_function, interfaces,
+                                        order_function, path_ensemble,
                                         engine, rgen, tis_settings)
     else:
         logger.error('Could not generate initial path.')
@@ -495,7 +495,77 @@ def generate_initial_path_kick(system, order_function, interfaces, engine,
     return initial_path
 
 
-def _fix_path_by_tis(initial_path, system, order_function, interfaces,
+def _get_help(start_cond, interfaces):
+    """Defines some methods for :py:func:`._fix_path_by_tis`
+
+    This method returns two methods that :py:func:`._fix_path_by_tis`
+    can use to determine if a new path is an improvement compared to
+    the current path and if the "fixing" is done.
+
+    Parameters
+    ----------
+    start_cond : string
+        The starting condition (from the TIS settings). Left or Right.
+    interfaces : list of floats
+        The interfaces, on form [left, middle, right]
+
+    Returns
+    -------
+    out[0] : method
+        The method which determines if a new path represents an
+        improvement over the current path.
+    out[1] : method
+        The method which determines if we are done, that is if we
+        can accept the current path.
+    """
+    left, middle, right = interfaces
+    improved, done = None, None
+    if start_cond == 'R':
+        def improved_r(newp, current):
+            """True if new path is an improvement."""
+            return (newp.ordermax[0] > current.ordermax[0] and
+                    newp.ordermin[0] < middle)
+        def done_r(path):
+            """True if the path can be accepted."""
+            return path.ordermax[0] > right
+        improved = improved_r
+        done = done_r
+    elif start_cond == 'L':
+        def improved_l(newp, current):
+            """True if new path is an improvement."""
+            return (newp.ordermin[0] < current.ordermin[0] and
+                    newp.ordermax[0] > middle)
+        def done_l(path):
+            """True if the path can be accepted."""
+            return path.ordermin[0] < left
+        improved = improved_l
+        done = done_l
+    else:
+        logger.error('Unknown start condition (should be "R" or "L")')
+        raise ValueError('Unknown start condition (should be "R" or "L")')
+    return improved, done
+
+
+def _copy_tis_settings(tis_settings):
+    """Copy the input TIS settings.
+
+    Parameters
+    ----------
+    tis_settings : dict
+        The input TIS settings.
+
+    Returns
+    -------
+    out : dict
+        A copy of the input TIS settings.
+    """
+    copy = {}
+    for key, val in tis_settings.items():
+        copy[key] = val
+    return copy
+
+
+def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
                      engine, rgen, tis_settings):
     """Fix a path that starts and ends at the wrong interfaces.
 
@@ -512,9 +582,8 @@ def _fix_path_by_tis(initial_path, system, order_function, interfaces,
         investigating
     order_function : object like :py:class:`OrderParameter`
         The object used for calculating the order parameter(s).
-    interfaces : list of floats
-        These are the interface positions on form
-        `[left, middle, right]`.
+    path_ensemble : object like :py:class:`PathEnsemble`
+        The path ensemble to create an initial path for.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.
     rgen : object like :py:class:`.random_gen.RandomGenerator`
@@ -534,39 +603,43 @@ def _fix_path_by_tis(initial_path, system, order_function, interfaces,
     out : object like :py:class:`.path.PathBase`
         The amended path.
     """
-    left, middle, right = interfaces
-    path_ok = False
-    local_tis_settings = {}
-    for key, val in tis_settings.items():
-        local_tis_settings[key] = val
+    logger.debug('Attempting to fix path by running TIS moves.')
+
+    local_tis_settings = _copy_tis_settings(tis_settings)
     local_tis_settings['allowmaxlength'] = True
     local_tis_settings['aimless'] = True,
     local_tis_settings['freq'] = 0.5
 
+    improved, check_ok = _get_help(local_tis_settings['start_cond'],
+                                   path_ensemble.interfaces)
+
+    backup_path = True
+    path_ok = False
+
     while not path_ok:
+        logger.debug('Performing a TIS move to improve the initial path')
+        if backup_path:
+            # move initial_path to safe place
+            logger.debug('Moving initial_path')
+            path_ensemble.move_path_to_generated(initial_path, prefix='_')
+            backup_path = False
         accept, trial, _ = make_tis_step(initial_path,
                                          system,
                                          order_function,
-                                         interfaces,
+                                         path_ensemble.interfaces,
                                          engine,
                                          rgen,
                                          local_tis_settings)
         if accept:
-            if tis_settings['start_cond'] == 'R':
-                # if new path is better, use it:
-                if (trial.ordermax[0] > initial_path.ordermax[0] and
-                        trial.ordermin[0] < middle):
-                    initial_path = trial
-                path_ok = initial_path.ordermax[0] > right
-            elif tis_settings['start_cond'] == 'L':
-                # if new path is better, use it:
-                if (trial.ordermin[0] < initial_path.ordermin[0] and
-                        trial.ordermax[0] > middle):
-                    initial_path = trial
-                path_ok = initial_path.ordermin[0] < left
+            if improved(trial, initial_path):
+                logger.debug('TIS move improved path.')
+                initial_path = trial
+                backup_path = True
             else:
-                logger.error('Unknown start condition (should be R/L')
-                raise ValueError('Unknown start condition (should be R/L)')
+                logger.debug('TIS move did not improve path')
+            path_ok = check_ok(initial_path)
+        else:
+            logger.debug('TIS move did not improve path')
     initial_path.generated = ('ki', 0, 0, 0)
     initial_path.status = 'ACC'
     return initial_path
