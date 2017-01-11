@@ -1032,7 +1032,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
                   'x': matched['overall-prob'][:, 0],
                   'y': matched['overall-prob'][:, 1],
                   'alpha': 0.8,
-                  'lw': 9, 'label': 'Over-all', 'color': '#262626'}
+                  'lw': 9, 'label': 'Overall', 'color': '#262626'}
     series.append(new_series)
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):
