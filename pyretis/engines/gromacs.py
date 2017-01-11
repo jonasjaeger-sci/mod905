@@ -199,6 +199,8 @@ class GromacsEngine(ExternalMDEngine):
         # This will generate some noise, let's remove files we don't need:
         mdout = os.path.join(self.input_path, out_files['mdout'])
         self.removefile(mdout)
+        # We also remove GROMACS backup files:
+        self.remove_gromacs_backup_files(self.input_path)
         # Keep the tpr file.
         self.input_files['tpr'] = os.path.join(self.input_path,
                                                out_files['tpr'])
@@ -326,6 +328,21 @@ class GromacsEngine(ExternalMDEngine):
         self.execute_command(cmd, cwd=exe_dir)
         out_files = {'tpr': tpxout}
         return out_files
+
+    def remove_gromacs_backup_files(self, dirname):
+        """Remove files GROMACS has backed up.
+
+        These are files starting with a '#'
+
+        Parameters
+        ----------
+        dirname : string
+            The directory where we are to remove files.
+        """
+        for entry in os.scandir(dirname):
+            if entry.name.startswith('#') and entry.is_file():
+                filename = os.path.join(dirname, entry.name)
+                self.removefile(filename)
 
     def extract_frame(self, trr_file, idx, out_file):
         """Extract a frame from a .trr file.
@@ -481,10 +498,7 @@ class GromacsEngine(ExternalMDEngine):
         for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
             filename = os.path.join(self.exe_dir, out_files[key])
             self.removefile(filename)
-        for entry in os.scandir(self.exe_dir):
-            if entry.name.startswith('#') and entry.is_file():
-                filename = os.path.join(self.exe_dir, entry.name)
-                self.removefile(filename)
+        self.remove_gromacs_backup_files(self.exe_dir)
         return success, status
 
     def step(self, system, name, exe_dir):
