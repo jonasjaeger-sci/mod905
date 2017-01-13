@@ -64,7 +64,7 @@ for i, umbrella in enumerate(umbrellas):
         pos.append(mysystem.particles.pos)
         trial.append(result['displace_step'][2])
         success.append(result['displace_step'][3])
-        ener.append(mysystem.v_pot)
+        ener.append(mysystem.particles.vpot)
     trajectory.append([np.array(pos), np.array(trial), success])
     energy.append(np.array(ener))
 

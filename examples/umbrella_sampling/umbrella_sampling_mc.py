@@ -69,7 +69,7 @@ for i, umbrella in enumerate(umbrellas):
     for result in simulation.run():
         for pos in mysystem.particles.pos:
             traj.append(pos)
-            ener.append(mysystem.v_pot)
+            ener.append(mysystem.particles.vpot)
     trajectory.append(np.array(traj))
     energy.append(np.array(ener))
     print('Done. Cycles: {}'.format(simulation.cycle['step'] -
