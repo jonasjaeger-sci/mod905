@@ -143,30 +143,11 @@ class MDEngine(EngineBase):
                           'vel': system.particles.vel,
                           'vpot': system.particles.vpot,
                           'ekin': kin}
-            add = path.append(phasepoint)
-            if not add:
-                if path.length >= path.maxlen:
-                    status = 'Max. path length exceeded'
-                else:
-                    status = 'Could not add for unknown reason'
-                success = False
+            status, success, stop = self.add_to_path(phasepoint, path,
+                                                     left, right)
+            if stop:
+                logger.debug('Stopping propagate. Reason: %s', status)
                 break
-            if path.ordermin[0] < left:
-                status = 'Crossed left interface!'
-                success = True
-                break
-            elif path.ordermax[0] > right:
-                status = 'Crossed right interface!'
-                success = True
-                break
-            if path.length == path.maxlen:
-                # Next step will just exceed path length,
-                # no need to actually do it:
-                # TODO: Uncomment the following to save a step:
-                #status = 'Max. path length exceeded'
-                #success = False
-                #break
-                pass
             if reverse:
                 system.particles.vel *= -1.0
                 self.integration_step(system)

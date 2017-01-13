@@ -36,6 +36,48 @@ class EngineBase(metaclass=ABCMeta):
         """Perform one time step of the integration."""
         pass
 
+    @staticmethod
+    def add_to_path(phase_point, path, left, right):
+        """Adds phase point and perform some checks.
+
+        This method is intended to be used by the propagate methods.
+
+        Parameters
+        ----------
+        phase_point : dict
+            The phase_point to add.
+        path : object like :py:class:`pyretis.core.path.PathBase`
+            The path to add to.
+        left : float
+            The left interface.
+        right : float
+            The right interface.
+        """
+        status = 'Running propagate...'
+        success = False
+        stop = False
+        add = path.append(phase_point)
+        if not add:
+            if path.length >= path.maxlen:
+                status = 'Max. path length exceeded'
+            else:
+                status = 'Could not add for unknown reason'
+            success = False
+            stop = True
+        if path.ordermin[0] < left:
+            status = 'Crossed left interface!'
+            success = True
+            stop = True
+        elif path.ordermax[0] > right:
+            status = 'Crossed right interface!'
+            success = True
+            stop = True
+        if path.length == path.maxlen:
+            status = 'Max. path length exceeded!'
+            success = False
+            stop = True
+        return status, success, stop
+
     @abstractmethod
     def propagate(self, path, system, orderp, interfaces, reverse=False):
         """Propagate equations of motion."""

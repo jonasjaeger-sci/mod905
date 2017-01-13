@@ -422,7 +422,7 @@ class GromacsEngine(ExternalMDEngine):
         phase_point = {'pos': (initial_conf, None), 'vel': reverse,
                        'vpot': None, 'ekin': None}
         system.particles.set_particle_state(phase_point)
-        order = self.calculate_order(order_function, system)
+        order = self.calculate_order(order_function, system)  # for current
         # In some cases, we don't really have to perform a step as the
         # initial config might be left/right of the interface in
         # question. Here, we will perform a step anyway. This is to be
@@ -444,44 +444,31 @@ class GromacsEngine(ExternalMDEngine):
 
         # Note: Order is calculated AT THE END of each iteration!
         for i in range(path.maxlen):
-            # We first add the current phase point, and then we propagate.
+            # We first add the previous phase point, and then we propagate.
             logger.debug('Current: %9.5g %9.5g %9.5g', left, order[0], right)
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
                 'vel': reverse, 'vpot': None, 'ekin': None}
-            add = path.append(phase_point)
-            if not add:
-                status = 'Could not add for unknown reason'
-                success = False
+            status, success, stop = self.add_to_path(path, phase_point,
+                                                     left, right)
+            if stop:
+                logger.debug('Ending propagate at %i. Reason: %s', i, status)
                 break
-            if path.ordermin[0] < left:
-                status = 'Crossed left interface!'
-                success = True
-                break
-            elif path.ordermax[0] > right:
-                status = 'Crossed right interface!'
-                success = True
-                break
-            if path.length == path.maxlen:
-                status = 'Max. path length exceeded!'
-                success = False
-                break
-            if i > 0:
-                out_grompp = self._extend_gromacs(tpr_file, self.ext_time,
-                                                  self.exe_dir)
-                ext_tpr_file = out_grompp['tpr']
-                for key, value in out_grompp.items():
-                    out_files[key] = value
-                out_mdrun = self._execute_mdrun_continue(ext_tpr_file,
-                                                         cpt_file, name,
-                                                         self.exe_dir)
-                for key, value in out_mdrun.items():
-                    out_files[key] = value
-                # Move extended tpr so that we can continue extending:
-                os.replace(os.path.join(self.exe_dir, ext_tpr_file),
-                           os.path.join(self.exe_dir, tpr_file))
-                out_files['tpr'] = tpr_file
+            out_grompp = self._extend_gromacs(tpr_file, self.ext_time,
+                                              self.exe_dir)
+            ext_tpr_file = out_grompp['tpr']
+            for key, value in out_grompp.items():
+                out_files[key] = value
+            out_mdrun = self._execute_mdrun_continue(ext_tpr_file,
+                                                     cpt_file, name,
+                                                     self.exe_dir)
+            for key, value in out_mdrun.items():
+                out_files[key] = value
+            # Move extended tpr so that we can continue extending:
+            os.replace(os.path.join(self.exe_dir, ext_tpr_file),
+                       os.path.join(self.exe_dir, tpr_file))
+            out_files['tpr'] = tpr_file
             # Calculate order parameter using the output config:
             conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
             phase_point = {'pos': (conf_abs, None),
@@ -489,6 +476,7 @@ class GromacsEngine(ExternalMDEngine):
             system.particles.set_particle_state(phase_point)
             order = self.calculate_order(order_function, system)
             self.removefile(conf_abs)
+
         logger.debug('Obtaining energies for trajectory...')
         energy = self.get_energies(out_files['edr'], self.exe_dir)
         path.vpot = np.copy(energy['potential'])
