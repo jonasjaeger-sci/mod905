@@ -41,8 +41,6 @@ class System(object):
         * `beta`: The derived property ``1.0/(k_B*T)``.
         * `dof`: Information about the degrees of freedom for the
           system.
-    v_pot : float
-        The potential energy of the system.
     particles : object like :py:class:`.particles.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
@@ -89,7 +87,6 @@ class System(object):
         self.box = box
         self._adjust_dof_according_to_box()
         # initialize other variables:
-        self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
         self.particles = None
         self.forcefield = None
         self.post_setup = []
@@ -237,36 +234,37 @@ class System(object):
         return self.particles.force, virial
 
     def potential(self):
-        """Update the potential energy in `self.v_pot`.
+        """Update the potential energy.
 
         Returns
         -------
         out : float
-            The potential energy, note `self.v_pot` is also updated.
+            The potential energy.
         """
-        self.v_pot = self.forcefield.evaluate_potential(self)
-        return self.v_pot
+        self.particles.vpot = self.forcefield.evaluate_potential(self)
+        return self.particles.vpot
 
     def potential_and_force(self):
         """Update the potential energy and forces.
 
-        The potential in `self.v_pot` and the forces in
+        The potential in `self.particles.vpot` and the forces in
         `self.particles.force` are here updated by calling
         `forcefield.evaluate_potential_force()`.
 
         Returns
         -------
         out[1] : float
-            The potential energy, note self.v_pot is also updated.
+            The potential energy, note `self.particles.vpot` is also
+            updated.
         out[2] : numpy.array
-            Forces on the particles. Note that self.particles.force will
-            also be updated.
+            Forces on the particles. Note that `self.particles.force`
+            will also be updated.
         out[3] : float
             The virial. Note that `self.particles.virial` will also be
             updated.
         """
         pot, force, viri = self.forcefield.evaluate_potential_and_force(self)
-        self.v_pot = pot
+        self.particles.vpot = pot
         self.particles.force = force
         self.particles.virial = viri
         return pot, force, viri
@@ -298,9 +296,10 @@ class System(object):
 
         Note
         ----
-        This function will not update `self.v_pot` but it will just
+        This function will not update the potential, but it will just
         return it's value for the (possibly given) configuration.
-        The function `self.potential` can be used to update `self.v_pot`.
+        The function `self.potential` can be used to update the
+        potential for the particles in the system.
         """
         return self.forcefield.evaluate_potential(self)
 
@@ -318,8 +317,8 @@ class System(object):
 
         Note
         ----
-        This function will not update the forces on the particles nor
-        `self.v_pot`. To update these, call `self.potential_and_force`.
+        This function will not update the forces/potential energy for the
+        particles. To update these, call `self.potential_and_force`.
         """
         return self.forcefield.evaluate_potential_and_force(self)
 

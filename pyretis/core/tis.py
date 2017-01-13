@@ -294,7 +294,6 @@ def _shoot(path, system, order_function, interfaces, engine, rgen,
     shooting_point, idx = path.get_shooting_point()
     orderp = shooting_point['order']
     system.particles.set_particle_state(shooting_point)
-    system.v_pot = shooting_point['vpot']
     # store info about this point, just in case we have to return
     # before completing a full new path:
     trial_path.generated = ('sh', orderp[0], idx, 0)
@@ -525,9 +524,11 @@ def _get_help(start_cond, interfaces):
             """True if new path is an improvement."""
             return (newp.ordermax[0] > current.ordermax[0] and
                     newp.ordermin[0] < middle)
+
         def done_r(path):
             """True if the path can be accepted."""
             return path.ordermax[0] > right
+
         improved = improved_r
         done = done_r
     elif start_cond == 'L':
@@ -535,9 +536,11 @@ def _get_help(start_cond, interfaces):
             """True if new path is an improvement."""
             return (newp.ordermin[0] < current.ordermin[0] and
                     newp.ordermax[0] > middle)
+
         def done_l(path):
             """True if the path can be accepted."""
             return path.ordermin[0] < left
+
         improved = improved_l
         done = done_l
     else:

@@ -138,8 +138,10 @@ class MDEngine(EngineBase):
         for _ in range(path.maxlen):
             order = self.calculate_order(orderp, system)
             kin = calculate_kinetic_energy(system.particles)[0]
-            phasepoint = {'order': order, 'pos': system.particles.pos,
-                          'vel': system.particles.vel, 'vpot': system.v_pot,
+            phasepoint = {'order': order,
+                          'pos': system.particles.pos,
+                          'vel': system.particles.vel,
+                          'vpot': system.particles.vpot,
                           'ekin': kin}
             add = path.append(phasepoint)
             if not add:
@@ -213,7 +215,7 @@ class MDEngine(EngineBase):
         """
         particles = system.particles
         if rescale is not None and rescale is not False and rescale > 0:
-            kin_old = rescale - system.v_pot
+            kin_old = rescale - particles.vpot
         else:
             kin_old = calculate_kinetic_energy(particles)[0]
         if aimless:

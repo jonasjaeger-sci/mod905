@@ -57,11 +57,12 @@ def accept_reject_displace(rgen, system, trial):
     system.particles.pos = trial
     v_trial = system.evaluate_potential()
     system.particles.pos = pos
-    deltae = v_trial - system.v_pot
+    deltae = v_trial - system.particles.vpot
     if metropolis_accept_reject(rgen, system, deltae):
         return trial, v_trial, trial, v_trial, True
     else:
-        return system.particles.pos, system.v_pot, trial, v_trial, False
+        return (system.particles.pos, system.particles.vpot,
+                trial, v_trial, False)
 
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):

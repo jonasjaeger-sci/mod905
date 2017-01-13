@@ -74,6 +74,8 @@ class Particles(object):
         self.npart = 0
         self.pos = None
         self.vel = None
+        self.vpot = None
+        self.ekin = None
         self.force = None
         self.mass = None
         self.imass = None
@@ -98,6 +100,8 @@ class Particles(object):
         """
         self.npart = 0
         self.pos = None
+        self.vpot = None
+        self.ekin = None
         self.vel = None
         self.force = None
         self.mass = None
@@ -118,6 +122,7 @@ class Particles(object):
             Dictionary with the positions, velocity and forces.
         """
         return {'pos': np.copy(self.pos), 'vel': np.copy(self.vel),
+                'vpot': self.vpot, 'ekin': self.ekin,
                 'force': np.copy(self.force)}
 
     def set_pos(self, pos):
@@ -179,8 +184,9 @@ class Particles(object):
         """
         self.set_pos(phasepoint['pos'])
         self.set_vel(phasepoint['vel'])
-        if 'force' in phasepoint:
-            self.set_force(phasepoint['force'])
+        self.set_force(phasepoint.get('force', None))
+        self.ekin = phasepoint['ekin']
+        self.vpot = phasepoint['vpot']
 
     def add_particle(self, pos, vel, force, mass=1.0,
                      name='?', ptype=0):
@@ -327,8 +333,6 @@ class ParticlesExt(Particles):
         """
         super().__init__(dim=dim)
         self.config = (None, None)
-        self.vpot = None
-        self.ekin = None
         self.vel_rev = None
 
     def set_pos(self, pos):

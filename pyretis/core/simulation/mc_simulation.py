@@ -41,7 +41,7 @@ def mc_task(rgen, system, maxdx):
                                                                 maxdx)
     if status:
         system.particles.pos = accepted_r
-        system.v_pot = v_trial
+        system.particles.vpot = v_trial
     return accepted_r, v_trial, trial_r, status
 
 

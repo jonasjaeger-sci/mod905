@@ -371,8 +371,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `system.box.calculate_volume()`.
     vpot : float
-        The potential energy of the particles. It can typically be
-        obtained by from `system.v_pot`.
+        The potential energy of the particles.
 
     Returns
     -------
@@ -382,7 +381,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     if volume is None:
         volume = system.box.calculate_volume()
     if vpot is None:
-        vpot = system.v_pot
+        vpot = system.particles.vpot
     if dim is None:
         dim = system.get_dim()
     if dof is None:
@@ -429,7 +428,7 @@ def calculate_thermo_path(system):
                                                dof=system.temperature['dof'],
                                                kin_tensor=kin_tens)
     ekin = kin_tens.trace()
-    vpot = system.v_pot
+    vpot = particles.vpot
     return {'vpot': vpot, 'ekin': ekin, 'etot': ekin + vpot, 'temp': temp}
 
 
