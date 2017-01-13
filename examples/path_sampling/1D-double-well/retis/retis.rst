@@ -75,7 +75,7 @@ periodic = False
 
 Output
 ------
-trajectory-file = 0
-energy-file = 0
-order-file = 0
+trajectory-file = 100
+energy-file = 100
+order-file = 100
 write_vel = True
