@@ -610,65 +610,27 @@ class GromacsEngine(ExternalMDEngine):
         write_gromos96_file(outfile, txt, xyz, -vel)
         return None
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
-        """Modify the velocities of the current state.
-
-        This method will modify the velocities of a time slice.
+    def aimless_velocities(self, system):
+        """Aimless modification of the current state.
 
         Parameters
         ----------
         system : object like :py:class:`core.system.System`
             System is used here since we need access to the particle
             list.
-        rgen : object like :py:class:`core.random_gen.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
-            the energy (after modification of the velocities) to match the
-            given float.
 
         Returns
         -------
-        dek : float
-            The change in the kinetic energy.
+        phase_point : dict
+            The new phase point with modified velocities.
         kin_new : float
             The new kinetic energy.
         """
-        dek = None
-        kin_old = None
-        kin_new = None
-        if rescale is not None and rescale is not False and rescale > 0:
-            msgtxt = 'GROMACS integrator does not support energy rescale!'
-            raise NotImplementedError(msgtxt)
-        else:
-            kin_old = system.particles.ekin
-        if aimless:
-            # Do GROMACS update
-            pos = self.dump_frame(system)
-            posvel = os.path.join(os.path.dirname(pos), 'genvel.g96')
-            _, energy = self.prepare_shooting_point(pos, posvel)
-            pot = energy['potential'][-1]
-            kin_new = energy['kinetic en.'][-1]
-            phase_point = {'pos': (posvel, None), 'vel': False,
-                           'vpot': pot, 'ekin': kin_new}
-            system.particles.set_particle_state(phase_point)
-        else:  # soft velocity change, add from Gaussian dist
-            msgtxt = 'GROMACS integrator only support aimless shooting!'
-            raise NotImplementedError(msgtxt)
-        if not momentum:
-            pass
-        if kin_old is None or kin_new is None:
-            dek = float('inf')
-            logger.warning('External kinetic energy is not set...')
-        else:
-            dek = kin_new - kin_old
-        return dek, kin_new
+        pos = self.dump_frame(system)
+        posvel = os.path.join(os.path.dirname(pos), 'genvel.g96')
+        _, energy = self.prepare_shooting_point(pos, posvel)
+        pot = energy['potential'][-1]
+        kin_new = energy['kinetic en.'][-1]
+        phase_point = {'pos': (posvel, None), 'vel': False,
+                       'vpot': pot, 'ekin': kin_new}
+        return phase_point, kin_new

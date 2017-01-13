@@ -89,13 +89,13 @@ class ExternalMDEngine(EngineBase):
     def integration_step(self, system):
         """Perform one time step of the integration.
 
-        For external engines, it does not make much sence to run single
-        steps unless we absolutely have to. We therefor just fail here
+        For external engines, it does not make much sense to run single
+        steps unless we absolutely have to. We therefore just fail here
         if someone wants to do that in MD simulations for instance.
 
-        If it's absolutely needed, there is a step() method which
-        is used, for instance in the initialization. It should not
-        be used for MD simulations!
+        If it's absolutely needed, there is a `self.step()` method
+        which can be used, for instance in the initialization.
+        It should not be used for MD simulations!
         """
         msg = 'External engine does not support "integration_step"!'
         logger.error(msg)
@@ -281,7 +281,7 @@ class ExternalMDEngine(EngineBase):
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
         """
-        logger.debug('Running kick across middle with external integrator...')
+        logger.debug('Kick across middle with external integrator...')
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
         particles = system.particles
@@ -354,11 +354,6 @@ class ExternalMDEngine(EngineBase):
         """Propagate the equations of motion with the external code."""
         raise NotImplementedError
 
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
-        """Modify the velocities of the current state."""
-        raise NotImplementedError
-
     def dump_config(self, config, deffnm='conf'):
         """Extract configuration frame from a system if needed.
 
@@ -400,6 +395,66 @@ class ExternalMDEngine(EngineBase):
         """Just dump the frame from a system object."""
         pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
         phasepoint['pos'] = (pos_file, None)
+
+    def aimless_velocities(self, system):
+        """Perform aimless modification of velocities."""
+        raise NotImplementedError
+
+    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
+                          momentum=False, rescale=None):
+        """Modify the velocities of the current state.
+
+        This method will modify the velocities of a time slice.
+
+        Parameters
+        ----------
+        system : object like :py:class:`core.system.System`
+            System is used here since we need access to the particle
+            list.
+        rgen : object like :py:class:`core.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        sigma_v : numpy.array, optional
+            These values can be used to set a standard deviation (one
+            for each particle) for the generated velocities.
+        aimless : boolean, optional
+            Determines if we should do aimless shooting or not.
+        momentum : boolean, optional
+            If True, we reset the linear momentum to zero after generating.
+        rescale : float, optional
+            In some NVE simulations, we may wish to rescale the energy to
+            a fixed value. If `rescale` is a float > 0, we will rescale
+            the energy (after modification of the velocities) to match the
+            given float.
+
+        Returns
+        -------
+        dek : float
+            The change in the kinetic energy.
+        kin_new : float
+            The new kinetic energy.
+        """
+        dek = None
+        kin_old = None
+        kin_new = None
+        if rescale is not None and rescale is not False and rescale > 0:
+            msgtxt = 'External integrator does not support energy rescale!'
+            raise NotImplementedError(msgtxt)
+        else:
+            kin_old = system.particles.ekin
+        if aimless:
+            phase_point, kin_new = self.aimless_velocities(system)
+            system.particles.set_particle_state(phase_point)
+        else:  # soft velocity change, add from Gaussian dist
+            msgtxt = 'External integrator only support aimless shooting!'
+            raise NotImplementedError(msgtxt)
+        if not momentum:
+            pass
+        if kin_old is None or kin_new is None:
+            dek = float('inf')
+            logger.warning('External kinetic energy is not set...')
+        else:
+            dek = kin_new - kin_old
+        return dek, kin_new
 
     def __str__(self):
         """Return the string description of the integrator."""
