@@ -37,17 +37,17 @@ class EngineBase(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def add_to_path(phase_point, path, left, right):
+    def add_to_path(path, phase_point, left, right):
         """Adds phase point and perform some checks.
 
         This method is intended to be used by the propagate methods.
 
         Parameters
         ----------
-        phase_point : dict
-            The phase_point to add.
         path : object like :py:class:`pyretis.core.path.PathBase`
             The path to add to.
+        phase_point : dict
+            The phase_point to add.
         left : float
             The left interface.
         right : float

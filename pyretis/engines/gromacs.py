@@ -268,6 +268,40 @@ class GromacsEngine(ExternalMDEngine):
             out_files[key] = '{}.{}'.format(deffnm, key)
         return out_files
 
+    def _execute_grompp_and_mdrun(self, config, deffnm, exe_dir):
+        """Run grompp and the mdrun.
+
+        Here we use the input file given in the input directory.
+
+        Parameters
+        ----------
+        config : string
+            The path to the GROMACS config file to use as input.
+        deffnm : string
+            A string used to name the GROMACS files.
+        exe_dir : string or None
+            If different from None, mdrun/grompp will be executed in
+            this directory.
+
+        Returns
+        -------
+        out_files : dict of strings
+            The files created by this command.
+        """
+        out_files = {}
+        out_grompp = self._execute_grompp(self.input_files['input'],
+                                          config,
+                                          deffnm,
+                                          exe_dir)
+        tpr_file = out_grompp['tpr']
+        for key, value in out_grompp.items():
+            out_files[key] = value
+        out_mdrun = self._execute_mdrun(tpr_file,
+                                        deffnm, exe_dir)
+        for key, value in out_mdrun.items():
+            out_files[key] = value
+        return out_files
+
     def _execute_mdrun_continue(self, tprfile, cptfile, deffnm, exe_dir):
         """Method to continue the execution of GROMACS.
 
@@ -327,6 +361,43 @@ class GromacsEngine(ExternalMDEngine):
                '-extend', '{}'.format(time), '-o', tpxout]
         self.execute_command(cmd, cwd=exe_dir)
         out_files = {'tpr': tpxout}
+        return out_files
+
+    def _extend_and_execute_mdrun(self, tpr_file, cpt_file, deffnm, exe_dir):
+        """Extend GROMACS and execute mdrun.
+
+        Parameters
+        ----------
+        tpr_file : string
+            The location of the "current" .tpr file.
+        cpt_file : string
+            The last check point file .cpt from the previous
+            run.
+        deffnm : string
+            To give the GROMACS simulation a name.
+        exe_dir : string or None
+            If different from None, mdrun will be executed in
+            this directory.
+
+        Returns
+        -------
+        out_files : dict
+            The files created by GROMACS when we extend.
+        """
+        out_files = {}
+        out_grompp = self._extend_gromacs(tpr_file, self.ext_time, exe_dir)
+        ext_tpr_file = out_grompp['tpr']
+        for key, value in out_grompp.items():
+            out_files[key] = value
+        out_mdrun = self._execute_mdrun_continue(ext_tpr_file, cpt_file,
+                                                 deffnm, exe_dir)
+        for key, value in out_mdrun.items():
+            out_files[key] = value
+        # Move extended tpr so that we can continue extending:
+        source = os.path.join(exe_dir, ext_tpr_file)
+        dest = os.path.join(exe_dir, tpr_file)
+        self.movefile(source, dest)
+        out_files['tpr'] = tpr_file
         return out_files
 
     def remove_gromacs_backup_files(self, dirname):
@@ -427,21 +498,12 @@ class GromacsEngine(ExternalMDEngine):
         # initial config might be left/right of the interface in
         # question. Here, we will perform a step anyway. This is to be
         # sure that we obtain energies and also a trajectory segment.
-        # So, we manually perform the first step:
-        out_files = {}
-        out_grompp = self._execute_grompp(self.input_files['input'],
-                                          initial_conf,
-                                          name,
-                                          self.exe_dir)
-        tpr_file = out_grompp['tpr']
-        for key, value in out_grompp.items():
-            out_files[key] = value
-        out_mdrun = self._execute_mdrun(tpr_file,
-                                        name, self.exe_dir)
-        for key, value in out_mdrun.items():
-            out_files[key] = value
-        cpt_file = out_mdrun['cpt']
-
+        # Note that all the energies are obtained after we are done
+        # with the integration from the .edr file of the trajectory.
+        out_files = self._execute_grompp_and_mdrun(initial_conf,
+                                                   name, self.exe_dir)
+        tpr_file = out_files['tpr']
+        cpt_file = out_files['cpt']
         # Note: Order is calculated AT THE END of each iteration!
         for i in range(path.maxlen):
             # We first add the previous phase point, and then we propagate.
@@ -449,34 +511,27 @@ class GromacsEngine(ExternalMDEngine):
             phase_point = {
                 'order': order,
                 'pos': (os.path.join(self.exe_dir, out_files['trr']), i),
-                'vel': reverse, 'vpot': None, 'ekin': None}
+                'vel': reverse,
+                'vpot': None,
+                'ekin': None}
+
             status, success, stop = self.add_to_path(path, phase_point,
                                                      left, right)
             if stop:
                 logger.debug('Ending propagate at %i. Reason: %s', i, status)
                 break
-            out_grompp = self._extend_gromacs(tpr_file, self.ext_time,
-                                              self.exe_dir)
-            ext_tpr_file = out_grompp['tpr']
-            for key, value in out_grompp.items():
-                out_files[key] = value
-            out_mdrun = self._execute_mdrun_continue(ext_tpr_file,
-                                                     cpt_file, name,
-                                                     self.exe_dir)
-            for key, value in out_mdrun.items():
-                out_files[key] = value
-            # Move extended tpr so that we can continue extending:
-            os.replace(os.path.join(self.exe_dir, ext_tpr_file),
-                       os.path.join(self.exe_dir, tpr_file))
-            out_files['tpr'] = tpr_file
+            # Extend gromacs:
+            if i > 0:
+                out_extnd = self._extend_and_execute_mdrun(tpr_file, cpt_file,
+                                                           name, self.exe_dir)
+                out_files.update(out_extnd)
             # Calculate order parameter using the output config:
-            conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
+            conf_abs = os.path.join(self.exe_dir, out_files['conf'])
             phase_point = {'pos': (conf_abs, None),
                            'vel': reverse, 'vpot': None, 'ekin': None}
             system.particles.set_particle_state(phase_point)
             order = self.calculate_order(order_function, system)
             self.removefile(conf_abs)
-
         logger.debug('Obtaining energies for trajectory...')
         energy = self.get_energies(out_files['edr'], self.exe_dir)
         path.vpot = np.copy(energy['potential'])

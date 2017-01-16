@@ -20,6 +20,7 @@ import collections
 import logging
 import os
 import shutil
+import tarfile
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -352,6 +353,7 @@ class PathEnsembleExt(PathEnsemble):
         """
         super().__init__(ensemble, interfaces, detect=detect,
                          maxpath=maxpath, exe_dir=exe_dir)
+        self._traj_file = os.path.join(self.directory['traj'], 'traj.tar')
 
     def directories(self):
         """Yield the directories pyretis should make."""
@@ -427,9 +429,35 @@ class PathEnsembleExt(PathEnsemble):
         self._move_path(path, self.directory['generate'], prefix=prefix)
 
     def generate_output(self, cycle, path):
-        """Output a trajectory by making a copy."""
-        return self._copy_path(path, self.directory['traj'],
-                               prefix='{}_'.format(cycle['step']))
+        """Output a trajectory by adding it to a tar file.
+
+        This method handles the "physical" output.
+
+        Parameters
+        ----------
+        cycle : int
+            The current cycle number. This is used to generate a
+            unique name for the output file.
+        path : object like :py:class:`pyretis.core.path.PathBase`
+            The path to output.
+
+        Returns
+        -------
+        path_copy : object like :py:class:`pyretis.core.path.PathBase`
+            A path like the input `path`, but with updated file names.
+        """
+        #copy_path = self._copy_path(path, self.directory['traj'],
+        #                            prefix='{}_'.format(cycle['step']))
+        new_pos, source = _generate_file_names(
+            path,
+            self.directory['traj'],
+            prefix='{}_'.format(cycle['step']))
+        path_copy = path.copy_path()
+        path_copy.pos = new_pos
+        with tarfile.open(self._traj_file, 'a') as tar:
+            for src, dest in source.items():
+                tar.add(src, arcname=os.path.basename(dest))
+        return path_copy
 
 
 def get_path_ensemble_class(ensemble_type):
