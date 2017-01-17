@@ -70,21 +70,21 @@ defined as dictionaries with the following keys:
 """
 _TASK_MAP['energy'] = {
     'target': 'file',
-    'filename': 'energy.dat',
+    'filename': 'energy.txt',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'energy'}
 
 _TASK_MAP['orderp'] = {
     'target': 'file',
-    'filename': 'orderp.dat',
+    'filename': 'orderp.txt',
     'result': 'orderp',
     'when': 'order-file',
     'writer': 'order'}
 
 _TASK_MAP['cross'] = {
     'target': 'file',
-    'filename': 'cross.dat',
+    'filename': 'cross.txt',
     'result': 'cross',
     'when': 'cross-file',
     'writer': 'cross'}
@@ -114,14 +114,14 @@ _TASK_MAP['thermo-screen'] = {
 
 _TASK_MAP['thermo-file'] = {
     'target': 'file',
-    'filename': 'thermo.dat',
+    'filename': 'thermo.txt',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'thermotable'}
 
 _TASK_MAP['pathensemble'] = {
     'target': 'file',
-    'filename': 'pathensemble.dat',
+    'filename': 'pathensemble.txt',
     'result': 'pathensemble',
     'when': 'pathensemble-file',
     'writer': 'pathensemble'}
@@ -134,14 +134,14 @@ _TASK_MAP['pathensemble-screen'] = {
 
 _TASK_MAP['path-order'] = {
     'target': 'file',
-    'filename': 'order.dat',
+    'filename': 'order.txt',
     'result': 'path',
     'when': 'order-file',
     'writer': 'pathorder'}
 
 _TASK_MAP['path-energy'] = {
     'target': 'file',
-    'filename': 'energy.dat',
+    'filename': 'energy.txt',
     'result': 'path',
     'when': 'energy-file',
     'writer': 'pathenergy'}
@@ -165,7 +165,7 @@ _TASK_MAP['path-traj-gro'] = {
 
 _TASK_MAP['path-traj-ext'] = {
     'target': 'file',
-    'filename': 'traj.dat',
+    'filename': 'traj.txt',
     'result': 'path',
     'when': 'trajectory-file',
     'special': True,
