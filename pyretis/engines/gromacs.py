@@ -173,7 +173,6 @@ class GromacsEngine(ExternalMDEngine):
         """
         super().__init__('GROMASC external script', timestep,
                          subcycles, 'g96')
-
         self.gmx = gmx
         # define derived commands
         # For mdrun we do things a bit convolved in case the mdrun command

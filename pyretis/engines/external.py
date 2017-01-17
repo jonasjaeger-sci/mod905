@@ -74,7 +74,7 @@ class ExternalMDEngine(EngineBase):
         ext : string
             The file extension for configuration files.
         """
-        self.description = description
+        super().__init__(description)
         self.timestep = timestep
         self.subcycles = subcycles
         self.ext_time = self.timestep * self.subcycles
@@ -455,7 +455,3 @@ class ExternalMDEngine(EngineBase):
         else:
             dek = kin_new - kin_old
         return dek, kin_new
-
-    def __str__(self):
-        """Return the string description of the integrator."""
-        return self.description

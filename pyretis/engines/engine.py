@@ -23,7 +23,17 @@ class EngineBase(metaclass=ABCMeta):
     The engines perform molecular dynamics (or Monte Carolo) and they
     are assumed to act on a system. Typically they will integrate
     Newtons equation of motion in time for that system.
+
+    Attributes
+    ----------
+    description : string
+        Short string description of the engine. Used for printing
+        information about the integrator.
     """
+
+    def __init__(self, description):
+        """Just add the description."""
+        self.description = description
 
     @property
     @abstractmethod
@@ -106,3 +116,7 @@ class EngineBase(metaclass=ABCMeta):
                            tis_settings):
         """Force a phase point across the middle interface."""
         pass
+
+    def __str__(self):
+        """Return the string description of the integrator."""
+        return self.description

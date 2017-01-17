@@ -49,14 +49,14 @@ class MDEngine(EngineBase):
     ----------
     delta_t : float
         Time step for the integration.
-    desc : string
+    description : string
         Description of the MD integrator.
     dynamics : str
         A short string to represent the type of dynamics produced
         by the integrator (NVE, NVT, stochastic, ...).
     """
 
-    def __init__(self, timestep, desc='Generic MD integrator', dynamics=''):
+    def __init__(self, timestep, description, dynamics=None):
         """Initialization of the integrator.
 
         Parameters
@@ -64,8 +64,8 @@ class MDEngine(EngineBase):
         timestep : float
             The time step for the integrator in internal units.
         """
+        super().__init__(description)
         self.delta_t = timestep
-        self.desc = desc
         self.dynamics = dynamics
 
     @property
@@ -336,10 +336,6 @@ class MDEngine(EngineBase):
         """This method is just for compatibility with external integrators."""
         pass
 
-    def __str__(self):
-        """Return the string description of the integrator."""
-        return self.desc
-
 
 class Verlet(MDEngine):
     """The Verlet MD integrator.
@@ -356,17 +352,17 @@ class Verlet(MDEngine):
         Squared time step: `delta_t**2`
     """
 
-    def __init__(self, timestep, desc='Verlet MD integrator'):
+    def __init__(self, timestep, description='Verlet MD integrator'):
         """Initiate the Verlet MD integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        description : string
             Description of the integrator
         """
-        super(Verlet, self).__init__(timestep, desc=desc, dynamics='NVE')
+        super().__init__(timestep, description, dynamics='NVE')
         self.half_idt = 0.5 / self.delta_t
         self.delta_t2 = self.delta_t**2
         self.previous_pos = None
@@ -417,22 +413,21 @@ class VelocityVerlet(MDEngine):
         The time step.
     half_delta_t : float
         Half of timestep.
-    desc : string
+    description : string
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='Velocity Verlet MD integrator'):
+    def __init__(self, timestep, description='Velocity Verlet MD integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        description : string
             Description of the integrator.
         """
-        super(VelocityVerlet, self).__init__(timestep, desc=desc,
-                                             dynamics='NVE')
+        super().__init__(timestep, description, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
@@ -526,7 +521,7 @@ class Langevin(MDEngine):
     """
 
     def __init__(self, timestep, gamma, rgen=None, seed=0, high_friction=False,
-                 desc='Langevin MD integrator'):
+                 description='Langevin MD integrator'):
         """Initiate the Langevin integrator.
 
         Actually, it is very convenient to set some variables for the
@@ -550,11 +545,10 @@ class Langevin(MDEngine):
         high_friction : boolean
             Determines if we are in the high_friction limit and should
             do the over-damped version.
-        desc : string
+        description : string
             Description of the integrator.
         """
-        super(Langevin, self).__init__(timestep, desc=desc,
-                                       dynamics='stochastic')
+        super().__init__(timestep, description, dynamics='stochastic')
         self.gamma = gamma
         self.high_friction = high_friction
         rgen_settings = {'seed': seed, 'rgen': rgen}
