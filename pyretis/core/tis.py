@@ -63,10 +63,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
     rgen : object like :py:class:`random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
-        This dictionary contain the TIS settings. Here we set the
-        setting for the starting condition (`'start_cond'`) according to
-        the given path ensemble. The other `tis_settings` are just
-        passed on.
+        This dictionary contain the TIS settings. 
     cycle : int
         The current cycle number
 
@@ -187,6 +184,7 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
 
         * `freq`: float, the frequency of how often we should do time
           reversal moves.
+        * `start_cond`: string, starting condition, 'L'eft or 'R'ight
 
     Returns
     -------
