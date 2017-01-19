@@ -567,8 +567,11 @@ class GromacsEngine(ExternalMDEngine):
         out_mdrun = self._execute_mdrun(out_grompp['tpr'],
                                         name, exe_dir)
         conf_abs = os.path.join(exe_dir, out_mdrun['conf'])
+        logger.debug('Obtaining energies after step...')
+        energy = self.get_energies(out_mdrun['edr'], exe_dir)
         phase_point = {'pos': (conf_abs, None),
-                       'vel': False, 'vpot': None, 'ekin': None}
+                       'vel': False, 'vpot': energy['potential'],
+                       'ekin': energy['kinetic en.']}
         system.particles.set_particle_state(phase_point)
         out_files = {}
         for key, val in out_grompp.items():
