@@ -113,8 +113,8 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        path : object like `Path` from `pyretis.core.Path`
-            This is the path we use to fill in phase-space point.
+        path : object like :py:class:`pyretis.core.Path.PathBase`
+            This is the path we use to fill in phase-space points.
             We are here not returning a new path - this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
