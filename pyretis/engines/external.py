@@ -191,6 +191,7 @@ class ExternalMDEngine(EngineBase):
                                shell=False,
                                cwd=cwd)
         out = exe.communicate(input=inputs)
+        # Note: communicate will wait untill process terminates.
         if exe.returncode != 0:
             msg = out[1].decode('utf-8')
             logger.critical(msg)
