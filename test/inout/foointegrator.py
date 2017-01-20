@@ -12,8 +12,8 @@ class FooIntegrator(MDEngine):
     """FooIntegrator(MDEngine) - Dummy integrator for tests."""
 
     def __init__(self, timestep, extra=0.0,
-                 desc='Dummy test integrator'):
-        super(FooIntegrator, self).__init__(timestep, desc=desc,
+                 description='Dummy test integrator'):
+        super(FooIntegrator, self).__init__(timestep, description,
                                             dynamics=None)
         self.extra = extra
 
@@ -24,12 +24,12 @@ class FooIntegrator(MDEngine):
 
 class BarIntegrator(object):
     """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    def __init__(self, description='Dummy test integrator'):
+        self.description = description
 
 
 class BazIntegrator(object):
     """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    def __init__(self, description='Dummy test integrator'):
+        self.description = description
         self.integration_step = 'fake_step'
