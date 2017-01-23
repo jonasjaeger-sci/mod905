@@ -587,10 +587,14 @@ if __name__ == '__main__':
                 settings['simulation']['endcycle'] = end
                 print_and_loginfo('Execution ended at step {}'.format(end))
         if system is not None:
+            if 'particles' not in settings:
+                settings['particles'] = {}
             settings['particles']['npart'] = system.particles.npart
-        outfile = 'out.{}'.format(input_file)
-        outpath = os.path.join(basepath, outfile)
-        print_and_loginfo('Saving simulation settings: "{}"'.format(outfile))
-        write_settings_file(settings, outpath,
-                            backup=settings['output']['backup'])
+        if len(settings) != 0:
+            outfile = 'out.{}'.format(input_file)
+            outpath = os.path.join(basepath, outfile)
+            print_and_loginfo('Storing read simulation settings in '
+                              '"{}"'.format(outfile))
+            write_settings_file(settings, outpath,
+                                backup=settings['output']['backup'])
         bye_bye_world()
