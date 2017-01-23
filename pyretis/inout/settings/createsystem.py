@@ -507,7 +507,7 @@ def create_system(settings, engine=None):
         # engine is not None and not internal -> external
         klass = get_particle_type(engine.engine_type)
         particles = klass(dim=3)
-        phasepoint = {'pos': (engine.input_files['configuration'], 0),
+        phasepoint = {'pos': (engine.input_files['configuration'], None),
                       'vel': False, 'ekin': None, 'vpot': None}
         particles.set_particle_state(phasepoint)
         size = None
