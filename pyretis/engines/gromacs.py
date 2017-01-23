@@ -597,6 +597,7 @@ class GromacsEngine(ExternalMDEngine):
         gen_mdp = os.path.join(self.exe_dir, 'genvel.mdp')
         if os.path.isfile(gen_mdp):
             logger.debug('%s found. Re-using it!', gen_mdp)
+        else:
             settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
             # Create output file to generate velocities:
             self.modify_input(self.input_files['input'], gen_mdp, settings,
