@@ -110,29 +110,46 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     """
     nblock = len(block_label)
     ncol = -1  # The number of columns
-    new_block = None
+    new_block = {'comment': [], 'data': []}
+    yield_block = False
+    read_comment = False
     with open(filename, 'r') as fileh:
         for line in fileh:
             stripline = line.strip()
             if stripline[:nblock] == block_label:
-                # this is a comment = a new block follows
-                # store the current block:
-                if new_block is not None:
-                    yield new_block
-                new_block = {'comment': stripline, 'data': []}
-                ncol = -1
-            else:
-                linedata = line_parser(stripline)
-                newcol = len(linedata)
-                if ncol == -1:  # first item
-                    ncol = newcol
-                    if new_block is None:
-                        new_block = {'comment': None, 'data': []}
-                if newcol == ncol:
-                    new_block['data'].append(linedata)
+                # this is a comment, then a new block will follow,
+                # unless this is a multi-line comment.
+                if read_comment:  # part of multiline comment...
+                    new_block['comment'].append(stripline)
                 else:
-                    break
-    if new_block is not None:
+                    if yield_block:
+                        # Yield the current block
+                        yield_block = False  # just for completeness
+                        yield new_block
+                    new_block = {'comment': [stripline], 'data': []}
+                    yield_block = True  # Data has been added
+                    ncol = -1
+                    read_comment = True
+            else:
+                read_comment = False
+                if line_parser is None:
+                    new_block['data'].append(line)  # Note: Full line added
+                    yield_block = True  # Data has been added
+                else:
+                    linedata = line_parser(stripline)
+                    newcol = len(linedata)
+                    if ncol == -1:  # first item
+                        ncol = newcol
+                    if newcol == ncol:
+                        new_block['data'].append(linedata)
+                        yield_block = True  # Data has been added
+                    else:
+                        # We assume that this is mal-formed data
+                        break
+    # if the block has not been yielded, yield it
+    if yield_block:
+        # Yield the current block if any
+        yield_block = False  # just for completeness
         yield new_block
 
 
@@ -217,8 +234,8 @@ class Writer(object):
         filename : string
             The path/file name of the file we want to open.
 
-        Returns
-        -------
+        Yields
+        ------
         data : list of tuples of int
             This is the data contained in the file. The columns are the
             step number, interface number and direction.

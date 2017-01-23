@@ -43,6 +43,7 @@ import os
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
 from pyretis.inout.writers.writers import Writer
+from pyretis.inout.writers.writers import read_some_lines
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -468,6 +469,24 @@ class PathGROWriter(GROWriter):
             for line in self.gro_format(i, npart, pos, vel, box):
                 yield line
 
+    def load(self, filename):
+        """Load a trajectory GRO file."""
+        convert_pos = 1.0 / self.convert_pos
+        convert_vel = 1.0 / self.convert_vel
+        for block in read_some_lines(filename, line_parser=None):
+            traj = []
+            for snapshot in read_gromacs_lines(block['data']):
+                new_snap = {'pos': None, 'vel': None}
+
+                for key in ('x', 'y', 'z'):
+                    new_snap[key] = np.array(snapshot[key]) * convert_pos
+                for key in ('vx', 'vy', 'vz'):
+                    if key in snapshot:
+                        new_snap[key] = np.array(snapshot[key]) * convert_vel
+                traj.append(new_snap)
+            out = {'comment': block['comment'], 'data': traj}
+            yield out
+
 
 class PathExtWriter(Writer):
     """A class for writing external trajectories.
@@ -522,6 +541,61 @@ class PathExtWriter(Writer):
         return [col for col in line.split()]
 
 
+def read_gromacs_lines(lines):
+    """A method for reading GROMACS GRO data.
+
+    This method will read a GROMACS file and yield the different
+    snapshots found in the file.
+
+    Parameters
+    ----------
+    lines : iterable
+        Some lines of text data representing a GROMACS GRO file.
+
+    Yields
+    ------
+    out : dict
+        This dict contains the snapshot.
+    """
+    lines_to_read = 0
+    snapshot = {}
+    read_natoms = False
+    gro = (5, 5, 5, 5, 8, 8, 8, 8, 8, 8)
+    gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
+                'x', 'y', 'z', 'vx', 'vy', 'vz')
+    gro_type = (int, str, str, int, float, float, float, float, float, float)
+    for line in lines:
+        if read_natoms:
+            read_natoms = False
+            lines_to_read = int(line.strip()) + 1
+            continue  # just skip to next line
+        if lines_to_read == 0:  # new shapshot
+            if len(snapshot) > 0:
+                yield snapshot
+            snapshot = {'header': line.strip()}
+            read_natoms = True
+        elif lines_to_read == 1:  # read box
+            snapshot['box'] = [float(boxl) for boxl in line.strip().split()]
+            lines_to_read -= 1
+        else:  # read atoms
+            lines_to_read -= 1
+            current = 0
+            for i, key, gtype in zip(gro, gro_keys, gro_type):
+                val = line[current:current+i].strip()
+                if len(val) == 0:
+                    # This typically happens if we try to read velocities
+                    # and they are not present in the file.
+                    break
+                value = gtype(val)
+                current += i
+                try:
+                    snapshot[key].append(value)
+                except KeyError:
+                    snapshot[key] = [value]
+    if len(snapshot) > 1:
+        yield snapshot
+
+
 def read_gromacs_file(filename):
     """A method for reading GROMACS GRO files.
 
@@ -544,45 +618,9 @@ def read_gromacs_file(filename):
     >>> for snapshot in read_gromacs_file('traj.gro'):
     ...     print(snapshot['x'][0])
     """
-    lines_to_read = 0
-    snapshot = {}
-    read_natoms = False
-    gro = (5, 5, 5, 5, 8, 8, 8, 8, 8, 8)
-    gro_keys = ('residunr', 'residuname', 'atomname', 'atomnr',
-                'x', 'y', 'z', 'vx', 'vy', 'vz')
-    gro_type = (int, str, str, int, float, float, float, float, float, float)
     with open(filename, 'r') as fileh:
-        for lines in fileh:
-            if read_natoms:
-                read_natoms = False
-                lines_to_read = int(lines.strip()) + 1
-                continue  # just skip to next line
-            if lines_to_read == 0:  # new shapshot
-                if len(snapshot) > 0:
-                    yield snapshot
-                snapshot = {'header': lines.strip()}
-                read_natoms = True
-            elif lines_to_read == 1:  # read box
-                snapshot['box'] = [float(length) for length in
-                                   lines.strip().split()]
-                lines_to_read -= 1
-            else:  # read atoms
-                lines_to_read -= 1
-                current = 0
-                for i, key, gtype in zip(gro, gro_keys, gro_type):
-                    val = lines[current:current+i].strip()
-                    if len(val) == 0:
-                        # This typically happens if we try to read velocities
-                        # and they are not present in the file.
-                        break
-                    value = gtype(val)
-                    current += i
-                    try:
-                        snapshot[key].append(value)
-                    except KeyError:
-                        snapshot[key] = [value]
-    if len(snapshot) > 1:
-        yield snapshot
+        for snapshot in read_gromacs_lines(fileh):
+            yield snapshot
 
 
 def read_xyz_file(filename):

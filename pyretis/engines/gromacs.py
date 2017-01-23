@@ -14,7 +14,6 @@ GromacsEngine
 import logging
 import os
 import shlex
-import tempfile
 import numpy as np
 from pyretis.engines.external import ExternalMDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -580,18 +579,13 @@ class GromacsEngine(ExternalMDEngine):
             out_files[key] = val
         return out_files
 
-    def prepare_shooting_point(self, input_file, output_file):
+    def prepare_shooting_point(self, input_file):
         """Method to create initial configuration for a shooting move.
 
         Parameters
         ----------
-        idx : integer
-            The index for the shooting point referring to a position
-            in the input .trr file.
         input_file : strings
             The input configuration to generate velocities for.
-        output_file : string
-            Where to store the configuration to use for shooting.
 
         Returns
         -------
@@ -600,25 +594,31 @@ class GromacsEngine(ExternalMDEngine):
         energy : dict
             The energy terms read from the GROMACS .edr file.
         """
-        prevdir = os.getcwd()
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            # Create output file to generate velocities:
+        gen_mdp = os.path.join(self.exe_dir, 'genvel.mdp')
+        if os.path.isfile(gen_mdp):
+            logger.debug('%s found. Re-using it!', gen_mdp)
             settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
-            tmp_mdp = os.path.join(tmp_dir, 'genvel.mdp')
-            self.modify_input(self.input_files['input'], tmp_mdp, settings,
+            # Create output file to generate velocities:
+            self.modify_input(self.input_files['input'], gen_mdp, settings,
                               delim='=')
-            # Run grompp for this input file:
-            out_grompp = self._execute_grompp(tmp_mdp, input_file, 'genvel',
-                                              exe_dir=tmp_dir)
-            # Run gromacs for this tpr file:
-            out_mdrun = self._execute_mdrun(out_grompp['tpr'],
-                                            'genvel', exe_dir=tmp_dir)
-            confout = os.path.join(tmp_dir, out_mdrun['conf'])
-            energy = self.get_energies(out_mdrun['edr'], exe_dir=tmp_dir)
-            # Copy back the g96 file with velocities:
-            dest = os.path.join(prevdir, output_file)
-            self.movefile(confout, dest)
-        return output_file, energy
+        # Run grompp for this input file:
+        out_grompp = self._execute_grompp(gen_mdp, input_file, 'genvel',
+                                          exe_dir=self.exe_dir)
+        # Run gromacs for this tpr file:
+        out_mdrun = self._execute_mdrun(out_grompp['tpr'], 'genvel',
+                                        exe_dir=self.exe_dir)
+        confout = os.path.join(self.exe_dir, out_mdrun['conf'])
+        energy = self.get_energies(out_mdrun['edr'], exe_dir=self.exe_dir)
+        # remove run-files:
+        self.removefile(out_grompp['tpr'])
+        self.removefile(out_grompp['mdout'])
+        for key in ('cpt', 'edr', 'log', 'trr', 'cpt_prev'):
+            # Note: Do not remove confout as we will use it!
+            if key in out_mdrun:
+                self.removefile(out_mdrun[key])
+        # We also remove GROMACS backup files:
+        self.remove_gromacs_backup_files(self.input_path)
+        return confout, energy
 
     @staticmethod
     def read_configuration(filename):
@@ -672,8 +672,8 @@ class GromacsEngine(ExternalMDEngine):
             The new kinetic energy.
         """
         pos = self.dump_frame(system)
-        posvel = os.path.join(os.path.dirname(pos), 'genvel.g96')
-        _, energy = self.prepare_shooting_point(pos, posvel)
+        #posvel = os.path.join(os.path.dirname(pos), 'genvel.g96')
+        posvel, energy = self.prepare_shooting_point(pos)
         pot = energy['potential'][-1]
         kin_new = energy['kinetic en.'][-1]
         phase_point = {'pos': (posvel, None), 'vel': False,
