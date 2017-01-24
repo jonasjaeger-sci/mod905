@@ -276,8 +276,6 @@ class SimulationRETIS(Simulation):
         out : object like :py:class:`Path`
             The initial path created.
         """
-        msg = 'Initiating path in {}'.format(ensemble.ensemble_name)
-        logger.info(msg)
         return initiate_path_ensemble(
             ensemble,
             self.system,
