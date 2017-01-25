@@ -144,15 +144,14 @@ class GromacsEngine(ExternalMDEngine):
         The directory where the input files are stored.
     input_files : dict of strings
         The names of the input files. We expect to find the keys
-        ``'configuration'``, ``'input'`` ``'topology'``.
+        ``'conf'``, ``'input'`` ``'topology'``.
     timestep : float
         The time step used in the GROMACS MD simulation.
     subcycles : integer
         The number of steps each GROMACS MD run is composed of.
     """
 
-    def __init__(self, gmx, mdrun, input_path, input_files, timestep,
-                 subcycles):
+    def __init__(self, gmx, mdrun, input_path, timestep, subcycles):
         """Initiate the script.
 
         Parameters
@@ -163,8 +162,6 @@ class GromacsEngine(ExternalMDEngine):
             The GROMACS mdrun executable.
         input_path : string
             The absolute path to where the input files are stored.
-        input_files : dict
-            This dictionary contains the names of the input files.
         timestep : float
             The time step used in the GROMACS MD simulation.
         subcycles : integer
@@ -180,24 +177,35 @@ class GromacsEngine(ExternalMDEngine):
         self.mdrunc = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
 
         self.input_path = os.path.abspath(input_path)
+        # Hard coded input files:
+        input_files = {'conf': 'conf.g96',
+                       'input_o': 'grompp.mdp',  # "o" = original input file
+                       'topology': 'topol.top'}
         self.input_files = {}
         for key, val in input_files.items():
             self.input_files[key] = os.path.join(self.input_path, val)
-        keys = ('configuration', 'input', 'topology')
-        for key in keys:
-            if key not in self.input_files:
-                msg = ('Gromacs integrator is missing '
-                       'input file "{}"').format(key)
+            if not os.path.isfile(self.input_files[key]):
+                msg = 'GROMACS engine is missing input file "{}"'.format(val)
                 logger.error(msg)
                 raise ValueError(msg)
+        # Sanitise the subcycles and the time step for the input file:
+        # Create output file to generate velocities:
+        settings = {'dt': self.timestep, 'nstxout-compressed': 0}
+        for key in ('nsteps', 'nstxout', 'nstvout', 'nstfout', 'nstlog',
+                    'nstcalcenergy', 'nstenergy'):
+            settings[key] = self.subcycles
+        self.input_files['input'] = os.path.join(self.input_path,
+                                                 'pyretis.mdp')
+        self.modify_input(self.input_files['input_o'],
+                          self.input_files['input'], settings, delim='=')
         # Generate a tpr file using the input files:
         out_files = self._execute_grompp(self.input_files['input'],
-                                         self.input_files['configuration'],
+                                         self.input_files['conf'],
                                          'topol', self.input_path)
         # This will generate some noise, let's remove files we don't need:
         mdout = os.path.join(self.input_path, out_files['mdout'])
         self.removefile(mdout)
-        # We also remove GROMACS backup files:
+        # We also remove GROMACS backup files after creating the tpr:
         self.remove_gromacs_backup_files(self.input_path)
         # Keep the tpr file.
         self.input_files['tpr'] = os.path.join(self.input_path,
@@ -264,6 +272,7 @@ class GromacsEngine(ExternalMDEngine):
                      'cpt_prev': '{}_prev.cpt'.format(deffnm)}
         for key in ('cpt', 'edr', 'log', 'trr'):
             out_files[key] = '{}.{}'.format(deffnm, key)
+        self.remove_gromacs_backup_files(exe_dir)
         return out_files
 
     def _execute_grompp_and_mdrun(self, config, deffnm, exe_dir):
@@ -333,6 +342,7 @@ class GromacsEngine(ExternalMDEngine):
         out_files = {'conf': confout}
         for key in ('cpt', 'edr', 'log', 'trr'):
             out_files[key] = '{}.{}'.format(deffnm, key)
+        self.remove_gromacs_backup_files(exe_dir)
         return out_files
 
     def _extend_gromacs(self, tprfile, time, exe_dir):
@@ -536,10 +546,15 @@ class GromacsEngine(ExternalMDEngine):
         path.ekin = np.copy(energy['kinetic en.'])
         system.particles.set_particle_state(initial_state)
         logger.debug('Removing files...')
-        for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr', 'edr'):
+        for key in ('log', 'mdout', 'cpt', 'cpt_prev', 'tpr'):
             filename = os.path.join(self.exe_dir, out_files[key])
             self.removefile(filename)
+        logger.debug('Remove backup in propagate...')
         self.remove_gromacs_backup_files(self.exe_dir)
+        logger.debug('Contents in %s:', self.exe_dir)
+        for entry in os.scandir(self.exe_dir):
+            if entry.is_file():
+                logger.debug('%s', entry.name)
         return success, status
 
     def step(self, system, name, exe_dir):
@@ -598,27 +613,23 @@ class GromacsEngine(ExternalMDEngine):
         if os.path.isfile(gen_mdp):
             logger.debug('%s found. Re-using it!', gen_mdp)
         else:
-            settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
             # Create output file to generate velocities:
+            settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
             self.modify_input(self.input_files['input'], gen_mdp, settings,
                               delim='=')
         # Run grompp for this input file:
+        remove = []
         out_grompp = self._execute_grompp(gen_mdp, input_file, 'genvel',
                                           exe_dir=self.exe_dir)
+        remove += [val for _, val in out_grompp.items()]
         # Run gromacs for this tpr file:
         out_mdrun = self._execute_mdrun(out_grompp['tpr'], 'genvel',
                                         exe_dir=self.exe_dir)
+        remove += [val for key, val in out_mdrun.items() if key != 'conf']
         confout = os.path.join(self.exe_dir, out_mdrun['conf'])
         energy = self.get_energies(out_mdrun['edr'], exe_dir=self.exe_dir)
         # remove run-files:
-        self.removefile(out_grompp['tpr'])
-        self.removefile(out_grompp['mdout'])
-        for key in ('cpt', 'edr', 'log', 'trr', 'cpt_prev'):
-            # Note: Do not remove confout as we will use it!
-            if key in out_mdrun:
-                self.removefile(out_mdrun[key])
-        # We also remove GROMACS backup files:
-        self.remove_gromacs_backup_files(self.input_path)
+        self.remove_files(self.exe_dir, remove)
         return confout, energy
 
     @staticmethod
@@ -673,7 +684,6 @@ class GromacsEngine(ExternalMDEngine):
             The new kinetic energy.
         """
         pos = self.dump_frame(system)
-        #posvel = os.path.join(os.path.dirname(pos), 'genvel.g96')
         posvel, energy = self.prepare_shooting_point(pos)
         pot = energy['potential'][-1]
         kin_new = energy['kinetic en.'][-1]

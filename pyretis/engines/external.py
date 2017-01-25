@@ -217,6 +217,19 @@ class ExternalMDEngine(EngineBase):
             logger.debug('Removing: %s', filename)
             os.remove(filename)
 
+    def remove_files(self, dirname, files):
+        """Remove files from a directory.
+
+        Parameters
+        ----------
+        dirname : string
+            Where we are removing.
+        file_names : list of strings
+            A list with files to remove.
+        """
+        for thefile in files:
+            self.removefile(os.path.join(dirname, thefile))
+
     def calculate_order(self, order_function, system):
         """Calculate order parameter from configuration in a file.
 
@@ -282,21 +295,30 @@ class ExternalMDEngine(EngineBase):
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
         """
-        logger.debug('Kick across middle with external integrator...')
+        logger.debug('Kicking with external integrator: %s', self.description)
         # We search for crossing with the middle interface and do this
-        # by sequentially kicking the initial phase point:
+        # by sequentially kicking the initial phase point
+        # Let's get the starting point:
         particles = system.particles
         initial_file = self.dump_frame(system)
-        # Start with a "previous" file:
-        prev_file = os.path.join(self.exe_dir, 'previous{}'.format(self.ext))
+        initial_file_short = os.path.basename(initial_file)
+
+        # Create a "previous file" for storing the state before a new kick
+        prev_file = os.path.join(self.exe_dir,
+                                 'p_{}'.format(initial_file_short))
+        logger.debug('Previous file: %s', prev_file)
         self.copyfile(initial_file, prev_file)
+        # Just set up so that we point to this file:
         previous = particles.get_particle_state()
         previous['pos'] = (prev_file, None)
         particles.set_particle_state(previous)
+
+        # Obtain current order parameter:
         curr = self.calculate_order(order_function, system)[0]
-        curr_file = os.path.join(self.exe_dir, 'current{}'.format(self.ext))
+
         logger.debug('Starting at %9.6g going for %9.6g', curr, middle)
         while True:
+            remove = []  # list of files to remove when we are done
             # save current state:
             previous = particles.get_particle_state()
             previous['order'] = curr
@@ -309,11 +331,9 @@ class ExternalMDEngine(EngineBase):
                                    rescale=tis_settings['rescale_energy'])
             # Integrate forward one step:
             out_files = self.step(system, 'current', self.exe_dir)
-            # Remove all out files, but not the config:
-            for key, val in out_files.items():
-                if key != 'conf':
-                    filename = os.path.join(self.exe_dir, val)
-                    self.removefile(filename)
+            remove += [val for key, val in out_files.items() if key != 'conf']
+            curr_file = os.path.join(self.exe_dir, out_files['conf'])
+            self.remove_files(self.exe_dir, remove)
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
@@ -332,8 +352,7 @@ class ExternalMDEngine(EngineBase):
                 logger.debug('Did not get closer %s', txt)
                 particles.set_particle_state(previous)
                 curr = previous['order']
-                filename = os.path.join(self.exe_dir, out_files['conf'])
-                self.removefile(filename)
+                self.removefile(curr_file)
         return previous, particles.get_particle_state()
 
     def extract_frame(self, traj_file, idx, out_file):
@@ -383,8 +402,7 @@ class ExternalMDEngine(EngineBase):
         else:
             out_file = os.path.join(self.exe_dir,
                                     '{}{}'.format(deffnm, self.ext))
-            msg = 'Config: {}'.format(config)
-            logger.debug(msg)
+            logger.debug('Config: %s', (config, ))
             self.extract_frame(pos_file, idx, out_file)
             return out_file
 
