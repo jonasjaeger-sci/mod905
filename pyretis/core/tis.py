@@ -430,6 +430,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
                                              order_function,
                                              rgen, interfaces[1],
                                              tis_settings)
+    logger.info('Propagating from crossing points.')
     # kick_across_middle will return two points, one immediately
     # left of the interface and one immediately right of the
     # interface. So we have two points (`leftpoint` and the

@@ -323,6 +323,7 @@ class MDEngine(EngineBase):
             curr = self.calculate_order(order_function, system)[0]
             if (prev <= middle < curr) or (curr < middle <= prev):
                 # have crossed middle interface, just stop the loop
+                logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # are getting closer, keep the new point
