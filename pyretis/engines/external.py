@@ -318,8 +318,7 @@ class ExternalMDEngine(EngineBase):
 
         # Obtain current order parameter:
         curr = self.calculate_order(order_function, system)[0]
-
-        logger.debug('Starting at %9.6g going for %9.6g', curr, middle)
+        logger.info('Starting at: %9.6g Searching for: %9.6g', curr, middle)
         while True:
             # save current state:
             previous = system.particles.get_particle_state()
