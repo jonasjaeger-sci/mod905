@@ -473,7 +473,6 @@ class GromacsEngine(ExternalMDEngine):
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
         """Propagate with GROMACS."""
-
         status = 'Propagate w/GROMACS (reverse = {})'.format(reverse)
         logger.debug(status)
         initial_state = system.particles.get_particle_state()
@@ -594,12 +593,57 @@ class GromacsEngine(ExternalMDEngine):
             out_files[key] = val
         return out_files
 
+    def kick_step(self, system):
+        """Perform a single step with GROMACS with random velocities.
+
+        Here, we initiate new velocities and perform the MD integration.
+        This method is a special method intended for the initial
+        generation of paths with kicking.
+
+        Parameters
+        ----------
+        system : object like :py:class:`pyretis.core.system.System`
+            The system we are integrating.
+        """
+        initial_conf = self.dump_frame(system)
+        # Save as a single snapshot file
+        phase_point = {'pos': (initial_conf, None), 'vel': False,
+                       'vpot': None, 'ekin': None}
+        system.particles.set_particle_state(phase_point)
+        # Create mdp-file
+        gen_mdp = os.path.join(self.exe_dir, 'genvel_kick.mdp')
+        if os.path.isfile(gen_mdp):
+            logger.debug('%s found. Re-using it!', gen_mdp)
+        else:
+            # Create output file to generate velocities:
+            settings = {'gen_vel': 'yes', 'gen_seed': -1}
+            self.modify_input(self.input_files['input'], gen_mdp, settings,
+                              delim='=')
+
+        remove = []
+        out_grompp = self._execute_grompp(gen_mdp, initial_conf,
+                                          'genvel_kick', self.exe_dir)
+        remove += [val for _, val in out_grompp.items()]
+        # Run gromacs for this tpr file:
+        out_mdrun = self._execute_mdrun(out_grompp['tpr'], 'genvel_kick',
+                                        self.exe_dir)
+        remove += [val for key, val in out_mdrun.items() if key != 'conf']
+        conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
+        logger.debug('Obtaining energies after step...')
+        energy = self.get_energies(out_mdrun['edr'], self.exe_dir)
+        phase_point = {'pos': (conf_abs, None),
+                       'vel': False, 'vpot': energy['potential'],
+                       'ekin': energy['kinetic en.']}
+        system.particles.set_particle_state(phase_point)
+        self.remove_files(self.exe_dir, remove)
+        return out_mdrun['conf']
+
     def prepare_shooting_point(self, input_file):
         """Method to create initial configuration for a shooting move.
 
         Parameters
         ----------
-        input_file : strings
+        input_file : string
             The input configuration to generate velocities for.
 
         Returns

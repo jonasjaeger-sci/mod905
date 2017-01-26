@@ -425,7 +425,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
         This is the generated initial path
     """
     interfaces = path_ensemble.interfaces
-    logger.debug('Kicking for initial path generation...')
+    logger.info('Seaching crossing with middle interface.')
     leftpoint, _ = engine.kick_across_middle(system,
                                              order_function,
                                              rgen, interfaces[1],

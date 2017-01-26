@@ -105,6 +105,10 @@ class ExternalMDEngine(EngineBase):
         """Perform a single step with the external engine."""
         raise NotImplementedError
 
+    def kick_step(self, system):
+        """Perform a single step, but with randomized velocities."""
+        raise NotImplementedError
+
     @staticmethod
     def read_configuration(filename):
         """Read output configuration from external software.
@@ -295,11 +299,10 @@ class ExternalMDEngine(EngineBase):
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
         """
-        logger.debug('Kicking with external integrator: %s', self.description)
+        logger.info('Kicking with external integrator: %s', self.description)
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point
         # Let's get the starting point:
-        particles = system.particles
         initial_file = self.dump_frame(system)
         initial_file_short = os.path.basename(initial_file)
 
@@ -309,51 +312,40 @@ class ExternalMDEngine(EngineBase):
         logger.debug('Previous file: %s', prev_file)
         self.copyfile(initial_file, prev_file)
         # Just set up so that we point to this file:
-        previous = particles.get_particle_state()
+        previous = system.particles.get_particle_state()
         previous['pos'] = (prev_file, None)
-        particles.set_particle_state(previous)
+        system.particles.set_particle_state(previous)
 
         # Obtain current order parameter:
         curr = self.calculate_order(order_function, system)[0]
 
         logger.debug('Starting at %9.6g going for %9.6g', curr, middle)
         while True:
-            remove = []  # list of files to remove when we are done
             # save current state:
-            previous = particles.get_particle_state()
+            previous = system.particles.get_particle_state()
             previous['order'] = curr
-            # Modify velocities
-            self.modify_velocities(system,
-                                   rgen,
-                                   sigma_v=None,
-                                   aimless=True,
-                                   momentum=tis_settings['zero_momentum'],
-                                   rescale=tis_settings['rescale_energy'])
-            # Integrate forward one step:
-            out_files = self.step(system, 'current', self.exe_dir)
-            remove += [val for key, val in out_files.items() if key != 'conf']
-            curr_file = os.path.join(self.exe_dir, out_files['conf'])
-            self.remove_files(self.exe_dir, remove)
+            conf = self.kick_step(system)
+            curr_file = os.path.join(self.exe_dir, conf)
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
             txt = '{} -> {} | {}'.format(prev, curr, middle)
             if (prev <= middle < curr) or (curr < middle <= prev):
-                logger.debug('Crossed middle interface: %s', txt)
+                logger.info('Crossed middle interface: %s', txt)
                 # have crossed middle interface, just stop the loop
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point
-                logger.debug('Getting closer %s', txt)
+                logger.debug('Getting closer to middle: %s', txt)
                 self.movefile(curr_file, prev_file)
                 # Update file name after moving:
-                particles.set_pos((prev_file, None))
+                system.particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
-                logger.debug('Did not get closer %s', txt)
-                particles.set_particle_state(previous)
+                logger.debug('Did not get closer to middle: %s', txt)
+                system.particles.set_particle_state(previous)
                 curr = previous['order']
                 self.removefile(curr_file)
-        return previous, particles.get_particle_state()
+        return previous, system.particles.get_particle_state()
 
     def extract_frame(self, traj_file, idx, out_file):
         """Extract a frame from a .trr file.
