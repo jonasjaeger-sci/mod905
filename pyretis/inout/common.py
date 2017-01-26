@@ -12,10 +12,6 @@ Important classes defined here
 PyretisLogFormatter
     A class representing a formatter for the pyretis log file.
 
-PyretisLogFormatterDebug
-    A class representing a formatter for the pyretis log file with
-    some extra information/details for a debug log file.
-
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -45,8 +41,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['apply_format', 'check_python_version', 'create_backup',
-           'make_dirs', 'print_to_screen', 'PyretisLogFormatter',
-           'PyretisLogFormatterDebug']
+           'make_dirs', 'print_to_screen', 'PyretisLogFormatter']
 
 
 # Hard-coded patters for energy analysis output files.
@@ -87,8 +82,8 @@ PATHFILES = {'pcross': '{}_pcross',
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
 # hard-coded formats to use for Log files:
-LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
 LOG_FMT = '[%(levelname)s]: %(message)s'
+LOG_DEBUG_FMT = '[%(levelname)s] [%(name)s.%(funcName)s()]: %(message)s'
 
 
 def create_backup(outputfile):
@@ -343,30 +338,8 @@ def check_python_version():
 class PyretisLogFormatter(logging.Formatter):
     """Hardcoded formatter for the pyretis log file.
 
-    This formatter is using a format of type:
-
-    ``'[%(levelname)s]: %(message)s'``
-
-    and is less verbose than the ``PyretisLogFormatterDebug``.
-    """
-    def format(self, record):
-        out = logging.Formatter.format(self, record)
-        shortname = record.name.split('.')[-1]
-        out = out.replace(record.name, shortname)
-        header, _ = out.split(record.message)
-        out = out.replace('\n', '\n' + ' ' * len(header))
-        return out
-
-
-class PyretisLogFormatterDebug(logging.Formatter):
-    """Hardcoded debug formatter for the pyretis log file.
-
-    This formatter is intended for usage when more debugging
-    information is needed with a format for logging as:
-
-    ``'%(name)s: [%(levelname)s]: %(message)s'``
-
-    so that information about modules will be printed out as well.
+    This formatter will just adjust multiline messages to have some
+    indentation
     """
     def format(self, record):
         out = logging.Formatter.format(self, record)
@@ -401,3 +374,25 @@ def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
         return fmtf.format(number)
     else:
         return fmte.format(number)
+
+
+def get_log_formatter(level):
+    """Helper function to select a log format.
+
+    Here, it is just used to get a slightly more verbose format for
+    the debug level.
+
+    Parameters
+    ----------
+    level : integer
+        This integer defines the log level.
+
+    Returns
+    -------
+    out : object like ``logging.Formatter``
+        An object that can be used as a formatter for a logger.
+    """
+    if level <= logging.DEBUG:
+        return PyretisLogFormatter(LOG_DEBUG_FMT)
+    else:
+        return PyretisLogFormatter(LOG_FMT)

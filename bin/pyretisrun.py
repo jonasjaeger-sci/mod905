@@ -39,12 +39,9 @@ from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.settings import create_output_tasks
 from pyretis.inout.common import (check_python_version,
-                                  LOG_DEBUG_FMT,
-                                  LOG_FMT,
+                                  get_log_formatter,
                                   make_dirs,
-                                  print_to_screen,
-                                  PyretisLogFormatter,
-                                  PyretisLogFormatterDebug)
+                                  print_to_screen)
 from pyretis.inout.settings import (parse_settings_file,
                                     write_settings_file,
                                     create_system,
@@ -73,28 +70,6 @@ def use_tqdm(progress):
                 return args[0]
             return kwargs.get('iterable', None)
         return empty_tqdm
-
-
-def get_formatter(level):
-    """Helper function to select a log format.
-
-    Parameters
-    ----------
-    level : integer
-        This integer defines the log level.
-
-    Returns
-    -------
-    out : object like ``logging.Formatter``
-        An object that can be used as a formatter for a logger.
-    """
-    if level < logging.DEBUG:
-        # Note: This will not happen. This formatter is intended
-        # for development and debugging. Change to
-        # level <= logging.DEBUG to use it at set the loglevel to debug.
-        return PyretisLogFormatterDebug(LOG_DEBUG_FMT)
-    else:
-        return PyretisLogFormatter(LOG_FMT)
 
 
 def hello_world(infile, rundir, logfile):
@@ -546,14 +521,14 @@ if __name__ == '__main__':
     # Define a console logger. This will log to sys.stderr:
     console = logging.StreamHandler()
     console.setLevel(logging.WARNING)
-    console.setFormatter(PyretisLogFormatter(LOG_FMT))
+    console.setFormatter(get_log_formatter(logging.WARNING))
     logger.addHandler(console)
     # Define a file logger:
     fileh = logging.FileHandler(args_dict['log_file'], mode='w')
     log_level = getattr(logging, args_dict['log_level'].upper(),
                         logging.INFO)
     fileh.setLevel(log_level)
-    fileh.setFormatter(get_formatter(log_level))
+    fileh.setFormatter(get_log_formatter(log_level))
     logger.addHandler(fileh)
 
     # Here, we just check the python version. pyretis should anyway
