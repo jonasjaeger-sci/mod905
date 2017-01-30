@@ -137,6 +137,10 @@ class Particles(object):
         """
         self.pos = np.copy(pos)
 
+    def get_pos(self):
+        """Return positions."""
+        return self.pos
+
     def set_vel(self, vel):
         """Set the velocities for the particles.
 
@@ -315,15 +319,12 @@ class ParticlesExt(Particles):
 
     Attributes
     ----------
-    pos_file : tuple of (string, int)
+    config : tuple of (string, int)
         The location of the file with positions and the index
         for locating a frame.
-    vel_file : tuple of (string, int)
-        The location of the file with velocities and the index
-        for locating a frame.
-    force_file : tuple of (string, int)
-        The location of the file with forces and the index
-        for locating a frame.
+    vel_ref : boolean
+        True if velocities should be reversed or not before using
+        the phase point.
     """
 
     def __init__(self, dim=1):
@@ -346,6 +347,10 @@ class ParticlesExt(Particles):
             The positions to set.
         """
         self.config = (pos[0], pos[1])
+
+    def get_pos(self):
+        """Just return the positions of the particles."""
+        return self.config
 
     def set_vel(self, vel):
         """Set the velocities for the particles.

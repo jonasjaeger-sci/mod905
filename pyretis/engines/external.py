@@ -258,6 +258,17 @@ class ExternalMDEngine(EngineBase):
             system.particles.vel = vel
         return order_function(system)
 
+    def _has_velocities(self, filename):
+        """Check if velocities are present in an initial configuration.
+
+        Parameters
+        ----------
+        filename : string
+            The config to investigate.
+        """
+        _, vel = self.read_configuration(filename)
+        return vel is not None
+
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
         """Force a phase point across the middle interface.
@@ -305,18 +316,25 @@ class ExternalMDEngine(EngineBase):
         # by sequentially kicking the initial phase point
         # Let's get the starting point:
         initial_file = self.dump_frame(system)
-        initial_file_short = os.path.basename(initial_file)
-
         # Create a "previous file" for storing the state before a new kick
-        prev_file = os.path.join(self.exe_dir,
-                                 'p_{}'.format(initial_file_short))
-        logger.debug('Previous file: %s', prev_file)
-        self.copyfile(initial_file, prev_file)
-        # Just set up so that we point to this file:
+        prev_file = os.path.join(
+            self.exe_dir,
+            'p_{}'.format(os.path.basename(initial_file))
+        )
+        # Check if the initial_file contains velocities:
+        if not self._has_velocities(initial_file):
+            logger.info('Initial configuration does not contain velocities.')
+            logger.info('Adding aimless velocities to initial configuration.')
+            phase_point, _ = self.aimless_velocities(system)
+            # Update system config
+            system.particles.set_particle_state(phase_point)
+            # And store the config with generated velocities:
+            self.movefile(system.particles.get_pos()[0], prev_file)
+        else:
+            self.copyfile(initial_file, prev_file)
+        # Update so that we use the prev_file
+        system.particles.set_pos((prev_file, None))
         previous = system.particles.get_particle_state()
-        previous['pos'] = (prev_file, None)
-        system.particles.set_particle_state(previous)
-
         # Obtain current order parameter:
         curr = self.calculate_order(order_function, system)[0]
         logger.info('Starting at: %9.6g Searching for: %9.6g', curr, middle)
