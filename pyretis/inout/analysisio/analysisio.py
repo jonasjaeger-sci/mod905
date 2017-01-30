@@ -13,7 +13,7 @@ analyse_file
     Method to analyse a file. For example, it can be used as
 
     >>> from pyretis.inout.analysisio import analyse_file
-    >>> result, raw_data = analyse_file('cross', 'cross.dat', settings)
+    >>> result, raw_data = analyse_file('cross', 'cross.txt', settings)
 
     To output the results, for instance by plotting, one can do:
 
@@ -41,6 +41,7 @@ from pyretis.inout.report import generate_report
 from pyretis.inout.settings.settings import SECTIONS, copy_settings
 from pyretis.inout.settings import is_single_tis
 from pyretis.inout.writers import get_writer, PathEnsembleFile
+from pyretis.inout.settings.createoutput import TASK_MAP
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -55,13 +56,19 @@ _ANALYSIS_FUNCTIONS = {'cross': analyse_flux,
 
 
 # Input files for analysis
-FILES = {'md-flux': {'cross': 'cross.dat',
-                     'energy': 'energy.dat',
-                     'order': 'order.dat'},
-         'md-nve': {'energy': 'energy.dat'},
-         'tis-single': {'pathensemble': 'pathensemble.dat'},
-         'tis': {'pathensemble': 'pathensemble.dat'},
-         'retis': {'pathensemble': 'pathensemble.dat'}}
+_FILES = {'md-flux': {},
+          'md-nve': {},
+          'tis-single': {},
+          'tis': {},
+          'retis': {}}
+# Add files
+for key in ('cross', 'energy', 'order'):
+    _FILES['md-flux'][key] = TASK_MAP[key]['filename']
+for key in ('energy',):
+    _FILES['md-nve'][key] = TASK_MAP[key]['filename']
+for key in ('pathensemble',):
+    for key2 in ('tis-single', 'tis', 'retis'):
+        _FILES[key2][key] = TASK_MAP[key]['filename']
 
 
 def run_analysis(settings):
@@ -133,11 +140,14 @@ def get_path_ensemble_files(ensemble, settings, detect,
     lsetting['simulation']['detect'] = detect
     lsetting['simulation']['ensemble'] = ensemble
     files = []
-    for file_type in FILES[sim_task]:
+    for file_type in _FILES[sim_task]:
         filename = os.path.join(PATH_DIR_FMT.format(ensemble),
-                                FILES[sim_task][file_type])
+                                _FILES[sim_task][file_type])
         if os.path.isfile(filename):
             files.append((file_type, filename))
+            logger.debug('Adding file "%s" for analysis', filename)
+        else:
+            logger.debug('Could not find file %s', filename)
     return lsetting, files
 
 
@@ -378,8 +388,8 @@ def run_mdflux_analysis(settings, plotter, txt_plotter):
     sim = settings['simulation']
     sim_task = sim['task']
     files = []
-    for file_type in FILES[sim_task]:
-        filename = FILES[sim_task][file_type]
+    for file_type in _FILES[sim_task]:
+        filename = _FILES[sim_task][file_type]
         if os.path.isfile(filename):
             files.append((file_type, filename))
     msgtxt = 'Running analysis of a MD flux simulation...'
@@ -491,7 +501,7 @@ def analyse_file(file_type, file_name, settings):
     """Run analysis on the given file.
 
     This function is included for convenience so that we can call an
-    analysis like `analyse_file('cross', 'cross.dat')` i.e. it should
+    analysis like `analyse_file('cross', 'cross.txt')` i.e. it should
     automatically open the file and apply the correct analysis according
     to a given file type. Here we return a function to do the analysis,
     so we are basically wrapping one of the analysis functions. This is

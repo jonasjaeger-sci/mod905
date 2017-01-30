@@ -67,9 +67,9 @@ Block error and distribution for temperature:
 MD order parameter data
 -----------------------
 
-.. image:: @{{ figures['order']['orderp'] }}@
+.. image:: @{{ figures['order']['order'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['runorderp'] }}@
+.. image:: @{{ figures['order']['runorder'] }}@
    :width: 30%
 .. image:: @{{ figures['order']['ordererror'] }}@
    :width: 30%
@@ -78,7 +78,7 @@ MD order parameter data
    :width: 30%
 .. image:: @{{ figures['order']['ordermsd'] }}@
    :width: 30%
-.. image:: @{{ figures['order']['orderpv'] }}@
+.. image:: @{{ figures['order']['orderv'] }}@
    :width: 30%
 
 

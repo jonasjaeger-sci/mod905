@@ -64,9 +64,9 @@ ENERTITLE = {'vpot': 'Potential energy',
 FLUXFILES = {'runflux': 'runflux_{}',
              'block': 'errflux_{}'}
 # order files:
-ORDERFILES = {'order': 'orderp',
-              'ordervel': 'orderpv',
-              'run_order': 'runorderp',
+ORDERFILES = {'order': 'order',
+              'ordervel': 'orderv',
+              'run_order': 'runorder',
               'dist': 'orderdist',
               'block': 'ordererror',
               'msd': 'ordermsd'}

@@ -42,7 +42,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['OutputTask', 'create_output_tasks']
 
 
-_TASK_MAP = {}
+TASK_MAP = {}
 """Define the known output tasks. The output tasks are
 defined as dictionaries with the following keys:
 
@@ -68,28 +68,28 @@ defined as dictionaries with the following keys:
     to physically move paths so that they are stored. This is in fact
     handled by a special output task and the this keyword shows that.
 """
-_TASK_MAP['energy'] = {
+TASK_MAP['energy'] = {
     'target': 'file',
     'filename': 'energy.txt',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'energy'}
 
-_TASK_MAP['orderp'] = {
+TASK_MAP['order'] = {
     'target': 'file',
-    'filename': 'orderp.txt',
-    'result': 'orderp',
+    'filename': 'order.txt',
+    'result': 'order',
     'when': 'order-file',
     'writer': 'order'}
 
-_TASK_MAP['cross'] = {
+TASK_MAP['cross'] = {
     'target': 'file',
     'filename': 'cross.txt',
     'result': 'cross',
     'when': 'cross-file',
     'writer': 'cross'}
 
-_TASK_MAP['traj-gro'] = {
+TASK_MAP['traj-gro'] = {
     'target': 'file',
     'filename': 'traj.gro',
     'result': 'system',
@@ -98,7 +98,7 @@ _TASK_MAP['traj-gro'] = {
                  'output': ('write_vel',)},
     'writer': 'trajgro'}
 
-_TASK_MAP['traj-xyz'] = {
+TASK_MAP['traj-xyz'] = {
     'target': 'file',
     'filename': 'traj.xyz',
     'result': 'system',
@@ -106,47 +106,47 @@ _TASK_MAP['traj-xyz'] = {
     'settings': {'system': ('units',)},
     'writer': 'trajxyz'}
 
-_TASK_MAP['thermo-screen'] = {
+TASK_MAP['thermo-screen'] = {
     'target': 'screen',
     'result': 'thermo',
     'when': 'energy-screen',
     'writer': 'thermotable'}
 
-_TASK_MAP['thermo-file'] = {
+TASK_MAP['thermo-file'] = {
     'target': 'file',
     'filename': 'thermo.txt',
     'result': 'thermo',
     'when': 'energy-file',
     'writer': 'thermotable'}
 
-_TASK_MAP['pathensemble'] = {
+TASK_MAP['pathensemble'] = {
     'target': 'file',
     'filename': 'pathensemble.txt',
     'result': 'pathensemble',
     'when': 'pathensemble-file',
     'writer': 'pathensemble'}
 
-_TASK_MAP['pathensemble-screen'] = {
+TASK_MAP['pathensemble-screen'] = {
     'target': 'screen',
     'result': 'pathensemble',
     'when': 'pathensemble-screen',
     'writer': 'pathtable'}
 
-_TASK_MAP['path-order'] = {
+TASK_MAP['path-order'] = {
     'target': 'file',
     'filename': 'order.txt',
     'result': 'path',
     'when': 'order-file',
     'writer': 'pathorder'}
 
-_TASK_MAP['path-energy'] = {
+TASK_MAP['path-energy'] = {
     'target': 'file',
     'filename': 'energy.txt',
     'result': 'path',
     'when': 'energy-file',
     'writer': 'pathenergy'}
 
-_TASK_MAP['path-traj-xyz'] = {
+TASK_MAP['path-traj-xyz'] = {
     'target': 'file',
     'filename': 'traj.xyz',
     'result': 'path',
@@ -154,7 +154,7 @@ _TASK_MAP['path-traj-xyz'] = {
     'settings': {'system': ('units',)},
     'writer': 'pathtrajxyz'}
 
-_TASK_MAP['path-traj-gro'] = {
+TASK_MAP['path-traj-gro'] = {
     'target': 'file',
     'filename': 'traj.gro',
     'result': 'path',
@@ -163,7 +163,7 @@ _TASK_MAP['path-traj-gro'] = {
                  'output': ('write_vel',)},
     'writer': 'pathtrajgro'}
 
-_TASK_MAP['path-traj-ext'] = {
+TASK_MAP['path-traj-ext'] = {
     'target': 'file',
     'filename': 'traj.txt',
     'result': 'path',
@@ -178,7 +178,7 @@ with the following keys:
 
 * type : string
     This selects the output task, it corresponds to one of the
-    items in ``_TASK_MAP``
+    items in ``TASK_MAP``
 * name : string
     This is just a unique name given to the task. It is only used
     for output of task information.
@@ -202,8 +202,8 @@ _SIM_OUTPUT['md-flux'] = [
      'name': 'flux-traj-file'},
     {'type': 'thermo-screen',
      'name': 'flux-thermo-screen'},
-    {'type': 'orderp',
-     'name': 'flux-orderp-file'},
+    {'type': 'order',
+     'name': 'flux-order-file'},
     {'type': 'cross',
      'name': 'flux-cross-file'}
 ]
@@ -214,7 +214,7 @@ _SIM_OUTPUT['tis'] = [
     {'type': 'pathensemble-screen',
      'name': 'tis-pathensemble-screen'},
     {'type': 'path-order',
-     'name': 'tis-path-ensemble-orderp'},
+     'name': 'tis-path-ensemble-order'},
     {'type': 'path-traj-xyz',
      'name': 'tis-path-ensemble-traj'},
     {'type': 'path-energy',
@@ -225,7 +225,7 @@ _SIM_OUTPUT['retis'] = [
     {'type': 'pathensemble',
      'name': 'retis-path-ensemble'},
     {'type': 'path-order',
-     'name': 'retis-path-ensemble-orderp'},
+     'name': 'retis-path-ensemble-order'},
     {'type': 'path-traj-{}',
      'name': 'retis-path-ensemble-traj'},
     {'type': 'path-energy',
@@ -642,7 +642,7 @@ def task_from_settings(task, settings, directory, engine):
         An output task we can use in the simulation
     """
     task_type = get_task_type(task, settings, engine)
-    task_settings = _TASK_MAP[task_type]
+    task_settings = TASK_MAP[task_type]
 
     when = {'every': settings['output'][task_settings['when']]}
     if when['every'] < 1:
