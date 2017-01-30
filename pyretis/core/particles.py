@@ -416,6 +416,6 @@ def get_particle_type(engine_type):
     try:
         return particle_map[engine_type]
     except KeyError:
-        msg = 'Unknown ensemble type "{}" requested.'.format(engine_type)
+        msg = 'Unknown particle type "{}" requested.'.format(engine_type)
         logger.critical(msg)
         raise ValueError(msg)
