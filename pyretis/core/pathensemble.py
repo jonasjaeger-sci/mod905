@@ -214,12 +214,12 @@ class PathEnsemble(object):
             The current cycle number
         """
         if len(self.paths) >= self.maxpath:
-            # Maybe this msg is just confusing.
-            msg = ('Exceeded maximum number of paths in ensemble {}!\n'
-                   'The path-data in memory will be reset.\n'
-                   'This will *NOT* influence the simulation.')
-            msg = msg.format(self.ensemble_name)
-            logger.info(msg)
+            # This is just to limit the data we keep in memory in
+            # case of really long simulations.
+            logger.debug(('Path-data memory storage reset for ensemble %s.\n'
+                          'This is just to limit the amount of data we store '
+                          'in memory.\nThis will *NOT* influence the '
+                          'simulation'), self.ensemble_name)
             self.paths = []
         # update statistics:
         if path is None:
@@ -446,8 +446,6 @@ class PathEnsembleExt(PathEnsemble):
         path_copy : object like :py:class:`pyretis.core.path.PathBase`
             A path like the input `path`, but with updated file names.
         """
-        #copy_path = self._copy_path(path, self.directory['traj'],
-        #                            prefix='{}_'.format(cycle['step']))
         new_pos, source = _generate_file_names(
             path,
             self.directory['traj'],

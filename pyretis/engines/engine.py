@@ -30,16 +30,11 @@ class EngineBase(metaclass=ABCMeta):
         Short string description of the engine. Used for printing
         information about the integrator.
     """
+    engine_type = None
 
     def __init__(self, description):
         """Just add the description."""
         self.description = description
-
-    @property
-    @abstractmethod
-    def engine_type(self):
-        """Return information about engine type."""
-        pass
 
     @abstractmethod
     def integration_step(self, system):
@@ -115,6 +110,11 @@ class EngineBase(metaclass=ABCMeta):
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
         """Force a phase point across the middle interface."""
+        pass
+
+    @abstractmethod
+    def clean_up(self):
+        """Perform clean up after using the engine."""
         pass
 
     def __str__(self):

@@ -55,6 +55,7 @@ class MDEngine(EngineBase):
         A short string to represent the type of dynamics produced
         by the integrator (NVE, NVT, stochastic, ...).
     """
+    engine_type = 'internal'
 
     def __init__(self, timestep, description, dynamics=None):
         """Initialization of the integrator.
@@ -67,11 +68,6 @@ class MDEngine(EngineBase):
         super().__init__(description)
         self.delta_t = timestep
         self.dynamics = dynamics
-
-    @property
-    def engine_type(self):
-        """Return information about engine type."""
-        return 'internal'
 
     def integration_step(self, system):
         """Perform one time step of the integration.
@@ -99,6 +95,10 @@ class MDEngine(EngineBase):
         """
         self.delta_t *= -1.0
         return self.delta_t > 0.0
+
+    def clean_up(self):
+        """Clean up after using the engine. Currently nothing is needed."""
+        pass
 
     def propagate(self, path, system, orderp, interfaces, reverse=False):
         """Generate a path by integrating until a criterion is met.
@@ -128,14 +128,21 @@ class MDEngine(EngineBase):
             These interfaces define the stopping criterion.
         reverse : boolean
             If True, the system will be propagated backwards in time.
+
+        Returns
+        -------
+        success : boolean
+            This is True if we generated an acceptable path.
+        status : string
+            A text description of the current status of the propagation.
         """
-        status = 'Propagate w/internal engine (reverse = {})'.format(reverse)
+        status = 'Propagate w/internal engine'
         logger.debug(status)
         success = False
-        initial_system = system.particles.get_particle_state()
         system.potential_and_force()  # make sure forces are set
+        initial_system = system.particles.get_particle_state()
         left, _, right = interfaces
-        for _ in range(path.maxlen):
+        for i in range(path.maxlen):
             order = self.calculate_order(orderp, system)
             kin = calculate_kinetic_energy(system.particles)[0]
             phasepoint = {'order': order,
@@ -146,7 +153,7 @@ class MDEngine(EngineBase):
             status, success, stop = self.add_to_path(path, phasepoint,
                                                      left, right)
             if stop:
-                logger.debug('Stopping propagate. Reason: %s', status)
+                logger.debug('Stopping propagate at step: %i ', i)
                 break
             if reverse:
                 system.particles.vel *= -1.0
@@ -154,6 +161,7 @@ class MDEngine(EngineBase):
                 system.particles.vel *= -1.0
             else:
                 self.integration_step(system)
+        # Reset to initial config:
         system.particles.set_particle_state(initial_system)
         logger.debug('Propagate done: "%s" (success: %s)', status, success)
         return success, status
@@ -308,7 +316,6 @@ class MDEngine(EngineBase):
         while True:
             # save current state:
             previous = particles.get_particle_state()
-            previous['order'] = curr
             # Modify velocities
             self.modify_velocities(system,
                                    rgen,
@@ -316,6 +323,11 @@ class MDEngine(EngineBase):
                                    aimless=True,
                                    momentum=tis_settings['zero_momentum'],
                                    rescale=tis_settings['rescale_energy'])
+            # Update order parameter in case it is velocity dependent:
+            curr = self.calculate_order(order_function, system)[0]
+            previous['order'] = curr
+            # Store modified velocities
+            previous['vel'] = system.particles.get_vel()
             # Integrate forward one step:
             self.integration_step(system)
             # Compare previous order parameter and the new one:
@@ -326,7 +338,7 @@ class MDEngine(EngineBase):
                 logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
-                # are getting closer, keep the new point
+                # We are getting closer, keep the new point
                 pass
             else:  # we did not get closer, fall back to previous point
                 particles.set_particle_state(previous)

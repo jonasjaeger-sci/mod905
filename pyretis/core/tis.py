@@ -63,7 +63,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
     rgen : object like :py:class:`random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
-        This dictionary contain the TIS settings. 
+        This dictionary contain the TIS settings.
     cycle : int
         The current cycle number
 
@@ -150,6 +150,8 @@ def initiate_path_ensemble(path_ensemble, system, order_function,
         accept = True
         status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle=cycle)
+    # Ask the engine to do clean up after the intialization.
+    engine.clean_up()
     return accept, initial_path, status
 
 
@@ -424,6 +426,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     out : object like :py:class:`.path.PathBase`
         This is the generated initial path
     """
+    initial_state = system.particles.get_particle_state()
     interfaces = path_ensemble.interfaces
     logger.info('Seaching crossing with middle interface.')
     leftpoint, _ = engine.kick_across_middle(system,
@@ -474,22 +477,27 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     if start == tis_settings['start_cond']:  # case 0 and 1
         initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
-        return initial_path
-    # Now we do the other cases:
-    if end == tis_settings['start_cond']:  # case 3 (and start != start_cond)
-        logger.info('Initial path is in the wrong direction. Reversing it!')
-        initial_path = initial_path.reverse()
-        initial_path.generated = ('ki', 0, 0, 0)
-        initial_path.status = 'ACC'
-    elif end == start:  # case 2
-        logger.info('Initial path start/end at wrong interfaces.')
-        logger.info('Will perform TIS moves to try to fix it!')
-        initial_path = _fix_path_by_tis(initial_path, system,
-                                        order_function, path_ensemble,
-                                        engine, rgen, tis_settings)
     else:
-        logger.error('Could not generate initial path.')
-        raise ValueError('Could not generate initial path.')
+        # Now we do the other cases:
+        if end == tis_settings['start_cond']:
+            # Case 3 (and start != start_cond):
+            logger.info('Initial path is in the wrong direction.')
+            initial_path = initial_path.reverse()
+            initial_path.generated = ('ki', 0, 0, 0)
+            initial_path.status = 'ACC'
+            logger.info('Path has been reversed!')
+        elif end == start:
+            # Case 2
+            logger.info('Initial path start/end at wrong interfaces.')
+            logger.info('Will perform TIS moves to try to fix it!')
+            initial_path = _fix_path_by_tis(initial_path, system,
+                                            order_function, path_ensemble,
+                                            engine, rgen, tis_settings)
+        else:
+            logger.error('Could not generate initial path.')
+            raise ValueError('Could not generate initial path.')
+    # Reset system:
+    system.particles.set_particle_state(initial_state)
     return initial_path
 
 

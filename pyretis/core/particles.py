@@ -138,8 +138,8 @@ class Particles(object):
         self.pos = np.copy(pos)
 
     def get_pos(self):
-        """Return positions."""
-        return self.pos
+        """Return (a copy of) positions."""
+        return np.copy(self.pos)
 
     def set_vel(self, vel):
         """Set the velocities for the particles.
@@ -152,6 +152,10 @@ class Particles(object):
             The velocities to set.
         """
         self.vel = np.copy(vel)
+
+    def get_vel(self):
+        """Return (a copy of) the velocities."""
+        return np.copy(self.vel)
 
     def set_force(self, force):
         """Set the forces for the particles.

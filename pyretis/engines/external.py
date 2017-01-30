@@ -52,7 +52,11 @@ class ExternalMDEngine(EngineBase):
     ext : string
         Extension for configuration files. It includes the
         extension separator ".".
+    exe_dir : string
+        The current directory we are executing the external
+        integrator in.
     """
+    engine_type = 'external'
 
     def __init__(self, description, timestep, subcycles, ext):
         """Initialization of the external engine.
@@ -78,13 +82,22 @@ class ExternalMDEngine(EngineBase):
         self.timestep = timestep
         self.subcycles = subcycles
         self.ext_time = self.timestep * self.subcycles
-        self.exe_dir = None
+        self._exe_dir = None
         self.ext = '{}{}'.format(os.extsep, ext)
 
     @property
-    def engine_type(self):
-        """Just return the type for the engine."""
-        return 'external'
+    def exe_dir(self):
+        """Return the directory we are currently using."""
+        return self._exe_dir
+
+    @exe_dir.setter
+    def exe_dir(self, exe_dir):
+        """Set the current executable dir."""
+        self._exe_dir = exe_dir
+        logger.debug('Setting exe_dir to "%s"', exe_dir)
+        if not os.path.isdir(exe_dir):
+            logger.warning(('"Exe dir" for "%s" is set to "%s" which does '
+                            'not exist!'), self.description, exe_dir)
 
     def integration_step(self, system):
         """Perform one time step of the integration.
@@ -101,16 +114,12 @@ class ExternalMDEngine(EngineBase):
         logger.error(msg)
         raise NotImplementedError(msg)
 
-    def step(self, system, name, exe_dir):
+    def step(self, system, name):
         """Perform a single step with the external engine."""
         raise NotImplementedError
 
-    def kick_step(self, system):
-        """Perform a single step, but with randomized velocities."""
-        raise NotImplementedError
-
     @staticmethod
-    def read_configuration(filename):
+    def _read_configuration(filename):
         """Read output configuration from external software.
 
         Parameters
@@ -128,7 +137,20 @@ class ExternalMDEngine(EngineBase):
         raise NotImplementedError
 
     @staticmethod
-    def modify_input(sourcefile, outputfile, settings, delim='='):
+    def _reverse_velocities(filename, outfile):
+        """Reverse velocities in a given snapshot.
+
+        Parameters
+        ----------
+        filename : string
+            Input file with velocities.
+        outfile : string
+            File to write with reversed velocities.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def _modify_input(sourcefile, outputfile, settings, delim='='):
         """Modify input file for external software.
 
         Here we assume that the input file has a syntax consiting of
@@ -204,25 +226,25 @@ class ExternalMDEngine(EngineBase):
         return out, exe.returncode
 
     @staticmethod
-    def movefile(source, dest):
+    def _movefile(source, dest):
         """Move file from source to destination."""
         logger.debug('Moving: %s -> %s', source, dest)
         shutil.move(source, dest)
 
     @staticmethod
-    def copyfile(source, dest):
+    def _copyfile(source, dest):
         """Copy file from source to destination."""
         logger.debug('Copy: %s -> %s', source, dest)
         shutil.copyfile(source, dest)
 
     @staticmethod
-    def removefile(filename):
+    def _removefile(filename):
         """Remove a given file if it exist."""
         if os.path.isfile(filename):
             logger.debug('Removing: %s', filename)
             os.remove(filename)
 
-    def remove_files(self, dirname, files):
+    def _remove_files(self, dirname, files):
         """Remove files from a directory.
 
         Parameters
@@ -233,7 +255,20 @@ class ExternalMDEngine(EngineBase):
             A list with files to remove.
         """
         for thefile in files:
-            self.removefile(os.path.join(dirname, thefile))
+            self._removefile(os.path.join(dirname, thefile))
+
+    def clean_up(self):
+        """Remove all files from a given directory.
+
+        Parameters
+        ----------
+        dirname : string
+            The directory to remove files from.
+        """
+        dirname = self.exe_dir
+        logger.debug('Running engine clean-up in "%s"', dirname)
+        files = [item.name for item in os.scandir(dirname) if item.is_file()]
+        self._remove_files(dirname, files)
 
     def calculate_order(self, order_function, system):
         """Calculate order parameter from configuration in a file.
@@ -250,24 +285,13 @@ class ExternalMDEngine(EngineBase):
         out : float
             The calculated order parameter.
         """
-        xyz, vel = self.read_configuration(system.particles.config[0])
+        xyz, vel = self._read_configuration(system.particles.config[0])
         system.particles.pos = xyz
         if system.particles.vel_rev:
             system.particles.vel = -vel
         else:
             system.particles.vel = vel
         return order_function(system)
-
-    def _has_velocities(self, filename):
-        """Check if velocities are present in an initial configuration.
-
-        Parameters
-        ----------
-        filename : string
-            The config to investigate.
-        """
-        _, vel = self.read_configuration(filename)
-        return vel is not None
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
@@ -321,28 +345,27 @@ class ExternalMDEngine(EngineBase):
             self.exe_dir,
             'p_{}'.format(os.path.basename(initial_file))
         )
-        # Check if the initial_file contains velocities:
-        if not self._has_velocities(initial_file):
-            logger.info('Initial configuration does not contain velocities.')
-            logger.info('Adding aimless velocities to initial configuration.')
-            phase_point, _ = self.aimless_velocities(system)
-            # Update system config
-            system.particles.set_particle_state(phase_point)
-            # And store the config with generated velocities:
-            self.movefile(system.particles.get_pos()[0], prev_file)
-        else:
-            self.copyfile(initial_file, prev_file)
+        self._copyfile(initial_file, prev_file)
         # Update so that we use the prev_file
         system.particles.set_pos((prev_file, None))
-        previous = system.particles.get_particle_state()
-        # Obtain current order parameter:
-        curr = self.calculate_order(order_function, system)[0]
-        logger.info('Starting at: %9.6g Searching for: %9.6g', curr, middle)
+        logger.info('Searching for crossing with: %9.6g', middle)
         while True:
-            # save current state:
+            # Do kick from current state:
+            self.modify_velocities(system,
+                                   rgen,
+                                   sigma_v=None,
+                                   aimless=True,
+                                   momentum=False,
+                                   rescale=None)
+            # Update order parameter in case it's velocity dependent:
+            curr = self.calculate_order(order_function, system)[0]
+            # Store the kicked configuration as the previous config.
+            self._movefile(system.particles.get_pos()[0], prev_file)
+            system.particles.set_pos((prev_file, None))
             previous = system.particles.get_particle_state()
             previous['order'] = curr
-            conf = self.kick_step(system)
+            # Update system by integrating forward:
+            conf = self.step(system, 'gen_kick')
             curr_file = os.path.join(self.exe_dir, conf)
             # Compare previous order parameter and the new one:
             prev = curr
@@ -355,17 +378,17 @@ class ExternalMDEngine(EngineBase):
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point
                 logger.debug('Getting closer to middle: %s', txt)
-                self.movefile(curr_file, prev_file)
+                self._movefile(curr_file, prev_file)
                 # Update file name after moving:
                 system.particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
                 logger.debug('Did not get closer to middle: %s', txt)
                 system.particles.set_particle_state(previous)
                 curr = previous['order']
-                self.removefile(curr_file)
+                self._removefile(curr_file)
         return previous, system.particles.get_particle_state()
 
-    def extract_frame(self, traj_file, idx, out_file):
+    def _extract_frame(self, traj_file, idx, out_file):
         """Extract a frame from a .trr file.
 
         Parameters
@@ -381,7 +404,79 @@ class ExternalMDEngine(EngineBase):
 
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
-        """Propagate the equations of motion with the external code."""
+        """Propagate the equations of motion with the external code.
+
+        This method will explicitly do the common set-up, before
+        calling more specialized code for doing the actual propagation.
+
+        Parameters
+        ----------
+        path : object like :py:class:`pyretis.core.Path.PathBase`
+            This is the path we use to fill in phase-space points.
+            We are here not returning a new path - this since we want
+            to delegate the creation of the path to the method
+            that is running `propagate`.
+        system : object like `System` from `pyretis.core.system`
+            The system object gives the initial state for the
+            integration. The initial state is stored and the system is
+            reset to the initial state when the integration is done.
+        order_function : object like `pyretis.orderparameter.OrderParameter`
+            The object used for calculating the order parameter.
+        interfaces : list of floats
+            These interfaces define the stopping criterion.
+        reverse : boolean
+            If True, the system will be propagated backwards in time.
+
+        Returns
+        -------
+        success : boolean
+            This is True if we generated an acceptable path.
+        status : string
+            A text description of the current status of the propagation.
+        """
+        logger.debug('Running propagate with: "%s"', self.description)
+        if reverse:
+            logger.debug('Running backward in time.')
+            name = 'trajB'
+        else:
+            logger.debug('Running forward in time.')
+            name = 'trajF'
+        logger.debug('Trajectory name: "%s"', name)
+
+        initial_state = system.particles.get_particle_state()
+        initial_file = self.dump_frame(system)
+        logger.debug('Initial state: %s', initial_state)
+
+        if reverse != initial_state['vel']:
+            logger.debug('Reversing velocities in initial config.')
+            basepath = os.path.dirname(initial_file)
+            localfile = os.path.basename(initial_file)
+            initial_conf = os.path.join(basepath, 'r_{}'.format(localfile))
+            self._reverse_velocities(initial_file, initial_conf)
+        else:
+            initial_conf = initial_file
+
+        # Update system to be at the configuration file:
+        phase_point = {'pos': (initial_conf, None),
+                       'vel': reverse,
+                       'vpot': None,
+                       'ekin': None}
+        system.particles.set_particle_state(phase_point)
+        # Perform propagate from this point
+        success, status = self._propagate_from(
+            name,
+            path,
+            system,
+            order_function,
+            interfaces,
+            reverse=reverse)
+        # Reset system to initial state:
+        system.particles.set_particle_state(initial_state)
+        return success, status
+
+    def _propagate_from(self, name, path, system, order_function, interfaces,
+                        reverse=False):
+        """Method to run the actual propagation using the specific engine."""
         raise NotImplementedError
 
     def dump_config(self, config, deffnm='conf'):
@@ -403,17 +498,17 @@ class ExternalMDEngine(EngineBase):
 
         Note
         ----
-        We assume here that we won't be using the velocities in the
-        configuration and we do not reverse the velocities.
+        If the velocities should be reversed, this is handled elsewhere.
         """
         pos_file, idx = config
         if idx is None:
+            # Note, this does not create a new file.
             return pos_file
         else:
             out_file = os.path.join(self.exe_dir,
                                     '{}{}'.format(deffnm, self.ext))
             logger.debug('Config: %s', (config, ))
-            self.extract_frame(pos_file, idx, out_file)
+            self._extract_frame(pos_file, idx, out_file)
             return out_file
 
     def dump_frame(self, system, deffnm='conf'):
