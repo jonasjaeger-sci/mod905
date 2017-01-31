@@ -169,9 +169,9 @@ def initial_positions_lattice(settings):
         ndim = len(size)
     else:
         if ndim != len(size):
-            msg = ['Inconsistent dimensions: settings gives {}D'.format(ndim),
-                   'Generated lattice is {}D!'.format(len(size))]
-            msgtxt = '\n'.join(msg)
+            msgtxt = ('Inconsistent dimenaions in settings and generated '
+                      'lattice.\nSettings gives {}D while the generated '
+                      'lattice is {}D.').format(ndim, len(size))
             logger.error(msgtxt)
             raise ValueError(msgtxt)
     particles = Particles(dim=ndim)
@@ -188,11 +188,10 @@ def initial_positions_lattice(settings):
         particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
-    msg = ['Initiated {} particles on lattice "{}".'.format(particles.npart,
-                                                            lattice_type)]
-    msg += ['Lattice is {}D.'.format(ndim)]
-    msgtxt = '\n'.join(msg)
-    logger.info(msgtxt)
+
+    logger.info('Initiated %i particles on lattice "%s"',
+                particles.npart, lattice_type)
+    logger.info('Lattice is %iD', ndim)
     return particles, size
 
 
@@ -220,17 +219,19 @@ def _get_snapshot_from_file(pos_settings, units):
     """
     filename = pos_settings.get('file', None)
     if filename is None:
-        msg = 'No input file given!'
+        msg = ('Requested reading (initial) configuration from file, '
+               'but no input file given!')
+        logger.error(msg)
         raise ValueError(msg)
-
     fmt = pos_settings.get('format', os.path.splitext(filename)[1][1:])
     snaps = []
     convert = None
     if fmt not in READFILE:
-        msg = 'Unknown format {} for input file: {}'
-        msgtxt = msg.format(fmt, pos_settings)
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
+        msg = ('Input configuration "{}" has unknown '
+               'format "{}"').format(filename, fmt)
+        logger.error(msg)
+        logger.error('Supported formats are: %s', [key for key in READFILE])
+        raise ValueError(msg)
 
     reader = READFILE[fmt]['reader']
     read_units = READFILE[fmt]['units']
@@ -242,14 +243,15 @@ def _get_snapshot_from_file(pos_settings, units):
 
     snapshot = None
     if len(snaps) == 0:
-        msg = 'Could not find any configurations in input file: {}'
-        raise ValueError(msg.format(filename))
+        msg = ('Could not find any configurations in '
+               'input file: {}').format(filename)
+        logger.error(msg)
+        raise ValueError(msg)
     elif len(snaps) == 1:
         snapshot = snaps[0]
     else:
         msg = ('Found several frames ({}) in input file.'
-               ' Will use the last one!')
-        msg = msg.format(len(snaps))
+               ' Will use the last one!').format(len(snaps))
         logger.warning(msg)
         snapshot = snaps[-1]
     return snapshot, convert

@@ -182,8 +182,7 @@ class ExternalMDEngine(EngineBase):
                                                     settings[keyword_strip])
                 outfile.write(to_write)
 
-    @staticmethod
-    def execute_command(cmd, cwd=None, inputs=None):
+    def execute_command(self, cmd, cwd=None, inputs=None):
         """Method that will execute a command.
 
         We are here executing a command and then waiting until it
@@ -219,9 +218,16 @@ class ExternalMDEngine(EngineBase):
         out = exe.communicate(input=inputs)
         # Note: communicate will wait untill process terminates.
         if exe.returncode != 0:
-            msg = 'Return code {}, msg = {}'.format(exe.returncode,
-                                                    out[1].decode('utf-8'))
-            logger.critical(msg)
+            logger.error('Failure in/by "%s"', self.description)
+            logger.error('Execution of external program failed!')
+            logger.error('Attempted command: "%s"', cmd2)
+            logger.error('Execution directory: "%s"', cwd)
+            if inputs is not None:
+                logger.error('Input to external program was: "%s"', inputs)
+            msg = 'Return code {}, message = {}'.format(
+                exe.returncode,
+                out[1].decode('utf-8'))
+            logger.error(msg)
             raise RuntimeError(msg)
         return out, exe.returncode
 
