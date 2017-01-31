@@ -60,14 +60,6 @@ tis.py (:py:mod:`pyretis.core.tis`)
 units.py (:py:mod:`pyretis.core.units`)
     This module defines conversion between units.
 
-Sub-packages
-~~~~~~~~~~~~
-
-simulation
-    Package defining the `Simulation` class which is used for
-    setting up generic simulations. It also contains classes for
-    more specialized simulations (NVE, TIS, etc.).
-
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,13 +89,8 @@ PathEnsemble (:py:class:`pyretis.core.pathensemble.PathEnsemble`)
 
 RandomGenerator (:py:class:`pyretis.core.random_gen.RandomGenerator`)
     A class for generating random numbers.
-
-Simulation (:py:mod:`pyretis.core.simulation`)
-    A sub-package defining the simulations. There is also a
-    class named ``Simulation`` which defines a generic simulation.
 """
 from __future__ import absolute_import
-from . import simulation
 from .system import System
 from .box import Box
 from .particles import Particles

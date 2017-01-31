@@ -7,7 +7,7 @@ a mixture of 3 Lennard-Jones particles.
 # pylint: disable=C0103
 import os
 import numpy as np
-from pyretis.core.simulation import Simulation
+from pyretis.simulation import Simulation
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.engines import VelocityVerlet

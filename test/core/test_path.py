@@ -5,7 +5,8 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core.path import Path, ReservoirPath
+from pyretis.core.path import Path
+from pyretis.core.reservoirpath import ReservoirPath
 from pyretis.core.random_gen import RandomGenerator
 logging.disable(logging.CRITICAL)
 

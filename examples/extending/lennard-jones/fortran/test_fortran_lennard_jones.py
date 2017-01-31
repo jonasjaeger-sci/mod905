@@ -8,7 +8,7 @@ with output from a similar simulation performed in LAMMPS.
 import os
 import unittest
 import numpy as np
-from pyretis.core.simulation import Simulation
+from pyretis.simulation import Simulation
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.engines import VelocityVerlet

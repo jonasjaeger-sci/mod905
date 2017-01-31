@@ -15,7 +15,7 @@ import os
 import subprocess
 import numpy as np
 from pyretis.core import Box
-from pyretis.core.pathext import PathExt
+from pyretis.core.path import PathExt
 from pyretis.engines.gromacs import read_gromos96_file
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.settings import (create_system, create_engine,

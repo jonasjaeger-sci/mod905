@@ -18,7 +18,7 @@ SimulationRETIS
 from __future__ import absolute_import
 import logging
 import numpy as np
-from pyretis.core.simulation.simulation import Simulation
+from pyretis.simulation.simulation import Simulation
 from pyretis.core.tis import (make_tis_step_ensemble,
                               initiate_path_ensemble)
 from pyretis.core.retis import make_retis_step

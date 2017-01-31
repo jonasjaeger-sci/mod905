@@ -8,7 +8,7 @@ The system considered is a simple Lennard-Jones fluid.
 # pylint: disable=C0103
 import numpy as np
 from pyretis.core import Box, Particles, System
-from pyretis.core.simulation import SimulationNVE
+from pyretis.simulation import SimulationNVE
 from pyretis.engines import VelocityVerlet
 from pyretis.tools import generate_lattice
 from pyretis.forcefield import ForceField

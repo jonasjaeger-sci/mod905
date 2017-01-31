@@ -205,7 +205,6 @@ if __name__ == '__main__':
             errtxt = ('Could not open input'
                       ' "{}"'.format(inputfile))
             raise ValueError(errtxt)
-        print_to_screen('Reading input settings for analysis.')
         settings = parse_settings_file(inputfile)
         # override exe-path to the one we are executing in now:
         settings['simulation']['exe-path'] = runpath

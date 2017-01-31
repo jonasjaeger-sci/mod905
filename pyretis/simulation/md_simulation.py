@@ -19,7 +19,7 @@ SimulationMDFlux
 """
 from __future__ import absolute_import
 import logging
-from pyretis.core.simulation.simulation import Simulation
+from pyretis.simulation.simulation import Simulation
 from pyretis.core.particlefunctions import calculate_thermo
 from pyretis.core.path import check_crossing
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

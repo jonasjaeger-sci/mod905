@@ -33,7 +33,7 @@ OutputTaskFileCombine
 import logging
 # pyretis imports
 from pyretis.inout.common import add_dirname
-from pyretis.core.simulation.simulation_task import execute_now
+from pyretis.simulation.simulation_task import execute_now
 from pyretis.inout.writers import get_writer, FileIO
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -283,8 +283,8 @@ class OutputTask(object):
 
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned
-        from a simulation object (e.g. object like `Simulation` from
-        `pyretis.core.simulation.simulation`) after a step.
+        from a simulation object (e.g. object like
+        :py:class:`pyretis.simulation.Simulation`) after a step.
         For trajectories, we expect that `simulation_result` contain
         the key `traj` so we can pass it to the trajectory writer.
 
@@ -483,8 +483,8 @@ class OutputTaskFileCombine(OutputTaskFile):
 
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned
-        from a simulation object (e.g. object like `Simulation` from
-        `pyretis.core.simulation.simulation`) after a step.
+        from a simulation object (e.g. object like
+        :py:class:`pyretis.simulation.Simulation`) after a step.
         For trajectories, we expect that `simulation_result` contain
         the key `traj` so we can pass it to the trajectory writer.
 

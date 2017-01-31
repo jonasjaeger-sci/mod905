@@ -24,14 +24,13 @@ optional arguments:
                         the simulation
 """
 # pylint: disable=C0103
-from __future__ import absolute_import
 import argparse
 import datetime
 import logging
 import os
 import sys
 # Other libraries:
-import tqdm  # for a nice progress bar
+import tqdm  # For a progress bar
 # pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
@@ -175,7 +174,7 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -198,7 +197,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -236,7 +235,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -286,7 +285,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -361,7 +360,7 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
 
     Parameters
     ----------
-    settings_sim : list of dicts or Simulation object
+    settings_sim : list of dicts or Simulation objects
         The settings for the simulations or the actual simulation
         to run.
     settings_tis : dict
@@ -401,7 +400,7 @@ def run_generic_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like `Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -440,7 +439,7 @@ def set_up_simulation(inputfile, runpath):
     -------
     runner : method
         A method which can be used to execute the simulation.
-    sim : object like :py:class:`pyretis.core.simulation.Simulation`
+    sim : object like :py:class:`pyretis.simulation.Simulation`
         The simulation defined by the input file.
     syst : object like :py:class:`pyretis.core.system.System`
         The system created.

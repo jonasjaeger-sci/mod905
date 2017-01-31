@@ -5,7 +5,6 @@
 	    tests-silent3
 	    clean
 	    upload-docs
-
  
 tests:
 	python -m unittest discover -v -s test

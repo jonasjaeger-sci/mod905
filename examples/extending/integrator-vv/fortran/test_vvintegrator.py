@@ -11,7 +11,7 @@ This test is comparing:
 import unittest
 import numpy as np
 from pyretis.core import System, Box, Particles
-from pyretis.core.simulation import Simulation
+from pyretis.simulation import Simulation
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCutnp

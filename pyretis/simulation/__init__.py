@@ -6,9 +6,8 @@
 The different simulations are defined as objects which inherits from
 the base Simulation object defined in `simulation.py`. The simulation
 object defines as simulation as a series of tasks to be executed,
-typically at each step of the simulation. Output is handled with a
-different set out 'output' tasks which make use of the results obtained
-in the simulation steps.
+typically at each step of the simulation. These tasks may produce
+results which can be outputted to the user in some way.
 
 Package structure
 -----------------
@@ -16,32 +15,37 @@ Package structure
 Modules
 ~~~~~~~
 
-md_simulation.py
+md_simulation.py (:py:mod:`pyretis.simulation.md_simulation`)
     Defines simulation classes for molecular dynamics simulations.
 
-mc_simulation.py
+mc_simulation.py (:py:mod:`pyretis.simulation.mc_simulation`)
     Define simulation classes for Monte Carlo simulations.
 
-path_simulation.py
+path_simulation.py (:py:mod:`pyretis.simulation.path_simulation`)
     Defines simulation classes for path simulations.
 
-simulation.py
+simulation.py (:py:mod:`pyretis.simulation.simulation`)
     Defines the Simulation class which is the base class for
     simulations.
 
-simulation_task.py
+simulation_task.py (:py:mod:`pyretis.simulation.simulation_task`)
     Defines classes for handling of simulation tasks.
 
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simulation
+Simulation (:py:class:`.simulation.Simulation`)
     The base class for simulations.
 
-SimulationTask
+SimulationTask (:py:class:`.simulation_task.SimulationTask`)
     A class for creating tasks for simulations.
+
+SimulationSingleTIS (:py:class:`.path_simulation.SimulationSingleTIS`)
+    A class for running a TIS simulation for a single ensemble.
+
+SimulationRETIS (:py:class:`.path_simulation.SimulationRETIS`)
+    A class for running a RETIS simulation for a set of ensembles.
 """
-# local pyretis imports
 from .simulation import Simulation
 from .simulation_task import SimulationTask
 from .mc_simulation import UmbrellaWindowSimulation

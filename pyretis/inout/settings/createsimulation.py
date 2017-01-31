@@ -4,7 +4,7 @@
 """This module handles creation of simulations from settings.
 
 The different simulations are defined as objects which inherits from the
-base Simulation object defined in `pyretis.core.simulation.simulation`.
+base Simulation object defined in :py:mod:`pyretis.simulation.simulation`.
 Here, we are treat each simulation with a special case since they are
 indeed special :-)
 
@@ -27,11 +27,11 @@ create_path_ensemble:
 from __future__ import absolute_import
 import logging
 from pyretis.core.random_gen import create_random_generator
-from pyretis.core.simulation.md_simulation import (SimulationNVE,
-                                                   SimulationMDFlux)
-from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
-from pyretis.core.simulation.path_simulation import (SimulationSingleTIS,
-                                                     SimulationRETIS)
+from pyretis.simulation.md_simulation import (SimulationNVE,
+                                              SimulationMDFlux)
+from pyretis.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.simulation.path_simulation import (SimulationSingleTIS,
+                                                SimulationRETIS)
 from pyretis.core.pathensemble import (get_path_ensemble_class,
                                        PATH_DIR_FMT)
 from pyretis.inout.settings.common import create_orderparameter
@@ -365,7 +365,7 @@ def create_simulation(settings, kwargs):
 
     Returns
     -------
-    out : object like `Simulation` from `pyretis.core.simulation.simulation`
+    out : object like :py:class:`pyretis.simulation.Simualtion`
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()

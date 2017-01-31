@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 from pyretis.core import System, RandomGenerator, Box, Particles
-from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.simulation import UmbrellaWindowSimulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis.histogram import histogram, match_all_histograms
