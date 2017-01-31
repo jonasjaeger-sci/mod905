@@ -373,6 +373,7 @@ class EnergyWriter(Writer):
     """
     # Format for the energy files:
     ENERGY_FMT = ['{:>10d}'] + 5*['{:>14.6f}']
+    ENERGY_TERMS = ('vpot', 'ekin', 'etot', 'temp')
 
     def __init__(self):
         """Initialize a `EnergyWriter`."""
@@ -430,9 +431,12 @@ class EnergyWriter(Writer):
             A formatted line of data.
         """
         towrite = [self.ENERGY_FMT[0].format(step)]
-        for i, key in enumerate(['vpot', 'ekin', 'etot', 'temp']):
-            value = energy.get(key, 0.0)
-            towrite.append(self.ENERGY_FMT[i + 1].format(value))
+        for i, key in enumerate(self.ENERGY_TERMS):
+            value = energy.get(key, None)
+            if value is None:
+                towrite.append(self.ENERGY_FMT[i + 1].format(float('nan')))
+            else:
+                towrite.append(self.ENERGY_FMT[i + 1].format(value))
         return ' '.join(towrite)
 
     def generate_output(self, step, energy):
