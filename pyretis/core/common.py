@@ -19,8 +19,8 @@ generic_factory (:py:func:`generic_factory`)
 import logging
 import inspect
 import sys
-from pyretis.core.path import Path, ReservoirPath
-from pyretis.core.pathext import PathExt
+from pyretis.core.path import Path, PathExt
+from pyretis.core.reservoirpath import ReservoirPath
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

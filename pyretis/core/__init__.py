@@ -107,7 +107,7 @@ from . import simulation
 from .system import System
 from .box import Box
 from .particles import Particles
-from .path import Path, ReservoirPath
-from .pathext import PathExt
+from .path import Path, PathExt
+from .reservoirpath import ReservoirPath
 from .pathensemble import PathEnsemble, PathEnsembleExt
 from .random_gen import RandomGenerator
