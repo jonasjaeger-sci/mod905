@@ -217,17 +217,20 @@ class ExternalMDEngine(EngineBase):
                                cwd=cwd)
         out = exe.communicate(input=inputs)
         # Note: communicate will wait untill process terminates.
-        if exe.returncode != 0:
-            logger.error('Failure in/by "%s"', self.description)
-            logger.error('Execution of external program failed!')
+        return_code = exe.returncode
+        if return_code != 0:
+            stdout, stderr = out[0], out[1]
+            logger.error('Execution of external program (%s) failed!',
+                         self.description)
             logger.error('Attempted command: "%s"', cmd2)
             logger.error('Execution directory: "%s"', cwd)
             if inputs is not None:
                 logger.error('Input to external program was: "%s"', inputs)
-            msg = 'Return code {}, message = {}'.format(
-                exe.returncode,
-                out[1].decode('utf-8'))
-            logger.error(msg)
+            logger.error('Return code from external program %i', return_code)
+            logger.error('STDOUT: %s', stdout.decode('utf-8'))
+            logger.error('STDERR: %s', stderr.decode('utf-8'))
+            msg = ('Execution of external program "{}" failed. '
+                   'Return code: {}').format(self.description, return_code)
             raise RuntimeError(msg)
         return out, exe.returncode
 
