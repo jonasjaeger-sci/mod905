@@ -88,16 +88,44 @@ class EngineBase(metaclass=ABCMeta):
         """Propagate equations of motion."""
         pass
 
-    @staticmethod
     @abstractmethod
-    def modify_velocities(system, rgen, sigma_v=None, aimless=True,
+    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
                           momentum=False, rescale=None):
-        """Generate random velocities for a configuration."""
+        """Modify the velocities of the current state.
+
+        This method will modify the velocities of a time slice.
+
+        Parameters
+        ----------
+        system : object like :py:class:`core.system.System`
+            System is used here since we need access to the particle
+            list.
+        rgen : object like :py:class:`core.random_gen.RandomGenerator`
+            This is the random generator that will be used.
+        sigma_v : numpy.array, optional
+            These values can be used to set a standard deviation (one
+            for each particle) for the generated velocities.
+        aimless : boolean, optional
+            Determines if we should do aimless shooting or not.
+        momentum : boolean, optional
+            If True, we reset the linear momentum to zero after generating.
+        rescale : float, optional
+            In some NVE simulations, we may wish to rescale the energy to
+            a fixed value. If `rescale` is a float > 0, we will rescale
+            the energy (after modification of the velocities) to match the
+            given float.
+
+        Returns
+        -------
+        dek : float
+            The change in the kinetic energy.
+        kin_new : float
+            The new kinetic energy.
+        """
         pass
 
-    @staticmethod
     @abstractmethod
-    def calculate_order(order_function, system):
+    def calculate_order(self, order_function, system):
         """Obtain the order parameter."""
         pass
 

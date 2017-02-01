@@ -14,6 +14,7 @@ ExternalMDEngine
     The base class for external scripts. This defines the actual
     interface to external programs.
 """
+from abc import abstractmethod
 import re
 import logging
 import subprocess
@@ -114,11 +115,13 @@ class ExternalMDEngine(EngineBase):
         logger.error(msg)
         raise NotImplementedError(msg)
 
+    @abstractmethod
     def step(self, system, name):
         """Perform a single step with the external engine."""
-        raise NotImplementedError
+        pass
 
     @staticmethod
+    @abstractmethod
     def _read_configuration(filename):
         """Read output configuration from external software.
 
@@ -134,9 +137,10 @@ class ExternalMDEngine(EngineBase):
         vel : numpy.array
             The velocities found in the given filename.
         """
-        raise NotImplementedError
+        pass
 
     @staticmethod
+    @abstractmethod
     def _reverse_velocities(filename, outfile):
         """Reverse velocities in a given snapshot.
 
@@ -147,7 +151,7 @@ class ExternalMDEngine(EngineBase):
         outfile : string
             File to write with reversed velocities.
         """
-        raise NotImplementedError
+        pass
 
     @staticmethod
     def _modify_input(sourcefile, outputfile, settings, delim='='):
@@ -181,6 +185,41 @@ class ExternalMDEngine(EngineBase):
                         to_write = '{} {}\n'.format(keyword,
                                                     settings[keyword_strip])
                 outfile.write(to_write)
+
+    @staticmethod
+    def _read_input_settings(sourcefile, delim='='):
+        """Read input settings for simulation input files.,
+
+        Here we assume that the input file has a syntax consiting of
+        ``keyword = setting``, where ``=`` can be any string given
+        in the input parameter ``delim``.
+
+        Parameters
+        ----------
+        sourcefile : string
+            The path of the file to use for creating the output.
+        delim : string
+            The delimiter used for separation keywords from settings
+
+        Returns
+        -------
+        settings : dict of strings
+            The settings found in the file.
+
+        Note
+        ----
+        Important: We are here assuming that there will *ONLY* be one
+        keyword per line.
+        """
+        reg = re.compile(r'(.*?){}'.format(delim))
+        settings = {}
+        with open(sourcefile, 'r') as infile:
+            for line in infile:
+                key = reg.match(line)
+                if key:
+                    keyword_strip = key.group(1).strip()
+                    settings[keyword_strip] = line.split(delim)[1].strip()
+        return settings
 
     def execute_command(self, cmd, cwd=None, inputs=None):
         """Method that will execute a command.
@@ -397,6 +436,7 @@ class ExternalMDEngine(EngineBase):
                 self._removefile(curr_file)
         return previous, system.particles.get_particle_state()
 
+    @abstractmethod
     def _extract_frame(self, traj_file, idx, out_file):
         """Extract a frame from a .trr file.
 
@@ -409,7 +449,7 @@ class ExternalMDEngine(EngineBase):
         out_file : string
             The file to dump to.
         """
-        raise NotImplementedError
+        pass
 
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
@@ -483,10 +523,11 @@ class ExternalMDEngine(EngineBase):
         system.particles.set_particle_state(initial_state)
         return success, status
 
+    @abstractmethod
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
         """Method to run the actual propagation using the specific engine."""
-        raise NotImplementedError
+        pass
 
     def dump_config(self, config, deffnm='conf'):
         """Extract configuration frame from a system if needed.
@@ -528,63 +569,3 @@ class ExternalMDEngine(EngineBase):
         """Just dump the frame from a system object."""
         pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
         phasepoint['pos'] = (pos_file, None)
-
-    def aimless_velocities(self, system):
-        """Perform aimless modification of velocities."""
-        raise NotImplementedError
-
-    def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
-                          momentum=False, rescale=None):
-        """Modify the velocities of the current state.
-
-        This method will modify the velocities of a time slice.
-
-        Parameters
-        ----------
-        system : object like :py:class:`core.system.System`
-            System is used here since we need access to the particle
-            list.
-        rgen : object like :py:class:`core.random_gen.RandomGenerator`
-            This is the random generator that will be used.
-        sigma_v : numpy.array, optional
-            These values can be used to set a standard deviation (one
-            for each particle) for the generated velocities.
-        aimless : boolean, optional
-            Determines if we should do aimless shooting or not.
-        momentum : boolean, optional
-            If True, we reset the linear momentum to zero after generating.
-        rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
-            the energy (after modification of the velocities) to match the
-            given float.
-
-        Returns
-        -------
-        dek : float
-            The change in the kinetic energy.
-        kin_new : float
-            The new kinetic energy.
-        """
-        dek = None
-        kin_old = None
-        kin_new = None
-        if rescale is not None and rescale is not False and rescale > 0:
-            msgtxt = 'External integrator does not support energy rescale!'
-            raise NotImplementedError(msgtxt)
-        else:
-            kin_old = system.particles.ekin
-        if aimless:
-            phase_point, kin_new = self.aimless_velocities(system)
-            system.particles.set_particle_state(phase_point)
-        else:  # soft velocity change, add from Gaussian dist
-            msgtxt = 'External integrator only support aimless shooting!'
-            raise NotImplementedError(msgtxt)
-        if not momentum:
-            pass
-        if kin_old is None or kin_new is None:
-            dek = float('inf')
-            logger.warning('External kinetic energy is not set...')
-        else:
-            dek = kin_new - kin_old
-        return dek, kin_new
