@@ -6,27 +6,21 @@ r"""This module defines natural constants and unit conversions.
 This module defines some natural constants and conversions between units
 which can be used by the pyretis program.
 The :ref:`natural constants <natural-constants>` are mainly used for
-conversions but it is also used to define the Boltzmann constant which
-is used by simulations in pyretis.
-The :ref:`unit conversions <unit-conversions>` are mainly useful for the
-pyretis input and output.
+conversions but it is also used to define the Boltzmann constant for
+internal use in pyretis. The :ref:`unit conversions <unit-conversions>`
+are mainly useful for input/output.
 
 All numerical values are from the National Institute of Standards and
 Technology and can be accessed through a web interface
 http://physics.nist.gov/constants or in plain text. [7]_
 
 Internally, all computations are carried out in units which are defined
-by a length scale, an energy scale and a mass scale. This means that
-the time scale is given by these choice. The input to pyretis is
-assumed to be in these internal units. There is one exception to
-this and that is initial configurations given by certain file types
-that define a particular unit (for instance the xyz-files which uses
-Ångström as the length unit). These will be converted to internal
-units by pyretis.
+by a length scale, an energy scale and a mass scale. The time scale
+is defined by these choices.
 
 Charges are typically given (in the input) in units of the electron
-charge. The internal unit for charge is not yet implemented, but one
-choice here is to include the
+charge. The internal unit for charge is not yet implemented, but a
+choice is here to include the
 factor :math:`\frac{1}{\sqrt{4\pi\varepsilon_0}}`. An internal
 calculation of :math:`q_1 q_2` will then include coulombs constant in
 the correct units.
@@ -178,7 +172,7 @@ Coulomb as it's unit for charge. The time units for the different
 energy systems are given in the table below.
 
 
-.. table:: Time units and velocity conversions for energy systems
+.. table:: Time units for different systems
 
   +-------------+----------------------+
   | System name | Time unit            |
@@ -199,8 +193,7 @@ energy systems are given in the table below.
 
 The interpretation here is that if you are for instance using the system
 ``real`` and would like to have a time step equal to 0.5 fs, then the
-input time step should be ``0.5 fs / 48.8882129084 fs`` which is
-approximately ``0.010227``.
+input time step to pyretis should be ``0.5 fs / 48.8882129084 fs``.
 
 
 References and footnotes
@@ -371,6 +364,11 @@ UNITS['force'] = {'N', 'pN', 'dyn'}
 CONVERT['force']['N', 'pN'] = 1.0e12
 CONVERT['force']['N', 'dyn'] = 1.0e5
 
+# For completeness, add self-convert:
+for i in DIMENSIONS:
+    for j in UNITS[i]:
+        CONVERT[i][j, j] = 1.0
+
 # Definitions for systems of units:
 UNIT_SYSTEMS = {'lj': {}, 'real': {}, 'metal': {}, 'au': {},
                 'electron': {}, 'si': {}, 'gromacs': {},
@@ -459,7 +457,11 @@ def _generate_conversion_for_dim(conv_dict, dim, unit):
         if unit == unit_to:  # just skip
             continue
         value = bfs_convert(convertdim, unit, unit_to)[1]
-        _add_conversion_and_inverse(convertdim, value, unit, unit_to)
+        if value is not None:
+            _add_conversion_and_inverse(convertdim, value, unit, unit_to)
+        else:
+            logger.warning('Could not convert %s -> %s for dimension %s',
+                           unit, unit_to, dim)
 
 
 def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
@@ -616,6 +618,10 @@ def bfs_convert(conversions, unit_from, unit_to):
                 que.append(unit2)
                 parents[unit2] = node
     path = []
+    if unit_to not in parents:
+        logger.warning('Could not determine conversion %s -> %s', unit_from,
+                       unit_to)
+        return (unit_from, unit_to), None, None
     node = unit_to
     while parents[node]:
         new = [None, node]
@@ -654,8 +660,13 @@ def convert_bases(dimension):
             elif unit1 not in convert and unit2 in convert:
                 convert[unit1] = 1.0 / convert[unit2]
             else:
-                convert[unit1] = bfs_convert(convert, key1, key2)[1]
-                convert[unit2] = 1.0 / convert[unit1]
+                value = bfs_convert(convert, key1, key2)[1]
+                if value is not None:
+                    convert[unit1] = value
+                    convert[unit2] = 1.0 / convert[unit1]
+                else:
+                    logger.warning(('Could not convert base %s -> %s for '
+                                    'dimension %s'), key1, key2, dimension)
 
 
 def generate_system_conversions(system1, system2):
@@ -675,8 +686,13 @@ def generate_system_conversions(system1, system2):
     """
     for dim in CONVERT:
         convert = CONVERT[dim]
-        convert[system1, system2] = bfs_convert(convert, system1, system2)[1]
-        convert[system2, system1] = 1.0 / convert[system1, system2]
+        value = bfs_convert(convert, system1, system2)[1]
+        if value is not None:
+            convert[system1, system2] = value
+            convert[system2, system1] = 1.0 / convert[system1, system2]
+        else:
+            logger.warning('Could not convert %s -> %s for dimension %s',
+                           system1, system2, dim)
 
 
 def print_table(unit, system=False):
@@ -755,13 +771,13 @@ def write_conversions(filename='units.txt'):
     out : None
         Will not return anything, but writes the given file.
     """
-    with open(filename, 'wb') as fileh:
+    with open(filename, 'w') as fileh:
         for dim in sorted(CONVERT):
             convert = CONVERT[dim]
             for unit in sorted(convert):
                 out = '{} {} {} {}\n'.format(dim, unit[0], unit[1],
                                              convert[unit])
-                fileh.write(out.encode('utf-8'))
+                fileh.write(out)
 
 
 def read_conversions(filename='units.txt', select_units=None):
@@ -792,9 +808,8 @@ def read_conversions(filename='units.txt', select_units=None):
                 if dim not in CONVERT:
                     raise ValueError
             except ValueError:
-                msg = 'Skipping line "{}" in {}'.format(lines.strip(),
-                                                        filename)
-                logger.warning(msg)
+                logger.warning('Skipping line "%s" in "%s"', lines.strip(),
+                               filename)
                 continue
             if dim not in convert:
                 convert[dim] = {}
@@ -922,11 +937,11 @@ def units_from_settings(settings):
             unit2 = settings['unit-system']['name'].lower()
         except KeyError:
             msg = 'Could not find "name" setting for section "unit-system"!'
-            logger.critical(msg)
+            logger.error(msg)
             raise ValueError(msg)
         if not unit2 == unit:
             msg = 'Inconsistent unit settings "{}" != "{}"'.format(unit, unit2)
-            logger.critical(msg)
+            logger.error(msg)
             raise ValueError(msg)
         setts = {}
         for key in ('length', 'energy', 'mass', 'charge'):
@@ -937,53 +952,52 @@ def units_from_settings(settings):
                 msg = msg.format(key)
                 logger.error(msg)
                 raise ValueError(msg)
-        msg = 'Creating (custom) unit system: "{}"'.format(unit)
-        logger.debug(msg)
+        logger.debug('Creating unit system: "%s"', unit)
         create_conversion_factors(unit, **setts)
     else:
-        msg = 'Creating unit: "{}"'.format(unit)
-        logger.debug(msg)
+        logger.debug('Creating unit: "%s"', unit)
         create_conversion_factors(unit)
     return msg
 
 
-if __name__ == '__main__':
-    # This is intended as an example of how to use the functions
-    # here to generate conversion factors for systems. This in case you
-    # would like to generate your own system of units.
-    # To make use of this example, just comment out the line where the
-    # units are read above.
-    # First, we just generate conversions between the bases:
-    NEW_UNITS = {'pyretis': {'length': (10, 'A'),
-                             'energy': (1000, 'J/mol'),
-                             'mass': (1.0, 'g/mol'),
-                             'charge': 'e'}}
-    for uni in NEW_UNITS:
-        create_conversion_factors(uni, length=NEW_UNITS[uni]['length'],
-                                  energy=NEW_UNITS[uni]['energy'],
-                                  mass=NEW_UNITS[uni]['mass'],
-                                  charge=NEW_UNITS[uni]['charge'])
-    # Units can be stored by:
-    # write_conversions()
-    # and loaded by:
-    # ccc = read_conversions(units='metal')
-    # for key in ccc:
-    #     print(key)
-    #     for key2 in ccc[key]:
-    #         print(key2, ccc[key][key2])
-    # just write out a table:
-    for uni in NEW_UNITS:
+def _examples():
+    """Just some examples of usage."""
+    # Create new system and print it out:
+    new_system = {'pyretis': {'length': (10, 'A'),
+                              'energy': (1000, 'J/mol'),
+                              'mass': (1.0, 'g/mol'),
+                              'charge': 'e'}}
+    for uni in new_system:
+        create_conversion_factors(
+            uni,
+            length=new_system[uni]['length'],
+            energy=new_system[uni]['energy'],
+            mass=new_system[uni]['mass'],
+            charge=new_system[uni]['charge'])
         print_table(uni)
-    # Also add some conversions between systems:
-    # print(bfs_convert(CONVERT['energy'], 'lj', 'gromacs'))
-    # print(bfs_convert(CONVERT['time'], 'gromacs', 'real'))
-    # print(bfs_convert(CONVERT['energy'], 'lj', 'real'))
-    # print(bfs_convert(CONVERT['length'], 'lj', 'real'))
-    # print(bfs_convert(CONVERT['mass'], 'lj', 'real'))
+    # Also add some base conversions for systems:
+    create_conversion_factors('lj')
+    create_conversion_factors('gromacs')
+    create_conversion_factors('real')
+    # Show how we can convert between systems:
+    for key in ('energy', 'time'):
+        for sys1 in ('lj', 'gromacs', 'real'):
+            for sys2 in ('lj', 'gromacs', 'real'):
+                if sys1 == sys2:
+                    continue
+                print(('\nTo convert "{}" between systems '
+                       '"{}" & "{}"').format(key, sys1, sys2))
+                _, value, path = bfs_convert(CONVERT[key], sys1, sys2)
+                txt_path = ['{} -> {}'.format(*nodes) for nodes in path]
+                txt = ' -> '.join(txt_path)
+                print('Conversion value: {}'.format(value))
+                print('Conversion path: {}'.format(txt))
     # To generate conversions between different systems:
-    # for sys1 in UNIT_SYSTEMS:
-    #     for sys2 in UNIT_SYSTEMS:
-    #         if sys1 != sys2:
-    #             generate_system_conversions(sys1, sys2)
-    # for uni in UNIT_SYSTEMS:
-    #    print_table(uni, system=True)
+    for sys1 in UNIT_SYSTEMS:
+        for sys2 in UNIT_SYSTEMS:
+            if sys1 != sys2:
+                generate_system_conversions(sys1, sys2)
+    write_conversions(filename='units-example.txt')
+
+if __name__ == '__main__':
+    _examples()
