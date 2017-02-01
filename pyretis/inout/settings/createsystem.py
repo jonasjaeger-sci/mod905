@@ -107,7 +107,7 @@ def list_get(input_list, index):
         return input_list[-1]
 
 
-def _guess_particle_mass(particle_no, particle_type, unit):
+def guess_particle_mass(particle_no, particle_type, unit):
     """Method that will try to guess a particle mass from it's type.
 
     Parameters
@@ -120,19 +120,18 @@ def _guess_particle_mass(particle_no, particle_type, unit):
         The system of units. This is used in case we try to get the
         mass from the periodic table where the units are in `g/mol`.
     """
-    msg = ['Mass not specified for particle no. {}!'.format(particle_no)]
-    msg += ['Will guess from particle type: {}'.format(particle_type)]
+    logger.info(('Mass not specified for particle no. %i\n'
+                 'Will guess from particle type "%s"'), particle_no,
+                particle_type)
     mass = PERIODIC_TABLE.get(particle_type, None)
     if mass is None:
         particle_mass = 1.0
-        msg += ['->\nCould not find mass. Assuming' +
-                ' {} (internal units)'.format(particle_mass)]
+        logger.info(('-> Could not find mass. '
+                     'Assuming %f (internal units)'), particle_mass)
     else:
-        msg += ['->\nUsing mass of: {} g/mol'.format(mass)]
         particle_mass = CONVERT['mass']['g/mol', unit] * mass
-        msg += ['({} in internal units)'.format(particle_mass)]
-    msgtxt = ' '.join(msg)
-    logger.warning(msgtxt)
+        logger.info(('-> Using a mass of %f g/mol '
+                     '(%f in internal units)'), mass, particle_mass)
     return particle_mass
 
 
@@ -183,8 +182,8 @@ def initial_positions_lattice(settings):
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
-            particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['system']['units'])
+            particle_mass = guess_particle_mass(i + 1, particle_name,
+                                                settings['system']['units'])
         particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
@@ -315,8 +314,8 @@ def initial_positions_file(settings):
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
-            particle_mass = _guess_particle_mass(i + 1, particle_name,
-                                                 settings['system']['units'])
+            particle_mass = guess_particle_mass(i + 1, particle_name,
+                                                settings['system']['units'])
         particles.add_particle(pos,
                                vel, np.zeros_like(pos),
                                mass=particle_mass, name=particle_name,
