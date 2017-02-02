@@ -36,31 +36,26 @@ class ExternalMDEngine(EngineBase):
     New engines should inherit from this class and implement the
     following methods:
 
-    :py:meth:`ExternalMDEngine.step`
+    * :py:meth:`ExternalMDEngine.step`
         A method for performing a MD step with the external
         engine. Note that the MD step can consist of a number
         of subcycles.
-
-    :py:meth:`ExternalMDEngine._read_configuration`
+    * :py:meth:`ExternalMDEngine._read_configuration`
         For reading output (configurations) from the external engine.
         This is used for calculating the order parameter(s).
-
-    :py:meth:`ExternalMDEngine._reverse_velocities`
+    * :py:meth:`ExternalMDEngine._reverse_velocities`
         For reversing velocities in a snapshot. This method
         will typically make use of the
         :py:meth:`ExternalMDEngine._read_configuration` method.
-
-    :py:meth:`ExternalMDEngine._extract_frame`
+    * :py:meth:`ExternalMDEngine._extract_frame`
         For extracting a single frame from a trajectory.
-
-    :py:meth:`ExternalMDEngine._propagate_from`
+    * :py:meth:`ExternalMDEngine._propagate_from`
         The method for propagating the equations of motion using
         the external engine.
-
-    :py:meth:`ExternalMDEngine.modify_velocities`
+    * :py:meth:`ExternalMDEngine.modify_velocities`
         The method used for generating random velocities for
-        shooting points. Note that this method in
-        :py:class:`pyretis.engines.engine.EngineBase`.
+        shooting points. Note that this method is defined in
+        :py:meth:`engines.EngineBase.modify_velocities`.
 
     Attributes
     ----------
