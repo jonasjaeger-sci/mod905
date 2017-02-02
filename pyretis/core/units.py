@@ -953,9 +953,11 @@ def units_from_settings(settings):
                 logger.error(msg)
                 raise ValueError(msg)
         logger.debug('Creating unit system: "%s"', unit)
+        msg = 'Creating unit system: {}'.format(unit)
         create_conversion_factors(unit, **setts)
     else:
         logger.debug('Creating unit: "%s"', unit)
+        msg = 'Creating unit:  {}'.format(unit)
         create_conversion_factors(unit)
     return msg
 
