@@ -45,23 +45,35 @@ calculate_thermo_path
     is similar to the `calculate_thermo`, however it is simpler and
     calculates fewer quantities.
 
+kinetic_energy
+    Return the kinetic energy for velocities and masses given as
+    numpy arrays.
+
+kinetic_temperature
+    Return the temperature for velocities and masses given as
+    numpy arrays.
+
 reset_momentum
     Set linear momentum (for a selection of particles) to zero.
 """
 import numpy as np
 
 
-__all__ = ['atomic_kinetic_energy_tensor',
-           'calculate_kinetic_energy',
-           'calculate_kinetic_energy_tensor',
-           'calculate_kinetic_temperature',
-           'calculate_linear_momentum',
-           'calculate_pressure_from_temp',
-           'calculate_pressure_tensor',
-           'calculate_scalar_pressure',
-           'calculate_thermo',
-           'calculate_thermo_path',
-           'reset_momentum']
+__all__ = [
+    'atomic_kinetic_energy_tensor',
+    'calculate_kinetic_energy',
+    'calculate_kinetic_energy_tensor',
+    'calculate_kinetic_temperature',
+    'calculate_linear_momentum',
+    'calculate_pressure_from_temp',
+    'calculate_pressure_tensor',
+    'calculate_scalar_pressure',
+    'calculate_thermo',
+    'calculate_thermo_path',
+    'kinetic_energy',
+    'kinetic_temperature',
+    'reset_momentum'
+]
 
 
 def _get_vel_mass(particles, selection=None):
@@ -116,9 +128,9 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
     vel, mass = _get_vel_mass(particles, selection=selection)
     mom = vel * mass
     if len(mass) == 1:  # in general: selection != particles.npart
-        kin = 0.5*np.outer(mom, vel)
+        kin = 0.5 * np.outer(mom, vel)
     else:
-        kin = 0.5*np.einsum('ij,ik->ijk', mom, vel)
+        kin = 0.5 * np.einsum('ij,ik->ijk', mom, vel)
     return kin
 
 
@@ -163,19 +175,38 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
     Returns
     -------
     out : numpy.array
-        A numpy array with dimensionality equal to (dim, dim) where dim
-        is the number of dimensions used in the velocities. This tensor
-        should be symmetric and it's trace should be identical to the
-        output from the `dim` times the averaged output of the
-        `kinetic_energy` function defined below.
+        The kinetic energy tensor. Dimensionality equal to (dim, dim)
+        where dim is the number of dimensions used in the velocities.
+        The trace gives the kinetic energy.
     """
     vel, mass = _get_vel_mass(particles, selection=selection)
-    mom = vel * mass
-    if len(mass) == 1:  # in general: selection != particles.npart
-        kin = 0.5*np.outer(mom, vel)
-    else:
-        kin = 0.5*np.einsum('ij,ik->jk', mom, vel)
+    _, kin = kinetic_energy(vel, mass)
     return kin
+
+
+def kinetic_energy(vel, mass):
+    """Obtain the kinetic energy for given velocities and masses.
+
+    Parameters
+    ----------
+    vel : numpy.array
+        The velocities
+    mass : numpy.array
+        The masses. This is assumed to be a column vector.
+
+    Returns
+    -------
+    out[0] : float
+        The kinetic energy
+    out[1] : numpy.array
+        The kinetic energy tensor.
+    """
+    mom = vel * mass
+    if len(mass) == 1:
+        kin = 0.5 * np.outer(mom, vel)
+    else:
+        kin = 0.5 * np.einsum('ij,ik->jk', mom, vel)
+    return kin.trace(), kin
 
 
 def calculate_kinetic_temperature(particles, boltzmann, dof=None,
@@ -215,6 +246,45 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(particles,
                                                      selection=selection)
+    if dof is not None:
+        ndof = ndof - dof
+    temperature = (2.0 * kin_tensor.diagonal() / ndof) / boltzmann
+    return temperature, np.average(temperature), kin_tensor
+
+
+def kinetic_temperature(vel, mass, boltzmann, dof=None):
+    """Return the kinetic temperature given velocities and masses.
+
+    This method does not work on a particle object, but rather with
+    numpy arrays. That is, it is intended for use when we can't rely
+    on the particle object.
+
+    Parameters
+    ----------
+    vel : numpy.array
+        The velocities
+    mass : numpy.array
+        The masses. This is assumed to be a column vector.
+    boltzmann : float
+        This is the Boltzmann factor/constant in correct units.
+    dof : list of floats, optional
+        dof is the degrees of freedom to subtract. It's shape should
+        be equal to the number of dimensions.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        Array with same size as the kinetic energy, it
+        contains the temperature in each spatial dimension.
+    out[1] : float
+        The temperature averaged over all dimensions.
+    out[2] : numpy.array
+        The kinetic energy tensor.
+    """
+    npart = len(mass)  # using mass, since selection may be != particles.npart
+    ndof = npart * np.ones(vel[0].shape)
+
+    _, kin_tensor = kinetic_energy(vel, mass)
     if dof is not None:
         ndof = ndof - dof
     temperature = (2.0 * kin_tensor.diagonal() / ndof) / boltzmann
