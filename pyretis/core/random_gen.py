@@ -208,9 +208,10 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
             sigma_v = np.sqrt(kbt*system.particles.imass)
-        dim, npart = system.particles.vel.shape
-        vel = self.normal(loc=0.0, scale=np.repeat(sigma_v, dim))
-        vel.shape = (dim, npart)
+        dim, _ = system.particles.vel.shape
+        vel = np.zeros_like(system.particles.vel)
+        for i in range(dim):
+            vel[:, i] = self.normal(loc=0.0, scale=sigma_v)
         return vel, sigma_v
 
 
