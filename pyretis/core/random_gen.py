@@ -75,7 +75,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def random_integers(self, low, high, size=None):
+    def random_integers(self, low, high):
         """Draw random integers in [low, high].
 
         Parameters
@@ -84,16 +84,13 @@ class RandomGeneratorBase(metaclass=ABCMeta):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
 
         Returns
         -------
         out : int
             The pseudo random integers in [low, high].
         """
-        return
+        pass
 
     @abstractmethod
     def normal(self, loc=0.0, scale=1.0, size=None):
@@ -211,8 +208,9 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
             sigma_v = np.sqrt(kbt*system.particles.imass)
-        vel = self.normal(loc=0.0, scale=sigma_v,
-                          size=system.particles.vel.shape)
+        dim, npart = system.particles.vel.shape
+        vel = self.normal(loc=0.0, scale=np.repeat(sigma_v, dim))
+        vel.shape = (dim, npart)
         return vel, sigma_v
 
 
@@ -266,10 +264,15 @@ class RandomGenerator(RandomGeneratorBase):
         -------
         out : float
             Pseudo random number in [0, 1)
+
+        Note
+        ----
+        Here, we will just draw a list of numbers and not for
+        an arbitrary shape.
         """
         return self.rgen.rand(shape)
 
-    def random_integers(self, low, high, size=None):
+    def random_integers(self, low, high):
         """Draw random integers in [low, high].
 
         Parameters
@@ -278,16 +281,18 @@ class RandomGenerator(RandomGeneratorBase):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
 
         Returns
         -------
         out : int
             The pseudo random integers in [low, high].
+
+        Note
+        ----
+        np.random.randint(low, high) is defined as drawing
+        from `low` (inclusive) to `high` (exclusive).
         """
-        return self.rgen.random_integers(low, high, size=size)
+        return self.rgen.randint(low, high + 1)
 
     def normal(self, loc=0.0, scale=1.0, size=None):
         """Return values from a normal distribution.
@@ -486,7 +491,7 @@ class MockRandomGenerator(RandomGeneratorBase):
             self.seed += 1
         return np.array(numbers)
 
-    def random_integers(self, low, high, size=None):
+    def random_integers(self, low, high):
         """Return random integers in [low, high].
 
         Parameters
@@ -495,18 +500,12 @@ class MockRandomGenerator(RandomGeneratorBase):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
-
 
         Returns
         -------
         out : int
             This is a pseudo random integer in [low, high]
         """
-        if size is not None:
-            logger.warning('The mock generator does not use a size variable')
         idx = self.rand()*(high-low+1)
         return int(idx) + low
 
