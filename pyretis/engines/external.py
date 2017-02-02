@@ -55,7 +55,7 @@ class ExternalMDEngine(EngineBase):
     * :py:meth:`ExternalMDEngine.modify_velocities`
         The method used for generating random velocities for
         shooting points. Note that this method is defined in
-        :py:meth:`engines.EngineBase.modify_velocities`.
+        :py:meth:`.EngineBase.modify_velocities`.
 
     Attributes
     ----------

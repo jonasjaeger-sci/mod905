@@ -97,10 +97,10 @@ class EngineBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        system : object like :py:class:`core.system.System`
+        system : object like :class:`.core.system.System`
             System is used here since we need access to the particle
             list.
-        rgen : object like :py:class:`core.random_gen.RandomGenerator`
+        rgen : object like :class:`.core.random_gen.RandomGenerator`
             This is the random generator that will be used.
         sigma_v : numpy.array, optional
             These values can be used to set a standard deviation (one
