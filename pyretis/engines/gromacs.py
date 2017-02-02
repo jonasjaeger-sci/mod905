@@ -140,15 +140,17 @@ class GromacsEngine(ExternalMDEngine):
     mdrun : string
         The command for executing GROMACS mdrun. In some cases this
         executable can be different from ``gmx mdrun``.
+    mdrun_c : string
+        The command for executing GROMACS mdrun when continuing a
+        simulation. This is derived from the ``mdrun`` command.
     input_path : string
         The directory where the input files are stored.
     input_files : dict of strings
         The names of the input files. We expect to find the keys
         ``'conf'``, ``'input'`` ``'topology'``.
-    timestep : float
-        The time step used in the GROMACS MD simulation.
-    subcycles : integer
-        The number of steps each GROMACS MD run is composed of.
+    ext_time : float
+        The time to extend simulations by. It is equal to
+        ``timestep * subcycles``.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles):
@@ -167,17 +169,16 @@ class GromacsEngine(ExternalMDEngine):
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
         """
-        super().__init__('GROMASC external script', timestep,
-                         subcycles, 'g96')
+        super().__init__('GROMASC engine', timestep, subcycles, 'g96')
+        # Define the gmx command:
         self.gmx = gmx
-        # define derived commands
-        # For mdrun we do things a bit convolved in case the mdrun command
-        # is actually several commands, e.g. ``mpirun mdrun_mpi``.
+        # For mdrun, set up for first execution and continuation:
         self.mdrun = mdrun + ' -s {} -deffnm {} -c {}'
-        self.mdrunc = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
+        self.mdrun_c = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
+        self.ext_time = self.timestep * self.subcycles
 
+        # Add input path and the input files:
         self.input_path = os.path.abspath(input_path)
-        # Hard coded input files:
         input_files = {'conf': 'conf.g96',
                        'input_o': 'grompp.mdp',  # "o" = original input file
                        'topology': 'topol.top'}
@@ -188,8 +189,8 @@ class GromacsEngine(ExternalMDEngine):
                 msg = 'GROMACS engine is missing input file "{}"'.format(val)
                 logger.error(msg)
                 raise ValueError(msg)
-        # Sanitise the subcycles and the time step for the input file:
-        # Create output file to generate velocities:
+        # Check the input file and create a pyretis version with consistent
+        # settings:
         settings = {'dt': self.timestep, 'nstxout-compressed': 0}
         for key in ('nsteps', 'nstxout', 'nstvout', 'nstfout', 'nstlog',
                     'nstcalcenergy', 'nstenergy'):
@@ -198,7 +199,11 @@ class GromacsEngine(ExternalMDEngine):
                                                  'pyretis.mdp')
         self._modify_input(self.input_files['input_o'],
                            self.input_files['input'], settings, delim='=')
+        logger.info(('Created GROMACS mdp input from %s. You might '
+                     'want to check the input file: %s'),
+                    self.input_files['input_o'], self.input_files['input'])
         # Generate a tpr file using the input files:
+        logger.info('Creating ".tpr" for GROMACS in %s', self.input_path)
         self.exe_dir = self.input_path
         out_files = self._execute_grompp(self.input_files['input'],
                                          self.input_files['conf'], 'topol')
@@ -210,12 +215,10 @@ class GromacsEngine(ExternalMDEngine):
         # Keep the tpr file.
         self.input_files['tpr'] = os.path.join(self.input_path,
                                                out_files['tpr'])
+        logger.info('GROMACS ".tpr" created: %s', self.input_files['tpr'])
 
     def _execute_grompp(self, mdp_file, config, deffnm):
         """Method to execute the GROMACS preprocessor.
-
-        This step is unique to GROMACS and is included here
-        as its own method.
 
         Parameters
         ----------
@@ -270,7 +273,7 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _execute_grompp_and_mdrun(self, config, deffnm):
-        """Run grompp and the mdrun.
+        """Run grompp and mdrun.
 
         Here we use the input file given in the input directory.
 
@@ -322,8 +325,8 @@ class GromacsEngine(ExternalMDEngine):
         """
         confout = '{}.g96'.format(deffnm)
         self._removefile(confout)
-        cmd = shlex.split(self.mdrunc.format(tprfile, cptfile,
-                                             deffnm, confout))
+        cmd = shlex.split(self.mdrun_c.format(tprfile, cptfile,
+                                              deffnm, confout))
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'conf': confout}
         for key in ('cpt', 'edr', 'log', 'trr'):
@@ -463,13 +466,8 @@ class GromacsEngine(ExternalMDEngine):
             A name to use for the trajectory we are generating.
         path : object like :py:class:`pyretis.core.Path.PathBase`
             This is the path we use to fill in phase-space points.
-            We are here not returning a new path - this since we want
-            to delegate the creation of the path to the method
-            that is running `propagate`.
         system : object like `System` from `pyretis.core.system`
-            The system object gives the initial state for the
-            integration. The initial state is stored and the system is
-            reset to the initial state when the integration is done.
+            The system object gives the initial state.
         order_function : object like `pyretis.orderparameter.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
@@ -538,7 +536,7 @@ class GromacsEngine(ExternalMDEngine):
         path.vpot = np.copy(energy['potential'])
         path.ekin = np.copy(energy['kinetic en.'])
 
-        logger.debug('Removing GROMACS files.')
+        logger.debug('Removing GROMACS output after propagate.')
         remove = [val for key, val in out_files.items() if key not in ('trr',)]
         self._remove_files(self.exe_dir, remove)
         self._remove_gromacs_backup_files(self.exe_dir)
@@ -553,6 +551,12 @@ class GromacsEngine(ExternalMDEngine):
             The system we are integrating.
         name : string
             To name the output files from the GROMACS step.
+
+        Returns
+        -------
+        out : string
+            The name of the output configuration, obtained after
+            completing the step.
         """
         initial_conf = self.dump_frame(system)
         # Save as a single snapshot file
@@ -565,12 +569,13 @@ class GromacsEngine(ExternalMDEngine):
         out_mdrun = self._execute_mdrun(out_grompp['tpr'],
                                         name)
         conf_abs = os.path.join(self.exe_dir, out_mdrun['conf'])
-        logger.debug('Obtaining energies after step...')
+        logger.debug('Obtaining GROMACS energies after single step.')
         energy = self.get_energies(out_mdrun['edr'])
         phase_point = {'pos': (conf_abs, None),
                        'vel': False, 'vpot': energy['potential'],
                        'ekin': energy['kinetic en.']}
         system.particles.set_particle_state(phase_point)
+        logger.debug('Removing GROMACS output after single step.')
         remove = [val for _, val in out_grompp.items()]
         remove += [val for key, val in out_mdrun.items() if key != 'conf']
         self._remove_files(self.exe_dir, remove)
@@ -608,6 +613,7 @@ class GromacsEngine(ExternalMDEngine):
         confout = os.path.join(self.exe_dir, out_mdrun['conf'])
         energy = self.get_energies(out_mdrun['edr'])
         # remove run-files:
+        logger.debug('Removing GROMACS output after velocity generation.')
         self._remove_files(self.exe_dir, remove)
         return confout, energy
 
@@ -691,10 +697,10 @@ class GromacsEngine(ExternalMDEngine):
         if aimless:
             pos = self.dump_frame(system)
             posvel, energy = self._prepare_shooting_point(pos)
-            pot = energy['potential'][-1]
             kin_new = energy['kinetic en.'][-1]
             phase_point = {'pos': (posvel, None), 'vel': False,
-                           'vpot': pot, 'ekin': kin_new}
+                           'ekin': kin_new,
+                           'vpot': energy['potential'][-1]}
             system.particles.set_particle_state(phase_point)
         else:  # soft velocity change, add from Gaussian dist
             msgtxt = 'GROMACS engine only support aimless shooting!'
@@ -704,7 +710,9 @@ class GromacsEngine(ExternalMDEngine):
             pass
         if kin_old is None or kin_new is None:
             dek = float('inf')
-            logger.warning('Kinetic energy not set for previous point.')
+            logger.warning(('Kinetic energy not found for previous point.'
+                            '\n(This happens when the initial configuration '
+                            'does not contain energies.)'))
         else:
             dek = kin_new - kin_old
         return dek, kin_new

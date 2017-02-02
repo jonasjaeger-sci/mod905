@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Definition of external integrators.
+"""Definition of external engines.
 
-This module defines the external integrator. In addition
-it defines a class for the execution script which is
-sub-classed by all external scripts.
+This module defines the base class for external MD engines.
+This class is subclassed by all other external MD engines.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,33 +28,55 @@ __all__ = ['ExternalMDEngine']
 
 
 class ExternalMDEngine(EngineBase):
-    """Base class for interfacing external engines (programs).
+    """Base class for interfacing external MD engines.
 
-    This class defines the interface to external programs. This
+    This class defines the interface to external programs. The
     interface will define how we interact with the external programs
     and how we write input files for them and read output files.
+    New engines should inherit from this class and implement the
+    following methods:
+
+    :py:meth:`ExternalMDEngine.step`
+        A method for performing a MD step with the external
+        engine. Note that the MD step can consist of a number
+        of subcycles.
+
+    :py:meth:`ExternalMDEngine._read_configuration`
+        For reading output (configurations) from the external engine.
+        This is used for calculating the order parameter(s).
+
+    :py:meth:`ExternalMDEngine._reverse_velocities`
+        For reversing velocities in a snapshot. This method
+        will typically make use of the
+        :py:meth:`ExternalMDEngine._read_configuration` method.
+
+    :py:meth:`ExternalMDEngine._extract_frame`
+        For extracting a single frame from a trajectory.
+
+    :py:meth:`ExternalMDEngine._propagate_from`
+        The method for propagating the equations of motion using
+        the external engine.
+
+    :py:meth:`ExternalMDEngine.modify_velocities`
+        The method used for generating random velocities for
+        shooting points. Note that this method in
+        :py:class:`pyretis.engines.engine.EngineBase`.
 
     Attributes
     ----------
     description : string
         Short string which a description about the external
         script. This can for instance be what program we are
-        interfacing.
+        interfacing. This is used for output of information to
+        the user.
     timestep : float
         The time step used for the external engine.
     subcycles : integer
-        The number of steps the external step is composed of. That is
-        each external step is really composed of ``subcycles``
-        number of iterations.
-    ext_time : float
-        The time to extend simulations by. It is equal to
-        ``timestep * subcycles``.
+        The number of steps the external step is composed of. That is:
+        each external step is really composed of ``subcycles`` number
+        of iterations.
     ext : string
-        Extension for configuration files. It includes the
-        extension separator ".".
-    exe_dir : string
-        The current directory we are executing the external
-        integrator in.
+        Extension for configuration files.
     """
     engine_type = 'external'
 
@@ -82,7 +103,6 @@ class ExternalMDEngine(EngineBase):
         super().__init__(description)
         self.timestep = timestep
         self.subcycles = subcycles
-        self.ext_time = self.timestep * self.subcycles
         self._exe_dir = None
         self.ext = '{}{}'.format(os.extsep, ext)
 
@@ -104,20 +124,35 @@ class ExternalMDEngine(EngineBase):
         """Perform one time step of the integration.
 
         For external engines, it does not make much sense to run single
-        steps unless we absolutely have to. We therefore just fail here
-        if someone wants to do that in MD simulations for instance.
+        steps unless we absolutely have to. We therefore just fail here.
+        I.e. the external engines are not intended for performing pure
+        MD simulations.
 
         If it's absolutely needed, there is a `self.step()` method
         which can be used, for instance in the initialization.
-        It should not be used for MD simulations!
         """
-        msg = 'External engine does not support "integration_step"!'
+        msg = 'External engine does not support "integration_step()"!'
         logger.error(msg)
         raise NotImplementedError(msg)
 
     @abstractmethod
     def step(self, system, name):
-        """Perform a single step with the external engine."""
+        """Perform a single step with the external engine.
+
+        Parameters
+        ----------
+        system : object like :py:class:`pyretis.core.system.System`
+            The system we are integrating.
+        name : string
+            To name the output files from the external engine.
+
+        Returns
+        -------
+        out : string
+            The name of the output configuration, obtained after
+            completing the step.
+
+        """
         pass
 
     @staticmethod
@@ -438,7 +473,7 @@ class ExternalMDEngine(EngineBase):
 
     @abstractmethod
     def _extract_frame(self, traj_file, idx, out_file):
-        """Extract a frame from a .trr file.
+        """Extract a frame from a trajectory file.
 
         Parameters
         ----------
@@ -526,7 +561,32 @@ class ExternalMDEngine(EngineBase):
     @abstractmethod
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
-        """Method to run the actual propagation using the specific engine."""
+        """Method to run the actual propagation using the specific engine.
+
+        This method is called after :py:meth:`.propagate`.
+
+        Parameters
+        ----------
+        name : string
+            A name to use for the trajectory we are generating.
+        path : object like :py:class:`pyretis.core.Path.PathBase`
+            This is the path we use to fill in phase-space points.
+        system : object like `System` from `pyretis.core.system`
+            The system object gives the initial state.
+        order_function : object like `pyretis.orderparameter.OrderParameter`
+            The object used for calculating the order parameter.
+        interfaces : list of floats
+            These interfaces define the stopping criterion.
+        reverse : boolean
+            If True, the system will be propagated backwards in time.
+
+        Returns
+        -------
+        success : boolean
+            This is True if we generated an acceptable path.
+        status : string
+            A text description of the current status of the propagation.
+        """
         pass
 
     def dump_config(self, config, deffnm='conf'):
