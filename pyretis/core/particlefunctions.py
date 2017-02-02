@@ -252,7 +252,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     return temperature, np.average(temperature), kin_tensor
 
 
-def kinetic_temperature(vel, mass, boltzmann, dof=None):
+def kinetic_temperature(vel, mass, boltzmann, dof=None, kin_tensor=None):
     """Return the kinetic temperature given velocities and masses.
 
     This method does not work on a particle object, but rather with
@@ -270,6 +270,9 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None):
     dof : list of floats, optional
         dof is the degrees of freedom to subtract. It's shape should
         be equal to the number of dimensions.
+    kin_tensor : numpy.array optional
+        The kinetic energy tensor. If the kinetic energy tensor is not
+        given, it will be recalculated here.
 
     Returns
     -------
@@ -284,7 +287,9 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None):
     npart = len(mass)  # using mass, since selection may be != particles.npart
     ndof = npart * np.ones(vel[0].shape)
 
-    _, kin_tensor = kinetic_energy(vel, mass)
+    if kin_tensor is None:
+        _, kin_tensor = kinetic_energy(vel, mass)
+
     if dof is not None:
         ndof = ndof - dof
     temperature = (2.0 * kin_tensor.diagonal() / ndof) / boltzmann
