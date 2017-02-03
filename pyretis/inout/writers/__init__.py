@@ -76,13 +76,14 @@ import logging
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .traj import (read_xyz_file, read_gromacs_file, XYZWriter, GROWriter,
-                   PathXYZWriter, PathGROWriter, PathExtWriter)
+from .gromacsio import (read_gromacs_file, GROWriter, PathGROWriter)
+from .xyzio import (read_xyz_file, XYZWriter, PathXYZWriter)
 from .txtinout import txt_save_columns
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import (CrossWriter,
                       EnergyWriter, EnergyPathWriter,
-                      OrderWriter, OrderPathWriter)
+                      OrderWriter, OrderPathWriter,
+                      TrajWriter, PathExtWriter)
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())

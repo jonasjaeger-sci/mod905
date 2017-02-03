@@ -3,7 +3,7 @@
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Here, we just generate the initial config using pyretis tools."""
 from pyretis.tools.lattice import generate_lattice
-from pyretis.inout.writers.traj import format_xyz_data
+from pyretis.inout.writers.xyzio import write_xyz_file
 
 filename = 'initial.xyz'
 density = 9.0 / 15.0
@@ -12,6 +12,4 @@ names = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'B', 'B']
 print('Generating for density: {}'.format(density))
 print('Box size: {}'.format(size))
 print('Writing file: {}'.format(filename))
-with open(filename, 'w') as output:
-    for lines in format_xyz_data(xyz, names=names, header='Initial config'):
-        output.write('{}\n'.format(lines))
+write_xyz_file(filename, xyz, names=names, header='Initial config')

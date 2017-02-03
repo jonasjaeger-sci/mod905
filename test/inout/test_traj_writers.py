@@ -11,7 +11,7 @@ import os
 import numpy as np
 from pyretis.core import Box, System, Particles, Path, PathExt
 from pyretis.tools.lattice import generate_lattice
-from pyretis.inout.writers.traj import _adjust_coordinate
+from pyretis.inout.writers.writers import adjust_coordinate
 from pyretis.inout.writers import get_writer
 logging.disable(logging.CRITICAL)
 
@@ -72,21 +72,21 @@ class TrajTest(unittest.TestCase):
         particles.add_particle(np.array([1.0]),
                                np.zeros(1),
                                np.zeros(1))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([1.0, 0.0, 0.0])))
         # 1 particle, 2D
         particles = Particles(dim=2)
         particles.add_particle(np.array([1.0, 1.0]),
                                np.zeros(2),
                                np.zeros(2))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([1.0, 1.0, 0.0])))
         # 1 particle, 3D
         particles = Particles(dim=3)
         particles.add_particle(np.array([1.0, 1.0, 1.0]),
                                np.zeros(3),
                                np.zeros(3))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([1.0, 1.0, 1.0])))
         # 2 particles, 1D
         particles = Particles(dim=1)
@@ -96,7 +96,7 @@ class TrajTest(unittest.TestCase):
         particles.add_particle(np.array([-1.0]),
                                np.zeros(1),
                                np.zeros(1))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([[1., 0., 0.],
                                                    [-1., 0., 0.]])))
         # 2 particles, 2D
@@ -107,7 +107,7 @@ class TrajTest(unittest.TestCase):
         particles.add_particle(np.array([-1.0, 1.0]),
                                np.zeros(2),
                                np.zeros(2))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([[1., -1., 0.],
                                                    [-1., 1., 0.]])))
 
@@ -119,7 +119,7 @@ class TrajTest(unittest.TestCase):
         particles.add_particle(np.array([-1.0, 1.0, -0.5]),
                                np.zeros(3),
                                np.zeros(3))
-        pos = _adjust_coordinate(particles.pos)
+        pos = adjust_coordinate(particles.pos)
         self.assertTrue(np.allclose(pos, np.array([[1., -1., 0.5],
                                                    [-1., 1., -0.5]])))
 

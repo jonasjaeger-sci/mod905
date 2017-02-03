@@ -4,7 +4,7 @@
 The outcome of the md_nve.py simulation should be independent (to numerical
 precision) of the units used. This script will test that by comparing:
 
-- the output in `thermo.dat`
+- the output in `thermo.txt`
 
 - the generated trajectory, `traj.gro`
 
@@ -16,7 +16,7 @@ import filecmp
 import numpy as np
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
-from pyretis.inout.writers.traj import read_gromacs_file
+from pyretis.inout.writers import read_gromacs_file
 from pyretis.inout.settings import parse_settings_file
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     create_conversion_factors(UNIT)
     generate_system_conversions('lj', UNIT)
     compare_traj('../traj.gro', 'traj.gro')
-    ljunits = np.loadtxt('../thermo.dat')
-    other_units = np.loadtxt('thermo.dat')
+    ljunits = np.loadtxt('../thermo.txt')
+    other_units = np.loadtxt('thermo.txt')
     # convert other_units:
     other_units[:, 1] *= CONVERT['temperature'][UNIT, 'lj']
     other_units[:, 2:5] *= CONVERT['energy'][UNIT, 'lj']

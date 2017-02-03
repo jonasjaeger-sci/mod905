@@ -20,17 +20,51 @@ CrossWriter
 EnergyWriter
     A class for writing energy data.
 
+EnergyPathWriter
+    A class for writing out energy data for paths.
+
 OrderWriter
     A class for writing out order parameter data.
+
+OrderPathWriter
+    A class for writing out order parameter data for paths.
+
+TrajWriter
+    Generic class for writing trajectory output.
+
+PathExtWriter
+    A class for writing external paths to file.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+adjust_coordinates
+    Helper method to add dimensions when writing data in 1D or 2D to an
+    output format that requires 3D data.
+
+read_some_lines
+    Open a file and try to read as many lines as possible. This method
+    is useful when we are reading possibly unfinished results.
 """
 import logging
+import os
 import numpy as np
+from pyretis.core.units import CONVERT  # unit conversion in trajectory
 # pyretis imports
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['CrossWriter', 'EnergyWriter', 'OrderWriter']
+__all__ = [
+    'CrossWriter',
+    'EnergyWriter',
+    'EnergyPathWriter',
+    'OrderWriter',
+    'OrderPathWriter',
+    'TrajWriter',
+    'PathExtWriter',
+    'read_some_lines',
+    'adjust_coordinate']
 
 
 def _make_header(labels, width, spacing=1):
@@ -592,3 +626,158 @@ class OrderPathWriter(OrderWriter):
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
             yield self.format_data(i, phasepoint['order'])
+
+
+def adjust_coordinate(coord):
+    """Method to adjust the dimensionality of coordinates.
+
+    This is a helper method for trajectory writers.
+
+    A lot of the different formats expects us to have 3 dimensional
+    data. This method just adds dummy dimensions equal to zero.
+
+    Parameters
+    ----------
+    coord : numpy.array
+        The real coordinates.
+
+    Returns
+    -------
+    out : numpy.array
+        The "zero-padded" coordinates.
+    """
+    if len(coord.shape) == 1:
+        npart, dim = len(coord), 1
+    else:
+        npart, dim = coord.shape
+    if dim == 3:
+        return coord
+    else:
+        adjusted = np.zeros((npart, 3))
+        try:
+            for i in range(dim):
+                adjusted[:, i] = coord[:, i]
+        except IndexError:
+            if dim == 1:
+                adjusted[:, 0] = coord
+        return adjusted
+
+
+class TrajWriter(Writer):
+    """Generic class for writing system shapshots.
+
+    Attributes
+    ----------
+    atom_names : list
+        These are the atom names used for the output.
+    convert_pos : float
+        Defines the conversion of positions from internal units.
+    covert_vel : float or None
+        Defines the conversion of velocities from internal units.
+    frame : integer
+        The number of frames written.
+    """
+
+    def __init__(self, name, write_vel, units, out_units):
+        """Initialize the writer.
+
+        Parameters
+        ----------
+        name : string
+            Just a name to identify the writer when printing it.
+        write_vel : boolean
+            If True, the writer will attempt to output velocities. This may
+            or may not be supported by the writer.
+        units : string
+            The internal units used in the simulation.
+        out_units : dict of strings
+            The units used in the output from the writer.
+        """
+        super().__init__(name, header=None)
+        self.print_header = False
+        self.atom_names = []
+        self.frame = 0  # number of frames written
+        self.write_vel = write_vel
+        pos_unit = out_units['pos']
+        vel_unit = out_units.get('vel', None)
+        try:
+            self.convert_pos = CONVERT['length'][units, pos_unit]
+        except KeyError:
+            self.convert_pos = 1.0
+            msg = 'Could not get conversion "{} -> {}"'.format(units,
+                                                               pos_unit)
+            logger.info(msg)
+            msg = 'Position output will be in units: "{}"'.format(units)
+            logger.info(msg)
+        if vel_unit is not None:
+            try:
+                self.convert_vel = CONVERT['velocity'][units, vel_unit]
+            except KeyError:
+                self.convert_vel = 1.0
+                msg = 'Could not get conversion "{} -> {}"'.format(units,
+                                                                   vel_unit)
+                logger.info(msg)
+                msg = 'Position output will be in units: "{}"'.format(units)
+                logger.info(msg)
+
+    def format_snapshot(self, step, system):
+        """Format the snapshot for output."""
+        raise NotImplementedError
+
+    def generate_output(self, step, system):
+        """Generate the snapshot output."""
+        for lines in self.format_snapshot(step, system):
+            yield lines
+
+
+class PathExtWriter(Writer):
+    """A class for writing external trajectories.
+
+    Attributes
+    ----------
+    print_header : boolean
+        Determines if we should print the header on the first step.
+    """
+
+    def __init__(self):
+        """Initialization of the PathExtWriter writer.
+
+        Parameters
+        ----------
+        units : string
+            The system of units used internally for positions and
+            velocities.
+        """
+        header = {'labels': ['Step', 'Filename', 'index', 'vel'],
+                  'width': [10, 20, 10, 5], 'spacing': 2}
+
+        super().__init__('PathExtWriter', header=header)
+        self.print_header = False
+
+    def generate_output(self, step, path):
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield self.header
+        for i, phasepoint in enumerate(path.trajectory()):
+            filename, idx = phasepoint['pos']
+            filename_short = os.path.basename(filename)
+            if idx is None:
+                idx = 0
+            vel = -1 if phasepoint['vel'] else 1
+            yield '{:>10}  {:>20s}  {:>10}  {:5}'.format(i, filename_short,
+                                                         idx, vel)
+
+    @staticmethod
+    def line_parser(line):
+        """A simple parser for reading path data.
+
+        Parameters
+        ----------
+        line : string
+            The line to parse.
+
+        Returns
+        -------
+        out : list
+            The columns of data.
+        """
+        return [col for col in line.split()]
