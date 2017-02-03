@@ -115,9 +115,9 @@ def step_txt(ensembles, retis_result, prun):
         accepted = result[1]
         line = []
         if name_of_move == 'swap':
-            name2 = ensembles[result[2]].ensemble_name
+            name2 = ensembles[result[-1]].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
-            if i == 0 or (i == 1 and result[2] == 0):
+            if i == 0 or (i == 1 and result[-1] == 0):
                 force += ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
             trial_path = result[2]
