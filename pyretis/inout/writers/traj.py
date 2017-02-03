@@ -37,6 +37,11 @@ read_xyz_file
 
 read_gromacs_file
     A method for reading snapshots from a GROMACS GRO file.
+
+format_xyz_data
+    A method for formatting position/velocity data in to a
+    xyz-like format. This can be used by external engines to
+    convert to a standard format.
 """
 import logging
 import os
@@ -53,12 +58,19 @@ _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
 _GRO_VEL_FMT = _GRO_FMT + '{7:8.4f}{8:8.4f}{9:8.4f}'
 _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 _XYZ_FMT = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}'
-_XYZ_FMTN = '{0:5s} {1:8.3f} {2:8.3f} {3:8.3f}\n'
+_XYZ_BIG_FMT = '{:5s}' + 3*' {:15.9f}'
+_XYZ_BIG_VEL_FMT = _XYZ_BIG_FMT + 3*' {:15.9f}'
 
 
-__all__ = ['XYZWriter', 'PathXYZWriter', 'GROWriter', 'PathGROWriter',
-           'PathExtWriter',
-           'read_gromacs_file', 'read_xyz_file', 'write_xyz_file']
+__all__ = [
+    'XYZWriter',
+    'PathXYZWriter',
+    'GROWriter',
+    'PathGROWriter',
+    'PathExtWriter',
+    'read_gromacs_file',
+    'read_xyz_file',
+    'format_xyz_data']
 
 
 def _adjust_coordinate(coord):
@@ -679,39 +691,51 @@ def read_xyz_file(filename):
         yield snapshot
 
 
-def write_xyz_file(filename, pos, names=None, header=None):
-    """Write a single configuration in xyz-format.
-
-    This is just a simple method to write a single xyz
-    configuration to a file. It will NOT convert positions and assumes
-    that these are given in correct units. This method is intended as a
-    lightweight alternative to :py:class:`.XYZWriter`.
+def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
+    """Format xyz data for outputting.
 
     Parameters
     ----------
-    filename : string
-        The file to create.
     pos : numpy.array
        The positions to write.
+    vel : numpy.array, optional
+       The velocities to write.
     names : list, optional
         The atom names.
     header : string, optional
         Header to use for writing the xyz-file.
+    fmt : string
+        A format to use for the writing
+
+    Yields
+    ------
+    out : string
+        The formatted lines.
     """
     npart = len(pos)
     pos = _adjust_coordinate(pos)
-    with open(filename, 'w') as fileh:
-        fileh.write('{}\n'.format(npart))
-        if header is None:
-            fileh.write('pyretis xyz writer\n')
-        else:
-            fileh.write('{}\n'.format(header))
+
+    if fmt is None:
+        fmt = _XYZ_BIG_FMT if vel is None else _XYZ_BIG_VEL_FMT
+
+    if vel is not None:
+        vel = _adjust_coordinate(vel)
+    yield '{}'.format(npart)
+
+    if header is None:
+        yield 'pyretis xyz writer'
+    else:
+        yield '{}'.format(header)
+
+    if names is None:
+        logger.warning('No atom name given. Using "X"')
+
+    for i in range(npart):
         if names is None:
-            for posi in pos:
-                logger.warning('No atom name given. Using "X"')
-                out = _XYZ_FMTN.format('X', posi[0], posi[1], posi[2])
-                fileh.write(out)
+            namei = 'X'
         else:
-            for namei, posi in zip(names, pos):
-                out = _XYZ_FMTN.format(namei, posi[0], posi[1], posi[2])
-                fileh.write(out)
+            namei = names[i]
+        if vel is None:
+            yield fmt.format(namei, *pos[i, :])
+        else:
+            yield fmt.format(namei, *pos[i, :], *vel[i, :])
