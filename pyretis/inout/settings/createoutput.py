@@ -580,9 +580,11 @@ def get_backup_settings(settings):
     try:
         old = settings['output']['backup'].lower()
     except AttributeError:
-        logger.warning('Setting "backup" not found in "output" section.')
-        old = 'backup' if settings['output']['backup'] else 'overwrite'
-        logger.warning('Handling of existing files is set to: %s', old)
+        logger.warning('Could not understand setting for "backup"'
+                       ' in "output" section.')
+        old = 'backup'
+        logger.warning('Handling of existing files is set to: "%s"', old)
+        settings['output']['backup'] = old
     return old
 
 

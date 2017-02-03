@@ -74,7 +74,8 @@ SECTIONS['potential'] = {'class': None,
 SECTIONS['orderparameter'] = {'class': None,
                               'module': None}
 
-SECTIONS['output'] = {'backup': False,
+
+SECTIONS['output'] = {'backup': 'overwrite',
                       'prefix': None,
                       'energy-file': 10,
                       'cross-file': 1,
