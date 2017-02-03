@@ -108,7 +108,8 @@ class GromacsEngine(ExternalMDEngine):
                 raise ValueError(msg)
         # Check the input file and create a pyretis version with consistent
         # settings:
-        settings = {'dt': self.timestep, 'nstxout-compressed': 0}
+        settings = {'dt': self.timestep, 'nstxout-compressed': 0,
+                    'gen_vel': 'no'}
         for key in ('nsteps', 'nstxout', 'nstvout', 'nstfout', 'nstlog',
                     'nstcalcenergy', 'nstenergy'):
             settings[key] = self.subcycles
@@ -518,7 +519,8 @@ class GromacsEngine(ExternalMDEngine):
             logger.debug('%s found. Re-using it!', gen_mdp)
         else:
             # Create output file to generate velocities:
-            settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0}
+            settings = {'gen_vel': 'yes', 'gen_seed': -1, 'nsteps': 0,
+                        'continuation': 'no'}
             self._modify_input(self.input_files['input'], gen_mdp, settings,
                                delim='=')
         # Run grompp for this input file:
