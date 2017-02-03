@@ -490,8 +490,9 @@ class GromacsEngine(ExternalMDEngine):
         logger.debug('Obtaining GROMACS energies after single step.')
         energy = self.get_energies(out_mdrun['edr'])
         phase_point = {'pos': (conf_abs, None),
-                       'vel': False, 'vpot': energy['potential'],
-                       'ekin': energy['kinetic en.']}
+                       'vel': False,
+                       'vpot': energy['potential'][-1],
+                       'ekin': energy['kinetic en.'][-1]}
         system.particles.set_particle_state(phase_point)
         logger.debug('Removing GROMACS output after single step.')
         remove = [val for _, val in out_grompp.items()]
