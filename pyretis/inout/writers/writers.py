@@ -408,13 +408,13 @@ class EnergyWriter(Writer):
     # Format for the energy files:
     ENERGY_FMT = ['{:>10d}'] + 5*['{:>14.6f}']
     ENERGY_TERMS = ('vpot', 'ekin', 'etot', 'temp')
+    HEADER = {'labels': ['Time', 'Potential', 'Kinetic', 'Total',
+                         'Temperature'],
+              'width': [10, 14]}
 
     def __init__(self):
         """Initialize a `EnergyWriter`."""
-        header = {'labels': ['Time', 'Potential', 'Kinetic', 'Total',
-                             'Temperature'],
-                  'width': [10, 14]}
-        super().__init__('EnergyWriter', header=header)
+        super().__init__('EnergyWriter', header=self.HEADER)
 
     def load(self, filename):
         """Load entire energy blocks into memory.
@@ -480,6 +480,9 @@ class EnergyWriter(Writer):
 
 class EnergyPathWriter(EnergyWriter):
     """A class for writing out energy data for paths."""
+    ENERGY_TERMS = ('vpot', 'ekin')
+    HEADER = {'labels': ['Time', 'Potential', 'Kinetic'],
+              'width': [10, 14]}
 
     def __init__(self):
         """Initialize."""

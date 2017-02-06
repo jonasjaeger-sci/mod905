@@ -144,9 +144,7 @@ class GROWriter(TrajWriter):
                                                 vel[i][1] * self.convert_vel,
                                                 vel[i][2] * self.convert_vel))
         if box_lengths is None:
-            logger.warning(('No box specified for GROMACS gro writer.\n'
-                            'Will just set it to (123, 123, 123)!'))
-            buff.append(_GRO_BOX_FMT.format(123.0, 123.0, 123.0))
+            buff.append(_GRO_BOX_FMT.format(222.2, 222.2, 222.2))
         else:
             buff.append(_GRO_BOX_FMT.format(*box_lengths))
         self.frame += 1
