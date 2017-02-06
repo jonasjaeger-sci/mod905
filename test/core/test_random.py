@@ -5,6 +5,9 @@
 import logging
 import unittest
 import numpy as np
+from pyretis.core.system import System
+from pyretis.core.box import Box
+from pyretis.core.particles import Particles
 from pyretis.core.random_gen import RandomGenerator
 logging.disable(logging.CRITICAL)
 
@@ -95,6 +98,32 @@ class RandomTest(unittest.TestCase):
         numbers = rgen.multivariate_normal(mean, cov, size=2)
         self.assertEqual(numbers.shape, (2, 2, 2))
 
+    def test_draw_maxwellian_velocities(self):
+        """Test that we can draw with the system object as input."""
+        temperature = 2.0
+        mass = np.array([1.0, 2.0, 4.0, 16.0, 256.0, 65536.0])
+        sigv = np.sqrt(temperature / mass)
+        tol = 0.1
+        rgen = RandomGenerator(seed=0)
+        for dim in (1, 2, 3):
+            system = System(
+                temperature=temperature,
+                units='reduced',
+                box=Box(periodic=[False]*dim))
+            system.particles = Particles(dim=dim)
+            for i in mass:
+                system.add_particle(np.zeros(dim), mass=i, name='Ar', ptype=0)
+            all_vel = []
+            for _ in range(1000):
+                veli, _ = rgen.draw_maxwellian_velocities(system)
+                all_vel.append(veli)
+            vel = np.array(all_vel)
+            # std over all drawn matrices:
+            std = np.std(vel, axis=(0,))
+            # compare for each dimension:
+            for i in range(dim):
+                std_diff = np.abs(std[:, i] - sigv) / sigv
+                self.assertTrue(all([i < tol for i in std_diff]))
 
 if __name__ == '__main__':
     unittest.main()

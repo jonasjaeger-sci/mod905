@@ -207,11 +207,10 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         """
         if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
+            # sigma_v is (n, 1) matrix
             sigma_v = np.sqrt(kbt*system.particles.imass)
-        dim, _ = system.particles.vel.shape
-        vel = np.zeros_like(system.particles.vel)
-        for i in range(dim):
-            vel[:, i] = self.normal(loc=0.0, scale=sigma_v)
+        npart, dim = system.particles.vel.shape
+        vel = self.normal(loc=0.0, scale=sigma_v, size=(npart, dim))
         return vel, sigma_v
 
 
