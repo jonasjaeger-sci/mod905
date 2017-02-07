@@ -35,7 +35,7 @@ def create_path():
     """Setup a simple path for a test."""
     system = create_test_system()
     system.particles.name = ['X'] * system.particles.npart
-    system.box = Box(size=[123.0, 123.0, 123.0])
+    system.box = Box(size=[222.2, 222.2, 222.2])
     path = Path(None)
     phasepoints = []
     for _ in range(10):
