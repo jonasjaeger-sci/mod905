@@ -8,7 +8,7 @@ This module defines different types of paths.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ReservoirPath
+ReservoirPath (:py:class:`.ReservoirPath`)
     A path where only a subset of points are stored in memory.
 """
 import logging
@@ -36,7 +36,7 @@ class ReservoirPath(Path):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -154,7 +154,7 @@ class ReservoirPath(Path):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`
+        out : object like :py:class:`.PathBase`
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', None)
@@ -173,7 +173,7 @@ class ReservoirPath(Path):
 
         Returns
         -------
-        path : object like :py:class:`PathBase`
+        path : object like :py:class:`.PathBase`
             This is basically a copy of `self`, just reversed.
         """
         path = self.reverse_trajectory()

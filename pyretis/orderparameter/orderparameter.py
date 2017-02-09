@@ -11,13 +11,13 @@ parameter (i.e. its velocity).
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OrderParameter
+OrderParameter (:py:class:`.OrderParameter`)
     Base class for the order parameters.
 
-OrderParameterPosition
+OrderParameterPosition (:py:class:`.OrderParameterPosition`)
     A class for a simple position dependent order parameter.
 
-OrderParameterDistance
+OrderParameterDistance (:py:class:`.OrderParameterDistance`)
     A class for a particle-particle distance order parameter.
 """
 import logging
@@ -49,8 +49,8 @@ class OrderParameter(object):
     extra : list of functions
         This is a list of extra order parameters to calculate.
         We will assume that this list contains functions that all
-        accept an object like `System` from `pyretis.core.system`
-        as input and returns a single float.
+        accept an object like :py:class:`.System` as input and return
+         a single float.
     """
 
     def __init__(self, name, desc='General order parameter'):
@@ -72,7 +72,7 @@ class OrderParameter(object):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be
@@ -90,7 +90,7 @@ class OrderParameter(object):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be
@@ -111,7 +111,7 @@ class OrderParameter(object):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation.
 
         Returns
@@ -141,7 +141,7 @@ class OrderParameter(object):
         """Add an extra order parameter to calculate.
 
         The given function should accept an object like
-        `pyretis.core.system.System` as parameter.
+        py:class:`.System` as parameter.
 
         Parameters
         ----------
@@ -227,7 +227,7 @@ class OrderParameterPosition(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases `system.forcefield` can also be
@@ -253,7 +253,7 @@ class OrderParameterPosition(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation.
 
         Returns
@@ -314,11 +314,12 @@ class OrderParameterDistance(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases `system.forcefield` can also be
-            used to include specific energies for the order parameter.
+            only ``system.particles.pos`` and/or
+            ``system.particles.vel`` will be used. In some cases
+            ``system.forcefield`` can also be used to include specific
+            energies for the order parameter.
 
         Returns
         -------
@@ -339,7 +340,7 @@ class OrderParameterDistance(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation.
 
         Returns

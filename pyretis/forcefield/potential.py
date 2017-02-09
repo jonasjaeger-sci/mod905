@@ -9,7 +9,7 @@ This class is sub-classed in all potential functions.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PotentialFunction
+PotentialFunction (:py:class:`.PotentialFunction`)
     A class for representing generic potential functions.
 """
 import logging

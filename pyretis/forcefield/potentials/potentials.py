@@ -9,10 +9,10 @@ as simple models.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DoubleWell
+DoubleWell (:py:class:`.DoubleWell`)
     This class defines a one-dimensional double well potential.
 
-RectangularWell
+RectangularWell (:py:class:`.RectangularWell`)
     This class defines a one-dimensional rectangular well potential.
 """
 from __future__ import absolute_import
@@ -77,7 +77,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -96,7 +96,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -118,7 +118,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -201,7 +201,7 @@ class RectangularWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 

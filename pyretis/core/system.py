@@ -7,7 +7,7 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-System
+System (:py:class:`.System`)
     A class representing a system. A system object defines the system
     the simulation acts and contains information about particles,
     force fields etc.
@@ -31,7 +31,7 @@ class System(object):
 
     Attributes
     ----------
-    box : object like :py:class:`.box.Box`
+    box : object like :py:class:`.Box`
         Defines the simulation box.
     temperature : dict
         This dictionary contains information on the temperature. The
@@ -41,7 +41,7 @@ class System(object):
         * `beta`: The derived property ``1.0/(k_B*T)``.
         * `dof`: Information about the degrees of freedom for the
           system.
-    particles : object like :py:class:`.particles.Particles`
+    particles : object like :py:class:`.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
     post_setup : list of tuples
@@ -50,7 +50,7 @@ class System(object):
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
         such that ``system.function(*args)`` can be called.
-    forcefield : object like :py:class:`pyretis.forcefield.ForceField`
+    forcefield : object like :py:class:`.ForceField`
         Defines the force field to use and implements the actual force
         and potential calculation.
     units : string
@@ -63,7 +63,7 @@ class System(object):
 
         Parameters
         ----------
-        box : object like :py:class:`.box.Box`
+        box : object like :py:class:`.Box`
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float

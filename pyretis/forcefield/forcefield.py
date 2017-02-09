@@ -9,7 +9,7 @@ The forcefield class is built up of potential functions.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ForceField
+ForceField (:py:class:`.ForceField`)
     A class representing a generic Force Field.
 """
 import logging
@@ -144,7 +144,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the forces in.
 
         Returns
@@ -170,7 +170,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -191,7 +191,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential energy and force in.
 
         Returns

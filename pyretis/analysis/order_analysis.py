@@ -6,7 +6,7 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_orderp
+analyse_orderp (:py:func:`.analyse_orderp`)
     Run a simple order parameter analysis.
 """
 from __future__ import absolute_import

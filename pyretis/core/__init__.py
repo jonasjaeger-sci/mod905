@@ -66,34 +66,41 @@ units.py (:py:mod:`pyretis.core.units`)
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box (:py:class:`pyretis.core.box.Box`)
+Box (:py:class:`.Box`)
     A class which defines the simulation box. This box will also
     handle the periodic boundaries.
 
-System (:py:class:`pyretis.core.system.System`)
+System (:py:class:`.System`)
     A class which defines the system we are working with. This
     class contain a lot of information and is used to group the
     information into a structure which the simulations will make use
     of. Typically the system will contain a reference to a box,
     a list of particles and also a force field.
 
-Particles (:py:class:`pyretis.core.particles.Particles`)
+Particles (:py:class:`.Particles`)
     A class defining a list of particles. This will contain the
     positions, velocities and forces for the particles.
 
-Path (:py:class:`pyretis.core.path.Path`)
+Path (:py:class:`.Path`)
     A class representing a path. The path contains snapshots with
     some additional information (energies and order parameters).
 
-PathEnsemble (:py:class:`pyretis.core.pathensemble.PathEnsemble`)
+PathExt (:py:class:`.PathExt`)
+    A class for representing external paths. This is used when we
+    are making use of external engines.
+
+PathEnsemble (:py:class:`.PathEnsemble`)
     A class representing a collection of paths. The path ensemble
     will not store the full trajectories of path, only a simplified
     representation of the paths.
 
-RandomGenerator (:py:class:`pyretis.core.random_gen.RandomGenerator`)
+PathEnsembleExt (:py:class:`.PathEnsembleExt`)
+    A class representing external path ensembles. This handles
+    additional bookeeping related to external paths.
+
+RandomGenerator (:py:class:`.RandomGenerator`)
     A class for generating random numbers.
 """
-from __future__ import absolute_import
 from .system import System
 from .box import Box
 from .particles import Particles

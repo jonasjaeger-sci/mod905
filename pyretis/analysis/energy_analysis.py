@@ -6,7 +6,7 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_energies
+analyse_energies (py:func:`.analyse_energies`)
     Run a energy analysis for energies (kinetic, potential etc.).
 """
 from __future__ import absolute_import

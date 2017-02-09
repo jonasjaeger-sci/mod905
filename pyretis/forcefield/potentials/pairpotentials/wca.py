@@ -6,7 +6,7 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DoubleWellWCA
+DoubleWellWCA (:py:class:`.DoubleWellWCA`)
     This class defines a n-dimensional Double Well potential.
 """
 from __future__ import absolute_import
@@ -141,7 +141,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -171,7 +171,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -211,7 +211,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns

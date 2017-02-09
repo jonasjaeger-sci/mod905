@@ -38,25 +38,31 @@ with the code and from `the pyretis homepage <http://www.pyretis.org>`_.
 pyretis sub-packages
 --------------------
 
-analysis
+analysis (:py:mod:`pyretis.analysis`)
     Analysis tools for calculating crossing probabilities, rates etc.
-core
+
+core (py:mod:`pyretis.core`)
     Core classes and functions for running the rare event simulations.
     This includes classes defining the system, particles, simulations
     etc.
-forcefield
-    This package define force fields and potentials functions.
-engines
+
+engines (:py:mod:`pyretis.engines`)
     A package defining engines which can be used to
     evolve the dynamics/solve Newton's equations of motion in time.
-inout
+
+forcefield (:py:mod:`pyretis.forcefield`)
+    This package define force fields and potentials functions.
+
+inout (:py:mod:`pyretis.inout`)
     This package defines the input output operations for pyretis.
     This includes generating output from the analysis and reading
     input-files etc.
-orderparameter
+
+orderparameter (:py:mod:`pyretis.orderparameter`)
     Definition of classes for order parameters. Defines the base class
     for order parameters.
-tools
+
+tools (:py:mod:`pyretis.tools`)
     This package defines some functions which can be useful for
     setting up simple systems, for example functions for generating
     lattices.

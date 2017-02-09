@@ -8,7 +8,7 @@ This module defines the base class for the engines.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EngineBase (:py:class:`pyretis.engines.engine.EngineBase`)
+EngineBase (:py:class:`.EngineBase`)
     The base class for engines.
 """
 from abc import ABCMeta, abstractmethod
@@ -49,7 +49,7 @@ class EngineBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        path : object like :py:class:`pyretis.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             The path to add to.
         phase_point : dict
             The phase_point to add.
@@ -97,10 +97,10 @@ class EngineBase(metaclass=ABCMeta):
 
         Parameters
         ----------
-        system : object like :class:`.core.system.System`
+        system : object like :class:`.System`
             System is used here since we need access to the particle
             list.
-        rgen : object like :class:`.core.random_gen.RandomGenerator`
+        rgen : object like :class:`.RandomGenerator`
             This is the random generator that will be used.
         sigma_v : numpy.array, optional
             These values can be used to set a standard deviation (one

@@ -12,23 +12,23 @@ Package structure
 Modules
 ~~~~~~~
 
-lennardjones.py
+lennardjones.py (:py:mod:`.lennardjones`)
     Potential functions for Lennard-Jones interactions.
 
-wca.py
+wca.py (:py:mod:`.wca`)
     Potential functions for WCA-type interactions.
 
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PairLennardJonesCut
+PairLennardJonesCut (:py:class:`.PairLennardJonesCut`)
     A class defining a Lennard-Jones potential.
 
-PairLennardJonesCutnp
+PairLennardJonesCutnp (:py:class:`.PairLennardJonesCutnp`)
     A class defining a Lennard-Jones potential using numpy for the
     evaluation.
 
-DoubleWellWCA
+DoubleWellWCA (:py:class:`.DoubleWellWCA`)
     This class defines a n-dimensional Double Well potential for a
     pair of particles.
 """

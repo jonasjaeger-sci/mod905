@@ -91,7 +91,7 @@ def initiate_kick(path_ensembles, system, order_function, engine,
                   rgen, tis_settings, cycle):
     """This is a helper method to initiate for several ensembles.
 
-    Please see documentation for :py:meth:`.initiate_path_ensemble_kick`.
+    Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
     for ensemble in path_ensembles:
         logger.info('Initiating path ensemble: %s', ensemble.ensemble_name)
@@ -110,11 +110,11 @@ def initiate_kick2(path_ensembles, system, order_function, engine,
                    rgen, tis_settings, cycle):
     """This is a helper method to initiate for several ensembles.
 
-    This method is similar to :py:meth:`.initiate_kick`, but here we
+    This method is similar to :py:func:`.initiate_kick`, but here we
     update the initial point for an ensemble to use that of the previous
     path (if this exist).
 
-    Please see documentation for :py:meth:`.initiate_path_ensemble_kick`.
+    Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
     last_paths = []
     last_path = None
@@ -174,10 +174,10 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the
-        setting for the starting condition (`'start_cond'`) according
+        setting for the starting condition (``'start_cond'``) according
         to the given path ensemble. We are also using the keyword
-        `initial_path` to determine how the initial path should be
-        initiated. The other `tis_settings` are just passed on.
+        ``'initial_path'`` to determine how the initial path should be
+        initiated. The other ``tis_settings`` are just passed on.
     cycle : integer, optional
         The cycle number we are initiating at, typically this will be 0
         which is the default value.
@@ -240,9 +240,6 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
 
         * `start_cond`: string, starting condition, 'L'eft or 'R'ight
         * `maxlength`: integer, maximum allowed length of paths.
-
-        Note that also `_fix_path_by_tis` and `kick_across_middle`
-        will use `tis_settings`.
 
     Returns
     -------

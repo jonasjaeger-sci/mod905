@@ -8,7 +8,7 @@ This module defines a class for using GROMACS as an external engine.
 Important classes defined here
 ------------------------------
 
-GromacsEngine
+GromacsEngine (:py:class:`.GromacsEngine`)
     A class responsible for interfacing GROMACS.
 """
 import logging
@@ -382,11 +382,11 @@ class GromacsEngine(ExternalMDEngine):
         ----------
         name : string
             A name to use for the trajectory we are generating.
-        path : object like :py:class:`pyretis.core.Path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object gives the initial state.
-        order_function : object like `pyretis.orderparameter.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
@@ -465,7 +465,7 @@ class GromacsEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system we are integrating.
         name : string
             To name the output files from the GROMACS step.
@@ -580,10 +580,10 @@ class GromacsEngine(ExternalMDEngine):
 
         Parameters
         ----------
-        system : object like :class:`.core.system.System`
+        system : object like :py:class:`.System`
             System is used here since we need access to the particle
             list.
-        rgen : object like :class:`.core.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         sigma_v : numpy.array, optional
             These values can be used to set a standard deviation (one

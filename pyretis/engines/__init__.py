@@ -17,22 +17,22 @@ Package structure
 Modules
 ~~~~~~~
 
-engine.py
+engine.py (:py:mod:`pyretis.engines.engine`)
     Defines the base engine class.
 
-internal.py
+internal.py (:py:mod:`pyretis.engines.internal`)
     Defines internal pyretis engines.
 
-external.py
+external.py (:py:mod:`pyretis.engines.external`)
     Defines the interface for external engines.
 
-gromacs.py
+gromacs.py (:py:mod:`pyretis.engines.gromacs`)
     Defines an engine for use with GROMACS.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-engine_factory
+engine_factory (:py:func:`.engine_factory`)
     A method to create engines from settings.
 """
 from pyretis.core.common import generic_factory
@@ -54,7 +54,7 @@ def engine_factory(settings):
 
     Returns
     -------
-    out : object like `EngineBase`
+    out : object like :py:class:`.EngineBase`
         The object representing the engine to use in a simulation.
     """
     engine_map = {'velocityverlet': {'cls': VelocityVerlet},

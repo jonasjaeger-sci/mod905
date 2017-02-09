@@ -6,7 +6,7 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_flux
+analyse_flux (:py:func:`.analyse_flux`)
     Run analysis for simulation flux data. This will calculate
     the initial flux for a simulation.
 """

@@ -12,14 +12,14 @@ Package structure
 Modules
 ~~~~~~~
 
-orderparameter.py
+orderparameter.py (:py:mod:`pyretis.orderparameter.orderparameter`)
     Defines the base class for order parameters and some simple
     example order parameters.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-order_factory
+order_factory (:py:func:`.order_factory`)
     A method to create order parameters from settings.
 """
 from pyretis.core.common import generic_factory
@@ -41,7 +41,7 @@ def order_factory(settings):
 
     Returns
     -------
-    out : object like `OrderParameter`
+    out : object like :py:class:`.OrderParameter`
         An object representing the orderparameter.
     """
     factory_map = {'orderparameter': {'cls': OrderParameter},

@@ -9,10 +9,10 @@ representing path ensembles.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PathEnsemble
+PathEnsemble (:py:class:`.PathEnsemble`)
     Class for defining path ensembles.
 
-PathEnsembleExt
+PathEnsembleExt (:py:class:`.PathEnsembleExt`)
     Class for defining path ensembles when we are working with
     paths stored on disk and not in memory only.
 """
@@ -39,7 +39,7 @@ def _generate_file_names(path, target_dir, prefix=None):
 
     Parameters
     ----------
-    path : object like :py:class:`.core.path.PathBase`
+    path : object like :py:class:`.PathBase`
         This is the path object we are going to store.
     target_dir : string
         The location were we are moving the path to.
@@ -111,7 +111,7 @@ class PathEnsemble(object):
         * ACC, BWI, ... : Number of paths with given status (from `_STATUS`).
     maxpath : int
         The maximum number of paths to store.
-    last_path : object like :py:class:`.path.PathBase`
+    last_path : object like :py:class:`.PathBase`
         This is the last **accepted** path.
     """
 
@@ -186,7 +186,7 @@ class PathEnsemble(object):
 
         Parameters
         ----------
-        path : object like :py:class:`.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             The path we are going to store.
 
         Returns
@@ -204,7 +204,7 @@ class PathEnsemble(object):
 
         Parameters
         ----------
-        path : object like :py:class:`.path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the object to store data from.
         status : string
             This is the status of the path. Note that the path object
@@ -367,7 +367,7 @@ class PathEnsembleExt(PathEnsemble):
 
         Parameters
         ----------
-        path : object like :py:class:`.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
         target_dir : string
             The location were we are moving the path to.
@@ -386,14 +386,14 @@ class PathEnsembleExt(PathEnsemble):
 
         Parameters
         ----------
-        path : object like :py:class:`.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
         target_dir : string
             The location were we are moving the path to.
 
         Returns
         -------
-        out : object like py:class:`.path.PathBase`
+        out : object like py:class:`.PathBase`
             A copy of the input path.
         """
         new_pos, source = _generate_file_names(path, target_dir,
@@ -409,7 +409,7 @@ class PathEnsembleExt(PathEnsemble):
 
         Parameters
         ----------
-        path : object like :py:class:`.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
         """
         self._move_path(path, self.directory['accepted'])
@@ -439,12 +439,12 @@ class PathEnsembleExt(PathEnsemble):
         cycle : int
             The current cycle number. This is used to generate a
             unique name for the output file.
-        path : object like :py:class:`pyretis.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             The path to output.
 
         Returns
         -------
-        path_copy : object like :py:class:`pyretis.core.path.PathBase`
+        path_copy : object like :py:class:`.PathBase`
             A path like the input `path`, but with updated file names.
         """
         new_pos, source = _generate_file_names(

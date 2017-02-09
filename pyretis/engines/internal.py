@@ -74,7 +74,7 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system we are acting on.
 
         Returns
@@ -109,16 +109,16 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        path : object like :py:class:`pyretis.core.Path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
             We are here not returning a new path - this since we want
             to delegate the creation of the path (type) to the method
             that is running `propagate`.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object gives the initial state for the
             integration. The initial state is stored and the system is
             reset to the initial state when the integration is done.
-        orderp : object like `OrderParameter` from `pyretis.orderparameter`
+        orderp : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
@@ -173,10 +173,10 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`core.system.System`
+        system : object like :py:class:`.System`
             System is used here since we need access to the particle
             list.
-        rgen : object like :py:class:`core.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         sigma_v : numpy.array, optional
             These values can be used to set a standard deviation (one
@@ -224,7 +224,7 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system we are integrating.
 
         Returns
@@ -250,9 +250,9 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        order_function : object like `OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter(s).
-        system : object like `pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system containing the corrent positions and velocities.
 
         Returns
@@ -271,12 +271,12 @@ class MDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.system.System`
+        system : object like :py:class:`.System`
             This is the system that contains the particles we are
             investigating
-        order_function : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         middle : float
             This is the value for the middle interface.
@@ -399,9 +399,9 @@ class Verlet(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles`
 
         Returns
         -------
@@ -446,9 +446,9 @@ class VelocityVerlet(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles``.
 
         Returns
         -------
@@ -472,7 +472,7 @@ class Langevin(MDEngine):
 
     Attributes
     ----------
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the class that handles generation of random numbers.
     gamma : float
         The friction parameter.
@@ -573,14 +573,14 @@ class Langevin(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles``.
 
         Returns
         -------
         out : None
-            Does not return anything, but updates `self.param`.
+            Does not return anything, but updates ``self.param``.
         """
         beta = system.temperature['beta']
         imasses = system.particles.imass
@@ -625,9 +625,9 @@ class Langevin(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles``.
 
         Returns
         -------
@@ -648,9 +648,9 @@ class Langevin(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles``.
 
         Returns
         -------
@@ -672,9 +672,9 @@ class Langevin(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in `system.particles`.
+            list in ``system.particles``.
 
         Returns
         -------

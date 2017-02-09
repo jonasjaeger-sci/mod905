@@ -10,13 +10,13 @@ representing paths.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PathBase
+PathBase (:py:class:`.PathBase`)
     A base class for paths.
 
-Path
+Path (:py:class:`.Path`)
     Class for a generic path that stores all possible information.
 
-PathExt
+PathExt (:py:class:`.PathExt`)
     Class for a external paths. In external paths, the trajectories
     are stored in external files and the object will only contain the
     file names so that the external snapshots can be accessed.
@@ -205,7 +205,7 @@ class PathBase(object):
         This is the (current) maximum order parameter for the path.
         `ordermax[0]` is the value, `ordermax[1]` is the index in
         `self.path`.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used for the
         paths that required random numbers.
     time_origin : int
@@ -223,7 +223,7 @@ class PathBase(object):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -397,7 +397,7 @@ class PathBase(object):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This object is used to draw a random integer.
 
         Returns
@@ -595,7 +595,7 @@ class PathBase(object):
 
         Returns
         -------
-        new_path : object like :py:class:`PathBase`
+        new_path : object like :py:class:`.PathBase`
             This is basically a copy of `self`, just reversed.
         """
         new_path = self.empty_path()
@@ -635,7 +635,7 @@ class PathBase(object):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`
+        out : object like :py:class:`.PathBase`
             A new empty path.
         """
         return
@@ -662,7 +662,7 @@ class Path(PathBase):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,
@@ -742,7 +742,7 @@ class Path(PathBase):
 
         Returns
         -------
-        out : object like :py:class:`PathBase`
+        out : object like :py:class:`.PathBase`
             A new empty path.
         """
         maxlen = kwargs.get('maxlen', None)
@@ -788,7 +788,7 @@ class PathExt(Path):
 
         Parameters
         ----------
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         maxlen : int, optional
             This is the max-length of the path. The default value,

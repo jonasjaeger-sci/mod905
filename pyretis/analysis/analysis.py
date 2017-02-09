@@ -6,13 +6,13 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-running_average
+running_average (:py:func:`.running_average`)
     Method to calculate a running average.
 
-block_error
+block_error (:py:func:`.block_error`)
     Perform block error analysis.
 
-block_error_corr
+block_error_corr (:py:func:`.block_error_corr`)
     Method to run a block error analysis and calculate relative
     errors and correlation length.
 """

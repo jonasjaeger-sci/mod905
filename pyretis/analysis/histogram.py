@@ -8,14 +8,14 @@ This module defines some simple functions for histograms.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-histogram
+histogram (:py:func:`.histogram`)
     Create a histogram from given data.
 
-match_all_histograms
+match_all_histograms (:py:func:`.match_all_histograms`)
     Function to match histograms, for instance from an umbrella
     sampling simulation.
 
-histogram_and_avg
+histogram_and_avg (:py:func:`.histogram_and_avg`)
     Create histogram an return bins, midpoints and simple statistics.
 """
 

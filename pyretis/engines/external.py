@@ -9,7 +9,7 @@ This class is subclassed by all other external MD engines.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ExternalMDEngine
+ExternalMDEngine (:py:class:`.ExternalMDEngine`)
     The base class for external scripts. This defines the actual
     interface to external programs.
 """
@@ -136,7 +136,7 @@ class ExternalMDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             The system we are integrating.
         name : string
             To name the output files from the external engine.
@@ -353,9 +353,9 @@ class ExternalMDEngine(EngineBase):
 
         Parameters
         ----------
-        order_function : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The class used for calculating the order parameter.
-        system : object like `pyretis.core.system`
+        system : object like :py:class:`.System`
             The object the order parameter is acting on.
 
         Returns
@@ -380,12 +380,12 @@ class ExternalMDEngine(EngineBase):
 
         Parameters
         ----------
-        system : object like :py:class:`.system.System`
+        system : object like :py:class:`.System`
             This is the system that contains the particles we are
             investigating
-        order_function : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
-        rgen : object like :py:class:`.random_gen.RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator that will be used.
         middle : float
             This is the value for the middle interface.
@@ -495,16 +495,16 @@ class ExternalMDEngine(EngineBase):
 
         Parameters
         ----------
-        path : object like :py:class:`pyretis.core.Path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object gives the initial state for the
             integration. The initial state is stored and the system is
             reset to the initial state when the integration is done.
-        order_function : object like `pyretis.orderparameter.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
@@ -569,11 +569,11 @@ class ExternalMDEngine(EngineBase):
         ----------
         name : string
             A name to use for the trajectory we are generating.
-        path : object like :py:class:`pyretis.core.Path.PathBase`
+        path : object like :py:class:`.PathBase`
             This is the path we use to fill in phase-space points.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object gives the initial state.
-        order_function : object like `pyretis.orderparameter.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.

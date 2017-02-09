@@ -65,16 +65,16 @@ def make_retis_step(ensembles, system, order_function, engine, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.pathensemble.PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`.orderparameter.OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for calculating the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -108,9 +108,9 @@ def _relative_shoots_select(ensembles, rgen, relative):
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.pathensemble.PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     relative : list of floats
@@ -121,7 +121,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
     -------
     out[0] : integer
         The index of the path ensemble to shoot in.
-    out[1] : object like :py:class:`.pathensemble.PathEnsemble`
+    out[1] : object like :py:class:`.PathEnsemble`
         The selected path ensemble for shooting.
     """
     freq = rgen.rand()
@@ -165,16 +165,16 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.pathensemble.PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for calculating the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -240,16 +240,16 @@ def retis_moves(ensembles, system, order_function, engine, rgen,
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.pathensemble.PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for calculating the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is a random generator. Here we assume that we can call
         `rgen.rand()` to draw random uniform numbers.
     settings : dict
@@ -321,18 +321,18 @@ def retis_swap(ensembles, idx, system, order_function, engine,
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`.pathensemble.PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
     idx : integer
         Definition of what path ensembles to swap. We will swap
         `ensembles[idx]` with `ensembles[idx+1]`. If `idx == 0` we have
         case 1) defined above.
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for calculating the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -343,7 +343,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
     -------
     out[0] : boolean
         Should the path be accepted or not?
-    out[1] : list of object like :py:class:`.path.PathBase`
+    out[1] : list of object like :py:class:`.PathBase`
         The trial paths.
     out[2] : string
         The status for the trial paths.
@@ -417,14 +417,14 @@ def retis_swap_zero(ensembles, system, order_function, engine,
 
     Parameters
     ----------
-    ensembles : list of objects like :py:class:`PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         This is a list of the ensembles we are using in the RETIS method
-    system : object like :py:class:`System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for calculating the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
     settings : dict
         This dict contains the settings for the RETIS method.
@@ -507,7 +507,7 @@ def null_move(path_ensemble, cycle):
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`.pathensemble.PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble to update with the null move
     cycle : integer
         The current cycle number
@@ -517,7 +517,7 @@ def null_move(path_ensemble, cycle):
     out[0] : boolean
         Should the path be accepted or not? Here, it's always True
         since the null move is always accepted.
-    out[1] : object like :py:class:`.path.PathBase`
+    out[1] : object like :py:class:`.PathBase`
         The generated path.
     out[2] : string
         The status, which here will be 'ACC', since we just accept

@@ -54,16 +54,16 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`.pathensemble.PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble to perform the TIS step for.
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for obtaining the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings.
@@ -74,7 +74,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like :py:class:`Path`
+    out[1] : object like :py:class:`.PathBase`
         The generated path.
     out[2] : string
         The status of the path
@@ -107,19 +107,19 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
 
     Parameters
     ----------
-    path : object like :py:class:`Path`
+    path : object like :py:class:`.PathBase`
         This is the input path which will be used for generating a
         new path.
-    system : object like :py:class:`System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for obtaining the order parameter(s).
     interfaces : list of floats
         These are the interface positions on form [left, middle, right]
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         Random number generator used to determine what TIS move to
         perform.
     tis_settings : dict
@@ -134,7 +134,7 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
     -------
     out[0] : boolean
         True if new path can be accepted
-    out[1] : object like :py:class:`Path`
+    out[1] : object like :py:class:`.PathBase`
         The generated path.
     out[2] : string
         The status of the path
@@ -156,7 +156,7 @@ def time_reversal(path, interfaces, start_condition):
 
     Parameters
     ----------
-    path : object like :py:class:`Path`
+    path : object like :py:class:`.PathBase`
         This is the input path which will be used for generating a
         new path.
     interfaces : list/tuple of floats
@@ -168,7 +168,7 @@ def time_reversal(path, interfaces, start_condition):
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object like :py:class:`.path.Path`
+    out[1] : object like :py:class:`.PathBase`
         Returns the generated path if something was generated
         `Path` is defined in `.path`.
     out[2] : string
@@ -198,20 +198,20 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
 
     Parameters
     ----------
-    path : object like :py:class:`.path.Path`
+    path : object like :py:class:`.PathBase`
         This is the input path which will be used for generating a
         new path.
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : object like :py:class:`OrderParameter`.
+    order_function : object like :py:class:`.OrderParameter`.
         The class used to calculate the order parameter.
     interfaces : list/tuple of floats
         These are the interface positions on form
         `[left, middle, right]`.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         This contains the settings for TIS. Keys used here:
@@ -226,7 +226,7 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
     -------
     out[0] : boolean
         True if the path can be accepted
-    out[1] : object like :py:class:`.path.PathBase`
+    out[1] : object like :py:class:`.PathBase`
         Returns the generated path.
     out[2] : string
         Status of the path, this is one of the strings defined in

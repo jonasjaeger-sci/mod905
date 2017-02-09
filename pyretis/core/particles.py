@@ -10,10 +10,10 @@ the particles in the simulations.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Particles (:py:class:`pyretis.core.particles.Particles`)
+Particles (:py:class:`.Particles`)
     Class for a list of particles.
 
-ParticlesExt (:py:class:`pyretis.core.particles.ParticlesExt`)
+ParticlesExt (:py:class:`.ParticlesExt`)
     Class for an external particle list.
 """
 import logging

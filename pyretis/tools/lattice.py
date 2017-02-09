@@ -5,7 +5,8 @@
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-generate_lattice
+
+generate_lattice (:py:func:`.generate_lattice`)
     Generate points on a simple lattice.
 
 Examples

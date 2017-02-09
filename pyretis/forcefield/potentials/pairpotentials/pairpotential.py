@@ -5,11 +5,12 @@
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-mixing_parameters
+
+mixing_parameters (:py:func:`.mixing_parameters`)
     Definition of mixing rules which are used in some force fields
     for generating cross interactions.
 
-generate_pair_interactions
+generate_pair_interactions (:py:func:`generate_pair_interactions`)
     Function to generate pair parameters from atom parameters.
 """
 import itertools
