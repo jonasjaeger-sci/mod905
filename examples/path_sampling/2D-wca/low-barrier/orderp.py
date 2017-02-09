@@ -46,7 +46,7 @@ class OrderParameterWCAJCP1(OrderParameter):
         description = '{} distance particles {} and {}'.format(pbc,
                                                                index[0],
                                                                index[1])
-        super(OrderParameterWCAJCP1, self).__init__(name, desc=description)
+        super().__init__(name, desc=description)
         self.periodic = periodic
         self.index = index
 

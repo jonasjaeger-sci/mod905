@@ -40,7 +40,7 @@ class DoublePendulumn(PotentialFunction):
         desc : string, optional
             Description of the force field.
         """
-        super(DoublePendulumn, self).__init__(dim=2, desc=desc)
+        super().__init__(dim=2, desc=desc)
         self.params = {'g': g, 'l1': l1, 'l2': l2}
         self.l1 = l1
         self.l2 = l2

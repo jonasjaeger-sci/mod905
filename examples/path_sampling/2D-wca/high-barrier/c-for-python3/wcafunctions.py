@@ -71,7 +71,7 @@ class WCAPotential(PotentialFunction):
         shift : boolean
             Determines if the potential should be shifted or not.
         """
-        super(WCAPotential, self).__init__(dim=dim, desc=desc)
+        super().__init__(dim=dim, desc=desc)
         self.shift = shift
         self.params = {'height': 0.0,
                        'height4': 0.0,
@@ -264,8 +264,7 @@ class WCAOrderParameter(OrderParameter):
         index : tuple of ints
             The index for the particles to use.
         """
-        super(WCAOrderParameter, self).__init__('wca high barrier',
-                                                desc='WCA order parameter')
+        super().__init__('WCA high barrier', desc='WCA order parameter')
         self.index = index
 
     def calculate(self, system):
@@ -337,8 +336,7 @@ class WCAOrderParameterp(OrderParameter):
         index : tuple of ints
             The index for the particles to use.
         """
-        super(WCAOrderParameterp, self).__init__('wca high barrier',
-                                                 desc='WCA order parameter')
+        super().__init__('WCA high barrier', desc='WCA order parameter')
         self.index = index
 
     def calculate(self, system):

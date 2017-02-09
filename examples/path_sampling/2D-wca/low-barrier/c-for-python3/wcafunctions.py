@@ -64,7 +64,7 @@ class WCAPotential(PotentialFunction):
         shift : boolean
             Determines if the potential should be shifted or not.
         """
-        super(WCAPotential, self).__init__(dim=dim, desc=desc)
+        super().__init__(dim=dim, desc=desc)
         self.shift = shift
         self.params = {'height': 0.0,
                        'height4': 0.0,

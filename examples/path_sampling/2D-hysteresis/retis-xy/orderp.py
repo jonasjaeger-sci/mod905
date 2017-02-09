@@ -39,7 +39,7 @@ class OrderXY(OrderParameter):
             This determines if periodic boundary conditions should be
             applied to the position.
         """
-        super(OrderXY, self).__init__('order', desc='2D->1D projection')
+        super().__init__('order', desc='2D->1D projection')
         self.index = index
         x1 = 0.2
         y1 = 0.4

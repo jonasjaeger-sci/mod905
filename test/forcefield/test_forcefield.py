@@ -19,7 +19,7 @@ class TestPotential(PotentialFunction):
     """A potential function to use in tests."""
 
     def __init__(self, desc='Test potential'):
-        super(TestPotential, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'a': 10}
 
     def potential(self, system):

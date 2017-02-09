@@ -83,8 +83,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         mixing : string
             Determines how we should mix potential parameters.
         """
-        super(PairLennardJonesCutC, self).__init__(dim=dim, desc=desc,
-                                                   mixing=mixing)
+        super().__init__(dim=dim, desc=desc, mixing=mixing)
         self.ntype = 0
 
     def set_parameters(self, parameters):

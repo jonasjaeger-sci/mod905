@@ -59,7 +59,7 @@ class Hyst2D(PotentialFunction):
         desc : string, optional
             Description of the force field.
         """
-        super(Hyst2D, self).__init__(dim=2, desc=desc)
+        super().__init__(dim=2, desc=desc)
         self.params = {'gamma1': 0.0, 'gamma2': 0.0, 'gamma3': 0.0,
                        'alpha1': 0.0, 'alpha2': 0.0, 'beta1': 0.0,
                        'beta2': 0.0, 'x0': 0.0, 'y0': 0.0}
