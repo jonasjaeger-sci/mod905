@@ -11,38 +11,38 @@ output to the screen or to files - this is done by an output task.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Writer
+Writer (:py:class:`.Writer`)
     A generic class for the writers.
 
-CrossWriter
+CrossWriter (:py:class:`.CrossWriter`)
     A class for writing crossing data from flux simulations.
 
-EnergyWriter
+EnergyWriter (:py:class:`.EnergyWriter`)
     A class for writing energy data.
 
-EnergyPathWriter
+EnergyPathWriter (:py:class:`.EnergyPathWriter`)
     A class for writing out energy data for paths.
 
-OrderWriter
+OrderWriter (:py:class:`.OrderWriter`)
     A class for writing out order parameter data.
 
-OrderPathWriter
+OrderPathWriter (:py:class:`.OrderPathWriter`)
     A class for writing out order parameter data for paths.
 
-TrajWriter
+TrajWriter (:py:class:`.TrajWriter`)
     Generic class for writing trajectory output.
 
-PathExtWriter
+PathExtWriter (:py:class:`.PathExtWriter`)
     A class for writing external paths to file.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-adjust_coordinates
+adjust_coordinates (:py:func:`.adjust_coordinates`)
     Helper method to add dimensions when writing data in 1D or 2D to an
     output format that requires 3D data.
 
-read_some_lines
+read_some_lines (:py:func:`.read_some_lines`)
     Open a file and try to read as many lines as possible. This method
     is useful when we are reading possibly unfinished results.
 """

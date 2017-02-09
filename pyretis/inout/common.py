@@ -9,26 +9,26 @@ typically to format tables and numbers.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyretisLogFormatter
+PyretisLogFormatter (:py:class:`.PyretisLogFormatter`)
     A class representing a formatter for the pyretis log file.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-apply_format
+apply_format (:py:func:`.apply_format`)
     Apply a format string to a given value.
 
-check_python_version
+check_python_version (:py:func:`.check_python_version`)
     Method that will give warnings when we use older and untested
     versions of python.
 
-create_backup
+create_backup (:py:func:`.create_backup`)
     A function to handle the creation of backups of old files.
 
-make_dirs
+make_dirs (:py:func:`.make_dirs`)
     Create directories (for path simulation).
 
-print_to_screen
+print_to_screen (:py:func:`.print_to_screen`)
     A method used for printing to screen.
 """
 import errno
@@ -389,7 +389,7 @@ def get_log_formatter(level):
 
     Returns
     -------
-    out : object like ``logging.Formatter``
+    out : object like :py:class:`logging.Formatter`
         An object that can be used as a formatter for a logger.
     """
     if level <= logging.DEBUG:

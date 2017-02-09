@@ -6,7 +6,7 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SimulationTask
+SimulationTask (:py:class:`.SimulationTask`)
     A class representing a simulation task.
 """
 import logging

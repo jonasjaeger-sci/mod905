@@ -34,16 +34,16 @@ simulation_task.py (:py:mod:`pyretis.simulation.simulation_task`)
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simulation (:py:class:`.simulation.Simulation`)
+Simulation (:py:class:`.Simulation`)
     The base class for simulations.
 
-SimulationTask (:py:class:`.simulation_task.SimulationTask`)
+SimulationTask (:py:class:`.SimulationTask`)
     A class for creating tasks for simulations.
 
-SimulationSingleTIS (:py:class:`.path_simulation.SimulationSingleTIS`)
+SimulationSingleTIS (:py:class:`.SimulationSingleTIS`)
     A class for running a TIS simulation for a single ensemble.
 
-SimulationRETIS (:py:class:`.path_simulation.SimulationRETIS`)
+SimulationRETIS (:py:class:`.SimulationRETIS`)
     A class for running a RETIS simulation for a set of ensembles.
 """
 from .simulation import Simulation

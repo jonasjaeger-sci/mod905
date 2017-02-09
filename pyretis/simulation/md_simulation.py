@@ -9,11 +9,11 @@ dynamics simulations.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SimulationNVE
+SimulationNVE (:py:class:`.SimulationNVE`)
     Definition of a simple NVE simulation. The engine
     used for this simulation must have dynamics equal to NVE.
 
-SimulationMDFlux
+SimulationMDFlux (:py:class:`.SimulationMDFlux`)
     Definition of a simulation for determining the initial flux.
     This is used for calculating rates in TIS simulations.
 """
@@ -37,9 +37,9 @@ class SimulationNVE(Simulation):
 
     Attributes
     ----------
-    system : object like :py:class:`pyretis.core.system.System`
+    system : object like :py:class:`.System`
         This is the system the simulation will act on.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for integrating the equations of motion.
         The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
@@ -54,9 +54,9 @@ class SimulationNVE(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             This is the system we are investigating.
-        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         steps : int, optional
@@ -108,9 +108,9 @@ class SimulationMDFlux(Simulation):
 
     Attributes
     ----------
-    system : object like :py:class:`pyretis.core.system.System`
+    system : object like :py:class:`.System`
         This is the system the simulation will act on.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         This is the integrator that is used to propagate the system
         in time.
     interfaces : list of floats
@@ -127,11 +127,11 @@ class SimulationMDFlux(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.system.System`
+        system : object like :py:class:`.System`
             This is the system we are investigating
-        orderp : object like :py:class:`pyretis.orderparameter`
+        orderp : object like :py:class:`.OrderParameter`
             The class used for calculating the order parameters.
-        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
         interfaces : list of floats

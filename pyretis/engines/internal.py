@@ -401,7 +401,7 @@ class Verlet(MDEngine):
         ----------
         system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
-            list in ``system.particles`
+            list in ``system.particles``.
 
         Returns
         -------

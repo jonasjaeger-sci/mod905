@@ -50,7 +50,7 @@ class OrderParameter(object):
         This is a list of extra order parameters to calculate.
         We will assume that this list contains functions that all
         accept an object like :py:class:`.System` as input and return
-         a single float.
+        a single float.
     """
 
     def __init__(self, name, desc='General order parameter'):

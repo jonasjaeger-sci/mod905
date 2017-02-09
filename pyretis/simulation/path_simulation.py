@@ -9,13 +9,12 @@ simulations.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SimulationSingleTIS
+SimulationSingleTIS (:py:class:`.SimulationSingleTIS`)
     Definition of a TIS simulation for a single path ensemble.
 
-SimulationRETIS
+SimulationRETIS (:py:class:`.SimulationRETIS`)
     Definition of a RETIS simulation.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.simulation.simulation import Simulation
@@ -33,15 +32,15 @@ class PathSimulation(Simulation):
 
     Attributes
     ----------
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         This is the integrator that is used to propagate the system
         in time.
-    path_ensembles : list of objects like :py:class:`PathEnsemble`
+    path_ensembles : list of objects like :py:class:`.PathEnsemble`
         This is used for storing results for the different path
         ensembles.
-    rgen : object like :py:class:`.core.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is a random generator used for the generation of paths.
-    system : object like :py:class:`System`
+    system : object like :py:class:`.System`
         This is the system the simulation will act on.
     settings : dict
         A dictionary with TIS and RETIS settings. We expect that
@@ -82,17 +81,17 @@ class PathSimulation(Simulation):
 
         Parameters
         ----------
-        system : object like :py:class:`pyretis.core.System`
+        system : object like :py:class:`.System`
             This is the system we are investigating.
-        order_fucntion : object like :py:class:`OrderParameter`
+        order_fucntion : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
-        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
-        path_ensembles : list of objects like :py:class:`PathEnsemble`
+        path_ensembles : list of objects like :py:class:`.PathEnsemble`
             This is used for storing results for the different path
             ensembles.
-        rgen : object like :py:class:`RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This object is the random generator to use in the simulation.
         settings : dict of dicts
             A dictionary with TIS and RETIS settings.
@@ -140,7 +139,7 @@ class SimulationSingleTIS(PathSimulation):
 
     Attributes
     ----------
-    path_ensemble : object like :py:class:`PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is used for storing results for the simulation.
         Note that we also have the ``path_ensembles`` attribute
         defined by the parent class. For ideological reasons we
@@ -157,18 +156,18 @@ class SimulationSingleTIS(PathSimulation):
 
         Parameters
         ----------
-        system : object like :py:class:`System`
+        system : object like :py:class:`.System`
             This is the system we are investigating.
-        order_function : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
-        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
-        path_ensemble : object like :py:class:`PathEnsemble`
+        path_ensemble : object like :py:class:`.PathEnsemble`
             This is used for storing results for the simulation. It
             is also used for defining the interfaces for this
             simulation.
-        rgen : object like :py:class:`RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This is the random generator to use in the simulation.
         settings : dict
             This dict contains settings for the simulation.
@@ -246,17 +245,17 @@ class SimulationRETIS(PathSimulation):
 
         Parameters
         ----------
-        system : object like :py:class:`System`
+        system : object like :py:class:`.System`
             This is the system we are investigating.
-        order_function : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
-        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
             in time.
-        path_ensembles : list of objects like :py:class:`PathEnsemble`
+        path_ensembles : list of objects like :py:class:`.PathEnsemble`
             This is used for storing results for the different path
             ensembles.
-        rgen : object like :py:class:`RandomGenerator`
+        rgen : object like :py:class:`.RandomGenerator`
             This object is the random generator to use in the simulation.
         settings : dict
             A dictionary with settings for TIS and RETIS.
