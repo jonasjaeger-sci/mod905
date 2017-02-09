@@ -12,7 +12,7 @@ class FooOrderParameter(OrderParameter):
     """FooOrderParameter(OrderParameter) - Dummy order parameter for tests."""
 
     def __init__(self, name, desc='Dummy order parameter'):
-        super(FooOrderParameter, self).__init__(name, desc=desc)
+        super().__init__(name, desc=desc)
 
 
 class BarOrderParameter(object):

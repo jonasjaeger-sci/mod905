@@ -254,7 +254,7 @@ class RandomGenerator(RandomGeneratorBase):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        super(RandomGenerator, self).__init__(seed=seed)
+        super().__init__(seed=seed)
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
@@ -465,7 +465,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        super(MockRandomGenerator, self).__init__(seed=seed)
+        super().__init__(seed=seed)
         self.rgen = [0.78008018, 0.04459916, 0.76596775, 0.97676713,
                      0.53799598, 0.98657116, 0.36343553, 0.55356511,
                      0.03172585, 0.48984682, 0.73416687, 0.98453452,

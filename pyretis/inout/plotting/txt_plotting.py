@@ -54,9 +54,8 @@ class TxtPlotter(Plotter):
             Determines if we should write the files to a particular
             directory.
         """
-        super(TxtPlotter, self).__init__(backup=backup,
-                                         plotter_type='text',
-                                         out_dir=out_dir)
+        super().__init__(backup=backup, plotter_type='text',
+                         out_dir=out_dir)
         self.out_fmt = out_fmt
 
     def output_flux(self, results):

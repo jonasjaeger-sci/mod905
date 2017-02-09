@@ -69,7 +69,7 @@ class DoubleWellWCA(PotentialFunction):
         desc : string, optional
             Description of the force field.
         """
-        super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
+        super().__init__(dim=dim, desc=desc)
         self.params = {'height': 0.0,
                        'height4': 0.0,
                        'rwidth': 0.0,

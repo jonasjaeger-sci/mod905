@@ -120,7 +120,7 @@ class TxtTable(Writer):
 
         _fill_list(header['width'], len(header['labels']))
 
-        super(TxtTable, self).__init__('TxtTable', header=header)
+        super().__init__('TxtTable', header=header)
         self.title = title
         self.variables = variables
         row_fmt = kwargs.get('row_fmt', None)
@@ -193,7 +193,7 @@ class PathTable(TxtTable):
                         'width': (10, 12),
                         'spacing': 2,
                         'row_fmt': ['{:> 10d}', '{:> 12d}']}
-        super(PathTable, self).__init__(var, title, **table_format)
+        super().__init__(var, title, **table_format)
 
     def generate_output(self, step, path_ensemble):
         """Generate the output for the PathTable.
@@ -247,4 +247,4 @@ class ThermoTable(TxtTable):
                         'width': (10, 12),
                         'spacing': 2,
                         'row_fmt': ['{:> 10d}', '{:> 12.6g}']}
-        super(ThermoTable, self).__init__(var, title, **table_format)
+        super().__init__(var, title, **table_format)

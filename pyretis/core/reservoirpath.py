@@ -47,8 +47,7 @@ class ReservoirPath(Path):
         res_length : int, optional
             This is the number of shooting-point candidates to store.
         """
-        super(ReservoirPath, self).__init__(rgen, maxlen=maxlen,
-                                            time_origin=time_origin)
+        super().__init__(rgen, maxlen=maxlen, time_origin=time_origin)
         self.res_length = res_length
         self.reservoir = []
 

@@ -208,7 +208,7 @@ class OrderParameterPosition(OrderParameter):
             applied to the position.
         """
         description = 'Position of particle {} (dim: {})'.format(index, dim)
-        super(OrderParameterPosition, self).__init__(name, desc=description)
+        super().__init__(name, desc=description)
         self.periodic = periodic
         self.index = index
         dims = {'x': 0, 'y': 1, 'z': 2}
@@ -302,7 +302,7 @@ class OrderParameterDistance(OrderParameter):
         description = '{} distance particles {} and {}'.format(pbc,
                                                                index[0],
                                                                index[1])
-        super(OrderParameterDistance, self).__init__(name, desc=description)
+        super().__init__(name, desc=description)
         self.periodic = periodic
         self.index = index
 

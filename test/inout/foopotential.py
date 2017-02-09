@@ -12,7 +12,7 @@ class FooPotential(PotentialFunction):
     """FooPotential(PotentialFunction) - Dummy potential for tests."""
 
     def __init__(self, a=0.0, desc='Dummy potential'):
-        super(FooPotential, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'a': a}
 
     def potential(self, pos):
@@ -32,7 +32,7 @@ class BarPotential(PotentialFunction):
     """BarPotential(PotentialFunction) - Dummy potential for tests."""
 
     def __init__(self, a=0.0, desc='Dummy potential'):
-        super(BarPotential, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'a': a}
 
     def potential(self, pos):

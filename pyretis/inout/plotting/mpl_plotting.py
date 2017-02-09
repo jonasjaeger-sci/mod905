@@ -97,9 +97,9 @@ class MplPlotter(Plotter):
             Determines if we should write the files to a particular
             directory.
         """
-        super(MplPlotter, self).__init__(backup=backup,
-                                         plotter_type='matplotlib',
-                                         out_dir=out_dir)
+        super().__init__(backup=backup,
+                         plotter_type='matplotlib',
+                         out_dir=out_dir)
         self.style = style
         mpl_set_style(self.style)
         # Check if the requested file format is something we can do:

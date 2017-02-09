@@ -65,8 +65,7 @@ class SimulationNVE(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super(SimulationNVE, self).__init__(steps=steps,
-                                            startcycle=startcycle)
+        super().__init__(steps=steps, startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.engine = engine
@@ -143,8 +142,7 @@ class SimulationMDFlux(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super(SimulationMDFlux, self).__init__(steps=steps,
-                                               startcycle=startcycle)
+        super().__init__(steps=steps, startcycle=startcycle)
         self.system = system
         self.system.potential_and_force()  # make sure forces are defined.
         self.orderp = orderp

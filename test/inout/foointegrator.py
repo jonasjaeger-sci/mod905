@@ -13,8 +13,7 @@ class FooIntegrator(MDEngine):
 
     def __init__(self, timestep, extra=0.0,
                  description='Dummy test integrator'):
-        super(FooIntegrator, self).__init__(timestep, description,
-                                            dynamics=None)
+        super().__init__(timestep, description, dynamics=None)
         self.extra = extra
 
     def integration_step(self, system):

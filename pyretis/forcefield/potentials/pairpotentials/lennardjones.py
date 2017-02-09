@@ -95,7 +95,7 @@ class PairLennardJonesCut(PotentialFunction):
         mixing : string
             Determines how we should mix potential parameters.
         """
-        super(PairLennardJonesCut, self).__init__(dim=dim, desc=desc)
+        super().__init__(dim=dim, desc=desc)
         self.shift = shift
         self._lj1 = {}
         self._lj2 = {}
@@ -303,8 +303,8 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         shift : boolean
             Determines if the potential should be shifted or not.
         """
-        super(PairLennardJonesCutnp, self).__init__(dim=dim, desc=desc,
-                                                    shift=shift, mixing=mixing)
+        super().__init__(dim=dim, desc=desc,
+                         shift=shift, mixing=mixing)
 
     def potential(self, system):
         """Calculate the potential energy for the Lennard-Jones interaction.
