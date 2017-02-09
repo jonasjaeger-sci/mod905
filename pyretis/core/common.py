@@ -13,7 +13,7 @@ inspect_function (:py:func:`.inspect_function`)
 initiate_instance (:py:func:`.initiate_instance`)
     Method to initiate a class with optional arguments.
 
-generic_factory (:py:func:`generic_factory`)
+generic_factory (:py:func:`.generic_factory`)
     Create instances of classes based on settings.
 """
 import logging
@@ -33,12 +33,12 @@ __all__ = ['inspect_function', 'initiate_instance', 'generic_factory']
 def _arg_kind(arg):
     """Helper function to determine kind for a given argument.
 
-    This method will help `inspect_function` to determine the correct
-    kind for arguments when using python3.
+    This method will help :py:func:`.inspect_function` to determine
+    the correct kind for arguments when using python3.
 
     Parameters
     ----------
-    arg : object like inspect.Parameter
+    arg : object like :py:class:`inspect.Parameter`.
         The argument we will determine the type of.
 
     Returns
@@ -238,6 +238,11 @@ def get_path_class(ensemble_type):
     ----------
     ensemble_type : string
         The type of ensemble we are requesting.
+
+    Returns
+    -------
+    out : object like :py:class:`.PathBase`
+        A path we can fill :-)
     """
     path_map = {'internal': Path,
                 'external': PathExt,

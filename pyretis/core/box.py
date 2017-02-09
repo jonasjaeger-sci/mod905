@@ -4,12 +4,13 @@
 """Definition of a class for a simulation box.
 
 The simulation box handles the periodic boundaries if needed.
-It is typically referenced via the `system`, i.e. as `system.box`.
+It is typically referenced via the :py:class:`.System` class,
+i.e. as ``System.box``.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box (:py:class:`pyretis.core.box.Box`)
+Box (:py:class:`.Box`)
     Class for a simulation box.
 
 Examples

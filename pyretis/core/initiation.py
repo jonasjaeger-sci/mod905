@@ -6,9 +6,9 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-initiate_path_simulation (:py:func:`.initiate_path_simulation`)
-    A method for initiating a path simulation. This is a helper
-    method that makes use of one of the other initiation methods.
+generate_initial_path_kick (:py:func:`.generate_initial_path_kick`)
+    Function for generating an initial path by repeatedly kicking a
+    phase point.
 
 initiate_kick (:py:func:`.initiate_kick`)
     A method for initiating a path ensemble by repeatedly modifying
@@ -19,9 +19,12 @@ initiate_kick2 (:py:func:`.initiate_kick2`)
     we will use points from the previous paths, closest to the target
     interface.
 
-generate_initial_path_kick (:py:func:`.generate_initial_path_kick`)
-    Function for generating an initial path by repeatedly kicking a
-    phase point.
+initiate_path_ensemble_kick (:py:func:`.initiate_path_ensemble_kick`)
+    Method to initiate a single path ensemble.
+
+initiate_path_simulation (:py:func:`.initiate_path_simulation`)
+    Helper method for initiating a path simulation. This method
+    will make use of one of the other initiation methods.
 """
 import logging
 from pyretis.core.path import paste_paths
@@ -33,10 +36,11 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = [
-    'initiate_path_simulation',
+    'generate_initial_path_kick',
     'initiate_kick',
     'initiate_kick2',
-    'generate_initial_path_kick'
+    'initiate_path_ensemble_kick',
+    'initiate_path_simulation',
 ]
 
 
@@ -157,16 +161,16 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`.pathensemble.PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         The path ensemble to create an initial path for.
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         System is used here since we need access to the temperature
         and to the particle list.
     order_function : object like :py:class:`.OrderParameter`
         The class used for obtaining the order parameter(s).
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the
@@ -182,7 +186,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     -------
     out[0] : boolean
         True if the initial path was accepted
-    out[1] : object like py:class:`.path.PathBase`
+    out[1] : object like py:class:`.PathBase`
         The initial path.
     out[2] : string
         Sthe status of the path.
@@ -220,16 +224,16 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
 
     Parameters
     ----------
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         This is the system that contains the particles we are
         investigating.
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for obtaining the order parameter(s).
-    path_ensemble : object like :py:class:`.path_ensemble.PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         The path ensemble to create an initial path for.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contains settings for TIS. Explicitly used here:
@@ -242,7 +246,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
 
     Returns
     -------
-    out : object like :py:class:`.path.PathBase`
+    out : object like :py:class:`.PathBase`
         This is the generated initial path
     """
     initial_state = system.particles.get_particle_state()
@@ -403,19 +407,19 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
 
     Parameters
     ----------
-    initial_path : object like :py:class:`.path.Path`
+    initial_path : object like :py:class:`.PathBase`
         This is the initial path to fix. It starts & ends at the
         wrong interface.
-    system : object like :py:class:`.system.System`
+    system : object like :py:class:`.System`
         This is the system that contains the particles we are
         investigating
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The object used for calculating the order parameter(s).
-    path_ensemble : object like :py:class:`.path_ensemble.PathEnsemble`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         The path ensemble to create an initial path for.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`.random_gen.RandomGenerator`
+    rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         Settings for TIS method, here we explicitly use:
@@ -429,7 +433,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
 
     Returns
     -------
-    out : object like :py:class:`.path.PathBase`
+    out : object like :py:class:`.PathBase`
         The amended path.
     """
     logger.debug('Attempting to fix path by running TIS moves.')
