@@ -20,6 +20,9 @@ box.py (:py:mod:`pyretis.core.box`)
 common.py (:py:mod:`pyretis.core.common`)
     Some common core methods, for instance for initiating classes.
 
+initiation.py (:py:mod:`pyretis.core.initiation`)
+    Initiation methods used by path sampling simulations.
+
 montecarlo.py (:py:mod:`pyretis.core.montecarlo`)
     This module defines methods for performing Monte Carlo moves.
 

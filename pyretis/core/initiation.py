@@ -66,7 +66,7 @@ def initiate_path_simulation(simulation, settings):
 
     Parameters
     ----------
-    simulation : object like py:class:`.PathSimulation`
+    simulation : object like :py:class:`.PathSimulation`
         The simulation we are doing the initiation for.
     settings : dict
         A dictionary with settings for the initiation.
