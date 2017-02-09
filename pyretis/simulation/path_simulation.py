@@ -19,17 +19,120 @@ from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.simulation.simulation import Simulation
-from pyretis.core.tis import (make_tis_step_ensemble,
-                              initiate_path_ensemble)
+from pyretis.core.tis import make_tis_step_ensemble
 from pyretis.core.retis import make_retis_step
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['SimulationSingleTIS', 'SimulationRETIS']
+__all__ = ['PathSimulation', 'SimulationSingleTIS', 'SimulationRETIS']
 
 
-class SimulationSingleTIS(Simulation):
+class PathSimulation(Simulation):
+    """A base class for TIS/RETIS simulations.
+
+    Attributes
+    ----------
+    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+        This is the integrator that is used to propagate the system
+        in time.
+    path_ensembles : list of objects like :py:class:`PathEnsemble`
+        This is used for storing results for the different path
+        ensembles.
+    rgen : object like :py:class:`.core.RandomGenerator`
+        This is a random generator used for the generation of paths.
+    system : object like :py:class:`System`
+        This is the system the simulation will act on.
+    settings : dict
+        A dictionary with TIS and RETIS settings. We expect that
+        we can find ``settings['tis']`` and possibly
+        ``settings['retis']``. For ``settings['tis']`` we further
+        expect to find the keys:
+
+        * `aimless`: Determines if we should do aimless shooting
+          (True) or not (False).
+        * `sigma_v`: Scale used for non-aimless shooting.
+        * `seed`: A integer seed for the random generator used for
+          the path ensemble we are simulating here.
+
+        Note that the
+        :py:meth:`pyretis.core.tis.make_tis_step_ensemble` method
+        will make use of additional keys from ``settings['tis']``.
+        Please see this method for further details. For the
+        ``settings['retis']`` we expect to find the following keys:
+
+        * `swapfreq`: The frequency for swapping moves.
+        * `relative_shoots`: If we should do relative shooting for
+          the ensembles.
+        * `nullmoves`: Should we perform null moves.
+        * `swapsimul`: Should we just swap a single pair or several
+          pairs.
+    required_settings : tuple of strings
+        This is just a list of the settings that the simulation
+        requires. Here it is used as a check to see that we have
+        all we need to set up the simulation.
+    """
+
+    required_settings = ('tis',)
+    name = 'Generic path simulation'
+
+    def __init__(self, system, order_function, engine, path_ensembles, rgen,
+                 settings, steps=0, startcycle=0):
+        """Initialization of the path simulation class.
+
+        Parameters
+        ----------
+        system : object like :py:class:`pyretis.core.System`
+            This is the system we are investigating.
+        order_fucntion : object like :py:class:`OrderParameter`
+            The object used for calculating the order parameter.
+        engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+            This is the integrator that is used to propagate the system
+            in time.
+        path_ensembles : list of objects like :py:class:`PathEnsemble`
+            This is used for storing results for the different path
+            ensembles.
+        rgen : object like :py:class:`RandomGenerator`
+            This object is the random generator to use in the simulation.
+        settings : dict of dicts
+            A dictionary with TIS and RETIS settings.
+        steps : int, optional
+            The number of simulation steps to perform.
+        startcycle : int, optional
+            The cycle we start the simulation on, can be useful if
+            restarting.
+        """
+        super().__init__(steps=steps, startcycle=startcycle)
+        self.system = system
+        self.system.potential_and_force()  # check that we can get forces.
+        self.order_function = order_function
+        self.engine = engine
+        self.path_ensembles = path_ensembles
+        self.settings = {}
+        for key in self.required_settings:
+            if key not in settings:
+                logtxt = 'Missing required setting "{}" for simulation "{}"'
+                logtxt = logtxt.format(key, self.name)
+                logger.error(logtxt)
+                raise ValueError(logtxt)
+            else:
+                self.settings[key] = settings[key]
+        self.rgen = rgen
+        # Additional setup for shooting:
+        if self.settings['tis']['sigma_v'] < 0.0:
+            self.settings['tis']['aimless'] = True
+            logger.info('%s: aimless is True', self.name)
+        else:
+            logger.debug('Path simulation: Creating sigma_v.')
+            sigv = (self.settings['tis']['sigma_v'] *
+                    np.sqrt(system.particles.imass))
+            logger.debug('Path simulation: sigma_v created and set.')
+            self.settings['tis']['sigma_v'] = sigv
+            self.settings['tis']['aimless'] = False
+            logger.info('Path simulation: aimless is False')
+
+
+class SimulationSingleTIS(PathSimulation):
     """A single TIS simulation.
 
     This class is used to define a TIS simulation where the goal is
@@ -37,32 +140,26 @@ class SimulationSingleTIS(Simulation):
 
     Attributes
     ----------
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
-        This is the integrator that is used to propagate the system
-        in time.
-    interfaces : list of floats
-        These floats defines the interfaces used in the crossing
-        calculation.
     path_ensemble : object like :py:class:`PathEnsemble`
         This is used for storing results for the simulation.
-    rgen : object like :py:class:`RandomGenerator`
-        This is a random generator used for the generation of paths.
-    system : object like :py:class:`System`
-        This is the system the simulation will act on.
-    tis_settings : dict
-        This dict contain specific settings for the TIS simulation
-        (shooting moves etc.).
+        Note that we also have the ``path_ensembles`` attribute
+        defined by the parent class. For ideological reasons we
+        also like to have a ``path_ensemble`` attribute since this
+        class is intended for simulating a single TIS ensemble only.
     """
 
-    def __init__(self, system, orderp, engine, path_ensemble, rgen,
-                 tis_settings, steps=0, startcycle=0):
+    required_settings = ('tis',)
+    name = 'Single TIS simulation'
+
+    def __init__(self, system, order_function, engine, path_ensemble, rgen,
+                 settings, steps=0, startcycle=0):
         """Initialization of the TIS simulation.
 
         Parameters
         ----------
         system : object like :py:class:`System`
             This is the system we are investigating.
-        orderp : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`OrderParameter`
             The object used for calculating the order parameter.
         engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
@@ -73,44 +170,25 @@ class SimulationSingleTIS(Simulation):
             simulation.
         rgen : object like :py:class:`RandomGenerator`
             This is the random generator to use in the simulation.
-        tis_settings : dict
-            This dict contains TIS specific settings, in particular we
-            expect that the following keys are defined:
-
-            * `aimless`: Determines if we should do aimless shooting
-              (True) or not (False).
-            * `sigma_v`: Values used for non-aimless shooting.
-            * `initial_path`: A string which defines the method used
-              for obtaining the initial path.
-            * `seed`: A integer seed for the random generator used for
-              the path ensemble we are simulating here.
-
-            Note that the `make_tis_step_ensemble` method will make
-            use of additional keys from `tis_settings`. Please see
-            this method for further details.
+        settings : dict
+            This dict contains settings for the simulation.
         steps : int, optional
             The number of simulation steps to perform.
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super(SimulationSingleTIS, self).__init__(steps=steps,
-                                                  startcycle=startcycle)
-        self.system = system
-        self.rgen = rgen
-        self.system.potential_and_force()  # make sure forces are defined.
-        self.orderp = orderp
-        self.engine = engine
+        path_ensembles = (path_ensemble,)  # Just for the base class
+        super().__init__(
+            system,
+            order_function,
+            engine,
+            path_ensembles,
+            rgen,
+            settings,
+            steps=steps,
+            startcycle=startcycle)
         self.path_ensemble = path_ensemble
-        self.interfaces = path_ensemble.interfaces
-        self.tis_settings = tis_settings
-        # check for shooting:
-        if self.tis_settings['sigma_v'] < 0.0:
-            self.tis_settings['aimless'] = True
-        else:
-            self.tis_settings['sigma_v'] = (self.tis_settings['sigma_v'] *
-                                            np.sqrt(system.particles.imass))
-            self.tis_settings['aimless'] = False
 
     def step(self):
         """Perform a TIS simulation step.
@@ -118,33 +196,19 @@ class SimulationSingleTIS(Simulation):
         Returns
         -------
         out : dict
-            This list contains the results of the defined tasks.
+            This list contains the results of the TIS step.
         """
         results = {}
-        if self.first_step:
-            initiate_path_ensemble(
-                self.path_ensemble,
-                self.system,
-                self.orderp,
-                self.engine,
-                self.rgen,
-                self.tis_settings,
-                self.cycle['step'])
-            trial = self.path_ensemble.last_path
-            status = 'ACC'
-            accept = True
-            self.first_step = False
-        else:
-            self.cycle['step'] += 1
-            self.cycle['stepno'] += 1
-            accept, trial, status = make_tis_step_ensemble(
-                self.path_ensemble,
-                self.system,
-                self.orderp,
-                self.engine,
-                self.rgen,
-                self.tis_settings,
-                self.cycle['step'])
+        self.cycle['step'] += 1
+        self.cycle['stepno'] += 1
+        accept, trial, status = make_tis_step_ensemble(
+            self.path_ensemble,
+            self.system,
+            self.order_function,
+            self.engine,
+            self.rgen,
+            self.settings['tis'],
+            self.cycle['step'])
         results['accept'] = accept
         results['trialpath'] = trial
         results['status'] = status
@@ -156,46 +220,35 @@ class SimulationSingleTIS(Simulation):
         """Just a small function to return some info about the simulation."""
         msg = ['TIS simulation']
         msg += ['Path ensemble: {}'.format(self.path_ensemble.ensemble)]
-        msg += ['Interfaces: {}'.format(self.interfaces)]
+        msg += ['Interfaces: {}'.format(self.path_ensemble.interfaces)]
         nstep = self.cycle['end'] - self.cycle['start']
         msg += ['Number of steps to do: {}'.format(nstep)]
         msg += ['Engine: {}'.format(self.engine)]
         return '\n'.join(msg)
 
 
-class SimulationRETIS(Simulation):
+class SimulationRETIS(PathSimulation):
     """A RETIS simulation.
 
     This class is used to define a RETIS simulation where the goal is
     to calculate crossing probabilities for a several path ensembles.
 
-    Attributes
-    ----------
-    system : object like :py:class:`System`
-        This is the system we are investigating.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
-        This is the integrator that is used to propagate the system
-        in time.
-    path_ensembles : list of objects like :py:class:`PathEnsemble`
-        This is used for storing results for the different path
-        ensembles.
-    settings : dict
-        The settings for the retis simulation. It contains settings
-        specific for TIS moves (in key ``'tis'``) and settings
-        specific for RETIS (in key ``'retis'``).
-    rgen : object like :py:class:`RandomGenerator`
-        This object is the random generator to use in the simulation.
+    The attributes are documented in the parent class, please see:
+    py:class:`.PathSimulation`.
     """
 
-    def __init__(self, system, orderp, engine, path_ensembles, rgen,
-                 tis_settings, retis_settings, steps=0, startcycle=0):
+    required_settings = ('tis', 'retis')
+    name = 'RETIS simulation'
+
+    def __init__(self, system, order_function, engine, path_ensembles, rgen,
+                 settings, steps=0, startcycle=0):
         """Initialization of the RETIS simulation.
 
         Parameters
         ----------
         system : object like :py:class:`System`
             This is the system we are investigating.
-        orderp : object like :py:class:`OrderParameter`
+        order_function : object like :py:class:`OrderParameter`
             The object used for calculating the order parameter.
         engine : object like :py:class:`pyretis.engines.engine.EngineBase`
             This is the integrator that is used to propagate the system
@@ -205,30 +258,8 @@ class SimulationRETIS(Simulation):
             ensembles.
         rgen : object like :py:class:`RandomGenerator`
             This object is the random generator to use in the simulation.
-        tis_settings : dict
-            This dict contains TIS specific settings, in particular we
-            expect that the following keys are defined:
-
-            * `aimless`: Determines if we should do aimless shooting
-              (True) or not (False).
-            * `sigma_v`: Values used for non-aimless shooting.
-            * `initial_path`: A string which defines the method used
-              for obtaining the initial path.
-            * `seed`: A integer seed for the random generator used for
-              the path ensemble we are simulating here.
-
-            Note that the `make_tis_step_ensemble` method will make
-            use of additional keys from `tis_settings`. Please see
-            this method for further details.
-        retis_settings : dict
-            This dict contains RETIS specific settings, in particular:
-
-            * `swapfreq`: The frequency for swapping moves.
-            * `relative_shoots`: If we should do relative shooting for
-              the ensembles.
-            * `nullmoves`: Should we perform nullmoves.
-            * `swapsimul`: Should we just swap a single pair or several
-              pairs.
+        settings : dict
+            A dictionary with settings for TIS and RETIS.
         steps : int, optional
             The number of simulation steps to perform.
         startcycle : int, optional
@@ -240,50 +271,15 @@ class SimulationRETIS(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super(SimulationRETIS, self).__init__(steps=steps,
-                                              startcycle=startcycle)
-        self.system = system
-        self.system.potential_and_force()  # make sure forces are defined.
-        self.orderp = orderp
-        self.engine = engine
-        self.path_ensembles = path_ensembles
-        self.settings = {'tis': tis_settings, 'retis': retis_settings}
-        self.rgen = rgen
-        # check for shooting:
-        local_tis = self.settings['tis']
-        if local_tis['sigma_v'] < 0.0:
-            local_tis['aimless'] = True
-        else:
-            local_tis['sigma_v'] = (local_tis['sigma_v'] *
-                                    np.sqrt(system.particles.imass))
-            local_tis['aimless'] = False
-
-    def initiate_ensemble(self, ensemble):
-        """Method to initiate a given ensemble.
-
-        This method is mainly here for convenience. Sometimes we
-        might want to do more stuff around the initiation - output
-        to the user and so on. This method will just do the
-        initialization.
-
-        Parameters
-        ----------
-        ensemble : object like :py:class:`PathEnsemble`
-            The ensemble to initiate.
-
-        Returns
-        -------
-        out : object like :py:class:`Path`
-            The initial path created.
-        """
-        return initiate_path_ensemble(
-            ensemble,
-            self.system,
-            self.orderp,
-            self.engine,
-            self.rgen,
-            self.settings['tis'],
-            self.cycle['step'])
+        super().__init__(
+            system,
+            order_function,
+            engine,
+            path_ensembles,
+            rgen,
+            settings,
+            steps=steps,
+            startcycle=startcycle)
 
     def step(self):
         """Perform a RETIS simulation step.
@@ -294,26 +290,18 @@ class SimulationRETIS(Simulation):
             This list contains the results of the defined tasks.
         """
         results = {}
-        if self.first_step:
-            retis_step = []
-            for ensemble in self.path_ensembles:
-                accept, trial, status = self.initiate_ensemble(ensemble)
-                result = ['init', status, trial, accept]
-                retis_step.append(result)
-            self.first_step = False
-        else:
-            self.cycle['step'] += 1
-            self.cycle['stepno'] += 1
-            msgtxt = 'RETIS step at cycle {}'.format(self.cycle['stepno'])
-            logger.info(msgtxt)
-            retis_step = make_retis_step(
-                self.path_ensembles,
-                self.system,
-                self.orderp,
-                self.engine,
-                self.rgen,
-                self.settings,
-                self.cycle['step'])
+        self.cycle['step'] += 1
+        self.cycle['stepno'] += 1
+        msgtxt = 'RETIS step. Cycle {}'.format(self.cycle['stepno'])
+        logger.info(msgtxt)
+        retis_step = make_retis_step(
+            self.path_ensembles,
+            self.system,
+            self.order_function,
+            self.engine,
+            self.rgen,
+            self.settings,
+            self.cycle['step'])
         results['retis'] = retis_step
         results['system'] = self.system
         results['cycle'] = self.cycle

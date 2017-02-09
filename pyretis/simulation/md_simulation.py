@@ -72,7 +72,7 @@ class SimulationNVE(Simulation):
         self.engine = engine
         if self.engine.dynamics.lower() != 'nve':
             msg = 'Inconsistent MD integrator {} for NVE dynamics!'
-            msg = msg.format(engine.desc)
+            msg = msg.format(engine.description)
             logger.warning(msg)
         task_integrate = {'func': self.engine.integration_step,
                           'args': [self.system]}

@@ -24,22 +24,22 @@ class VVIntegrator(MDEngine):
         The time step.
     half_delta_t : float
         Half of timestep.
-    desc : string
+    description : string
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='The velocity verlet integrator'):
+    def __init__(self, timestep,
+                 description='The velocity verlet integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        description : string
             Description of the integrator.
         """
-        super(VVIntegrator, self).__init__(timestep, desc=desc,
-                                           dynamics='NVE')
+        super().__init__(timestep, description, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
@@ -76,22 +76,21 @@ class Euler(MDEngine):
         The time step.
     half_delta_t : float
         Half of timestep.
-    desc : string
+    description : string
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='The Euler integrator'):
+    def __init__(self, timestep, description='The Euler integrator'):
         """Initiate the Euler integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        descriotion : string
             Description of the integrator.
         """
-        super(Euler, self).__init__(timestep, desc=desc,
-                                    dynamics='NVE?')
+        super().__init__(timestep, description, dynamics='NVE?')
         self.half_delta_tsq = 0.5 * self.delta_t**2
 
     def integration_step(self, system):

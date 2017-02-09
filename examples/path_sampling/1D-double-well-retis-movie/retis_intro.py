@@ -9,6 +9,7 @@ some of the objects in pyretis.
 Have fun!
 """
 from pyretis.core import System, Box, Particles
+from pyretis.core.initiation import initiate_path_simulation
 from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_orderparameter, create_simulation)
 import numpy as np
@@ -117,10 +118,11 @@ def main():
     simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
-    simulation.step()  # Run the first step of the simulation:
-    # Let us look at the resulting path ensembles and paths:
+
     ensembles = simulation.path_ensembles
-    for ensemble in ensembles:
+    for i, _ in enumerate(initiate_path_simulation(simulation,
+                                                   SETTINGS['tis'])):
+        ensemble = ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))
         print(ensemble)
@@ -178,9 +180,7 @@ def main():
             print('\tTIS move: {}'.format(tis_move))
         print('\tResult: {}'.format(accepted))
 
-    # Let us just run the rest of the simulation.
-    # But first create a function to output results, i.e.
-    # write the code for the method `print_step_results`.
+    # Run the rest of the simulation:
     while not simulation.is_finished():
         result = simulation.step()
         print('Simulation step: {}'.format(result['cycle']['step']))

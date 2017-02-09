@@ -99,6 +99,9 @@ def inspect_function(function):
                                 arg.kind, arg.name)
         return out
     else:
+        # We get a pylint warning here, but it is not
+        # deprecated for versions =< (3,3) which we are in fact
+        # assuming here.
         arguments = inspect.getargspec(function)
         if not arguments.defaults:
             out['args'] = [arg for arg in arguments.args]
@@ -228,7 +231,7 @@ def generic_factory(settings, object_map, name='generic'):
     return initiate_instance(cls, settings)
 
 
-def get_path_klass(ensemble_type):
+def get_path_class(ensemble_type):
     """Method to return the path class to work with an integrator.
 
     Parameters

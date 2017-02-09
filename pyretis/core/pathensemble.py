@@ -21,6 +21,7 @@ import logging
 import os
 import shutil
 import tarfile
+from pyretis.inout.common import create_backup
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -452,9 +453,18 @@ class PathEnsembleExt(PathEnsemble):
             prefix='{}_'.format(cycle['step']))
         path_copy = path.copy_path()
         path_copy.pos = new_pos
-        with tarfile.open(self._traj_file, 'a') as tar:
-            for src, dest in source.items():
-                tar.add(src, arcname=os.path.basename(dest))
+        try:
+            with tarfile.open(self._traj_file, 'a') as tar:
+                for src, dest in source.items():
+                    tar.add(src, arcname=os.path.basename(dest))
+        except tarfile.ReadError:
+            logger.warning('Could not open trajectory: "%s"', self._traj_file)
+            logger.info('Will backup and create new file.')
+            logtxt = create_backup(self._traj_file)
+            logger.info(logtxt)
+            with tarfile.open(self._traj_file, 'w') as tar:
+                for src, dest in source.items():
+                    tar.add(src, arcname=os.path.basename(dest))
         return path_copy
 
 

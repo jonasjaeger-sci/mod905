@@ -20,6 +20,7 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = ['ReservoirPath']
 
+
 class ReservoirPath(Path):
     """A path where only a subset of points are stored in memory.
 

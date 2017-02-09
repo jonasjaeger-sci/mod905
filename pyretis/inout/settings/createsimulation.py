@@ -297,7 +297,7 @@ def _create_tis_single_simulation(settings, system, engine):
     return SimulationSingleTIS(system, order_function, engine,
                                path_ensemble,
                                rgen,
-                               settings['tis'],
+                               settings,
                                steps=sim['steps'],
                                startcycle=sim.get('startcycle', 0))
 
@@ -334,8 +334,7 @@ def create_retis_simulation(settings, system, engine):
     return SimulationRETIS(system, order_function, engine,
                            path_ensembles,
                            rgen,
-                           settings['tis'],
-                           settings['retis'],
+                           settings,
                            steps=sim['steps'],
                            startcycle=sim.get('startcycle', 0))
 

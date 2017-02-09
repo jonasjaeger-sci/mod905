@@ -308,6 +308,7 @@ class MDEngine(EngineBase):
         # by sequentially kicking the initial phase point:
         previous = None
         particles = system.particles
+        system.potential_and_force()  # make sure forces are set
         curr = self.calculate_order(order_function, system)[0]
         while True:
             # save current state:

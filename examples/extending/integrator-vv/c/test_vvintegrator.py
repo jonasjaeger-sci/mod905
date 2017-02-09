@@ -20,25 +20,45 @@ from pyretis.engines import VelocityVerlet
 from vvintegratorc import VelocityVerletC
 
 
-def set_up_initial_state():
-    """Create particles for the test."""
+def create_positions():
+    """Create particles for test"""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
+    box = Box(size, periodic=[True, True, True])
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = Box(size, periodic=[True, True, True])
-    system = System(temperature=1.0, units='lj', box=box)
-    system.particles = Particles(dim=3)
+    particles = Particles(dim=3)
     for pos in lattice:
-        system.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
+        particles.add_particle(pos, np.zeros_like(pos), np.zeros_like(pos),
+                               mass=1.0, name='Ar', ptype=0)
     msg = 'Created lattice with {} atoms.'
-    print(msg.format(system.particles.npart))
+    print(msg.format(particles.npart))
+    return particles, box
+
+
+def run_test(steps, integrator, system=None):
+    """Execute test MD simulation."""
+    if system is None:
+        # create system
+        particles, box = create_positions()
+        initial = particles.get_particle_state()
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = particles
+    else:
+        initial = None
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
     forcefieldnp = ForceField('Lennard-Jones force field',
                               potential=[potentialnp], params=[parameters])
     system.forcefield = forcefieldnp
-    return system
+    simulation = Simulation(steps=steps)
+    task_integrate = {'func': integrator.integration_step,
+                      'args': [system]}
+    simulation.add_task(task_integrate)
+    traj = []
+    for _ in simulation.run():
+        traj.append(system.particles.get_particle_state())
+    return traj, initial, system
 
 
 class VVIntegratorTest(unittest.TestCase):
@@ -46,27 +66,13 @@ class VVIntegratorTest(unittest.TestCase):
 
     def test_integrator(self):
         """Test by integrating the equations of motion."""
-        system = set_up_initial_state()
-        initial = system.particles.get_particle_state()
-        numberofsteps = 20
-        simulation = Simulation(steps=numberofsteps)
         integrator = VelocityVerlet(0.0025)
-        task_integrate = {'func': integrator.integration_step,
-                          'args': [system]}
-        simulation.add_task(task_integrate)
-        traj = []
-        for _ in simulation.run():
-            traj.append(system.particles.get_particle_state())
-        # repeat with external integrator:
+        traj, initial, system = run_test(20, integrator)
+        # reset to initial state
         system.particles.set_particle_state(initial)
-        simulation = Simulation(steps=numberofsteps)
-        integrator = VelocityVerletC(0.0025)
-        task_integrate = {'func': integrator.integration_step,
-                          'args': [system]}
-        simulation.add_task(task_integrate)
-        traj2 = []
-        for _ in simulation.run():
-            traj2.append(system.particles.get_particle_state())
+        # repeat with external integrator:
+        integratorc = VelocityVerletC(0.0025)
+        traj2, _, _ = run_test(20, integratorc, system)
         for trj1, trj2 in zip(traj, traj2):
             posok = np.allclose(trj1['pos'], trj2['pos'])
             self.assertTrue(posok)

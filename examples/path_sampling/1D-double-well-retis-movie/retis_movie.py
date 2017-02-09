@@ -9,6 +9,7 @@ the temperature, the ratio of the different RETIS moves etc.
 Have fun!
 """
 from pyretis.core import System, Box, Particles
+from pyretis.core.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_orderparameter, create_simulation)
@@ -74,9 +75,8 @@ COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
 TXTCOLOR = {'SW': '#006BA4', 'NU': '#FF800E',
             'TR': '#ABABAB', 'SH': '#595959',
             'IN': '#808080'}
-
-
 FTOT = 0
+
 
 def set_up_system(settings):
     """Just a method to help set up the system.
@@ -567,6 +567,17 @@ def main():
     simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# GENERATING INITIAL PATHS')
+
+    for i, _ in enumerate(initiate_path_simulation(simulation,
+                                                   SETTINGS['tis'])):
+        ensemble = simulation.path_ensembles[i]
+        name = ensemble.ensemble_name
+        print('Info about ensemble {}:'.format(name))
+        print(ensemble)
+        print('Info about the initial path:')
+        print(ensemble.last_path)
+        print('')
+
     fig, plot_patches, axes = matplotlib_setup()
     variables = {'length0': Property('Path length in [0^-]'),
                  'length1': Property('Path length in [0^+]'),

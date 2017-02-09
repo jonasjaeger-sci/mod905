@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Example of using a integration routine implemented in Fortran."""
 import logging
+from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# pyretis imports
-from pyretis.engines import MDEngine
 try:
     import vvintegrator
 except ImportError:
@@ -43,8 +42,7 @@ class VelocityVerletC(MDEngine):
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerletC, self).__init__(delta_t, desc=desc,
-                                              dynamics='NVE')
+        super().__init__(delta_t, desc, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):

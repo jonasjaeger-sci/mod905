@@ -9,6 +9,7 @@ aim to calculate the crossing probability and the rate constant.
 Have fun!
 """
 from pyretis.core import System, Box, Particles
+from pyretis.core.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_orderparameter, create_simulation)
@@ -285,7 +286,16 @@ def main():
     simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
-    simulation.step()  # Run the first step of the simulation:
+    print('# GENERATING INITIAL PATHS')
+    for i, res in enumerate(initiate_path_simulation(simulation,
+                                                     SETTINGS['tis'])):
+        ensemble = simulation.path_ensembles[i]
+        name = ensemble.ensemble_name
+        print('Info about ensemble {}:'.format(name))
+        print(ensemble)
+        print('Info about the initial path:')
+        print(ensemble.last_path)
+        print('')
     # We make a dictionary of these variable for easier access:
     # Set up some variables for storing results:
     variables = {'length0': Property('Path length in [0^-]'),

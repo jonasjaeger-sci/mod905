@@ -6,6 +6,7 @@ import logging
 import unittest
 import numpy as np
 from pyretis.core import System, Box, Particles
+from pyretis.core.initiation import initiate_path_simulation
 from pyretis.inout.settings import (create_force_field, create_engine,
                                     create_simulation)
 logging.disable(logging.CRITICAL)
@@ -83,8 +84,13 @@ class TISTest(unittest.TestCase):
         """Test a TIS simulation for 001."""
         simulation = prepare_test_simulation()
         ensemble = simulation.path_ensemble
+        settings = simulation.settings['tis']
         for i in range(10):
-            simulation.step()
+            if i == 0:
+                for _ in initiate_path_simulation(simulation, settings):
+                    logging.debug('Running initialization')
+            else:
+                simulation.step()
             path = ensemble.paths[-1]
             path_data = [path['length'], path['status'], path['generated'][0],
                          path['ordermin'][0], path['ordermax'][0]]
