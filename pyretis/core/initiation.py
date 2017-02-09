@@ -6,20 +6,20 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-initiate_path_simulation
+initiate_path_simulation (:py:func:`.initiate_path_simulation`)
     A method for initiating a path simulation. This is a helper
     method that makes use of one of the other initiation methods.
 
-initiate_kick
+initiate_kick (:py:func:`.initiate_kick`)
     A method for initiating a path ensemble by repeatedly modifying
     velocities to find the crossing with the interfaces.
 
-initiate_kick2
+initiate_kick2 (:py:func:`.initiate_kick2`)
     A method similar to py:meth:`.initiate_kick`. Here, if possible,
     we will use points from the previous paths, closest to the target
     interface.
 
-generate_initial_path_kick
+generate_initial_path_kick (:py:func:`.generate_initial_path_kick`)
     Function for generating an initial path by repeatedly kicking a
     phase point.
 """
@@ -157,16 +157,16 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
 
     Parameters
     ----------
-    path_ensemble : object like :py:class:`PathEnsemble`
+    path_ensemble : object like :py:class:`.pathensemble.PathEnsemble`
         The path ensemble to create an initial path for.
-    system : object like :py:class:`System`
+    system : object like :py:class:`.system.System`
         System is used here since we need access to the temperature
         and to the particle list.
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.OrderParameter`
         The class used for obtaining the order parameter(s).
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.
-    rgen : object like :py:class:`RandomGenerator`
+    rgen : object like :py:class:`.random_gen.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
         This dictionary contain the TIS settings. Here we set the
@@ -225,7 +225,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
         investigating.
     order_function : object like :py:class:`OrderParameter`
         The class used for obtaining the order parameter(s).
-    path_ensemble : object like :py:class:`PathEnsemble`
+    path_ensemble : object like :py:class:`.path_ensemble.PathEnsemble`
         The path ensemble to create an initial path for.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.
@@ -411,7 +411,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
         investigating
     order_function : object like :py:class:`OrderParameter`
         The object used for calculating the order parameter(s).
-    path_ensemble : object like :py:class:`PathEnsemble`
+    path_ensemble : object like :py:class:`.path_ensemble.PathEnsemble`
         The path ensemble to create an initial path for.
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.

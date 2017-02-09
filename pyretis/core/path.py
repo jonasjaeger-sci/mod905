@@ -71,9 +71,9 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
 
     Parameters
     ----------
-    path_back : object like :py:class:`Path`
+    path_back : object like :py:class:`.PathBase`
         This is the backward trajectory.
-    path_forw : object like :py:class:`Path`
+    path_forw : object like :py:class:`.PathBase`
         This is the forward trajectory.
     overlap : boolean, default is True
         If true, `path_back` and `path_forw` have a common

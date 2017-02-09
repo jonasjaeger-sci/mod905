@@ -9,17 +9,17 @@ The algorithms are implemented as described by van Erp et al. [TIS]_.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-make_tis_step
+make_tis_step (:py:func:`.make_tis_step`)
     A method that will perform a single TIS step.
 
-make_tis_step_ensemble
+make_tis_step_ensemble (:py:func:`.make_tis_step_ensemble`)
     A method to preform a TIS step for a path ensemble. It will handle
     adding of the path to a path ensemble object.
 
-shoot
+shoot (:py:func:`.shoot`)
     A method that will perform a shooting move.
 
-time_reversal
+time_reversal (:py:func:`.time_reversal`)
     A method for performing the time reversal move.
 
 References

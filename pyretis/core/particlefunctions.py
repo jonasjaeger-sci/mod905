@@ -9,51 +9,51 @@ kinetic temperature, pressure etc.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-atomic_kinetic_energy_tensor
+atomic_kinetic_energy_tensor (:py:func:`.atomic_kinetic_energy_tensor`)
     Return the kinetic energy tensor for each atom in a selection
     of particles.
 
-calculate_kinetic_energy
+calculate_kinetic_energy (:py:func:`.calculate_kinetic_energy`)
     Return the kinetic energy of a collection of particles.
 
-calculate_kinetic_energy_tensor
+calculate_kinetic_energy_tensor (:py:func:`.calculate_kinetic_energy_tensor`)
     Return the kinetic energy tensor for a selection of particles.
 
-calculate_kinetic_temperature
+calculate_kinetic_temperature (:py:func:`calculate_kinetic_temperature`)
     Return the kinetic temperature of a collection of particles.
 
-calculate_linear_momentum
+calculate_linear_momentum (:py:func:`calculate_linear_momentum`)
     Calculates the linear momentum of a collection of particles.
 
-calculate_pressure_from_temp
+calculate_pressure_from_temp (:py:func:`calculate_pressure_from_temp`)
     Return the scalar pressure using the temperature and the virial.
 
-calculate_pressure_tensor
+calculate_pressure_tensor (:py:func:`calculate_pressure_tensor`)
     Return the pressure tensor, obtained from the virial and the kinetic
     energy tensor.
 
-calculate_scalar_pressure
+calculate_scalar_pressure (:py:func:`calculate_scalar_pressure`)
     Return the scalar pressure (from the trace of the pressure tensor).
 
-calculate_thermo
+calculate_thermo (:py:func:`calculate_thermo`)
     Calculate and return several "thermodynamic" properties as the
     potential, kinetic and total energies per particle, the temperature,
     the pressure and the momentum.
 
-calculate_thermo_path
+calculate_thermo_path (:py:func:`calculate_thermo_path`)
     Calculate and return some thermodynamic properties. This method
     is similar to the `calculate_thermo`, however it is simpler and
     calculates fewer quantities.
 
-kinetic_energy
+kinetic_energy (:py:func:`kinetic_energy`)
     Return the kinetic energy for velocities and masses given as
     numpy arrays.
 
-kinetic_temperature
+kinetic_temperature (:py:func:`kinetic_temperature`)
     Return the temperature for velocities and masses given as
     numpy arrays.
 
-reset_momentum
+reset_momentum (:py:func:`reset_momentum`)
     Set linear momentum (for a selection of particles) to zero.
 """
 import numpy as np

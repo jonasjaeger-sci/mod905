@@ -12,21 +12,21 @@ van Erp [RETIS]_.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-make_retis_step
+make_retis_step (:py:func:`.make_retis_step`)
     Function to select and execute the RETIS move.
 
-retis_tis_moves
+retis_tis_moves (:py:func:`.retis_tis_moves`)
     Function to execute the TIS steps in the RETIS algorithm.
 
-retis_moves
+retis_moves (:py:func:`.retis_moves`)
     Function to perform RETIS swapping moves - it selects what scheme
     to use, i.e. ``[0^-] <-> [0^+], [1^+] <-> [2^+], ...`` or
     ``[0^+] <-> [1^+], [2^+] <-> [3^+], ...``.
 
-retis_swap
+retis_swap (:py:func:`.retis_swap`)
     The function that actually swaps two path ensembles.
 
-retis_swap_zero
+retis_swap_zero (:py:func:`.retis_swap_zero`)
     The function that performs the swapping for the
     ``[0^-] <-> [0^+]`` swap.
 
@@ -70,7 +70,7 @@ def make_retis_step(ensembles, system, order_function, engine, rgen,
     system : object like :py:class:`.system.System`
         System is used here since we need access to the temperature
         and to the particle list
-    order_function : object like :py:class:`OrderParameter`
+    order_function : object like :py:class:`.orderparameter.OrderParameter`
         The class used for calculating the order parameter(s).
     engine : object like :py:class:`pyretis.engines.engine.EngineBase`
         The engine to use for propagating a path.
