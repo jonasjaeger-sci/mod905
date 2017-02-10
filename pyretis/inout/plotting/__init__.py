@@ -42,8 +42,7 @@ Folders
 
 styles
     This folder contains style files for matplotlib which are used by
-    pyretis. For instance the
-    :download:`pyretis.mplstyle <styles/pyretis.mplstyle>` file.
+    pyretis.
 
 References
 ~~~~~~~~~~

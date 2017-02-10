@@ -43,19 +43,6 @@ Folders
 ~~~~~~~
 
 templates
-    A folder containing templates for generating reports:
-
-    * :download:`report_mdflux.rst <templates/report_mdflux.rst`.
-    * :download:`report_mdflux.tex <templates/report_mdflux.tex`.
-    * :download:`report_mdflux.txt <templates/report_mdflux.txt`.
-    * :download:`report_retis0.txt <templates/report_retis0.txt`.
-    * :download:`report_retis.rst <templates/report_retis.rst`.
-    * :download:`report_retis.tex <templates/report_retis.tex`.
-    * :download:`report_tis.rst <templates/report_tis.rst`.
-    * :download:`report_tis.tex <templates/report_tis.tex`.
-    * :download:`report_tis.txt <templates/report_tis.txt`.
-    * :download:`report_tis_single.rst <templates/report_tis_single.rst`.
-    * :download:`report_tis_single.tex <templates/report_tis_single.tex`.
-    * :download:`report_tis_single.txt <templates/report_tis_single.txt`.
+    A folder containing templates for generating reports.
 """
 from .report import generate_report
