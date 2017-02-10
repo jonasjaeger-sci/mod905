@@ -139,7 +139,7 @@ def get_tasks(sim_settings, directory=None, engine=None, progress=False):
         The simulation settings.
     directory : string
         The directory where output files should be written.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine (if any) specified for the simulation.
     progress : boolean, optional
         If True, we will display a progress bar and we don't need
@@ -147,7 +147,7 @@ def get_tasks(sim_settings, directory=None, engine=None, progress=False):
 
     Returns
     -------
-    out : list of objects like `OutputTask`
+    out : list of objects like :py:class:`.OutputTask`
         Objects that can be used for creating output.
     """
     msgtxt = 'Creating output tasks from settings'
@@ -172,7 +172,7 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -195,7 +195,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -219,7 +219,7 @@ def create_pathensemble_directories(ensemble):
 
     Parameters
     ----------
-    ensemble : object like :py:class:`pyretis.core.pathensemble.Pathensemble`
+    ensemble : object like :py:class:`.Pathensemble`
         The path ensemble to create for.
     """
     for ensemble_dir in ensemble.directories():
@@ -234,7 +234,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -316,7 +316,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -438,7 +438,7 @@ def run_generic_simulation(sim, sim_settings, progress=False):
 
     Parameters
     ----------
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         This is the simulation to run.
     sim_settings : dict
         The simulation settings.
@@ -479,9 +479,9 @@ def set_up_simulation(inputfile, runpath):
     -------
     runner : method
         A method which can be used to execute the simulation.
-    sim : object like :py:class:`pyretis.simulation.Simulation`
+    sim : object like :py:class:`.Simulation`
         The simulation defined by the input file.
-    syst : object like :py:class:`pyretis.core.system.System`
+    syst : object like :py:class:`.System`
         The system created.
     sim_settings : dict
         The input settings read from the input file.

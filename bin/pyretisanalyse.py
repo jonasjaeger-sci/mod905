@@ -18,7 +18,6 @@ optional arguments:
   -V, --version         show program's version number and exit
 """
 # pylint: disable=C0103
-from __future__ import absolute_import
 import argparse
 import logging
 import os
