@@ -9,25 +9,25 @@ be read from a file.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_box
+create_box (:py:func:`.create_box`)
     Create a simulation box from simulation settings.
 
-create_initial_positions
+create_initial_positions (:py:func:`.create_initial_positions`)
     Get initial positions based on settings. This will either be
     read from a file or generated on a lattice.
 
-create_system
+create_system (:py:func:`.create_system`)
     Set up a system from given settings. This method will probably
     also need to set/get the initial positions and velocities for
     the particles and set up the simulation box.
 
-create_velocities
+create_velocities (:py:func:`.create_velocities`)
     Create velocities from settings for a system with particles.
 
-initial_positions_file
+initial_positions_file (:py:func:`.initial_positions_file`)
     Get initial positions from a file.
 
-initial_positions_lattice
+initial_positions_lattice (:py:func:`.initial_positions_lattice`)
     Get initial positions by generating a lattice.
 """
 import logging
@@ -39,7 +39,8 @@ from pyretis.core.box import Box
 from pyretis.core.system import System
 from pyretis.core.particles import Particles, get_particle_type
 from pyretis.core.units import CONVERT
-from pyretis.inout.writers import read_xyz_file, read_gromacs_file
+from pyretis.inout.writers.xyzio import read_xyz_file
+from pyretis.inout.writers.gromacsio import read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -139,7 +140,7 @@ def initial_positions_lattice(settings):
     """Method to generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
-    as dictated by `settings['system']['units']`.
+    as dictated by ``settings['system']['units']``.
 
     Parameters
     ----------
@@ -148,7 +149,7 @@ def initial_positions_lattice(settings):
 
     Returns
     -------
-    particles : object like `Particles` from `pyretis.core.particles`
+    particles : object like :py:class:`.Particles`
         The particles we created.
     size : list of floats
         A size for the region we created. This can be used to create
@@ -266,7 +267,7 @@ def initial_positions_file(settings):
 
     Returns
     -------
-    particles : object like `Particles` from `pyretis.core.particles`
+    particles : object like :py:class:`.Particles`
         The particles we created.
     size : list of floats
         A size for the region we created. This can be used to create
@@ -343,7 +344,7 @@ def create_initial_positions(settings):
 
     Returns
     -------
-    out[0] : object like `Particles` from `pyretis.core.particles`
+    out[0] : object like :py:class:`.Particles`
         The particles we created
     out[1] : list
         The size associated with the particles. Can be used to create a
@@ -393,7 +394,7 @@ def create_box(settings, size, dim=3):
 
     Returns
     -------
-    box : object like :py:class:`pyretis.core.box.Box` or None
+    box : object like :py:class:`.Box` or None
         The box if we managed to create it, otherwise None.
     """
     msg = 'Box created {}:\n{}'
@@ -424,7 +425,7 @@ def create_velocities(system, settings, vel):
 
     Parameters
     ----------
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system to create velocities for. It's needed since
         we need to know the degrees of freedom.
     settings : dict
@@ -493,13 +494,13 @@ def create_system(settings, engine=None):
     ----------
     settings : dict
         The dict with the simulation settings
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to be used for the simulation. This can be given
         in case we want to choose an external particle list type.
 
     Returns
     -------
-    system : object like `system` from `pyretis.core.system`
+    system : object like :py:class:`.System`
         The system object we create here.
     """
     if engine is None or engine.engine_type == 'internal':
@@ -523,6 +524,5 @@ def create_system(settings, engine=None):
     else:
         vel_gen = False
     if not (vel_gen or vel):
-        msg = 'Velocities were not created or read. Just set to zero!'
-        logger.warning(msg)
+        logger.warning('Velocities were not created or read - set to zero!')
     return system

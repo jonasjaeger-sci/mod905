@@ -10,7 +10,7 @@ can make use of them.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Plotter
+Plotter (:py:class:`.Plotter`)
     A generic class for creating plots.
 """
 from abc import ABCMeta, abstractmethod

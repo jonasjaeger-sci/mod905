@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Functions for generating plots using matplotlib.
+"""A class for writing text data for the analysis.
 
+This module defines a text plotter which supports the same method as
+the generic plotter, however the output is human-readable text.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TxtPlotter
+TxtPlotter (:py:class:`.TxtPlotter`)
     A class for writing text output.
 """
 import logging
@@ -30,10 +32,10 @@ __all__ = ['TxtPlotter']
 class TxtPlotter(Plotter):
     """A plotter writing text-based output.
 
-    This class will just write text-based output. It is similar to the
-    matplotlib plotter in the sence that the same functions are supported.
-    Here, however, we do not plot any figures, we just write out column
-    based text file.
+    This class will just write text-based output. It is similar to
+    (:py:class:`.MplPlotter`) in the sense that the same functions are
+    supported. Here, however, we do not plot any figures, we just
+    write a column based text file with the results.
 
     Attributes
     ----------

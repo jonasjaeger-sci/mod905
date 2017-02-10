@@ -25,16 +25,16 @@ __init__.py
     This file, handles imports for pyretis and defines some colors
     and the method for creating a plotter.
 
-mpl_plotting.py
+mpl_plotting.py (:py:mod:`pyretis.inout.plotting.mpl_plotting`)
     Methods for generating plots using matplotlib.
 
-plotting.py
+plotting.py (:py:mod:`pyretis.inout.plotting.plotting`)
     Definition of a generic base class for the plotter(s).
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_plotter
+create_plotter (:py:func:`.create_plotter`)
     Method to create a plotter.
 
 Folders
@@ -42,7 +42,8 @@ Folders
 
 styles
     This folder contains style files for matplotlib which are used by
-    pyretis.
+    pyretis. For instance the
+    :download:`pyretis.mplstyle <styles/pyretis.mplstyle>` file.
 
 References
 ~~~~~~~~~~
@@ -56,6 +57,7 @@ References
 from pyretis.inout.settings.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
 from .txt_plotting import TxtPlotter
+
 
 __all__ = ['create_plotter']
 
@@ -105,7 +107,7 @@ def create_plotter(plot_settings, out_dir=None):
 
     Returns
     -------
-    out : object like `MplPlotter` from `.mpl_plotting`
+    out : object like :py:class:`.MplPlotter`
         This is a object which can be used for plotting.
     """
     if plot_settings is None:

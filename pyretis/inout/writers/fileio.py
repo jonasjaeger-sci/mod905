@@ -5,12 +5,12 @@
 
 This module defines a class that is useful for writing data
 to the disk. The typical usage in pyretis is to write the output from
-a `Writer` to a file.
+a :py:class:`.Writer` to a file using a :py:class:`.FileIO` object.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FileIO
+FileIO (:py:class:`.FileIO`)
     A generic class for handling output to files.
 """
 import os
@@ -26,9 +26,10 @@ class FileIO(object):
     """A generic file writer class.
 
     This class defines a simple object for writing to files.
-    Formatting etc. is handled by objects like `Writers` from
-    `pyretis.inout.writers.writers`, The `FileIO` class handle the
-    creation/opening of the file with backup/overwriting etc.
+    Formatting etc. is handled by objects like :py:class:`.Writer`
+    from :py:mod:`pyretis.inout.writers.writers`. This class
+    handle the creation/opening of the file with backup/overwriting
+    etc.
 
     Attributes
     ----------
@@ -37,7 +38,7 @@ class FileIO(object):
     oldfile : string
         Determines if we should backup, overwrite or append if a file
         exist with the given `filename`.
-    fileh : object like `file` (`io.IOBase`)
+    fileh : object like :py:class:`io.IOBase`
         The file handle we are using.
     """
     OLDFILE = ('append', 'overwrite', 'backup')

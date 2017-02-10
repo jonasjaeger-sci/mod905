@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Functions for generating reports.
+"""Method for generating reports from path sampling simulations.
 
 The reports are useful for displaying results from the analysis.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-generate_report_tis
+generate_report_tis (:py:func:`.generate_report_tis`)
     Generate a report for the over-all results from a TIS simulation.
 
-generate_report_tis_path
+generate_report_tis_path (:py:func:`.generate_report_tis_path`)
     Generate a report for a single TIS simulation.
 
-generate_report_retis
+generate_report_retis (:py:func:`.generate_report_retis`)
     Generate a report for the over-all results from a RETIS simulation.
 """
-from __future__ import absolute_import
 import logging
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
@@ -39,8 +38,9 @@ def generate_report_tis_path(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -77,8 +77,9 @@ def generate_report_tis(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -132,8 +133,9 @@ def generate_report_retis(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -205,8 +207,9 @@ def generate_report_retis0(analysis, output='txt'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------

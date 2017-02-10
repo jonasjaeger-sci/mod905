@@ -11,13 +11,13 @@ displayed on screen.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TxtTable
+TxtTable (:py:class:`.TxtTable`)
     A class for generating table output.
 
-PathTable
+PathTable (:py:class:`.PathTable`)
     A class for table-like output from path simulations.
 
-ThermoTable
+ThermoTable (:py:class:`.ThermoTable`)
     A class for thermodynamic output, useful for output from
     MD-simulations.
 """
@@ -120,7 +120,7 @@ class TxtTable(Writer):
 
         _fill_list(header['width'], len(header['labels']))
 
-        super().__init__('TxtTable', header=header)
+        super(TxtTable, self).__init__('TxtTable', header=header)
         self.title = title
         self.variables = variables
         row_fmt = kwargs.get('row_fmt', None)
@@ -193,12 +193,12 @@ class PathTable(TxtTable):
                         'width': (10, 12),
                         'spacing': 2,
                         'row_fmt': ['{:> 10d}', '{:> 12d}']}
-        super().__init__(var, title, **table_format)
+        super(PathTable, self).__init__(var, title, **table_format)
 
     def generate_output(self, step, path_ensemble):
-        """Generate the output for the PathTable.
+        """Generate the output for the path table.
 
-        Here we overload the `generate_output` method in `TxtTable`
+        Here we overload the :py:meth:`.TxtTable.generate_output` method
         in order to write path ensemble statistics to (presumably)
         the screen.
 
@@ -207,7 +207,7 @@ class PathTable(TxtTable):
         step : int
             This is the current step number or a cycle number in a
             simulation.
-        path_ensemble : object like `pyretis.core.path.PathEnsemble`
+        path_ensemble : object like :py:class:`.PathEnsemble`
             This is the path ensemble to output for.
 
         Yield
@@ -247,4 +247,4 @@ class ThermoTable(TxtTable):
                         'width': (10, 12),
                         'spacing': 2,
                         'row_fmt': ['{:> 10d}', '{:> 12.6g}']}
-        super().__init__(var, title, **table_format)
+        super(ThermoTable, self).__init__(var, title, **table_format)

@@ -13,7 +13,7 @@ Package structure
 Modules
 ~~~~~~~
 
-analysisio.py
+analysisio.py (:py:mod:`.analysisio`)
     Methods that will output results from the analysis functions.
     The methods defined here can also be used to run an analysis on
     output files from pyretis.
@@ -24,12 +24,11 @@ __init__.py
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_file
+analyse_file (:py:func:`.analyse_file`)
     Method to analyse a file.
 
-run_analysis_files
+run_analysis_files (:py:func:`.run_analysis_files`)
     Method to analyse simulation data in output files. This is a
     post-processing step.
 """
-from __future__ import absolute_import
 from .analysisio import analyse_file, run_analysis_files

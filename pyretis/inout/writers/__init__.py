@@ -14,71 +14,96 @@ Package structure
 Modules
 ~~~~~~~
 
-writers.py
+fileio.py (:py:mod:`pyretis.inout.writers.fileio`)
+    Module defining a class for handling writing of files.
+
+gromacsio.py (:py:mod:`pyretis.inout.writers.gromacsio`)
+    Module defining some io methods for use with GROMACS.
+
+__init__.py
+    This file.
+
+pathfile.py (:py:mod:`pyretis.inout.writers.pathfile`)
+    Module for handling path data and path-ensemble data.
+
+tablewriter.py (:py:mod:`pyretis.inout.writers.tablewriter`)
+    Module defining generic methods for creating text tables.
+
+txtinout.py (:py:mod:`pyretis.inout.writers.txtinout`)
+    Module defining some text based output.
+
+writers.py (:py:mod:`pyretis.inout.writers.writers`)
     Module for defining the base writer and some simple derived writers
     (for crossing data, energy and order parameter data).
 
-pathfile.py
-    Module for handling path data and path-ensemble data.
-
-traj.py
-    Module for handling writing of trajectory data.
+xyzio.py (:py:mod:`pyretis.inout.writers.xyzio`)
+    Module for handling writing of trajectory data in XYZ format.
 
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-get_writer
+get_writer (:py:func:`.get_writer`)
     Opens a file for reading given a file type and file name.
-
-read_xyz_file
-    Read snapshots from a xyz file.
-
-read_gro_file
-    Read snapshots from a gromacs GRO file.
 
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-CrossWriter
+CrossWriter (:py:class:`.CrossWriter`)
     A writer of crossing data.
 
-EnergyWriter
+EnergyWriter (:py:class:`.EnergyWriter`)
     A writer of energy data
 
-OrderWriter
+EnergyPathWriter (:py:class:`.EnergyPathWriter`)
+    A class for writing out energy data for paths.
+
+OrderWriter (:py:class:`.OrderWriter`)
     A writer of order parameter data.
 
-PathEnsembleWriter
+OrderPathWriter (:py:class:`.OrderPathWriter`)
+    A class for writing out order parameter data for paths.
+
+TrajWriter (:py:class:`.TrajWriter`)
+    Generic class for writing trajectory output.
+
+PathExtWriter (:py:class:`.PathExtWriter`)
+    A class for writing external paths to file.
+
+PathEnsembleWriter (:py:class:`.PathEnsembleWriter`)
     A writer of path ensemble data.
 
-PathEnsembleFile
+PathEnsembleFile (:py:class:`.PathEnsembleFile`)
     A class which represent path ensembles in files. This class is
     intended for use in an analysis.
 
-XYZWriter
-    A writer of trajectories in xyz-format.
+XYZWriter (:py:class:`.XYZWriter`)
+    A writer of trajectories in XYZ format.
 
-GROWriter
-    A writer of trajectories in GROMACS gro-format.
+PathXYZWriter (:py:class:`.PathXYZWriter`)
+    A writer of path data to a file in XYZ format.
 
-TxtTable
+GROWriter (:py:class:`.GROWriter`)
+    A writer of trajectories in GROMACS GRO format.
+
+PathGROWriter (:py:class:`.PathGROWriter`)
+    A writer of trajectories in GROMACS GRO format.
+
+TxtTable (:py:class:`.TxtTable`)
     A generic table writer.
 
-ThermoTable
+ThermoTable (:py:class:`.ThermoTable`)
     A specific table writer for energy output.
 
-PathTable
+PathTable (:py:class:`.PathTable`)
     A specific table writer for path results.
 """
-from __future__ import absolute_import
 import logging
 # pyretis imports
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .gromacsio import (read_gromacs_file, GROWriter, PathGROWriter)
-from .xyzio import (read_xyz_file, XYZWriter, PathXYZWriter)
-from .txtinout import txt_save_columns
+from .gromacsio import GROWriter, PathGROWriter
+from .xyzio import XYZWriter, PathXYZWriter
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import (CrossWriter,
                       EnergyWriter, EnergyPathWriter,
@@ -123,7 +148,7 @@ def get_writer(file_type, settings=None):
 
     Returns
     -------
-    out : object like `Writer` from `pyretis.inout.writers`
+    out : object like :py:class:`.Writer`
         An object which implements the `load(filename)` method.
 
     Examples

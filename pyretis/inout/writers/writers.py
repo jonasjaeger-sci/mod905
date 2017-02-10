@@ -496,7 +496,7 @@ class EnergyPathWriter(EnergyWriter):
         ----------
         step : int
             The cycle number we are creating output for.
-        path : object like :py:class:`pyretis.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             The path we are creating output for.
 
         Yields
@@ -617,7 +617,7 @@ class OrderPathWriter(OrderWriter):
         ----------
         step : int
             The cycle number we are creating output for.
-        path : object like :py:class:`pyretis.core.path.PathBase`
+        path : object like :py:class:`.PathBase`
             The path we are creating output for.
 
         Yields

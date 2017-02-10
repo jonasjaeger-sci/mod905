@@ -8,10 +8,10 @@ This module defines classes for writing path ensemble data.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PathEnsembleWriter
+PathEnsembleWriter (:py:class:`.PathEnsembleWriter`)
     Writing/reading of path ensemble data.
 
-PathEnsembleFile
+PathEnsembleFile (:py:class:`.PathEnsembleFile`)
     Reading of path ensemble data. Mainly used for analysis.
 """
 import logging
@@ -128,7 +128,7 @@ class PathEnsembleWriter(Writer):
 
         Yields
         ------
-        out : object like `Path` from `pyretis.core.path`
+        out : object like :py:class:`.Path`
             The current path in the file.
         """
         try:
@@ -154,8 +154,8 @@ class PathEnsembleWriter(Writer):
         ----------
         cycle : integer
             This is the current cycle number.
-        path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-            We will write the path defined by PathEnsemble.paths[-1]
+        path_ensemble : object like :py:class:`.PathEnsemble`
+            We will write the path defined by ``PathEnsemble.paths[-1]``
 
         Yields
         ------
@@ -221,7 +221,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
             yield path
 
     def to_path_ensemble(self):
-        """Read a file and return a pure `PathEnsemble` object.
+        """Read a file and return a pure :py:class:`.PathEnsemble` object.
 
         This will read an entire file and return a path ensemble object.
         Note that this might not be the fastest way of using the path
@@ -231,7 +231,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
 
         Returns
         -------
-        out : object like `PathEnsemble` from `pyretis.core.path`
+        out : object like :py:class:`.PathEnsemble`
             The path ensemble read from the file.
         """
         path_ensemble = PathEnsemble(self.ensemble, self.interfaces,

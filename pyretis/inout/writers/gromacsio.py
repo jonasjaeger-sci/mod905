@@ -6,23 +6,22 @@
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TrajWriter
-    Generic class for writing trajectory output.
-
-GROWriter
+GROWriter (:py:class:`.GROWriter`)
     Writing of a coordinates to a file in a GROMACS format.
 
+PathGROWriter (:py:class:`.PathGROWriter`)
+    Writing of trajectories in GROMACS gro-format.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-read_gromacs_file
+read_gromacs_file (:py:func:`.read_gromacs_file`)
     A method for reading snapshots from a GROMACS GRO file.
 
-read_gromos96_file
+read_gromos96_file (:py:func:`.read_gromos96_file`)
     Read a single configuration GROMACS .g96 file.
 
-write_gromos96_file
+write_gromos96_file (:py:func:`.write_gromos96_file`)
     Write configuration in GROMACS g96 format.
 """
 import logging
@@ -159,7 +158,7 @@ class GROWriter(TrajWriter):
         ----------
         step : int
             The current step number.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object with the positions to write
 
         Returns
@@ -180,7 +179,7 @@ class GROWriter(TrajWriter):
 
         Parameters
         ----------
-        box : object like `pyretis.core.Box`
+        box : object like :py:class:`.Box`
             This is the simulation box.
 
         Returns

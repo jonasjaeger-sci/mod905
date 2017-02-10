@@ -4,25 +4,16 @@
 """This module handles creation of simulations from settings.
 
 The different simulations are defined as objects which inherits from the
-base Simulation object defined in :py:mod:`pyretis.simulation.simulation`.
+base :py:class:`.Simulation` class defined in
+:py:mod:`pyretis.simulation.simulation`.
 Here, we are treat each simulation with a special case since they are
 indeed special :-)
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_simulation
+create_simulation (:py:func:`.create_simulation`)
     Method for creating a simulation object from settings.
-
-create_path_ensembles
-    Method for creating a set of objects like
-    :py:class:`pyretis.core.pathensemble.PathEnsemble` from
-    given interfaces.
-
-create_path_ensemble:
-    Create a new object like
-    :py:class:`pyretis.core.pathensemble.PathEnsemble` from
-    simulation settings.
 """
 from __future__ import absolute_import
 import logging
@@ -57,7 +48,7 @@ def create_path_ensemble(settings, ensemble_type):
 
     Returns
     -------
-    out : object like `PathEnsemble`
+    out : object like :py:class:`.PathEnsemble`
         An object that can be used as a path ensemble in simulations.
     """
     interfaces = settings['simulation']['interfaces']
@@ -116,7 +107,7 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
 
     Returns
     -------
-    ensembles : list of objects like :py:class:`PathEnsemble`
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         The generated (empty) path ensemble objects.
     detect : list of floats
         These are interfaces that can be used for an analysis, i.e. for
@@ -150,14 +141,14 @@ def create_nve_simulation(settings, system, engine):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are going to simulate.
-    engine : object like `pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for the simulation.
 
     Returns
     -------
-    out : object like `Simulation`
+    out : object like :py:class:`.SimulationNVE`
         The object representing the simulation to run.
     """
     sim = settings['simulation']
@@ -177,14 +168,14 @@ def create_mdflux_simulation(settings, system, engine):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are going to simulate.
-    engine : object like `pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for the simulation.
 
     Returns
     -------
-    out : object like `Simulation`
+    out : object like :py:class:`.SimulationMDFlux`
         The object representing the simulation to run.
     """
     order_function = create_orderparameter(settings)
@@ -206,12 +197,12 @@ def create_umbrellaw_simulation(settings, system):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are going to simulate.
 
     Returns
     -------
-    out : list of object(s) like `Simulation`
+    out : list of object(s) like :py:class:`UmbrellaWindowSimulation`
         The object(s) representing the simulation(s) to run.
     """
     sim = settings['simulation']
@@ -234,9 +225,9 @@ def create_tis_simulations(settings, system, engine):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are going to simulate.
-    engine : object like `pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for the simulation.
 
     Returns
@@ -273,14 +264,14 @@ def _create_tis_single_simulation(settings, system, engine):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are integrating.
-    engine : object like `pyretis.engines.engine.EngineBase`
+    engine : object like :py:class`.EngineBase`
         The engine to use for the simulation.
 
     Returns
     -------
-    out : object like `Simulation`
+    out : object like :py:class:`.SimulationSingleTIS`
         The object representing the simulation to run.
     """
     order_function = create_orderparameter(settings)
@@ -309,14 +300,14 @@ def create_retis_simulation(settings, system, engine):
     ----------
     settings : dict
         The settings needed to set up the simulation.
-    system : object like `pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are going to simulate.
-    engine : object like `pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         The engine to use for the simulation.
 
     Returns
     -------
-    out : object like `Simulation`
+    out : object like :py:class:`.SimulationRETIS`
         The object representing the simulation to run.
     """
     order_function = create_orderparameter(settings)
@@ -356,15 +347,15 @@ def create_simulation(settings, kwargs):
         This dict contains objects that might be needed to initialize
         the simulation for instance:
 
-        * system : object like `System` from `pyretis.core.system`
+        * system : object like :py:class:`.System`
             This is the system for which the simulation will run.
 
-        * engine : object like `pyretis.engines.engine.EngineBase`
+        * engine : object like :py:class:`.EngineBase`
             The engine to use for the simulation.
 
     Returns
     -------
-    out : object like :py:class:`pyretis.simulation.Simualtion`
+    out : object like :py:class:`.Simulation`
         This object will correspond to the selected simulation type.
     """
     sim_type = settings['simulation']['task'].lower()

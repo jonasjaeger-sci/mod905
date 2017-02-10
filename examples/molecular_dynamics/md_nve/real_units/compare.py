@@ -16,7 +16,7 @@ import filecmp
 import numpy as np
 from pyretis.core.units import (create_conversion_factors,
                                 generate_system_conversions, CONVERT)
-from pyretis.inout.writers import read_gromacs_file
+from pyretis.inout.writers.gromacsio import read_gromacs_file
 from pyretis.inout.settings import parse_settings_file
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style

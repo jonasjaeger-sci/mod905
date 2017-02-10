@@ -8,10 +8,9 @@ The reports are useful for displaying results from the analysis.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-generate_report_mdflux
+generate_report_mdflux (:py:func:`.generate_report_mdflux`)
     Generate a report for a MD flux simulation.
 """
-from __future__ import absolute_import
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
 from pyretis.inout.common import apply_format
@@ -29,8 +28,9 @@ def generate_report_mdflux(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `_TEMPLATES` in `pyretis.inout.report`.
-        Default is 'rst' (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report.__TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -57,8 +57,7 @@ def _table_md_efficiency(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` function in
-        the analysis package.
+        These are the results obtained by :py:func:`.analyse_flux`.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').
@@ -117,8 +116,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` function in
-        the analysis package.
+        These are the results obtained by :py:func:`.analyse_flux`.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').
@@ -155,8 +153,7 @@ def _table_md_flux(results, fmt='rst'):
     Parameters
     ----------
     results : dict
-        These are the results obtained in the `analyse_flux` function in
-        the analysis package.
+        These are the results obtained by :py:func:`.analyse_flux`.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').

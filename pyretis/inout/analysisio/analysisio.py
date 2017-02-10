@@ -9,7 +9,7 @@ according to given settings.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_file
+analyse_file (:py:func:`.analyse_file`)
     Method to analyse a file. For example, it can be used as
 
     >>> from pyretis.inout.analysisio import analyse_file
@@ -21,11 +21,10 @@ analyse_file
     >>> txt_file = output_results(file_type, txt_plotter, result, raw_data)
 
 
-run_analysis_files
+run_analysis_files (:py:func:`.run_analysis_files`)
     Methods to the analysis on a set of files. It will create some
     output that can be used for reporting.
 """
-from __future__ import absolute_import
 import logging
 import os
 # pyretis imports
@@ -225,9 +224,9 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -257,9 +256,9 @@ def run_tis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -308,9 +307,9 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
     """
     units = settings['system']['units']
@@ -375,9 +374,9 @@ def run_mdflux_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -414,9 +413,9 @@ def run_analysis_files(settings, files, plotter, txt_plotter):
     files : list of tuples
         This list contains the raw files to be analysed. The
         tuples are on format ('filetype', 'filename').
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -439,7 +438,7 @@ def read_first_block(fileobj, file_name):
 
     Parameters
     ----------
-    fileobj : object like `Writer`
+    fileobj : object like :py:class:`.Writer`
         A object that supports a `load` function to read block
         of data from a file.
     file_name : string
@@ -475,7 +474,7 @@ def output_results(file_type, plotter, result, rawdata):
     ----------
     file_type : string
         This determines what we are going to plot.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
             This is the object that handles the plotting.
     result : list of lists or dicts
         This contains the results from a specific analysis.
@@ -501,13 +500,12 @@ def analyse_file(file_type, file_name, settings):
     """Run analysis on the given file.
 
     This function is included for convenience so that we can call an
-    analysis like `analyse_file('cross', 'cross.txt')` i.e. it should
-    automatically open the file and apply the correct analysis according
-    to a given file type. Here we return a function to do the analysis,
-    so we are basically wrapping one of the analysis functions. This is
-    done in case we wish to rerun the analysis but with different
-    settings for instance.
-
+    analysis like ``analyse_file('cross', 'cross.txt')`` i.e. it should
+    automatically open the file and apply the correct analysis
+    according to a given file type. Here we return a function to do the
+    analysis, so we are basically wrapping one of the analysis
+    functions. This is done in case we wish to rerun the analysis but
+    with different settings for instance.
 
     Parameters
     ----------
@@ -557,9 +555,9 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
     ----------
     raw_data : list, numpy.array or other type of object
         The raw data used in the analysis.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns

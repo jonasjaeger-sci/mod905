@@ -4,31 +4,31 @@
 """Module for handling the output/input of trajectory data.
 
 This module defines some classes for writing out and reading
-trajectory data in a xyz-like format. By xyz-like we here mean
+trajectory data in a XYZ-like format. By XYZ-like we here mean
 that we also include velocities as part of the file.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-XYZWriter
-    Writing of coordinates to a file in a xyz format.
+XYZWriter (:py:class:`.XYZWriter`)
+    Writing of coordinates to a file in a XYZ format.
 
-PathXYZWriter
-    Writing of path data to a file in xyz format.
+PathXYZWriter (:py:class:`.PathXYZWriter`)
+    Writing of path data to a file in XYZ format.
 
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-read_xyz_file
-    A method for reading snapshots from a xyz file.
+read_xyz_file (:py:func:`.read_xyz_file`)
+    A method for reading snapshots from a XYZ file.
 
-format_xyz_data
+format_xyz_data (:py:func:`.format_xyz_data`)
     A method for formatting position/velocity data in to a
-    xyz-like format. This can be used by external engines to
+    XYZ-like format. This can be used by external engines to
     convert to a standard format.
 
-write_xyz_file
+write_xyz_file (:py:func:`.write_xyz_file`)
     Just a convenience method for writing to a new file.
 """
 import logging
@@ -54,7 +54,7 @@ __all__ = [
 class XYZWriter(TrajWriter):
     u"""A class for writing XYZ files.
 
-    This class handles writing of a system to a file in a simple xyz
+    This class handles writing of a system to a file in a simple XYZ
     format.
 
     Attributes
@@ -119,7 +119,7 @@ class XYZWriter(TrajWriter):
         ----------
         step : int
             The current simulation step.
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system object with the positions to write
 
         Returns
@@ -168,9 +168,9 @@ class PathXYZWriter(XYZWriter):
 
 
 def read_xyz_file(filename):
-    """A method for reading files in xyz format.
+    """A method for reading files in XYZ format.
 
-    This method will read a xyz file and yield the different snapshots
+    This method will read a XYZ file and yield the different snapshots
     found in the file.
 
     Parameters
@@ -226,7 +226,7 @@ def read_xyz_file(filename):
 
 
 def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
-    """Format xyz data for outputting.
+    """Format XYZ data for outputting.
 
     Parameters
     ----------
@@ -237,7 +237,7 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     names : list, optional
         The atom names.
     header : string, optional
-        Header to use for writing the xyz-file.
+        Header to use for writing the XYZ-file.
     fmt : string
         A format to use for the writing
 
@@ -257,7 +257,7 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     yield '{}'.format(npart)
 
     if header is None:
-        yield 'pyretis xyz writer'
+        yield 'pyretis XYZ writer'
     else:
         yield '{}'.format(header)
 
@@ -276,7 +276,7 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
 
 
 def write_xyz_file(filename, pos, vel=None, names=None, header=None):
-    """Create a new xyz file with the given file name.
+    """Create a new XYZ file with the given file name.
 
     Parameters
     ----------
@@ -289,7 +289,7 @@ def write_xyz_file(filename, pos, vel=None, names=None, header=None):
     names : list, optional
         The atom names.
     header : string, optional
-        Header to use for writing the xyz-file.
+        Header to use for writing the XYZ-file.
 
     Note
     ----

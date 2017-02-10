@@ -10,20 +10,19 @@ numbers and generate tables for the reports.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-generate_rst_table
+generate_rst_table (:py:func:`.generate_rst_table`)
     Generate reStructuredText for a table.
 
-generate_latex_table
+generate_latex_table (:py:func:`.generate_latex_table`)
     Generate latex code for a table.
 
-latexify_number
+latexify_number (:py:func:`.latexify_number`)
     Change exponential notation into something nicer for latex.
 
-mathexify_number
+mathexify_number (:py:func:`.mathexify_number`)
     Change exponential notation into something nicer for
     reStructuredText.
 """
-from __future__ import absolute_import
 
 
 __all__ = ['generate_rst_table', 'generate_latex_table', 'latexify_number',

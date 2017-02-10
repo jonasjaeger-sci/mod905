@@ -10,13 +10,13 @@ reports.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-get_template
+get_template (:py:func:`.get_template`)
     Returns the template for a specific output format and report type.
 
-render_report
+render_report (:py:func:`.render_report`)
     Render a report using a template and jinja2.
 
-generate_report
+generate_report (:py:func:`.generate_report`)
     Generate a specific report from analysis output.
 """
 from __future__ import absolute_import
@@ -114,7 +114,7 @@ def get_template(output, report_type, template=None):
         rst, html, latex, tex.
     template : string, optional
         The full path to the template to use. If not given/found, the
-        defaults in _TEMPLATES will be used.
+        defaults in :py:const:`._TEMPLATES` will be used.
     report_type : string
         This is the type of report we are doing, e.g. TIS or MD.
 
@@ -174,7 +174,7 @@ def render_report(report, output, template, path):
     Note
     ----
     The parameters `template` and `path` are typically obtained by a
-    call to `get_template`.
+    call to :py:func:`.get_template`.
     """
     env = jinja2.Environment(block_start_string='@{%',
                              block_end_string='%}@',
@@ -203,8 +203,8 @@ def generate_report(report_type, analysis_results, output, template=None):
         Output format for the report.
     template : string, optional
         The full path to the template to use. If not given/found, the
-        defaults in _TEMPLATES will be used. This is handled by
-        `get_template`.
+        defaults in :py:const`._TEMPLATES` will be used. This is handled
+        by :py:func:`.get_template`.
 
     Returns
     -------

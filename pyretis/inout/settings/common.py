@@ -6,22 +6,22 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_external
+create_external (:py:func:`.create_external`)
     Method to create objects from settings.
 
-check_settings
+check_settings (:py:func:`.check_settings`)
     Check that required simulation settings are actually given.
 
-create_engine
+create_engine (:py:func:`.create_engine`)
     Method to create an engine from settings.
 
-create_orderparameter
+create_orderparameter (:py:func:`.create_orderparameter`)
     Method to create order parameters from settings.
 
-create_potential
+create_potential (:py:func:`.create_potential`)
     Method to create a potential from settings.
 
-import_from
+import_from (:py:func:`.import_from`)
     A method to dynamically import method/classes etc. from user
     specified modules.
 """
@@ -80,12 +80,12 @@ def import_from(module_path, function_name):
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
-            spec = importlib.util.spec_from_file_location(module_name,  # pylint: disable=no-member
-                                                          module_path)
+            spec = importlib.util.spec_from_file_location(  # pylint: disable=no-member
+                module_name,
+                module_path)
             module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
             spec.loader.exec_module(module)
-        msg = 'Imported module: {}'.format(module)
-        logger.debug(msg)
+        logger.debug('Imported module: %s', module)
         return getattr(module, function_name)
     except (ImportError, IOError):
         msg = 'Could not import module: {}'.format(module_path)
@@ -171,8 +171,7 @@ def create_external(settings, key, factory, required_methods,
         try:
             key_settings = settings[key]
         except KeyError:
-            msg = 'No {} settings found. Skipping set-up.'.format(key)
-            logger.debug(msg)
+            logger.debug('No "%s" setting found. Skipping set-up', key)
             return None
     module = key_settings.get('module', None)
     klass = None
@@ -226,7 +225,7 @@ def create_orderparameter(settings):
 
     Returns
     -------
-    out : object like `OrderParameter` from `pyretis.orderparameter`
+    out : object like :py:class:`.OrderParameter`
         This object represents the order parameter.
     """
     return create_external(settings, 'orderparameter', order_factory,
@@ -243,7 +242,7 @@ def create_engine(settings):
 
     Returns
     -------
-    out : object like :py:class:`pyretis.engines.engine.EngineBase`
+    out : object like :py:class:`.EngineBase`
         This object represents the engine.
     """
     return create_external(settings, 'engine', engine_factory,
@@ -262,7 +261,7 @@ def create_potential(settings, key_settings):
 
     Returns
     -------
-    out : object like `PotentialFunction` from `pyretis.forcefield`
+    out : object like :py:class:`.PotentialFunction`
         The object representing the potential function.
     """
     return create_external(settings, 'potential', potential_factory,

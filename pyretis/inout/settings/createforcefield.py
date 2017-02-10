@@ -6,8 +6,12 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_potentials
+create_potentials (:py:func:`.create_potentials`)
     Method for creating potentials from a dictionary of settings.
+    Note that this method will make use of :py:func:`.create_potential`.
+
+create_force_field (:py:func:`.create_force_field`)
+    Method to create a force field from input settings.
 """
 from __future__ import absolute_import
 import logging
@@ -17,14 +21,14 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['create_force_field']
+__all__ = ['create_force_field', 'create_potentials']
 
 
 def create_potentials(settings):
     """Method to create potential functions from simulations settings.
 
     This method will basically loop over the given potential settings
-    and just run `create_potential` for each setting.
+    and just run :py:func:`.create_potential` for each setting.
 
     Parameters
     ----------

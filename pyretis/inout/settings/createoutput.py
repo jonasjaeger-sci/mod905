@@ -6,29 +6,29 @@
 This module defines functions and classes for handling the output from
 simulations.
 
-Important methods defined here
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-create_output_tasks
-    Function that sets up output tasks from a dictionary of settings.
-
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OutputTask
+OutputTask (:py:class:`.OutputTask`)
     A generic class for handling output tasks.
 
-OutputTaskScreen
+OutputTaskScreen (:py:class:`.OutputTaskScreen`)
     A class for handling output tasks that will print to the screen.
 
-OutputTaskFile
+OutputTaskFile (:py:class:`.OutputTaskFile`)
     A class for handling output tasks that will write to a file.
 
-OutputTaskFileCombine
+OutputTaskFileCombine (:py:class:`.OutputTaskFileCombine`)
     A class for handling output tasks that will write to a file,
     but require some special pre-processing of the data to be
     written. Currently, this is only used to move files physically
     when storing external paths.
+
+Important methods defined here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+create_output_tasks (:py:func:`.create_output_tasks`)
+    Function that sets up output tasks from a dictionary of settings.
 """
 import logging
 # pyretis imports
@@ -239,8 +239,8 @@ class OutputTask(object):
     This class will handle a output task for a simulation. The
     output task may be something that should print to the screen or
     a file. This object is a general class for output tasks and the
-    specific writers for file and screen are implemented in the
-    `OutputTaskFile` and `OutputTaskScreen` tasks.
+    specific writers ('tasks') for file and screen are implemented in
+    :py:class:`.OutputTaskFile` and :py:class:`.OutputTaskScreen`.
 
     Attributes
     ----------
@@ -249,7 +249,7 @@ class OutputTask(object):
         to reference the dictionary used to create the writer.
     result : string
         This string defines the result we are going to output.
-    writer : object like `Writer` from `pyretis.inout.writers`
+    writer : object like :py:class:`.Writer`
         This object will handle the actual formatting of the result.
     when : dict
         Determines if the task should be executed.
@@ -266,7 +266,7 @@ class OutputTask(object):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `Writer` from `pyretis.inout.writers`
+        writer : object like :py:class:`.Writer`
             This object will handle formatting of the actual result
             which can be printed to the screen or to a file.
         when : dict
@@ -284,7 +284,7 @@ class OutputTask(object):
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned
         from a simulation object (e.g. object like
-        :py:class:`pyretis.simulation.Simulation`) after a step.
+        :py:class:`.Simulation`) after a step.
         For trajectories, we expect that `simulation_result` contain
         the key `traj` so we can pass it to the trajectory writer.
 
@@ -346,7 +346,7 @@ class OutputTaskScreen(OutputTask):
         to reference the dictionary used to create the writer.
     result : string
         This string defines the result we are going to output.
-    writer : object like `Writer` from `pyretis.inout.writers`
+    writer : object like :py:class:`.Writer`
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
@@ -363,7 +363,7 @@ class OutputTaskScreen(OutputTask):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `Writer` from `pyretis.inout.writers`
+        writer : object like :py:class:`.Writer`
             This object will handle the actual writing of the result.
         when : dict
             Determines when the task should be executed.
@@ -406,7 +406,7 @@ class OutputTaskFile(OutputTask):
         to reference the dictionary used to create the writer.
     result : string
         This string defines the result we are going to output.
-    writer : object like `Writer` from `pyretis.inout.writers`
+    writer : object like :py:class:`.Writer`
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
@@ -423,7 +423,7 @@ class OutputTaskFile(OutputTask):
             to reference the dictionary used to create the writer.
         result : string
             This string defines the result we are going to output.
-        writer : object like `Writer` from `pyretis.inout.writers`
+        writer : object like :py:class:`.Writer`
             This object will handle the actual writing of the result.
         when: dict.
             Determines if and when the task should be executed.
@@ -484,7 +484,7 @@ class OutputTaskFileCombine(OutputTaskFile):
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned
         from a simulation object (e.g. object like
-        :py:class:`pyretis.simulation.Simulation`) after a step.
+        :py:class:`.Simulation`) after a step.
         For trajectories, we expect that `simulation_result` contain
         the key `traj` so we can pass it to the trajectory writer.
 

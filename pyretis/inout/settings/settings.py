@@ -8,10 +8,10 @@ This module define the file format for pyretis input files.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-parse_settings_file
+parse_settings_file (:py:func:`.parse_settings_file`)
     Method for parsing settings from a given input file.
 
-write_settings_file
+write_settings_file (:py:func:`.write_settings_file`)
     Method for writing settings from a simulation to a given file.
 """
 import ast
