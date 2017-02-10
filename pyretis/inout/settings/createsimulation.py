@@ -202,7 +202,7 @@ def create_umbrellaw_simulation(settings, system):
 
     Returns
     -------
-    out : list of object(s) like :py:class:`UmbrellaWindowSimulation`
+    out : list of object(s) like :py:class:`.UmbrellaWindowSimulation`
         The object(s) representing the simulation(s) to run.
     """
     sim = settings['simulation']

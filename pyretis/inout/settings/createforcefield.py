@@ -80,7 +80,7 @@ def create_force_field(settings):
 
     Returns
     -------
-    out : object like :py:class:`pyretis.forcefield.forcefield.ForceField`
+    out : object like :py:class:`.ForceField`
         This object represents the force field.
     """
     try:

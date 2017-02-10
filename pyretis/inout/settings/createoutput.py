@@ -525,7 +525,7 @@ def create_writer(task_settings, writer_name, settings):
 
     Returns
     -------
-    out : object like :py:class:`.writers.Writer`
+    out : object like :py:class:`.Writer`
         The writer to use for formatting output.
     """
     writer_settings = {}
@@ -600,7 +600,7 @@ def get_task_type(task, settings, engine):
         Settings related to the specific task.
     settings : dict
         Settings for the simulation.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do
         not do anything special.
@@ -633,14 +633,14 @@ def task_from_settings(task, settings, directory, engine):
         Settings related to the specific task.
     settings : dict
         Settings for the simulation.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do
         not do anything special.
 
     Returns
     -------
-    out : object like `OutputTask`
+    out : object like :py:class:`.OutputTask`
         An output task we can use in the simulation
     """
     task_type = get_task_type(task, settings, engine)
@@ -702,14 +702,14 @@ def create_output_tasks(settings, directory=None, engine=None):
         These are the settings for the simulation.
     directory : string
         The directory to write output files to.
-    engine : object like :py:class:`pyretis.engines.engine.EngineBase`
+    engine : object like :py:class:`.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do
         not do anything special.
 
     Yields
     ------
-    out : object like `OutputTask`
+    out : object like :py:class:`.OutputTask`
     """
     sim_task = settings['simulation']['task'].lower()
     for task in _SIM_OUTPUT.get(sim_task, []):
