@@ -411,11 +411,9 @@ class System(object):
         ekin, _ = calculate_kinetic_energy(self.particles)
         ekin_new = energy - vpot
         if ekin_new < 0:
-            msg = ('Can not rescale velocities. '
-                   'Target: {}, Pot = {}'.format(energy, vpot))
-            logger.warning(msg)
+            logger.warning(('Can not rescale velocities. '
+                            'Target energy: %f, Potential: %f'), energy, vpot)
         else:
-            msg = 'Rescaled energies to Kin = {}'.format(ekin_new)
-            logger.debug(msg)
+            logger.debug('Rescaled energies to ekin: %f', ekin_new)
             alpha = np.sqrt(ekin_new / ekin)
             self.particles.vel = self.particles.vel * alpha
