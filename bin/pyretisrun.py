@@ -95,14 +95,14 @@ def hello_world(infile, rundir, logfile):
     msgtxt += [r"| |_) || |_| || |  |  __/| |_ | |\__ \ "]
     msgtxt += [r"| .__/  \__, ||_|   \___| \__||_||___/"]
     msgtxt += [r"|_|     |___/"]
-    msgtxt += [None]
+    msgtxt += ['']
     msgtxt += ['Version: {}'.format(VERSION)]
     msgtxt += ['Start of execution: {}'.format(timestart)]
     msgtxt += ['Python version: {}'.format(pyversion)]
     msgtxt += ['Running in directory: {}'.format(rundir)]
     msgtxt += ['Input file: {}'.format(infile)]
     msgtxt += ['Log file: {}'.format(logfile)]
-    msgtxt += [None]
+    msgtxt += ['']
     for txt in msgtxt:
         print_to_screen(txt)
         logger.info(txt)
