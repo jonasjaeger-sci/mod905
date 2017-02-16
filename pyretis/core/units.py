@@ -931,7 +931,7 @@ def units_from_settings(settings):
         created. This can be used for printing out some info to
         the user.
     """
-    unit = settings['system']['units'].lower()
+    unit = settings['system']['units'].lower().strip()
     if 'unit-system' in settings:
         try:
             unit2 = settings['unit-system']['name'].lower()
@@ -957,7 +957,7 @@ def units_from_settings(settings):
         create_conversion_factors(unit, **setts)
     else:
         logger.debug('Creating unit: "%s"', unit)
-        msg = 'Creating unit:  {}'.format(unit)
+        msg = 'Creating unit: {}'.format(unit)
         create_conversion_factors(unit)
     return msg
 
