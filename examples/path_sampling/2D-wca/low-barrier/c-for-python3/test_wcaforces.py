@@ -25,6 +25,7 @@ def set_up_initial_state():
     lattice += np.random.random((lattice.shape)) * 0.05
     box = Box(size, periodic=[True, True])
     system = System(temperature=1.0, units='lj', box=box)
+    system.particles = Particles(dim=2)
     for i, pos in enumerate(lattice):
         if i < 2:
             system.add_particle(name='Ar', pos=pos, mass=1.0, ptype=1)

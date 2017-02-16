@@ -57,7 +57,6 @@ parameter types = [(1, 1)]
 Orderparameter
 ---------------
 class = Distance
-name = B-B distance
 index = (0, 1)
 periodic = True
 

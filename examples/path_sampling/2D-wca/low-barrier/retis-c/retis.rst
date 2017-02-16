@@ -4,7 +4,7 @@ RETIS simulation 2D WCA, low barrier
 Simulation
 ----------
 task = retis
-steps = 2500000
+steps = 1000000
 interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
 System
@@ -32,7 +32,7 @@ allowmaxlength = False
 zero_momentum = True
 rescale_energy = 9.0
 sigma_v = -1
-seed = 1
+seed = 0
 initial_path = kick
 
 RETIS settings
@@ -73,13 +73,9 @@ Orderparameter
 --------------
 class = OrderParameterWCAJCP1
 module = ../c-for-python3/orderp.py
-name = WCAJCP1
 index = (7,8)
 periodic = True
 
 Output
 ------
-backup = False
-energy-file = 10
-order-file = 10
-cross-file = 1
+backup = overwrite

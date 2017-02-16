@@ -77,5 +77,4 @@ Orderparameter
 class = Position
 dim = y
 index = 0
-name = Position
 periodic = False

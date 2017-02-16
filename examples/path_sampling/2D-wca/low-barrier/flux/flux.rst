@@ -25,9 +25,8 @@ timestep = 0.002
 
 Particles
 ---------
-
 position = {'file': '../initial.xyz'}
-velocity = {'scale': 54.0}
+velocity = {'scale': 9.0}
 mass = {'A': 1.0, 'B': 1.0}
 name = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'B', 'B']
 type = [0, 0, 0, 0, 0, 0, 0, 1, 1]
@@ -58,13 +57,12 @@ Orderparameter
 --------------
 class = OrderParameterWCAJCP1
 module = ../orderp.py
-name = WCAJCP1
-index = (7,8)
+index = (7, 8)
 periodic = True
 
 Output
 ------
-backup = False
+backup = overwrite
 energy-file = 10
 order-file = 10
 cross-file = 1

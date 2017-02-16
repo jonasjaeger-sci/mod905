@@ -4,7 +4,7 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.settings import create_force_field, create_orderparameter
 # imports for the plotting:
@@ -19,13 +19,13 @@ settings['potential'] = [{'class': 'Hyst2D',
                                         'beta2': -3, 'x0': 0.2, 'y0': 0.4}}]
 settings['orderparameter'] = {'class': 'OrderXY',
                               'module': 'retis-xy/orderp.py',
-                              'name': 'order',
                               'index': 0}
 forcefield = create_force_field(settings)
 print(forcefield)
 orderp = create_orderparameter(settings)
 box = Box(periodic=[False, False])
 fakesys = System(units='reduced', box=box)
+fakesys.particles = Particles(dim=2)
 fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
 x = np.linspace(-0.5, 0.5, 100)
 y = np.linspace(-0.5, 0.5, 100)

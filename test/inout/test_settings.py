@@ -254,8 +254,8 @@ extra = 100
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
-            args = [settings]
-            self.assertRaises(ValueError, create_engine, *args)
+            with self.assertRaises(ValueError):
+                create_engine(settings)
 
     def test_internal_engine(self):
         """Test that we can load all internal engines"""
@@ -332,8 +332,6 @@ name = Dummy"""
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name,
-                         correct['orderparameter']['name'])
 
         def extra_function(args):
             """Dummy function for testing."""
@@ -352,19 +350,13 @@ name = Dummy"""
                          '--------------\n'
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = BazOrderParameter\n'
-                         'module =  fooorderparameter.py')
         correct.append({'orderparameter': {'class': 'BarOrderParameter',
-                                           'module': 'fooorderparameter.py'}})
-        correct.append({'orderparameter': {'class': 'BazOrderParameter',
                                            'module': 'fooorderparameter.py'}})
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
-            args = [settings]
-            self.assertRaises(ValueError, create_orderparameter, *args)
+            with self.assertRaises(ValueError):
+                create_orderparameter(settings)
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""

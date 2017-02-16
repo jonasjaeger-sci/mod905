@@ -20,6 +20,7 @@ OrderParameterPosition (:py:class:`.OrderParameterPosition`)
 OrderParameterDistance (:py:class:`.OrderParameterDistance`)
     A class for a particle-particle distance order parameter.
 """
+from abc import abstractmethod
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -33,19 +34,15 @@ __all__ = ['OrderParameter', 'OrderParameterPosition',
 class OrderParameter(object):
     """Base class for order parameters.
 
-    This class represents an order parameter. The order parameter
-    is assumed to be a function that can uniquely be determined by
-    the system object and its attributes.
-
-    The order parameter implements `__call__` so it can be calculated
-    using `OrderParameter(System)`.
+    This class represents an order parameter and other collective
+    variables (CV's). The order parameter is assumed to be a
+    function that can uniquely be determined by the system object
+    and its attributes.
 
     Attributes
     ----------
-    desc : string
+    description : string
         This is a short description of the order parameter.
-    name : string
-        A name for the order parameter (useful for output).
     extra : list of functions
         This is a list of extra order parameters to calculate.
         We will assume that this list contains functions that all
@@ -53,22 +50,23 @@ class OrderParameter(object):
         a single float.
     """
 
-    def __init__(self, name, desc='General order parameter'):
+    def __init__(self, description='Generic order parameter'):
         """Initialize the OrderParameter object.
 
         Parameters
         ----------
-        name : string
-            The name for the order parameter.
         desc : string
             Short description of the order parameter.
         """
-        self.name = name
-        self.desc = desc
+        self.description = description
         self.extra = []
 
+    @abstractmethod
     def calculate(self, system):
-        """Calculate the order parameter and return it.
+        """Calculate the main order parameter and return it.
+
+        This is defined as a method just to ensure that at least this
+        method will be defined in the different order parameters.
 
         Parameters
         ----------
@@ -83,28 +81,10 @@ class OrderParameter(object):
         out : float
             The order parameter.
         """
-        raise NotImplementedError
+        pass
 
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter.
-        """
-        raise NotImplementedError
-
-    def __call__(self, system):
-        """Conveniently call `calculate` and `calculate_velocity`.
+    def calculate_all(self, system):
+        """Call :py:meth:`.calculate` and calculate other CV's.
 
         It will also call the additional order parameters defined in
         `self.extra`, if any.
@@ -124,8 +104,7 @@ class OrderParameter(object):
             Additional order parameters, if any.
         """
         orderp = self.calculate(system)
-        orderv = self.calculate_velocity(system)
-        ret_val = [orderp, orderv]
+        ret_val = [orderp]
         if self.extra is None:
             return ret_val
         else:
@@ -147,8 +126,8 @@ class OrderParameter(object):
         ----------
         func : function
             Extra function for calculation of an extra order parameter.
-            It is assumed to accept only a `pyretis.core.system.System`
-            object as its parameter.
+            It is assumed to accept only a :py:class:`.System` object
+            as its parameter.
 
         Returns
         -------
@@ -165,9 +144,8 @@ class OrderParameter(object):
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""
-        msg = ['Order parameter {}'.format(self.name)]
-        msg += ['{}'.format(self.desc)]
-        return '\n'.join(msg)
+        return 'Order parameter: "{}"\n{}'.format(self.__class__.__name__,
+                                                  self.description)
 
 
 class OrderParameterPosition(OrderParameter):
@@ -191,13 +169,11 @@ class OrderParameterPosition(OrderParameter):
         the position or not.
     """
 
-    def __init__(self, name, index, dim='x', periodic=False):
+    def __init__(self, index, dim='x', periodic=False):
         """Initialize `OrderParameterPosition`.
 
         Parameters
         ----------
-        name : string
-            The name for the order parameter
         index : int
             This is the index of the atom we will use the position of.
         dim : string
@@ -207,8 +183,8 @@ class OrderParameterPosition(OrderParameter):
             This determines if periodic boundary conditions should be
             applied to the position.
         """
-        description = 'Position of particle {} (dim: {})'.format(index, dim)
-        super().__init__(name, desc=description)
+        txt = 'Position of particle {} (dim: {})'.format(index, dim)
+        super().__init__(description=txt)
         self.periodic = periodic
         self.index = index
         dims = {'x': 0, 'y': 1, 'z': 2}
@@ -218,6 +194,7 @@ class OrderParameterPosition(OrderParameter):
             msg = 'Unknown dimension {} requested'.format(dim)
             logger.critical(msg)
             raise
+        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.
@@ -285,7 +262,7 @@ class OrderParameterDistance(OrderParameter):
         the position or not.
     """
 
-    def __init__(self, name, index, periodic=True):
+    def __init__(self, index, periodic=True):
         """Initialize `OrderParameterDistance`.
 
         Parameters
@@ -299,12 +276,12 @@ class OrderParameterDistance(OrderParameter):
             applied to the position.
         """
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        description = '{} distance particles {} and {}'.format(pbc,
-                                                               index[0],
-                                                               index[1])
-        super().__init__(name, desc=description)
+        txt = '{} distance particles {} and {}'.format(pbc, index[0],
+                                                       index[1])
+        super().__init__(description=txt)
         self.periodic = periodic
         self.index = index
+        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.

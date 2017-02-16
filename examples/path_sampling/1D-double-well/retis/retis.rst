@@ -70,7 +70,6 @@ Orderparameter
 class = OrderParameterPosition
 dim = x
 index = 0
-name = Position
 periodic = False
 
 Output

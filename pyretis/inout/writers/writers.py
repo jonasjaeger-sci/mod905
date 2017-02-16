@@ -520,17 +520,11 @@ class OrderWriter(Writer):
 
     2) Main order parameter.
 
-    3) Velocity for main order parameter.
+    3) Collective variable 1
 
-    4) Second order parameter.
+    4) Collective variable 2
 
-    5) Velocity for second order parameter ``A``.
-
-    6) ...
-
-    And so on, that is, columns 2, 4, 6, ... are order parameters, while
-    columns 3, 5, 7, ... are the corresponding velocities. The first
-    column is always just the time (or step number).
+    5) ...
     """
     # Format for order files, note that we don't know how many parameters
     # we need to write yet.
@@ -538,7 +532,7 @@ class OrderWriter(Writer):
 
     def __init__(self):
         """Initialize a `OrderWriter`."""
-        header = {'labels': ['Time', 'Orderp', 'Orderv'], 'width': [10, 12]}
+        header = {'labels': ['Time', 'Orderp'], 'width': [10, 12]}
         super().__init__('OrderWriter', header=header)
 
     def load(self, filename):

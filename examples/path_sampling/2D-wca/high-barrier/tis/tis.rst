@@ -75,7 +75,8 @@ periodic = True
 
 Output
 ------
-backup = False
-energy-file = 10
-order-file = 10
-cross-file = 1
+backup = overwrite
+energy-file = 100
+order-file = 100
+path-file = 1
+trajectory-file = 0

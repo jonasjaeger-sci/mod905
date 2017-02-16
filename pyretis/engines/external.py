@@ -369,7 +369,7 @@ class ExternalMDEngine(EngineBase):
             system.particles.vel = -vel
         else:
             system.particles.vel = vel
-        return order_function(system)
+        return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):

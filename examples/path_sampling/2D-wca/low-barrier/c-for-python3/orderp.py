@@ -18,8 +18,6 @@ class OrderParameterWCAJCP1(OrderParameter):
 
     Attributes
     ----------
-    name : string
-        A human readable name for the order parameter
     index : tuple of integers
         These are the indices used for the two particles.
         `system.particles.pos[index[0]]` and
@@ -29,13 +27,11 @@ class OrderParameterWCAJCP1(OrderParameter):
         the position or not.
     """
 
-    def __init__(self, name, index, periodic=True):
+    def __init__(self, index, periodic=True):
         """Initialize the order parameter.
 
         Parameters
         ----------
-        name : string
-            The name for the order parameter
         index : tuple of ints
             This is the indices of the atom we will use the position of.
         periodic : boolean, optional
@@ -43,12 +39,12 @@ class OrderParameterWCAJCP1(OrderParameter):
             applied to the position.
         """
         pbc = 'Periodic' if periodic else 'Non-periodic'
-        description = '{} distance particles {} and {}'.format(pbc,
-                                                               index[0],
-                                                               index[1])
-        super().__init__(name, desc=description)
+        txt = '{} distance particles {} and {}'.format(pbc, index[0],
+                                                       index[1])
+        super().__init__(description=txt)
         self.periodic = periodic
         self.index = index
+        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.

@@ -9,7 +9,7 @@ interfaces = [1.2]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 2
 temperature = 1.0
 
@@ -54,13 +54,12 @@ Orderparameter
 --------------
 class = OrderParameterWCAJCP1
 module = ../c-for-python3/orderp.py
-name = WCAJCP1
 index = (7,8)
 periodic = True
 
 Output
 ------
-backup = False
+backup = overwrite
 energy-file = 10
 order-file = 10
 cross-file = 1

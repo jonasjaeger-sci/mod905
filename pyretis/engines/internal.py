@@ -260,7 +260,7 @@ class MDEngine(EngineBase):
         out : list of floats
             The calculated order parameters
         """
-        return order_function(system)
+        return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):

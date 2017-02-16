@@ -5,26 +5,22 @@
 from pyretis.orderparameter import OrderParameter
 
 
-__all__ = []
-
-
 class FooOrderParameter(OrderParameter):
     """FooOrderParameter(OrderParameter) - Dummy order parameter for tests."""
-
     def __init__(self, name, desc='Dummy order parameter'):
-        super().__init__(name, desc=desc)
+        super().__init__(description=desc)
 
 
 class BarOrderParameter(object):
-    """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    """BarOrderParameter(object) - Dummy order parameter for tests."""
+    def __init__(self, description='Dummy test order parameter'):
+        self.description = description
 
 
 class BazOrderParameter(object):
-    """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    """BazOrderParameter(object) - Dummy order parameter for tests."""
+    def __init__(self, description='Dummy test order parameter'):
+        self.description = description
 
     def calculate(self, system):
-        raise NotImplementedError
+        pass

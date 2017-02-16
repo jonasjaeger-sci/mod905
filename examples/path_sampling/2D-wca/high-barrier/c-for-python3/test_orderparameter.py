@@ -35,7 +35,7 @@ class WCAOrderTest(unittest.TestCase):
         system.particles = particles
 
         order1 = WCAOrderParameter((0,1))
-        order2 = OrderParameterDistance('WCA distance', (0,1), periodic=True)
+        order2 = OrderParameterDistance((0,1), periodic=True)
 
         for i in np.arange(0.001, 5.0, 0.1):
             particles.pos[1] = np.array([1.0, i])

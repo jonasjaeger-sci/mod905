@@ -17,8 +17,6 @@ class OrderXY(OrderParameter):
 
     Attributes
     ----------
-    name : string
-        A human readable name for the order parameter
     index : integer
         This selects the particle to use for the order parameter.
     periodic : boolean
@@ -31,15 +29,13 @@ class OrderXY(OrderParameter):
 
         Parameters
         ----------
-        name : string
-            The name for the order parameter
         index : tuple of ints
             This is the indices of the atom we will use the position of.
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
         """
-        super().__init__('order', desc='2D->1D projection')
+        super().__init__(description='2D->1D projection')
         self.index = index
         x1 = 0.2
         y1 = 0.4
@@ -76,21 +72,3 @@ class OrderXY(OrderParameter):
         vec = np.array([x - self.x0, y - self.y0])
         proj = np.dot(vec, self.vec)
         return proj
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter it is given by the time derivative of
-        the distance vector.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        return None

@@ -228,8 +228,13 @@ def create_orderparameter(settings):
     out : object like :py:class:`.OrderParameter`
         This object represents the order parameter.
     """
-    return create_external(settings, 'orderparameter', order_factory,
-                           ['calculate', 'calculate_velocity'])
+    order = create_external(
+        settings,
+        'orderparameter',
+        order_factory,
+        ('calculate',))
+    logger.info('Created order parameter:\n%s', order)
+    return order
 
 
 def create_engine(settings):

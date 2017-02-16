@@ -25,14 +25,14 @@ timestep = 0.002
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
 zero_momentum = True
 rescale_energy = 25
 sigma_v = -1
-seed = 1
+seed = 0
 initial_path = kick
 
 RETIS settings
@@ -78,8 +78,8 @@ module = ../c-for-python3/wcafunctions.py
 
 Output
 ------
-backup = False
-energy-file = 0
-order-file = 0
+backup = overwrite
+energy-file = 100
+order-file = 100
 path-file = 1
 trajectory-file = 0

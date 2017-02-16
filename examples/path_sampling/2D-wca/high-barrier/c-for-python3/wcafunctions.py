@@ -264,8 +264,9 @@ class WCAOrderParameter(OrderParameter):
         index : tuple of ints
             The index for the particles to use.
         """
-        super().__init__('WCA high barrier', desc='WCA order parameter')
+        super().__init__(description='WCA order parameter')
         self.index = index
+        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter and return it.
@@ -336,8 +337,9 @@ class WCAOrderParameterp(OrderParameter):
         index : tuple of ints
             The index for the particles to use.
         """
-        super().__init__('WCA high barrier', desc='WCA order parameter')
+        super().__init__(description='WCA order parameter')
         self.index = index
+        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter and return it.

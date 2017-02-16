@@ -29,8 +29,7 @@ class OrderPositionTest(unittest.TestCase):
             system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
                                 ptype=0)
             for idim, xdim in enumerate(('x', 'y', 'z')):
-                orderp = OrderParameterPosition('Positional order parameter',
-                                                0, dim=xdim, periodic=False)
+                orderp = OrderParameterPosition(0, dim=xdim, periodic=False)
                 if idim > ndim - 1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
                     self.assertRaises(IndexError, orderp.calculate_velocity,
@@ -49,8 +48,8 @@ class OrderPositionTest(unittest.TestCase):
         dim_map = {'x': 0, 'y': 1, 'z': 2}
         for xdim in dim_map:
             idim = dim_map[xdim]
-            orderp = OrderParameterPosition('Positional order parameter', 0,
-                                            dim=xdim, periodic=False)
+            orderp = OrderParameterPosition(0, dim=xdim,
+                                            periodic=False)
             # Test for n-component system
             for ndim in [1, 2, 3]:
                 box = Box(periodic=[False]*ndim)
@@ -88,8 +87,7 @@ class OrderPositionTest(unittest.TestCase):
                 system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
                                     ptype=0)
                 for xdim in ['x', 'y', 'z'][:ndim]:
-                    orderp = OrderParameterPosition('Positional order param',
-                                                    0, dim=xdim,
+                    orderp = OrderParameterPosition(0, dim=xdim,
                                                     periodic=True)
                     lmb = orderp.calculate(system)
                     idim = dim_map[xdim]
@@ -112,8 +110,7 @@ class OrderPositionTest(unittest.TestCase):
                     system.add_particle(name='Ar', pos=pos, vel=vel,
                                         mass=1.0, ptype=0)
                 for xdim in ['x', 'y', 'z'][:ndim]:
-                    orderp = OrderParameterPosition('Positional order param',
-                                                    0, dim=xdim,
+                    orderp = OrderParameterPosition(0, dim=xdim,
                                                     periodic=True)
                     lmb = orderp.calculate(system)
                     idim = dim_map[xdim]
@@ -127,7 +124,7 @@ class OrderDistanceTest(unittest.TestCase):
 
     def test_two_particles(self):
         """Test the distance order parameter without pbc."""
-        orderp = OrderParameterDistance('Positional order parameter', (0, 1),
+        orderp = OrderParameterDistance((0, 1),
                                         periodic=False)
         # Test for a one-particle system:
         for ndim in [1, 2, 3]:
@@ -150,7 +147,7 @@ class OrderDistanceTest(unittest.TestCase):
 
     def test_two_pbcparticles(self):
         """Test the distance order parameter with pbc."""
-        orderp = OrderParameterDistance('Positional order parameter', (0, 1),
+        orderp = OrderParameterDistance((0, 1),
                                         periodic=True)
         # Test for a one-particle system:
         for disp in [0.0, 1.5, -1.5, 100., -100.]:

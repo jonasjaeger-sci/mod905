@@ -10,7 +10,7 @@ interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
 System
 ------
-units = lj
+units = retis
 dimensions = 2
 temperature = 1.0
 
@@ -33,12 +33,11 @@ allowmaxlength = False
 zero_momentum = True
 rescale_energy = 9.0
 sigma_v = -1
-seed = 1
+seed = 0
 initial_path = kick
 
 Particles
 ---------
-
 position = {'file': '../initial.xyz'}
 velocity = {'scale': 9.0}
 mass = {'A': 1.0, 'B': 1.0}
@@ -69,17 +68,15 @@ parameter types = [(1, 1)]
 
 Orderparameter
 --------------
-
 class = OrderParameterWCAJCP1
 module = ../orderp.py
-name = WCAJCP1
 index = (7,8)
 periodic = True
 
 
 Output
 ------
-backup = False
+backup = overwrite
 energy-file = 10
 order-file = 10
 cross-file = 1

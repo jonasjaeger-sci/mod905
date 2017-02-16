@@ -40,7 +40,7 @@ class RingDiffusion(OrderParameter):
             This determines if periodic boundary conditions should be
             applied to the position.
         """
-        super().__init__('ringdiffusion', desc='Ring diffusion for hydrate')
+        super().__init__(description='Ring diffusion for hydrate')
         self.idx1 = np.array([56, 64, 104, 112, 200, 208], dtype=np.int16)
         # convert to atom index:
         self.idx1 *= 4
@@ -85,24 +85,6 @@ class RingDiffusion(OrderParameter):
         molvec -= cm1
         orderp = -np.dot(cmvec, molvec) / np.sqrt(np.dot(cmvec, cmvec))
         return orderp
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter it is given by the time derivative of
-        the distance vector.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        return None
 
 
 if __name__ == '__main__':
