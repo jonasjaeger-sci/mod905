@@ -2,7 +2,7 @@
 
 axes.edgecolor: 262626
 axes.labelcolor: 262626
-axes.labelsize: medium
+axes.labelsize: small
 axes.titlesize: x-small
 axes.grid: False
 axes.formatter.limits: -3, 3
@@ -14,7 +14,8 @@ figure.subplot.bottom: 0.15
 figure.subplot.top: 0.93
 
 font.family: serif
-font.size: 18
+font.serif: ['Droid Serif', 'FreeSerif', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', 'Palatino', 'Georgia', 'Garamond', 'Times']
+font.size: 16
 
 grid.color: 262626
 grid.linestyle: :
@@ -41,10 +42,10 @@ text.usetex: False
 
 xtick.major.pad: 6
 xtick.color: 262626
-xtick.labelsize: medium
+xtick.labelsize: small
 
 ytick.major.pad: 6
 ytick.color: 262626
-ytick.labelsize: medium
+ytick.labelsize: small
 
 image.cmap: viridis
