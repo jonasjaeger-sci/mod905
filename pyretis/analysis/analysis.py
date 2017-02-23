@@ -112,7 +112,7 @@ def block_error(data, maxblock=None, blockskip=1):
     .. [1] Wikipedia, "Algorithms for calculating variance",
        http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
     """
-    if maxblock is None:
+    if maxblock is None or maxblock < 1:
         maxblock = len(data) // 2
     else:
         maxblock = min(maxblock, len(data) // 2)
@@ -217,7 +217,7 @@ def mean_square_displacement(data, ndt=None):
         column is the corresponding standard deviation.
     """
     length = data.size
-    if ndt is None:
+    if ndt is None or ndt < 1:
         ndt = length // 5
     msd = []
     for i in range(1, ndt):
