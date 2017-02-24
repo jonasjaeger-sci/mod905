@@ -326,7 +326,7 @@ class ParticlesExt(Particles):
     config : tuple of (string, int)
         The location of the file with positions and the index
         for locating a frame.
-    vel_ref : boolean
+    vel_rev : boolean
         True if velocities should be reversed or not before using
         the phase point.
     """
