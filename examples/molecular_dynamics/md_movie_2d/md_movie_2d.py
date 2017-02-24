@@ -115,7 +115,7 @@ ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
 # Add second axis for plotting the energies
 ax2 = fig.add_subplot(122)
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.25, 0.25)
+ax2.set_ylim(-0.05, 0.25)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
@@ -238,9 +238,9 @@ def update(frame, sim, output_tasks):
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
         patches.append(linepot)
-        linekin.set_data(time, (np.array(e_kin) - e_kin[0]))
+        linekin.set_data(time, (np.array(e_kin)))
         patches.append(linekin)
-        linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
+        linetot.set_data(time, (np.array(e_tot) - v_pot[0]))
         patches.append(linetot)
         # also display current simulation time;
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],
