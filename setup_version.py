@@ -14,8 +14,8 @@ import subprocess
 # For setting version. This is copied from Numpy's setup.py.
 MAJOR = 0
 MINOR = 2
-MICRO = 0
-DEV = 2
+MICRO = 1
+DEV = 0
 ISRELEASED = False
 if not ISRELEASED:
     VERSION = '{:d}.{:d}.{:d}.dev{:d}'.format(MAJOR, MINOR, MICRO, DEV)
