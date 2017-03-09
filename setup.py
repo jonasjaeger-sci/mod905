@@ -22,6 +22,7 @@ along with pyretis. If not, see <http://www.gnu.org/licenses/>
 """
 from codecs import open as openc
 import os
+import shutil
 from setuptools import setup, find_packages
 
 
@@ -35,7 +36,11 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.2.1.dev0'  # copied from version.py generated.
+FULL_VERSION = '0.2.1.dev1'  # copied from version.py generated.
+
+# create copies of scripts:
+shutil.copyfile('bin/pyretisrun.py', 'bin/pyretisrun')
+shutil.copyfile('bin/pyretisanalyse.py', 'bin/pyretisanalyse')
 
 setup(name='pyretis',
       version=FULL_VERSION,
@@ -67,4 +72,4 @@ setup(name='pyretis',
                         'jinja2>=2.7.2',
                         'docutils>=0.11',
                         'tqdm>=4.7.0'],
-      scripts=['bin/pyretisrun.py', 'bin/pyretisanalyse.py'])
+      scripts=['bin/pyretisrun', 'bin/pyretisanalyse'])

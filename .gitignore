@@ -53,6 +53,9 @@
 build
 # setup.py dist directory
 dist
+# setup.py bin scripts
+bin/pyretisrun
+bin/pyretisanalyse
 # Egg metadata
 *.egg-info
 # for sphinx
