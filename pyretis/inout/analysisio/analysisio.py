@@ -570,13 +570,18 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
         A list with the text files created (if any).
     """
     path_results, ensemble_names, detect = [], [], []
+    interface_left = None
     for ensemble in raw_data:
         path_results.append(ensemble['out'])
         ensemble_names.append(ensemble['out']['ensemble'])
         detect.append(ensemble['out']['detect'])
+        if interface_left is None:
+            interface_left = ensemble['out']['interfaces'][0]
     result = match_probabilities(path_results, detect)
+    # for the figure, we add the A interface:
+    detect_plot = [interface_left] + detect
     figures = plotter.output_matched_probability(ensemble_names,
-                                                 detect,
+                                                 detect_plot,
                                                  result)
     outtxt = txt_plotter.output_matched_probability(ensemble_names,
                                                     detect,
