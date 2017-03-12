@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Plot results from time tests of the Lennard-Jones potential.
 
 Here we assume that the results are available in files named

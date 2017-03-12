@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module handles parsing of input settings.
 
-This module define the file format for pyretis input files.
+This module define the file format for PyRETIS input files.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,7 +410,7 @@ def parse_settings_file(filename, add_default=True):
     Returns
     -------
     settings : dict
-        A dictionary with settings for pyretis.
+        A dictionary with settings for PyRETIS.
     """
     with open(filename, 'r') as fileh:
         raw_sections = _parse_sections(fileh)
@@ -493,7 +493,7 @@ def section_to_text(settings, prefix=None):
 def write_settings_file(settings, outfile, backup=True):
     """Write simulation settings to an output file.
 
-    This will write a dictionary to a output file in the pyretis input
+    This will write a dictionary to a output file in the PyRETIS input
     file format.
 
     Parameters

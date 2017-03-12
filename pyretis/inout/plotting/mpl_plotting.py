@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Functions for generating plots using matplotlib.
 
@@ -17,7 +17,7 @@ Important methods defined here
 
 mpl_set_style (:py:func:`.mpl_set_style`)
     Method for setting the style for the plots, typically used here to
-    load the *pyretis style*.
+    load the *PyRETIS style*.
 """
 # TODO: See if the plotting functions mpl_* can be moved into the object.
 import os
@@ -27,7 +27,6 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
-# pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
@@ -267,7 +266,7 @@ def mpl_set_style(style='pyretis'):
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
     'grayscale' (i.e. one of the styles in `matplotlib.style.available`)
-    or as a file (full path is needed). The default pyretis style
+    or as a file (full path is needed). The default PyRETIS style
     is stored in `_MPL_STYLE_FILE` and can be selected with 'pyretis'.
     Style equal to None is just the default matplotlib style.
 

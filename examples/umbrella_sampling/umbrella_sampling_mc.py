@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-This is a simple example of how pyretis can be used
+This is a simple example of how PyRETIS can be used
 for running an umbrella simulation.
 
 In this simulation, we study a particle moving in a one-dimensional

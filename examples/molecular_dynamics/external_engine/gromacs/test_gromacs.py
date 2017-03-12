@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-Example test for an interface for pyretis and a external MD package.
+Example test for an interface for PyRETIS and an external MD package.
 
 Here we test the following:
 
@@ -33,7 +33,7 @@ def compare_g96_files(file1, file2, box, negvel=False):
         First file to open.
     file2 : string
         Second file to open.
-    box : object like pyretis.core.box
+    box : object like :py:class:`.box`
         This is used to handle the periodic boundaries.
     negvel : boolean
         If True, we flip the velocities in file1.
@@ -179,8 +179,8 @@ def compare_results(path1, path2, out_files, patho, reverse):
         Path to folder with frames for second trajectory.
     out_files : dict
         A dict with files from the ouput when running the
-        gromacs simulation with pyretis.
-    path0 : object like :py:class:`pyretis.core.pathext.PathExt`.
+        gromacs simulation with PyRETIS.
+    path0 : object like :py:class:`.PathExt`.
         The path object.
     reverse : boolean
         If True, we are comparing time reversed results.
@@ -229,16 +229,16 @@ def run_forward(gro, system, order_function):
 
     Parameters
     ----------
-    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+    gro : object like :py:class:`.GromacsExt`
         The object which handles gromacs integration.
-    system : object like :py:class:`pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are studying.
 
     Returns
     -------
     out[0] : dict
         Some files created by this method.
-    out[1] : object like :py:class:`pyretis.core.path.pathext.PathExt`.
+    out[1] : object like :py:class:`.PathExt`.
         The trajectory created.
     """
     exe_path = os.path.join(os.getcwd(), 'trajf')
@@ -269,18 +269,18 @@ def run_reverse(gro, system, forward_path, order_function):
 
     Parameters
     ----------
-    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+    gro : object like :py:class:`.GromacsExt`
         The object which handles gromacs integration.
-    system : object like :py:class:`pyretis.core.system.System`
+    system : object like :py:class:`.System`
         The system we are studying.
-    forward_path : object like :py:class:`pyretis.core.pathext.PathExt`
+    forward_path : object like :py:class:`.PathExt`
         The forward path generated. Used here to pick the initial point.
 
     Returns
     -------
     out[0] : dict
         Some files created by this method.
-    out[1] : object like :py:class:`pyretis.core.path.pathext.PathExt`.
+    out[1] : object like :py:class:`.PathExt`.
         The trajectory created.
     """
     exe_path = os.path.join(os.getcwd(), 'trajb')
@@ -308,10 +308,10 @@ def do_setup():
 
     Returns
     -------
-    system : object like :py:class`pyretis.core.system.System`
+    system : object like :py:class`.System`
         A system which we are integrating. It contains information
         about the order parameter and how to calculate it.
-    gro : object like :py:class:`pyretis.integrators.gromacs.GromacsExt`
+    gro : object like :py:class:`.GromacsExt`
         The object used for interfacing gromacs.
     """
     settings = {}

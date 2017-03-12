@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This file defines the order parameter used for the WCA example.
-"""
+"""This file defines the order parameter used for the WCA example."""
 import logging
 import numpy as np
 from pyretis.orderparameter import OrderParameter
@@ -54,7 +53,7 @@ class OrderParameterWCAJCP1(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases `system.forcefield` can also be
@@ -105,7 +104,7 @@ class OrderParameterWCAJCP1(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`System`
             This object is used for the actual calculation.
 
         Returns

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module handles the set-up of initial positions and a box.
 
@@ -33,7 +33,6 @@ initial_positions_lattice (:py:func:`.initial_positions_lattice`)
 import logging
 import os
 import numpy as np
-# pyretis imports:
 from pyretis.tools import generate_lattice
 from pyretis.core.box import Box
 from pyretis.core.system import System
@@ -335,7 +334,7 @@ def create_initial_positions(settings):
     """Set up the initial positions from the given settings.
 
     The settings can specify the initial positions as a file or
-    to be generated on a lattice by pyretis.
+    to be generated on a lattice by PyRETIS.
 
     Parameters
     ----------

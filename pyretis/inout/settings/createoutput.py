@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module for handling output from simulations.
 
@@ -31,7 +31,6 @@ create_output_tasks (:py:func:`.create_output_tasks`)
     Function that sets up output tasks from a dictionary of settings.
 """
 import logging
-# pyretis imports
 from pyretis.inout.common import add_dirname
 from pyretis.simulation.simulation_task import execute_now
 from pyretis.inout.writers import get_writer, FileIO

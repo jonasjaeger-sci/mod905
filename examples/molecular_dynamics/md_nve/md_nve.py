@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Example of running a MD simulation using the pyretis library.
+"""Example of running a MD simulation using the PyRETIS library.
 
 The system considered is a simple Lennard-Jones fluid.
 """

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of engines.
 
-This package defines engines for pyretis. The engines are responsible
+This package defines engines for PyRETIS. The engines are responsible
 for carrying out dynamics for a system. This can in principle both
 be molecular dynamics or Monte Carlo dynamics. Typically, with RETIS,
 this will be molecular dynamics in some form in order to propagate
 the equations of motion and obtain new trajectories.
-
 
 
 Package structure

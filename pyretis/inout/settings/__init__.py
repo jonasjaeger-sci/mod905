@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains functions for input/output of settings.
 
@@ -26,7 +26,7 @@ createsystem.py (:py:mod:`pyretis.inout.settings.createsystem`)
     Handle creation of systems from input simulation settings.
 
 __init__.py
-    This file, handles imports for pyretis.
+    This file, handles imports for PyRETIS.
 
 settings.py (:py:mod:`pyretis.inout.settings.settings`)
     Handle parsion of input settings.

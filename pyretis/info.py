@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This module just contains some info for pyretis.
+"""This module just contains some info for PyRETIS.
 
 Here we define the name of the program and some other
 relevant info.
 """
-PROGRAM_NAME = 'pyretis'
+PROGRAM_NAME = 'PyRETIS'
 URL = 'http://www.pyretis.org'
 GIT_URL = 'https://gitlab.com/pyretis/pyretis'
 CITE = """

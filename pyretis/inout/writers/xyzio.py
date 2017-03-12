@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module for handling the output/input of trajectory data.
 
@@ -257,7 +257,7 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     yield '{}'.format(npart)
 
     if header is None:
-        yield 'pyretis XYZ writer'
+        yield 'PyRETIS XYZ writer'
     else:
         yield '{}'.format(header)
 

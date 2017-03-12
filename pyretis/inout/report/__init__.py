@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains methods for generating reports.
 
@@ -13,7 +13,7 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, handles imports for pyretis and defines a method for
+    This file, handles imports for PyRETIS and defines a method for
     writing a report to a file.
 
 markup.py (:py:mod:`pyretis.inout.report.markup`)

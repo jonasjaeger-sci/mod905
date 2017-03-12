@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Package defining classes for pair potentials.
 
 This package defines different pair potentials for use with internal
-calculation in pyretis.
+calculation in PyRETIS.
 
 Package structure
 -----------------

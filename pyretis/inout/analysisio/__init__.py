@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains functions for input/output for the analysis.
 
@@ -16,10 +16,10 @@ Modules
 analysisio.py (:py:mod:`.analysisio`)
     Methods that will output results from the analysis functions.
     The methods defined here can also be used to run an analysis on
-    output files from pyretis.
+    output files from PyRETIS.
 
 __init__.py
-    This file, handles imports for pyretis.
+    This file, handles imports for PyRETIS.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

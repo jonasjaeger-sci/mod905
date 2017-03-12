@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """The Langevin integrator implemented in FORTRAN."""
 import numpy as np
 from matplotlib import pyplot as plt
@@ -6,7 +8,7 @@ from matplotlib import pyplot as plt
 try:
     from vvintegrator import vvintegrator
 except ImportError:
-    MSG = ('Could not import external Fortran library.'
+    MSG = ('Could not import external FORTRAN library.'
            '\nPlease compile with "make"!')
     logger.critical(MSG)
     raise ImportError(MSG)

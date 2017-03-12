@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module for handling input and output of data.
 
 The input and output of data are handled by writers who are responsible
-for turning raw data from pyretis into an output (in some form).
+for turning raw data from PyRETIS into an output (in some form).
 Note that the writers are not responsible for actually writing the
 output to the screen or to files - this is done by an output task.
 
@@ -50,7 +50,6 @@ import logging
 import os
 import numpy as np
 from pyretis.core.units import CONVERT  # unit conversion in trajectory
-# pyretis imports
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -188,9 +187,9 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
 
 
 class Writer(object):
-    """A generic class for writing output from pyretis.
+    """A generic class for writing output from PyRETIS.
 
-    The writer class handles output and input of some data for pyretis.
+    The writer class handles output and input of some data for PyRETIS.
 
     Attributes
     ----------
@@ -390,7 +389,7 @@ class CrossWriter(Writer):
 
 
 class EnergyWriter(Writer):
-    """A class for writing energy data from pyretis.
+    """A class for writing energy data from PyRETIS.
 
     This class handles writing/reading of energy data.
     The data is written in 7 columns:

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-Example of running a MD NVE simulation
+Plot the potential.
 """
 # pylint: disable=C0103
 import numpy as np

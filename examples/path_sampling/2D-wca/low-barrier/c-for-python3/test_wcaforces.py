@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test the C implementation of the WCA potential.
 
-This test is comparing the C implementation with the pyretis
+This test is comparing the C implementation with the PyRETIS 
 implementation.
 """
 # pylint: disable=C0103
@@ -44,7 +46,7 @@ def set_up_python_forcefield():
     dwca_params = {'types': [(1, 1)],
                    'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField('Double well force field from pyretis',
+    forcefield = ForceField('Double well force field from PyRETIS',
                             potential=[wca_pot, dwca_pot],
                             params=[wca_params, dwca_params])
     return forcefield
@@ -55,7 +57,7 @@ def set_up_python_forcefield_well():
     dwca_params = {'types': [(1, 1)],
                    'rzero': 1.0 * (2.0**(1.0/6.0)),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField('Well force field from pyretis',
+    forcefield = ForceField('Well force field from PyRETIS',
                             potential=[dwca_pot],
                             params=[dwca_params])
     return forcefield
@@ -66,14 +68,14 @@ def set_up_c_forcefield():
     wca_paramsc = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.**(1./6.),
                    'idxi': 0, 'idxj': 1, 'rzero': 2.0**(1./6),
                    'height': 15.0, 'width': 0.5}
-    forcefield = ForceField('Double well force field, pyretis + c',
+    forcefield = ForceField('Double well force field, PyRETIS + c',
                             potential=[wca_pot_c],
                             params=[wca_paramsc])
     return forcefield
 
 
 class WCATest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the C potential class."""
 
     def test_wca_pot(self):
         """Test evaluation of potential."""

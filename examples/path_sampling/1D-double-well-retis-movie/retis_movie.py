@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016, pyretis Development Team.
+# Copyright (c) 2016, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This is a simple RETIS example animating the algorithm.
 
@@ -88,7 +88,7 @@ def set_up_system(settings):
 
     Returns
     -------
-    sys : object like System from pyretis.core
+    sys : object like :py:class:`.System`
         A system object we can use in a simulation.
     """
     box = Box(periodic=[False])
@@ -106,7 +106,7 @@ def get_path(path):
 
     Parameters
     ----------
-    path : object like Path from pyretis.core
+    path : object like :py:class:`.PathBase`
         The path/trajectory we are collecting points from.
 
     Returns

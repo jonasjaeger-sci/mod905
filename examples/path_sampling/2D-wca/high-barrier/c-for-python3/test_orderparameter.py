@@ -4,7 +4,7 @@
 This test is checking that the order parameter is calculated
 correctly.
 
-1) The order parameter from pyretis.
+1) The order parameter from PyRETIS.
 
 2) A python implementation.
 
@@ -20,7 +20,7 @@ from pyretis.orderparameter import OrderParameterDistance
 
 
 class WCAOrderTest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the C potential class."""
 
     def test_wca_orderp(self):
         """Test evaluation of the order parameter."""

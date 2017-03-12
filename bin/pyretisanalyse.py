@@ -1,20 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""pyretisanalysis - An application for analysing pyretis simulations
+"""pyretisanalysis - An application for analysing PyRETIS simulations
 
-This script is a part of the pyretis library and can be used for
+This script is a part of the PyRETIS library and can be used for
 analysing the result from simulations.
 
 usage: pyretisanalyse.py [-h] -i INPUT [-V]
 
-pyretis
+PyRETIS
 
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
-                        Location of pyretis input file
+                        Location of PyRETIS input file
   -V, --version         show program's version number and exit
 """
 # pylint: disable=C0103
@@ -22,7 +22,6 @@ import argparse
 import logging
 import os
 import sys
-# pyretis library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import CONSTANTS
@@ -129,7 +128,7 @@ def create_reports(settings, analysis_results, report_path):
 
 
 def hello_world(infile, reportdir):
-    """Method to output a standard greeting for pyretis analysis.
+    """Method to output a standard greeting for PyRETIS analysis.
 
     Parameters
     ----------
@@ -150,7 +149,7 @@ def hello_world(infile, reportdir):
 
 
 def bye_bye_world():
-    """Method to print out the goodbye message for pyretis."""
+    """Method to print out the goodbye message for PyRETIS."""
     msgtxt = 'End of {} analysis execution.'.format(PROGRAM_NAME)
     logger.info(msgtxt)
     print_to_screen('')

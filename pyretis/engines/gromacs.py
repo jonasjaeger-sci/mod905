@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """A GROMACS external MD integrator interface.
 
@@ -106,7 +106,7 @@ class GromacsEngine(ExternalMDEngine):
                 msg = 'GROMACS engine is missing input file "{}"'.format(val)
                 logger.error(msg)
                 raise ValueError(msg)
-        # Check the input file and create a pyretis version with consistent
+        # Check the input file and create a PyRETIS version with consistent
         # settings:
         settings = {'dt': self.timestep, 'nstxout-compressed': 0,
                     'gen_vel': 'no'}

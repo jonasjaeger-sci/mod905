@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of order parameters.
 
-This package defines order parameters for use with pyretis.
+This package defines order parameters for use with PyRETIS.
 
 
 Package structure

@@ -1,5 +1,5 @@
-Extending pyretis with a new integrator
+Extending PyRETIS with a new integrator
 =======================================
 
-This folder contains some examples on how pyretis can be extended with
+This folder contains some examples on how PyRETIS can be extended with
 a new integrator.

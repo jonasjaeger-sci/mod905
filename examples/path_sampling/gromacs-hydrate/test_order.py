@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This file defines the order parameter used for the WCA example.
-"""
+"""This file tests the Python implementation of the order parameter."""
 import logging
 import numpy as np
 from pyretis.engines.gromacs import read_gromos96_file

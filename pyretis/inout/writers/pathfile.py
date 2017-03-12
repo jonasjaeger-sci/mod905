@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods and classes for input/output of path data.
 
@@ -15,7 +15,6 @@ PathEnsembleFile (:py:class:`.PathEnsembleFile`)
     Reading of path ensemble data. Mainly used for analysis.
 """
 import logging
-# pyretis imports:
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

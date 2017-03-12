@@ -1,20 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""pyretisrun - An application for running pyretis simulations
+"""pyretisrun - An application for running PyRETIS simulations
 
-This script is a part of the pyretis library and can be used for
+This script is a part of the PyRETIS library and can be used for
 running simulations from an input script.
 
 usage: pyretisrun.py [-h] -i INPUT [-V] [-f LOG_FILE] [-l LOG_LEVEL] [-p]
 
-pyretis
+PyRETIS
 
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
-                        Location of pyretis input file
+                        Location of PyRETIS input file
   -V, --version         show program's version number and exit
   -f LOG_FILE, --log_file LOG_FILE
                         Specify log file to write
@@ -23,7 +23,7 @@ optional arguments:
   -p, --progress        Display a progress meter instead of text output for
                         the simulation
 
-More information about running pyretis can be found at: www.pyretis.org
+More information about running PyRETIS can be found at: www.pyretis.org
 """
 # pylint: disable=C0103
 import argparse
@@ -33,7 +33,7 @@ import os
 import sys
 # Other libraries:
 import tqdm  # For a progress bar
-# pyretis library imports:
+# PyRETIS library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import units_from_settings
@@ -75,7 +75,7 @@ def use_tqdm(progress):
 
 
 def hello_world(infile, rundir, logfile):
-    """Method to print out a standard greeting for pyretis.
+    """Method to print out a standard greeting for PyRETIS.
 
     Parameters
     ----------
@@ -110,7 +110,7 @@ def hello_world(infile, rundir, logfile):
 
 
 def bye_bye_world():
-    """Method to print out the goodbye message for pyretis."""
+    """Method to print out the goodbye message for PyRETIS."""
     timeend = datetime.datetime.now().strftime(_DATE_FMT)
     msgtxt = 'End of {} execution: {}'.format(PROGRAM_NAME, timeend)
     print_to_screen(msgtxt)
@@ -440,7 +440,7 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
 
 
 def run_generic_simulation(sim, sim_settings, progress=False):
-    """Run a pyretis single simulation.
+    """Run a generic PyRETIS simulation.
 
     These are simulations that are just going to complete a given
     number of steps. Other simulation may consist of several
@@ -555,12 +555,12 @@ def set_up_simulation(inputfile, runpath):
 
 
 def main(infile, indir, exe_dir, progress):
-    """The main method for executing pyretis.
+    """The main method for executing PyRETIS.
 
     Parameters
     ----------
     infile : string
-        The input file to open with settings for pyretis.
+        The input file to open with settings for PyRETIS.
     indir : string
         The folder containing the settings file.
     run_path : string
@@ -647,7 +647,7 @@ if __name__ == '__main__':
     fileh.setFormatter(get_log_formatter(log_level))
     logger.addHandler(fileh)
 
-    # Here, we just check the python version. pyretis should anyway
+    # Here, we just check the python version. PyRETIS should anyway
     # fail before this for python2.
     check_python_version()
 

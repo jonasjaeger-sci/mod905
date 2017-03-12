@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """A class for writing text data for the analysis.
 
@@ -14,7 +14,6 @@ TxtPlotter (:py:class:`.TxtPlotter`)
 """
 import logging
 import numpy as np
-# pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,

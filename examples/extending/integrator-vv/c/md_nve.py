@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
 This system considered is a simple Lennard-Jones fluid.

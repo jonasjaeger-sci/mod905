@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
-In this example we re-run a LAMMPS simulation using pyretis.
+In this example we re-run a LAMMPS simulation using PyRETIS.
 """
 # pylint: disable=C0103
 import os

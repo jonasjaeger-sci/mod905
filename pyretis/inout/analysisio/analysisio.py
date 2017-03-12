@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods that will output results from the analysis functions.
 
@@ -27,7 +27,6 @@ run_analysis_files (:py:func:`.run_analysis_files`)
 """
 import logging
 import os
-# pyretis imports
 from pyretis.core.units import create_conversion_factors
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,

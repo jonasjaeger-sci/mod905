@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This package defines analysis tools for the pyretis program.
+"""This package defines analysis tools for the PyRETIS program.
 
 The analysis tools are intended to be used for analysis of the
-simulation output from the pyretis program. The typically use of this
+simulation output from the PyRETIS program. The typically use of this
 package is in post-processing of the results from a simulation (or
 several simulations).
 

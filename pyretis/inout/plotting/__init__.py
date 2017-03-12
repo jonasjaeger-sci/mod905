@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains functions for setting up plotters.
 
@@ -22,7 +22,7 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, handles imports for pyretis and defines some colors
+    This file, handles imports for PyRETIS and defines some colors
     and the method for creating a plotter.
 
 mpl_plotting.py (:py:mod:`pyretis.inout.plotting.mpl_plotting`)
@@ -42,7 +42,7 @@ Folders
 
 styles
     This folder contains style files for matplotlib which are used by
-    pyretis.
+    PyRETIS.
 
 References
 ~~~~~~~~~~

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the Lennard Jones potential.
-
-This test is actually running a simulation and then comparing the results
-with output from a similar simulation performed in LAMMPS.
-"""
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Test the FORTRAN implementation of the Lennard Jones potential."""
 # pylint: disable=C0103
 import os
 import unittest
@@ -90,7 +88,7 @@ def run_simulation(simulationLAMMPS, ljsystem):
 
 
 class LennardJonesTest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the FORTRAN potential class."""
 
     def setUp(self):
         """Run the simulation and get the outputs."""

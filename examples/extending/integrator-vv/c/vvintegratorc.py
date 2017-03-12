@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Example of using a integration routine implemented in Fortran."""
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Example of using a integration routine implemented in C."""
 import logging
 from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -32,7 +34,7 @@ class VelocityVerletC(MDEngine):
     """
 
     def __init__(self, delta_t,
-                 desc='The velocity verlet integrator (Fortran)'):
+                 desc='The velocity verlet integrator (C)'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters

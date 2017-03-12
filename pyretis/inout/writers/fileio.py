@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module defining the base classes for file writers.
 
 This module defines a class that is useful for writing data
-to the disk. The typical usage in pyretis is to write the output from
+to the disk. The typical usage in PyRETIS is to write the output from
 a :py:class:`.Writer` to a file using a :py:class:`.FileIO` object.
 
 Important classes defined here

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """General functions for generating reports.
 
@@ -29,7 +29,6 @@ from docutils.writers.html4css1 import Writer as HTMLWriter
 from docutils.writers.html4css1 import HTMLTranslator
 # for using templates
 import jinja2
-# pyretis imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME
 from pyretis.inout.report.markup import latexify_number

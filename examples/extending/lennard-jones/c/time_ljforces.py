@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Time the C implementation of the Lennard-Jones potential.
 
 This timing is simply done by evaluating the Leannrd-Jones forces

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This package defines different simulations for use with pyretis.
+"""This package defines different simulations for use with PyRETIS.
 
 The different simulations are defined as objects which inherits from
 the base Simulation object defined in `simulation.py`. The simulation

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """The Langevin integrator implemented in FORTRAN."""
 import logging
 import numpy as np
 from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# pyretis imports
 try:
     from vvintegrator import vvintegrator
 except ImportError:
-    MSG = ('Could not import external Fortran library.'
+    MSG = ('Could not import external FORTRAN library.'
            '\nPlease compile with "make"!')
     logger.critical(MSG)
     raise ImportError(MSG)

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 #######
-pyretis
+PyRETIS
 #######
 
-This file is part of pyretis - a simulation package for rare events.
+This file is part of PyRETIS - a simulation package for rare events.
 
-Copyright (C) 2015  The pyretis team
+Copyright (C) 2015  The PyRETIS team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-pyretis documentation
+PyRETIS documentation
 ---------------------
 
-The documentation for pyretis is available either doc-strings provided
-with the code and from `the pyretis homepage <http://www.pyretis.org>`_.
+The documentation for PyRETIS is available either doc-strings provided
+with the code and from `the PyRETIS homepage <http://www.pyretis.org>`_.
 
-pyretis sub-packages
+PyRETIS sub-packages
 --------------------
 
 analysis (:py:mod:`pyretis.analysis`)
@@ -54,7 +54,7 @@ forcefield (:py:mod:`pyretis.forcefield`)
     This package define force fields and potentials functions.
 
 inout (:py:mod:`pyretis.inout`)
-    This package defines the input output operations for pyretis.
+    This package defines the input output operations for PyRETIS.
     This includes generating output from the analysis and reading
     input-files etc.
 

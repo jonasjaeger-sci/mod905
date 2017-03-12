@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of numerical integrators.
 
@@ -47,7 +47,7 @@ class VVIntegrator(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 
@@ -98,7 +98,7 @@ class Euler(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 

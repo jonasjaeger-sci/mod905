@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the Lennard Jones potential.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Test the FORTRAN implementation of the Lennard Jones potential.
 
 This test is comparing the three versions of the Lennard Jones
 potential:
@@ -8,7 +10,7 @@ potential:
 
 2) The numpy python implementation
 
-3) The Fortran implementation.
+3) The FORTRAN implementation.
 """
 # pylint: disable=C0103
 import unittest
@@ -40,7 +42,7 @@ def set_up_initial_state():
 
 def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
-    # Calculate with Fortran:
+    # Calculate with FORTRAN:
     potential_ext = PairLennardJonesCutFp(dim=3, shift=True,
                                           mixing='geometric')
     forceField_ext = ForceField('Python with external FORTRAN force field',
@@ -74,7 +76,7 @@ def run_calculations(system, parameters):
 
 
 class LennardJonesTest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the FORTRAN potential class."""
 
     def test_lj(self):
         """Test one-component system."""

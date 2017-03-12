@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module handles creation of simulations from settings.
 
@@ -219,7 +219,7 @@ def create_tis_simulations(settings, system, engine):
 
     This method will for each interface set up a single TIS simulation.
     These simulations can then be run in series, parallel or written
-    out as settings files that pyretis can run.
+    out as settings files that PyRETIS can run.
 
     Parameters
     ----------

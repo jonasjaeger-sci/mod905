@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# pyretis imports
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import generate_pair_interactions
 # Just to handle imports of the library:
@@ -130,7 +131,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system we are evaluating the potential in.
 
         Returns
@@ -156,7 +157,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system we are evaluating the force in.
 
         Returns
@@ -186,7 +187,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system we are evaluating the potential and force in.
 
         Note

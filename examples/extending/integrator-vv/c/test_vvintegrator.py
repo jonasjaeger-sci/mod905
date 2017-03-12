@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the velocity verlet integrator.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Test the C implementation of the velocity verlet integrator.
 
 This test is comparing:
 
 1) The python (numpy) implementation
 
-2) The Fortran implementation.
+2) The C implementation.
 """
 # pylint: disable=C0103
 import unittest
@@ -62,7 +64,7 @@ def run_test(steps, integrator, system=None):
 
 
 class VVIntegratorTest(unittest.TestCase):
-    """Run the tests for the Fortran integrator."""
+    """Run the tests for the C integrator."""
 
     def test_integrator(self):
         """Test by integrating the equations of motion."""

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
@@ -10,7 +10,7 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyretisLogFormatter (:py:class:`.PyretisLogFormatter`)
-    A class representing a formatter for the pyretis log file.
+    A class representing a formatter for the PyRETIS log file.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,7 +220,7 @@ def make_dirs(dirname):
 def print_to_screen(txt=None):
     """Method to print output to standard out.
 
-    This method is included to ensure that output from pyretis to the
+    This method is included to ensure that output from PyRETIS to the
     screen is written out in a uniform way across the library and
     application(s).
 
@@ -336,7 +336,7 @@ def check_python_version():
 
 
 class PyretisLogFormatter(logging.Formatter):
-    """Hardcoded formatter for the pyretis log file.
+    """Hardcoded formatter for the PyRETIS log file.
 
     This formatter will just adjust multiline messages to have some
     indentation

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test the Box class from pyretis.core"""
 import logging
@@ -105,11 +105,11 @@ class IntegratorTest(unittest.TestCase):
     def test_langevin_inertia(self):
         """Test the Langevin integrator.
 
-        In this test we compare the trajectory obtained by pyretis
+        In this test we compare the trajectory obtained by PyRETIS 
         with a trajectory obtained independently by the TISMOL program.
         Since we are using a Langevin integrator, we are using a mock
         random generator. This random generator is implemented identically
-        in TISMOL and pyretis.
+        in TISMOL and PyRETIS.
         """
         system = prepare_test_system()
         inth = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)

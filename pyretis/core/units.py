@@ -1,13 +1,13 @@
 # *- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 r"""This module defines natural constants and unit conversions.
 
 This module defines some natural constants and conversions between units
-which can be used by the pyretis program.
+which can be used by the PyRETIS program.
 The :ref:`natural constants <natural-constants>` are mainly used for
 conversions but it is also used to define the Boltzmann constant for
-internal use in pyretis. The :ref:`unit conversions <unit-conversions>`
+internal use in PyRETIS. The :ref:`unit conversions <unit-conversions>`
 are mainly useful for input/output.
 
 All numerical values are from the National Institute of Standards and
@@ -117,7 +117,7 @@ Velocity:
 Unit conversions and internal systems of units
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following system of units are defined for pyretis:
+The following system of units are defined for PyRETIS:
 
 - ``lj``: A Lennard-Jones type of units.
 
@@ -193,7 +193,7 @@ energy systems are given in the table below.
 
 The interpretation here is that if you are for instance using the system
 ``real`` and would like to have a time step equal to 0.5 fs, then the
-input time step to pyretis should be ``0.5 fs / 48.8882129084 fs``.
+input time step to PyRETIS should be ``0.5 fs / 48.8882129084 fs``.
 
 
 References and footnotes

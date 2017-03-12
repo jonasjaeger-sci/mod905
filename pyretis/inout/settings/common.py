@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module defines common methods for the settings handling.
 
@@ -137,7 +137,7 @@ def create_external(settings, key, factory, required_methods,
     """Method to create objects from settings.
 
     This method will handle creation of objects from settings. The
-    requested objects can be pyretis internals or defined in external
+    requested objects can be PyRETIS internals or defined in external
     modules.
 
     Parameters

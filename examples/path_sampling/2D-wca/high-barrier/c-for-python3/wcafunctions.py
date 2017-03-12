@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
 import logging
 import numpy as np
-# pyretis imports
 from pyretis.forcefield import PotentialFunction
 from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -273,7 +274,7 @@ class WCAOrderParameter(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be
@@ -296,7 +297,7 @@ class WCAOrderParameter(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be
@@ -346,7 +347,7 @@ class WCAOrderParameterp(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be
@@ -367,7 +368,7 @@ class WCAOrderParameterp(OrderParameter):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This object is used for the actual calculation, typically
             only `system.particles.pos` and/or `system.particles.vel`
             will be used. In some cases system.forcefield can also be

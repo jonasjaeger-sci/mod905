@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""The sub-package handles input and output for pyretis.
+"""The sub-package handles input and output for PyRETIS.
 
 This package is intended for creating various forms of output
-from the pyretis program. It include writers for simple text based
+from the PyRETIS program. It include writers for simple text based
 output and plotters for creating figures. Figures and the text results
 can be combined into reports, which are handled by the report module.
 

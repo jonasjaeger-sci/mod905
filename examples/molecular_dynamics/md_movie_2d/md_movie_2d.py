@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
 In this example we animate the output.
 """
 # pylint: disable=C0103
 import numpy as np
-# pyretis imports:
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.settings import (create_force_field, create_system,

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This sub-package handle writers for pyretis data.
+"""This sub-package handle writers for PyRETIS data.
 
-Writers are basically formatting the data created from pyretis.
+Writers are basically formatting the data created from PyRETIS.
 The writers also have some additional functionality and can be used to
-load data written by pyretis as well. This is used when analysing
-the output from a pyretis simulation.
+load data written by PyRETIS as well. This is used when analysing
+the output from a PyRETIS simulation.
 
 Package structure
 -----------------
@@ -98,7 +98,6 @@ PathTable (:py:class:`.PathTable`)
     A specific table writer for path results.
 """
 import logging
-# pyretis imports
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile

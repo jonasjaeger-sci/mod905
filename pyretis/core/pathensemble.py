@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Classes and functions for path ensembles.
 
@@ -162,7 +162,7 @@ class PathEnsemble(object):
                 self.directory[key] = os.path.join(path_dir, key)
 
     def directories(self):
-        """Yield the directories pyretis should make."""
+        """Yield the directories PyRETIS should make."""
         yield self.directory['path-ensemble']
 
     def reset_data(self):
@@ -357,7 +357,7 @@ class PathEnsembleExt(PathEnsemble):
         self._traj_file = os.path.join(self.directory['traj'], 'traj.tar')
 
     def directories(self):
-        """Yield the directories pyretis should make."""
+        """Yield the directories PyRETIS should make."""
         for key in self.directory:
             yield self.directory[key]
 

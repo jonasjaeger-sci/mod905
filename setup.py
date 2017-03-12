@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-pyretis - A simulation package for rare event simulations.
-Copyright (C) 2015  The pyretis team
+PyRETIS - A simulation package for rare event simulations.
+Copyright (C) 2015  The PyRETIS team
 
-This file is part of pyretis.
+This file is part of PyRETIS.
 
-pyretis is free software: you can redistribute it and/or modify
+PyRETIS is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-pyretis is distributed in the hope that it will be useful,
+PyRETIS is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with pyretis. If not, see <http://www.gnu.org/licenses/>
+along with PyRETIS. If not, see <http://www.gnu.org/licenses/>
 """
 from codecs import open as openc
 import os
@@ -36,7 +36,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.2.1.dev1'  # copied from version.py generated.
+FULL_VERSION = '0.2.1.dev2'  # copied from version.py generated.
 
 # create copies of scripts:
 shutil.copyfile('bin/pyretisrun.py', 'bin/pyretisrun')
@@ -47,7 +47,7 @@ setup(name='pyretis',
       description='A simulation package for rare events',
       long_description=get_long_description(),
       url='http://www.pyretis.org',
-      author='The pyretis team',
+      author='The PyRETIS team',
       author_email='pyretis@pyretis.org',
       license='LGPLv3',
       classifiers=['Development Status :: 3 - Alpha',
