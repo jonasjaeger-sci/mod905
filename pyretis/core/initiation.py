@@ -11,10 +11,14 @@ generate_initial_path_kick (:py:func:`.generate_initial_path_kick`)
     phase point.
 
 initiate_kick (:py:func:`.initiate_kick`)
+    Helper method, selects either :py:func:`.initiate_kicki` or
+    :py:func:`.initiate_kick_max`.
+
+initiate_kicki (:py:func:`.initiate_kicki`)
     A method for initiating a path ensemble by repeatedly modifying
     velocities to find the crossing with the interfaces.
 
-initiate_kick2 (:py:func:`.initiate_kick2`)
+initiate_kick_max (:py:func:`.initiate_kick_max`)
     A method similar to py:meth:`.initiate_kick`. Here, if possible,
     we will use points from the previous paths, closest to the target
     interface.
@@ -38,7 +42,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = [
     'generate_initial_path_kick',
     'initiate_kick',
-    'initiate_kick2',
+    'initiate_kicki',
+    'initiate_kick_max',
     'initiate_path_ensemble_kick',
     'initiate_path_simulation',
 ]
@@ -52,9 +57,8 @@ def get_initiation_method(settings):
     settings : dict
         This dictionary contains the settings for the initiation.
     """
-    _methods = {'kick': initiate_kick,
-                'kick2': initiate_kick2}
-    method = settings['initial_path'].lower()
+    _methods = {'kick': initiate_kick}
+    method = settings['method'].lower()
     if method not in _methods:
         logger.error('Unknown initiation method "%s" requrested', method)
         logger.error('Known methods: %s', _methods.keys())
@@ -77,37 +81,46 @@ def initiate_path_simulation(simulation, settings):
     """
     cycle = simulation.cycle['step']
     method = get_initiation_method(settings)
-    tis_settings = simulation.settings['tis']
-    return method(simulation.path_ensembles,
-                  simulation.system,
-                  simulation.order_function,
-                  simulation.engine,
-                  simulation.rgen,
-                  tis_settings,
-                  cycle)
+    return method(simulation, cycle, settings)
 
 
-def initiate_kick(path_ensembles, system, order_function, engine,
-                  rgen, tis_settings, cycle):
+def initiate_kick(simulation, cycle, init_settings):
     """This is a helper method to initiate for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
-    for ensemble in path_ensembles:
+    start = init_settings.get('kick-from', 'initial').lower()
+    if start == 'previous':
+        logger.info('Kick-initiate using previous configuration')
+        return initiate_kick_max(simulation, cycle)
+    elif start == 'initial':
+        logger.info('Kick-initiate using initial configuration')
+        return initiate_kicki(simulation, cycle)
+    else:
+        errtxt = 'Unknown argument {} for kick-from'.format(start)
+        logger.error(errtxt)
+        raise ValueError(errtxt)
+
+
+def initiate_kicki(simulation, cycle):
+    """This is a helper method to initiate for several ensembles.
+
+    Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
+    """
+    for ensemble in simulation.path_ensembles:
         logger.info('Initiating path ensemble: %s', ensemble.ensemble_name)
         accept, initial_path, status = initiate_path_ensemble_kick(
             ensemble,
-            system,
-            order_function,
-            engine,
-            rgen,
-            tis_settings,
+            simulation.system,
+            simulation.order_function,
+            simulation.engine,
+            simulation.rgen,
+            simulation.settings['tis'],
             cycle)
         yield accept, initial_path, status
 
 
-def initiate_kick2(path_ensembles, system, order_function, engine,
-                   rgen, tis_settings, cycle):
+def initiate_kick_max(simulation, cycle):
     """This is a helper method to initiate for several ensembles.
 
     This method is similar to :py:func:`.initiate_kick`, but here we
@@ -118,7 +131,7 @@ def initiate_kick2(path_ensembles, system, order_function, engine,
     """
     last_paths = []
     last_path = None
-    for ensemble in path_ensembles:
+    for ensemble in simulation.path_ensembles:
         logtxt = 'Initiating path ensemble {}'.format(ensemble.ensemble_name)
         print_to_screen(logtxt)
         logger.info(logtxt)
@@ -138,15 +151,15 @@ def initiate_kick2(path_ensembles, system, order_function, engine,
                 logtxt = logtxt.format(current['order'][0])
                 logger.info(logtxt)
                 print_to_screen(logtxt)
-                system.particles.set_particle_state(current)
+                simulation.system.particles.set_particle_state(current)
 
         accept, initial_path, status = initiate_path_ensemble_kick(
             ensemble,
-            system,
-            order_function,
-            engine,
-            rgen,
-            tis_settings,
+            simulation.system,
+            simulation.order_function,
+            simulation.engine,
+            simulation.rgen,
+            simulation.settings['tis'],
             cycle)
         last_paths.append(initial_path)
         yield accept, initial_path, status
@@ -154,10 +167,7 @@ def initiate_kick2(path_ensembles, system, order_function, engine,
 
 def initiate_path_ensemble_kick(path_ensemble, system, order_function,
                                 engine, rgen, tis_settings, cycle):
-    """This function will run the initiate for a given ensemble.
-
-    This function is intended for convenience. It should handle and
-    call all the possible initiation methods.
+    """This function will run the "kick" initiate for a given ensemble.
 
     Parameters
     ----------

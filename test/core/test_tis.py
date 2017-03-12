@@ -58,8 +58,8 @@ def prepare_test_simulation():
                        'seed': 1,
                        'rgen': 'mock',
                        'zero_momentum': False,
-                       'rescale_energy': False,
-                       'initial_path': 'kick'}
+                       'rescale_energy': False}
+    settings['initiate-path'] = {'method': 'kick'}
 
     box = Box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
@@ -74,7 +74,7 @@ def prepare_test_simulation():
     # both use the same random generator:
     simulation.rgen = simulation.engine.rgen
     system.particles.vel = np.array([[0.78008019924163818]])
-    return simulation
+    return simulation, settings
 
 
 class TISTest(unittest.TestCase):
@@ -82,12 +82,13 @@ class TISTest(unittest.TestCase):
 
     def test_tis_001(self):
         """Test a TIS simulation for 001."""
-        simulation = prepare_test_simulation()
+        simulation, in_settings = prepare_test_simulation()
         ensemble = simulation.path_ensemble
         settings = simulation.settings['tis']
+        init = in_settings['initiate-path']
         for i in range(10):
             if i == 0:
-                for _ in initiate_path_simulation(simulation, settings):
+                for _ in initiate_path_simulation(simulation, init):
                     logging.debug('Running initialization')
             else:
                 simulation.step()

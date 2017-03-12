@@ -46,8 +46,8 @@ SETTINGS['tis'] = {'freq': 0.5,
                    'sigma_v': -1,
                    'seed': 0,
                    'zero_momentum': False,
-                   'rescale_energy': False,
-                   'initial_path': 'kick'}
+                   'rescale_energy': False}
+SETTINGS['initial-path'] = {'method': 'kick'}
 # RETIS specific settings:
 SETTINGS['retis'] = {'swapfreq': 0.5,
                      'relative_shoots': None,
@@ -121,7 +121,7 @@ def main():
 
     ensembles = simulation.path_ensembles
     for i, _ in enumerate(initiate_path_simulation(simulation,
-                                                   SETTINGS['tis'])):
+                                                   SETTINGS['initial-path'])):
         ensemble = ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))

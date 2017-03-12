@@ -277,7 +277,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     # We perform the initiation here. The initiation method expects
     # a iterable of path ensembles so we just give that to it:
-    _help_with_initialization(sim, (output_tasks,))
+    _help_with_initialization(sim, sim_settings, (output_tasks,))
 
     logtxt = 'Initialization done. Starting main TIS simulation'
     print_to_screen(logtxt)
@@ -290,9 +290,18 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
         for out_task in output_tasks:
             out_task.output(result)
 
-def _help_with_initialization(sim, output_tasks):
-    """Just a helper method do initialization and output results."""
-    settings = sim.settings['tis']
+def _help_with_initialization(sim, sim_settings, output_tasks):
+    """Just a helper method do initialization and output results.
+
+    Parameters
+    ----------
+    sim : object like :py:class:`.Simulation`
+        The simulation we are initiating for.
+    sim_settings : dictionary
+        The simulation settings
+    output_tasks : list
+        The output tasks defined for the simulation."""
+    settings = sim_settings['initial-path']
     for i, result in enumerate(initiate_path_simulation(sim, settings)):
         path = result[1]
         logtxt = 'Initial path is:'
@@ -349,7 +358,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     print_to_screen(logtxt)
     logger.info(logtxt)
     # Here we do the initialization:
-    _help_with_initialization(sim, output_tasks)
+    _help_with_initialization(sim, sim_settings, output_tasks)
 
     logtxt = 'Starting main RETIS simulation.'
     print_to_screen(logtxt)

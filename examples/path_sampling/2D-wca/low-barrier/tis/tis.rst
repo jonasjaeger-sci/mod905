@@ -34,7 +34,10 @@ zero_momentum = True
 rescale_energy = 9.0
 sigma_v = -1
 seed = 0
-initial_path = kick
+
+Initial-path
+------------
+method = kick
 
 Particles
 ---------

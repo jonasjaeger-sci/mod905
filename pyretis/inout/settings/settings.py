@@ -93,8 +93,9 @@ SECTIONS['tis'] = {'freq': None,
                    'zero_momentum': False,
                    'rescale_energy': False,
                    'sigma_v': -1,
-                   'seed': 0,
-                   'initial_path': 'kick'}
+                   'seed': 0}
+
+SECTIONS['initial-path'] = {'method': None}
 
 SECTIONS['retis'] = {'swapfreq': None,
                      'relative_shoots': None,
@@ -115,7 +116,7 @@ SECTIONS['analysis'] = {'skipcross': 1000,
 
 
 SPECIAL_KEY = set(('parameter', ))
-ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine'))
+ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine', 'initial-path'))
 
 
 def parse_primitive(text):

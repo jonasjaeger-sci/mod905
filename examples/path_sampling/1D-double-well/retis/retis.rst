@@ -35,7 +35,6 @@ zero_momentum = False
 rescale_energy = False
 sigma_v =  -1
 seed = 0
-initial_path = kick
 
 RETIS settings
 --------------
@@ -43,6 +42,11 @@ swapfreq = 0.5
 relative_shoots = None
 nullmoves = True
 swapsimul = True
+
+Initial-path settings
+---------------------
+method = kick
+kick-from = initial
 
 Particles
 ---------
