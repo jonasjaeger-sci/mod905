@@ -86,7 +86,7 @@ class GromacsEngine(ExternalMDEngine):
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
         """
-        super().__init__('GROMASC engine', timestep, subcycles, 'g96')
+        super().__init__('GROMACS engine', timestep, subcycles, 'g96')
         # Define the gmx command:
         self.gmx = gmx
         # For mdrun, set up for first execution and continuation:
