@@ -1,7 +1,7 @@
-Extending pyretis with C
+Extending PyRETIS with C
 ========================
 
-This folder contains an example of extending pyretis with a new
+This folder contains an example of extending PyRETIS with a new
 integrator which is implemented in C.
 
 The C code must be compiled before it can be executed and this

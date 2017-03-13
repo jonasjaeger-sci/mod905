@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test parsing from a settings input file.
 
@@ -216,7 +216,7 @@ extra = 100
                               'extra': 100}}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
+        # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         foointegrator = create_engine(settings)
@@ -328,7 +328,7 @@ name = Dummy"""
                                       'name': 'Dummy'}}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
+        # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         orderp = create_orderparameter(settings)

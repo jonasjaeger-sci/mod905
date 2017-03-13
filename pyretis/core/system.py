@@ -13,7 +13,6 @@ System (:py:class:`.System`)
 """
 import logging
 import numpy as np
-# from the pyretis package
 from pyretis.core.units import CONSTANTS
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)

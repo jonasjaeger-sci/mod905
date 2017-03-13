@@ -1,7 +1,7 @@
-pyretis - A library for rare event simulations.
-Copyright (C) 2015  The pyretis team
+PyRETIS - A library for rare event simulations.
+Copyright (C) 2015  The PyRETIS team
 
-pyretis is released under the GNU Lesser General Public License v3.0.
+PyRETIS is released under the GNU Lesser General Public License v3.0.
 Please see the files: COPYING and COPYING.LESSER included in the source
 directory.
 

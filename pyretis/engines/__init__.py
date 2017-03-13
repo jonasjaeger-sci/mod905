@@ -20,7 +20,7 @@ engine.py (:py:mod:`pyretis.engines.engine`)
     Defines the base engine class.
 
 internal.py (:py:mod:`pyretis.engines.internal`)
-    Defines internal pyretis engines.
+    Defines internal PyRETIS engines.
 
 external.py (:py:mod:`pyretis.engines.external`)
     Defines the interface for external engines.

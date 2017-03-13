@@ -1,11 +1,11 @@
-pyretis
+PyRETIS
 =======
 
-pyretis is a library for **rare event simulations**
+PyRETIS is a library for **rare event simulations**
 with emphasis on methods based on transition interface sampling
 replica exchange transition interface sampling.
 
-pyretis is open source (see the COPYING and COPYING.LESSER files)
+PyRETIS is open source (see the COPYING and COPYING.LESSER files)
 easy to use and can be interfaced with other simulation packages such
 as GROMACS or CP2K.
 
