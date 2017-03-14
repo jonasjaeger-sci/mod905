@@ -17,31 +17,10 @@ import shlex
 import numpy as np
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.inout.writers.gromacsio import (read_gromos96_file,
-                                             write_gromos96_file)
+                                             write_gromos96_file,
+                                             read_xvg_file)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-
-
-def read_xvg_file(filename):
-    """Return data in xvg file as numpy array."""
-    data = []
-    legends = []
-    with open(filename, 'r') as fileh:
-        for lines in fileh:
-            if lines.startswith('@ s') and lines.find('legend') != -1:
-                legend = lines.split('legend')[-1].strip()
-                legend = legend.replace('"', '')
-                legends.append(legend.lower())
-            else:
-                if lines.startswith('#') or lines.startswith('@'):
-                    pass
-                else:
-                    data.append([float(i) for i in lines.split()])
-    data = np.array(data)
-    data_dict = {'step': data[:, 0]}
-    for i, key in enumerate(legends):
-        data_dict[key] = data[:, i+1]
-    return data_dict
 
 
 class GromacsEngine(ExternalMDEngine):

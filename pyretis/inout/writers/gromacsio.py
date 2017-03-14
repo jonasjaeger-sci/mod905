@@ -23,6 +23,9 @@ read_gromos96_file (:py:func:`.read_gromos96_file`)
 
 write_gromos96_file (:py:func:`.write_gromos96_file`)
     Write configuration in GROMACS g96 format.
+
+read_xvg_file (:py:func:`.read_xvg_file`)
+    For reading .xvg files from GROMACS.
 """
 import logging
 import numpy as np
@@ -43,7 +46,9 @@ __all__ = [
     'PathGROWriter',
     'read_gromacs_file',
     'read_gromos96_file',
-    'write_gromos96_file']
+    'write_gromos96_file',
+    'read_xvg_file',
+    ]
 
 
 class GROWriter(TrajWriter):
@@ -422,3 +427,25 @@ def write_gromos96_file(filename, raw, xyz, vel):
                 else:
                     outfile.write('{}\n'.format(line))
             outfile.write('END\n')
+
+
+def read_xvg_file(filename):
+    """Return data in xvg file as numpy array."""
+    data = []
+    legends = []
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            if lines.startswith('@ s') and lines.find('legend') != -1:
+                legend = lines.split('legend')[-1].strip()
+                legend = legend.replace('"', '')
+                legends.append(legend.lower())
+            else:
+                if lines.startswith('#') or lines.startswith('@'):
+                    pass
+                else:
+                    data.append([float(i) for i in lines.split()])
+    data = np.array(data)
+    data_dict = {'step': data[:, 0]}
+    for i, key in enumerate(legends):
+        data_dict[key] = data[:, i+1]
+    return data_dict
