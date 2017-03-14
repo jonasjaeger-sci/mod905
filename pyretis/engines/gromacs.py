@@ -70,7 +70,8 @@ class GromacsEngine(ExternalMDEngine):
         ``timestep * subcycles``.
     """
 
-    def __init__(self, gmx, mdrun, input_path, timestep, subcycles):
+    def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
+                 maxwarn=0):
         """Initiate the script.
 
         Parameters
@@ -93,7 +94,7 @@ class GromacsEngine(ExternalMDEngine):
         self.mdrun = mdrun + ' -s {} -deffnm {} -c {}'
         self.mdrun_c = mdrun + ' -s {} -cpi {} -append -deffnm {} -c {}'
         self.ext_time = self.timestep * self.subcycles
-
+        self.maxwarn = maxwarn
         # Add input path and the input files:
         self.input_path = os.path.abspath(input_path)
         input_files = {'conf': 'conf.g96',
@@ -157,6 +158,8 @@ class GromacsEngine(ExternalMDEngine):
         tpr = '{}.tpr'.format(deffnm)
         cmd = [self.gmx, 'grompp', '-f', mdp_file, '-c', config,
                '-p', topol, '-o', tpr]
+        if self.maxwarn > 0:
+            cmd.extend(['-maxwarn', '{}'.format(self.maxwarn)])
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'tpr': tpr, 'mdout': 'mdout.mdp'}
         return out_files
