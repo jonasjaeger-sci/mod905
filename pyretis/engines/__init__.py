@@ -38,6 +38,7 @@ from pyretis.core.common import generic_factory
 from .internal import MDEngine, Verlet, VelocityVerlet, Langevin
 from .external import ExternalMDEngine
 from .gromacs import GromacsEngine
+from .gromacs2 import GromacsEngine2
 
 
 def engine_factory(settings):
@@ -56,8 +57,11 @@ def engine_factory(settings):
     out : object like :py:class:`.EngineBase`
         The object representing the engine to use in a simulation.
     """
-    engine_map = {'velocityverlet': {'cls': VelocityVerlet},
-                  'verlet': {'cls': Verlet},
-                  'langevin': {'cls': Langevin},
-                  'gromacs': {'cls': GromacsEngine}}
+    engine_map = {
+        'velocityverlet': {'cls': VelocityVerlet},
+        'verlet': {'cls': Verlet},
+        'langevin': {'cls': Langevin},
+        'gromacs': {'cls': GromacsEngine},
+        'gromacs2': {'cls': GromacsEngine2}
+    }
     return generic_factory(settings, engine_map, name='engine')

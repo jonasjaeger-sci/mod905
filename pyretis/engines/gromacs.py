@@ -47,6 +47,8 @@ class GromacsEngine(ExternalMDEngine):
     ext_time : float
         The time to extend simulations by. It is equal to
         ``timestep * subcycles``.
+    maxwarn : integer
+        Setting for the GROMACS grompp ``maxwarn`` option.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
@@ -65,6 +67,8 @@ class GromacsEngine(ExternalMDEngine):
             The time step used in the GROMACS MD simulation.
         subcycles : integer
             The number of steps each GROMACS MD run is composed of.
+        maxwarn : integer
+            Setting for the GROMACS grompp ``maxwarn`` option.
         """
         super().__init__('GROMACS engine', timestep, subcycles, 'g96')
         # Define the gmx command:
