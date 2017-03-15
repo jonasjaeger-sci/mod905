@@ -29,12 +29,19 @@ initiate_path_ensemble_kick (:py:func:`.initiate_path_ensemble_kick`)
 initiate_path_simulation (:py:func:`.initiate_path_simulation`)
     Helper method for initiating a path simulation. This method
     will make use of one of the other initiation methods.
+
+initiate_load (:py:func`.initiate_load`)
+    Method that will get the initial path from the output from
+    a previous simulation.
 """
 import logging
+import os
 from pyretis.core.path import paste_paths
+from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.core.tis import make_tis_step
 from pyretis.core.common import get_path_class
 from pyretis.inout.common import print_to_screen
+from pyretis.inout.writers import get_writer
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -46,6 +53,7 @@ __all__ = [
     'initiate_kick_max',
     'initiate_path_ensemble_kick',
     'initiate_path_simulation',
+    'initiate_load',
 ]
 
 
@@ -57,8 +65,9 @@ def get_initiation_method(settings):
     settings : dict
         This dictionary contains the settings for the initiation.
     """
-    _methods = {'kick': initiate_kick}
-    method = settings['method'].lower()
+    _methods = {'kick': initiate_kick,
+                'load': initiate_load}
+    method = settings['initial-path']['method'].lower()
     if method not in _methods:
         logger.error('Unknown initiation method "%s" requrested', method)
         logger.error('Known methods: %s', _methods.keys())
@@ -84,11 +93,12 @@ def initiate_path_simulation(simulation, settings):
     return method(simulation, cycle, settings)
 
 
-def initiate_kick(simulation, cycle, init_settings):
+def initiate_kick(simulation, cycle, settings):
     """This is a helper method to initiate for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
+    init_settings = settings['initial-path']
     start = init_settings.get('kick-from', 'initial').lower()
     if start == 'previous':
         logger.info('Kick-initiate using previous configuration')
@@ -483,3 +493,35 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
     initial_path.generated = ('ki', 0, 0, 0)
     initial_path.status = 'ACC'
     return initial_path
+
+
+def initiate_load(simulation, cycle, settings):
+    """Initiate paths by loading already generated ones.
+
+    Parameters
+    ----------
+    simulation : object like :py:class:`.Simulation`
+        The simulation we are setting up.
+    cycle : integer
+        The simulation cycles we are starting at.
+    init_settings : dictionary
+        A dictionary with settings for the initiation.
+    """
+    raise NotImplemented
+    #maxlen = settings['tis']['maxlength']
+    #klass = get_path_class(simulation.engine.engine_type)
+    #folder = settings['initial-path'].get('restart_folder', 'restart')
+    #for ensemble in simulation.path_ensembles:
+    #    path = klass(simulation.rgen, maxlen=maxlen)
+    #    edir = os.path.join(folder, PATH_DIR_FMT.format(ensemble.ensemble))
+    #    load_path_from_file(path, edir, settings)
+    #    logger.info('Initiating path ensemble: %s', ensemble.ensemble_name)
+    #    #accept, initial_path, status = initiate_path_ensemble_kick(
+    #    #    ensemble,
+    #    #    simulation.system,
+    #    #    simulation.order_function,
+    #    #    simulation.engine,
+    #    #    simulation.rgen,
+    #    #    simulation.settings['tis'],
+    #    #    cycle)
+    #    yield accept, initial_path, status

@@ -301,8 +301,7 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
         The simulation settings
     output_tasks : list
         The output tasks defined for the simulation."""
-    settings = sim_settings['initial-path']
-    for i, result in enumerate(initiate_path_simulation(sim, settings)):
+    for i, result in enumerate(initiate_path_simulation(sim, sim_settings)):
         path = result[1]
         logtxt = 'Initial path is:'
         print_to_screen(logtxt)

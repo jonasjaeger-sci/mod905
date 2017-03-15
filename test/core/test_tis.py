@@ -59,7 +59,7 @@ def prepare_test_simulation():
                        'rgen': 'mock',
                        'zero_momentum': False,
                        'rescale_energy': False}
-    settings['initiate-path'] = {'method': 'kick'}
+    settings['initial-path'] = {'method': 'kick'}
 
     box = Box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
@@ -85,10 +85,9 @@ class TISTest(unittest.TestCase):
         simulation, in_settings = prepare_test_simulation()
         ensemble = simulation.path_ensemble
         settings = simulation.settings['tis']
-        init = in_settings['initiate-path']
         for i in range(10):
             if i == 0:
-                for _ in initiate_path_simulation(simulation, init):
+                for _ in initiate_path_simulation(simulation, in_settings):
                     logging.debug('Running initialization')
             else:
                 simulation.step()
