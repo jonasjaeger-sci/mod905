@@ -144,28 +144,30 @@ class TrajTest(unittest.TestCase):
             for lines1, lines2 in zip(fileh, snapshot):
                 self.assertEqual(lines1.rstrip(), lines2.rstrip())
 
-    def test_path_gro_writer(self):
-        """Test the path gro writer."""
-        system, phasepoints, path = create_path()
-        path_writer = get_writer('pathtrajgro', {'units': None,
-                                                 'write_vel': True})
-        conf_writer = get_writer('trajgro', {'units': None,
-                                             'write_vel': True})
-        for line1, line2 in generate_snaplines(path_writer, conf_writer,
-                                               phasepoints, system, path):
-            self.assertEqual(line1, line2)
-
-    def test_path_xyz_writer(self):
-        """Test the path xyz writers."""
-        system, phasepoints, path = create_path()
-        path_writer = get_writer('pathtrajxyz', {'units': None})
-        conf_writer = get_writer('trajxyz', {'units': None})
-        for line1, line2 in generate_snaplines(path_writer, conf_writer,
-                                               phasepoints, system, path):
-            self.assertEqual(line1, line2)
+    def test_path_int_writer(self):
+        """Test the path internal writer."""
+        _, phasepoints, path = create_path()
+        writer = get_writer('pathtrajint')
+        idxs = 0
+        idx = 0
+        for i, lines in enumerate(writer.generate_output(0, path)):
+            if i == 0:
+                self.assertEqual('# Cycle: 0, status: None', lines)
+            else:
+                if lines.startswith('Snapshot'):
+                    self.assertEqual('Snapshot: {}'.format(idxs), lines)
+                    idxs += 1
+                    idx = 0
+                else:
+                    posvel = '{} {} {} {} {} {}'.format(
+                        *phasepoints[idxs - 1]['pos'][idx],
+                        *phasepoints[idxs - 1]['vel'][idx]
+                    )
+                    self.assertEqual(lines, posvel)
+                    idx += 1
 
     def test_path_ext_writer(self):
-        """Test the path ext writer."""
+        """Test the path external writer."""
         path = PathExt(None)
         phasepoint = {'pos': ('initial.g96', None), 'vel': False,
                       'order': [np.random.random(), None], 'vpot': None,

@@ -13,10 +13,6 @@ Important classes defined here
 XYZWriter (:py:class:`.XYZWriter`)
     Writing of coordinates to a file in a XYZ format.
 
-PathXYZWriter (:py:class:`.PathXYZWriter`)
-    Writing of path data to a file in XYZ format.
-
-
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -46,7 +42,6 @@ _XYZ_BIG_VEL_FMT = _XYZ_BIG_FMT + 3*' {:15.9f}'
 
 __all__ = [
     'XYZWriter',
-    'PathXYZWriter',
     'read_xyz_file',
     'format_xyz_data']
 
@@ -154,17 +149,6 @@ class XYZWriter(TrajWriter):
             snapshot['y'] = np.array(snapshot['y']) * convert
             snapshot['z'] = np.array(snapshot['z']) * convert
             yield snapshot
-
-
-class PathXYZWriter(XYZWriter):
-    """A class for writing trajectories to XYZ files."""
-
-    def generate_output(self, step, path):
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
-        for i, phasepoint in enumerate(path.trajectory()):
-            npart = len(phasepoint['pos'])
-            for line in self.xyz_format(i, npart, phasepoint['pos']):
-                yield line
 
 
 def read_xyz_file(filename):

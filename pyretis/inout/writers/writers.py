@@ -35,6 +35,9 @@ TrajWriter (:py:class:`.TrajWriter`)
 PathExtWriter (:py:class:`.PathExtWriter`)
     A class for writing external paths to file.
 
+PathIntWriter (:py:class:`.PathIntWriter`)
+    A class for writing internal paths to file.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -777,3 +780,88 @@ class PathExtWriter(Writer):
             The columns of data.
         """
         return [col for col in line.split()]
+
+class PathIntWriter(Writer):
+
+    """A class for writing internal trajectories.
+
+    Attributes
+    ----------
+    print_header : boolean
+        Determines if we should print the header on the first step.
+    """
+
+    def __init__(self):
+        """Initialization of the PathIntWriter writer.
+
+        Parameters
+        ----------
+        units : string
+            The system of units used internally for positions and
+            velocities.
+        """
+        super().__init__('PathExtWriter', header=None)
+        self.print_header = False
+        self.fmt = None
+
+    def generate_output(self, step, path):
+        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        for i, phasepoint in enumerate(path.trajectory()):
+            yield 'Snapshot: {}'.format(i)
+            pos = phasepoint['pos']
+            vel = phasepoint['vel']
+            for posj, velj in zip(pos, vel):
+                if self.fmt is None:
+                    self.fmt = ('{} ' * (len(posj) + len(velj))).strip()
+                yield self.fmt.format(*posj, *velj)
+
+    @staticmethod
+    def read_snapshots(data):
+        """Read snapshots from data from a file.
+
+        Parameters
+        ----------
+        data : strings
+            The data to read
+        """
+        snapshots = []
+        pos, vel = [], []
+        dim = None
+        for lines in data:
+            if lines.startswith('Snapshot'):
+                if len(pos) > 0:
+                    snapshots.append({'pos': np.array(pos),
+                                      'vel': np.array(vel)})
+                    pos, vel = [], []
+            else:
+                raw = [float(col) for col in lines.split()]
+                if dim is None:
+                    dim = len(raw) // 2
+                    if dim > 3 or dim < 1:
+                        raise ValueError('Malformed trajectory data!')
+                pos.append(raw[:dim])
+                vel.append(raw[dim:])
+        if len(pos) > 0:
+            snapshots.append({'pos': np.array(pos),
+                              'vel': np.array(vel)})
+        return snapshots
+
+
+    def load(self, filename):
+        """Load entire snapshots into memory.
+
+        Parameters
+        ----------
+        filename : string
+            The path/file name of the file we want to open.
+
+        Yields
+        ------
+        data : list of tuples of int
+            This is the data contained in the file. The columns are the
+            step number, interface number and direction.
+        """
+        for blocks in read_some_lines(filename, line_parser=None):
+            data_dict = {'comment': blocks['comment'],
+                         'data': self.read_snapshots(blocks['data'])}
+            yield data_dict

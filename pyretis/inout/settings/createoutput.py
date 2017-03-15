@@ -145,22 +145,12 @@ TASK_MAP['path-energy'] = {
     'when': 'energy-file',
     'writer': 'pathenergy'}
 
-TASK_MAP['path-traj-xyz'] = {
+TASK_MAP['path-traj-int'] = {
     'target': 'file',
-    'filename': 'traj.xyz',
+    'filename': 'traj.txt',
     'result': 'path',
     'when': 'trajectory-file',
-    'settings': {'system': ('units',)},
-    'writer': 'pathtrajxyz'}
-
-TASK_MAP['path-traj-gro'] = {
-    'target': 'file',
-    'filename': 'traj.gro',
-    'result': 'path',
-    'when': 'trajectory-file',
-    'settings': {'system': ('units',),
-                 'output': ('write_vel',)},
-    'writer': 'pathtrajgro'}
+    'writer': 'pathtrajint'}
 
 TASK_MAP['path-traj-ext'] = {
     'target': 'file',
@@ -587,7 +577,7 @@ def get_backup_settings(settings):
     return old
 
 
-def get_task_type(task, settings, engine):
+def get_task_type(task, engine):
     """Method to do some additional handling for a path task.
 
     The path task is special since we do very different things for
@@ -611,10 +601,10 @@ def get_task_type(task, settings, engine):
     """
     if task['type'] == 'path-traj-{}':
         if engine is None or engine.engine_type == 'internal':
-            fmt = settings['output'].get('traj-format', 'gro')
+            fmt = 'int'
         else:
             fmt = 'ext'
-        if fmt not in ('gro', 'xyz', 'ext'):
+        if fmt not in ('int', 'ext'):
             msg = 'Unknown trajectory format "{}"'.format(fmt)
             logger.error(msg)
             raise ValueError(msg)
@@ -642,7 +632,7 @@ def task_from_settings(task, settings, directory, engine):
     out : object like :py:class:`.OutputTask`
         An output task we can use in the simulation
     """
-    task_type = get_task_type(task, settings, engine)
+    task_type = get_task_type(task, engine)
     task_settings = TASK_MAP[task_type]
 
     when = {'every': settings['output'][task_settings['when']]}

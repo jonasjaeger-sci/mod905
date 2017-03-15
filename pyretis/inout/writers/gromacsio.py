@@ -9,9 +9,6 @@ Important classes defined here
 GROWriter (:py:class:`.GROWriter`)
     Writing of a coordinates to a file in a GROMACS format.
 
-PathGROWriter (:py:class:`.PathGROWriter`)
-    Writing of trajectories in GROMACS gro-format.
-
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -40,15 +37,13 @@ skip_trr_data (:py:func:`.skip_trr_data`)
 import logging
 import struct
 import numpy as np
-from pyretis.inout.writers.writers import (TrajWriter, read_some_lines,
-                                           adjust_coordinate)
+from pyretis.inout.writers.writers import TrajWriter, adjust_coordinate
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = [
     'GROWriter',
-    'PathGROWriter',
     'read_gromacs_file',
     'read_gromos96_file',
     'write_gromos96_file',
@@ -257,38 +252,6 @@ class GROWriter(TrajWriter):
                 if key in snapshot:
                     snapshot[key] = np.array(snapshot[key]) * convert_vel
             yield snapshot
-
-
-class PathGROWriter(GROWriter):
-    """A class for writing trajectories to GRO files."""
-
-    def generate_output(self, step, path):
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
-        for i, phasepoint in enumerate(path.trajectory()):
-            vel = None if not self.write_vel else phasepoint['vel']
-            pos = phasepoint['pos']
-            npart = len(pos)
-            box = None
-            for line in self.gro_format(i, npart, pos, vel, box):
-                yield line
-
-    def load(self, filename):
-        """Load a trajectory GRO file."""
-        convert_pos = 1.0 / self.convert_pos
-        convert_vel = 1.0 / self.convert_vel
-        for block in read_some_lines(filename, line_parser=None):
-            traj = []
-            for snapshot in read_gromacs_lines(block['data']):
-                new_snap = {'pos': None, 'vel': None}
-
-                for key in ('x', 'y', 'z'):
-                    new_snap[key] = np.array(snapshot[key]) * convert_pos
-                for key in ('vx', 'vy', 'vz'):
-                    if key in snapshot:
-                        new_snap[key] = np.array(snapshot[key]) * convert_vel
-                traj.append(new_snap)
-            out = {'comment': block['comment'], 'data': traj}
-            yield out
 
 
 def read_gromacs_lines(lines):

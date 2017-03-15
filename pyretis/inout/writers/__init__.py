@@ -69,6 +69,9 @@ TrajWriter (:py:class:`.TrajWriter`)
 PathExtWriter (:py:class:`.PathExtWriter`)
     A class for writing external paths to file.
 
+PathIntWriter (:py:class:`.PathIntWriter`)
+    A class for writing internal paths to file.
+
 PathEnsembleWriter (:py:class:`.PathEnsembleWriter`)
     A writer of path ensemble data.
 
@@ -79,13 +82,7 @@ PathEnsembleFile (:py:class:`.PathEnsembleFile`)
 XYZWriter (:py:class:`.XYZWriter`)
     A writer of trajectories in XYZ format.
 
-PathXYZWriter (:py:class:`.PathXYZWriter`)
-    A writer of path data to a file in XYZ format.
-
 GROWriter (:py:class:`.GROWriter`)
-    A writer of trajectories in GROMACS GRO format.
-
-PathGROWriter (:py:class:`.PathGROWriter`)
     A writer of trajectories in GROMACS GRO format.
 
 TxtTable (:py:class:`.TxtTable`)
@@ -101,13 +98,13 @@ import logging
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .gromacsio import GROWriter, PathGROWriter
-from .xyzio import XYZWriter, PathXYZWriter
+from .gromacsio import GROWriter
+from .xyzio import XYZWriter
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import (CrossWriter,
                       EnergyWriter, EnergyPathWriter,
                       OrderWriter, OrderPathWriter,
-                      TrajWriter, PathExtWriter)
+                      TrajWriter, PathExtWriter, PathIntWriter)
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -123,8 +120,7 @@ _CLASS_MAP = {'cross': CrossWriter,
               'pathtable': PathTable,
               'pathorder': OrderPathWriter,
               'pathenergy': EnergyPathWriter,
-              'pathtrajxyz': PathXYZWriter,
-              'pathtrajgro': PathGROWriter,
+              'pathtrajint': PathIntWriter,
               'pathtrajext': PathExtWriter}
 
 
