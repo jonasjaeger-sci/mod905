@@ -440,12 +440,12 @@ class EnergyWriter(Writer):
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
             data = np.array(blocks['data'])
+            _, col = data.shape
+            col_max = min(col, len(self.ENERGY_TERMS) + 1)
             data_dict = {'comment': blocks['comment'],
-                         'data': {'time': data[:, 0],
-                                  'vpot': data[:, 1],
-                                  'ekin': data[:, 2],
-                                  'etot': data[:, 3],
-                                  'temp': data[:, 4]}}
+                         'data': {'time': data[:, 0]}}
+            for i in range(col_max-1):
+                data_dict['data'][self.ENERGY_TERMS[i]] = data[:, i+1]
             yield data_dict
 
     def format_data(self, step, energy):
