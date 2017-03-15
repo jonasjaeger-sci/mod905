@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Simple gromacs script to compare outcome of two simulations.
+"""Simple script to compare outcome of two simulations.
 
-The outcome of the md_nve.py simulation should be independent (to numerical
+The outcome of the ``md_nve.py`` simulation should be independent (to numerical
 precision) of the units used. This script will test that by comparing:
 
 - the output in `thermo.txt`
@@ -21,9 +21,9 @@ from pyretis.core.units import (create_conversion_factors,
 from pyretis.inout.writers.gromacsio import read_gromacs_file
 from pyretis.inout.settings import parse_settings_file
 # for plotting:
-from pyretis.inout.plotting import mpl_set_style
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
+plt.style.use('seaborn-colorblind')
 
 
 def compare_traj(traj1, traj2):
@@ -82,7 +82,6 @@ if __name__ == '__main__':
     other_units[:, 2:5] *= CONVERT['energy'][UNIT, 'lj']
     other_units[:, 5] *= CONVERT['pressure'][UNIT, 'lj']
     # just make a bunch of plots comparing the energies
-    mpl_set_style()  # load pyretis style
     fig1 = plt.figure(figsize=(12, 6))
     gs = gridspec.GridSpec(2, 2)
     ax1 = fig1.add_subplot(gs[:, 0])
@@ -106,7 +105,7 @@ if __name__ == '__main__':
              ls='--', lw=3, alpha=0.8)
     ax1.set_xlabel('Step no.')
     ax1.set_ylabel('Energy per particle')
-    leg = ax1.legend(loc='center left', prop={'size': 'small'}, ncol=3)
+    leg = ax1.legend(loc='center left', prop={'size': 'large'}, ncol=3)
 
     ax2 = fig1.add_subplot(gs[0, 1])
     ax2.plot(ljunits[:, 0], ljunits[:, 1], label=ljlab,
@@ -114,7 +113,7 @@ if __name__ == '__main__':
     ax2.plot(other_units[:, 0], other_units[:, 1], label=unilab,
              ls='--', lw=3, alpha=0.8, color='0.2')
     ax2.set_ylabel('Temperature')
-    ax2.legend(loc='upper right', prop={'size': 'small'})
+    ax2.legend(loc='upper right', prop={'size': 'large'})
     ax3 = fig1.add_subplot(gs[1, 1])
     ax3.plot(ljunits[:, 0], ljunits[:, 5], label=ljlab,
              ls='-', lw=7, alpha=0.9)
@@ -122,7 +121,7 @@ if __name__ == '__main__':
              ls='--', lw=3, alpha=0.8, color='0.2')
     ax3.set_xlabel('Step no.')
     ax3.set_ylabel('Pressure')
-    ax3.legend(loc='lower right', prop={'size': 'small'})
+    ax3.legend(loc='lower right', prop={'size': 'large'})
     fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95,
                          left=0.08, wspace=0.2)
     fig1.savefig('compare.png')
