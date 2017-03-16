@@ -89,7 +89,7 @@ def hello_world(infile, rundir, logfile):
     """
     timestart = datetime.datetime.now().strftime(_DATE_FMT)
     pyversion = sys.version.split()[0]
-    msgtxt = ["Welcome to"]
+    msgtxt = ['Starting']
     msgtxt += [r"                          _    _"]
     msgtxt += [r" _ __   _   _  _ __  ___ | |_ (_) ___"]
     msgtxt += [r"| '_ \ | | | || '__|/ _ \| __|| |/ __|"]
@@ -97,7 +97,11 @@ def hello_world(infile, rundir, logfile):
     msgtxt += [r"| .__/  \__, ||_|   \___| \__||_||___/"]
     msgtxt += [r"|_|     |___/"]
     msgtxt += [None]
-    msgtxt += ['Version: {}'.format(VERSION)]
+    for txt in msgtxt:
+        print_to_screen(txt, level='success')
+        if txt is not None:
+            logger.info(txt)
+    msgtxt = ['Version: {}'.format(VERSION)]
     msgtxt += ['Start of execution: {}'.format(timestart)]
     msgtxt += ['Python version: {}'.format(pyversion)]
     msgtxt += ['Running in directory: {}'.format(rundir)]
@@ -129,7 +133,7 @@ def bye_bye_world():
     urltxt = '{}'.format(URL)
     logger.info(urltxt)
     print_to_screen()
-    print_to_screen(urltxt)
+    print_to_screen(urltxt, level='info')
 
 
 def get_tasks(sim_settings, directory=None, engine=None, progress=False):
@@ -508,7 +512,7 @@ def set_up_simulation(inputfile, runpath):
         raise ValueError(msg)
 
     logtxt = 'Reading input settings from: {}'.format(inputfile)
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
     sim_settings = parse_settings_file(inputfile)
@@ -517,7 +521,7 @@ def set_up_simulation(inputfile, runpath):
     print_to_screen()
 
     logtxt = 'Initiaizing unit system.'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
     logtxt = units_from_settings(sim_settings)
@@ -527,33 +531,33 @@ def set_up_simulation(inputfile, runpath):
     engine = create_engine(sim_settings)
     if engine is not None:
         logtxt = 'Created engine "{}" from settings'.format(engine)
-        print_to_screen(logtxt)
+        print_to_screen(logtxt, level='info')
         logger.info(logtxt)
     else:
         logtxt = 'No engine created'
-        print_to_screen(logtxt)
+        print_to_screen(logtxt, level='warning')
         logger.info(logtxt)
 
     logtxt = 'Creating system from settings.'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     syst = create_system(sim_settings, engine=engine)
 
     logtxt = 'Creating force field'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     syst.forcefield = create_force_field(sim_settings)
     syst.extra_setup()
 
     logtxt = 'Creating simulation from settings.'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     keyargs = {'system': syst, 'engine': engine}
     sim = create_simulation(sim_settings, keyargs)
 
     task = sim_settings['simulation']['task'].lower()
     logtxt = 'Will run simulation: "{}"'.format(task)
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='success')
     logger.info(logtxt)
     runner = _RUNNERS.get(task, run_generic_simulation)
     return runner, sim, syst, sim_settings
