@@ -90,18 +90,18 @@ def hello_world(infile, rundir, logfile):
     timestart = datetime.datetime.now().strftime(_DATE_FMT)
     pyversion = sys.version.split()[0]
     msgtxt = ['Starting']
-    msgtxt += [r"                          _    _"]
-    msgtxt += [r" _ __   _   _  _ __  ___ | |_ (_) ___"]
-    msgtxt += [r"| '_ \ | | | || '__|/ _ \| __|| |/ __|"]
-    msgtxt += [r"| |_) || |_| || |  |  __/| |_ | |\__ \ "]
-    msgtxt += [r"| .__/  \__, ||_|   \___| \__||_||___/"]
-    msgtxt += [r"|_|     |___/"]
+    msgtxt += [r" ____        ____  _____ _____ ___ ____  "]
+    msgtxt += [r"|  _ \ _   _|  _ \| ____|_   _|_ _/ ___| "]
+    msgtxt += [r"| |_) | | | | |_) |  _|   | |  | |\___ \ "]
+    msgtxt += [r"|  __/| |_| |  _ <| |___  | |  | | ___) |"]
+    msgtxt += [r"|_|    \__, |_| \_\_____| |_| |___|____/ "]
+    msgtxt += [r"       |___/                             "]
     msgtxt += [None]
     for txt in msgtxt:
-        print_to_screen(txt, level='success')
+        print_to_screen(txt, level='message')
         if txt is not None:
             logger.info(txt)
-    msgtxt = ['Version: {}'.format(VERSION)]
+    msgtxt = ['{} version: {}'.format(PROGRAM_NAME, VERSION)]
     msgtxt += ['Start of execution: {}'.format(timestart)]
     msgtxt += ['Python version: {}'.format(pyversion)]
     msgtxt += ['Running in directory: {}'.format(rundir)]
@@ -118,7 +118,7 @@ def bye_bye_world():
     """Method to print out the goodbye message for PyRETIS."""
     timeend = datetime.datetime.now().strftime(_DATE_FMT)
     msgtxt = 'End of {} execution: {}'.format(PROGRAM_NAME, timeend)
-    print_to_screen(msgtxt, level='success')
+    print_to_screen(msgtxt, level='info')
     logger.info(msgtxt)
     # display some references:
     references = ['{} references:'.format(PROGRAM_NAME)]
@@ -612,6 +612,7 @@ def main(infile, indir, exe_dir, progress):
             logger.info(logtxt)
             write_settings_file(settings, out_file,
                                 backup=settings['output']['backup'])
+        bye_bye_world()
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
@@ -662,7 +663,4 @@ if __name__ == '__main__':
     check_python_version()
 
     hello_world(input_file, cwd_dir, args_dict['log_file'])
-
     main(input_file, input_dir, cwd_dir, args_dict['progress'])
-
-    bye_bye_world()

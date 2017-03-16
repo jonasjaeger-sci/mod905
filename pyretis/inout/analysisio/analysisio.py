@@ -206,14 +206,14 @@ def get_path_simulation_files(sim_settings):
     return all_settings, all_files
 
 
-def print_value_error(heading, value, rel_error):
+def print_value_error(heading, value, rel_error, level=None):
     """Just print out matched results"""
     val = format_number(value, 0.1, 100)
     msgtxt = '{}: {}'.format(heading, val)
-    print_to_screen(msgtxt.strip())
+    print_to_screen(msgtxt.strip(), level=level)
     fmt_scale = format_number(rel_error * 100, 0.1, 100)
     msgtxt = '(Relative error: {} %)'.format(fmt_scale.rstrip())
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level=level)
 
 
 def run_single_tis_analysis(settings, plotter, txt_plotter):
@@ -239,7 +239,7 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
                                           sim['detect'],
                                           sim['interfaces'])
     msgtxt = 'Analysing ensemble {}'.format(sim['ensemble'])
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level='info')
     print_to_screen()
     result = run_analysis_files(sett, files, plotter, txt_plotter)
     report_txt = generate_report('tis-single', result, output='txt')[0]
@@ -276,10 +276,10 @@ def run_tis_analysis(settings, plotter, txt_plotter):
                 msgtxt = ('Initial flux is not calculated here.\n'
                           'Remember to calculate this separately!')
                 logger.info(msgtxt)
-                print_to_screen(msgtxt)
+                print_to_screen(msgtxt, level='warning')
             else:
                 msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-                print_to_screen(msgtxt)
+                print_to_screen(msgtxt, level='info')
                 print_to_screen()
                 result = run_analysis_files(sett, files, plotter, txt_plotter)
                 results['pathensemble'].append(result['pathensemble'])
@@ -291,11 +291,11 @@ def run_tis_analysis(settings, plotter, txt_plotter):
         out, fig, txt = analyse_and_output_matched(results['pathensemble'],
                                                    plotter, txt_plotter)
         results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-        print_to_screen('Overall results')
-        print_to_screen('===============')
+        print_to_screen('Overall results', level='success')
+        print_to_screen('===============', level='success')
         print_to_screen()
         print_value_error('TIS Crossing probability',
-                          out['prob'], out['relerror'])
+                          out['prob'], out['relerror'], level='success')
         return results
 
 
@@ -324,7 +324,7 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     print_to_screen()
     for i, (sett, files) in enumerate(zip(all_settings, all_files)):
         msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-        print_to_screen(msgtxt)
+        print_to_screen(msgtxt, level='info')
         print_to_screen()
         if i == 0:
             result = run_analysis_files(sett, files, plotter, txt_plotter)
@@ -352,17 +352,17 @@ def run_retis_analysis(settings, plotter, txt_plotter):
                                   flux, flux_error)
     results['rate'] = {'value': rate, 'error': rate_error,
                        'unit': units}
-    print_to_screen('Overall results')
-    print_to_screen('===============')
+    print_to_screen('Overall results', level='success')
+    print_to_screen('===============', level='success')
     print_to_screen()
     print_value_error('RETIS Crossing probability',
-                      out['prob'], out['relerror'])
+                      out['prob'], out['relerror'], level='success')
     print_to_screen()
     print_value_error('Initial flux (units 1/{})'.format(units), flux,
-                      flux_error)
+                      flux_error, level='success')
     print_to_screen()
     print_value_error('Rate constant (units 1/{})'.format(units), rate,
-                      rate_error)
+                      rate_error, level='success')
     return results
 
 
@@ -391,7 +391,7 @@ def run_mdflux_analysis(settings, plotter, txt_plotter):
         if os.path.isfile(filename):
             files.append((file_type, filename))
     msgtxt = 'Running analysis of a MD flux simulation...'
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level='info')
     print_to_screen()
     result = run_analysis_files(settings, files, plotter, txt_plotter)
     report_txt = generate_report('md-flux', result, output='txt')[0]

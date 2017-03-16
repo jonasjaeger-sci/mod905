@@ -22,6 +22,7 @@ import argparse
 import logging
 import os
 import sys
+import colorama
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import CONSTANTS
@@ -127,25 +128,43 @@ def create_reports(settings, analysis_results, report_path):
             yield reportfile
 
 
-def hello_world(infile, reportdir):
+def hello_world(infile, run_dir, report_dir):
     """Method to output a standard greeting for PyRETIS analysis.
 
     Parameters
     ----------
     infile : string
         String showing the location of the input file.
-    reportdir : string
+    run_dir : string
+        The location where we are executing the analysis.
+    report_dir : string
         String showing the location of where we write the output.
     """
     pyversion = sys.version.split()[0]
-    msg = ['{} analysis version {} (Python version: {})'.format(PROGRAM_NAME,
-                                                                VERSION,
-                                                                pyversion)]
-    msg += ['Input file: {}'.format(infile)]
-    msg += ['Report directory: {}'.format(reportdir)]
-    for message in msg:
-        logger.info(message)
-        print_to_screen(message)
+    msgtxt = ['Starting the']
+    msgtxt += [r" ____        ____  _____ _____ ___ ____  "]
+    msgtxt += [r"|  _ \ _   _|  _ \| ____|_   _|_ _/ ___| "]
+    msgtxt += [r"| |_) | | | | |_) |  _|   | |  | |\___ \ "]
+    msgtxt += [r"|  __/| |_| |  _ <| |___  | |  | | ___) |"]
+    msgtxt += [r"|_|    \__, |_| \_\_____| |_| |___|____/ "]
+    msgtxt += [r"       |___/                             "]
+    msgtxt += [None]
+    msgtxt += ['analysis tool!']
+    for txt in msgtxt:
+        print_to_screen(txt, level='message')
+        if txt is not None:
+            logger.info(txt)
+
+    msgtxt = ['{} version: {}'.format(PROGRAM_NAME, VERSION)]
+    msgtxt += ['Python version: {}'.format(pyversion)]
+    msgtxt += ['Running in directory: {}'.format(run_dir)]
+    msgtxt += ['Report directory: {}'.format(report_dir)]
+    msgtxt += ['Input file: {}'.format(infile)]
+    msgtxt += [None]
+    for txt in msgtxt:
+        print_to_screen(txt)
+        if txt is not None:
+            logger.info(txt)
 
 
 def bye_bye_world():
@@ -153,7 +172,7 @@ def bye_bye_world():
     msgtxt = 'End of {} analysis execution.'.format(PROGRAM_NAME)
     logger.info(msgtxt)
     print_to_screen('')
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level='info')
     # display some references:
     references = ['{} references:'.format(PROGRAM_NAME)]
     references.append(('-')*len(references[0]))
@@ -167,10 +186,56 @@ def bye_bye_world():
     urltxt = '{}'.format(URL)
     logger.info(urltxt)
     print_to_screen('')
-    print_to_screen(urltxt)
+    print_to_screen(urltxt, level='info')
 
+
+def main(input_file, run_path, report_dir):
+    """Run the analysis.
+
+    Parameters
+    ----------
+    input_file : string
+        The input file with settings for the analysis.
+    run_path : string
+        The location from which we are running the analysis.
+    report_dir : string
+        The location where we will write the report.
+    """
+    try:
+        if not os.path.isfile(input_file):
+            errtxt = ('Could not open input'
+                      ' "{}"'.format(input_file))
+            print_to_screen(errtxt, level='error')
+            raise ValueError(errtxt)
+        print_to_screen('Reading input file "{}"'.format(input_file))
+        settings = parse_settings_file(input_file)
+        # override exe-path to the one we are executing in now:
+        settings['simulation']['exe-path'] = run_path
+        units = settings['system']['units']
+        # set derived properties:
+        settings['system']['beta'] = (settings['system']['temperature'] *
+                                      CONSTANTS['kB'][units])**-1
+        settings['analysis']['report-dir'] = report_dir
+        msg_dir = make_dirs(report_dir)
+        print_to_screen(msg_dir)
+        task = settings['simulation']['task']
+        print_to_screen('Simulation task was: "{}"'.format(task))
+        print_to_screen()
+        results = run_analysis(settings)
+        print_to_screen()
+        for outfile in create_reports(settings, results, report_dir):
+            relfile = os.path.relpath(outfile, start=runpath)
+            print_to_screen('Report created: {}'.format(relfile), level='info')
+    except Exception as error:  # Exceptions should subclass BaseException.
+        errtxt = '{}: {}'.format(type(error).__name__, error.args)
+        print_to_screen(errtxt, level='error')
+        print_to_screen('Execution failed! Exiting...', level='error')
+        raise
+    finally:
+        bye_bye_world()
 
 if __name__ == '__main__':
+    colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
                         help=('Location of {} input file'.format(PROGRAM_NAME)),
@@ -179,13 +244,6 @@ if __name__ == '__main__':
                         version='{} {}'.format(PROGRAM_NAME, VERSION))
     args_dict = vars(parser.parse_args())
 
-    inputfile = args_dict['input']
-    runpath = os.getcwd()
-    basepath = os.path.dirname(inputfile)
-    localfile = os.path.basename(inputfile)
-    if not os.path.isdir(basepath):
-        basepath = os.getcwd()
-    report_dir = os.path.join(runpath, 'report')
     # set up for logging:
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
@@ -196,37 +254,14 @@ if __name__ == '__main__':
     logger.addHandler(console)
 
     check_python_version()
+    
+    inputfile = args_dict['input']
+    runpath = os.getcwd()
+    basepath = os.path.dirname(inputfile)
+    localfile = os.path.basename(inputfile)
+    if not os.path.isdir(basepath):
+        basepath = os.getcwd()
+    reportdir = os.path.join(runpath, 'report')
 
-    try:
-        hello_world(inputfile, report_dir)
-        if not os.path.isfile(inputfile):
-            errtxt = ('Could not open input'
-                      ' "{}"'.format(inputfile))
-            raise ValueError(errtxt)
-        settings = parse_settings_file(inputfile)
-        # override exe-path to the one we are executing in now:
-        settings['simulation']['exe-path'] = runpath
-        #print(settings['unit-system'])
-        units = settings['system']['units']
-        #create_conversion_factors(settings['system']['units'],
-        #                          **settings['unit-system'])
-        # set derived properties:
-        settings['system']['beta'] = (settings['system']['temperature'] *
-                                      CONSTANTS['kB'][units])**-1
-        settings['analysis']['report-dir'] = report_dir
-        msg_dir = make_dirs(report_dir)
-        print_to_screen(msg_dir)
-        task = settings['simulation']['task']
-        print_to_screen('Will run analysis for task "{}"'.format(task))
-        results = run_analysis(settings)
-        print_to_screen('')
-        for outfile in create_reports(settings, results, report_dir):
-            relfile = os.path.relpath(outfile, start=runpath)
-            print_to_screen('Report created: {}'.format(relfile))
-    except Exception as error:  # Exceptions should subclass BaseException.
-        errtxt = '{}: {}'.format(type(error).__name__, error.args)
-        print_to_screen(errtxt)
-        print_to_screen('Execution failed! Will exit now.')
-        raise
-    finally:
-        bye_bye_world()
+    hello_world(inputfile, runpath, reportdir)
+    main(inputfile, runpath, reportdir)
