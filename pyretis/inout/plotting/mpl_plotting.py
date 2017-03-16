@@ -27,6 +27,7 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
+import matplotlib.style
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
