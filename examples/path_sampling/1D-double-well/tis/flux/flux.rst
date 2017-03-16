@@ -51,7 +51,7 @@ periodic = False
 
 Output
 ------
-backup = False
+backup = overwrite
 energy-file = 1000
 order-file = 1000
 cross-file = 1
