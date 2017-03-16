@@ -45,6 +45,11 @@ Important methods defined in this package
 get_writer (:py:func:`.get_writer`)
     Opens a file for reading given a file type and file name.
 
+prepare_load (:py:func:`.prepare_load`)
+    Open up a file for reading, given file type and file name, and
+    create the generator for it. This method can be set to fail if
+    the file is not found.
+
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -95,6 +100,8 @@ PathTable (:py:class:`.PathTable`)
     A specific table writer for path results.
 """
 import logging
+import os
+import errno
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
@@ -164,3 +171,37 @@ def get_writer(file_type, settings=None):
         msg = 'Unknown file type {} requested. Ignored'.format(file_type)
         logger.error(msg)
         return None
+
+
+def prepare_load(file_type, filename, required=True):
+    """Prepare to load a file of a given file type
+
+    Parameters
+    ----------
+    file_type : string
+        This selects the file type.
+    filename : string
+        The path to the file we are to open.
+    required : boolen
+        If True, we will fail if we can't find the file.
+
+    Returns
+    -------
+    out : generator or None
+        A generator which can be used to read the file.
+    """
+    if not os.path.isfile(filename):
+        if required:
+            raise FileNotFoundError(
+                errno.ENOENT,
+                os.strerror(errno.ENOENT),
+                filename
+            )
+        else:
+            return None
+    else:
+        loader = get_writer(file_type)
+        if loader is None:
+            raise ValueError('Could not open type: "{}"'.format(file_type))
+        else:
+            return loader.load(filename)
