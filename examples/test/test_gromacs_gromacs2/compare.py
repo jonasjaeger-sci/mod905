@@ -6,9 +6,9 @@
 import filecmp
 import os
 import numpy as np
-from colorama import init
-from colorama import Fore
+import colorama
 from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.inout.common import print_to_screen
 from pyretis.inout.writers import EnergyPathWriter
 
 # Folders to consider:
@@ -18,11 +18,6 @@ GROMACS2 = 'run-gromacs2'
 FILES = ['energy.txt', 'order.txt', 'pathensemble.txt', 'traj.txt']
 # Define number of ensembles used:
 ENSEMBLES = 6
-
-
-WARNING = Fore.RED
-INFO = Fore.GREEN
-INFO2 = Fore.BLUE
 
 
 def compare_energy_term(energy1, energy2, term):
@@ -40,6 +35,7 @@ def compare_energy_term(energy1, energy2, term):
     term1 = energy1['data'][term]
     term2 = energy2['data'][term]
     return np.allclose(term1, term2)
+
 
 def compare_energies(file1, file2):
     """We do a special comparison for the energies.
@@ -65,16 +61,16 @@ def compare_energies(file1, file2):
         equal &= (block1['comment'] == block2['comment'])
         for key in block1['data']:
             if key == 'vpot':
-                print(INFO2 + 'Skipping potential energy')
+                print_to_screen('Skipping potential energy', level='warning')
                 continue
             termok = compare_energy_term(block1, block2, key)
             if not termok:
-                print(WARNING + 'Energy terms "{}" differ!'.format(key))
+                print_to_screen('Energy terms "{}" differ!'.format(key),
+                                level='error')
         equal &= termok
     if equal:
-        print(INFO + 'Energy terms are equal')
+        print_to_screen('Energy terms are equal', level='success')
     return equal
-
 
 
 def main():
@@ -83,14 +79,15 @@ def main():
     errors = []
     for i in range(ENSEMBLES):
         ensemble_dir = PATH_DIR_FMT.format(i)
-        print('\nComparing for ensemble {}'.format(ensemble_dir))
+        print_to_screen('\nComparing for ensemble {}'.format(ensemble_dir),
+                        level='info')
         for fil in FILES:
             file1 = os.path.join(GROMACS1, ensemble_dir, fil)
             file2 = os.path.join(GROMACS2, ensemble_dir, fil)
             for fili in (file1, file2):
                 if not os.path.isfile(fili):
                     msg = 'File "{}" NOT found, skipping...'.format(fili)
-                    print(WARNING + msg)
+                    print_to_screen(msg, level='error')
             print('Comparing: {} {}'.format(file1, file2))
             equal = False
             if fil == 'energy.txt':
@@ -98,18 +95,19 @@ def main():
             else:
                 equal = filecmp.cmp(file1, file2)
             if not equal:
-                print(WARNING + 'NOTE: Files are NOT equal!')
+                print_to_screen('NOTE: Files are NOT equal!', level='error')
                 errors.append((file1, file2))
     if len(errors) > 0:
         print()
-        print(WARNING + 'Comparison is done and it FAILED!')
+        print_to_screen('Comparison is done and it FAILED!', level='error')
         for file1, file2 in errors:
-            print(WARNING + '{} != {}'.format(file1, file2))
+            print_to_screen('{} != {}'.format(file1, file2), level='error')
     else:
         print()
-        print(INFO + 'Comparison is done and it was successful')
+        print_to_screen('Comparison is done and it was successful',
+                        level='success')
 
 
 if __name__ == '__main__':
-    init(autoreset=True)
+    colorama.init(autoreset=True)
     main()

@@ -88,6 +88,7 @@ LOG_DEBUG_FMT = '[%(levelname)s] [%(name)s.%(funcName)s()]: %(message)s'
 # colors for printing:
 COLORS = {'error': colorama.Fore.RED,
           'info': colorama.Fore.BLUE,
+          'warning': colorama.Fore.YELLOW,
           'success': colorama.Fore.GREEN}
 
 
