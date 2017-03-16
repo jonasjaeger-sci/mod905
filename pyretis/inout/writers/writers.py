@@ -546,7 +546,7 @@ class OrderWriter(Writer):
         blocks are found in the file, they will be yielded, this is
         just to reduce the memory usage.
         The format is:
-        `time` `orderp0` `orderv0` `orderp1` `orderp2` ...,
+        `time` `orderp0` orderp1` `orderp2` ...
         where the actual meaning of `orderp1` `orderp2` and the
         following order parameters are left to be defined by the user.
 
@@ -565,11 +565,8 @@ class OrderWriter(Writer):
         `read_some_lines`.
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
-            data = np.array(blocks['data'])
-            _, col = data.shape
-            data_dict = {'comment': blocks['comment'], 'data': []}
-            for i in range(col):
-                data_dict['data'].append(data[:, i])
+            data_dict = {'comment': blocks['comment'],
+                         'data': np.array(blocks['data'])}
             yield data_dict
 
     def format_data(self, step, orderdata):

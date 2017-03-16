@@ -155,7 +155,7 @@ class TxtPlotter(Plotter):
         results : dict
             Each item in `results` contains the results for the
             corresponding order parameter.
-        orderdata : list of numpy.arrays
+        orderdata : numpy.array
             This is the raw-data for the order parameter analysis
 
         Returns
@@ -173,7 +173,7 @@ class TxtPlotter(Plotter):
         one will be assumed to represent the velocity here.
         """
         outfiles = []
-        time = orderdata[0]
+        time = orderdata[:, 0]
         # output running average:
         outfile = name_file(ORDERFILES['run_order'], self.out_fmt,
                             path=self.out_dir)

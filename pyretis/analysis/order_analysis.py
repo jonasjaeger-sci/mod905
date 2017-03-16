@@ -24,9 +24,8 @@ def analyse_orderp(orderdata, settings):
 
     Parameters
     ----------
-    orderdata : list of numpy.arrays
-        The contents of this list is the data read from the order
-        parameter file.
+    orderdata : numpy.arrays
+        The data read from the order parameter file.
     settings : dict
         This dictionary contains settings for the analysis.
 
@@ -48,13 +47,17 @@ def analyse_orderp(orderdata, settings):
     parameter and so on.
     """
     results = []
-    for i, data in enumerate(orderdata):
+    _, col = orderdata.shape
+    for i in range(col):
         if i == 0:  # first column is just the time, skip it
             pass
         else:
-            result = analyse_data(data, settings)
+            result = analyse_data(orderdata[:, i], settings)
             if i == 1:  # assume that we want the MSD analysis here:
                 ndt = settings['analysis']['maxordermsd']
-                result['msd'] = mean_square_displacement(data, ndt=ndt)
+                result['msd'] = mean_square_displacement(
+                    orderdata[:, i],
+                    ndt=ndt
+                )
             results.append(result)
     return results

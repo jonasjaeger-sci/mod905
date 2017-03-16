@@ -36,24 +36,13 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # import styles for newer matplotlibs:
-_STYLEFILE = 'pyretis.mplstyle'
-if matplotlib.__version__ < '1.5.0':
-    _STYLEFILE = 'pyretis-old.mplstyle'
-if matplotlib.__version__ < '1.4.0':
-    HAS_STYLE = False
-    logger.warning('Using Matplotlib version < 1.4.0, please upgrade.')
-else:
-    try:
-        import matplotlib.style
-        HAS_STYLE = True
-    except ImportError:
-        HAS_STYLE = False
 
 
 __all__ = ['MplPlotter']
 
 
 # Define default style file:
+_STYLEFILE = 'pyretis.mplstyle'
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                                _STYLEFILE])
 _TITLE_SETTINGS = {'loc': 'right'}
@@ -280,21 +269,16 @@ def mpl_set_style(style='pyretis'):
         return
     if style == 'pyretis':
         style = _MPL_STYLE_FILE
-    if not HAS_STYLE:  # default to loading from file
-        logger.warning(('Your matplotlib installation cannot use styles!\n'
-                        'Will try to load style from file: "%s".\n'
-                        'Please consider updating matplotlib.'), style)
-        _mpl_read_style_file(style)
-    else:
-        if style in matplotlib.style.available:
-            logger.info('Loading matplotlib style: %s', style)
-            matplotlib.style.use(style)
-        else:  # assume this is just a file
-            logger.info('Loading matplotlib style from file: %s', style)
-            rcpar = matplotlib.rc_params_from_file(style)
-            # TODO: For mpl version 1.5: use_default_template=False can be
-            # added to matplotlib.rc_params_from_file().
-            matplotlib.rcParams.update(rcpar)
+    if style in matplotlib.style.available:
+        logger.info('Loading matplotlib style: %s', style)
+        matplotlib.style.use(style)
+    else:  # assume this is just a file
+        logger.info('Loading matplotlib style from file: %s', style)
+        rcpar = matplotlib.rc_params_from_file(
+            style,
+            use_default_template=False
+        )
+        matplotlib.rcParams.update(rcpar)
 
 
 def mpl_savefig(canvas, outputfile, backup=False):
@@ -800,8 +784,8 @@ def mpl_plot_orderp(results, orderdata):
     one will be assumed to represent the velocity here.
     """
     canvas = {}
-    time = orderdata[0]
-    series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
+    time = orderdata[:, 0]
+    series = [{'type': 'xy', 'x': time, 'y': orderdata[:, 1]}]
     figset = {'xlabel': 'Time', 'ylabel': 'Order parameter'}
     canvas[ORDERFILES['order']] = mpl_simple_plot(series, fig_settings=figset)
     # make running average plot of the energies as function of time
@@ -828,8 +812,9 @@ def mpl_plot_orderp(results, orderdata):
     canvas[ORDERFILES['dist']] = mpl_simple_plot(series,
                                                  fig_settings=figset)
     # also try a orderp vs ordervel plot:
-    if len(orderdata) >= 3:
-        series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
+    _, col = orderdata.shape
+    if col >= 3:
+        series = [{'type': 'xyc', 'x': orderdata[:, 1], 'y': orderdata[:, 2]}]
         figset = {'xlabel': r'$\lambda$',
                   'ylabel': r'$\dot{\lambda}$',
                   'title': 'Order parameter vs velocity'}
