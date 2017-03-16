@@ -161,7 +161,6 @@ class GromacsEngine2(GromacsEngine):
                                                      left, right)
             if stop:
                 logger.debug('Ending propagate at %i. Reason: %s', i, status)
-                print('Ending propagate at {}. Reason: {}'.format(i, status))
                 break
         # Ask GROMACS to stop and close open files
         gro.stop()

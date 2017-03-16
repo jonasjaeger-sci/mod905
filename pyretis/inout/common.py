@@ -36,6 +36,7 @@ import os
 import re
 import sys
 import logging
+import colorama
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -84,6 +85,10 @@ PATH_MATCH = {'total': 'total-probability',
 # hard-coded formats to use for Log files:
 LOG_FMT = '[%(levelname)s]: %(message)s'
 LOG_DEBUG_FMT = '[%(levelname)s] [%(name)s.%(funcName)s()]: %(message)s'
+# colors for printing:
+COLORS = {'error': colorama.Fore.RED,
+          'info': colorama.Fore.BLUE,
+          'success': colorama.Fore.GREEN}
 
 
 def create_backup(outputfile):
@@ -217,7 +222,7 @@ def make_dirs(dirname):
             return msg
 
 
-def print_to_screen(txt=None):
+def print_to_screen(txt=None, level=None):
     """Method to print output to standard out.
 
     This method is included to ensure that output from PyRETIS to the
@@ -227,13 +232,19 @@ def print_to_screen(txt=None):
     Parameters
     ----------
     txt : string
-        The text to write to the screen
+        The text to write to the screen.
+    level : string
+        The level can be used to color the output.
     """
     if txt is None:
         print()
     else:
         out = '{}'.format(txt)
-        print(out)
+        color = COLORS.get(level, None)
+        if color is None:
+            print(out)
+        else:
+            print(color + out)
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):

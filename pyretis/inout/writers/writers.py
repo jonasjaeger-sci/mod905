@@ -781,6 +781,7 @@ class PathExtWriter(Writer):
         """
         return [col for col in line.split()]
 
+
 class PathIntWriter(Writer):
 
     """A class for writing internal trajectories.
@@ -845,7 +846,6 @@ class PathIntWriter(Writer):
             snapshots.append({'pos': np.array(pos),
                               'vel': np.array(vel)})
         return snapshots
-
 
     def load(self, filename):
         """Load entire snapshots into memory.

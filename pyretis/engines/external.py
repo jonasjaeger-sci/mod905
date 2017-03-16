@@ -19,6 +19,7 @@ import logging
 import subprocess
 import shutil
 import os
+from pyretis.inout.common import print_to_screen
 from pyretis.engines.engine import EngineBase
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -427,9 +428,9 @@ class ExternalMDEngine(EngineBase):
         # Update so that we use the prev_file
         system.particles.set_pos((prev_file, None))
         logger.info('Searching for crossing with: %9.6g', middle)
-        print('Searching for crossing with: {}'.format(middle))
+        print_to_screen('Searching for crossing with: {}'.format(middle))
         while True:
-            print('Kicking...')
+            print_to_screen('Kicking:')
             # Do kick from current state:
             self.modify_velocities(system,
                                    rgen,
@@ -453,19 +454,20 @@ class ExternalMDEngine(EngineBase):
             txt = '{} -> {} | {}'.format(prev, curr, middle)
             if (prev <= middle < curr) or (curr < middle <= prev):
                 logger.info('Crossed middle interface: %s', txt)
-                print('Crossed middle interface: {}'.format(txt))
+                print_to_screen('Crossed middle interface: {}'.format(txt),
+                                level='info')
                 # have crossed middle interface, just stop the loop
                 break
             elif (prev <= curr < middle) or (middle < curr <= prev):
                 # Getting closer, keep the new point
                 logger.debug('Getting closer to middle: %s', txt)
-                print('Getting closer to middle: {}'.format(txt))
+                print_to_screen('-> Getting closer to middle: {}'.format(txt))
                 self._movefile(curr_file, prev_file)
                 # Update file name after moving:
                 system.particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
                 logger.debug('Did not get closer to middle: %s', txt)
-                print('Did not get closer to middle: {}'.format(txt))
+                print_to_screen('-> Did not get closer to middle: {}'.format(txt))
                 system.particles.set_particle_state(previous)
                 curr = previous['order']
                 self._removefile(curr_file)

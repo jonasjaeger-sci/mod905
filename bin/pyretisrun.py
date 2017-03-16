@@ -33,6 +33,7 @@ import os
 import sys
 # Other libraries:
 import tqdm  # For a progress bar
+import colorama  # For coloring text
 # PyRETIS library imports:
 from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
@@ -113,7 +114,7 @@ def bye_bye_world():
     """Method to print out the goodbye message for PyRETIS."""
     timeend = datetime.datetime.now().strftime(_DATE_FMT)
     msgtxt = 'End of {} execution: {}'.format(PROGRAM_NAME, timeend)
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level='success')
     logger.info(msgtxt)
     # display some references:
     references = ['{} references:'.format(PROGRAM_NAME)]
@@ -162,7 +163,7 @@ def get_tasks(sim_settings, directory=None, engine=None, progress=False):
             msgtxt = ('Ignoring "{}" since progress '
                       'bar is ON'.format(out_task.name))
             logger.info(msgtxt)
-            print_to_screen(msgtxt)
+            print_to_screen(msgtxt, level='info')
         else:
             output_tasks.append(out_task)
     return output_tasks
@@ -183,7 +184,7 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
     """
     output_tasks = get_tasks(sim_settings, engine=sim.engine,
                              progress=progress)
-    print_to_screen('Starting MD-Flux simulation')
+    print_to_screen('Starting MD-Flux simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
     for result in tqd(sim.run(), total=nsteps, desc='MD-flux'):
@@ -207,7 +208,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
     # create output tasks:
     output_tasks = get_tasks(sim_settings, engine=sim.engine,
                              progress=progress)
-    print_to_screen('Starting MD simulation')
+    print_to_screen('Starting MD simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
     for result in tqd(sim.run(), total=nsteps, desc='MD step'):
@@ -249,7 +250,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     ensemble_name = ensemble.ensemble_name
 
     logtxt = 'TIS simulation: {}'.format(ensemble_name)
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
     logtxt = 'Creating output directories'
@@ -280,7 +281,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     _help_with_initialization(sim, sim_settings, (output_tasks,))
 
     logtxt = 'Initialization done. Starting main TIS simulation'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
     tqd = use_tqdm(progress)
@@ -289,6 +290,7 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     for result in tqd(sim.run(), total=nsteps, desc=desc):
         for out_task in output_tasks:
             out_task.output(result)
+
 
 def _help_with_initialization(sim, sim_settings, output_tasks):
     """Just a helper method do initialization and output results.
@@ -303,8 +305,9 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
         The output tasks defined for the simulation."""
     for i, result in enumerate(initiate_path_simulation(sim, sim_settings)):
         path = result[1]
-        logtxt = 'Initial path is:'
-        print_to_screen(logtxt)
+        logtxt = 'Found initial path:'
+        print_to_screen()
+        print_to_screen(logtxt, level='info')
         logger.info(logtxt)
         logtxt = '{}'.format(path)
         print_to_screen(logtxt)
@@ -350,8 +353,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         )
         output_tasks.append(ensemble_task)
     print_to_screen('')
-    logtxt = 'Starting RETIS simulation'
-    print_to_screen(logtxt)
+    logtxt = 'Initializing RETIS simulation'
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     logtxt = 'Initializing path ensembles'
     print_to_screen(logtxt)
@@ -360,7 +363,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     _help_with_initialization(sim, sim_settings, output_tasks)
 
     logtxt = 'Starting main RETIS simulation.'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
     tqd = use_tqdm(progress)
@@ -378,8 +381,11 @@ def run_retis_simulation(sim, sim_settings, progress=False):
             logtxt = '\nStep: {}'.format(result['cycle']['step'])
             print_to_screen(logtxt)
             for res, ensemble in zip(result['retis'], sim.path_ensembles):
-                logtxt = '{:>10s}: {:>8s} {:>5s}'.format(ensemble.ensemble_name,
-                                                         res[0], res[1])
+                logtxt = '{:>10s}: {:>8s} {:>5s}'.format(
+                    ensemble.ensemble_name,
+                    res[0],
+                    res[1]
+                )
                 print_to_screen(logtxt)
             print_to_screen()
 
@@ -460,7 +466,7 @@ def run_generic_simulation(sim, sim_settings, progress=False):
                              engine=getattr(sim, 'engine', None),
                              progress=progress)
     logtxt = 'Running simulation'
-    print_to_screen(logtxt)
+    print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     tqd = use_tqdm(progress)
     for result in tqd(sim.run(), desc='Step'):
@@ -578,8 +584,8 @@ def main(infile, indir, exe_dir, progress):
     except Exception as error:  # Exceptions should subclass BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         logger.error(errtxt)
-        print_to_screen('Error encountered, execution stopped.')
-        print_to_screen('Please see the LOG for more info.')
+        print_to_screen('ERROR - execution stopped.', level='error')
+        print_to_screen('Please see the LOG for more info.', level='error')
         raise
     finally:
         # Write out the simulation settings as they were parsed and
@@ -604,6 +610,7 @@ def main(infile, indir, exe_dir, progress):
                                 backup=settings['output']['backup'])
 
 if __name__ == '__main__':
+    colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
     parser.add_argument('-i', '--input',
                         help='Location of {} input file'.format(PROGRAM_NAME),
