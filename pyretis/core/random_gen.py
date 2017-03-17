@@ -13,7 +13,7 @@ Important classes defined here
 RandomGeneratorBase (:py:class:`.RandomGeneratorBase`)
     An abstract base class for random number generators.
 
-RandomGenerator (:py:class:`.RandomGeneratorBase`)
+RandomGenerator (:py:class:`.RandomGenerator`)
     A class representing a random number generator.
 
 ReservoirSampler (:py:class:`.ReservoirSampler`)
@@ -77,7 +77,17 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         out : float
             Pseudo random number in [0, 1)
         """
-        return
+        pass
+
+    @abstractmethod
+    def get_state(self):
+        """Return info about the current state."""
+        pass
+
+    @abstractmethod
+    def set_state(self, state):
+        """Set state for random generator."""
+        pass
 
     @abstractmethod
     def random_integers(self, low, high):
@@ -116,7 +126,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         out : float, numpy.array of floats
             The random numbers generated
         """
-        return
+        pass
 
     @abstractmethod
     def multivariate_normal(self, mean, cov, cho=None, size=1):
@@ -139,7 +149,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         out : float or numpy.array of floats size
             The random numbers drawn.
         """
-        return
+        pass
 
     def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
                                        dof, selection=None, momentum=True):
@@ -224,10 +234,7 @@ class RandomGenerator(RandomGeneratorBase):
 
     This class that defines a random number generator. It will use
     `numpy.random.RandomState` for the actual generation, and we refer
-    to the numpy documentation [1]_. Here we could inherit from
-    RandomState but here we do not wish (?) to inherit from an old-style
-    class. That is the cause of some small functions here that will
-    actually just call the corresponding function from `RandomState`.
+    to the numpy documentation [1]_.
 
     Attributes
     ----------
@@ -276,6 +283,14 @@ class RandomGenerator(RandomGeneratorBase):
         an arbitrary shape.
         """
         return self.rgen.rand(shape)
+
+    def get_state(self):
+        """Return current state."""
+        return self.rgen.get_state()
+
+    def set_state(self, state):
+        """Set state for random generator."""
+        return self.rgen.set_state(state)
 
     def random_integers(self, low, high):
         """Draw random integers in [low, high].
@@ -495,6 +510,14 @@ class MockRandomGenerator(RandomGeneratorBase):
             numbers.append(self.rgen[self.seed])
             self.seed += 1
         return np.array(numbers)
+
+    def get_state(self):
+        """Return current state."""
+        return self.seed
+
+    def set_state(self, state):
+        """Set current state."""
+        self.seed = state
 
     def random_integers(self, low, high):
         """Return random integers in [low, high].
