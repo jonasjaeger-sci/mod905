@@ -66,8 +66,8 @@ class WriterTest(unittest.TestCase):
             all_data = np.array(all_data)
             for block in order_reader.load(temp.name):
                 data = block['data']
-                for i, column in enumerate(data):
-                    for num1, num2 in zip(column, all_data[:, i]):
+                for row1, row2 in zip(all_data, data):
+                    for num1, num2 in zip(row1, row2):
                         self.assertAlmostEqual(num1, num2, 6)
 
     def test_cross_writer(self):
