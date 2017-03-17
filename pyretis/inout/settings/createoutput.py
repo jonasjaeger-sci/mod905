@@ -204,7 +204,7 @@ _SIM_OUTPUT['tis'] = [
      'name': 'tis-pathensemble-screen'},
     {'type': 'path-order',
      'name': 'tis-path-ensemble-order'},
-    {'type': 'path-traj-xyz',
+    {'type': 'path-traj-{}',
      'name': 'tis-path-ensemble-traj'},
     {'type': 'path-energy',
      'name': 'tis-path-ensemble-energy'}
