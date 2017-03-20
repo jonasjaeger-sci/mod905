@@ -36,10 +36,10 @@ from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.plotting import TxtPlotter
 from pyretis.inout.report import generate_report
-from pyretis.inout.settings.settings import SECTIONS, copy_settings
-from pyretis.inout.settings import is_single_tis
+from pyretis.inout.settings import (SECTIONS, copy_settings,
+                                    is_single_tis)
 from pyretis.inout.writers import get_writer, PathEnsembleFile
-from pyretis.inout.settings.createoutput import TASK_MAP
+from pyretis.inout.setup.createoutput import TASK_MAP
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

@@ -237,9 +237,12 @@ def main(input_file, run_path, report_dir):
 if __name__ == '__main__':
     colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)
-    parser.add_argument('-i', '--input',
-                        help=('Location of {} input file'.format(PROGRAM_NAME)),
-                        required=True)
+    parser.add_argument(
+        '-i',
+        '--input',
+        help=('Location of {} input file'.format(PROGRAM_NAME)),
+        required=True
+    )
     parser.add_argument('-V', '--version', action='version',
                         version='{} {}'.format(PROGRAM_NAME, VERSION))
     args_dict = vars(parser.parse_args())
@@ -254,7 +257,7 @@ if __name__ == '__main__':
     logger.addHandler(console)
 
     check_python_version()
-    
+
     inputfile = args_dict['input']
     runpath = os.getcwd()
     basepath = os.path.dirname(inputfile)
