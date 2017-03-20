@@ -46,7 +46,7 @@ swapsimul = True
 
 Initial-path
 ------------
-mehod = kick
+method = kick
 
 Particles
 ---------

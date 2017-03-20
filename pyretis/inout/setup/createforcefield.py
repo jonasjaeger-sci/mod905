@@ -15,7 +15,7 @@ create_force_field (:py:func:`.create_force_field`)
 """
 from __future__ import absolute_import
 import logging
-from pyretis.inout.settings.common import create_potential
+from pyretis.inout.setup.common import create_potential
 from pyretis.forcefield import ForceField
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())

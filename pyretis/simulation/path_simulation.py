@@ -130,6 +130,21 @@ class PathSimulation(Simulation):
             self.settings['tis']['aimless'] = False
             logger.info('Path simulation: aimless is False')
 
+    def restart_info(self):
+        """Return restart info.
+
+        Here we report the cycle number and the random
+        number generator status.
+        """
+        info = {'cycle': self.cycle,
+                'rgen': self.rgen.get_state()}
+        try:
+            rgen = self.engine.rgen
+            info['engine_rgen'] = rgen.get_state()
+        except AttributeError:
+            pass
+        return info
+
 
 class SimulationSingleTIS(PathSimulation):
     """A single TIS simulation.

@@ -36,7 +36,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.2.1.dev2'  # copied from version.py generated.
+FULL_VERSION = '0.6.0.dev0'
 
 # create copies of scripts:
 shutil.copyfile('bin/pyretisrun.py', 'bin/pyretisrun')

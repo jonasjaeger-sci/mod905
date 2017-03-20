@@ -239,3 +239,8 @@ class Simulation(object):
         mtask = 'task' if ntask == 1 else 'tasks'
         msg = ['General simulation with {} {}.'.format(ntask, mtask)]
         return '\n'.join(msg)
+
+    def restart_info(self):
+        """Return information which can be used to restart the simulation."""
+        info = {'cycle': self.cycle}
+        return info

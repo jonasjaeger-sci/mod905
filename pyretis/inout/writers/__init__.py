@@ -84,12 +84,6 @@ PathEnsembleFile (:py:class:`.PathEnsembleFile`)
     A class which represent path ensembles in files. This class is
     intended for use in an analysis.
 
-XYZWriter (:py:class:`.XYZWriter`)
-    A writer of trajectories in XYZ format.
-
-GROWriter (:py:class:`.GROWriter`)
-    A writer of trajectories in GROMACS GRO format.
-
 TxtTable (:py:class:`.TxtTable`)
     A generic table writer.
 
@@ -105,8 +99,6 @@ import errno
 from pyretis.core.common import initiate_instance
 from .fileio import FileIO
 from .pathfile import PathEnsembleWriter, PathEnsembleFile
-from .gromacsio import GROWriter
-from .xyzio import XYZWriter
 from .tablewriter import TxtTable, ThermoTable, PathTable
 from .writers import (CrossWriter,
                       EnergyWriter, EnergyPathWriter,
@@ -120,10 +112,9 @@ logger.addHandler(logging.NullHandler())
 _CLASS_MAP = {'cross': CrossWriter,
               'order': OrderWriter,
               'energy': EnergyWriter,
-              'trajgro': GROWriter,
-              'trajxyz': XYZWriter,
               'pathensemble': PathEnsembleWriter,
               'thermotable': ThermoTable,
+              'trajtxt': TrajWriter,
               'pathtable': PathTable,
               'pathorder': OrderPathWriter,
               'pathenergy': EnergyPathWriter,

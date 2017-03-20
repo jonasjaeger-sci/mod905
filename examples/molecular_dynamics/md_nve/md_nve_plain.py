@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 
 # If you have a recent version of matplotlib you can make
 # the plot nicer by loading a style, e.g.:
-plt.style.use('bmh')
+plt.style.use('seaborn')
 
 
 print('Creating box:')
@@ -46,14 +46,15 @@ print(system.forcefield)
 
 print('Creating simulation:')
 engine = VelocityVerlet(0.002)
-simulation = SimulationNVE(system, engine, steps=100)
+simulation = SimulationNVE(system, engine, steps=200)
 
 ekin = []
 vpot = []
 etot = []
 step = []
 for result in simulation.run():
-    print('Step:', result['cycle']['step'])
+    if result['cycle']['step'] % 10 == 0:
+        print('Step:', result['cycle']['step'])
     step.append(result['cycle']['step'])
     ekin.append(result['thermo']['ekin'])
     vpot.append(result['thermo']['vpot'])

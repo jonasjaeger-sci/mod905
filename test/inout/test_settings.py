@@ -12,16 +12,16 @@ import logging
 import tempfile
 import unittest
 import numpy as np
-from pyretis.inout.settings.common import (create_engine,
-                                           create_orderparameter)
-from pyretis.inout.settings.createforcefield import (create_potentials,
-                                                     create_force_field)
-from pyretis.inout.settings.settings import (parse_settings_file,
-                                             _parse_raw_section,
-                                             _parse_all_raw_sections,
-                                             _parse_sections,
-                                             settings_to_text)
-from pyretis.inout.settings.createsystem import create_initial_positions
+from pyretis.inout.setup.common import (create_engine,
+                                        create_orderparameter)
+from pyretis.inout.setup.createforcefield import (create_potentials,
+                                                  create_force_field)
+from pyretis.inout.setup.createsystem import create_initial_positions
+from pyretis.inout.settings import (parse_settings_file,
+                                    _parse_raw_section,
+                                    _parse_all_raw_sections,
+                                    _parse_sections,
+                                    settings_to_text)
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.engines import Verlet, VelocityVerlet, Langevin
 from pyretis.orderparameter import (OrderParameter,
@@ -167,7 +167,7 @@ Engine settings
 class = velocityverlet
 timestep = 0.002"""
         correct = {'engine': {'timestep': 0.002,
-                                  'class': 'velocityverlet'},
+                              'class': 'velocityverlet'},
                    'system': {'dimensions': 2, 'temperature': 1.0},
                    'simulation': {'task': 'md-nve', 'steps': 100}}
         settings = _test_correct_parsing(self, data, correct)

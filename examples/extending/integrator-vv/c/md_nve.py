@@ -11,9 +11,9 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout.settings import (create_system, create_simulation,
-                                    create_engine, create_force_field,
-                                    create_output_tasks)
+from pyretis.inout.setup import (create_system, create_simulation,
+                                 create_engine, create_force_field,
+                                 create_output_tasks)
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
@@ -24,7 +24,7 @@ settings['system'] = {'units': 'lj', 'temperature': 2.0,
 settings['engine'] = {'class': 'VelocityVerletC',
                       'delta_t': 0.002,
                       'module': 'vvintegratorc.py'}
-settings['output'] = {'backup': False,
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,

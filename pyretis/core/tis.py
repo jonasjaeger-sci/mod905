@@ -79,7 +79,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
     out[2] : string
         The status of the path
     """
-    tis_settings['start_cond'] = path_ensemble.get_start_condition()
+    start_cond = path_ensemble.get_start_condition()
     logger.info('TIS move in: %s', path_ensemble.ensemble_name)
     engine.exe_dir = path_ensemble.directory['generate']
     accept, trial, status = make_tis_step(path_ensemble.last_path,
@@ -88,7 +88,8 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
                                           path_ensemble.interfaces,
                                           engine,
                                           rgen,
-                                          tis_settings)
+                                          tis_settings,
+                                          start_cond)
     if accept:
         logger.info('The move was accepted!')
     else:
@@ -98,7 +99,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
 
 
 def make_tis_step(path, system, order_function, interfaces, engine, rgen,
-                  tis_settings):
+                  tis_settings, start_cond):
     """Perform a TIS step and generate a new path/trajectory.
 
     The new path will be generated from an existing one, either by
@@ -128,7 +129,9 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
 
         * `freq`: float, the frequency of how often we should do time
           reversal moves.
-        * `start_cond`: string, starting condition, 'L'eft or 'R'ight
+    start_cond : string
+        The starting condition for the path. This is determined by the
+        ensemble we are generating for - it is 'R'ight or 'L'eft.
 
     Returns
     -------
@@ -141,13 +144,12 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
     """
     if rgen.rand() < tis_settings['freq']:
         logger.info('Performing a time reversal move')
-        accept, new_path, status = time_reversal(path, interfaces,
-                                                 tis_settings['start_cond'])
+        accept, new_path, status = time_reversal(path, interfaces, start_cond)
     else:
         logger.info('Performing a shooting move.')
         accept, new_path, status = shoot(path, system, order_function,
                                          interfaces, engine, rgen,
-                                         tis_settings)
+                                         tis_settings, start_cond)
     return accept, new_path, status
 
 
@@ -175,6 +177,7 @@ def time_reversal(path, interfaces, start_condition):
         Status of the path, this is one of the strings defined in
         `.path._STATUS`.
     """
+    logger.info('Order parameters are not re-calculated!')
     new_path = path.reverse()
     start, _, _, _ = new_path.check_interfaces(interfaces)
     # explicitly set how this was generated
@@ -190,7 +193,7 @@ def time_reversal(path, interfaces, start_condition):
 
 
 def shoot(path, system, order_function, interfaces, engine, rgen,
-          tis_settings):
+          tis_settings, start_cond):
     """Perform a shooting-move.
 
     This function will perform the shooting move from a randomly
@@ -219,8 +222,10 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
         * `aimless`: boolean, is the shooting aimless or not?
         * `allowmaxlength`: boolean, should paths be allowed to reach
           maximum length?
-        * `start_cond`: string, starting condition, 'L'eft or 'R'ight.
         * `maxlength`: integer, maximum allowed length of paths.
+    start_cond : string
+        The starting condition for the current ensemble, 'L'eft or
+        'R'ight.
 
     Returns
     -------
@@ -294,7 +299,7 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
             trial_path.status = 'BTX'
         return accept, trial_path, trial_path.status
     # Backward seems OK so far, check if the ending point is correct:
-    if path_back.get_end_point(left, right) != tis_settings['start_cond']:
+    if path_back.get_end_point(left, right) != start_cond:
         # Nope, backward trajectory end at wrong interface
         accept, trial_path.status = False, 'BWI'
         trial_path += path_back  # just store path for analysis

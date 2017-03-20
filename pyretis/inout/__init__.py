@@ -22,6 +22,12 @@ common.py (:py:mod:`pyretis.inout.common`)
     functions are mainly intended for internal use and are not imported
     here.
 
+settings.py (:py:mod:`pyretis.inout.settings`)
+    A module which handles the reading/writing of settings.
+
+restart.py (:py:mod:`pyretis.inout.restart`)
+    A module which handles restart reading/writing.
+
 Sub-packages
 ~~~~~~~~~~~~
 
@@ -36,8 +42,8 @@ plotting (:py:mod:`pyretis.inout.plotting`)
 report (:py:mod:`pyretis.inout.report`)
     Generate reports with results from simulations.
 
-settings (:py:mod:`pyretis.inout.settings`)
-    Handle input and output settings.
+setup (:py:mod:`pyretis.inout.setup`)
+    Handles set-up of simulations etc. from user settings.
 
 writers (:py:mod:`pyretis.inout.writers`)
     Handle formatting and presentation of text based output.
@@ -75,9 +81,33 @@ TxtTable (:py:class:`.TxtTable`)
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+create_engine (:py:func:`.create_engine`)
+    Create an engine from input settings.
+
+create_force_field (:py:func:`.create_force_field`)
+    Create a force field from input settings.
+
+create_orderparameter (:py:func:`.create_orderparameter`)
+    Create an order parameter from input settings.
+
 create_output_tasks (:py:func:`.create_output_tasks`)
-    A function to create output tasks for a simulation.
+    Create output tasks from input settings.
+
+create_simulation (:py:func:`.create_simulation`)
+    Create a simulation from input settings.
+
+create_system (:py:func:`.create_system`)
+    Create a system from input settings.
 
 generate_report (:py:func:`.generate_report`)
     A function to generate reports from analysis output(s).
+
+parse_settings_file (:py:func:`.parse_settings_file`)
+    Method for parsing settings from a given input file.
+
+write_settings_file (:py:func:`.write_settings_file`)
+    Method for writing settings from a simulation to a given file.
+
+write_restart_file (:py:func:`.write_restart_file`)
+    Method for writing restart information.
 """

@@ -25,8 +25,8 @@ from pyretis.simulation.path_simulation import (SimulationSingleTIS,
                                                 SimulationRETIS)
 from pyretis.core.pathensemble import (get_path_ensemble_class,
                                        PATH_DIR_FMT)
-from pyretis.inout.settings.common import create_orderparameter
-from pyretis.inout.settings.settings import copy_settings, is_single_tis
+from pyretis.inout.setup.common import create_orderparameter
+from pyretis.inout.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

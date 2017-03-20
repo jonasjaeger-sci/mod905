@@ -26,10 +26,76 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['SimulationNVE', 'SimulationMDFlux']
+__all__ = [
+    'SimulationMD',
+    'SimulationNVE',
+    'SimulationMDFlux'
+]
 
 
-class SimulationNVE(Simulation):
+class SimulationMD(Simulation):
+    """A generic MD simulation.
+
+    This class is used to define a MD simulation without whistles and bells.
+
+    Attributes
+    ----------
+    system : object like :py:class:`.System`
+        This is the system the simulation will act on.
+    engine : object like :py:class:`.EngineBase`
+        The engine to use for integrating the equations of motion.
+        The engine must have engine.dynamics == 'NVE' in order
+        for it to be usable in this simulation.
+    """
+
+    def __init__(self, system, engine, steps=0, startcycle=0):
+        """Initialize the simulation.
+
+        Here we just add variables and do not do any other setup.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            This is the system we are investigating.
+        engine : object like :py:class:`.EngineBase`
+            This is the integrator that is used to propagate the system
+            in time.
+        steps : int, optional
+            The number of simulation steps to perform.
+        startcycle : int, optional
+            The cycle we start the simulation on, can be useful if
+            restarting.
+        """
+        super().__init__(steps=steps, startcycle=startcycle)
+        self.system = system
+        self.system.potential_and_force()  # make sure forces are defined.
+        self.engine = engine
+
+    def __str__(self):
+        """Return a string with info about the simulation."""
+        msg = ['Generic MD simulation']
+        nstep = self.cycle['end'] - self.cycle['start']
+        msg += ['Number of steps to do: {}'.format(nstep)]
+        msg += ['MD engine: {}'.format(self.engine)]
+        msg += ['Time step: {}'.format(self.engine.delta_t)]
+        return '\n'.join(msg)
+
+    def restart_info(self):
+        """Return restart info.
+
+        Here we report the cycle number and the random
+        number generator status.
+        """
+        info = {'cycle': self.cycle}
+        try:
+            rgen = self.engine.rgen
+            info['engine_rgen'] = rgen.get_state()
+        except AttributeError:
+            pass
+        return info
+
+
+class SimulationNVE(SimulationMD):
     """A MD NVE simulation class.
 
     This class is used to define a NVE simulation with some additional
@@ -65,16 +131,17 @@ class SimulationNVE(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super().__init__(steps=steps, startcycle=startcycle)
-        self.system = system
-        self.system.potential_and_force()  # make sure forces are defined.
-        self.engine = engine
+        super().__init__(system, engine, steps=steps, startcycle=startcycle)
         if self.engine.dynamics.lower() != 'nve':
             msg = 'Inconsistent MD integrator {} for NVE dynamics!'
             msg = msg.format(engine.description)
             logger.warning(msg)
+
+        # Create integration task:
         task_integrate = {'func': self.engine.integration_step,
                           'args': [self.system]}
+        self.add_task(task_integrate)
+
         task_thermo = {'func': calculate_thermo,
                        'args': [system],
                        'kwargs': {'dof': system.temperature['dof'],
@@ -83,9 +150,6 @@ class SimulationNVE(Simulation):
                        'first': True,
                        'result': 'thermo'}
         # task_thermo is set up to execute at all steps
-        # add propagation task:
-        self.add_task(task_integrate)
-        # add task_thermo:
         self.add_task(task_thermo)
 
     def __str__(self):
@@ -98,7 +162,7 @@ class SimulationNVE(Simulation):
         return '\n'.join(msg)
 
 
-class SimulationMDFlux(Simulation):
+class SimulationMDFlux(SimulationMD):
     """A simulation for obtaining the initial flux for TIS.
 
     This class is used to define a MD simulation where the goal is
@@ -142,11 +206,8 @@ class SimulationMDFlux(Simulation):
             The cycle we start the simulation on, can be useful if
             restarting.
         """
-        super().__init__(steps=steps, startcycle=startcycle)
-        self.system = system
-        self.system.potential_and_force()  # make sure forces are defined.
+        super().__init__(system, engine, steps=steps, startcycle=startcycle)
         self.orderp = orderp
-        self.engine = engine
         self.interfaces = interfaces
         # set up for initial crossing
         self.leftside_prev = None

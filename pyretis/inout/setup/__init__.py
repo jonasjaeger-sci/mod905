@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""This package contains functions for input/output of settings.
+"""This package handles set-up of simulations from settings.
 
 Package structure
 -----------------
@@ -28,9 +28,6 @@ createsystem.py (:py:mod:`pyretis.inout.settings.createsystem`)
 __init__.py
     This file, handles imports for PyRETIS.
 
-settings.py (:py:mod:`pyretis.inout.settings.settings`)
-    Handle parsion of input settings.
-
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -51,18 +48,7 @@ create_simulation (:py:func:`.create_simulation`)
 
 create_system (:py:func:`.create_system`)
     Create a system from input settings.
-
-is_single_tis (:py:func:`.is_single_tis`)
-    A method which determines is input settings represents a
-    single TIS simulation.
-
-parse_settings_file (:py:func:`.parse_settings_file`)
-    For parsing input settings from file.
-
-write_settings_file (:py:func:`.write_settings_file`)
-    For writing simulation settings to a file.
 """
-from .settings import parse_settings_file, write_settings_file, is_single_tis
 from .common import create_orderparameter, create_engine
 from .createsystem import create_system
 from .createsimulation import create_simulation

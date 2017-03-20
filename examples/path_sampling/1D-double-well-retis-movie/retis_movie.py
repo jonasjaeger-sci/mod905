@@ -11,14 +11,15 @@ Have fun!
 from pyretis.core import System, Box, Particles
 from pyretis.core.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
-from pyretis.inout.settings import (create_force_field, create_engine,
-                                    create_orderparameter, create_simulation)
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pylab as plt
 from matplotlib import animation
 from matplotlib import gridspec as gridspec
+
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 PCROSS_LOG = True
@@ -568,8 +569,7 @@ def main():
     print(simulation)
     print('# GENERATING INITIAL PATHS')
 
-    for i, _ in enumerate(initiate_path_simulation(simulation,
-                                                   SETTINGS['initial-path'])):
+    for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         ensemble = simulation.path_ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))

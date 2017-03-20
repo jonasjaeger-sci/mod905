@@ -10,8 +10,8 @@ Have fun!
 """
 from pyretis.core import System, Box, Particles
 from pyretis.core.initiation import initiate_path_simulation
-from pyretis.inout.settings import (create_force_field, create_engine,
-                                    create_orderparameter, create_simulation)
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_orderparameter, create_simulation)
 import numpy as np
 
 # Let us define the simulation:
@@ -120,8 +120,7 @@ def main():
     print('# INITIATING TRAJECTORIES...')
 
     ensembles = simulation.path_ensembles
-    for i, _ in enumerate(initiate_path_simulation(simulation,
-                                                   SETTINGS['initial-path'])):
+    for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         ensemble = ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))

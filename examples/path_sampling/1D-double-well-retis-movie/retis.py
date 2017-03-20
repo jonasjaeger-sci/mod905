@@ -11,8 +11,8 @@ Have fun!
 from pyretis.core import System, Box, Particles
 from pyretis.core.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
-from pyretis.inout.settings import (create_force_field, create_engine,
-                                    create_orderparameter, create_simulation)
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
 import numpy as np
 from tqdm import tqdm
@@ -287,9 +287,7 @@ def main():
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
     print('# GENERATING INITIAL PATHS')
-    for i, _ in enumerate(initiate_path_simulation(
-            simulation,
-            SETTINGS['initial-path'])):
+    for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         ensemble = simulation.path_ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))

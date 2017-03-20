@@ -9,9 +9,9 @@ import numpy as np
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_output_tasks, create_system,
-                                    create_engine, create_force_field,
-                                    create_simulation)
+from pyretis.inout.setup import (create_output_tasks, create_system,
+                                 create_engine, create_force_field,
+                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -32,7 +32,7 @@ settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
 settings['simulation'] = {'task': 'md-nve',
                           'steps': 1100}
 settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': False,
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,
@@ -127,7 +127,7 @@ ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
 # add second axis for displaying energies:
 ax2 = fig.add_subplot(grid[0, 1])
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.55, 0.55)
+ax2.set_ylim(-0.6, 1.1)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.90, '', transform=ax2.transAxes)
@@ -385,9 +385,9 @@ def update(frame, sys, output_tasks, sim):
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
         patches.append(linepot)
-        linekin.set_data(time, (np.array(e_kin) - e_kin[0]))
+        linekin.set_data(time, (np.array(e_kin)))
         patches.append(linekin)
-        linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
+        linetot.set_data(time, (np.array(e_tot) - v_pot[0]))
         patches.append(linetot)
         # also display current simulation time;
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],

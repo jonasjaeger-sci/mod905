@@ -88,22 +88,13 @@ TASK_MAP['cross'] = {
     'when': 'cross-file',
     'writer': 'cross'}
 
-TASK_MAP['traj-gro'] = {
+TASK_MAP['traj-txt'] = {
     'target': 'file',
-    'filename': 'traj.gro',
+    'filename': 'traj.txt',
     'result': 'system',
     'when': 'trajectory-file',
-    'settings': {'system': ('units',),
-                 'output': ('write_vel',)},
-    'writer': 'trajgro'}
-
-TASK_MAP['traj-xyz'] = {
-    'target': 'file',
-    'filename': 'traj.xyz',
-    'result': 'system',
-    'when': 'trajectory-file',
-    'settings': {'system': ('units',)},
-    'writer': 'trajxyz'}
+    'settings': {'output': ('write_vel',)},
+    'writer': 'trajtxt'}
 
 TASK_MAP['thermo-screen'] = {
     'target': 'screen',
@@ -178,7 +169,7 @@ _SIM_OUTPUT['md-nve'] = [
      'name': 'nve-energy-file'},
     {'type': 'thermo-file',
      'name': 'nve-thermo-file'},
-    {'type': 'traj-gro',
+    {'type': 'traj-txt',
      'name': 'nve-traj-file'},
     {'type': 'thermo-screen',
      'name': 'nve-thermo-screen'}
@@ -187,7 +178,7 @@ _SIM_OUTPUT['md-nve'] = [
 _SIM_OUTPUT['md-flux'] = [
     {'type': 'energy',
      'name': 'flux-energy-file'},
-    {'type': 'traj-gro',
+    {'type': 'traj-txt',
      'name': 'flux-traj-file'},
     {'type': 'thermo-screen',
      'name': 'flux-thermo-screen'},
@@ -268,7 +259,7 @@ class OutputTask(object):
         self.when = when
 
     def output(self, simulation_result):
-        """Output a task given results from a simulation.
+        """Output a task, given results from a simulation.
 
         This will output the task using the result found in the
         `simulation_result` which should be the dictionary returned

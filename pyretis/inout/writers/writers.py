@@ -52,7 +52,6 @@ read_some_lines (:py:func:`.read_some_lines`)
 import logging
 import os
 import numpy as np
-from pyretis.core.units import CONVERT  # unit conversion in trajectory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -66,7 +65,8 @@ __all__ = [
     'TrajWriter',
     'PathExtWriter',
     'read_some_lines',
-    'adjust_coordinate']
+    'adjust_coordinate'
+]
 
 
 def _make_header(labels, width, spacing=1):
@@ -659,22 +659,76 @@ def adjust_coordinate(coord):
         return adjusted
 
 
+def read_txt_snapshots(filename, data_keys=None):
+    """A method for reading snapshots from a text file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to read from.
+    data_keys : tuple of strings.
+        This tuple determines the data we are to read. It can
+        be of type ``('atomname', 'x', 'y', 'z', ...)``.
+
+    Yields
+    ------
+    out : dict
+        A dictionary with the snapshot.
+    """
+    lines_to_read = 0
+    snapshot = None
+    if data_keys is None:
+        data_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
+    read_header = False
+    with open(filename, 'r') as fileh:
+        for lines in fileh:
+            if read_header:
+                snapshot = {'header': lines.strip()}
+                read_header = False
+                continue
+            if lines_to_read == 0:  # new shapshot
+                if snapshot is not None:
+                    yield snapshot
+                lines_to_read = int(lines.strip())
+                read_header = True
+                snapshot = None
+            else:
+                lines_to_read -= 1
+                data = lines.strip().split()
+                for i, (val, key) in enumerate(zip(data, data_keys)):
+                    if i == 0:
+                        value = val.strip()
+                    else:
+                        value = float(val)
+                    try:
+                        snapshot[key].append(value)
+                    except KeyError:
+                        snapshot[key] = [value]
+    if snapshot is not None:
+        yield snapshot
+
+
 class TrajWriter(Writer):
     """Generic class for writing system shapshots.
 
     Attributes
     ----------
-    atom_names : list
-        These are the atom names used for the output.
-    convert_pos : float
-        Defines the conversion of positions from internal units.
-    covert_vel : float or None
-        Defines the conversion of velocities from internal units.
     frame : integer
         The number of frames written.
+    write_vel : boolean
+        If True, we will also write velocities
+    fmt : string
+        Format to use for position output.
+    fmt_vel : string
+        Format to use for position and velocity output.
     """
+    data_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
+    _FMT_FULL = '{} {} {} {}'
+    _FMT_FULL_VEL = '{} {} {} {} {} {} {}'
+    _FMT = '{:5s} {:15.9f} {:15.9f} {:15.9f}'
+    _FMT_VEL = '{:5s} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f}'
 
-    def __init__(self, name, write_vel, units, out_units):
+    def __init__(self, write_vel, fmt=None):
         """Initialize the writer.
 
         Parameters
@@ -684,46 +738,100 @@ class TrajWriter(Writer):
         write_vel : boolean
             If True, the writer will attempt to output velocities. This may
             or may not be supported by the writer.
-        units : string
-            The internal units used in the simulation.
-        out_units : dict of strings
-            The units used in the output from the writer.
         """
-        super().__init__(name, header=None)
+        super().__init__('TrajWriter', header=None)
         self.print_header = False
-        self.atom_names = []
         self.frame = 0  # number of frames written
         self.write_vel = write_vel
-        pos_unit = out_units['pos']
-        vel_unit = out_units.get('vel', None)
-        try:
-            self.convert_pos = CONVERT['length'][units, pos_unit]
-        except KeyError:
-            self.convert_pos = 1.0
-            msg = 'Could not get conversion "{} -> {}"'.format(units,
-                                                               pos_unit)
-            logger.info(msg)
-            msg = 'Position output will be in units: "{}"'.format(units)
-            logger.info(msg)
-        if vel_unit is not None:
-            try:
-                self.convert_vel = CONVERT['velocity'][units, vel_unit]
-            except KeyError:
-                self.convert_vel = 1.0
-                msg = 'Could not get conversion "{} -> {}"'.format(units,
-                                                                   vel_unit)
-                logger.info(msg)
-                msg = 'Position output will be in units: "{}"'.format(units)
-                logger.info(msg)
-
-    def format_snapshot(self, step, system):
-        """Format the snapshot for output."""
-        raise NotImplementedError
+        if fmt is 'full':
+            self.fmt = self._FMT_FULL
+            self.fmt_vel = self._FMT_FULL_VEL
+        else:
+            self.fmt = self._FMT
+            self.fmt_vel = self._FMT_VEL
 
     def generate_output(self, step, system):
         """Generate the snapshot output."""
         for lines in self.format_snapshot(step, system):
             yield lines
+
+    def _format_without_vel(self, particles):
+        """Format positions of particles for output.
+
+        Parameters
+        ----------
+        particles : object like :py:class:`.Particles`
+            The particles we will write information about.
+
+        Yields
+        ------
+        out : string
+            The formatted output, to be written.
+        """
+        pos = adjust_coordinate(particles.pos)
+        for namei, posi in zip(particles.name, pos):
+            yield self.fmt.format(namei, *posi)
+
+    def _format_with_vel(self, particles):
+        """Format positions of particles for output.
+
+        Parameters
+        ----------
+        particles : object like :py:class:`.Particles`
+            The particles we will write information about.
+
+        Yields
+        ------
+        out : string
+            The formatted output, to be written.
+        """
+        pos = adjust_coordinate(particles.pos)
+        vel = adjust_coordinate(particles.vel)
+        for namei, posi, veli in zip(particles.name, pos, vel):
+            yield self.fmt_vel.format(namei, *posi, *veli)
+
+    def format_snapshot(self, step, system):
+        """Format the given snapshot.
+
+        Parameters
+        ----------
+        step : int
+            The current simulation step.
+        system : object like :py:class:`.System`
+            The system object with the positions to write
+
+        Returns
+        -------
+        out : list of strings
+            The formatted snapshot
+        """
+        npart = system.particles.npart
+        buff = ['{}'.format(npart)]
+        buff.append('Snapshot, step: {}'.format(step))
+        if self.write_vel:
+            formatter = self._format_with_vel
+        else:
+            formatter = self._format_without_vel
+        for lines in formatter(system.particles):
+            buff += [lines]
+        return buff
+
+    def load(self, filename):
+        """Read snapshots from the trajectory file.
+
+        Parameters
+        ----------
+        filename : string
+            The path/filename to open.
+
+        Yields
+        ------
+        out : dict
+            This dict contains the snapshot.
+        """
+        for snapshot in read_txt_snapshots(filename,
+                                           data_keys=self.data_keys):
+            yield snapshot
 
 
 class PathExtWriter(Writer):

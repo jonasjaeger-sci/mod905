@@ -20,9 +20,6 @@ class = gromacs
 gmx = gmx_5.1.4
 mdrun = gmx_5.1.4 mdrun
 input_path = ext_input
-input_files = {'configuration': 'conf.g96',
-               'input': 'grompp.mdp',
-               'topology': 'topol.top'}
 timestep = 0.002
 subcycles = 5
 
@@ -47,6 +44,7 @@ swapsimul = True
 Initial-path
 ------------
 method = kick
+kick-from previous
 
 Orderparameter
 --------------

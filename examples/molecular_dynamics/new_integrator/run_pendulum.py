@@ -9,8 +9,8 @@ import numpy as np
 from pyretis.core import System, Box
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_system, create_engine,
-                                    create_force_field, create_simulation)
+from pyretis.inout.setup import (create_system, create_engine,
+                                 create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -43,7 +43,7 @@ settings['engine'] = {'class': 'VVIntegrator',
 #settings['engine'] = {'class': 'Euler',
 #                      'timestep': 0.005,
 #                      'module': 'myintegrator.py'}
-settings['output'] = {'backup': False,
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,

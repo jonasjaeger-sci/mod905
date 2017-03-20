@@ -38,6 +38,7 @@ from pyretis.core.box import Box
 from pyretis.core.system import System
 from pyretis.core.particles import Particles, get_particle_type
 from pyretis.core.units import CONVERT
+from pyretis.inout.writers.writers import read_txt_snapshots
 from pyretis.inout.writers.xyzio import read_xyz_file
 from pyretis.inout.writers.gromacsio import read_gromacs_file
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -82,6 +83,8 @@ PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
 # TODO: Move this to the place where the file readers are defined?
 READFILE = {'xyz': {'reader': read_xyz_file,
                     'units': {'length': 'A', 'velocity': 'A/fs'}},
+            'txt': {'reader': read_txt_snapshots,
+                    'units': None},
             'gro': {'reader': read_gromacs_file,
                     'units': {'length': 'nm', 'velocity': 'nm/ps'}}}
 
@@ -234,8 +237,13 @@ def _get_snapshot_from_file(pos_settings, units):
 
     reader = READFILE[fmt]['reader']
     read_units = READFILE[fmt]['units']
-    convert = {'length': CONVERT['length'][read_units['length'], units],
-               'velocity': CONVERT['velocity'][read_units['velocity'], units]}
+    if read_units is None:
+        convert = {'length': 1.0, 'velocity': 1.0}
+    else:
+        convert = {
+            'length': CONVERT['length'][read_units['length'], units],
+            'velocity': CONVERT['velocity'][read_units['velocity'], units]
+        }
     msg = 'Reading "{}" input file.'.format(fmt)
     logger.info(msg)
     snaps = [snap for snap in reader(filename)]

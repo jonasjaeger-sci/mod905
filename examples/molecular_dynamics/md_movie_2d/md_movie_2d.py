@@ -9,9 +9,9 @@ In this example we animate the output.
 import numpy as np
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_force_field, create_system,
-                                    create_engine, create_output_tasks,
-                                    create_simulation)
+from pyretis.inout.setup import (create_force_field, create_system,
+                                 create_engine, create_output_tasks,
+                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -26,7 +26,7 @@ settings['box'] = {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
                    'periodic': [True, True]}
 settings['simulation'] = {'task': 'md-nve', 'steps': 950}
 settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': False,
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,

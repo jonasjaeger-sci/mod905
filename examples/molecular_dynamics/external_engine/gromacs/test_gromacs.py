@@ -18,8 +18,8 @@ from pyretis.core import Box
 from pyretis.core.path import PathExt
 from pyretis.engines.gromacs import read_gromos96_file
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import (create_system, create_engine,
-                                    create_orderparameter)
+from pyretis.inout.setup import (create_system, create_engine,
+                                 create_orderparameter)
 from pyretis.inout.common import make_dirs
 from matplotlib import pyplot as plt
 

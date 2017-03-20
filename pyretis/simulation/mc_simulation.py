@@ -130,3 +130,13 @@ class UmbrellaWindowSimulation(Simulation):
                                                     self.overlap)]
         msg += ['Minimum number of cycles: {}'.format(self.cycle['end'])]
         return '\n'.join(msg)
+
+    def restart_info(self):
+        """Return restart info.
+
+        Here we report the cycle number and the random
+        number generator status.
+        """
+        info = {'cycle': self.cycle,
+                'random_state': self.rgen.get_state()}
+        return info

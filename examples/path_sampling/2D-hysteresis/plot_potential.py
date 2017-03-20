@@ -8,7 +8,7 @@ Plot the potential.
 import numpy as np
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
-from pyretis.inout.settings import create_force_field, create_orderparameter
+from pyretis.inout.setup import create_force_field, create_orderparameter
 # imports for the plotting:
 from matplotlib import pyplot as plt
 settings = {}

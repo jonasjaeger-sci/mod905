@@ -43,9 +43,9 @@ parameter 0 = {'sigma': 3.405, 'epsilon': 0.238066991253, 'factor': 2.5}
 
 Output
 ------
-backup = False # True, False, Append
+backup = Overwrite
 energy-file = 1
 order-file = 1
 cross-file = 1
 trajectory-file = 1
-write_vel = False
+write_vel = True

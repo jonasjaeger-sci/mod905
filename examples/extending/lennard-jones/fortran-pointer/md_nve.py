@@ -7,9 +7,9 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import (create_simulation, create_system,
-									create_engine, create_force_field,
-                                    create_output_tasks)
+from pyretis.inout.setup import (create_simulation, create_system,
+						   	     create_engine, create_force_field,
+                                 create_output_tasks)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
 settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
@@ -17,7 +17,7 @@ settings['system'] = {'units': 'lj', 'temperature': 2.0,
                       'dimensions': 3}
 settings['engine'] = {'class': 'velocityverlet',
                       'timestep': 0.002}
-settings['output'] = {'backup': False,
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,

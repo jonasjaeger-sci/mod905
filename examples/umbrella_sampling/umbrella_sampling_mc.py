@@ -10,7 +10,7 @@ potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
 from pyretis.core import System, RandomGenerator, Box, Particles
-from pyretis.inout.settings import create_simulation
+from pyretis.inout.setup import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis import histogram, match_all_histograms

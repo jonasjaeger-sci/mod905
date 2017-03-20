@@ -41,7 +41,7 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.core.tis import make_tis_step
 from pyretis.core.common import get_path_class
 from pyretis.inout.common import print_to_screen
-from pyretis.inout.writers import get_writer
+from pyretis.inout.writers import prepare_load
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -473,13 +473,16 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
             logger.debug('Moving initial_path')
             path_ensemble.move_path_to_generated(initial_path, prefix='_')
             backup_path = False
-        accept, trial, _ = make_tis_step(initial_path,
-                                         system,
-                                         order_function,
-                                         path_ensemble.interfaces,
-                                         engine,
-                                         rgen,
-                                         local_tis_settings)
+        accept, trial, _ = make_tis_step(
+            initial_path,
+            system,
+            order_function,
+            path_ensemble.interfaces,
+            engine,
+            rgen,
+            local_tis_settings,
+            path_ensemble.get_start_condition()
+        )
         if accept:
             if improved(trial, initial_path):
                 logger.debug('TIS move improved path.')
@@ -507,21 +510,172 @@ def initiate_load(simulation, cycle, settings):
     init_settings : dictionary
         A dictionary with settings for the initiation.
     """
-    raise NotImplemented
-    #maxlen = settings['tis']['maxlength']
-    #klass = get_path_class(simulation.engine.engine_type)
-    #folder = settings['initial-path'].get('restart_folder', 'restart')
-    #for ensemble in simulation.path_ensembles:
-    #    path = klass(simulation.rgen, maxlen=maxlen)
-    #    edir = os.path.join(folder, PATH_DIR_FMT.format(ensemble.ensemble))
-    #    load_path_from_file(path, edir, settings)
-    #    logger.info('Initiating path ensemble: %s', ensemble.ensemble_name)
-    #    #accept, initial_path, status = initiate_path_ensemble_kick(
-    #    #    ensemble,
-    #    #    simulation.system,
-    #    #    simulation.order_function,
-    #    #    simulation.engine,
-    #    #    simulation.rgen,
-    #    #    simulation.settings['tis'],
-    #    #    cycle)
-    #    yield accept, initial_path, status
+    maxlen = settings['tis']['maxlength']
+    klass = get_path_class(simulation.engine.engine_type)
+    folder = settings['initial-path'].get('restart_folder', 'restart')
+    for ensemble in simulation.path_ensembles:
+        logger.info('Loading data for path ensemble: %s',
+                    ensemble.ensemble_name)
+        path = klass(simulation.rgen, maxlen=maxlen)
+        edir = os.path.join(folder, PATH_DIR_FMT.format(ensemble.ensemble))
+        accept, status = read_path_files(
+            path,
+            ensemble,
+            edir,
+            simulation.system,
+            simulation.order_function,
+            simulation.engine,
+        )
+        ensemble.add_path_data(path, status, cycle)
+        yield accept, path, status
+
+
+def _load_order_parameters(traj, dirname, system, order_function):
+    """Load or recalculate the order parameters.
+
+    Parameters
+    ----------
+    traj : dictionary
+        The trajectory we have loaded. Used here if we are
+        re-calculating the order parameter(s).
+    dirname : string
+        The path to the directory with the input files.
+    system : object like :py:class:`.System`
+        A system object we can use when calculating the order parameter(s).
+    order_function : object like :py:class:`.OrderParameter`
+        This can be used to re-calculate order parameters in case
+        they are not given.
+
+    Returns
+    -------
+    out : list
+        The order parameters, each item in the list corresponds to a time
+        frame.
+    """
+    order_file_name = os.path.join(dirname, 'order.txt')
+    orderfile = prepare_load('pathorder', order_file_name, required=False)
+    if orderfile is not None:
+        order = next(orderfile)
+        return order['data'][:, 1:]
+    else:
+        orderdata = []
+        logger.info('Recalculating order parameters for input path.')
+        for snapshot in traj['data']:
+            system.particles.pos = snapshot['pos']
+            system.particles.vel = snapshot['vel']
+            orderdata.append(order_function.calculate_all(system))
+        return orderdata
+
+
+def _load_energies_for_path(path, dirname):
+    """Load energy data for a path.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        The path we are to set up/fill.
+    dirname : string
+        The path to the directory with the input files.
+
+    Returns
+    -------
+    None, but may add energies to the path.
+    """
+    # Get energies if any:
+    energy_file_name = os.path.join(dirname, 'energy.txt')
+    energyfile = prepare_load('pathenergy', energy_file_name, required=False)
+    if energyfile is not None:
+        energy = next(energyfile)
+        path.vpot = [i for i in energy['data']['vpot']]
+        path.ekin = [i for i in energy['data']['ekin']]
+
+
+def _check_path(path, ensemble):
+    """Run some checks for the path.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        The path we are to set up/fill.
+    interfaces : list of floats
+        The position of the interfaces for a particular ensemble.
+    ensemble : object like :py:class:`.PathEnsemble`
+        The ensemble the path could be added to.
+    """
+    start, end, _, cross = path.check_interfaces(ensemble.interfaces)
+    start_condition = ensemble.get_start_condition()
+    accept = True
+    status = 'ACC'
+
+    if start != start_condition:
+        logger.critical('Initial path for %s start at wrong interface!',
+                        ensemble.ensemble_name)
+        status = 'SWI'
+        accept = False
+
+    if not (end == 'R' or end == 'L'):
+        logger.critical('Initial path for %s end at wrong interface!',
+                        ensemble.ensemble_name)
+        status = 'EWI'
+        accept = False
+        if ensemble.ensemble == 0 and end == 'L':
+            logger.critical('Path for %s ends at LEFT interface!',
+                            ensemble.ensemble_name)
+    if not cross[1]:
+        logger.critical('Initial path for %s did not cross middle interface!',
+                        ensemble.ensemble_name)
+        status = 'NCR'
+        accept = False
+    path.status = status
+    return accept, status
+
+
+def read_path_files(path, ensemble, dirname, system, order_function, engine):
+    """Read data needed for a path from a directory.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        The path we are to set up/fill.
+    ensemble : object like :py:class:`.PathEnsemble`
+        The ensemble the path could be added to.
+    dirname : string
+        The path to the directory with the input files.
+    system : object like :py:class:`.System`
+        A system object we can use when calculating the order parameter(s).
+    order_function : object like :py:class:`.OrderParameter`
+        This can be used to re-calculate order parameters in case
+        they are not given.
+    engine : object like :py:class:`.EngineBase`
+        The engine we use for the dynamics.
+    interfaces : list of floats
+        The position of the interfaces for a particular ensemble.
+    """
+    left, _, right = ensemble.interfaces
+    traj_file_name = os.path.join(dirname, 'traj.txt')
+    trajfile = prepare_load('pathtrajint', traj_file_name, required=True)
+    # Just get the first trajectory:
+    traj = next(trajfile)
+
+    orderdata = _load_order_parameters(traj, dirname, system, order_function)
+
+    # Add to path :-)
+    for snapshot, orderi in zip(traj['data'], orderdata):
+        phase_point = {'order': orderi,
+                       'pos': snapshot['pos'],
+                       'vel': snapshot['vel'],
+                       'vpot': None,
+                       'ekin': None}
+        status, success, _ = engine.add_to_path(
+            path,
+            phase_point,
+            left,
+            right
+        )
+        if not success:
+            logger.critical('Could not add to path! %s', status)
+            logger.critical('Please check your input path.')
+            break
+    _load_energies_for_path(path, dirname)
+    path.generated = ('re', 0, 0, 0)
+    return _check_path(path, ensemble)

@@ -123,23 +123,13 @@ class TrajTest(unittest.TestCase):
         self.assertTrue(np.allclose(pos, np.array([[1., -1., 0.5],
                                                    [-1., 1., -0.5]])))
 
-    def test_gro_writer(self):
-        """Test the GROWriter."""
+    def test_txt_writer(self):
+        """Test the TrajWriter."""
         system = create_test_system()
-        gro_writer = get_writer('trajgro', {'units': None,
-                                            'write_vel': True})
-        snapshot = gro_writer.generate_output(0, system)
-        correct = os.path.join(LOCAL_DIR, 'generated.gro')
-        with open(correct, 'r') as fileh:
-            for lines1, lines2 in zip(fileh, snapshot):
-                self.assertEqual(lines1.rstrip(), lines2.rstrip())
-
-    def test_xyz_writer(self):
-        """Test the XYZWriter."""
-        system = create_test_system()
-        xyz_writer = get_writer('trajxyz', {'units': None})
-        snapshot = xyz_writer.generate_output(0, system)
-        correct = os.path.join(LOCAL_DIR, 'generated.xyz')
+        txt_writer = get_writer('trajtxt', {'write_vel': True,
+                                            'fmt': 'yes'})
+        snapshot = txt_writer.generate_output(0, system)
+        correct = os.path.join(LOCAL_DIR, 'generated.txt')
         with open(correct, 'r') as fileh:
             for lines1, lines2 in zip(fileh, snapshot):
                 self.assertEqual(lines1.rstrip(), lines2.rstrip())

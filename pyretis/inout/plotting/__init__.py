@@ -53,7 +53,7 @@ References
           http://stanford.edu/~mwaskom/software/seaborn/index.html
 .. [husl] The husl color scheme, http://www.husl-colors.org/
 """
-from pyretis.inout.settings.settings import SECTIONS
+from pyretis.inout.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
 from .txt_plotting import TxtPlotter
 

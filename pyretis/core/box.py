@@ -249,3 +249,7 @@ class Box(object):
             msg = 'Dim: {}, Low: {}, high: {}, periodic: {}'
             boxstr.append(msg.format(i, low, high, periodic))
         return '\n'.join(boxstr)
+
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        return {'size': self.size, 'periodic': self.periodic}

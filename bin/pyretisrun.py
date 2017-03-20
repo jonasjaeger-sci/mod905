@@ -40,18 +40,29 @@ from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.core.initiation import initiate_path_simulation
-from pyretis.inout.settings import create_output_tasks
-from pyretis.inout.common import (check_python_version,
-                                  get_log_formatter,
-                                  make_dirs,
-                                  print_to_screen)
-from pyretis.inout.settings import (parse_settings_file,
-                                    write_settings_file,
-                                    create_system,
-                                    create_force_field,
-                                    create_simulation,
-                                    create_engine,
-                                    is_single_tis)
+from pyretis.inout.setup import (
+    create_output_tasks,
+    create_system,
+    create_force_field,
+    create_simulation,
+    create_engine
+)
+from pyretis.inout.common import (
+    check_python_version,
+    get_log_formatter,
+    make_dirs,
+    print_to_screen
+)
+from pyretis.inout.settings import (
+    parse_settings_file,
+    write_settings_file,
+    is_single_tis
+)
+from pyretis.inout.restart import (
+    write_restart_file,
+    add_restart_settings,
+    add_restart_objects
+)
 
 
 _DATE_FMT = '%d.%m.%Y %H:%M:%S'
@@ -97,12 +108,12 @@ def hello_world(infile, rundir, logfile):
     msgtxt += [r"|_|    \__, |_| \_\_____| |_| |___|____/ "]
     msgtxt += [r"       |___/                             "]
     msgtxt += [None]
+    msgtxt += ['{} version: {}'.format(PROGRAM_NAME, VERSION)]
     for txt in msgtxt:
         print_to_screen(txt, level='message')
         if txt is not None:
             logger.info(txt)
-    msgtxt = ['{} version: {}'.format(PROGRAM_NAME, VERSION)]
-    msgtxt += ['Start of execution: {}'.format(timestart)]
+    msgtxt = ['Start of execution: {}'.format(timestart)]
     msgtxt += ['Python version: {}'.format(pyversion)]
     msgtxt += ['Running in directory: {}'.format(rundir)]
     msgtxt += ['Input file: {}'.format(infile)]
@@ -218,6 +229,7 @@ def run_md_simulation(sim, sim_settings, progress=False):
     for result in tqd(sim.run(), total=nsteps, desc='MD step'):
         for out_task in output_tasks:
             out_task.output(result)
+        write_restart_file('pyretis.restart', sim)
 
 
 def create_pathensemble_directories(ensemble):
@@ -392,6 +404,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
                 )
                 print_to_screen(logtxt)
             print_to_screen()
+        write_restart_file('pyretis.restart', sim)
 
 
 def run_tis_simulation(settings_sim, settings_tis, progress=False):
@@ -518,6 +531,14 @@ def set_up_simulation(inputfile, runpath):
     sim_settings = parse_settings_file(inputfile)
     sim_settings['simulation']['exe-path'] = runpath
 
+    restart = sim_settings['simulation'].get('restart', None)
+    restart_info = None
+    if restart is not None:
+        print_to_screen('Reading restart file: "{}"'.format(restart),
+                        level='warning')
+        logger.info('Reading restart file: "%s"', restart)
+        restart_info = add_restart_settings(sim_settings, restart)
+
     print_to_screen()
 
     logtxt = 'Initiaizing unit system.'
@@ -554,6 +575,8 @@ def set_up_simulation(inputfile, runpath):
     logger.info(logtxt)
     keyargs = {'system': syst, 'engine': engine}
     sim = create_simulation(sim_settings, keyargs)
+    if restart_info is not None:
+        add_restart_objects(restart_info, sim)
 
     task = sim_settings['simulation']['task'].lower()
     logtxt = 'Will run simulation: "{}"'.format(task)
