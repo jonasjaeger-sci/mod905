@@ -867,8 +867,8 @@ class PathExtWriter(Writer):
             if idx is None:
                 idx = 0
             vel = -1 if phasepoint['vel'] else 1
-            yield '{:>10}  {:>20s}  {:>10}  {:5}'.format(i, filename_short,
-                                                         idx, vel)
+            yield '{:>10}  {:>20s}  {:>10}  {:>5}'.format(i, filename_short,
+                                                          idx, vel)
 
     @staticmethod
     def line_parser(line):

@@ -21,9 +21,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = [
-    'initiate_load',
-]
+__all__ = ['initiate_load']
 
 
 def initiate_load(simulation, cycle, settings):
@@ -365,7 +363,7 @@ def read_path_files_ext(path, ensemble, dirname, system, order_function,
     print_to_screen('Creating path from files')
     logger.debug('Creating path from files')
     for snapshot, orderi in zip(traj['data'], orderdata):
-        reverse = (int(snapshot[3]) == 1)
+        reverse = (int(snapshot[3]) == -1)
         idx = int(snapshot[2])
         phase_point = {'order': orderi,
                        'pos': (snapshot[1], idx),
