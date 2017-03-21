@@ -10,7 +10,6 @@ and restarted after 100 steps.
 import filecmp
 import os
 import colorama
-import numpy as np
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.core.pathensemble import PATH_DIR_FMT
