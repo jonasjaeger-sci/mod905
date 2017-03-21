@@ -38,4 +38,6 @@ integrators. The tests can be run in the same way:
    3.2 Run the simulation: ``pyretisrun -i md-100-1000.rst -p``
 
 4. Compare the output: ``python compare.py``
-   
+
+Note: Inside each directory there is a ``run.sh`` file which lists the
+commands for the steps given above.

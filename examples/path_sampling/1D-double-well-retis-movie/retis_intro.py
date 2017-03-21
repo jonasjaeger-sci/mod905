@@ -9,7 +9,7 @@ some of the objects in PyRETIS.
 Have fun!
 """
 from pyretis.core import System, Box, Particles
-from pyretis.core.initiation import initiate_path_simulation
+from pyretis.initiation import initiate_path_simulation
 from pyretis.inout.setup import (create_force_field, create_engine,
                                  create_orderparameter, create_simulation)
 import numpy as np

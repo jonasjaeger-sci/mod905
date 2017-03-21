@@ -39,7 +39,7 @@ from pyretis import __version__ as VERSION
 from pyretis.info import PROGRAM_NAME, URL, CITE
 from pyretis.core.units import units_from_settings
 from pyretis.core.pathensemble import PATH_DIR_FMT
-from pyretis.core.initiation import initiate_path_simulation
+from pyretis.initiation import initiate_path_simulation
 from pyretis.inout.setup import (
     create_output_tasks,
     create_system,
@@ -377,6 +377,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     logger.info(logtxt)
     # Here we do the initialization:
     _help_with_initialization(sim, sim_settings, output_tasks)
+    write_restart_file('pyretis.restart', sim)
 
     logtxt = 'Starting main RETIS simulation.'
     print_to_screen(logtxt, level='info')

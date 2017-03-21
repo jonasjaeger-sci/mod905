@@ -906,7 +906,7 @@ class PathIntWriter(Writer):
             The system of units used internally for positions and
             velocities.
         """
-        super().__init__('PathExtWriter', header=None)
+        super().__init__('PathIntWriter', header=None)
         self.print_header = False
         self.fmt = None
 

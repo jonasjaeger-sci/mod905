@@ -8,12 +8,14 @@ the temperature, the ratio of the different RETIS moves etc.
 
 Have fun!
 """
+import colorama
 from pyretis.core import System, Box, Particles
-from pyretis.core.initiation import initiate_path_simulation
+from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.setup import (create_force_field, create_engine,
                                  create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
+from pyretis.inout.common import print_to_screen
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pylab as plt
@@ -490,7 +492,7 @@ def update(frame, simulation, plot_patches, variables, axes):
             return patches
         step = result['cycle']['step']
         ensembles = simulation.path_ensembles
-        print('# Current cycle: {}'.format(step))
+        print_to_screen('# Current cycle: {}'.format(step), level='info')
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result['retis'],
                                     variables['prun'])
@@ -561,22 +563,24 @@ def update(frame, simulation, plot_patches, variables, axes):
 
 def main():
     """Just run the simulation :-)"""
-    print('# CREATING SYSTEM')
+    colorama.init(autoreset=True)
+    print_to_screen('# CREATING SYSTEM', level='info')
     system = set_up_system(SETTINGS)
-    print('# CREATING SIMULATION:')
+    print_to_screen('# CREATING SIMULATION:', level='info')
     sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
     simulation = create_simulation(SETTINGS, sim_args)
-    print(simulation)
-    print('# GENERATING INITIAL PATHS')
+    print_to_screen(simulation)
+    print_to_screen('# GENERATING INITIAL PATHS', level='info')
 
     for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
         ensemble = simulation.path_ensembles[i]
         name = ensemble.ensemble_name
-        print('Info about ensemble {}:'.format(name))
-        print(ensemble)
-        print('Info about the initial path:')
-        print(ensemble.last_path)
-        print('')
+        print_to_screen('Info about ensemble {}:'.format(name),
+                        level='success')
+        print_to_screen(ensemble)
+        print_to_screen('Info about the initial path:', level='success')
+        print_to_screen(ensemble.last_path)
+        print_to_screen('')
 
     fig, plot_patches, axes = matplotlib_setup()
     variables = {'length0': Property('Path length in [0^-]'),

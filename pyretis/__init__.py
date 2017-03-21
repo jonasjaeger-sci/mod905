@@ -77,3 +77,4 @@ from . import forcefield
 from . import tools
 from . import analysis
 from . import inout
+from . import initiation
