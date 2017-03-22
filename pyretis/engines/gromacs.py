@@ -53,7 +53,7 @@ class GromacsEngine(ExternalMDEngine):
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
                  maxwarn=0):
-        """Initiate the script.
+        """Initiate the GROMACS engine.
 
         Parameters
         ----------
