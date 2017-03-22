@@ -491,7 +491,7 @@ class EnergyPathWriter(EnergyWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, path):
+    def generate_output(self, step, path, status):
         """Format the order parameter data from a path.
 
         Parameters
@@ -506,7 +506,7 @@ class EnergyPathWriter(EnergyWriter):
         out : string
             The strings to be written.
         """
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
             yield self.format_data(i, phasepoint)
@@ -603,7 +603,7 @@ class OrderPathWriter(OrderWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, path):
+    def generate_output(self, step, path, status):
         """Format the order parameter data from a path.
 
         Parameters
@@ -618,7 +618,7 @@ class OrderPathWriter(OrderWriter):
         out : string
             The strings to be written.
         """
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
+        yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
             yield self.format_data(i, phasepoint['order'])
@@ -858,8 +858,8 @@ class PathExtWriter(Writer):
         super().__init__('PathExtWriter', header=header)
         self.print_header = False
 
-    def generate_output(self, step, path):
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
+    def generate_output(self, step, path, status):
+        yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
             filename, idx = phasepoint['pos']
@@ -910,8 +910,8 @@ class PathIntWriter(Writer):
         self.print_header = False
         self.fmt = None
 
-    def generate_output(self, step, path):
-        yield '# Cycle: {}, status: {}'.format(step, path.status)
+    def generate_output(self, step, path, status):
+        yield '# Cycle: {}, status: {}'.format(step, status)
         for i, phasepoint in enumerate(path.trajectory()):
             yield 'Snapshot: {}'.format(i)
             pos = phasepoint['pos']

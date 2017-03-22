@@ -333,6 +333,7 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
             'pathensemble': sim.path_ensembles[i],
             'cycle': sim.cycle,
             'path': path,
+            'status': result[2],
             'system': sim.system
         }
         for out_task in output_tasks[i]:
@@ -390,6 +391,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         for i, ensemble in enumerate(path_ensembles):
             ensemble_result = {'pathensemble': ensemble,
                                'cycle': result['cycle'],
+                               'status': result['retis'][i][1],
                                'path': result['retis'][i][2],
                                'system': result['system']}
             for out_task in output_tasks[i]:
@@ -445,19 +447,18 @@ def run_tis_simulation(settings_sim, settings_tis, progress=False):
         for setting in settings_sim:
             ens = setting['simulation']['ensemble']
             ensf = PATH_DIR_FMT.format(ens)
-            logtxt = 'Setting up TIS ensemble: {}'.format(ens)
+            logtxt = 'Creating input for TIS ensemble: {}'.format(ens)
             print_to_screen(logtxt)
             logger.info(logtxt)
             infile = '{}-{}.rst'.format(setting['simulation']['task'], ensf)
             logtxt = 'Create file: "{}"'.format(infile)
-            print_to_screen()
             logger.info(logtxt)
             write_settings_file(setting, infile, backup=False)
             logtxt = 'Command for executing:'
             print_to_screen(logtxt)
             logger.info(logtxt)
             logtxt = 'pyretisrun -i {} -p -f {}.log'.format(infile, ensf)
-            print_to_screen(logtxt)
+            print_to_screen(logtxt, level='message')
             logger.info(logtxt)
             print_to_screen()
 

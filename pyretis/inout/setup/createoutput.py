@@ -49,7 +49,7 @@ defined as dictionaries with the following keys:
     "file" or "screen", defines where the task should write to.
 * filename : string
     A default file name for an output file if writing to a file.
-* result : string
+* result : tuple of strings
     Determines what item from the result dictionary we are outputting.
 * when : string
     Determines what input setting from the "output" section is used to
@@ -70,83 +70,83 @@ defined as dictionaries with the following keys:
 TASK_MAP['energy'] = {
     'target': 'file',
     'filename': 'energy.txt',
-    'result': 'thermo',
+    'result': ('thermo',),
     'when': 'energy-file',
     'writer': 'energy'}
 
 TASK_MAP['order'] = {
     'target': 'file',
     'filename': 'order.txt',
-    'result': 'order',
+    'result': ('order',),
     'when': 'order-file',
     'writer': 'order'}
 
 TASK_MAP['cross'] = {
     'target': 'file',
     'filename': 'cross.txt',
-    'result': 'cross',
+    'result': ('cross',),
     'when': 'cross-file',
     'writer': 'cross'}
 
 TASK_MAP['traj-txt'] = {
     'target': 'file',
     'filename': 'traj.txt',
-    'result': 'system',
+    'result': ('system',),
     'when': 'trajectory-file',
     'settings': {'output': ('write_vel',)},
     'writer': 'trajtxt'}
 
 TASK_MAP['thermo-screen'] = {
     'target': 'screen',
-    'result': 'thermo',
+    'result': ('thermo',),
     'when': 'energy-screen',
     'writer': 'thermotable'}
 
 TASK_MAP['thermo-file'] = {
     'target': 'file',
     'filename': 'thermo.txt',
-    'result': 'thermo',
+    'result': ('thermo',),
     'when': 'energy-file',
     'writer': 'thermotable'}
 
 TASK_MAP['pathensemble'] = {
     'target': 'file',
     'filename': 'pathensemble.txt',
-    'result': 'pathensemble',
+    'result': ('pathensemble',),
     'when': 'pathensemble-file',
     'writer': 'pathensemble'}
 
 TASK_MAP['pathensemble-screen'] = {
     'target': 'screen',
-    'result': 'pathensemble',
+    'result': ('pathensemble',),
     'when': 'pathensemble-screen',
     'writer': 'pathtable'}
 
 TASK_MAP['path-order'] = {
     'target': 'file',
     'filename': 'order.txt',
-    'result': 'path',
+    'result': ('path', 'status'),
     'when': 'order-file',
     'writer': 'pathorder'}
 
 TASK_MAP['path-energy'] = {
     'target': 'file',
     'filename': 'energy.txt',
-    'result': 'path',
+    'result': ('path', 'status'),
     'when': 'energy-file',
     'writer': 'pathenergy'}
 
 TASK_MAP['path-traj-int'] = {
     'target': 'file',
     'filename': 'traj.txt',
-    'result': 'path',
+    'result': ('path', 'status'),
     'when': 'trajectory-file',
     'writer': 'pathtrajint'}
 
 TASK_MAP['path-traj-ext'] = {
     'target': 'file',
     'filename': 'traj.txt',
-    'result': 'path',
+    'result': ('path', 'status'),
     'when': 'trajectory-file',
     'special': True,
     'writer': 'pathtrajext'}
@@ -227,7 +227,7 @@ class OutputTask(object):
     name : string
         This string identifies the task, it can for instance be used
         to reference the dictionary used to create the writer.
-    result : string
+    result : tuple of strings
         This string defines the result we are going to output.
     writer : object like :py:class:`.Writer`
         This object will handle the actual formatting of the result.
@@ -281,14 +281,16 @@ class OutputTask(object):
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
             return False
-        if self.result not in simulation_result:
-            # This probably just means that the required result was not
-            # calculated at this step.
-            return False
-        result = simulation_result[self.result]
-        return self.write(step, result)
+        result = []
+        for res in self.result:
+            if res not in simulation_result:
+                # This probably just means that the required result was not
+                # calculated at this step.
+                return False
+            result.append(simulation_result[res])
+        return self.write(step, *result)
 
-    def write(self, step, result):
+    def write(self, step, *result):
         """Write the obtained result using the writer.
 
         Parameters
@@ -351,7 +353,7 @@ class OutputTaskScreen(OutputTask):
         super().__init__(name, result, writer, when)
         self.print_header = writer.print_header
 
-    def write(self, step, result):
+    def write(self, step, *result):
         """Ouput the result to screen
 
         Parameters
@@ -369,7 +371,7 @@ class OutputTaskScreen(OutputTask):
         if self.print_header:
             print(self.writer.header)
             self.print_header = False
-        for lines in self.writer.generate_output(step['step'], result):
+        for lines in self.writer.generate_output(step['step'], *result):
             print(lines)
         return None
 
@@ -421,7 +423,7 @@ class OutputTaskFile(OutputTask):
             if self.writer.header is not None:
                 self.fileh.write(self.writer.header)
 
-    def write(self, step, result):
+    def write(self, step, *result):
         """Ouput the result.
 
         Parameters
@@ -436,7 +438,7 @@ class OutputTaskFile(OutputTask):
         out : boolean
             True if we are printing something, False otherwise.
         """
-        for lines in self.writer.generate_output(step['step'], result):
+        for lines in self.writer.generate_output(step['step'], *result):
             self.fileh.write(lines)
         return None
 
@@ -481,13 +483,17 @@ class OutputTaskFileCombine(OutputTaskFile):
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
             return False
-        for res in (self.result, self.dependency):
+        if self.dependency not in simulation_result:
+            return False
+        result = []
+        for res in self.result:
             if res not in simulation_result:
                 return False
-        result = simulation_result[self.result]
+            result.append(simulation_result[res])
         function = simulation_result[self.dependency]
-        result_ = function.generate_output(step, result)
-        return self.write(step, result_)
+        result_ = function.generate_output(step, result[0])
+        result[0] = result_
+        return self.write(step, *result)
 
 
 def create_writer(task_settings, writer_name, settings):

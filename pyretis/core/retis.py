@@ -347,6 +347,13 @@ def retis_swap(ensembles, idx, system, order_function, engine,
         The trial paths.
     out[2] : string
         The status for the trial paths.
+
+    Note
+    ----
+    Note that path.generated is **NOT** updated here. This is because
+    we are just swapping references and not the paths. In case the
+    swap is rejected updating this would invalidate the last accepted
+    path.
     """
     logger.info('Swapping: %s <-> %s', ensembles[idx].ensemble_name,
                 ensembles[idx+1].ensemble_name)
