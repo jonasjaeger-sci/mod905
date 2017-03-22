@@ -9,7 +9,6 @@ Important methods defined here
 analyse_energies (py:func:`.analyse_energies`)
     Run a energy analysis for energies (kinetic, potential etc.).
 """
-from __future__ import absolute_import
 import numpy as np
 from scipy.stats import gamma  # pylint: disable=E0611
 from pyretis.analysis.analysis import analyse_data

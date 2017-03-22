@@ -12,7 +12,6 @@ Important classes defined here
 Simulation (:py:class:`.Simulation`)
     Object defining a generic simulation.
 """
-from __future__ import absolute_import
 import logging
 from .simulation_task import SimulationTask
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

@@ -13,7 +13,6 @@ create_potentials (:py:func:`.create_potentials`)
 create_force_field (:py:func:`.create_force_field`)
     Method to create a force field from input settings.
 """
-from __future__ import absolute_import
 import logging
 from pyretis.inout.setup.common import create_potential
 from pyretis.forcefield import ForceField

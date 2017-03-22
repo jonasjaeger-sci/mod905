@@ -2,7 +2,6 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """This is a 2D example potential"""
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction

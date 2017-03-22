@@ -6,7 +6,6 @@
 Here we test that we understand the input file and that fail in
 a predictable way.
 """
-from __future__ import absolute_import
 import logging
 import unittest
 from pyretis.core.system import System

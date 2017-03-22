@@ -215,6 +215,7 @@ def _check_path(path, ensemble):
     path.status = status
     return accept, status
 
+
 def _load_trajectory(dirname):
     """Method to set-up and load a trajectory from a file.
 

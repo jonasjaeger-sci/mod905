@@ -6,7 +6,7 @@ Simulation
 task = retis
 steps = 25
 interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
-restart = ../initialize/pyretis.restart
+restart = ../run-initialize/pyretis.restart
 
 
 System

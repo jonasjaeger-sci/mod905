@@ -130,15 +130,19 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
 
-       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times r_{\text{c},j}}{2}`
+       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times
+                r_{\text{c},j}}{2}`
 
     3. Sixthpower
 
-       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}} \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
+       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}}
+                \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
 
-       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times \sigma_{j}^6}{2} \right)^{1/6}`
+       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times
+                \sigma_{j}^6}{2} \right)^{1/6}`
 
-       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times r_{\text{c},j}^6}{2}\right)^{1/6}`
+       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times
+                r_{\text{c},j}^6}{2}\right)^{1/6}`
 
 
     Parameters

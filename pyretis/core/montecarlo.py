@@ -16,7 +16,6 @@ max_displace_step (:py:func:`.max_displace_step`)
     Monte Carlo routine for displacing particles. It will select and
     displace one particle randomly.
 """
-from __future__ import absolute_import
 import numpy as np
 
 

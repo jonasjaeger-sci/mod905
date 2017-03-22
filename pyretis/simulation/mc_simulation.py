@@ -14,7 +14,6 @@ UmbrellaWindowSimulation (:py:class:`.UmbrellaWindowSimulation`)
     Several umbrella window simulations can be joined to perform a
     umbrella simulation.
 """
-from __future__ import absolute_import
 import numpy as np
 from pyretis.core.montecarlo import max_displace_step
 from pyretis.simulation.simulation import Simulation

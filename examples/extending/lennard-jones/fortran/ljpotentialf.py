@@ -2,7 +2,6 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in FORTRAN."""
-from __future__ import absolute_import
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

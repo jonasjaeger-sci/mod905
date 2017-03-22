@@ -6,32 +6,41 @@
 Here we test that we parse the input file correctly and also that
 we fail in predictable ways.
 """
-from __future__ import absolute_import
 import os
 import logging
 import tempfile
 import unittest
 import numpy as np
-from pyretis.inout.setup.common import (create_engine,
-                                        create_orderparameter)
-from pyretis.inout.setup.createforcefield import (create_potentials,
-                                                  create_force_field)
+from pyretis.inout.setup.common import (
+    create_engine,
+    create_orderparameter
+)
+from pyretis.inout.setup.createforcefield import (
+    create_potentials,
+    create_force_field
+)
 from pyretis.inout.setup.createsystem import create_initial_positions
-from pyretis.inout.settings import (parse_settings_file,
-                                    _parse_raw_section,
-                                    _parse_all_raw_sections,
-                                    _parse_sections,
-                                    settings_to_text)
+from pyretis.inout.settings import (
+    parse_settings_file,
+    _parse_raw_section,
+    _parse_all_raw_sections,
+    _parse_sections,
+    settings_to_text
+)
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.engines import Verlet, VelocityVerlet, Langevin
-from pyretis.orderparameter import (OrderParameter,
-                                    OrderParameterPosition,
-                                    OrderParameterDistance)
-from pyretis.forcefield.potentials import (PairLennardJonesCut,
-                                           PairLennardJonesCutnp,
-                                           DoubleWellWCA,
-                                           DoubleWell,
-                                           RectangularWell)
+from pyretis.orderparameter import (
+    OrderParameter,
+    OrderParameterPosition,
+    OrderParameterDistance
+)
+from pyretis.forcefield.potentials import (
+    PairLennardJonesCut,
+    PairLennardJonesCutnp,
+    DoubleWellWCA,
+    DoubleWell,
+    RectangularWell
+)
 from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 

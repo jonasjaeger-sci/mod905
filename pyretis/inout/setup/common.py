@@ -80,10 +80,11 @@ def import_from(module_path, function_name):
         if sys.version_info < (3, 5):
             module = imp.load_source(module_name, module_path)
         else:
-            spec = importlib.util.spec_from_file_location(  # pylint: disable=no-member
+            spec = importlib.util.spec_from_file_location(
                 module_name,
-                module_path)
-            module = importlib.util.module_from_spec(spec)  # pylint: disable=no-member
+                module_path
+            )
+            module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
         logger.debug('Imported module: %s', module)
         return getattr(module, function_name)

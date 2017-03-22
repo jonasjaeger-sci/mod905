@@ -12,9 +12,10 @@ clean:
 	find -name \*.log -delete
 	find -name \mdout.mdp -delete
 	find -name \*.tpr -delete
-	rm -rf initialize/0*
+	rm -rf run-initialize/0*
 	rm -rf run-25/0*
 	rm -rf run-restart/0*
 	rm -rf run-restart/initial_path
 	rm -rf gromacs_input/pyretis.mdp
-    
+ 
+   

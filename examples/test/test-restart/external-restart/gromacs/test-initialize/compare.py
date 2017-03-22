@@ -14,6 +14,9 @@ from pyretis.inout.common import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.core.pathensemble import PATH_DIR_FMT
 
+RUN_FULL = 'run-25'
+RUN_RESTART = 'run-restart'
+
 
 def compare_files(file1, file2):
     """Compare two files."""
@@ -27,25 +30,26 @@ def compare_files(file1, file2):
 def compare_ensemble(ensemble):
     """Run the comparison for an ensemble"""
     print_to_screen('Comparing for "{}"'.format(ensemble), level='info')
-    traj1 = os.path.join('run-25', ensemble, 'traj.txt')
-    traj2 = os.path.join('run-restart', ensemble, 'traj.txt')
+    traj1 = os.path.join(RUN_FULL, ensemble, 'traj.txt')
+    traj2 = os.path.join(RUN_RESTART, ensemble, 'traj.txt')
     print_to_screen('* Comparing traj.txt files...')
     compare_files(traj1, traj2)
 
     print_to_screen('* Comparing traj.txt files...')
-    ener1 = os.path.join('run-25', ensemble, 'energy.txt')
-    ener2 = os.path.join('run-restart', ensemble, 'energy.txt')
+    ener1 = os.path.join(RUN_FULL, ensemble, 'energy.txt')
+    ener2 = os.path.join(RUN_RESTART, ensemble, 'energy.txt')
     compare_files(ener1, ener2)
 
     print_to_screen('* Comparing order.txt files...')
-    order1 = os.path.join('run-25', ensemble, 'order.txt')
-    order2 = os.path.join('run-restart', ensemble, 'order.txt')
+    order1 = os.path.join(RUN_FULL, ensemble, 'order.txt')
+    order2 = os.path.join(RUN_RESTART, ensemble, 'order.txt')
     compare_files(order1, order2)
 
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    settings = parse_settings_file('run-25/retis.rst')
+    sett_file = os.path.join(RUN_FULL, 'retis.rst')
+    settings = parse_settings_file(sett_file)
     inter = settings['simulation']['interfaces']
     for i in range(len(inter)):
         ens = PATH_DIR_FMT.format(i)

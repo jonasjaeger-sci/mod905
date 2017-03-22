@@ -15,16 +15,21 @@ Important methods defined here
 create_simulation (:py:func:`.create_simulation`)
     Method for creating a simulation object from settings.
 """
-from __future__ import absolute_import
 import logging
 from pyretis.core.random_gen import create_random_generator
-from pyretis.simulation.md_simulation import (SimulationNVE,
-                                              SimulationMDFlux)
+from pyretis.simulation.md_simulation import (
+    SimulationNVE,
+    SimulationMDFlux
+)
 from pyretis.simulation.mc_simulation import UmbrellaWindowSimulation
-from pyretis.simulation.path_simulation import (SimulationSingleTIS,
-                                                SimulationRETIS)
-from pyretis.core.pathensemble import (get_path_ensemble_class,
-                                       PATH_DIR_FMT)
+from pyretis.simulation.path_simulation import (
+    SimulationSingleTIS,
+    SimulationRETIS
+)
+from pyretis.core.pathensemble import (
+    get_path_ensemble_class,
+    PATH_DIR_FMT
+)
 from pyretis.inout.setup.common import create_orderparameter
 from pyretis.inout.settings import copy_settings, is_single_tis
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

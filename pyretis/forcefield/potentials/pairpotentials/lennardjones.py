@@ -16,7 +16,6 @@ PairLennardJonesCutnp (:py:class:`.PairLennardJonesCutnp`)
     A class representing a Lennard-Jones 6-12 potential implemented
     with usage of numpy.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction

@@ -15,7 +15,6 @@ DoubleWell (:py:class:`.DoubleWell`)
 RectangularWell (:py:class:`.RectangularWell`)
     This class defines a one-dimensional rectangular well potential.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction

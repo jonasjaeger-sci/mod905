@@ -22,7 +22,6 @@ ReservoirSampler (:py:class:`.ReservoirSampler`)
 MockRandomGenerator (:py:class:`.MockRandomGenerator`)
     A non-random number generator which is useful for testing.
 """
-from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
 import logging
 import numpy as np

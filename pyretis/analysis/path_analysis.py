@@ -26,7 +26,6 @@ retis_flux (:py:func:`.retis_flux`)
 retis_rate (:py:func:`.retis_rate`)
     Calculate the rate constant with errors for a RETIS simulation.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr

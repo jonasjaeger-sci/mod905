@@ -17,7 +17,6 @@ SimulationMDFlux (:py:class:`.SimulationMDFlux`)
     Definition of a simulation for determining the initial flux.
     This is used for calculating rates in TIS simulations.
 """
-from __future__ import absolute_import
 import logging
 from pyretis.simulation.simulation import Simulation
 from pyretis.core.particlefunctions import calculate_thermo

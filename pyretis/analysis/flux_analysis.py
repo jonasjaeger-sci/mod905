@@ -10,7 +10,6 @@ analyse_flux (:py:func:`.analyse_flux`)
     Run analysis for simulation flux data. This will calculate
     the initial flux for a simulation.
 """
-from __future__ import absolute_import
 import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr
 

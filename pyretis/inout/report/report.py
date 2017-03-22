@@ -19,7 +19,6 @@ render_report (:py:func:`.render_report`)
 generate_report (:py:func:`.generate_report`)
     Generate a specific report from analysis output.
 """
-from __future__ import absolute_import
 import datetime
 import logging
 import os

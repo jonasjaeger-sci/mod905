@@ -9,7 +9,6 @@ Important classes defined here
 DoubleWellWCA (:py:class:`.DoubleWellWCA`)
     This class defines a n-dimensional Double Well potential.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
