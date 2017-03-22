@@ -13,7 +13,7 @@ __init__.py
     This file, imports from the other modules and defines helper
     methods for the initiation.
 
-initiate_kick.py (:py:mod:`pyretis.initation.initiate_kick`)
+initiate_kick.py (:py:mod:`pyretis.initiation.initiate_kick`)
     Methods for initiating using the ``kick`` method.
 
 initiate_load.py (:py:mod:`pyretis.initiation.initiate_load`)
