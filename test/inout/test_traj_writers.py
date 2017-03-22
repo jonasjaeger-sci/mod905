@@ -140,9 +140,9 @@ class TrajTest(unittest.TestCase):
         writer = get_writer('pathtrajint')
         idxs = 0
         idx = 0
-        for i, lines in enumerate(writer.generate_output(0, path)):
+        for i, lines in enumerate(writer.generate_output(0, path, 'ACC')):
             if i == 0:
-                self.assertEqual('# Cycle: 0, status: None', lines)
+                self.assertEqual('# Cycle: 0, status: ACC', lines)
             else:
                 if lines.startswith('Snapshot'):
                     self.assertEqual('Snapshot: {}'.format(idxs), lines)
@@ -174,7 +174,7 @@ class TrajTest(unittest.TestCase):
                           'ekin': None}
             path.append(phasepoint)
         writer = get_writer('pathtrajext')
-        correct = ['# Cycle: 0, status: None',
+        correct = ['# Cycle: 0, status: ACC',
                    '#     Step              Filename       index    vel',
                    '         0           initial.g96           0      1',
                    '         1             trajB.trr           5     -1',
@@ -188,7 +188,7 @@ class TrajTest(unittest.TestCase):
                    '         9             trajF.trr           3      1',
                    '        10             trajF.trr           4      1']
 
-        for corr, snap in zip(correct, writer.generate_output(0, path)):
+        for corr, snap in zip(correct, writer.generate_output(0, path, 'ACC')):
             self.assertEqual(corr, snap)
 
 
