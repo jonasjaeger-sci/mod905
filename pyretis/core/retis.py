@@ -363,12 +363,13 @@ def retis_swap(ensembles, idx, system, order_function, engine,
         cross = path1.check_interfaces(ensemble2.interfaces)[-1]
         # Do the swap
         path1, path2 = path2, path1
+        # And set moves:
+        path1.set_move('s+')  # came from right
+        path2.set_move('s-')  # came from left
         accept = cross[1]
         if accept:  # accept the swap
             status = 'ACC'
             logger.info('Swap was accepted.')
-            path1.set_move('s+')  # came from right
-            path2.set_move('s-')  # came from left
             # To avoid overwriting files, we move the paths to the
             # generate directory here. They will be moved into the
             # accepted directory by the `add_path_data` below.
