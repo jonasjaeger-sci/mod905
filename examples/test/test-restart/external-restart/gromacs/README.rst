@@ -8,7 +8,7 @@ This directory contains tests for restarting with GROMACS:
    compared to the outcome of just running the full simulation
    (i.e. in one step).
 
-2. ``test-midway``: This tests that we can run a RETIS simulation
+2. ``test-restart``: This tests that we can run a RETIS simulation
    for a number of steps, stop it, relaunch it and that this gives
    the same result as running a longer RETIS simulation.
 
