@@ -44,7 +44,7 @@ swapsimul = True
 Initial-path
 ------------
 method = kick
-kick-from previous
+kick-from = previous
 
 Orderparameter
 --------------
