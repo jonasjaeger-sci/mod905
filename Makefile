@@ -23,6 +23,8 @@ clean:
 	find -name \*.pyo -delete
 	find -name __pycache__ -delete
 	find -name \*.so -delete
+	rm bin/pyretisrun
+	rm bin/pyretisanalyse
 
 upload-docs:
 	scp -r docs/_build/html/* pyretisweb:WWW/

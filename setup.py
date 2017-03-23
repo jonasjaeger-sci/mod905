@@ -36,11 +36,14 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.6.0.dev0'
+FULL_VERSION = '0.6.0.dev2'
 
 # create copies of scripts:
-shutil.copyfile('bin/pyretisrun.py', 'bin/pyretisrun')
-shutil.copyfile('bin/pyretisanalyse.py', 'bin/pyretisanalyse')
+try:
+    shutil.copy('bin/pyretisrun.py', 'bin/pyretisrun')
+    shutil.copy('bin/pyretisanalyse.py', 'bin/pyretisanalyse')
+except FileNotFoundError:
+    pass
 
 setup(name='pyretis',
       version=FULL_VERSION,
@@ -64,8 +67,10 @@ setup(name='pyretis',
                    'Programming Language :: Python :: 3.4',
                    'Programming Language :: Python :: 3.5',
                    'Topic :: Scientific/Engineering :: Physics'],
-      keywords='rare md mc tps simulation tis retis',
+      keywords='rare-events md mc tps simulation tis retis',
       packages=find_packages(exclude=['docs']),
+      package_data={'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']},
+      include_package_data=True,
       install_requires=['numpy>=1.6.0',
                         'scipy>=0.13.3',
                         'matplotlib>=1.5',

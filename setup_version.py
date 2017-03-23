@@ -15,7 +15,7 @@ import subprocess
 MAJOR = 0
 MINOR = 6
 MICRO = 0
-DEV = 0
+DEV = 2
 ISRELEASED = False
 if not ISRELEASED:
     VERSION = '{:d}.{:d}.{:d}.dev{:d}'.format(MAJOR, MINOR, MICRO, DEV)
