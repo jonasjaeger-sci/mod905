@@ -220,7 +220,7 @@ def make_dirs(dirname):
             msg = '"{}" is a file. Will abort!'
             raise OSError(errno.EEXIST, msg, dirname)
         if os.path.isdir(dirname):
-            msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
+            msg = 'Directory "{}" already exist.'.format(dirname)
             return msg
 
 

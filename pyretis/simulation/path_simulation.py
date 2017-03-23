@@ -120,7 +120,7 @@ class PathSimulation(Simulation):
         # Additional setup for shooting:
         if self.settings['tis']['sigma_v'] < 0.0:
             self.settings['tis']['aimless'] = True
-            logger.info('%s: aimless is True', self.name)
+            logger.debug('%s: aimless is True', self.name)
         else:
             logger.debug('Path simulation: Creating sigma_v.')
             sigv = (self.settings['tis']['sigma_v'] *
