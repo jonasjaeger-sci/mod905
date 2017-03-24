@@ -79,7 +79,7 @@ def extract_traj(traj_file, target_traj, last_one):
                     output.write('{}\n'.format(lines))
                 for snapshot in path['data']:
                     snap = [i for i in snapshot]
-                    snap[1] = snapshot[1].split('_')[1]
+                    snap[1] = '_'.join(snap[1].split('_')[1:])
                     output.write(fmt.format(*snap))
 
 
