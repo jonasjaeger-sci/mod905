@@ -64,10 +64,10 @@ class GromacsEngine2R(GromacsEngine2):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0):
+                 maxwarn=0, gro_format='g96'):
         """Initiate the script."""
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
-                         maxwarn=0)
+                         maxwarn=0, gro_format=gro_format)
 
     def _prepare_shooting_point(self, input_file):
         """Method to create initial configuration for a shooting move."""

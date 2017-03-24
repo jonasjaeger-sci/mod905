@@ -9,6 +9,12 @@ Important methods defined here
 read_gromacs_file (:py:func:`.read_gromacs_file`)
     A method for reading snapshots from a GROMACS GRO file.
 
+read_gromacs_gro_file (:py:func:`.read_gromacs_gro_file`)
+    Read a single snapshot from a GROMACS GRO file.
+
+write_gromacs_gro_file (:py:func:`.write_gromacs_gro_file`)
+    Write configuration in GROMACS GRO format.
+
 read_gromos96_file (:py:func:`.read_gromos96_file`)
     Read a single configuration GROMACS .g96 file.
 
@@ -37,6 +43,8 @@ logger.addHandler(logging.NullHandler())
 
 __all__ = [
     'read_gromacs_file',
+    'read_gromacs_gro_file',
+    'write_gromacs_gro_file',
     'read_gromos96_file',
     'write_gromos96_file',
     'read_xvg_file',
@@ -147,6 +155,77 @@ def read_gromacs_file(filename):
     with open(filename, 'r') as fileh:
         for snapshot in read_gromacs_lines(fileh):
             yield snapshot
+
+
+def read_gromacs_gro_file(filename):
+    """Read a single configuration GROMACS .gro file.
+
+    Parameters
+    ----------
+    filename : string
+        The file to read.
+
+    Returns
+    -------
+    rawdata : dict of list of strings
+        This is the raw data read from the file grouped into sections.
+    xyz : numpy.array
+        The positions.
+    vel : numpy.array
+        The velocities.
+    """
+    xyz = []
+    vel = []
+    frame = None
+    with open(filename, 'r') as fileh:
+        for frame in read_gromacs_lines(fileh):
+            xyz = [[i, j, k] for i, j, k in zip(frame['x'],
+                                                frame['y'],
+                                                frame['z'])]
+            vel = [[i, j, k] for i, j, k in zip(frame['vx'],
+                                                frame['vy'],
+                                                frame['vz'])]
+            break
+    return frame, np.array(xyz), np.array(vel)
+
+
+def write_gromacs_gro_file(outfile, txt, xyz, vel):
+    """Write configuration in GROMACS GRO format.
+
+    Parameters
+    ----------
+    filename : string
+        The name of the file to create.
+    raw : dict of lists of strings
+        This contains the raw data read from a .gro file.
+    xyz : numpy.array
+        The positions to write.
+    vel : numpy.array
+        The velocities to write.
+    """
+    resnum = txt['residunr']
+    resname = txt['residuname']
+    atomname = txt['atomname']
+    atomnr = txt['atomnr']
+    npart = len(xyz)
+    with open(outfile, 'w') as output:
+        output.write('{}\n'.format(txt['header']))
+        output.write('{}\n'.format(npart))
+        for i in range(npart):
+            buff = _GRO_VEL_FMT.format(
+                resnum[i],
+                resname[i],
+                atomname[i],
+                atomnr[i],
+                xyz[i, 0],
+                xyz[i, 1],
+                xyz[i, 2],
+                vel[i, 0],
+                vel[i, 1],
+                vel[i, 2])
+            output.write('{}\n'.format(buff))
+        box = _GRO_BOX_FMT.format(*txt['box'])
+        output.write('{}\n'.format(box))
 
 
 def read_gromos96_file(filename):

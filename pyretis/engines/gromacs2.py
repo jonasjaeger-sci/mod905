@@ -52,10 +52,12 @@ class GromacsEngine2(GromacsEngine):
         ``timestep * subcycles``.
     maxwarn : integer
         Setting for the GROMACS grompp ``maxwarn` option.
+    ext : string
+        This string selects the output format for GROMACS.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0):
+                 maxwarn=0, gro_format='g96'):
         """Initiate the GROMACS engine.
 
         Parameters
@@ -72,9 +74,11 @@ class GromacsEngine2(GromacsEngine):
             The number of steps each GROMACS MD run is composed of.
         maxwarn : integer
             Setting for the GROMACS grompp ``maxwarn` option.
+        gro_format : string
+            The format used for GROMACS configurations.
         """
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
-                         maxwarn=maxwarn)
+                         maxwarn=maxwarn, gro_format=gro_format)
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
@@ -128,7 +132,7 @@ class GromacsEngine2(GromacsEngine):
         # 2) Run GROMACS preprocessor:
         out_files = self._execute_grompp(mdp_file, initial_conf, name)
         # Generate some names that will be created by mdrun.
-        confout = '{}.g96'.format(name)
+        confout = '{}.{}'.format(name, self.ext)
         out_files['conf'] = confout
         out_files['cpt_prev'] = '{}_prev.cpt'.format(name)
         for key in ('cpt', 'edr', 'log', 'trr'):

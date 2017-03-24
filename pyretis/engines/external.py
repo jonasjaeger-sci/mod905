@@ -71,12 +71,10 @@ class ExternalMDEngine(EngineBase):
         The number of steps the external step is composed of. That is:
         each external step is really composed of ``subcycles`` number
         of iterations.
-    ext : string
-        Extension for configuration files.
     """
     engine_type = 'external'
 
-    def __init__(self, description, timestep, subcycles, ext):
+    def __init__(self, description, timestep, subcycles):
         """Initialization of the external engine.
 
         Here we just set up some common properties which are useful
@@ -93,14 +91,11 @@ class ExternalMDEngine(EngineBase):
         subcycles : integer
             The number of steps each external interation run is
             composed of.
-        ext : string
-            The file extension for configuration files.
         """
         super().__init__(description)
         self.timestep = timestep
         self.subcycles = subcycles
         self._exe_dir = None
-        self.ext = '{}{}'.format(os.extsep, ext)
 
     @property
     def exe_dir(self):
@@ -151,9 +146,8 @@ class ExternalMDEngine(EngineBase):
         """
         pass
 
-    @staticmethod
     @abstractmethod
-    def _read_configuration(filename):
+    def _read_configuration(self, filename):
         """Read output configuration from external software.
 
         Parameters
@@ -170,9 +164,8 @@ class ExternalMDEngine(EngineBase):
         """
         pass
 
-    @staticmethod
     @abstractmethod
-    def _reverse_velocities(filename, outfile):
+    def _reverse_velocities(self, filename, outfile):
         """Reverse velocities in a given snapshot.
 
         Parameters
@@ -591,6 +584,10 @@ class ExternalMDEngine(EngineBase):
         """
         pass
 
+    def _name_output(self, basename):
+        """Return the name of the output file."""
+        return os.path.join(self.exe_dir, basename)
+
     def dump_config(self, config, deffnm='conf'):
         """Extract configuration frame from a system if needed.
 
@@ -617,8 +614,7 @@ class ExternalMDEngine(EngineBase):
             # Note, this does not create a new file.
             return pos_file
         else:
-            out_file = os.path.join(self.exe_dir,
-                                    '{}{}'.format(deffnm, self.ext))
+            out_file = os.path.join(self.exe_dir, self._name_output(deffnm))
             logger.debug('Config: %s', (config, ))
             self._extract_frame(pos_file, idx, out_file)
             return out_file

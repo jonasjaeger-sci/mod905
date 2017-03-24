@@ -17,6 +17,8 @@ import shlex
 import numpy as np
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.inout.writers.gromacsio import (read_gromos96_file,
+                                             read_gromacs_gro_file,
+                                             write_gromacs_gro_file,
                                              write_gromos96_file,
                                              read_xvg_file)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -49,10 +51,12 @@ class GromacsEngine(ExternalMDEngine):
         ``timestep * subcycles``.
     maxwarn : integer
         Setting for the GROMACS grompp ``maxwarn`` option.
+    ext : string
+        This string selects the output format for GROMACS.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0):
+                 maxwarn=0, gro_format='g96'):
         """Initiate the GROMACS engine.
 
         Parameters
@@ -69,8 +73,15 @@ class GromacsEngine(ExternalMDEngine):
             The number of steps each GROMACS MD run is composed of.
         maxwarn : integer
             Setting for the GROMACS grompp ``maxwarn`` option.
+        gro_format : string
+            The format used for GROMACS configurations.
         """
-        super().__init__('GROMACS engine', timestep, subcycles, 'g96')
+        super().__init__('GROMACS engine', timestep, subcycles)
+        self.ext = gro_format
+        if self.ext not in ('g96', 'gro'):
+            msg = 'Unknown "gro_format": %s'
+            logger.error(msg, self.ext)
+            raise ValueError(msg % self.ext)
         # Define the gmx command:
         self.gmx = gmx
         # For mdrun, set up for first execution and continuation:
@@ -80,7 +91,7 @@ class GromacsEngine(ExternalMDEngine):
         self.maxwarn = maxwarn
         # Add input path and the input files:
         self.input_path = os.path.abspath(input_path)
-        input_files = {'conf': 'conf.g96',
+        input_files = {'conf': 'conf.{}'.format(self.ext),
                        'input_o': 'grompp.mdp',  # "o" = original input file
                        'topology': 'topol.top'}
         self.input_files = {}
@@ -118,6 +129,14 @@ class GromacsEngine(ExternalMDEngine):
         self.input_files['tpr'] = os.path.join(self.input_path,
                                                out_files['tpr'])
         logger.info('GROMACS ".tpr" created: %s', self.input_files['tpr'])
+
+    def _name_output(self, basename):
+        """Return the name of output file for dumping.
+
+        Here, we just add the corect extension for GROMACS-
+        """
+        out_file = '{}.{}'.format(basename, self.ext)
+        return os.path.join(self.exe_dir, out_file)
 
     def _execute_grompp(self, mdp_file, config, deffnm):
         """Method to execute the GROMACS preprocessor.
@@ -166,7 +185,7 @@ class GromacsEngine(ExternalMDEngine):
             This dict contains the output files created by mdrun.
             Note that we here hard code the file names.
         """
-        confout = '{}.g96'.format(deffnm)
+        confout = '{}.{}'.format(deffnm, self.ext)
         cmd = shlex.split(self.mdrun.format(tprfile, deffnm, confout))
         self.execute_command(cmd, cwd=self.exe_dir)
         out_files = {'conf': confout,
@@ -227,7 +246,7 @@ class GromacsEngine(ExternalMDEngine):
             The output files created/appended by GROMACS when we
             continue the simulation.
         """
-        confout = '{}.g96'.format(deffnm)
+        confout = '{}.{}'.format(deffnm, self.ext)
         self._removefile(confout)
         cmd = shlex.split(self.mdrun_c.format(tprfile, cptfile,
                                               deffnm, confout))
@@ -523,9 +542,8 @@ class GromacsEngine(ExternalMDEngine):
         self._remove_files(self.exe_dir, remove)
         return confout, energy
 
-    @staticmethod
-    def _read_configuration(filename):
-        """Method to read output from GROMACS .g96 files.
+    def _read_configuration(self, filename):
+        """Method to read output from GROMACS .g96/gro files.
 
         Parameters
         ----------
@@ -539,11 +557,17 @@ class GromacsEngine(ExternalMDEngine):
         vel : numpy.array
             The velocities.
         """
-        _, xyz, vel = read_gromos96_file(filename)
+        if self.ext == 'g96':
+            _, xyz, vel = read_gromos96_file(filename)
+        elif self.ext == 'gro':
+            _, xyz, vel = read_gromacs_gro_file(filename)
+        else:
+            msg = 'GROMACS engine does not support reading "%s"'
+            logger.error(msg, self.ext)
+            raise ValueError(msg % self.ext)
         return xyz, vel
 
-    @staticmethod
-    def _reverse_velocities(filename, outfile):
+    def _reverse_velocities(self, filename, outfile):
         """Method to reverse velocity in a given snapshot.
 
         Parameters
@@ -554,8 +578,16 @@ class GromacsEngine(ExternalMDEngine):
             The output file for storing the configuration with
             reversed velocities.
         """
-        txt, xyz, vel = read_gromos96_file(filename)
-        write_gromos96_file(outfile, txt, xyz, -vel)
+        if self.ext == 'g96':
+            txt, xyz, vel = read_gromos96_file(filename)
+            write_gromos96_file(outfile, txt, xyz, -vel)
+        elif self.ext == 'gro':
+            txt, xyz, vel = read_gromacs_gro_file(filename)
+            write_gromacs_gro_file(outfile, txt, xyz, -vel)
+        else:
+            msg = 'GROMACS engine does not support writing "%s"'
+            logger.error(msg, self.ext)
+            raise ValueError(msg % self.ext)
         return None
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
