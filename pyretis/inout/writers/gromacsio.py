@@ -33,6 +33,9 @@ read_trr_data (:py:func:`.read_trr_data`)
 skip_trr_data (:py:func:`.skip_trr_data`)
     Skip reading data from an open .trr file and move on to the
     next header.
+
+read_trr_file (:py:func:`.read_trr_file`)
+    Yield frames from a .trr file.
 """
 import logging
 import struct
@@ -584,3 +587,15 @@ def read_trr_data(fileh, header):
             data[key] = read_coord(fileh, endian, double,
                                    header['natoms'])
     return data
+
+
+def read_trr_file(filename):
+    """Yields frames in a trr file."""
+    with open(filename, 'rb') as infile:
+        while True:
+            try:
+                header, _ = read_trr_header(infile)
+                data = read_trr_data(infile, header)
+                yield header, data
+            except EOFError:
+                raise StopIteration
