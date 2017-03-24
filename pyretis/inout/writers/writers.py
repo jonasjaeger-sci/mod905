@@ -844,21 +844,19 @@ class PathExtWriter(Writer):
     print_header : boolean
         Determines if we should print the header on the first step.
     """
+    FMT = '{:>10}  {:>20s}  {:>10}  {:>5}'
 
     def __init__(self):
-        """Initialization of the PathExtWriter writer.
-
-        Parameters
-        ----------
-        units : string
-            The system of units used internally for positions and
-            velocities.
-        """
+        """Initialization of the PathExtWriter writer."""
         header = {'labels': ['Step', 'Filename', 'index', 'vel'],
                   'width': [10, 20, 10, 5], 'spacing': 2}
 
         super().__init__('PathExtWriter', header=header)
         self.print_header = False
+
+    def format_output(self, time, filename, index, vel):
+        """Just format the output."""
+        return self.FMT.format(time, filename, index, vel)
 
     def generate_output(self, step, path, status):
         yield '# Cycle: {}, status: {}'.format(step, status)
@@ -869,8 +867,7 @@ class PathExtWriter(Writer):
             if idx is None:
                 idx = 0
             vel = -1 if phasepoint['vel'] else 1
-            yield '{:>10}  {:>20s}  {:>10}  {:>5}'.format(i, filename_short,
-                                                          idx, vel)
+            yield self.format_output(i, filename_short, idx, vel)
 
     @staticmethod
     def line_parser(line):
@@ -890,7 +887,6 @@ class PathExtWriter(Writer):
 
 
 class PathIntWriter(Writer):
-
     """A class for writing internal trajectories.
 
     Attributes
@@ -900,14 +896,7 @@ class PathIntWriter(Writer):
     """
 
     def __init__(self):
-        """Initialization of the PathIntWriter writer.
-
-        Parameters
-        ----------
-        units : string
-            The system of units used internally for positions and
-            velocities.
-        """
+        """Initialization of the PathIntWriter writer."""
         super().__init__('PathIntWriter', header=None)
         self.print_header = False
         self.fmt = None
