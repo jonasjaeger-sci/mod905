@@ -94,6 +94,8 @@ def main():
                 equal = compare_energies(file1, file2)
             else:
                 equal = filecmp.cmp(file1, file2)
+                if equal:
+                    print_to_screen('Files are equal!', level='success')
             if not equal:
                 print_to_screen('NOTE: Files are NOT equal!', level='error')
                 errors.append((file1, file2))
@@ -104,7 +106,7 @@ def main():
             print_to_screen('{} != {}'.format(file1, file2), level='error')
     else:
         print()
-        print_to_screen('Comparison is done and it was successful',
+        print_to_screen('Comparison is done and it was successful!',
                         level='success')
 
 
