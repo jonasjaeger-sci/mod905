@@ -153,6 +153,7 @@ class GromacsEngine2(GromacsEngine):
         for i, data in enumerate(gro.get_gromacs_frames()):
             system.particles.pos = data['x']
             system.particles.vel = data['v']
+            system.box.update_size(np.diagonal(data['box']))
             if reverse:
                 system.particles.vel *= -1
             order = order_function.calculate_all(system)

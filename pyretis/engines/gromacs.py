@@ -552,20 +552,25 @@ class GromacsEngine(ExternalMDEngine):
 
         Returns
         -------
+        box : numpy.array
+            The box dimensions.
         xyz : numpy.array
             The positions.
         vel : numpy.array
             The velocities.
         """
+        box = None
         if self.ext == 'g96':
-            _, xyz, vel = read_gromos96_file(filename)
+            txt, xyz, vel = read_gromos96_file(filename)
+            box = [float(i) for i in txt['BOX'][0].split()]
         elif self.ext == 'gro':
-            _, xyz, vel = read_gromacs_gro_file(filename)
+            txt, xyz, vel = read_gromacs_gro_file(filename)
+            box = txt['box']
         else:
             msg = 'GROMACS engine does not support reading "%s"'
             logger.error(msg, self.ext)
             raise ValueError(msg % self.ext)
-        return xyz, vel
+        return box, xyz, vel
 
     def _reverse_velocities(self, filename, outfile):
         """Method to reverse velocity in a given snapshot.

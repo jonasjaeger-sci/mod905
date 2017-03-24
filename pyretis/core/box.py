@@ -128,6 +128,25 @@ class Box(object):
         """
         return np.product(self.length)
 
+    def update_size(self, new_size):
+        """Update the box size.
+
+        Parameters
+        ----------
+        new_size : list, tuple, numpy.array, or other iterable.
+            The new box size.
+        """
+        if new_size is None:
+            logger.warning('Tried to update box with empty size! Ignored!')
+        else:
+            if len(new_size) != self.dim:
+                logger.warning('Wrong number of dimensions in box update!')
+            else:
+                for i, length in enumerate(new_size):
+                    self.length[i] = length
+                    self.high[i] = self.low[i] + length
+                self.ilength = 1.0 / self.length
+
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.
 
@@ -249,6 +268,10 @@ class Box(object):
             msg = 'Dim: {}, Low: {}, high: {}, periodic: {}'
             boxstr.append(msg.format(i, low, high, periodic))
         return '\n'.join(boxstr)
+
+    def print_length(self):
+        """Return a string with box lengths. Can be used for output."""
+        return ' '.join(('{}'.format(i) for i in self.length))
 
     def restart_info(self):
         """Return a dictionary with restart information."""

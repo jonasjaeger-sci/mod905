@@ -157,6 +157,8 @@ class ExternalMDEngine(EngineBase):
 
         Returns
         -------
+        box : numpy.array
+            The dimensions of the simulation box.
         xyz : numpy.array
             The positions found in the given filename.
         vel : numpy.array
@@ -357,12 +359,13 @@ class ExternalMDEngine(EngineBase):
         out : float
             The calculated order parameter.
         """
-        xyz, vel = self._read_configuration(system.particles.config[0])
+        box, xyz, vel = self._read_configuration(system.particles.config[0])
         system.particles.pos = xyz
         if system.particles.vel_rev:
             system.particles.vel = -vel
         else:
             system.particles.vel = vel
+        system.box.update_size(box)
         return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
