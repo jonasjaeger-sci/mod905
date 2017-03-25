@@ -141,12 +141,14 @@ def _load_order_parameters_ext(traj, dirname, system, engine, order_function):
         print_to_screen('Recalculating order parameters for input path')
         logger.info('Recalculating order parameters for input path')
         for snapshot in traj['data']:
-            system.particles.set_pos((snapshot[1], int(snapshot[2])))
+            system.particles.set_pos((snapshot[1], snapshot[2]))
+            system.particles.set_vel(snapshot[3])
             dump = engine.dump_frame(system)
             system.particles.set_pos((dump, None))
             order = engine.calculate_order(order_function, system)
+            print(system.particles.config, order)
             orderdata.append(order)
-            if os.path.isfile(dump):
+            if os.path.isfile(dump) and snapshot[2] is not None:
                 os.remove(dump)
         return orderdata
 
@@ -275,16 +277,16 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
                        'vel': snapshot['vel'],
                        'vpot': None,
                        'ekin': None}
-        status, success, _ = engine.add_to_path(
+        engine.add_to_path(
             path,
             phase_point,
             left,
             right
         )
-        if not success:
-            logger.critical('Could not add to path! %s', status)
-            logger.critical('Please check your input path')
-            break
+        #if stop:
+        #    logger.critical('Could not add to path! %s', status)
+        #    logger.critical('Please check your input path')
+        #    break
     _load_energies_for_path(path, dirname)
     path.generated = ('re', 0, 0, 0)
     return _check_path(path, ensemble)
@@ -331,6 +333,14 @@ def _load_external_trajectory(dirname, engine):
     for i, snapshot in enumerate(traj['data']):
         config = os.path.join(engine.exe_dir, snapshot[1])
         traj['data'][i][1] = config
+        reverse = (int(snapshot[3]) == -1)
+        idx = int(snapshot[2])
+        if idx < 0:
+            idx = None
+        traj['data'][i][2] = idx
+        traj['data'][i][3] = reverse
+
+
     return traj
 
 
@@ -364,23 +374,21 @@ def read_path_files_ext(path, ensemble, dirname, system, order_function,
     print_to_screen('Creating path from files')
     logger.debug('Creating path from files')
     for snapshot, orderi in zip(traj['data'], orderdata):
-        reverse = (int(snapshot[3]) == -1)
-        idx = int(snapshot[2])
         phase_point = {'order': orderi,
-                       'pos': (snapshot[1], idx),
-                       'vel': reverse,
+                       'pos': (snapshot[1], snapshot[2]),
+                       'vel': snapshot[3],
                        'vpot': None,
                        'ekin': None}
-        status, success, _ = engine.add_to_path(
+        engine.add_to_path(
             path,
             phase_point,
             left,
             right
         )
-        if not success:
-            logger.critical('Could not add to path! %s', status)
-            logger.critical('Please check your input path!')
-            break
+        #if stop:
+        #    logger.critical('Could not add to path! %s', status)
+        #    logger.critical('Please check your input path!')
+        #    break
     _load_energies_for_path(path, dirname)
     path.generated = ('re', 0, 0, 0)
     return _check_path(path, ensemble)

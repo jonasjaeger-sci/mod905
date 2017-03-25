@@ -51,7 +51,8 @@ from pyretis.inout.common import (
     check_python_version,
     get_log_formatter,
     make_dirs,
-    print_to_screen
+    print_to_screen,
+    create_backup,
 )
 from pyretis.inout.settings import (
     parse_settings_file,
@@ -66,6 +67,14 @@ from pyretis.inout.restart import (
 
 
 _DATE_FMT = '%d.%m.%Y %H:%M:%S'
+# Set up for logging:
+logger = logging.getLogger('')
+logger.setLevel(logging.DEBUG)
+# Define a console logger. This will log to sys.stderr:
+console = logging.StreamHandler()
+console.setLevel(logging.WARNING)
+console.setFormatter(get_log_formatter(logging.WARNING))
+logger.addHandler(console)
 
 
 def use_tqdm(progress):
@@ -614,6 +623,7 @@ def main(infile, indir, exe_dir, progress):
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         logger.error(errtxt)
         print_to_screen('ERROR - execution stopped.', level='error')
+        print_to_screen(errtxt, level='error')
         print_to_screen('Please see the LOG for more info.', level='error')
         raise
     finally:
@@ -667,22 +677,14 @@ if __name__ == '__main__':
     if not os.path.isdir(input_dir):
         input_dir = os.getcwd()
 
-    # Set up for logging:
-    logger = logging.getLogger('')
-    logger.setLevel(logging.DEBUG)
-    # Define a console logger. This will log to sys.stderr:
-    console = logging.StreamHandler()
-    console.setLevel(logging.WARNING)
-    console.setFormatter(get_log_formatter(logging.WARNING))
-    logger.addHandler(console)
     # Define a file logger:
-    fileh = logging.FileHandler(args_dict['log_file'], mode='w')
+    create_backup(args_dict['log_file'])
+    fileh = logging.FileHandler(args_dict['log_file'], mode='a')
     log_level = getattr(logging, args_dict['log_level'].upper(),
                         logging.INFO)
     fileh.setLevel(log_level)
     fileh.setFormatter(get_log_formatter(log_level))
     logger.addHandler(fileh)
-
     # Here, we just check the python version. PyRETIS should anyway
     # fail before this for python2.
     check_python_version()

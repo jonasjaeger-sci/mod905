@@ -64,7 +64,6 @@ _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
 
 
 # Definitions for the .trr reader.
-TRR_HEAD_SIZE = 74
 _GROMACS_MAGIC = 1993
 _DIM = 3
 _TRR_VERSION = 'GMX_trn_file'

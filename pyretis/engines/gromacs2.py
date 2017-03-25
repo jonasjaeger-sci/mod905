@@ -20,10 +20,14 @@ import numpy as np
 from pyretis.engines.gromacs import GromacsEngine
 from pyretis.inout.writers.gromacsio import (read_trr_header,
                                              read_trr_data,
-                                             TRR_HEAD_SIZE,
                                              TRR_DATA_ITEMS)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+TRR_HEAD_SIZE = 1000
+# Actually we don't know the header size, this is just a "large"
+# number so that we don't try to read the header before at least
+# this number of bytes have been written.
 
 
 class GromacsEngine2(GromacsEngine):
@@ -187,53 +191,30 @@ class GromacsEngine2(GromacsEngine):
         return success, status
 
 
-def get_header(filename, fileh, idx):
-    """Try to get the header from the file if we think we can
+def get_data(fileh, header):
+    """Read data from the trr file.
 
     Parameters
     ----------
-    filename : string
-        The name of the file.
     fileh : file object
         The file we are reading.
-    idx : integer
-        The current position we are at.
-    """
-    size = os.path.getsize(filename)
-    size_h = idx + TRR_HEAD_SIZE
-    if size >= size_h:
-        header, header_s = read_trr_header(fileh)
-        return header, size_h, header_s
-    else:
-        return None, idx, None
-
-
-def get_data(filename, fileh, idx, header):
-    """Try to get the next from the file if we think we can.
-
-    Parameters
-    ----------
-    filename : string
-        The name of the file.
-    fileh : file object
-        The file we are reading.
-    idx : integer
-        The current position we are at.
     header : dict
         The previously read header. Contains sizes and what to read.
+
+    Returns
+    -------
+    data : dict
+        The data read from the file.
+    data_size : integer
+        The size of the data read.
     """
-    size = os.path.getsize(filename)
     data_size = sum([header[key] for key in TRR_DATA_ITEMS])
-    size_d = idx + data_size
-    if size >= size_d:
-        data = read_trr_data(fileh, header)
-        return data, size_d
-    else:
-        return None, idx
+    data = read_trr_data(fileh, header)
+    return data, data_size
 
 
-def reopen_file(filename, fileh, inode):
-    """Will reopen a file if the inode has changed.
+def reopen_file(filename, fileh, inode, bytes_read):
+    """Reopen a file if the inode has changed.
 
     Parameters
     ----------
@@ -243,6 +224,8 @@ def reopen_file(filename, fileh, inode):
         The current open file object.
     inode : integer
         The current inode we are using.
+    bytes_read : integer
+        The position we should start reading at.
 
     Returns
     -------
@@ -255,6 +238,7 @@ def reopen_file(filename, fileh, inode):
         new_fileh = open(filename, 'rb')
         fileh.close()
         new_inode = os.fstat(new_fileh.fileno()).st_ino
+        new_fileh.seek(bytes_read)
         return new_fileh, new_inode
     else:
         return None, None
@@ -271,11 +255,14 @@ def read_remaining_trr(filename, fileh, start):
         The file object we are reading from.
     start : integer
         The current position we are at.
+
+    Yields
+    ------
     """
     stop = False
     bytes_read = start
     bytes_total = os.path.getsize(filename)
-    logger.debug('Reading remaining')
+    logger.debug('Reading remaing data from: %s', filename)
     while not stop:
         if bytes_read >= bytes_total:
             stop = True
@@ -283,27 +270,20 @@ def read_remaining_trr(filename, fileh, start):
         header = None
         new_bytes = bytes_read
         try:
-            logger.debug('Reading header')
-            header, new_bytes, _ = get_header(filename, fileh, bytes_read)
+            header, new_bytes = read_trr_header(fileh)
         except EOFError:
             # Just assume that we have reached the end of the
             # file and we just stop here.
             stop = True
-            logger.debug('Could not find it, aborting.')
             continue
         if header is not None:
-            logger.debug('Found header')
-            bytes_read = new_bytes
+            bytes_read += new_bytes
             try:
-                logger.debug('Looking for data')
-                data, new_bytes = get_data(filename, fileh, bytes_read,
-                                           header)
+                data, new_bytes = get_data(fileh, header)
                 if data is not None:
-                    logger.debug('Found some data....')
-                    bytes_read = new_bytes
+                    bytes_read += new_bytes
                     yield header, data, bytes_read
             except EOFError:
-                logger.debug('Should not have looked here...')
                 # Hopefully, this code should not be reached...
                 stop = True
                 continue
@@ -335,6 +315,10 @@ class GromacsRunner():
     SLEEP : float
         How long we wait after an unsuccessful read before
         reading again.
+    data_size : integer
+        The size of the data (x, v, f, box, etc.) in the .trr file.
+    header_size : integer
+        The size of the header in the .trr file.
     """
 
     SLEEP = 0.1
@@ -362,10 +346,12 @@ class GromacsRunner():
         self.bytes_read = 0
         self.ino = 0
         self.stop_read = True
+        self.data_size = 0
+        self.header_size = 0
 
     def start(self):
         """Start execution of GROMACS and wait for output file creation."""
-        logger.debug('Starting GROMACS execution')
+        logger.debug('Starting GROMACS execution in %s', self.exe_dir)
         self.running = subprocess.Popen(
             self.cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -391,6 +377,7 @@ class GromacsRunner():
 
     def get_gromacs_frames(self):
         """Read the GROMACS .trr file on-the-fly."""
+        first_header = True
         while not self.stop_read:
             poll = self.running.poll()
             if poll is not None:
@@ -401,47 +388,63 @@ class GromacsRunner():
                                                          self.fileh,
                                                          self.bytes_read):
                         yield data
+
             else:
-                # Try to read next frame:
-                header = None
-                try:
-                    header, new_bytes, _ = get_header(self.trr_file,
-                                                      self.fileh,
-                                                      self.bytes_read)
-                except EOFError:
-                    new_fileh, new_ino = reopen_file(self.trr_file,
-                                                     self.fileh,
-                                                     self.ino)
-                    if new_fileh is not None:
-                        self.fileh = new_fileh
-                        self.ino = new_ino
-                if header is None:
-                    # Data header is not ready, we will wait before
-                    # running a new cycle.
-                    sleep(self.SLEEP)
+                # first we try to get the header from the file:
+                size = os.path.getsize(self.trr_file)
+                if self.header_size == 0:
+                    header_size = TRR_HEAD_SIZE
                 else:
-                    # We have read a header, try to read the data:
-                    self.bytes_read = new_bytes
-                    data = None
-                    while data is None:
-                        try:
-                            data, new_bytes = get_data(self.trr_file,
-                                                       self.fileh,
-                                                       self.bytes_read,
-                                                       header)
-                        except EOFError:
-                            new_fileh, new_ino = reopen_file(self.trr_file,
-                                                             self.fileh,
-                                                             self.ino)
-                            if new_fileh is not None:
-                                self.fileh = new_fileh
-                                self.ino = new_ino
-                        if data is None:
-                            # Data is not ready, will wait:
-                            sleep(self.SLEEP)
-                        else:
-                            self.bytes_read = new_bytes
-                    yield data
+                    header_size = self.header_size
+                if size >= self.bytes_read + header_size:
+                    # Try to read next frame:
+                    try:
+                        header, new_bytes = read_trr_header(self.fileh)
+                    except EOFError:
+                        new_fileh, new_ino = reopen_file(self.trr_file,
+                                                         self.fileh,
+                                                         self.ino,
+                                                         self.bytes_read)
+                        if new_fileh is not None:
+                            self.fileh = new_fileh
+                            self.ino = new_ino
+                    if header is not None:
+                        self.bytes_read += new_bytes
+                        self.header_size = new_bytes
+                        if first_header:
+                            logger.debug('TRR header was: %i', new_bytes)
+                            first_header = False
+                        # calculate the size of the data
+                        self.data_size = sum([header[key] for key in
+                                              TRR_DATA_ITEMS])
+                        data = None
+                        while data is None:
+                            size = os.path.getsize(self.trr_file)
+                            if size >= self.bytes_read + self.data_size:
+                                try:
+                                    data, new_bytes = get_data(self.fileh,
+                                                               header)
+                                except EOFError:
+                                    new_fileh, new_ino = reopen_file(
+                                        self.trr_file,
+                                        self.fileh,
+                                        self.ino,
+                                        self.bytes_read)
+                                    if new_fileh is not None:
+                                        self.fileh = new_fileh
+                                        self.ino = new_ino
+                                if data is None:
+                                    # Data is not ready, will wait:
+                                    sleep(self.SLEEP)
+                                else:
+                                    self.bytes_read += new_bytes
+                                    yield data
+                            else:
+                                # Data is not ready, will wait:
+                                sleep(self.SLEEP)
+                else:
+                    # header was not ready, just wait before trying again...
+                    sleep(self.SLEEP)
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
@@ -455,7 +458,7 @@ class GromacsRunner():
             logger.debug('Terminating GROMACS execution')
             self.running.terminate()
             logger.debug('Waiting for GROMACS termination')
-            self.running.wait(timeout=60)
+            self.running.wait(timeout=120)
         self.stop_read = True
         self.close()  # close trr file.
 
