@@ -613,14 +613,14 @@ class ExternalMDEngine(EngineBase):
         If the velocities should be reversed, this is handled elsewhere.
         """
         pos_file, idx = config
+        out_file = os.path.join(self.exe_dir, self._name_output(deffnm))
         if idx is None:
-            # Note, this does not create a new file.
-            return pos_file
+            if pos_file != out_file:
+                self._copyfile(pos_file, out_file)
         else:
-            out_file = os.path.join(self.exe_dir, self._name_output(deffnm))
             logger.debug('Config: %s', (config, ))
             self._extract_frame(pos_file, idx, out_file)
-            return out_file
+        return out_file
 
     def dump_frame(self, system, deffnm='conf'):
         """Just dump the frame from a system object."""
