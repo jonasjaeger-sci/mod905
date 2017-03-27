@@ -52,7 +52,7 @@ simulation_nve = create_simulation(settings, kwargs)
 
 # set up extra output:
 table = ThermoTable()
-thermo_file = FileIO('thermo.dat', header=table.header)
+thermo_file = FileIO('thermo-test.txt', header=table.header)
 store_results = []
 # also create some other outputs:
 output_tasks = [task for task in create_output_tasks(settings)]
