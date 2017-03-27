@@ -19,19 +19,19 @@ Engine settings
 class = gromacs
 gmx = gmx_5.1.4
 mdrun = gmx_5.1.4 mdrun
-input_path = ext_input
+input_path = gromacs_input
 timestep = 0.002
 subcycles = 5
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
-sigma_v =  -1
+sigma_v = -1
 seed = 0
 
 RETIS settings
