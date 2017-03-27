@@ -139,13 +139,10 @@ class Box(object):
         if new_size is None:
             logger.warning('Tried to update box with empty size! Ignored!')
         else:
-            if len(new_size) != self.dim:
-                logger.warning('Wrong number of dimensions in box update!')
-            else:
-                for i, length in enumerate(new_size):
-                    self.length[i] = length
-                    self.high[i] = self.low[i] + length
-                self.ilength = 1.0 / self.length
+            for i in range(self.dim):
+                self.length[i] = new_size[i]
+                self.high[i] = self.low[i] + new_size[i]
+            self.ilength = 1.0 / self.length
 
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.
