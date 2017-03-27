@@ -25,7 +25,7 @@ subcycles = 5
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
@@ -37,7 +37,7 @@ seed = 0
 Initial-path
 ------------
 method = load
-restart_folder = initial_path
+load_path = initial_path
 
 RETIS settings
 --------------

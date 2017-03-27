@@ -24,7 +24,7 @@ subcycles = 5
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False

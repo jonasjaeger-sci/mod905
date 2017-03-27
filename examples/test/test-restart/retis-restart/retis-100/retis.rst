@@ -27,13 +27,13 @@ seed = 0
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
-sigma_v =  -1
+sigma_v = -1
 seed = 0
 
 RETIS settings
