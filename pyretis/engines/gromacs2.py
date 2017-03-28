@@ -61,7 +61,8 @@ class GromacsEngine2(GromacsEngine):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gro_format='g96'):
+                 maxwarn=0, gmx_format='g96', write_vel=True,
+                 write_force=False):
         """Initiate the GROMACS engine.
 
         Parameters
@@ -78,11 +79,12 @@ class GromacsEngine2(GromacsEngine):
             The number of steps each GROMACS MD run is composed of.
         maxwarn : integer
             Setting for the GROMACS grompp ``maxwarn` option.
-        gro_format : string
+        gmx_format : string
             The format used for GROMACS configurations.
         """
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
-                         maxwarn=maxwarn, gro_format=gro_format)
+                         maxwarn=maxwarn, gmx_format=gmx_format,
+                         write_vel=write_vel, write_force=write_force)
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
@@ -156,10 +158,13 @@ class GromacsEngine2(GromacsEngine):
         gro.start()  # Start GROMACS run.
         for i, data in enumerate(gro.get_gromacs_frames()):
             system.particles.pos = data['x']
-            system.particles.vel = data['v']
+            if 'v' in data:
+                system.particles.vel = data['v']
+                if reverse:
+                    system.particles.vel *= -1
+            else:
+                system.particles.vel = None
             system.box.update_size(np.diagonal(data['box']))
-            if reverse:
-                system.particles.vel *= -1
             order = order_function.calculate_all(system)
             phase_point = {'order': order,
                            'pos': (trr_file, i),

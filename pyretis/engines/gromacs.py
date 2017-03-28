@@ -56,7 +56,8 @@ class GromacsEngine(ExternalMDEngine):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gro_format='g96'):
+                 maxwarn=0, gmx_format='g96', write_vel=True,
+                 write_force=False):
         """Initiate the GROMACS engine.
 
         Parameters
@@ -73,13 +74,13 @@ class GromacsEngine(ExternalMDEngine):
             The number of steps each GROMACS MD run is composed of.
         maxwarn : integer
             Setting for the GROMACS grompp ``maxwarn`` option.
-        gro_format : string
+        gmx_format : string
             The format used for GROMACS configurations.
         """
         super().__init__('GROMACS engine', timestep, subcycles)
-        self.ext = gro_format
+        self.ext = gmx_format
         if self.ext not in ('g96', 'gro'):
-            msg = 'Unknown "gro_format": %s'
+            msg = 'Unknown GROMACS format: "%s"'
             logger.error(msg, self.ext)
             raise ValueError(msg % self.ext)
         # Define the gmx command:
@@ -108,6 +109,10 @@ class GromacsEngine(ExternalMDEngine):
         for key in ('nsteps', 'nstxout', 'nstvout', 'nstfout', 'nstlog',
                     'nstcalcenergy', 'nstenergy'):
             settings[key] = self.subcycles
+        if not write_vel:
+            settings['nstvout'] = 0
+        if not write_force:
+            settings['nstfout'] = 0
         self.input_files['input'] = os.path.join(self.input_path,
                                                  'pyretis.mdp')
         self._modify_input(self.input_files['input_o'],

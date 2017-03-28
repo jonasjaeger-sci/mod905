@@ -47,7 +47,7 @@ swapsimul = True
 Initial-path settings
 ---------------------
 method = load
-load_path = restart
+restart_folder = restart
 
 Particles
 ---------

@@ -59,10 +59,12 @@ class GromacsEngineR(GromacsEngine):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gro_format='g96'):
+                 maxwarn=0, gmx_format='g96', write_vel=True,
+                 write_force=False):
         """Initiate the script."""
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
-                         maxwarn=maxwarn, gro_format=gro_format)
+                         maxwarn=maxwarn, gmx_format=gmx_format,
+                         write_vel=write_vel, write_force=write_force)
 
     def _prepare_shooting_point(self, input_file):
         """Method to create initial configuration for a shooting move"""
@@ -77,10 +79,12 @@ class GromacsEngine2R(GromacsEngine2):
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
-                 maxwarn=0, gro_format='g96'):
+                 maxwarn=0, gmx_format='g96', write_vel=True,
+                 write_force=False):
         """Initiate the script."""
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
-                         maxwarn=maxwarn, gro_format=gro_format)
+                         maxwarn=maxwarn, gmx_format=gmx_format,
+                         write_vel=write_vel, write_force=write_force)
 
     def _prepare_shooting_point(self, input_file):
         """Method to create initial configuration for a shooting move."""
