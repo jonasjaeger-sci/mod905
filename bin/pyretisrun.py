@@ -330,16 +330,17 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
         The output tasks defined for the simulation."""
     for i, result in enumerate(initiate_path_simulation(sim, sim_settings)):
         path = result[1]
-        logtxt = 'Found initial path:'
+        ensemble = sim.path_ensembles[i]
+        logtxt = 'Found initial path for %s:'
         print_to_screen()
-        print_to_screen(logtxt, level='info')
-        logger.info(logtxt)
+        print_to_screen(logtxt % ensemble.ensemble_name, level='info')
+        logger.info(logtxt, ensemble.ensemble_name)
         logtxt = '{}'.format(path)
         print_to_screen(logtxt)
         logger.info(logtxt)
         print_to_screen('')
         ensemble_result = {
-            'pathensemble': sim.path_ensembles[i],
+            'pathensemble': ensemble,
             'cycle': sim.cycle,
             'path': path,
             'status': result[2],
