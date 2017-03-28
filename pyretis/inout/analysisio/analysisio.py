@@ -87,7 +87,7 @@ def run_analysis(settings):
                'tis': run_tis_analysis,
                'md-flux': run_mdflux_analysis}
     sim = settings['simulation']
-    sim_task = sim['task']
+    sim_task = sim['task'].lower()
     report_dir = settings['analysis'].get('report-dir', None)
     plotter = create_plotter(settings['analysis']['plot'],
                              out_dir=report_dir)
