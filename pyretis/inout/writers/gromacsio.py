@@ -36,6 +36,9 @@ skip_trr_data (:py:func:`.skip_trr_data`)
 
 read_trr_file (:py:func:`.read_trr_file`)
     Yield frames from a .trr file.
+
+trr_frame_to_g96 (:py:func:`.trr_frame_to_g96`)
+    Dump a specific frame from a .trr file to a .g96 file.
 """
 import logging
 import struct
@@ -53,7 +56,9 @@ __all__ = [
     'read_xvg_file',
     'read_trr_header',
     'read_trr_data',
-    'skip_trr_data'
+    'skip_trr_data',
+    'read_trr_file',
+    'trr_frame_to_g96'
     ]
 
 
@@ -61,7 +66,9 @@ __all__ = [
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
 _GRO_VEL_FMT = _GRO_FMT + '{7:8.4f}{8:8.4f}{9:8.4f}'
 _GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
-
+_G96_FMT = '{0:}{1:15.9f}{2:15.9f}{3:15.9f}\n'
+_G96_FMT_FULL = '{0:5d} {1:5s} {2:5s}{3:7d}{4:15.9f}{5:15.9f}{6:15.9f}\n'
+_G96_BOX_FMT = '{:15.9f}' * 9 + '\n'
 
 # Definitions for the .trr reader.
 _GROMACS_MAGIC = 1993
@@ -301,15 +308,14 @@ def write_gromos96_file(filename, raw, xyz, vel):
         The velocities to write.
     """
     _keys = ('TITLE', 'POSITION', 'VELOCITY', 'BOX')
-    _fmt = '{0:}{1:15.9f}{2:15.9f}{3:15.9f}\n'
     with open(filename, 'w') as outfile:
         for key in _keys:
             outfile.write('{}\n'.format(key))
             for i, line in enumerate(raw[key]):
                 if key == 'POSITION':
-                    outfile.write(_fmt.format(line, *xyz[i]))
+                    outfile.write(_G96_FMT.format(line, *xyz[i]))
                 elif key == 'VELOCITY':
-                    outfile.write(_fmt.format(line, *vel[i]))
+                    outfile.write(_G96_FMT.format(line, *vel[i]))
                 else:
                     outfile.write('{}\n'.format(line))
             outfile.write('END\n')
@@ -598,3 +604,59 @@ def read_trr_file(filename):
                 yield header, data
             except EOFError:
                 raise StopIteration
+
+
+def read_trr_frame(filename, index):
+    """Return a given frame from a .trr file."""
+    idx = 0
+    with open(filename, 'rb') as infile:
+        while True:
+            try:
+                header, _ = read_trr_header(infile)
+                if idx == index:
+                    data = read_trr_data(infile, header)
+                    return header, data
+                else:
+                    skip_trr_data(infile, header)
+                idx += 1
+                if idx > index:
+                    logger.error('Frame %i not found in %s', index, filename)
+                    return None
+            except EOFError:
+                return None
+
+
+def trr_frame_to_g96(trr_file, index, outfile):
+    """Dump a .trr frame to a .g96 file.
+
+    Parameters
+    ----------
+    trr_file : string
+        The .trr file to read from.
+    index : integer
+        The index for the frame to dump from ``trr_file``.
+    outfile : string
+        The g96 file to write.
+    """
+    header, data = read_trr_frame(trr_file, index)
+    with open(outfile, 'w') as output:
+        output.write('TITLE\n')
+        output.write(' Dump from .trr, index = {}, time = {}\n'.format(
+            index,
+            header['time']))
+        output.write('END\n')
+        output.write('POSITION\n')
+        for i, posi in enumerate(data['x']):
+            output.write(_G96_FMT_FULL.format(i, 'DUM', 'X', i, *posi))
+        output.write('END\n')
+        if 'v' in data:
+            output.write('VELOCITY\n')
+            for i, veli in enumerate(data['v']):
+                output.write(_G96_FMT_FULL.format(i, 'DUM', 'X', i, *veli))
+            output.write('END\n')
+        output.write('BOX\n')
+        box = data['box']
+        output.write(_G96_BOX_FMT.format(box[0, 0], box[1, 1], box[2, 2],
+                                         box[1, 0], box[2, 0], box[0, 1],
+                                         box[2, 1], box[0, 2], box[1, 2]))
+        output.write('END\n')
