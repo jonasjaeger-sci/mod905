@@ -103,7 +103,7 @@ RandomGenerator (:py:class:`.RandomGenerator`)
 """
 from .system import System
 from .box import Box
-from .particles import Particles
+from .particles import Particles, ParticlesExt
 from .path import Path, PathExt
 from .reservoirpath import ReservoirPath
 from .pathensemble import PathEnsemble, PathEnsembleExt
