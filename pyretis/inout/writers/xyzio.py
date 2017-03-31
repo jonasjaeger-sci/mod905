@@ -107,15 +107,15 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     if names is None:
         logger.warning('No atom name given. Using "X"')
 
-    for i in range(npart):
-        if names is None:
-            namei = 'X'
-        else:
-            namei = names[i]
-        if vel is None:
-            yield fmt.format(namei, *pos[i, :])
-        else:
-            yield fmt.format(namei, *pos[i, :], *vel[i, :])
+    if vel is None:
+        for i in range(npart):
+            namei = 'X' if names is None else names[i]
+            yield fmt.format(namei, pos[i, 0], pos[i, 1], pos[i, 2])
+    else:
+        for i in range(npart):
+            namei = 'X' if names is None else names[i]
+            yield fmt.format(namei, pos[i, 0], pos[i, 1], pos[i, 2],
+                             vel[i, 0], vel[i, 1], vel[i, 2])
 
 
 def write_xyz_file(filename, pos, vel=None, names=None, header=None):
@@ -150,4 +150,40 @@ def write_xyz_file(filename, pos, vel=None, names=None, header=None):
     with open(filename, 'w') as output_file:
         for line in format_xyz_data(pos, vel=vel, names=names,
                                     header=header):
+            output_file.write('{}\n'.format(line))
+
+
+def write_xyz_trajectory(filename, pos, vel, names, box):
+    """Write XYZ snapshot to a trajectory.
+
+    This is indended as a lightweight alternative for just
+    dumping snapshots to a trajectory file.
+
+    Parameters
+    ----------
+    filename : string
+        The file name to dump to.
+    pos : numpy.array
+        The positions we are to write.
+    vel : numpy.array
+        The velocities we are to write.
+    names : list of strings
+        Atom names to write.
+    box : list of floats
+        The box vectors.
+
+    Note
+    ----
+    We will here append to the file.
+    """
+    npart = len(pos)
+    box_fmt = '{}' * len(box)
+    with open(filename, 'a') as output_file:
+        output_file.write('{}\n'.format(npart))
+        box_str = box_fmt.format(*box)
+        output_file.write('# Box: {}\n'.format(box_str))
+        for i in range(npart):
+            line = _XYZ_BIG_VEL_FMT.format(names[i], pos[i, 0], pos[i, 1],
+                                           pos[i, 2], vel[i, 0], vel[i, 1],
+                                           vel[i, 2])
             output_file.write('{}\n'.format(line))
