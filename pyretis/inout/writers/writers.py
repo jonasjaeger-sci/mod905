@@ -713,8 +713,6 @@ class TrajWriter(Writer):
 
     Attributes
     ----------
-    frame : integer
-        The number of frames written.
     write_vel : boolean
         If True, we will also write velocities
     fmt : string
@@ -741,7 +739,6 @@ class TrajWriter(Writer):
         """
         super().__init__('TrajWriter', header=None)
         self.print_header = False
-        self.frame = 0  # number of frames written
         self.write_vel = write_vel
         if fmt is 'full':
             self.fmt = self._FMT_FULL
