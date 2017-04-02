@@ -443,7 +443,8 @@ class GromacsEngine(ExternalMDEngine):
             status, success, stop = self.add_to_path(path, phase_point,
                                                      left, right)
             if stop:
-                logger.debug('Ending propagate at %i. Reason: %s', i, status)
+                logger.debug('GROMACS propagation ended at %i. Reason: %s',
+                             i, status)
                 break
             if i == 0:
                 # This step was performed before entering the main loop
@@ -511,7 +512,9 @@ class GromacsEngine(ExternalMDEngine):
         return out_mdrun['conf']
 
     def _prepare_shooting_point(self, input_file):
-        """Method to create initial configuration for a shooting move.
+        """Create initial configuration for a shooting move.
+
+        This creates a new initial configuration with random velocities.
 
         Parameters
         ----------
@@ -567,7 +570,7 @@ class GromacsEngine(ExternalMDEngine):
         box = None
         if self.ext == 'g96':
             txt, xyz, vel = read_gromos96_file(filename)
-            box = [float(i) for i in txt['BOX'][0].split()]
+            box = np.array([float(i) for i in txt['BOX'][0].split()])
         elif self.ext == 'gro':
             txt, xyz, vel = read_gromacs_gro_file(filename)
             box = txt['box']

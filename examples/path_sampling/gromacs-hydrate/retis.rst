@@ -50,3 +50,7 @@ Orderparameter
 --------------
 class = RingDiffusion
 module = orderp.py
+
+Output
+------
+order-file = 1

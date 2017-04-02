@@ -10,18 +10,23 @@ that we also include velocities as part of the file.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-read_xyz_file (:py:func:`.read_xyz_file`)
-    A method for reading snapshots from a XYZ file.
-
 format_xyz_data (:py:func:`.format_xyz_data`)
     A method for formatting position/velocity data in to a
     XYZ-like format. This can be used by external engines to
     convert to a standard format.
 
+read_xyz_file (:py:func:`.read_xyz_file`)
+    A method for reading snapshots from a XYZ file.
+
 write_xyz_file (:py:func:`.write_xyz_file`)
     Just a convenience method for writing to a new file.
+
+write_xyz_trajectory (:py:func:`.write_xyz_trajectory`)
+    A helper method to write xyz trajectories. This will
+    also attempt to write box information to the xyz-header.
 """
 import logging
+import numpy as np
 from pyretis.inout.writers.writers import (adjust_coordinate,
                                            read_txt_snapshots)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -34,7 +39,38 @@ _XYZ_BIG_FMT = '{:5s}' + 3*' {:15.9f}'
 _XYZ_BIG_VEL_FMT = _XYZ_BIG_FMT + 3*' {:15.9f}'
 
 
-__all__ = ['read_xyz_file', 'format_xyz_data']
+__all__ = [
+    'format_xyz_data',
+    'read_xyz_file',
+    'write_xyz_file',
+    'write_xyz_trajectory'
+]
+
+
+def get_box_from_header(header):
+    """Get the box dimensions from the header.
+
+    Parameters
+    ----------
+    header : string
+        The header string we will try to extract the box from.
+
+    Returns
+    -------
+    box : numpy.array or None
+        The box as read from the header (if any).
+
+    Note
+    ----
+    Currently, we only support 3D boxes.
+    """
+    box = None
+    if header.find('Box:') != -1:
+        split = header.split('Box:')[1].strip()
+        box = np.array([float(i) for i in split.split()])
+        if box.size == 9:
+            box = box.reshape((3, 3))
+    return box
 
 
 def read_xyz_file(filename):
@@ -65,6 +101,7 @@ def read_xyz_file(filename):
     """
     xyz_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
     for snapshot in read_txt_snapshots(filename, data_keys=xyz_keys):
+        snapshot['box'] = get_box_from_header(snapshot['header'])
         yield snapshot
 
 
@@ -153,7 +190,8 @@ def write_xyz_file(filename, pos, vel=None, names=None, header=None):
             output_file.write('{}\n'.format(line))
 
 
-def write_xyz_trajectory(filename, pos, vel, names, box):
+def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
+                         append=True):
     """Write XYZ snapshot to a trajectory.
 
     This is indended as a lightweight alternative for just
@@ -169,19 +207,32 @@ def write_xyz_trajectory(filename, pos, vel, names, box):
         The velocities we are to write.
     names : list of strings
         Atom names to write.
-    box : list of floats
-        The box vectors.
+    box : numpy.array
+        The box dimensions/vectors
+    step : integer, optional
+        If the ``step`  is given, then the step number is
+        written to the header.
+    append : boolean
+        Determines if we append or overwrite an existing file.
 
     Note
     ----
     We will here append to the file.
     """
     npart = len(pos)
-    box_fmt = '{}' * len(box)
-    with open(filename, 'a') as output_file:
+    box_fmt = '{:8.3f} ' * box.size
+    filemode = 'a' if append else 'w'
+    with open(filename, filemode) as output_file:
         output_file.write('{}\n'.format(npart))
-        box_str = box_fmt.format(*box)
-        output_file.write('# Box: {}\n'.format(box_str))
+        header = ['#']
+        if step is not None:
+            header.append('Step: {}'.format(step))
+        box_str = box_fmt.format(*box.flatten()).strip()
+        header.append('Box:')
+        header.append(box_str)
+        header.append('\n')
+        header_str = ' '.join(header)
+        output_file.write(header_str)
         for i in range(npart):
             line = _XYZ_BIG_VEL_FMT.format(names[i], pos[i, 0], pos[i, 1],
                                            pos[i, 2], vel[i, 0], vel[i, 1],

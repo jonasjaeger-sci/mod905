@@ -235,7 +235,8 @@ class MDEngine(EngineBase):
         return self.integration_step(system)
 
     @staticmethod
-    def calculate_order(order_function, system):
+    def calculate_order(order_function, system, xyz=None, vel=None,
+                        box=None):
         """Return the order parameter.
 
         This method is just to help calculating the order parameter
@@ -254,13 +255,28 @@ class MDEngine(EngineBase):
             The object used for calculating the order parameter(s).
         system : object like :py:class:`.System`
             The system containing the corrent positions and velocities.
+        xyz : numpy.array, optional
+            The positions to use. Typically for internal engines, this
+            is not needed. It is included here as it can be used for
+            testing and also to be compatible with the generic function
+            defined by the parent.
+        vel : numpy.array, optional
+            The velocities to use.
+        box : numpy.array, optional
+            The current box vectors.
 
         Returns
         -------
         out : list of floats
             The calculated order parameters
         """
-        return order_function.calculate_all(system)
+        if any((xyz is None, vel is None, box is None)):
+            return order_function.calculate_all(system)
+        else:
+            system.particles.pos = xyz
+            system.particles.vel = vel
+            system.box.update_size(box)
+            return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):

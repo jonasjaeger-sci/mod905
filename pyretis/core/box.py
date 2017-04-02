@@ -139,9 +139,19 @@ class Box(object):
         if new_size is None:
             logger.warning('Tried to update box with empty size! Ignored!')
         else:
-            for i in range(self.dim):
-                self.length[i] = new_size[i]
-                self.high[i] = self.low[i] + new_size[i]
+            # For the rectangular box we'll handle two options
+            # 1) Just giving the lengths
+            if new_size.size <= 3:
+                for i in range(self.dim):
+                    self.length[i] = new_size[i]
+                    self.high[i] = self.low[i] + new_size[i]
+            else:
+                # 2) Giving vectors, here we are lazy and just pick out
+                # the diagonal:
+                diag = np.diagonal(new_size)
+                for i in range(self.dim):
+                    self.length[i] = diag[i]
+                    self.high[i] = self.low[i] + diag[i]
             self.ilength = 1.0 / self.length
 
     def pbc_coordinate_dim(self, pos, dim):

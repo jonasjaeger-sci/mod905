@@ -157,11 +157,11 @@ class ExternalMDEngine(EngineBase):
 
         Returns
         -------
-        box : numpy.array
+        out[0] : numpy.array
             The dimensions of the simulation box.
-        xyz : numpy.array
+        out[1] : numpy.array
             The positions found in the given filename.
-        vel : numpy.array
+        out[2] : numpy.array
             The velocities found in the given filename.
         """
         pass
@@ -344,8 +344,13 @@ class ExternalMDEngine(EngineBase):
         files = [item.name for item in os.scandir(dirname) if item.is_file()]
         self._remove_files(dirname, files)
 
-    def calculate_order(self, order_function, system):
+    def calculate_order(self, order_function, system,
+                        xyz=None, vel=None, box=None):
         """Calculate order parameter from configuration in a file.
+
+        Note, if ``xyz``, ``vel`` or ``box`` are given, we will
+        **NOT** read positions, velicity and box information from the
+        current configuration file.
 
         Parameters
         ----------
@@ -353,13 +358,24 @@ class ExternalMDEngine(EngineBase):
             The class used for calculating the order parameter.
         system : object like :py:class:`.System`
             The object the order parameter is acting on.
+        xyz : numpy.array, optional
+            The positions to use, in case we have already read them
+            somewhere else. We will then not attempt to read the again.
+        vel : numpy.array, optional
+            The velocities to use, in case we already have read them.
+        box : numpy.array, optional
+            The current box vectors, in case we already have read them.
 
         Returns
         -------
         out : float
             The calculated order parameter.
         """
-        box, xyz, vel = self._read_configuration(system.particles.config[0])
+        if any((xyz is None, vel is None, box is None)):
+            out = self._read_configuration(system.particles.config[0])
+            box = out[0]
+            xyz = out[1]
+            vel = out[2]
         system.particles.pos = xyz
         if system.particles.vel_rev:
             system.particles.vel = -vel
@@ -463,7 +479,9 @@ class ExternalMDEngine(EngineBase):
                 system.particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
                 logger.debug('Did not get closer to middle: %s', txt)
-                print_to_screen('-> Did not get closer to middle: {}'.format(txt))
+                print_to_screen(
+                    '-> Did not get closer to middle: {}'.format(txt)
+                )
                 system.particles.set_particle_state(previous)
                 curr = previous['order']
                 self._removefile(curr_file)

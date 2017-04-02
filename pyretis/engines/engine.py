@@ -125,7 +125,8 @@ class EngineBase(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def calculate_order(self, order_function, system):
+    def calculate_order(self, order_function, system,
+                        xyz=None, vel=None, box=None):
         """Obtain the order parameter."""
         pass
 
