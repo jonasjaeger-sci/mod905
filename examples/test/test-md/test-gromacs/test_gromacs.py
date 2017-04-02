@@ -302,7 +302,7 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
     ax32 = fig3.add_subplot(222)
     ax33 = fig3.add_subplot(223)
     ax34 = fig3.add_subplot(224)
-    ax31.scatter(orderf[:, 0], orderb[:,0], marker='o', label='Backward',
+    ax31.scatter(orderf[:, 0], orderb[:, 0], marker='o', label='Backward',
                  alpha=0.8)
     ax31.scatter(orderf[:, 0], plainf[1][:, 0], marker='s',
                  label='Forward-plain', alpha=0.8)
@@ -316,7 +316,7 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
     ax31.set_ylabel('Order 1')
     ax31.legend()
 
-    ax32.scatter(orderf[:, 1], orderb[:,1], marker='o', label='Backward',
+    ax32.scatter(orderf[:, 1], orderb[:, 1], marker='o', label='Backward',
                  alpha=0.8)
     ax32.scatter(orderf[:, 1], plainf[1][:, 1], marker='s',
                  label='Forward-plain', alpha=0.8)
