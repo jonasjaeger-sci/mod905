@@ -16,6 +16,7 @@ import itertools
 import os
 import shutil
 import sys
+import time
 import colorama
 from matplotlib import pyplot as plt
 import numpy as np
@@ -172,35 +173,47 @@ def main(select=1):
     system.particles.set_particle_state(phase_point)
     interfaces = [-float('inf'), float('inf'), float('inf')]
     order_parameter = OrderParameterPosition(1472, dim='z', periodic=True)
-
+    start = time.perf_counter()
     pathf = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
                          exe_dir='{}-forward-step'.format(select),
                          reverse=False)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
 
     # set state to last point in trajectory:
     phase_point = pathf.phasepoint(-1)
     system.particles.set_particle_state(phase_point)
+    start = time.perf_counter()
     pathb = run_in_steps(gro, system, order_parameter, interfaces,
                          steps=steps,
                          exe_dir='{}-backward-step'.format(select),
                          reverse=True)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
 
     # Run plain GROMACS:
+    start = time.perf_counter()
     plainf = run_plain_gromacs(gro, system, order_parameter, initial_conf,
                                steps=steps,
                                exe_dir='{}-forward-plain'.format(select),
                                reverse=False)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
     last_c = plainf[-1]
     last_r = os.path.join(
         os.path.dirname(last_c),
         'r_{}'.format(os.path.basename(last_c))
     )
     gro._reverse_velocities(last_c, last_r)
+    start = time.perf_counter()
     plainb = run_plain_gromacs(gro, system, order_parameter, last_r,
                                steps=steps,
                                exe_dir='{}-backward-plain'.format(select),
                                reverse=True)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+
     print_to_screen('\nPlotting for comparison', level='message')
     obtain_mses(pathf, pathb, plainf, plainb)
     plot_path_comparison(pathf, pathb, plainf, plainb)
@@ -284,8 +297,70 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
     ax23.set_title('Potential energy')
     ax22.legend()
     ax23.legend()
+    fig3 = plt.figure(figsize=(12, 6))
+    ax31 = fig3.add_subplot(221)
+    ax32 = fig3.add_subplot(222)
+    ax33 = fig3.add_subplot(223)
+    ax34 = fig3.add_subplot(224)
+    ax31.scatter(orderf[:, 0], orderb[:,0], marker='o', label='Backward',
+                 alpha=0.8)
+    ax31.scatter(orderf[:, 0], plainf[1][:, 0], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax31.scatter(orderf[:, 0], plainb[1][:, 0][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    minx = min(orderf[:, 0])
+    maxx = max(orderf[:, 0])
+    ax31.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax31.set_xlabel('Order 1 Forward')
+    ax31.set_ylabel('Order 1')
+    ax31.legend()
+
+    ax32.scatter(orderf[:, 1], orderb[:,1], marker='o', label='Backward',
+                 alpha=0.8)
+    ax32.scatter(orderf[:, 1], plainf[1][:, 1], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax32.scatter(orderf[:, 1], plainb[1][:, 1][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax32.set_xlabel('Order 2 Forward')
+    ax32.set_ylabel('Order 2')
+    minx = min(orderf[:, 1])
+    maxx = max(orderf[:, 1])
+    ax32.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax32.legend()
+
+    ax33.scatter(kinf, kinb, marker='o', label='Backward',
+                 alpha=0.8)
+    ax33.scatter(kinf, plainf[0][:, 0], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax33.scatter(kinf, plainb[0][:, 0][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax33.set_xlabel('Ekin Forward')
+    ax33.set_ylabel('Ekin')
+    minx = min(kinf)
+    maxx = max(kinf)
+    ax33.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax33.legend()
+
+    ax34.scatter(potf, potb, marker='o', label='Backward',
+                 alpha=0.8)
+    ax34.scatter(potf, plainf[0][:, 1], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax34.scatter(potf, plainb[0][:, 1][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax34.set_xlabel('Vpot Forward')
+    ax34.set_ylabel('Vpot')
+    minx = min(potf)
+    maxx = max(potf)
+    ax34.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax34.legend()
+
     fig1.tight_layout()
     fig2.tight_layout()
+    fig3.tight_layout()
     plt.show()
 
 
