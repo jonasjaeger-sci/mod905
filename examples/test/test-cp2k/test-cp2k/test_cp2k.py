@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
+"""
+Here we test the basic functionality of the CP2K engine.
+
+1) We generate random velocities.
+
+2) We integrate forward in time.
+
+3) We reverse the velocities.
+
+4) We integrate backward in time from 3.
+"""
 import os
 import shutil
 import time
@@ -13,8 +24,11 @@ from pyretis.orderparameter.orderparameter import OrderParameterPosition
 from pyretis.inout.common import make_dirs, print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
-from pyretis.engines.cp2k import CP2KEngine, write_for_step_vel, convert_snapshot
-
+from pyretis.engines.cp2k import (
+    CP2KEngine,
+    write_for_step_vel,
+    convert_snapshot
+)
 
 
 plt.style.use('seaborn-deep')
@@ -58,9 +72,12 @@ def run_in_steps(engine, system, order_parameter, interfaces,
     clean_dir(folder)
     engine.exe_dir = folder
     path = PathExt(None, maxlen=steps)
+    start = time.perf_counter()
     engine.propagate(path, system, order_parameter, interfaces,
                      reverse=reverse)
+    end = time.perf_counter()
     print_to_screen('Propagation done!')
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
     return path
 
 
@@ -109,8 +126,11 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
     )
     engine.add_input_files(exe_dir)
     print_to_screen('Running CP2K...')
+    start = time.perf_counter()
     engine.run_cp2k('md.inp', 'md')
+    end = time.perf_counter()
     print_to_screen('Done!')
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
     energy_file = os.path.join(exe_dir, 'md-1.ener')
     energy = np.loadtxt(energy_file)
     pos_file = os.path.join(exe_dir, 'md-pos-1.xyz')
@@ -137,7 +157,38 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
     return energy, order, out_file
 
 
+def test_genvel(engine, input_file, exe_dir='genvel'):
+    """Test generation of velocities.
+
+    Parameters
+    ----------
+    engine : object like :py:class:`.ExternalMDEngine
+        Engine to use for propagation.
+    system : object like :py:class:`.System`
+        The system we are propagation.
+
+    Returns
+    -------
+    out_conf : string
+        The path to the output configuration with randommized
+        velocities.
+    """
+    print_to_screen('\nRunning CP2K genvel step in "{}"'.format(exe_dir),
+                    level='message')
+    make_dirs(exe_dir)
+    folder = os.path.abspath(exe_dir)
+    clean_dir(folder)
+    engine.exe_dir = folder
+    start = time.perf_counter()
+    out_conf, _ = engine._prepare_shooting_point(input_file)
+    end = time.perf_counter()
+    print_to_screen('Generation of velocity done!')
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    return out_conf
+
+
 def main():
+    """Run the tests."""
     settings = parse_settings_file('engine.rst')
     steps = settings['simulation']['steps']
     engine_settings = settings['engine']
@@ -164,34 +215,31 @@ def main():
     interfaces = [-float('inf'), float('inf'), float('inf')]
     order_parameter = OrderParameterPosition(0, dim='x', periodic=True)
 
-    start = time.perf_counter()
+    # First generate some random velocities:
+    initial_conf = test_genvel(engine, initial_conf, exe_dir='genvel')
+    phase_point = {'pos': (initial_conf, None),
+                   'vel': False,
+                   'vpot': None,
+                   'ekin': None}
+    system.particles.set_particle_state(phase_point)
+
     pathf = run_in_steps(engine, system, order_parameter, interfaces,
                          steps=steps, exe_dir='forward', reverse=False)
-    end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
 
     # set state to last point in trajectory:
     phase_point = pathf.phasepoint(-1)
     system.particles.set_particle_state(phase_point)
-    start = time.perf_counter()
+
     pathb = run_in_steps(engine, system, order_parameter, interfaces,
                          steps=steps, exe_dir='backward', reverse=True)
-    end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
-    
-    start = time.perf_counter()
+
     plainf = run_plain_cp2k(engine, system, order_parameter, initial_conf,
                             steps=steps, exe_dir='forward-plain',
                             reverse=False)
-    end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
-    
-    start = time.perf_counter()
+
     plainb = run_plain_cp2k(engine, system, order_parameter, plainf[-1],
                             steps=steps, exe_dir='backward-plain',
                             reverse=True)
-    end = time.perf_counter()
-    print_to_screen('Time spent: {}'.format(end - start), level='info')
     # plot for comparison:
     steps = np.array([i * engine.subcycles for i in range(steps)])
     obtain_mses(pathf, pathb, plainf, plainb, engine.subcycles)
@@ -228,7 +276,6 @@ def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
             (plainf[0][::subcycles, 4], 'plain-forward'),
             (plainb[0][::subcycles, 4][::-1], 'plain-back')]
     mse_combinations('potential energy', mses)
-
 
 
 def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):

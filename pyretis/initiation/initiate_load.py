@@ -335,8 +335,6 @@ def _load_external_trajectory(dirname, engine):
             idx = None
         traj['data'][i][2] = idx
         traj['data'][i][3] = reverse
-
-
     return traj
 
 
@@ -381,10 +379,6 @@ def read_path_files_ext(path, ensemble, dirname, system, order_function,
             left,
             right
         )
-        #if stop:
-        #    logger.critical('Could not add to path! %s', status)
-        #    logger.critical('Please check your input path!')
-        #    break
     _load_energies_for_path(path, dirname)
     path.generated = ('re', 0, 0, 0)
     return _check_path(path, ensemble)
