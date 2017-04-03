@@ -26,6 +26,7 @@ from pyretis.core.common import generic_factory
 from .orderparameter import (OrderParameter,
                              OrderParameterPosition,
                              OrderParameterDistance)
+from .orderangle import OrderParameterAngle
 
 
 def order_factory(settings):
@@ -44,9 +45,13 @@ def order_factory(settings):
     out : object like :py:class:`.OrderParameter`
         An object representing the orderparameter.
     """
-    factory_map = {'orderparameter': {'cls': OrderParameter},
-                   'orderparameterposition': {'cls': OrderParameterPosition},
-                   'position': {'cls': OrderParameterPosition},
-                   'orderparameterdistance': {'cls': OrderParameterDistance},
-                   'distance': {'cls': OrderParameterDistance}}
+    factory_map = {
+        'orderparameter': {'cls': OrderParameter},
+        'orderparameterposition': {'cls': OrderParameterPosition},
+        'position': {'cls': OrderParameterPosition},
+        'orderparameterdistance': {'cls': OrderParameterDistance},
+        'distance': {'cls': OrderParameterDistance},
+        'orderparameterangle': {'cls': OrderParameterAngle},
+        'angle': {'cls': OrderParameterAngle},
+    }
     return generic_factory(settings, factory_map, name='orderparameter')

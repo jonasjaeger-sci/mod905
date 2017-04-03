@@ -4,9 +4,9 @@
 """This file contains classes to represent order parameters.
 
 The order parameters are assumed to all be completely determined
-by the system properties and they will all return at least two
-values - the order parameter and the rate of change in the order
-parameter (i.e. its velocity).
+by the system properties and they will all return at least one
+value - the order parameter it self. The order parameters can also
+return several order parameters which can be used for further analysis.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,6 +275,16 @@ class OrderParameterDistance(OrderParameter):
             This determines if periodic boundary conditions should be
             applied to the position.
         """
+        try:
+            if len(index) != 2:
+                msg = ('Wrong number of atoms for distance definition. '
+                       'Expected 2 got {}'.format(len(index)))
+                logger.error(msg)
+                raise ValueError(msg)
+        except TypeError:
+            msg = 'Distance should be defined as a tuple/list of integers!'
+            logger.error(msg)
+            raise TypeError(msg)
         pbc = 'Periodic' if periodic else 'Non-periodic'
         txt = '{} distance particles {} and {}'.format(pbc, index[0],
                                                        index[1])

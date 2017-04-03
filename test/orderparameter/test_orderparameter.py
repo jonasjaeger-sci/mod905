@@ -6,9 +6,12 @@ import logging
 import unittest
 import numpy as np
 from pyretis.orderparameter import order_factory
-from pyretis.orderparameter.orderparameter import (OrderParameter,
-                                                   OrderParameterPosition,
-                                                   OrderParameterDistance)
+from pyretis.orderparameter.orderparameter import (
+    OrderParameter,
+    OrderParameterPosition,
+    OrderParameterDistance
+)
+from pyretis.orderparameter.orderangle import OrderParameterAngle
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
@@ -118,6 +121,11 @@ class OrderPositionTest(unittest.TestCase):
                     lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
                     self.assertAlmostEqual(lmb, lmb_correct)
 
+    def test_init_fail(self):
+        """Check that the initiation fails if we supply strange input."""
+        with self.assertRaises(KeyError):
+            OrderParameterPosition(0, dim='a')
+
 
 class OrderDistanceTest(unittest.TestCase):
     """Run the tests for the OrderParameterDistance class."""
@@ -158,8 +166,9 @@ class OrderDistanceTest(unittest.TestCase):
                 system.particles = Particles(system.get_dim())
                 for _ in range(2):
                     pos = np.random.random(box.dim) + np.ones(box.dim)*disp
-                    vel = np.random.random(box.dim)
-                    system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
+                    system.add_particle(name='Ar', pos=pos,
+                                        vel=np.random.random(box.dim),
+                                        mass=1.0,
                                         ptype=0)
                 lmb = orderp.calculate(system)
                 delta = box.pbc_dist_coordinate(system.particles.pos[1] -
@@ -171,22 +180,100 @@ class OrderDistanceTest(unittest.TestCase):
                 lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
                 self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
+    def test_init_fail(self):
+        """Check that the initiation fails if we supply strange input."""
+        with self.assertRaises(TypeError):
+            OrderParameterDistance(0)
+        with self.assertRaises(TypeError):
+            OrderParameterDistance((0))
+        with self.assertRaises(ValueError):
+            OrderParameterDistance([0])
+        with self.assertRaises(ValueError):
+            OrderParameterDistance((0,))
+        with self.assertRaises(ValueError):
+            OrderParameterDistance((0, 1, 2))
+
+
+class OrderAngleTest(unittest.TestCase):
+    """Run the tests for the OrderParameterAngle class."""
+
+    def test_without_pbc(self):
+        """Test the distance order parameter without pbc."""
+        orderp = OrderParameterAngle((1, 0, 2), periodic=False)
+        # Test for SPC water
+        box = Box(periodic=[False, False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
+        system.add_particle(name='H', pos=np.array([0.137, 0.626, 0.150]))
+        system.add_particle(name='H', pos=np.array([0.231, 0.589, 0.021]))
+        angle = orderp.calculate(system)
+        angle_deg = angle * 180. / np.pi
+        self.assertAlmostEqual(angle_deg, 109.984398, places=3)
+
+    def test_witht_pbc(self):
+        """Test the distance order parameter with pbc."""
+        orderp = OrderParameterAngle((1, 0, 2), periodic=True)
+        # Test for SPC water
+        box = Box(periodic=[True, True, True], size=[1., 1., 1.])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
+        system.add_particle(name='H', pos=np.array([0.137, 0.626, 0.150]))
+        system.add_particle(name='H', pos=np.array([1.231, 0.589, 0.021]))
+        angle = orderp.calculate(system)
+        angle_deg = angle * 180. / np.pi
+        self.assertAlmostEqual(angle_deg, 109.984398, places=3)
+
+    def test_triangle(self):
+        """Test the distance order parameter for a 2D case."""
+        box = Box(periodic=[False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        system.add_particle(name='X', pos=np.array([0.0, 0.0]))
+        system.add_particle(name='X', pos=np.array([1.0, 0.0]))
+        system.add_particle(name='X', pos=np.array([0.0, 1.0]))
+        for idx, correct in zip(((1, 0, 2), (0, 1, 2), (0, 2, 1)),
+                                (90., 45., 45.)):
+            orderp = OrderParameterAngle(idx, periodic=False)
+            angle = orderp.calculate(system)
+            angle_deg = angle * 180. / np.pi
+            self.assertAlmostEqual(angle_deg, correct)
+
+    def test_initiate_fail(self):
+        """Test that we fail if we give incorrect number of indices."""
+        with self.assertRaises(TypeError):
+            OrderParameterAngle((0), periodic=False)
+        with self.assertRaises(TypeError):
+            OrderParameterAngle(0, periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterAngle((0,), periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterAngle((0, 1), periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterAngle((0, 1, 2, 3), periodic=False)
+
 
 class OrderFactoryTest(unittest.TestCase):
     """Test the order factory."""
 
     def test_factory(self):
         """Test that we can create order parameters with the factory."""
-        test_settings = [{'class': 'orderparameter', 'name': 'Test'},
-                         {'class': 'OrderPARAMetEr', 'name': 'Test'},
-                         {'class': 'orderparameterposition', 'name': 'Test',
-                          'index': 0, 'dim': 'x', 'periodic': False},
-                         {'class': 'orderparameterdistance', 'name': 'Test',
-                          'index': (0, 1), 'periodic': True}]
+        test_settings = [
+            {'class': 'orderparameter'},
+            {'class': 'OrderPARAMetEr'},
+            {'class': 'orderparameterposition',
+             'index': 0, 'dim': 'x', 'periodic': False},
+            {'class': 'orderparameterdistance',
+             'index': (0, 1), 'periodic': True},
+            {'class': 'orderparameterangle', 'index': (0, 1, 2),
+             'periodic': True},
+        ]
         correct_class = [OrderParameter,
                          OrderParameter,
                          OrderParameterPosition,
-                         OrderParameterDistance]
+                         OrderParameterDistance,
+                         OrderParameterAngle]
         for setting, correct in zip(test_settings, correct_class):
             orderp = order_factory(setting)
             self.assertIsInstance(orderp, correct)
