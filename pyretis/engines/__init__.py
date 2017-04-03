@@ -39,6 +39,7 @@ from .internal import MDEngine, Verlet, VelocityVerlet, Langevin
 from .external import ExternalMDEngine
 from .gromacs import GromacsEngine
 from .gromacs2 import GromacsEngine2
+from .cp2k import CP2KEngine
 
 
 def engine_factory(settings):
@@ -62,6 +63,7 @@ def engine_factory(settings):
         'verlet': {'cls': Verlet},
         'langevin': {'cls': Langevin},
         'gromacs': {'cls': GromacsEngine},
-        'gromacs2': {'cls': GromacsEngine2}
+        'gromacs2': {'cls': GromacsEngine2},
+        'cp2k': {'cls': CP2KEngine}
     }
     return generic_factory(settings, engine_map, name='engine')
