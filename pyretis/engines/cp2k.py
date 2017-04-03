@@ -427,6 +427,9 @@ class CP2KEngine(ExternalMDEngine):
         pwave_file = os.path.join(self.exe_dir, 'previous.wfn')
         # Note: Order is calculated at the END of each iteration!
         i = 0
+        # Write the config so we have a non-empty file:
+        write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i,
+                             append=False)
         for i in range(path.maxlen):
             print('At step %i' % i)
             phase_point = {'order': order,
@@ -447,10 +450,10 @@ class CP2KEngine(ExternalMDEngine):
                 self._movefile(wave_file, pwave_file)
                 if i < path.maxlen - 1:
                     out_files = self.run_cp2k('continue.inp', name)
+                # Write the previous configuration:
+                write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i)
             self._remove_files(self.exe_dir,
                                self._find_backup_files(self.exe_dir))
-            # Write the previous configuration:
-            write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i)
             # Read config after the step
             if i < path.maxlen - 1:
                 atoms, xyz, vel, box, _ = read_cp2k_restart(restart_file)
