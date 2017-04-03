@@ -472,6 +472,10 @@ class CP2KEngine(ExternalMDEngine):
                            'ekin': None}
             status, success, stop = self.add_to_path(path, phase_point,
                                                      left, right)
+            if success and i > 0:
+                # Write the previous configuration:
+                write_xyz_trajectory(traj_file, xyz, vel, atoms, box,
+                                     step=i)
             if stop:
                 logger.debug('CP2K propagation ended at %i. Reason: %s',
                              i, status)
@@ -483,8 +487,6 @@ class CP2KEngine(ExternalMDEngine):
                 self._movefile(wave_file, pwave_file)
                 if i < path.maxlen - 1:
                     out_files = self.run_cp2k('continue.inp', name)
-                # Write the previous configuration:
-                write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i)
             self._remove_files(self.exe_dir,
                                self._find_backup_files(self.exe_dir))
             # Read config after the step
