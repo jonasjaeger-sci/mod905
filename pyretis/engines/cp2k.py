@@ -439,6 +439,7 @@ class CP2KEngine(ExternalMDEngine):
             if stop:
                 logger.debug('CP2K propagation ended at %i. Reason: %s',
                              i, status)
+                break
             if i == 0:
                 pass
             elif i > 0:
