@@ -283,10 +283,6 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
             left,
             right
         )
-        #if stop:
-        #    logger.critical('Could not add to path! %s', status)
-        #    logger.critical('Please check your input path')
-        #    break
     _load_energies_for_path(path, dirname)
     path.generated = ('re', 0, 0, 0)
     return _check_path(path, ensemble)
