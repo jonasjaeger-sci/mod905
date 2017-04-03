@@ -1,0 +1,358 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+import os
+import shutil
+import time
+import itertools
+import colorama
+import numpy as np
+from matplotlib import pyplot as plt
+from pyretis.core import System, Box, ParticlesExt, PathExt
+from pyretis.orderparameter.orderparameter import OrderParameterPosition
+from pyretis.inout.common import make_dirs, print_to_screen
+from pyretis.inout.settings import parse_settings_file
+from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
+from pyretis.engines.cp2k import CP2KEngine, write_for_step_vel, convert_snapshot
+
+
+
+plt.style.use('seaborn-deep')
+
+
+def clean_dir(dirname):
+    """Remove ALL files in the given directory!"""
+    for files in os.listdir(dirname):
+        filename = os.path.join(dirname, files)
+        if os.path.isfile(filename):
+            os.remove(filename)
+
+
+def run_in_steps(engine, system, order_parameter, interfaces,
+                 steps=25, exe_dir='forward-step', reverse=False):
+    """Run the engine forward in time, in steps.
+
+    Parameters
+    ----------
+    engine : object like :py:class:`.ExternalMDEngine
+        Engine to use for propagation.
+    system : object like :py:class:`.System`
+        The system we are propagation.
+    order_parameter : object like :py:class:`.OrderParameter`
+        An order parameter to calculate.
+    interfaces : list of floats
+        Interfaces to consider, here typically just set to
+        ``[-float('inf'), float('inf'), float('inf')]``
+    steps : integer
+        The number of steps we will do.
+    exe_dir : string
+        The foler to use for the execution.
+    reverse : boolean
+        Selects the time direction.
+    """
+    print_to_screen('\nRunning {} steps in "{}"'.format(steps, exe_dir),
+                    level='message')
+    print_to_screen('(Reverse = {})'.format(reverse))
+    make_dirs(exe_dir)
+    folder = os.path.abspath(exe_dir)
+    clean_dir(folder)
+    engine.exe_dir = folder
+    path = PathExt(None, maxlen=steps)
+    engine.propagate(path, system, order_parameter, interfaces,
+                     reverse=reverse)
+    print_to_screen('Propagation done!')
+    return path
+
+
+def run_plain_cp2k(engine, system, order_parameter, input_conf,
+                   steps=25, exe_dir='forward-plain', reverse=False):
+    """Run a plain CP2K simulation.
+
+    Parameters
+    ----------
+    engine : object like :py:class:`.CP2KEngine`
+        This is used to obtain the commands for executing CP2K
+    system : object like :py:class:`.System`
+        The system we are propagation.
+    order_parameter : object like :py:class:`.OrderParameter`
+        An order parameter to calculate.
+    input_conf : string
+        The input configuration to use for the CP2K run.
+    steps : integer
+        The number of steps to run.
+    exe_dir : string
+        Path to where we should execute CP2K
+    reverse : boolean
+        Selects the time direction.
+    """
+    print_to_screen(
+        '\nRunning {} plain CP2K steps in "{}"'.format(steps, exe_dir),
+        level='message'
+    )
+    print_to_screen('(Reverse = {})'.format(reverse))
+    make_dirs(exe_dir)
+    folder = os.path.abspath(exe_dir)
+    clean_dir(folder)
+    engine.exe_dir = exe_dir
+    shutil.copy(input_conf, folder)
+    _, _, vel, _ = engine._read_configuration(input_conf)
+    input_file = os.path.join(exe_dir, 'md.inp')
+    write_for_step_vel(
+        engine.input_files['template'],
+        input_file,
+        engine.timestep,
+        (steps - 1) * engine.subcycles,
+        os.path.basename(input_conf),
+        vel,
+        name='md',
+        print_freq=1
+    )
+    engine.add_input_files(exe_dir)
+    print_to_screen('Running CP2K...')
+    engine.run_cp2k('md.inp', 'md')
+    print_to_screen('Done!')
+    energy_file = os.path.join(exe_dir, 'md-1.ener')
+    energy = np.loadtxt(energy_file)
+    pos_file = os.path.join(exe_dir, 'md-pos-1.xyz')
+    vel_file = os.path.join(exe_dir, 'md-vel-1.xyz')
+    order = []
+    box = np.array([5.0, 5.0, 5.0])
+    out_file = os.path.join(exe_dir, 'rev_last.xyz')
+    out_file2 = os.path.join(exe_dir, 'rev_last2.xyz')
+    for snapshotp, snapshotv in zip(read_xyz_file(pos_file),
+                                    read_xyz_file(vel_file)):
+        _, xyz, _, names = convert_snapshot(snapshotp)
+        _, vel, _, _ = convert_snapshot(snapshotv)  # interpret pos as vel
+        system.particles.pos = xyz
+        system.particles.vel = vel
+        if reverse:
+            system.particles.vel *= -1
+        system.box.update_size(box)
+        order.append(order_parameter.calculate_all(system))
+        write_xyz_trajectory(out_file, xyz, -vel, names, box,
+                             append=False)
+        write_xyz_trajectory(out_file2, xyz, -vel, names, box,
+                             append=False)
+    order = np.array(order)
+    return energy, order, out_file
+
+
+def main():
+    settings = parse_settings_file('engine.rst')
+    steps = settings['simulation']['steps']
+    engine_settings = settings['engine']
+    engine = CP2KEngine(
+        engine_settings['cp2k'],
+        engine_settings['input_path'],
+        engine_settings['timestep'],
+        engine_settings['subcycles'],
+        engine_settings.get('extra_files', [])
+    )
+    print_to_screen('Testing engine: {}'.format(engine), level='info')
+    print_to_screen('Time step: {}'.format(engine.timestep))
+    print_to_screen('Subcycles: {}'.format(engine.subcycles))
+    system = System(units='gromacs',
+                    box=Box(size=[100, 100, 100]),
+                    temperature=500)
+    system.particles = ParticlesExt(dim=3)
+    initial_conf = engine.input_files['conf']
+    phase_point = {'pos': (initial_conf, None),
+                   'vel': False,
+                   'vpot': None,
+                   'ekin': None}
+    system.particles.set_particle_state(phase_point)
+    interfaces = [-float('inf'), float('inf'), float('inf')]
+    order_parameter = OrderParameterPosition(0, dim='x', periodic=True)
+
+    start = time.perf_counter()
+    pathf = run_in_steps(engine, system, order_parameter, interfaces,
+                         steps=steps, exe_dir='forward', reverse=False)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+
+    # set state to last point in trajectory:
+    phase_point = pathf.phasepoint(-1)
+    system.particles.set_particle_state(phase_point)
+    start = time.perf_counter()
+    pathb = run_in_steps(engine, system, order_parameter, interfaces,
+                         steps=steps, exe_dir='backward', reverse=True)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    
+    start = time.perf_counter()
+    plainf = run_plain_cp2k(engine, system, order_parameter, initial_conf,
+                            steps=steps, exe_dir='forward-plain',
+                            reverse=False)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    
+    start = time.perf_counter()
+    plainb = run_plain_cp2k(engine, system, order_parameter, plainf[-1],
+                            steps=steps, exe_dir='backward-plain',
+                            reverse=True)
+    end = time.perf_counter()
+    print_to_screen('Time spent: {}'.format(end - start), level='info')
+    # plot for comparison:
+    steps = np.array([i * engine.subcycles for i in range(steps)])
+    obtain_mses(pathf, pathb, plainf, plainb, engine.subcycles)
+    plot_path_comparison(steps, pathf, pathb, plainf, plainb, engine.subcycles)
+
+
+def mse_combinations(text, var):
+    """Calculate mse for several combinations."""
+    for comb in itertools.combinations(var, 2):
+        mse = ((comb[0][0] - comb[1][0])**2).mean(axis=0)
+        print_to_screen(
+            'MSE {}: {:<14s} {:<14s} = {}'.format(text, comb[0][1],
+                                                  comb[1][1], mse),
+            level='warning'
+        )
+
+
+def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
+    """Obtain some MSE's"""
+    mses = [(np.array(pathf.order), 'step-forward'),
+            (np.array([i for i in pathb.order[::-1]]), 'step-back'),
+            (plainf[1][::subcycles, :], 'plain-forward'),
+            (plainb[1][::subcycles, :][::-1], 'plain-back')]
+    mse_combinations('order parameters', mses)
+
+    mses = [(np.array(pathf.ekin), 'step-forward'),
+            (np.array(pathb.ekin[::-1]), 'step-back'),
+            (plainf[0][::subcycles, 2], 'plain-forward'),
+            (plainb[0][::subcycles, 2][::-1], 'plain-back')]
+    mse_combinations('kinetic energy', mses)
+
+    mses = [(np.array(pathf.vpot), 'step-forward'),
+            (np.array(pathb.vpot[::-1]), 'step-back'),
+            (plainf[0][::subcycles, 4], 'plain-forward'),
+            (plainb[0][::subcycles, 4][::-1], 'plain-back')]
+    mse_combinations('potential energy', mses)
+
+
+
+def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
+    """Just plot some properties for the paths."""
+    orderf = np.array(pathf.order)
+    orderb = np.array([i for i in pathb.order[::-1]])
+    fig1 = plt.figure(figsize=(12, 6))
+    ax11 = fig1.add_subplot(121)
+    ax12 = fig1.add_subplot(122)
+    ax11.plot(steps, orderf[:, 0], lw=2, ls='-', marker='o',
+              label='Forward', ms=12, alpha=0.8)
+    ax11.plot(steps, orderb[:, 0], lw=2, ls='--', marker='^',
+              label='Backward', ms=12, alpha=0.8)
+    ax11.plot(plainf[1][:, 0], lw=2, ls='--', marker='^',
+              label='Plain forward', alpha=0.8)
+    ax11.plot(plainb[1][:, 0][::-1], lw=2, ls='-.', marker='x',
+              label='Plain backward', alpha=0.8)
+    ax11.legend()
+    ax11.set_title('Order param 1')
+    ax12.plot(steps, orderf[:, 1], lw=2, ls='-', marker='o', ms=12,
+              alpha=0.8)
+    ax12.plot(steps, orderb[:, 1], lw=2, ls='--', marker='^', ms=12,
+              alpha=0.8)
+    ax12.plot(plainf[1][:, 1], lw=2, ls=':', marker='s', alpha=0.8)
+    ax12.plot(plainb[1][:, 1][::-1], lw=2, ls='-.', marker='x',
+              alpha=0.8)
+    ax12.set_title('Order param 2')
+    kinf = np.array(pathf.ekin)
+    kinb = np.array(pathb.ekin[::-1])
+    potf = np.array(pathf.vpot)
+    potb = np.array(pathb.vpot[::-1])
+    fig2 = plt.figure(figsize=(12, 6))
+    ax21 = fig2.add_subplot(121)
+    ax22 = fig2.add_subplot(122)
+    ax21.plot(steps, kinf, lw=2, ls='-', marker='o', label='Forward', ms=12,
+              alpha=0.8)
+    ax21.plot(steps, kinb, lw=2, ls='--', marker='^', label='Backward',
+              ms=9, alpha=0.8)
+    ax21.plot(plainf[0][:, 0], plainf[0][:, 2], lw=2, ls=':', marker='s',
+              label='Plain forward', alpha=0.8)
+    ax21.plot(plainb[0][:, 0], plainb[0][:, 2][::-1], lw=2, ls='-.',
+              marker='x', label='Plain backward', alpha=0.8)
+    ax21.set_title('Kinetic energy')
+    ax21.legend()
+    ax22.plot(steps, potf, lw=2, ls='-', marker='o', label='Forward',
+              ms=12, alpha=0.8)
+    ax22.plot(steps, potb, lw=2, ls='--', marker='^', label='Backward',
+              ms=12, alpha=0.8)
+    ax22.plot(plainf[0][:, 0], plainf[0][:, 4], lw=2, ls=':', marker='s',
+              label='Plain forward', alpha=0.8)
+    ax22.plot(plainb[0][:, 0], plainb[0][:, 4][::-1], lw=2, ls='-.',
+              marker='x', label='Plain backward', alpha=0.8)
+    ax22.set_title('Potential energy')
+    ax22.legend()
+
+    fig3 = plt.figure(figsize=(12, 6))
+    ax31 = fig3.add_subplot(221)
+    ax32 = fig3.add_subplot(222)
+    ax33 = fig3.add_subplot(223)
+    ax34 = fig3.add_subplot(224)
+
+    ax31.scatter(orderf[:, 0], orderb[:, 0], marker='o', label='Backward',
+                 alpha=0.8)
+    ax31.scatter(orderf[:, 0], plainf[1][::subcycles, 0], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax31.scatter(orderf[:, 0], plainb[1][::subcycles, 0][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    minx = min(orderf[:, 0])
+    maxx = max(orderf[:, 0])
+    ax31.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax31.set_xlabel('Order 1 Forward')
+    ax31.set_ylabel('Order 1')
+    ax31.legend()
+
+    ax32.scatter(orderf[:, 1], orderb[:, 1], marker='o', label='Backward',
+                 alpha=0.8)
+    ax32.scatter(orderf[:, 1], plainf[1][::subcycles, 1], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax32.scatter(orderf[:, 1], plainb[1][::subcycles, 1][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax32.set_xlabel('Order 2 Forward')
+    ax32.set_ylabel('Order 2')
+    minx = min(orderf[:, 1])
+    maxx = max(orderf[:, 1])
+    ax32.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax32.legend()
+
+    ax33.scatter(kinf, kinb, marker='o', label='Backward',
+                 alpha=0.8)
+    ax33.scatter(kinf, plainf[0][::subcycles, 2], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax33.scatter(kinf, plainb[0][::subcycles, 2][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax33.set_xlabel('Ekin Forward')
+    ax33.set_ylabel('Ekin')
+    minx = min(kinf)
+    maxx = max(kinf)
+    ax33.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax33.legend()
+
+    ax34.scatter(potf, potb, marker='o', label='Backward',
+                 alpha=0.8)
+    ax34.scatter(potf, plainf[0][::subcycles, 4], marker='s',
+                 label='Forward-plain', alpha=0.8)
+    ax34.scatter(potf, plainb[0][::subcycles, 4][::-1], marker='^',
+                 label='Backward-plain', alpha=0.8)
+    ax34.set_xlabel('Vpot Forward')
+    ax34.set_ylabel('Vpot')
+    minx = min(potf)
+    maxx = max(potf)
+    ax34.plot([minx, maxx], [minx, maxx], ls=':',
+              c='#262626', alpha=0.5, lw=2)
+    ax34.legend()
+
+    fig1.tight_layout()
+    fig2.tight_layout()
+    fig3.tight_layout()
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    colorama.init(autoreset=True)
+    main()

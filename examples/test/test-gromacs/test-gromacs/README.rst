@@ -9,8 +9,10 @@ We are here doing the following:
 3) Reverse the velocities of the configuration output from 2)
 4) Integrate forward in time for n steps.
 
-The trajectories from 2) and 4) should match at least within the accuracy
-for short simulations. 
+The trajectories from 2) and 4) should match for short simulations.
+A complicating factor is here that we can use two formats for GROMACS,
+.gro and .g96, with different precision. You can compare the outcome for
+these two cases by modifying the ``engines.rst`` file.
 
 In this example we perform the integration in different ways:
 
