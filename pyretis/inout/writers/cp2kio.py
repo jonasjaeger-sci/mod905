@@ -158,6 +158,9 @@ def read_cp2k_input(filename):
     with open(filename, 'r') as infile:
         for lines in infile:
             lstrip = lines.strip()
+            if len(lstrip) == 0:
+                # skip empty lines
+                continue
             if lstrip.startswith('&'):
                 strip = lstrip[1:].split()
                 if lstrip[1:].lower().startswith('end'):
@@ -177,7 +180,6 @@ def read_cp2k_input(filename):
                     current_node = new_node
             else:
                 if current_node is not None:
-                    # add lstrip as a new node as well
                     current_node.data.append(lstrip)
     return nodes
 
@@ -347,8 +349,9 @@ def read_box_data(box_data):
     else:
         box = None
     periodic = []
+    periodic_setting = data.get('PERIODIC', 'XYZ')
     for val in ('X', 'Y', 'Z'):
-        periodic.append(True if val in data['PERIODIC'].upper() else False)
+        periodic.append(True if val in periodic_setting.upper() else False)
     return box, periodic
 
 

@@ -115,6 +115,10 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
             'data': {'STEPS': subcycles,
                      'TIMESTEP': timestep}
         },
+        'MOTION->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
         'MOTION->PRINT->RESTART->EACH': {
             'data': {'MD': print_freq}
         },
@@ -132,12 +136,19 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
             'data': [],
             'replace': True,
         },
+        'FORCE_EVAL->DFT->SCF->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
     }
     for veli in vel:
         to_update['FORCE_EVAL->SUBSYS->VELOCITY']['data'].append(
             '{} {} {}'.format(*veli)
         )
-    remove = ['EXT_RESTART', 'FORCE_EVAL->SUBSYS->COORD']
+    remove = [
+        'EXT_RESTART',
+        'FORCE_EVAL->SUBSYS->COORD'
+    ]
     update_cp2k_input(infile, outfile, update=to_update, remove=remove)
 
 
@@ -174,6 +185,10 @@ def write_for_continue(infile, outfile, timestep, subcycles,
             'data': {'STEPS': subcycles,
                      'TIMESTEP': timestep}
         },
+        'MOTION->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
         'MOTION->PRINT->RESTART->EACH': {
             'data': {'MD': subcycles}
         },
@@ -191,11 +206,18 @@ def write_for_continue(infile, outfile, timestep, subcycles,
         },
         'FORCE_EVAL->DFT': {
             'data': {'WFN_RESTART_FILE_NAME': 'previous.wfn'},
-        }
+        },
+        'FORCE_EVAL->DFT->SCF->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
     }
-    remove = ['FORCE_EVAL->SUBSYS->TOPOLOGY',
-              'FORCE_EVAL->SUBSYS->VELOCITY',
-              'FORCE_EVAL->SUBSYS->COORD']
+    remove = [
+        'FORCE_EVAL->SUBSYS->TOPOLOGY',
+        'FORCE_EVAL->SUBSYS->VELOCITY',
+        'FORCE_EVAL->SUBSYS->COORD'
+        'FORCE_EVAL->DFT->RESTART_FILE_NAME',
+    ]
     update_cp2k_input(infile, outfile, update=to_update, remove=remove)
 
 
@@ -230,6 +252,10 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
             'data': {'STEPS': 1,
                      'TIMESTEP': 0}
         },
+        'MOTION->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
         'MOTION->PRINT->RESTART->EACH': {
             'data': {'MD': 1}
         },
@@ -242,10 +268,17 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
         'FORCE_EVAL->SUBSYS->TOPOLOGY': {
             'data': {'COORD_FILE_NAME': posfile,
                      'COORD_FILE_FORMAT': 'xyz'}
-        }
+        },
+        'FORCE_EVAL->DFT->SCF->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
     }
-    remove = ['EXT_RESTART',
-              'FORCE_EVAL->SUBSYS->VELOCITY']  # CHECK IF THIS IS NEEDED!
+    remove = [
+        'EXT_RESTART',
+        'FORCE_EVAL->SUBSYS->VELOCITY',
+        'FORCE_EVAL->DFT->RESTART_FILE_NAME',
+    ]
     update_cp2k_input(infile, outfile, update=to_update, remove=remove)
 
 
