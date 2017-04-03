@@ -137,6 +137,8 @@ The following system of units are defined for PyRETIS:
 
 - ``reduced``: A reduced system of units.
 
+- ``cp2k``: A system of units consistent with CP2K.
+
 
 The defining units for the Lennard-Jones units (``lj``) are typically
 based on the Lennard-Jones parameters for one of the components, e.g.
@@ -161,6 +163,8 @@ units for the other systems are given in the table below:
   | si          | 1 J          | 1 m         | 1 kg               |
   +-------------+--------------+-------------+--------------------+
   | gromacs     | 1 kJ/mol     | 1 nm        | 1 g/mol            |
+  +-------------+--------------+-------------+--------------------+
+  | cp2k        | 1 hartree    | 1 Å         | 1 g/mol            |
   +-------------+--------------+-------------+--------------------+
 
 
@@ -189,11 +193,20 @@ energy systems are given in the table below.
   +-------------+----------------------+
   | gromacs     | 1.0 ps               |
   +-------------+----------------------+
+  | cp2k        | 0.0457102889683 fs   |
+  +-------------+----------------------+
 
 
 The interpretation here is that if you are for instance using the system
 ``real`` and would like to have a time step equal to 0.5 fs, then the
 input time step to PyRETIS should be ``0.5 fs / 48.8882129084 fs``.
+NOTE: When using external engines, PyRETIS will not do any assumptions
+on the input time/length etc and simply assume that the input values
+are given in correct units for the external engine. In this case, the
+only time PyRETIS will make use of the unit system is when the
+Boltzmann constant is used together with energies. That is, the
+Boltzmann constant must be in units consistent with the energy output
+from the external engine.
 
 
 References and footnotes
@@ -290,6 +303,7 @@ CONSTANTS['kB']['metal'] = CONSTANTS['kB']['eV/K']
 CONSTANTS['kB']['au'] = 1.0
 CONSTANTS['kB']['electron'] = 3.16681534e-6
 CONSTANTS['kB']['gromacs'] = CONSTANTS['kB']['kJ/mol/K']
+CONSTANTS['kB']['cp2k'] = 3.16681534e-6  # hartree
 
 
 DIMENSIONS = {'length', 'mass', 'time', 'energy', 'velocity', 'charge',
@@ -408,6 +422,10 @@ UNIT_SYSTEMS['gromacs'] = {'length': (1.0, 'nm'),
                            'energy': (1.0, 'kJ/mol'),
                            'mass': (1.0, 'g/mol'),
                            'charge': 'e'}
+UNIT_SYSTEMS['cp2k'] = {'length': (1.0, 'A'),
+                        'energy': (1.0, 'hartree'),
+                        'mass': (9.10938356e-31, 'kg'),
+                        'charge': 'e'}
 
 
 def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
@@ -981,10 +999,11 @@ def _examples():
     create_conversion_factors('lj')
     create_conversion_factors('gromacs')
     create_conversion_factors('real')
+    create_conversion_factors('cp2k')
     # Show how we can convert between systems:
     for key in ('energy', 'time'):
-        for sys1 in ('lj', 'gromacs', 'real'):
-            for sys2 in ('lj', 'gromacs', 'real'):
+        for sys1 in ('lj', 'gromacs', 'real', 'cp2k'):
+            for sys2 in ('lj', 'gromacs', 'real', 'cp2k'):
                 if sys1 == sys2:
                     continue
                 print(('\nTo convert "{}" between systems '
