@@ -146,8 +146,8 @@ class MDEngine(EngineBase):
                           'vel': system.particles.vel,
                           'vpot': system.particles.vpot,
                           'ekin': kin}
-            status, success, stop = self.add_to_path(path, phasepoint,
-                                                     left, right)
+            status, success, stop, _ = self.add_to_path(path, phasepoint,
+                                                        left, right)
             if stop:
                 logger.debug('Stopping propagate at step: %i ', i)
                 break

@@ -440,8 +440,8 @@ class GromacsEngine(ExternalMDEngine):
                            'vel': reverse,
                            'vpot': None,
                            'ekin': None}
-            status, success, stop = self.add_to_path(path, phase_point,
-                                                     left, right)
+            status, success, stop, _ = self.add_to_path(path, phase_point,
+                                                        left, right)
             if stop:
                 logger.debug('GROMACS propagation ended at %i. Reason: %s',
                              i, status)

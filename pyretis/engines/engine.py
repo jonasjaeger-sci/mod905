@@ -81,7 +81,7 @@ class EngineBase(metaclass=ABCMeta):
             status = 'Max. path length exceeded!'
             success = False
             stop = True
-        return status, success, stop
+        return status, success, stop, add
 
     @abstractmethod
     def propagate(self, path, system, orderp, interfaces, reverse=False):

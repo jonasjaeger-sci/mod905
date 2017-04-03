@@ -470,9 +470,9 @@ class CP2KEngine(ExternalMDEngine):
                            'vel': reverse,
                            'vpot': None,
                            'ekin': None}
-            status, success, stop = self.add_to_path(path, phase_point,
-                                                     left, right)
-            if success and i > 0:
+            status, success, stop, add = self.add_to_path(path, phase_point,
+                                                          left, right)
+            if add and i > 0:
                 # Write the previous configuration:
                 write_xyz_trajectory(traj_file, xyz, vel, atoms, box,
                                      step=i)
