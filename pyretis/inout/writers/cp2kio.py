@@ -221,7 +221,10 @@ def update_node(target, settings, data, node_ref,
         formatted.
     """
     if target not in node_ref:  # add node
-        _add_node(target, settings, node_ref)
+        try:
+            _add_node(target, settings, node_ref)
+        except KeyError:
+            return
     node = node_ref[target]
     new_data = []
     done = set()
