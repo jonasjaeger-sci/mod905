@@ -464,7 +464,7 @@ class CP2KEngine(ExternalMDEngine):
         write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i,
                              append=False)
         for i in range(path.maxlen):
-            print('At step %i' % i)
+            print('At step {}, order = {}'.format(i, order))
             phase_point = {'order': order,
                            'pos': (traj_file, i),
                            'vel': reverse,
