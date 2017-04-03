@@ -340,7 +340,8 @@ def initial_positions_file(settings):
                                ptype=particle_type)
     try:
         size = [lng * convert['length'] for lng in snapshot['box'][:ndim]]
-    except KeyError:
+    except (KeyError, IndexError, TypeError) as err:
+        logger.debug('No box read from file: %s', err)
         size = None
     if vel_read:
         msg = 'Used velocities found in {}.'.format(pos_settings['file'])
