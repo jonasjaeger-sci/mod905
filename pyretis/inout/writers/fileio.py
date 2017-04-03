@@ -114,7 +114,7 @@ class FileIO(object):
             status = False
         return status
 
-    def write(self, towrite, end='\n', force_flush=False):
+    def write(self, towrite, end='\n'):
         """Write a string to the file.
 
         Parameters
@@ -124,9 +124,6 @@ class FileIO(object):
         end : string
             Appended to `towrite` when writing, can be used to print a
             new line after the input `towrite`.
-        force_flush : boolean
-            If this is set to True and we have written to the file,
-            we attempt to flush the data immediately to the file.
 
         Returns
         -------
@@ -148,8 +145,6 @@ class FileIO(object):
                 msg = 'Write I/O error ({}): {}'.format(error.errno,
                                                         error.strerror)
                 logger.critical(msg)
-            if status and force_flush:
-                os.fsync(self.fileh.fileno())
             return status
         else:
             if self.fileh is not None and self.fileh.closed:
@@ -157,6 +152,11 @@ class FileIO(object):
             if self.fileh is None:
                 logger.warning('File handle is empty.')
             return status
+
+    def force_flush(self):
+        """Attempt to force flushing of data to the file."""
+        if self.fileh is not None and not self.fileh.closed:
+            os.fsync(self.fileh.fileno())
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
