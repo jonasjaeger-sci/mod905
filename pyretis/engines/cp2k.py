@@ -353,7 +353,7 @@ class CP2KEngine(ExternalMDEngine):
                     logger.warning('CP2K will overwrite %s', out_file)
                 write_xyz_trajectory(out_file, xyz, vel, names, box,
                                      append=False)
-                break
+                return
         logger.error('CP2K could not extract index %i from %s!',
                      idx, out_file)
 
