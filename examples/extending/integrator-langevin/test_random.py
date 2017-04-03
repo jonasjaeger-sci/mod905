@@ -2,9 +2,11 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """The Langevin integrator implemented in FORTRAN."""
+import logging
 import numpy as np
 from matplotlib import pyplot as plt
-
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 try:
     from vvintegrator import vvintegrator
 except ImportError:
@@ -12,6 +14,7 @@ except ImportError:
            '\nPlease compile with "make"!')
     logger.critical(MSG)
     raise ImportError(MSG)
+
 
 def test_rangaussian(sigma, numbers=10000, bins=100):
     """Test the gaussian generator"""
@@ -33,9 +36,14 @@ def test_rangaussian(sigma, numbers=10000, bins=100):
     ax1.legend()
     plt.show()
 
+
 def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
-    rndf = np.array([vvintegrator.gssbivar(s12os11, sqrts11, sqrtsos11) for _ in range(numbers)])
-    histf, xedges, yedges = np.histogram2d(rndf[:, 0], rndf[:, 1], bins=bins, range=None)
+    rndf = []
+    for _ in range(numbers):
+        rndf.append(vvintegrator.gssbivar(s12os11, sqrts11, sqrtsos11))
+    rndf = np.array(rndf)
+    histf, xedges, yedges = np.histogram2d(rndf[:, 0], rndf[:, 1],
+                                           bins=bins, range=None)
     xvarf, yvarf = np.meshgrid(xedges, yedges)
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -43,12 +51,10 @@ def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
     plt.show()
 
 if __name__ == '__main__':
-    seed = 1000
+    SEED = 1000
     size = vvintegrator.get_seed_size()
-    print(size)
-    seeds = [seed + i for i in range(size)]
-    seeds = np.array(seeds, dtype=np.int32)
+    seeds = np.array([SEED + i for i in range(size)], dtype=np.int32)
     vvintegrator.seed_random_generator(seeds)
-    for sigma in [1.0, 0.5, 2.0, 10.0]:
-        test_rangaussian(sigma, numbers=10**6)
+    for sig in [1.0, 0.5, 2.0, 10.0]:
+        test_rangaussian(sig, numbers=10**6)
     test_gssbivar(1.0, 2.0, 1.0)

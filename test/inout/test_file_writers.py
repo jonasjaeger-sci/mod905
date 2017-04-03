@@ -106,13 +106,15 @@ class TableWritersTest(unittest.TestCase):
         table = ThermoTable()
         data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
                     etot=3.456, press=1.011e9)
-        line = '       100        1.2345        5432.1         2.222         3.456     1.011e+09'
+        line = ('       100        1.2345        5432.1         '
+                '2.222         3.456     1.011e+09')
         for lines in table.generate_output(100, data):
             self.assertMultiLineEqual(lines, line)
             break
         data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
                     etot=3.456, press=101.11111111)
-        line = '       100        1.2345        5432.1         2.222         3.456       101.111'
+        line = ('       100        1.2345        5432.1         '
+                '2.222         3.456       101.111')
         for lines in table.generate_output(100, data):
             self.assertMultiLineEqual(lines, line)
             break

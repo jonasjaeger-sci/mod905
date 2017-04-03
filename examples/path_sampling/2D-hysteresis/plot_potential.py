@@ -44,9 +44,8 @@ for i, xi in enumerate(x):
         Z[i, j] = forcefield.evaluate_potential(fakesys)
         O[i, j] = orderp.calculate(fakesys)
         point = orderp.origin + orderp.vec * O[i, j]
-        OXY.append(point)       
+        OXY.append(point)
 OXY = np.array(OXY)
 ax1.contourf(X, Y, Z, 10, cmap=plt.cm.viridis)
-ax1.scatter(OXY[:,0], OXY[:, 1], color='k')
+ax1.scatter(OXY[:, 0], OXY[:, 1], color='k')
 fig.savefig('pot.png')
-#plt.show()

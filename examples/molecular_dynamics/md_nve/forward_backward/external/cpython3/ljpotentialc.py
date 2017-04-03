@@ -3,15 +3,17 @@
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
 import logging
-import numpy as np
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
-logger.addHandler(logging.NullHandler())
-from pyretis.forcefield.potentials import PairLennardJonesCut
-from pyretis.forcefield.potentials.pairpotentials import generate_pair_interactions
-# Just to handle imports of the library:
 import sys
 import os
+import numpy as np
+from pyretis.forcefield.potentials import PairLennardJonesCut
+from pyretis.forcefield.potentials.pairpotentials import (
+    generate_pair_interactions
+)
+# Just to handle imports of the library:
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 try:
     import ljc
 except ImportError:

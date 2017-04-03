@@ -7,7 +7,6 @@ These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
 """
 import logging
-import numpy as np
 from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -64,6 +63,7 @@ class VVIntegrator(MDEngine):
         system.potential_and_force()
         particles.vel += self.half_delta_t * particles.force * imass
         return None
+
 
 class Euler(MDEngine):
     """Euler(MDEngine).

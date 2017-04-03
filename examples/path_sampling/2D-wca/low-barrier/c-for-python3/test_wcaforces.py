@@ -3,7 +3,7 @@
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test the C implementation of the WCA potential.
 
-This test is comparing the C implementation with the PyRETIS 
+This test is comparing the C implementation with the PyRETIS
 implementation.
 """
 # pylint: disable=C0103

@@ -2,6 +2,8 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
+import sys
+import os
 import logging
 import numpy as np
 from pyretis.forcefield import PotentialFunction
@@ -9,8 +11,6 @@ from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # Just to handle imports of the library:
-import sys
-import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     import wcaforces
@@ -112,7 +112,7 @@ class WCAPotential(PotentialFunction):
         vcut = 0.0
         if self.shift:
             try:
-                vcut = 4.0 * eps_ij * ((sig_ij / rcut)**12 - 
+                vcut = 4.0 * eps_ij * ((sig_ij / rcut)**12 -
                                        (sig_ij / rcut)**6)
             except ZeroDivisionError:
                 vcut = 0.0
@@ -146,7 +146,7 @@ class WCAPotential(PotentialFunction):
                                       self.params['rcut2'],
                                       particles.npart)
         return v_pot
-    
+
     def potential_well(self, system):
         """Calculate the potential energy for the well only.
 

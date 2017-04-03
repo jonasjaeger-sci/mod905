@@ -17,3 +17,4 @@ clean:
 	rm -rf backward-plain
 	rm -rf forward
 	rm -rf forward-plain
+	rm -rf genvel

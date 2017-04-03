@@ -46,7 +46,7 @@ class RingDiffusion(OrderParameter):
         self.idx1 -= 3
         # convert to 0 index:
         self.idx1 -= 1
-        self.idx2 = np.array([56, 64, 72, 80, 104, 112, 136, 152, 168, 176, 
+        self.idx2 = np.array([56, 64, 72, 80, 104, 112, 136, 152, 168, 176,
                               200, 208, 232, 248, 264, 272, 296, 304, 328,
                               336, 344, 352, 360, 368], dtype=np.int16)
         # convert to atom index:

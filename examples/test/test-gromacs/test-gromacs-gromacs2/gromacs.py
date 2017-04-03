@@ -13,6 +13,7 @@ logger.addHandler(logging.NullHandler())
 
 RND = RandomState(42)
 
+
 def prepare_shooting_point(gro, input_file):
     """Method to create initial configuration for a shooting move.
 

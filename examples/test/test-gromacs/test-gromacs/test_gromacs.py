@@ -10,7 +10,7 @@ Here we test the basic functionality of the GROMACS engine.
 
 3) We reverse the velocities.
 
-4) We integrate forward in time from 3.
+4) We integrate backward in time from 3.
 """
 import itertools
 import os

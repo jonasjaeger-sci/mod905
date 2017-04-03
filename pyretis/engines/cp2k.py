@@ -639,7 +639,6 @@ class CP2KEngine(ExternalMDEngine):
             self.exe_dir,
             self._find_backup_files(self.exe_dir)
         )
-        print(energy)
         return conf_out, energy
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,

@@ -22,9 +22,7 @@ klass = {'fortran': 'PairLennardJonesCutF',
 module = {'fortran': 'fortran/ljpotentialf.py',
           'cpython3': 'cpython3/ljpotentialc.py'}
 
-USE = 'cpython3'
-# or
-#USE = 'fortran'
+USE = 'cpython3'  # or 'fortran'
 
 settings = {}
 settings['simulation'] = {'task': 'md-nve',

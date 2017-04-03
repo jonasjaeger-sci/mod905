@@ -63,7 +63,7 @@ for i, key in enumerate(data):
     avg_n = avg[:nmin] / norm_avg[:nmin]
     ax2.plot(npart, avg_n, lw=3, label=key, markersize=9, alpha=0.9,
              marker=markers[i])
-ax2.legend(ncol=2, loc='best',  bbox_to_anchor=(0.3,0.7))
+ax2.legend(ncol=2, loc='best',  bbox_to_anchor=(0.3, 0.7))
 ax2.set_yscale('log')
 ax2.set_xlabel('System size')
 ax2.set_ylabel('Time relative to python+c')

@@ -105,7 +105,7 @@ class IntegratorTest(unittest.TestCase):
     def test_langevin_inertia(self):
         """Test the Langevin integrator.
 
-        In this test we compare the trajectory obtained by PyRETIS 
+        In this test we compare the trajectory obtained by PyRETIS
         with a trajectory obtained independently by the TISMOL program.
         Since we are using a Langevin integrator, we are using a mock
         random generator. This random generator is implemented identically

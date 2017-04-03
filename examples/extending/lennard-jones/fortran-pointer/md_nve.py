@@ -7,9 +7,13 @@ This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.setup import (create_simulation, create_system,
-						   	     create_engine, create_force_field,
-                                 create_output_tasks)
+from pyretis.inout.setup import (
+    create_simulation,
+    create_system,
+    create_engine,
+    create_force_field,
+    create_output_tasks
+)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
 settings['simulation'] = {'task': 'md-nve', 'steps': 1000}

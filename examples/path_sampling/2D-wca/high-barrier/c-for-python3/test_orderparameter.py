@@ -31,11 +31,11 @@ class WCAOrderTest(unittest.TestCase):
         particles.add_particle(np.array([1.0, 2.0]), np.zeros(2), np.zeros(2),
                                mass=1.0, name='A', ptype=0)
         create_conversion_factors('lj')
-        system = System(box=box, units='lj')        
+        system = System(box=box, units='lj')
         system.particles = particles
 
-        order1 = WCAOrderParameter((0,1))
-        order2 = OrderParameterDistance((0,1), periodic=True)
+        order1 = WCAOrderParameter((0, 1))
+        order2 = OrderParameterDistance((0, 1), periodic=True)
 
         for i in np.arange(0.001, 5.0, 0.1):
             particles.pos[1] = np.array([1.0, i])
