@@ -114,7 +114,7 @@ class FileIO(object):
             status = False
         return status
 
-    def write(self, towrite, end='\n'):
+    def write(self, towrite, end='\n', force_flush=False):
         """Write a string to the file.
 
         Parameters
@@ -124,16 +124,19 @@ class FileIO(object):
         end : string
             Appended to `towrite` when writing, can be used to print a
             new line after the input `towrite`.
+        force_flush : boolean
+            If this is set to True and we have written to the file,
+            we attempt to flush the data immediately to the file.
 
         Returns
         -------
-        out : boolean
+        status : boolean
             True if we managed to write, False otherwise.
         """
+        status = False
         if towrite is None:
-            return False
+            return status
         if self.fileh is not None and not self.fileh.closed:
-            status = False
             try:
                 if end is not None:
                     self.fileh.write('{}{}'.format(towrite, end))
@@ -145,13 +148,15 @@ class FileIO(object):
                 msg = 'Write I/O error ({}): {}'.format(error.errno,
                                                         error.strerror)
                 logger.critical(msg)
+            if status and force_flush:
+                os.fsync(self.fileh.fileno())
             return status
         else:
             if self.fileh is not None and self.fileh.closed:
                 logger.warning('Ignored writing to closed file.')
             if self.fileh is None:
                 logger.warning('File handle is empty.')
-            return False
+            return status
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
@@ -162,11 +167,10 @@ class FileIO(object):
         """Close a file in case the object is deleted.
 
         This method will just close the file in case the program
-        crashes or exits in some other way. It is used here as it's not
-        so nice to add a with statement to the main script running the
-        simulation.
+        crashes or exits in some other way.
         """
         if self.fileh is not None and not self.fileh.closed:
+            os.fsync(self.fileh.fileno())
             self.fileh.close()
 
     def __str__(self):
