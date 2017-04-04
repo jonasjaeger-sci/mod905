@@ -10,13 +10,15 @@ initiate_load (:py:func`.initiate_load`)
     Method that will get the initial path from the output from
     a previous simulation.
 """
+import collections
 import logging
 import os
 import shutil
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.core.common import get_path_class
 from pyretis.inout.common import print_to_screen
-from pyretis.inout.writers import prepare_load
+from pyretis.inout.writers import prepare_load, get_writer
+from pyretis.tools.recalculate_order import recalculate_order
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -60,7 +62,6 @@ def initiate_load(simulation, cycle, settings):
                 path,
                 ensemble,
                 edir,
-                simulation.system,
                 simulation.order_function,
                 simulation.engine,
             )
@@ -108,8 +109,12 @@ def _load_order_parameters(traj, dirname, system, order_function):
         return orderdata
 
 
-def _load_order_parameters_ext(traj, dirname, system, engine, order_function):
-    """Load or recalculate the order parameters.
+def _load_order_parameters_ext(traj, dirname, order_function):
+    """Load or re-calculate the order parameters.
+
+    For external trajectories, dumping of specific frames from a
+    trajectory might be expensive and we here do slightly more work than
+    just dumping the frames.
 
     Parameters
     ----------
@@ -118,8 +123,6 @@ def _load_order_parameters_ext(traj, dirname, system, engine, order_function):
         re-calculating the order parameter(s).
     dirname : string
         The path to the directory with the input files.
-    system : object like :py:class:`.System`
-        A system object we can use when calculating the order parameter(s).
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
@@ -132,25 +135,51 @@ def _load_order_parameters_ext(traj, dirname, system, engine, order_function):
     """
     order_file_name = os.path.join(dirname, 'order.txt')
     orderfile = prepare_load('pathorder', order_file_name, required=False)
+    print(orderfile)
     if orderfile is not None:
-        print_to_screen('Loading order parameters')
+        print_to_screen('Loading order parameters from file!')
         order = next(orderfile)
         return order['data'][:, 1:]
     else:
         orderdata = []
-        print_to_screen('Recalculating order parameters for input path')
+        print_to_screen('Recalculating order parameters for input path!')
         logger.info('Recalculating order parameters for input path')
+        # First get unique files and indexes for them:
+        files = collections.OrderedDict()
         for snapshot in traj['data']:
-            system.particles.set_pos((snapshot[1], snapshot[2]))
-            system.particles.set_vel(snapshot[3])
-            dump = engine.dump_frame(system)
-            system.particles.set_pos((dump, None))
-            order = engine.calculate_order(order_function, system)
-            print(system.particles.config, order)
-            orderdata.append(order)
-            if os.path.isfile(dump) and snapshot[2] is not None:
-                os.remove(dump)
+            filename = snapshot[1]
+            if filename not in files:
+                files[filename] = {'minidx': None, 'maxidx': None,
+                                   'reverse': snapshot[3]}
+            idx = int(snapshot[2])
+            minidx = files[filename]['minidx']
+            if minidx is None or idx < minidx:
+                files[filename]['minidx'] = idx
+            maxidx = files[filename]['maxidx']
+            if maxidx is None or idx > maxidx:
+                files[filename]['maxidx'] = idx
+        # ok now we have the files, calculate the order parameters:
+        for filename, info in files.items():
+            new_order = recalculate_order(order_function, filename,
+                                          reverse=info['reverse'],
+                                          maxidx=info['maxidx'],
+                                          minidx=info['minidx'])
+            orderdata += new_order
+        # Store the re-calculated order parameters so we don't have
+        # to re-calculate again later:
+        write_order_parameters(order_file_name, orderdata)
         return orderdata
+
+
+def write_order_parameters(order_file_name, orderdata):
+    """Store re-calculated order parameters to a file."""
+    writer = get_writer('order')
+    with open(order_file_name, 'w') as outfile:
+        outfile.write('# Cycle: Re-calculated\n')
+        outfile.write('{}\n'.format(writer.header))
+        for step, data in enumerate(orderdata):
+            txt = writer.format_data(step, data)
+            outfile.write('{}\n'.format(txt))
 
 
 def _load_energies_for_path(path, dirname):
@@ -338,8 +367,7 @@ def _load_external_trajectory(dirname, engine):
     return traj
 
 
-def read_path_files_ext(path, ensemble, dirname, system, order_function,
-                        engine):
+def read_path_files_ext(path, ensemble, dirname, order_function, engine):
     """Read data needed for a path from a directory.
 
     Parameters
@@ -350,8 +378,6 @@ def read_path_files_ext(path, ensemble, dirname, system, order_function,
         The ensemble the path could be added to.
     dirname : string
         The path to the directory with the input files.
-    system : object like :py:class:`.System`
-        A system object we can use when calculating the order parameter(s).
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
@@ -362,8 +388,7 @@ def read_path_files_ext(path, ensemble, dirname, system, order_function,
     """
     left, _, right = ensemble.interfaces
     traj = _load_external_trajectory(dirname, engine)
-    orderdata = _load_order_parameters_ext(traj, dirname, system, engine,
-                                           order_function)
+    orderdata = _load_order_parameters_ext(traj, dirname, order_function)
     # Add to path :-)
     print_to_screen('Creating path from files')
     logger.debug('Creating path from files')
