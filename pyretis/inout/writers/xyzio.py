@@ -24,6 +24,15 @@ write_xyz_file (:py:func:`.write_xyz_file`)
 write_xyz_trajectory (:py:func:`.write_xyz_trajectory`)
     A helper method to write xyz trajectories. This will
     also attempt to write box information to the xyz-header.
+
+xyz_merge (:py:func:`.xyz_merge`)
+    A method to merge a forward and a backward xyz trajectory. This
+    method is mainly used when creating a whole trajectory for
+    visualization.
+
+reverse_xyz_file (:py:func:`.reverse_xyz_file`)
+    Method to read an xyz-file in reverse, helps :py:func:`.xyz_merge`
+    merge trajectories.
 """
 import logging
 import numpy as np
@@ -42,8 +51,10 @@ _XYZ_BIG_VEL_FMT = _XYZ_BIG_FMT + 3*' {:15.9f}'
 __all__ = [
     'format_xyz_data',
     'read_xyz_file',
+    'reverse_xyz_file',
     'write_xyz_file',
-    'write_xyz_trajectory'
+    'write_xyz_trajectory',
+    'xyz_merge',
 ]
 
 
@@ -238,3 +249,98 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
                                            pos[i, 2], vel[i, 0], vel[i, 1],
                                            vel[i, 2])
             output_file.write('{}\n'.format(line))
+
+
+def xyz_merge(backward, forward, merged):
+    """Merge forward and backward trajectories into one.
+
+    Parameters
+    ----------
+    backward : string
+        File path to the backward trajectory.
+    forward : string
+        File path to the forward trajectory.
+    merged : string
+        File path to the merged (output) trajectory. This will
+        overwrite existing files with the same file path!
+
+    Note
+    ----
+    The velocities in the backward trajectory will not be reversed,
+    the purpose of this method is mainly to make whole trajectories
+    for visualization purposes.
+    """
+    reverse_xyz_file(backward, merged)
+    with open(forward, 'r') as infile, open(merged, 'a+') as output:
+        for lines in infile:
+            output.write(lines)
+
+
+def _reverse_xyz_buffer(buff, output):
+    """Reverse the xyz buffer and extract frames.
+
+    Parameters
+    ----------
+    buff : string
+        A buffer read from a .xyz file.
+    output : object like ``file object``
+        Where we write the reversed frames.
+
+    Returns
+    -------
+    out : string
+        The left-over data which did not make a full frame.
+    """
+    frame = []
+    finish_next = False
+    for lines in reversed(buff.split('\n')):
+        if not lines:
+            continue
+        frame.append(lines)
+        if finish_next:
+            output.write('\n'.join(frame[::-1]))
+            output.write('\n')
+            frame = []
+            finish_next = False
+            continue
+        if lines.find('# Step') != -1:
+            # need just one more line to complete the frame
+            finish_next = True
+    if len(frame) == 0:
+        return None
+    else:
+        return '\n'.join(frame[::-1])
+
+
+def reverse_xyz_file(filename, outputfile):
+    """Reverse the given xyz-file.
+
+    Parameters
+    ----------
+    filename : string
+        The input .xyz file to open.
+    outputfile : string
+        The .xyz file to write.
+    """
+    buff_size = 1024
+    left_over = None
+    with open(filename, 'r') as fileh, open(outputfile, 'w') as outfh:
+        fileh.seek(0, 2)  # Go to the end
+        current_pos = fileh.tell()
+        done = False
+        while current_pos >= 0 and not done:
+            next_pos = current_pos - buff_size
+            if next_pos > 0:
+                fileh.seek(next_pos)
+                buff = fileh.read(buff_size)
+                if left_over is not None:
+                    buff += left_over
+                left_over = _reverse_xyz_buffer(buff, outfh)
+                current_pos = fileh.tell() - buff_size
+            else:
+                # data < buff_size is left, just read it all:
+                fileh.seek(0)
+                buff = fileh.read(current_pos)
+                buff += left_over
+                left_over = _reverse_xyz_buffer(buff, outfh)
+                done = True
