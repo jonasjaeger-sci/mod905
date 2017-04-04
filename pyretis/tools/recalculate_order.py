@@ -197,6 +197,8 @@ def recalculate_order(order_parameter, traj_file, reverse=False,
     else:
         all_order = helpers[ext](order_parameter, traj_file, reverse=reverse,
                                  maxidx=maxidx, minidx=minidx)
+    if reverse:
+        all_order.reverse()
     return all_order
 
 
