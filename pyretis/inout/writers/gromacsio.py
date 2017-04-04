@@ -42,6 +42,7 @@ trr_frame_to_g96 (:py:func:`.trr_frame_to_g96`)
 """
 import logging
 import struct
+import io
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -594,13 +595,17 @@ def read_trr_data(fileh, header):
     return data
 
 
-def read_trr_file(filename):
+def read_trr_file(filename, read_data=True):
     """Yields frames in a trr file."""
     with open(filename, 'rb') as infile:
         while True:
             try:
                 header, _ = read_trr_header(infile)
-                data = read_trr_data(infile, header)
+                if read_data:
+                    data = read_trr_data(infile, header)
+                else:
+                    skip_trr_data(infile, header)
+                    data = None
                 yield header, data
             except EOFError:
                 raise StopIteration
@@ -660,3 +665,51 @@ def trr_frame_to_g96(trr_file, index, outfile):
                                          box[1, 0], box[2, 0], box[0, 1],
                                          box[2, 1], box[0, 2], box[1, 2]))
         output.write('END\n')
+
+
+def _get_chunks(start, end, size):
+    """Yield chunks between start and end of the given size."""
+    while start < end:
+        new_size = min(size, end - start)
+        start += new_size
+        yield start, new_size
+
+
+def reverse_trr(filename, outname, print_progress=True):
+    """Reverse a gromacs .trr file.
+
+    Parameters
+    ----------
+    filename : string
+        The file path to the input file.
+    outname : string
+        The file path to the output file.
+    print_progress : boolean
+        This can be used to print out information about the
+        progress to the screen. Might be useful if we are reading
+        a large file.
+    """
+    # We first loop over the file until we reach the
+    # last header, we skip the data and read all the headers.
+    all_headers = []
+    buff_size = io.DEFAULT_BUFFER_SIZE
+    with open(filename, 'rb') as infile, open(outname, 'wb') as outfile:
+        while True:
+            try:
+                header, header_size = read_trr_header(infile)
+                header_loc = infile.tell()
+                skip_trr_data(infile, header)
+                all_headers.append((header, header_loc, header_size))
+            except EOFError:
+                break
+        # Loop through headers in reverse and write data.
+        for header, header_loc, header_size in reversed(all_headers):
+            if print_progress:
+                print('Processing step {} time {}'.format(header['step'],
+                                                          header['time']))
+            data_size = sum([header[key] for key in TRR_DATA_ITEMS])
+            start = header_loc - header_size
+            infile.seek(start)
+            end = start + header_size + data_size
+            for _, chunk_size in _get_chunks(start, end, buff_size):
+                outfile.write(infile.read(chunk_size))
