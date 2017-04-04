@@ -34,6 +34,7 @@ reverse_xyz_file (:py:func:`.reverse_xyz_file`)
     Method to read an xyz-file in reverse, helps :py:func:`.xyz_merge`
     merge trajectories.
 """
+import io
 import logging
 import numpy as np
 from pyretis.inout.writers.writers import (adjust_coordinate,
@@ -354,7 +355,7 @@ def reverse_xyz_file(filename, outputfile):
     outputfile : string
         The .xyz file to write.
     """
-    buff_size = 1024
+    buff_size = io.DEFAULT_BUFFER_SIZE
     left_over = None
     with open(filename, 'r') as fileh, open(outputfile, 'w') as outfh:
         fileh.seek(0, 2)  # Go to the end
@@ -373,6 +374,7 @@ def reverse_xyz_file(filename, outputfile):
                 # data < buff_size is left, just read it all:
                 fileh.seek(0)
                 buff = fileh.read(current_pos)
-                buff += left_over
+                if left_over is not None:
+                    buff += left_over
                 left_over = _reverse_xyz_buffer(buff, outfh)
                 done = True
