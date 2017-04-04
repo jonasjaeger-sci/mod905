@@ -68,13 +68,14 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
     system = System(box=Box([100, 100, 100]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
     all_order = []
+    msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
+           ' Step {}, time {}')
     for i, (header, data) in enumerate(read_trr_file(trr_file)):
         if maxidx is not None and i > maxidx:
             break
         if minidx is not None and i < minidx:
             continue
-        print_to_screen('At step {} time {}'.format(header['step'],
-                                                    header['time']))
+        print_to_screen(msg.format(header['step'], header['time']))
         system.particles.pos = data['x']
         if 'v' in data:
             system.particles.vel = data['v']
@@ -114,12 +115,14 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
     system = System(box=Box([100, 100, 100]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
     all_order = []
+    msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
+           ' Step {}')
     for i, snapshot in enumerate(read_xyz_file(traj_file)):
         if maxidx is not None and i > maxidx:
             break
         if minidx is not None and i < minidx:
             continue
-        print_to_screen('At step {}'.format(i))
+        print_to_screen(msg.format(i))
         box, xyz, vel, _ = convert_snapshot(snapshot)
         system.particles.pos = xyz
         system.particles.vel = vel
@@ -153,6 +156,8 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     """
     system = System(box=Box([100, 100, 100]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
+    msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
+    print_to_screen(msg)
     if ext == '.g96':
         txt, xyz, vel = read_gromos96_file(traj_file)
         box = np.array([float(i) for i in txt['BOX'][0].split()])
