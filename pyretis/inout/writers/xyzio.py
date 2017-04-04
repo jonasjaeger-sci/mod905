@@ -254,7 +254,7 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
     box : numpy.array
         The box dimensions/vectors
     step : integer, optional
-        If the ``step`  is given, then the step number is
+        If the ``step`` is given, then the step number is
         written to the header.
     append : boolean
         Determines if we append or overwrite an existing file.
