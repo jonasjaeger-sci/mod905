@@ -15,10 +15,17 @@ Modules
 lattice.py (:py:mod:`pyretis.tools.lattice`)
     Defines tools for setting up and generating lattice points.
 
+recalculate_order.py (:py:mod:`pyretis.tools.recalculate_order`)
+    Methods for recalculating order parameters on external paths.
+
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 generate_lattice (:py:func:`.generate_lattice`)
     Generates points on a lattice.
+
+recalculate_order (:py:func:`.recalculate_order`)
+    Recalculate order parameter(s).
 """
 from pyretis.tools.lattice import generate_lattice
+from pyretis.tools.recalculate_order import recalculate_order

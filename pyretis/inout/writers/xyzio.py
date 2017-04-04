@@ -116,6 +116,38 @@ def read_xyz_file(filename):
         yield snapshot
 
 
+def convert_snapshot(snapshot):
+    """Convert a xyz snapshot to numpy arrays.
+
+    Parameters
+    ----------
+    snapshot : dict
+        The dict containing a snapshot read from a xyz-file.
+
+    Returns
+    -------
+    box : numpy.array
+        The box dimensions if we mange to read it.
+    xyz : numpy.array
+        The positions.
+    vel : numpy.array
+        The velocities.
+    names : list of strings
+        The atom names found in the file.
+    """
+    names = snapshot['atomname']
+    box = snapshot['box']
+    natom = len(names)
+    xyz = np.zeros((natom, 3))
+    vel = np.zeros_like(xyz)
+    for i, dim in enumerate(('x', 'y', 'z')):
+        xyz[:, i] = snapshot[dim]
+        key = 'v{}'.format(dim)
+        if key in snapshot:
+            vel[:, i] = snapshot[key]
+    return box, xyz, vel, names
+
+
 def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     """Format XYZ data for outputting.
 

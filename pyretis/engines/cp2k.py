@@ -15,10 +15,13 @@ import logging
 import os
 import re
 import shlex
-import numpy as np
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.core.random_gen import create_random_generator
-from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
+from pyretis.inout.writers.xyzio import (
+    read_xyz_file,
+    write_xyz_trajectory,
+    convert_snapshot
+)
 from pyretis.inout.writers.cp2kio import (
     update_cp2k_input,
     read_cp2k_restart,
@@ -40,38 +43,6 @@ OUTPUT_FILES = {
 
 
 REGEXP_BACKUP = re.compile(r'\.bak-\d$')
-
-
-def convert_snapshot(snapshot):
-    """Convert a xyz snapshot to numpy arrays.
-
-    Parameters
-    ----------
-    snapshot : dict
-        The dict containing a snapshot read from a xyz-file.
-
-    Returns
-    -------
-    box : numpy.array
-        The box dimensions if we mange to read it.
-    xyz : numpy.array
-        The positions.
-    vel : numpy.array
-        The velocities.
-    names : list of strings
-        The atom names found in the file.
-    """
-    names = snapshot['atomname']
-    box = snapshot['box']
-    natom = len(names)
-    xyz = np.zeros((natom, 3))
-    vel = np.zeros_like(xyz)
-    for i, dim in enumerate(('x', 'y', 'z')):
-        xyz[:, i] = snapshot[dim]
-        key = 'v{}'.format(dim)
-        if key in snapshot:
-            vel[:, i] = snapshot[key]
-    return box, xyz, vel, names
 
 
 def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
