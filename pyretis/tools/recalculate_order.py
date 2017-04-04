@@ -6,7 +6,6 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 recalculate_order (:py:func:`.recalculate_order`)
     Generic method for recalculating order parameters.
 
