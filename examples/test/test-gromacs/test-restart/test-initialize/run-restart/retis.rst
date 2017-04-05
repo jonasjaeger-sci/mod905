@@ -53,7 +53,6 @@ module = ../orderp.py
 
 Output settings
 ---------------
-write_vel = False
 pathensemble-file = 1
 pathensemble-screen = 10
 energy-screen = 0
