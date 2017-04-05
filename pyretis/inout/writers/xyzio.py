@@ -33,12 +33,19 @@ xyz_merge (:py:func:`.xyz_merge`)
 reverse_xyz_file (:py:func:`.reverse_xyz_file`)
     Method to read an xyz-file in reverse, helps :py:func:`.xyz_merge`
     merge trajectories.
+
+txt_to_xyz (:py:func:`.txt_to_xyz`)
+    Method for converting/extracting paths from the internal trajectory
+    format and writing them as a .xyz file.
 """
 import io
 import logging
 import numpy as np
-from pyretis.inout.writers.writers import (adjust_coordinate,
-                                           read_txt_snapshots)
+from pyretis.inout.writers.writers import (
+    adjust_coordinate,
+    read_txt_snapshots,
+    PathIntWriter
+)
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -264,16 +271,20 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
     We will here append to the file.
     """
     npart = len(pos)
-    box_fmt = '{:8.3f} ' * box.size
+    if box is not None:
+        box_fmt = '{:8.3f} ' * box.size
+    else:
+        box_fmt = ''
     filemode = 'a' if append else 'w'
     with open(filename, filemode) as output_file:
         output_file.write('{}\n'.format(npart))
         header = ['#']
         if step is not None:
             header.append('Step: {}'.format(step))
-        box_str = box_fmt.format(*box.flatten()).strip()
-        header.append('Box:')
-        header.append(box_str)
+        if box is not None:
+            box_str = box_fmt.format(*box.flatten()).strip()
+            header.append('Box:')
+            header.append(box_str)
         header.append('\n')
         header_str = ' '.join(header)
         output_file.write(header_str)
@@ -378,3 +389,40 @@ def reverse_xyz_file(filename, outputfile):
                     buff += left_over
                 left_over = _reverse_xyz_buffer(buff, outfh)
                 done = True
+
+
+def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
+    """Convert a .txt trajectory to a .xyz trajectory.
+
+    The input trajectory is a trajectory in the internal
+    trajectory format.
+
+    Parameters
+    ----------
+    inputfile : string
+        The input trajectory file.
+    outputfile : string
+        A template name for output trajctories.
+    atoms : list of strings
+        Atom names to write to the xyz-file.
+    selection : string, optional
+        The selection can be used to select trajectories for output
+        based on the status.
+    nzero : integer
+        The number of zeros we use to pad trajectory names.
+    """
+    out = ''.join([outputfile, '-{:0', '{}d'.format(nzero), '}-{}.xyz'])
+    for traj in PathIntWriter().load(inputfile):
+        split = traj['comment'][0].split()
+        cycle = int(split[2][:-1])
+        status = split[4]
+        if selection is not None and status.lower() != selection.lower():
+            continue
+        output = out.format(cycle, status)
+        with open(output, 'w') as outh:
+            for j, snapshot in enumerate(traj['data']):
+                for lines in format_xyz_data(snapshot['pos'],
+                                             vel=snapshot['vel'],
+                                             names=atoms,
+                                             header='Snapshot: {}'.format(j)):
+                    outh.write('{}\n'.format(lines))
