@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module defining functions useful in analysis of simulation data.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-running_average
+running_average (:py:func:`.running_average`)
     Method to calculate a running average.
 
-block_error
+block_error (:py:func:`.block_error`)
     Perform block error analysis.
 
-block_error_corr
+block_error_corr (:py:func:`.block_error_corr`)
     Method to run a block error analysis and calculate relative
     errors and correlation length.
 """
@@ -43,7 +43,7 @@ def running_average(data):
 
 
 def _chunks(itera, size):
-    """Yield successive same-sized chunks from `itera`.
+    """Yield successive same-sized chunks from an iterable.
 
     Parameters
     ----------
@@ -59,10 +59,7 @@ def _chunks(itera, size):
 
     Notes
     -----
-    We are here using `range` rather than `xrange`. This is just to ease
-    the transition from python2 to python3. Note that this will probably
-    lead to some inefficiencies for python2 execution. The code is based
-    on one question at Stackoverflow [chunks]_.
+    The code is based on one question at Stackoverflow [chunks]_.
 
     References
     ----------
@@ -115,7 +112,7 @@ def block_error(data, maxblock=None, blockskip=1):
     .. [1] Wikipedia, "Algorithms for calculating variance",
        http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
     """
-    if maxblock is None:
+    if maxblock is None or maxblock < 1:
         maxblock = len(data) // 2
     else:
         maxblock = min(maxblock, len(data) // 2)
@@ -171,24 +168,25 @@ def block_error_corr(data, maxblock=None, blockskip=1):
 
     Returns
     -------
-    out[0] : numpy.array, `blen`.
-        These contains the block lengths considered.
-    out[1] : numpy.array, `berr`.
-        Estimate of errors as function of block length.
-    out[2] : float, `berr_avg`.
-        Average of the error estimate for blocks
+    out[0] : numpy.array
+        These contains the block lengths considered (`blen`).
+    out[1] : numpy.array
+        Estimate of errors as function of block length (`berr`).
+    out[2] : float
+        Average of the error estimate for blocks (`berr_avg`)
         with ``length > maxblock // 2``.
-    out[3] : numpy.array, `rel_err`.
-        Estimate of relative errors (normalised by the overall average)
-        as a function of block length.
-    out[4] : float, `avg_rel_err`.
-        The average relative error, for blocks
+    out[3] : numpy.array
+        Estimate of relative errors normalised by the overall average
+        as a function of block length (`rel_err`).
+    out[4] : float
+        The average relative error (`avg_rel_err`), for blocks
         with ``length > maxblock // 2``.
-    out[5] : numpy.array, `ncor`.
-        The estimated correlation length as a function of block length.
-    out[6] : float, `avg_ncor`.
+    out[5] : numpy.array
+        The estimated correlation length as a function of block
+        length (`ncor`).
+    out[6] : float
         The average (for blocks with length > maxblock // 2) estimated
-        correlation length.
+        correlation length (`avg_ncor`).
     """
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)
@@ -219,7 +217,7 @@ def mean_square_displacement(data, ndt=None):
         column is the corresponding standard deviation.
     """
     length = data.size
-    if ndt is None:
+    if ndt is None or ndt < 1:
         ndt = length // 5
     msd = []
     for i in range(1, ndt):
@@ -253,13 +251,14 @@ def analyse_data(data, settings):
         This dict contains the results.
     """
     result = {}
+    asett = settings['analysis']
     # 1) Do the running average
     result['running'] = running_average(data)
     # 2) Obtain distributions:
-    result['distribution'] = histogram_and_avg(data, settings['bins'],
+    result['distribution'] = histogram_and_avg(data, asett['bins'],
                                                density=True)
     # 3) Do the block error analysis:
     result['blockerror'] = block_error_corr(data,
-                                            maxblock=settings['maxblock'],
-                                            blockskip=settings['blockskip'])
+                                            maxblock=asett['maxblock'],
+                                            blockskip=asett['blockskip'])
     return result

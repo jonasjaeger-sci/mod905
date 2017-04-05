@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """A module defining a generic writer for tables.
 
 The tables are defined with a set of variables (`keys`) and some rules
@@ -11,18 +11,17 @@ displayed on screen.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TxtTable
+TxtTable (:py:class:`.TxtTable`)
     A class for generating table output.
 
-PathTable
+PathTable (:py:class:`.PathTable`)
     A class for table-like output from path simulations.
 
-ThermoTable
+ThermoTable (:py:class:`.ThermoTable`)
     A class for thermodynamic output, useful for output from
     MD-simulations.
 """
 import logging
-# pyretis imports:
 from pyretis.inout.writers.writers import Writer
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -64,7 +63,7 @@ def _fill_list(the_list, length, fillvalue=None):
 
 
 class TxtTable(Writer):
-    """TxtTable(Writer) - A class for generating table output.
+    """A class for generating table output.
 
     This class handles writing/reading of output data to a table-like
     format.
@@ -172,7 +171,7 @@ class TxtTable(Writer):
 
 
 class PathTable(TxtTable):
-    """PathTable(object) - Special table for path ensembles.
+    """A special table output class for path ensembles.
 
     This object will return a table of text with a header and with
     formatted rows for a path ensemble. The table rows will contain
@@ -196,9 +195,9 @@ class PathTable(TxtTable):
         super(PathTable, self).__init__(var, title, **table_format)
 
     def generate_output(self, step, path_ensemble):
-        """Generate the output for the PathTable.
+        """Generate the output for the path table.
 
-        Here we overload the `generate_output` method in `TxtTable`
+        Here we overload the :py:meth:`.TxtTable.generate_output` method
         in order to write path ensemble statistics to (presumably)
         the screen.
 
@@ -207,7 +206,7 @@ class PathTable(TxtTable):
         step : int
             This is the current step number or a cycle number in a
             simulation.
-        path_ensemble : object like `pyretis.core.path.PathEnsemble`
+        path_ensemble : object like :py:class:`.PathEnsemble`
             This is the path ensemble to output for.
 
         Yield
@@ -227,7 +226,7 @@ class PathTable(TxtTable):
 
 
 class ThermoTable(TxtTable):
-    """Class ThermoTable(TxtTable) - Special table for energy output.
+    """A special text table for energy output.
 
     This object will return a table of text with a header and with
     formatted rows for energy output. Typical use is in MD simulation

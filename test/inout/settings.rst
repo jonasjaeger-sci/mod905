@@ -5,19 +5,17 @@ what this simulation is doing.
 
 Simulation settings
 -------------------
-
 task = 'md-nve'
 steps = 100
 
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = velocityverlet
 timestep = 0.002
 
 System settings
 ---------------
-
 units = 'lj'
 units = lj
 units='lj'
@@ -27,7 +25,6 @@ temperature = 2.0
 
 Particles
 ---------
-
 position = {'file': 'initial.gro'}
 
 velocity = {'generate': 'maxwell',
@@ -40,7 +37,6 @@ mass = {'Ar': 1.0}
 
 Forcefield settings
 -------------------
-
 description = Lennard Jones test
 
 potential

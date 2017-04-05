@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
-"""Functions for generating plots using matplotlib.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""A class for writing text data for the analysis.
 
+This module defines a text plotter which supports the same method as
+the generic plotter, however the output is human-readable text.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TxtPlotter
+TxtPlotter (:py:class:`.TxtPlotter`)
     A class for writing text output.
 """
 import logging
 import numpy as np
-# pyretis imports
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
@@ -28,12 +29,12 @@ __all__ = ['TxtPlotter']
 
 
 class TxtPlotter(Plotter):
-    """Class TxtPlotter(Plotter).
+    """A plotter writing text-based output.
 
-    This class will just write text-based output. It is similar to the
-    matplotlib plotter in the sence that the same functions are supported.
-    Here, however, we do not plot any figures, we just write out column
-    based text file.
+    This class will just write text-based output. It is similar to
+    (:py:class:`.MplPlotter`) in the sense that the same functions are
+    supported. Here, however, we do not plot any figures, we just
+    write a column based text file with the results.
 
     Attributes
     ----------
@@ -54,9 +55,8 @@ class TxtPlotter(Plotter):
             Determines if we should write the files to a particular
             directory.
         """
-        super(TxtPlotter, self).__init__(backup=backup,
-                                         plotter_type='text',
-                                         out_dir=out_dir)
+        super().__init__(backup=backup, plotter_type='text',
+                         out_dir=out_dir)
         self.out_fmt = out_fmt
 
     def output_flux(self, results):
@@ -155,7 +155,7 @@ class TxtPlotter(Plotter):
         results : dict
             Each item in `results` contains the results for the
             corresponding order parameter.
-        orderdata : list of numpy.arrays
+        orderdata : numpy.array
             This is the raw-data for the order parameter analysis
 
         Returns
@@ -173,7 +173,7 @@ class TxtPlotter(Plotter):
         one will be assumed to represent the velocity here.
         """
         outfiles = []
-        time = orderdata[0]
+        time = orderdata[:, 0]
         # output running average:
         outfile = name_file(ORDERFILES['run_order'], self.out_fmt,
                             path=self.out_dir)

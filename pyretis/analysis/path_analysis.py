@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods for analysis of path ensembles.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_path_ensemble
+analyse_path_ensemble (:py:func:`.analyse_path_ensemble`)
     Method to analyse a path ensemble, it will calculate crossing
     probabilities and information about moves etc. This method
     can be applied to files as well as path ensemble objects.
 
-analyse_path_ensemble_object
+analyse_path_ensemble_object (:py:func:`.analyse_path_ensemble_object`)
     Method to analyse a path ensemble, it will calculate crossing
     probabilities and information about moves etc. This method is
     intended to work directly on path ensemble objects.
 
-match_probabilities
+match_probabilities (:py:func:`.match_probabilities`)
     Match probabilities from several path ensembles and calculate
     efficiencies and the error for the matched probability.
 
-retis_flux
+retis_flux (:py:func:`.retis_flux`)
     Calculate the initial flux with errors for a RETIS simulation.
 
-retis_rate
+retis_rate (:py:func:`.retis_rate`)
     Calculate the rate constant with errors for a RETIS simulation.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr
@@ -51,7 +50,7 @@ def _get_successful(path_ensemble, idetect):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
     idetect : float
         This is the interface used for detecting if a path is successful
@@ -81,7 +80,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
     idetect : float
         This is the interface used for detecting if a path is successful
@@ -114,11 +113,11 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
     The crossing probability is here obtained as a function of the order
     parameter. The actual calculation is performed by
     `_pcross_lambda_cumulative` and this function is just a wrapper in
-    order to handle input objects like `pyretis.core.path.PathEnsemble`.
+    order to handle input objects like :py:class:`.PathEnsemble`.
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
     ngrid : int
         This is the number of grid points.
@@ -211,7 +210,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the
@@ -300,7 +299,7 @@ def _shoot_analysis(path_ensemble, bins=1000):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
     bins : int, optional
         The number of bins to use for the histograms for the
@@ -407,13 +406,12 @@ def analyse_path_ensemble_object(path_ensemble, settings):
 
     This function will make use of the different analysis functions and
     analyse a path ensemble. This analysis function assumes that the
-    given path ensemble is an object like
-    `pyretis.core.path.PathEnsemble` and that this path ensemble
-    contains all the paths that are needed.
+    given path ensemble is an object like :py:class:`.PathEnsemble`
+    and that this path ensemble contains all the paths that are needed.
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         The path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
@@ -499,9 +497,7 @@ def analyse_path_ensemble(path_ensemble, settings):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
-        from `pyretis.core.pathensemble` or from
-        `pyretis.inout.writers.pathfile`.
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.
@@ -634,9 +630,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
 
     Parameters
     ----------
-    path_ensemble : object like `PathEnsemble` or `PathEnsembleFile`
-        from `pyretis.core.pathensemble` or from
-        `pyretis.inout.writers.pathfile`.
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble to analyse.
     settings : dict
         This dictionary contains settings for the analysis.

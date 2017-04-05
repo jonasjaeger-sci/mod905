@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Time the Fortran implementation of the Lennard-Jones potential.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Time the FORTRAN implementation of the Lennard-Jones potential.
 
 This timing is simply done by evaluating the Leannrd-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialfp import PairLennardJonesCutFp
@@ -25,6 +26,7 @@ def set_up_initial_state(nlattice=5):
     lattice += np.random.randn(npart, 3) * 0.05
     box = Box(size, periodic=[True, True, True])
     sys = System(temperature=1.0, units='lj', box=box)
+    sys.particles = Particles(dim=3)
     for pos in lattice:
         sys.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
     msg = 'Created lattice with {} atoms.'
@@ -53,10 +55,9 @@ def test_function(function, system, repeat=3, number=5):
 
 
 if __name__ == '__main__':
-    parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                  'mixing': 'geometric'}
+    parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     # set up potentials:
-    potential = PairLennardJonesCutFp(dim=3, shift=True)
+    potential = PairLennardJonesCutFp(dim=3, shift=True, mixing='geometric')
     potential.set_parameters(parameters)
 
     results = []

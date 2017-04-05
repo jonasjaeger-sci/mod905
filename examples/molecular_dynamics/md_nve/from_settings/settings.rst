@@ -6,8 +6,8 @@ Simulation settings
 task = md-nve
 steps = 1000
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = velocityverlet
 timestep = 0.002
 
@@ -18,7 +18,9 @@ units = lj
 
 Particles
 ---------
-position = {'file': 'initial.gro'}
+position = {'generate': 'fcc',
+            'repeat': [3, 3, 3],
+            'density': 0.9}
 
 velocity = {'generate': 'maxwell',
             'set-temperature': 2.0,
@@ -31,7 +33,6 @@ type = [0]
 
 Forcefield settings
 --------------------
-
 description = Lennard Jones test
 
 Potential
@@ -42,8 +43,8 @@ parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
 
 Output
 ------
-backup = False # True, False, Append
-energy-file = 10
+backup = overwrite
+energy-file = 1
 order-file = 10
 cross-file = 1
 trajectory-file = 10

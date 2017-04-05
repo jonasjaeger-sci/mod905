@@ -1,37 +1,44 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of some common methods that might be useful.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-inspect_function (:py:func:`pyretis.core.common.inspect_function`)
+inspect_function (:py:func:`.inspect_function`)
     A method to obtain information about arguments, keyword arguments
     for functions.
 
-initiate_instance
+initiate_instance (:py:func:`.initiate_instance`)
     Method to initiate a class with optional arguments.
 
-generic_factory
+generic_factory (:py:func:`.generic_factory`)
     Create instances of classes based on settings.
 """
 import logging
 import inspect
 import sys
+from pyretis.core.path import Path, PathExt
+from pyretis.core.reservoirpath import ReservoirPath
+
+
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+
+__all__ = ['inspect_function', 'initiate_instance', 'generic_factory']
 
 
 def _arg_kind(arg):
     """Helper function to determine kind for a given argument.
 
-    This method will help `inspect_function` to determine the correct
-    kind for arguments when using python3.
+    This method will help :py:func:`.inspect_function` to determine
+    the correct kind for arguments when using python3.
 
     Parameters
     ----------
-    arg : object like inspect.Parameter
+    arg : object like :py:class:`inspect.Parameter`.
         The argument we will determine the type of.
 
     Returns
@@ -61,12 +68,12 @@ def inspect_function(function):
     This method is intended for usage where we are checking that we can
     call certain function. This method will return arguments and
     keyword arguments a function expects. This method may be fragile -
-    we assume here that we are not really interested in *args and
-    **kwargs and we do not look for more information about these here.
+    we assume here that we are not really interested in args and
+    kwargs and we do not look for more information about these here.
 
     Parameters
     ----------
-    function : A callable function.
+    function : callable
         The function to analyse.
 
     Returns
@@ -76,8 +83,8 @@ def inspect_function(function):
 
         * `args` : list of the positional arguments
         * `kwargs` : list of keyword arguments
-        * `varargs` : list of arguments on form *args
-        * `keywords` : list of arguments on form **kwargs
+        * `varargs` : list of arguments
+        * `keywords` : list of keyword arguments
     """
     out = {'args': [], 'kwargs': [],
            'varargs': [], 'keywords': []}
@@ -88,11 +95,13 @@ def inspect_function(function):
             if kind is not None:
                 out[kind].append(arg.name)
             else:
-                msg = 'Unknow variable kind "{}" for "{}"'.format(arg.kind,
-                                                                  arg.name)
-                logger.critical(msg)
+                logger.critical('Unknown variable kind "%s" for "%s"',
+                                arg.kind, arg.name)
         return out
     else:
+        # We get a pylint warning here, but it is not
+        # deprecated for versions =< (3,3) which we are in fact
+        # assuming here.
         arguments = inspect.getargspec(function)
         if not arguments.defaults:
             out['args'] = [arg for arg in arguments.args]
@@ -144,16 +153,6 @@ def _pick_out_arg_kwargs(klass, settings):
             continue
         if arg in settings:
             kwargs[arg] = settings[arg]
-            # used.add(arg)
-    # add special keys as used:
-    # used.add('class')
-    # used.add('parameter')
-    # used.add('module')
-    # for key in settings:
-    #     if key not in used:
-    #        msg = 'Superfluous setting "{}" ignored for "{}"!'.format(key,
-    #                                                                  klass)
-    #        logger.warning(msg)
     return args, kwargs
 
 
@@ -174,25 +173,23 @@ def initiate_instance(klass, settings):
     """
     args, kwargs = _pick_out_arg_kwargs(klass, settings)
     # Ready to initiate!
-    msg = 'Initiated "{}" from "{}" {{}}'.format(klass.__name__,
-                                                 klass.__module__)
+    msg = 'Initiated "%s" from "%s" %s'
+    name = klass.__name__
+    mod = klass.__module__
     if len(args) == 0:
         if len(kwargs) == 0:
-            msgtxt = msg.format('without arguments.')
-            logger.debug(msgtxt)
+            logger.debug(msg, name, mod, 'without arguments.')
             return klass()
         else:
-            msgtxt = msg.format('with keyword arguments.')
-            logger.debug(msgtxt)
+            logger.debug(msg, name, mod, 'with keyword arguments.')
             return klass(**kwargs)
     else:
         if len(kwargs) == 0:
-            msgtxt = msg.format('with positional arguments.')
-            logger.debug(msgtxt)
+            logger.debug(msg, name, mod, 'with positional arguments.')
             return klass(*args)
         else:
-            msgtxt = msg.format('with positional and keyword arguments.')
-            logger.debug(msgtxt)
+            logger.debug(msg, name, mod,
+                         'with positional and keyword arguments.')
             return klass(*args, **kwargs)
 
 
@@ -223,14 +220,37 @@ def generic_factory(settings, object_map, name='generic'):
     try:
         klass = settings['class'].lower()
     except KeyError:
-        msg = ('No class given for {}'
-               ' -- could not create object!').format(name)
-        logger.critical(msg)
+        msg = 'No class given for %s -- could not create object!'
+        logger.critical(msg, name)
         return None
     if klass not in object_map:
-        msg = ('Could not create unknown class "{}"'
-               ' for {}').format(settings['class'], name)
-        logger.critical(msg)
+        logger.critical('Could not create unknown class "%s" for %s',
+                        settings['class'], name)
         return None
     cls = object_map[klass]['cls']
     return initiate_instance(cls, settings)
+
+
+def get_path_class(ensemble_type):
+    """Method to return the path class to work with an integrator.
+
+    Parameters
+    ----------
+    ensemble_type : string
+        The type of ensemble we are requesting.
+
+    Returns
+    -------
+    out : object like :py:class:`.PathBase`
+        A path we can fill :-)
+    """
+    path_map = {'internal': Path,
+                'external': PathExt,
+                'reservoir': ReservoirPath}
+    try:
+        klass = path_map[ensemble_type]
+        return klass
+    except KeyError:
+        msg = 'Unknown ensemble type "{}" requested.'.format(ensemble_type)
+        logger.critical(msg)
+        raise ValueError(msg)

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the Lennard Jones potential.
-
-This test is actually running a simulation and then comparing the results
-with output from a similar simulation performed in LAMMPS.
-"""
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Test the FORTRAN implementation of the Lennard Jones potential."""
 # pylint: disable=C0103
-from __future__ import print_function
 import os
 import unittest
 import numpy as np
-from pyretis.core.simulation import Simulation
-from pyretis.core import System, Box
+from pyretis.simulation import Simulation
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
-from pyretis.core.integrators import VelocityVerlet
+from pyretis.engines import VelocityVerlet
 from pyretis.forcefield import ForceField
 from pyretis.core.particlefunctions import calculate_thermo
 from ljpotentialf import PairLennardJonesCutF
@@ -24,13 +21,13 @@ def set_up_simulation():
     size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
     box = Box(size)
     ljsystem = System(box=box, units='lj')
-
-    ljpot = PairLennardJonesCutF(shift=True)
+    ljsystem.particles = Particles(dim=3)
+    ljpot = PairLennardJonesCutF(shift=True, mixing='geometric')
     lj_parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
                      1: {'sigma': 1.2, 'epsilon': 1.1, 'rcut': 2.5},
-                     2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5},
-                     'mixing': 'geometric'}
-    forcefield = ForceField(potential=[ljpot], params=[lj_parameters])
+                     2: {'sigma': 1.4, 'epsilon': 0.9, 'rcut': 2.5}}
+    forcefield = ForceField('Lennard-Jones force field',
+                            potential=[ljpot], params=[lj_parameters])
     ljsystem.forcefield = forcefield
     # read initial position and velocity:
     dirname = 'molecular_dynamics/initial_lammps/input_data'
@@ -57,8 +54,8 @@ def set_up_simulation():
     ljsystem.potential_and_force()
     numberofsteps = 100
     simulationLAMMPS = Simulation(steps=numberofsteps)
-    integrator = VelocityVerlet(0.0025)
-    task_integrate = {'func': integrator.integration_step,
+    engine = VelocityVerlet(0.0025)
+    task_integrate = {'func': engine.integration_step,
                       'args': [ljsystem]}
     simulationLAMMPS.add_task(task_integrate)
     return simulationLAMMPS, ljsystem
@@ -91,7 +88,7 @@ def run_simulation(simulationLAMMPS, ljsystem):
 
 
 class LennardJonesTest(unittest.TestCase):
-    """Run the tests for the Fortran potential class."""
+    """Run the tests for the FORTRAN potential class."""
 
     def setUp(self):
         """Run the simulation and get the outputs."""

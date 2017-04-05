@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
-"""Functions for generating reports.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Method for generating reports from path sampling simulations.
 
 The reports are useful for displaying results from the analysis.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-generate_report_tis
+generate_report_tis (:py:func:`.generate_report_tis`)
     Generate a report for the over-all results from a TIS simulation.
 
-generate_report_tis_path
+generate_report_tis_path (:py:func:`.generate_report_tis_path`)
     Generate a report for a single TIS simulation.
 
-generate_report_retis
+generate_report_retis (:py:func:`.generate_report_retis`)
     Generate a report for the over-all results from a RETIS simulation.
 """
-from __future__ import absolute_import
 import logging
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
@@ -39,8 +38,9 @@ def generate_report_tis_path(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -77,8 +77,9 @@ def generate_report_tis(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -132,8 +133,9 @@ def generate_report_retis(analysis, output='rst'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -153,8 +155,8 @@ def generate_report_retis(analysis, output='rst'):
                          'summary': None},
               'numbers': {'pcross': None, 'perr': None, 'simt': None,
                           'teff': None, 'opteff': None, 'flux': None,
-                          'fluxc': None, 'flux-err': None, 'fluxc-err': None},
-              'text': {'flux-unit': None, 'fluxc-unit': None}}
+                          'flux-err': None},
+              'text': {'flux-unit': None}}
     results = analysis['pathensemble']
     result0 = analysis['pathensemble0']
     figures = report['figures']
@@ -174,20 +176,13 @@ def generate_report_retis(analysis, output='rst'):
     numbers['flux'] = format_number(analysis['flux']['value'], 0.1, 100)
     numbers['flux-err'] = format_number(analysis['flux']['error'] * 100,
                                         0.1, 100)
-    numbers['fluxc'] = format_number(analysis['fluxc']['value'], 0.1, 100)
-    numbers['fluxc-err'] = format_number(analysis['fluxc']['error'] * 100,
-                                         0.1, 100)
     numbers['rate'] = format_number(analysis['rate']['value'], 0.1, 100)
     numbers['rate-err'] = format_number(analysis['rate']['error'] * 100,
                                         0.1, 100)
-    numbers['ratec'] = format_number(analysis['ratec']['value'], 0.1, 100)
-    numbers['ratec-err'] = format_number(analysis['ratec']['error'] * 100,
-                                         0.1, 100)
     numbers['simt'] = format_number(matched_out['simtime'], 0.1, 100)
     numbers['teff'] = format_number(matched_out['eff'], 0.1, 100)
     numbers['opteff'] = format_number(matched_out['opteff'], 0.1, 100)
     report['text']['flux-unit'] = analysis['flux']['unit']
-    report['text']['fluxc-unit'] = analysis['fluxc']['unit']
     # Get tables:
     tables = report['tables']
     tables['interfaces0'] = _table_interface0([result0], fmt=output)[1]
@@ -212,8 +207,9 @@ def generate_report_retis0(analysis, output='txt'):
         This is the output from the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
-        formats defined in `.report._TEMPLATES`. Default is 'rst'
-        (reStructuredText).
+        formats defined in
+        :py:const:`pyretis.inout.report.report._TEMPLATES`. Default
+        is 'rst' (reStructuredText).
 
     Returns
     -------
@@ -492,11 +488,7 @@ def _table_summary(report, fmt='rst'):
              ['Flux (1/{})'.format(text['flux-unit']), numbers['flux'],
               numbers['flux-err']],
              ['Rate constant (1/{})'.format(text['flux-unit']),
-              numbers['rate'], numbers['rate-err']],
-             ['Flux (1/{})'.format(text['fluxc-unit']), numbers['fluxc'],
-              numbers['fluxc-err']],
-             ['Rate constant (1/{})'.format(text['fluxc-unit']),
-              numbers['ratec'], numbers['ratec-err']]]
+              numbers['rate'], numbers['rate-err']]]
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Summary of main results',
                                          ['Property', 'Value',

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Functions for generating plots using matplotlib.
 
 This module defines a class for using matplotlib and it also defines
@@ -9,15 +9,15 @@ some standard plots that are used in the analysis.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MplPlotter
+MplPlotter (:py:class:`.MplPlotter`)
     A class for plotting with matplotlib.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-mpl_set_style
+mpl_set_style (:py:func:`.mpl_set_style`)
     Method for setting the style for the plots, typically used here to
-    load the *pyretis style*.
+    load the *PyRETIS style*.
 """
 # TODO: See if the plotting functions mpl_* can be moved into the object.
 import os
@@ -27,7 +27,7 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
-# pyretis imports
+import matplotlib.style
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
@@ -37,35 +37,24 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # import styles for newer matplotlibs:
-_STYLEFILE = 'pyretis.mplstyle'
-if matplotlib.__version__ < '1.5.0':
-    _STYLEFILE = 'pyretis-old.mplstyle'
-if matplotlib.__version__ < '1.4.0':
-    HAS_STYLE = False
-    logger.warning('Using Matplotlib version < 1.4.0, please upgrade.')
-else:
-    try:
-        import matplotlib.style
-        HAS_STYLE = True
-    except ImportError:
-        HAS_STYLE = False
 
 
 __all__ = ['MplPlotter']
 
 
 # Define default style file:
+_STYLEFILE = 'pyretis.mplstyle'
 _MPL_STYLE_FILE = os.sep.join([os.path.dirname(__file__), 'styles',
                                _STYLEFILE])
 _TITLE_SETTINGS = {'loc': 'right'}
 
 
 class MplPlotter(Plotter):
-    """Class MplPlotter(Plotter).
+    """A plotter using matplotlib.
 
     This class defines a plotter. A plotter is just a object that
     supports certain functions which conveniently can be called in
-    different analysis output function. The `MplPlotter` will use
+    different analysis output function. The ``MplPlotter`` will use
     matplotlib and it can be used to create other plotters based
     on other tools, for instance gnuplot or Veusz, visvis or your
     favorite plotting tool.
@@ -97,9 +86,8 @@ class MplPlotter(Plotter):
             Determines if we should write the files to a particular
             directory.
         """
-        super(MplPlotter, self).__init__(backup=backup,
-                                         plotter_type='matplotlib',
-                                         out_dir=out_dir)
+        super().__init__(backup=backup, plotter_type='matplotlib',
+                         out_dir=out_dir)
         self.style = style
         mpl_set_style(self.style)
         # Check if the requested file format is something we can do:
@@ -118,17 +106,17 @@ class MplPlotter(Plotter):
         del canvas
 
     def _print_figures_to_file(self, canvas):
-        """Function to save figures as files.
+        """Save figure(s) to file(s).
 
-        This function will save figures to files. It will append a file
+        This function will save figures to files. It will add a file
         format extension to the files when writing.
 
         Parameters
         ----------
-        canvas : dict of objects like `FigureCanvas` from `matplotlib`.
-            `canvas[key]` is assumed to define a figure which we will
-            save to a file with a file name defined by `key` and the
-            extension defined by `self.out_fmt`.
+        canvas : dict of :class:`matplotlib.backend_bases.FigureCanvasBase`
+            ``canvas[key]`` is assumed to define a figure which we will
+            save to a file with a file name defined by ``key`` and the
+            extension defined by ``self.out_fmt``.
 
         Returns
         -------
@@ -144,9 +132,10 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def output_flux(self, results):
-        """Function to plot flux results using `mpl_plot_flux`.
+        """Plot flux results using py:func:`.mpl_plot_flux`.
 
-        The parameters for this method is described in `mpl_plot_flux`.
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_flux`.
 
         Returns
         -------
@@ -156,8 +145,7 @@ class MplPlotter(Plotter):
 
         Note
         ----
-        We return a list here. This is because we want to plot these
-        figures in pairs.
+        The returned list is used to plot the figures in *pairs*.
         """
         canvas_run, canvas_err = mpl_plot_flux(results)
         # Restructure output files for reporting
@@ -174,10 +162,10 @@ class MplPlotter(Plotter):
         return outputfiles
 
     def output_energy(self, results, energies):
-        """Function to plot energy results using `mpl_plot_energy`.
+        """Plot energy results using :py:func:`.mpl_plot_energy`.
 
         The parameters for this method is described in
-        `mpl_plot_energy`.
+        :py:func:`.mpl_plot_energy`.
 
         Returns
         -------
@@ -188,10 +176,10 @@ class MplPlotter(Plotter):
         return self._print_figures_to_file(canvas)
 
     def output_orderp(self, results, orderdata):
-        """Function to plot order parameter using `mpl_plot_orderp`.
+        """Plot order parameter data using :py:func:`.mpl_plot_orderp`.
 
         The parameters for this method is described in
-        `mpl_plot_orderp`.
+        :py:func:`.mpl_plot_orderp`.
 
         Returns
         -------
@@ -202,9 +190,10 @@ class MplPlotter(Plotter):
         return self._print_figures_to_file(canvas)
 
     def output_path(self, results, path_ensemble):
-        """Function to plot path results using `mpl_plot_path`.
+        """Plot path results using :py:func:`.mpl_plot_path`.
 
-        The parameters for this method is described in `mpl_plot_path`.
+        The parameters for this method is described in
+        :py:func:`.mpl_plot_path`.
 
         Returns
         -------
@@ -215,10 +204,10 @@ class MplPlotter(Plotter):
         return self._print_figures_to_file(canvas)
 
     def output_matched_probability(self, path_ensembles, detect, matched):
-        """Function to plot matched probabilities with `mpl_plot_matched`
+        """Plot matched probabilities using :py:func:`.mpl_plot_matched`
 
         The parameters for this method is described in
-        `mpl_plot_matched`.
+        :py:func:`.mpl_plot_matched`.
 
         Returns
         -------
@@ -243,7 +232,7 @@ def _mpl_read_style_file(filename):
     Returns
     -------
     out : None
-        Returns `None` but modifies `matplotlib.rcParams`.
+        Returns None, but modifies `matplotlib.rcParams`.
     """
     with open(filename, 'r') as fileh:
         for lines in fileh:
@@ -257,9 +246,8 @@ def _mpl_read_style_file(filename):
                 try:
                     matplotlib.rcParams[key] = value
                 except KeyError:
-                    msg = 'Unknown setting "{}". Please update matplotlib'
-                    msg = msg.format(key)
-                    logger.warning(msg)
+                    logger.warning(('Unknown setting "%s". '
+                                    'Please upate matplotlib'), key)
 
 
 def mpl_set_style(style='pyretis'):
@@ -268,7 +256,7 @@ def mpl_set_style(style='pyretis'):
     This will set up the plotting according to some given style.
     Styles can be given as string, for instance 'ggplot', 'bmh',
     'grayscale' (i.e. one of the styles in `matplotlib.style.available`)
-    or as a file (full path is needed). The default pyretis style
+    or as a file (full path is needed). The default PyRETIS style
     is stored in `_MPL_STYLE_FILE` and can be selected with 'pyretis'.
     Style equal to None is just the default matplotlib style.
 
@@ -282,37 +270,28 @@ def mpl_set_style(style='pyretis'):
         return
     if style == 'pyretis':
         style = _MPL_STYLE_FILE
-    if not HAS_STYLE:  # default to loading from file
-        msg = ('Your matplotlib installation cannot use styles!',
-               'Will try to load style from file: "{}"'.format(style),
-               'Please consider updating matplotlib.')
-        msgtxt = '\n'.join(msg)
-        logger.warning(msgtxt)
-        _mpl_read_style_file(style)
-    else:
-        if style in matplotlib.style.available:
-            msgtxt = 'Loading matplotlib style: {}'.format(style)
-            logger.info(msgtxt)
-            matplotlib.style.use(style)
-        else:  # assume this is just a file
-            msgtxt = 'Loading matplitlib style from file: {}'.format(style)
-            logger.info(msgtxt)
-            rcpar = matplotlib.rc_params_from_file(style)
-            # TODO: For mpl version 1.5: use_default_template=False can be
-            # added to matplotlib.rc_params_from_file().
-            matplotlib.rcParams.update(rcpar)
+    if style in matplotlib.style.available:
+        logger.info('Loading matplotlib style: %s', style)
+        matplotlib.style.use(style)
+    else:  # assume this is just a file
+        logger.info('Loading matplotlib style from file: %s', style)
+        rcpar = matplotlib.rc_params_from_file(
+            style,
+            use_default_template=False
+        )
+        matplotlib.rcParams.update(rcpar)
 
 
 def mpl_savefig(canvas, outputfile, backup=False):
-    """Function to save matplotlib figures.
+    """Write/save matplotlib figures to files.
 
     It will save figures so that old ones are not overwritten.
 
     Parameters
     ----------
-    canvas : object like `FigureCanvas` from `matplotlib.backends.backend_agg`
+    canvas : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure to be written to the file by
-        using `canvas.print_figure()`.
+        using ``canvas.print_figure()``.
     outputfile : string
         This is the name of the output file to create.
     backup : boolean
@@ -330,9 +309,9 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
     """Plot a series in chunks using matplotlib.
 
     When plotting 'large' datasets, matplotlib might give an
-    'OverflowError: Allocated too many blocks' error.
+    ``OverflowError: Allocated too many blocks`` error.
     Here we avoid this error by plotting the data in chunks. We could
-    also down sample the data, but this is perhaps something best left
+    also downsample the data, but this is perhaps something best left
     to the user.
 
     Parameters
@@ -382,7 +361,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
 
     Returns
     -------
-    handle : object like `matplotlib.lines.Line2D`.
+    handle : object like :py:class:`matplotlib.lines.Line2D`
         A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
@@ -419,7 +398,7 @@ def mpl_simple_plot(series, fig_settings=None):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure we create here.
     """
     fig = Figure()
@@ -475,7 +454,7 @@ def mpl_linecollection_gradient(axs, series):
 
     Returns
     -------
-    handle : object of like `matplotlib.collections.LineCollection`.
+    handle : object like :class:`matplotlib.collections.LineCollection`
         A handle for the plotted line.
     """
     # pick out just a few keys - we want to limit what we change here:
@@ -497,11 +476,11 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
     Here we will plot a line in chunks and color each chunk with one
     color. This function can be used as an alternative to
-    `mpl_linecollection_gradient` when the number of points to plot is
-    very large. Typically the chunk size here will be small compared to
-    the size of the data to be plotted, so that each chunk, if plotted
-    with `mpl_linecollection_gradient`, would have approximately the
-    same color anyway.
+    :py:func:`.mpl_linecollection_gradient` when the number of points
+    to plot is very large. Typically the chunk size here will be small
+    compared to the size of the data to be plotted, so that each chunk,
+    if plotted with :py:func:`.mpl_linecollection_gradient`, would have
+    approximately the same color anyway.
 
     Parameters
     ---------
@@ -515,7 +494,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
     Returns
     -------
-    handle : object of type matplotlib.lines.Line2D
+    handle : object like :class:`matplotlib.lines.Line2D`
         A handle for the plotted line.
 
     Note
@@ -546,7 +525,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
 
 
 def mpl_line_gradient(series, fig_settings):
-    """Plot time series and color the line with a color gradient.
+    """Plot time series with a color gradient.
 
     This function will plot time series data and color the lines with
     a gradient according to 'time'
@@ -565,7 +544,7 @@ def mpl_line_gradient(series, fig_settings):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure we create here.
 
     Notes
@@ -581,6 +560,7 @@ def mpl_line_gradient(series, fig_settings):
     for seri in series:
         lenx = len(seri['x'])
         if lenx >= 10**6:  # plot in chunks
+            logger.info('Line gradient: LARGE dataset - plotting in chunks')
             handle = mpl_chunks_gradient(axs, seri)
         else:  # just plot it all
             handle = mpl_linecollection_gradient(axs, seri)
@@ -601,10 +581,9 @@ def mpl_line_gradient(series, fig_settings):
 
 
 def mpl_error_plot(series, fig_settings):
-    """Plot series with error values.
+    """Plot series with errors.
 
-    This will plot a series with error values displayed as a filled
-    region.
+    Plot a series with error values displayed as a filled region.
 
     Parameters
     ----------
@@ -620,7 +599,7 @@ def mpl_error_plot(series, fig_settings):
 
     Returns
     -------
-    out : object like `FigureCanvas` from `matplotlib.backends.backend_agg`.
+    out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure we create here.
     """
     fig = Figure()
@@ -666,9 +645,9 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
 
     Returns
     -------
-    out[0] : object like `FigureCanvas` from `matplotlib`.
+    out[0] : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the unscaled histogram.
-    out[1] : object like `FigureCanvas` from `matplotlib`.
+    out[1] : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the scaled histogram.
     """
     series = []
@@ -683,9 +662,10 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
                                  'label': '{}'.format(key), 'alpha': 0.8})
         except KeyError:
             continue
-    title = r'Ensemble ${0}$'.format(ensemble)
-    canvas = mpl_simple_plot(series, fig_settings={'title': title})
-    canvas_scale = mpl_simple_plot(series_scale, fig_settings={'title': title})
+    figset = {'xlabel': 'Order parameter', 'ylabel': 'Frequency',
+              'title': r'Ensemble ${0}$'.format(ensemble)}
+    canvas = mpl_simple_plot(series, fig_settings=figset)
+    canvas_scale = mpl_simple_plot(series_scale, fig_settings=figset)
     return canvas, canvas_scale
 
 
@@ -696,7 +676,7 @@ def mpl_plot_path(results, path_ensemble):
     ----------
     results : dict
         This dict contains the result from the analysis.
-    path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
+    path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we have analyzed.
 
     Returns
@@ -805,8 +785,8 @@ def mpl_plot_orderp(results, orderdata):
     one will be assumed to represent the velocity here.
     """
     canvas = {}
-    time = orderdata[0]
-    series = [{'type': 'xy', 'x': time, 'y': orderdata[1]}]
+    time = orderdata[:, 0]
+    series = [{'type': 'xy', 'x': time, 'y': orderdata[:, 1]}]
     figset = {'xlabel': 'Time', 'ylabel': 'Order parameter'}
     canvas[ORDERFILES['order']] = mpl_simple_plot(series, fig_settings=figset)
     # make running average plot of the energies as function of time
@@ -833,8 +813,9 @@ def mpl_plot_orderp(results, orderdata):
     canvas[ORDERFILES['dist']] = mpl_simple_plot(series,
                                                  fig_settings=figset)
     # also try a orderp vs ordervel plot:
-    if len(orderdata) >= 3:
-        series = [{'type': 'xyc', 'x': orderdata[1], 'y': orderdata[2]}]
+    _, col = orderdata.shape
+    if col >= 3:
+        series = [{'type': 'xyc', 'x': orderdata[:, 1], 'y': orderdata[:, 2]}]
         figset = {'xlabel': r'$\lambda$',
                   'ylabel': r'$\dot{\lambda}$',
                   'title': 'Order parameter vs velocity'}
@@ -992,7 +973,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
 
     Parameters
     ----------
-    path_ensembles : list of strings.
+    path_ensembles : list of strings
         This is the name of the path ensembles we have calculated
         the probability for.
     detect : list of floats
@@ -1031,7 +1012,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
                   'x': matched['overall-prob'][:, 0],
                   'y': matched['overall-prob'][:, 1],
                   'alpha': 0.8,
-                  'lw': 9, 'label': 'Over-all', 'color': '#262626'}
+                  'lw': 9, 'label': 'Overall', 'color': '#262626'}
     series.append(new_series)
     for i, (prob, path_e) in enumerate(zip(matched['matched-prob'],
                                            path_ensembles)):

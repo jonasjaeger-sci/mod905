@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains a class for a generic force field.
 
 This module defines the class used for representing force field.
@@ -9,7 +9,7 @@ The forcefield class is built up of potential functions.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ForceField
+ForceField (:py:class:`.ForceField`)
     A class representing a generic Force Field.
 """
 import logging
@@ -21,7 +21,7 @@ __all__ = ['ForceField']
 
 
 class ForceField(object):
-    """ForceField(object).
+    """Represents a generic force field.
 
     This class described a generic Force Field.
     A force field is assumed to consist of a number of potential
@@ -37,15 +37,14 @@ class ForceField(object):
         The parameters for the corresponding potential functions.
     """
 
-    def __init__(self, desc='Generic force field', potential=None,
-                 params=None):
+    def __init__(self, desc, potential=None, params=None):
         """Initiate the force field object.
 
         Parameters
         ----------
-        desc : string, optional.
+        desc : string
             Description of the force field.
-        potential : list, optional.
+        potential : list, optional
             Potential functions that the force field is built up from.
         params : list, optional
             Parameters for the potential(s). If too few parameters are
@@ -145,7 +144,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we evaluate the forces in.
 
         Returns
@@ -171,7 +170,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -192,7 +191,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential energy and force in.
 
         Returns

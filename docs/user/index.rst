@@ -16,4 +16,5 @@ User Guide
     intro-api.rst
     Input reference for sections <section/sections.rst>
     errors.rst
+    integrator.rst
 

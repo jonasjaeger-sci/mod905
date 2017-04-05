@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Double pendulum
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
-from pyretis.core import System, Box
-from pyretis.core.units import CONVERT, create_conversion_factors
-from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_output, create_system,
-                                    create_force_field, create_simulation)
+from pyretis.core.units import create_conversion_factors
+from pyretis.inout.setup import (create_system, create_engine,
+                                 create_force_field, create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -36,13 +35,10 @@ settings['simulation'] = {'task': 'md-nve',
 settings['system'] = {'units': 'gromacs',
                       'temperature': 1.,
                       'dimensions': 2}
-settings['integrator'] = {'class': 'VVIntegrator',
-                          'timestep': 0.005,
-                          'module': 'myintegrator.py'}
-#settings['integrator'] = {'class': 'Euler',
-#                          'timestep': 0.005,
-#                          'module': 'myintegrator.py'}
-settings['output'] = {'backup': False,
+settings['engine'] = {'class': 'VVIntegrator',
+                      'timestep': 0.005,
+                      'module': 'myintegrator.py'}
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,
@@ -65,8 +61,8 @@ system.particles.pos[0][0] = THETA1
 system.particles.pos[1][0] = THETA2
 system.particles.vel[0][0] = DTHETA1
 system.particles.vel[1][0] = DTHETA2
-
-simulation = create_simulation(settings, system)
+kwargs = {'system': system, 'engine': create_engine(settings)}
+simulation = create_simulation(settings, kwargs)
 mpl.rc('axes', labelsize='large')
 mpl.rc('font', family='serif')
 fig = plt.figure(figsize=(12, 6))
@@ -74,7 +70,7 @@ grid = gridspec.GridSpec(3, 2)
 ax1 = fig.add_subplot(grid[:, 0])
 ax1.set_xlim((-5, 5))
 ax1.set_ylim((-5, 2))
-ax1.set_aspect('equal')#, 'datalim')
+ax1.set_aspect('equal')
 time_text = ax1.text(0.02, 0.90, '', transform=ax1.transAxes)
 
 # set up circles to represent the two objects:
@@ -103,7 +99,7 @@ ax4.set_ylim(-2.5, -0.5)
 ax4.set_xlabel('Steps')
 ax2.set_xticks([])
 ax3.set_xticks([])
-#ax4.set_xticks([])
+
 
 def init():
     """Declare what to re-draw when clearing the animation frame.

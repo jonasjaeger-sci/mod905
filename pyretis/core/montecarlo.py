@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module for Monte Carlo Algorithms and other "random" functions.
 
 In this module, Monte Carlo Algorithms are defined. Note that some
@@ -9,14 +9,13 @@ derived or "random" functions are also defined in the TIS module.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-metropolis_accept_reject
+metropolis_accept_reject (:py:func:`.metropolis_accept_reject`)
     Accept/reject a energy change according to the metropolis rule.
 
-max_displace_step
+max_displace_step (:py:func:`.max_displace_step`)
     Monte Carlo routine for displacing particles. It will select and
     displace one particle randomly.
 """
-from __future__ import absolute_import
 import numpy as np
 
 
@@ -33,9 +32,9 @@ def accept_reject_displace(rgen, system, trial):
 
     Parameters
     ----------
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like :py:class:`.RandomGenerator`
         The random number generator.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`.System`
         The system object we are investigating.
     trial : numpy.array
         The the trial position(s)
@@ -57,11 +56,12 @@ def accept_reject_displace(rgen, system, trial):
     system.particles.pos = trial
     v_trial = system.evaluate_potential()
     system.particles.pos = pos
-    deltae = v_trial - system.v_pot
+    deltae = v_trial - system.particles.vpot
     if metropolis_accept_reject(rgen, system, deltae):
         return trial, v_trial, trial, v_trial, True
     else:
-        return system.particles.pos, system.v_pot, trial, v_trial, False
+        return (system.particles.pos, system.particles.vpot,
+                trial, v_trial, False)
 
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):
@@ -69,9 +69,9 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
 
     Parameters
     ----------
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like :py:class:`.RandomGenerator`
         The random number generator.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`.System`
         The system object we are investigating. This is used
         to access the beta factor.
     dke : float
@@ -98,9 +98,9 @@ def metropolis_accept_reject(rgen, system, deltae):
 
     Parameters
     ----------
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like :py:class:`.RandomGenerator`
         The random number generator.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`.System`
         The system object we are investigating. This is used
         to access the beta factor.
     deltae : float
@@ -136,13 +136,13 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
 
     Parameters
     ----------
-    rgen : object like `RandomGenerator` from `pyretis.core.random_gen`
+    rgen : object like :py:class:`.RandomGenerator`
         The random number generator.
-    system : object like `System` from `pyretis.core.system`
+    system : object like :py:class:`.System`
         The system object to operate on
     maxdx : float, optional
         The maximum displacement (default is 0.1).
-    idx : int, optional.
+    idx : int, optional
         Index of particle to displace. If `idx` is not given, the
         particle is chosen randomly.
 

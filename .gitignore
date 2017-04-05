@@ -53,41 +53,48 @@
 build
 # setup.py dist directory
 dist
+# setup.py bin scripts
+bin/pyretisrun
+bin/pyretisanalyse
 # Egg metadata
 *.egg-info
 # for sphinx
 docs/_build
 
 # for examples:
+# backup files
+*pyretis.log_*
+*pyretis.restart*
+*.rst_*
 # md wca: energy and trajectory
-examples/molecular_dynamics/md_wca/energy.dat*
-examples/molecular_dynamics/md_wca/traj.gro*
+examples/molecular_dynamics/md_wca/thermo.txt*
+examples/molecular_dynamics/md_wca/traj.txt*
+examples/molecular_dynamics/md_wca/energy.txt*
 # md nve: energy, thermo and trajectory
-examples/molecular_dynamics/md_nve/energy.dat*
+examples/molecular_dynamics/md_nve/energy.txt*
 examples/molecular_dynamics/md_nve/thermo.txt*
-examples/molecular_dynamics/md_nve/traj.gro*
+examples/molecular_dynamics/md_nve/traj.txt*
 # md movie 2D: energy and trajectory
-examples/molecular_dynamics/md_movie_2d/energy.dat*
-examples/molecular_dynamics/md_movie_2d/traj.gro*
+examples/molecular_dynamics/md_movie_2d/energy.txt*
+examples/molecular_dynamics/md_movie_2d/traj.txt*
 # umbrella sampling, temp files for movie
 examples/umbrella_sampling/fancy_movie/*.png
 # tis, md-flux:
-examples/tis/1D-double-well/md_flux/cross.dat
-examples/tis/1D-double-well/md_flux/energy.dat
-examples/tis/1D-double-well/md_flux/order.dat
-examples/tis/1D-double-well/md_flux/traj.gro
+examples/tis/1D-double-well/md_flux/cross.txt
+examples/tis/1D-double-well/md_flux/energy.txt
+examples/tis/1D-double-well/md_flux/order.txt
+examples/tis/1D-double-well/md_flux/traj.txt
 examples/tis/1D-double-well/md_flux/*.png
 examples/tis/1D-double-well/md_flux/*.txt.gz
 examples/tis/1D-double-well/md_flux/report
 # extending with fortran:
-examples/extending/fortran/*/energy.dat*
+examples/extending/fortran/*/energy.txt*
 examples/extending/fortran/*/thermo.txt*
-examples/extending/fortran/*/traj.gro*
+examples/extending/fortran/*/traj.xtt*
 # tis examples
-examples/tis/1D-double-well/md_flux/cross.dat*
-examples/tis/1D-double-well/md_flux/energy.dat*
-examples/tis/1D-double-well/md_flux/order.dat*
-examples/tis/1D-double-well/tis_simulation_multiprocessing/pathensemble.dat*
+examples/tis/1D-double-well/md_flux/cross.txt*
+examples/tis/1D-double-well/md_flux/energy.txt*
+examples/tis/1D-double-well/md_flux/order.txt*
 examples/tis/1D-double-well/tis_simulation/001
 examples/tis/1D-double-well/tis_simulation/002
 examples/tis/1D-double-well/tis_simulation/003
@@ -95,14 +102,16 @@ examples/tis/1D-double-well/tis_simulation/004
 examples/tis/1D-double-well/tis_simulation/005
 examples/tis/1D-double-well/tis_simulation/006
 examples/tis/1D-double-well/tis_simulation/007
-examples/tis/1D-double-well/tis_simulation_serial/001
-examples/tis/1D-double-well/tis_simulation_serial/002
-examples/tis/1D-double-well/tis_simulation_serial/003
-examples/tis/1D-double-well/tis_simulation_serial/004
-examples/tis/1D-double-well/tis_simulation_serial/005
-examples/tis/1D-double-well/tis_simulation_serial/006
-examples/tis/1D-double-well/tis_simulation_serial/007
 # md units
-examples/molecular_dynamics/md_nve/strange_units/energy.dat*
+examples/molecular_dynamics/md_nve/strange_units/energy.txt*
 examples/molecular_dynamics/md_nve/strange_units/thermo.txt*
 examples/molecular_dynamics/md_nve/strange_units/traj.gro*
+# CP2K files:
+GTH_BASIS_SETS
+GTH_POTENTIALS
+# GROMACS example:
+examples/path_sampling/gromacs-hydrate/0*
+*pyretis.mdp
+*topol.tpr
+*mdout.mdp
+

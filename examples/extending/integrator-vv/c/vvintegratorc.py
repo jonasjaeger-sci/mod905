@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Example of using a integration routine implemented in Fortran."""
-from __future__ import absolute_import
-from __future__ import print_function
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Example of using a integration routine implemented in C."""
 import logging
+from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# pyretis imports
-from pyretis.core.integrators import Integrator
 try:
     import vvintegrator
 except ImportError:
@@ -19,8 +18,8 @@ except ImportError:
 __all__ = ['VelocityVerletC']
 
 
-class VelocityVerletC(Integrator):
-    """VelocityVerletC(Integrator).
+class VelocityVerletC(MDEngine):
+    """VelocityVerletC(MDEngine).
 
     This class defines the Velocity Verlet integrator.
 
@@ -35,7 +34,7 @@ class VelocityVerletC(Integrator):
     """
 
     def __init__(self, delta_t,
-                 desc='The velocity verlet integrator (Fortran)'):
+                 desc='The velocity verlet integrator (C)'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
@@ -45,8 +44,7 @@ class VelocityVerletC(Integrator):
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerletC, self).__init__(delta_t, desc=desc,
-                                              dynamics='NVE')
+        super().__init__(delta_t, desc, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):

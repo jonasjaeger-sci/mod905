@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains a class for a generic property."""
 import numpy as np
 
@@ -8,7 +8,7 @@ __all__ = ['Property']
 
 
 class Property(object):
-    """Property(object).
+    """A generic numerical value with standard deviation and average.
 
     A generic object to store values obtained during a simulation.
     It will maintain the mean and variance as values are added using
@@ -31,7 +31,7 @@ class Property(object):
 
     Parameters
     ----------
-    desc : string, optional.
+    desc : string, optional
         Used to set the attribute desc.
 
     Examples

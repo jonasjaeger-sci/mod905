@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods for analysis of energy simulation results.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_energies
+analyse_energies (py:func:`.analyse_energies`)
     Run a energy analysis for energies (kinetic, potential etc.).
 """
-from __future__ import absolute_import
 import numpy as np
 from scipy.stats import gamma  # pylint: disable=E0611
 from pyretis.analysis.analysis import analyse_data
@@ -50,7 +49,7 @@ def analyse_energies(energies, settings):
     alp = (0.5 * settings['particles']['npart'] *
            settings['system']['dimensions'])
     scale = {'ekin': 1.0 / settings['system']['beta'],
-             'temp': settings['sytem']['temperature'] / alp}
+             'temp': settings['system']['temperature'] / alp}
     for key in scale:
         if key in results:
             dist = results[key]['distribution']

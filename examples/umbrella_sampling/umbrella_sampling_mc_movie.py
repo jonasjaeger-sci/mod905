@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 This is an simple example of how we can create a simple animation.
 It will run the umbrella sampling defined in `umbrella_sampling_mc.py` and
 draw the frames as a very simple animation.
 """
-from __future__ import print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -55,11 +56,11 @@ def update(frame):
 
     Returns
     -------
-    scat : object like `matplotlib.collections.PathCollection`.
+    scat : object like `matplotlib.collections.PathCollection`
         The scatter points with updated positions.
-    axv : object like `matplotlib.patches.Polygon`.
+    axv : object like `matplotlib.patches.Polygon`
         The region to highlight.
-    linec : object like `matplotlib.lines.Line2D`.
+    linec : object like `matplotlib.lines.Line2D`
         The crossing line.
     """
     pos_ener = np.array([traj_data[frame], ener_data[frame]])

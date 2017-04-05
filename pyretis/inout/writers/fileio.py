@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module defining the base classes for file writers.
 
 This module defines a class that is useful for writing data
-to the disk. The typical usage in pyretis is to write the output from
-a `Writer` to a file.
+to the disk. The typical usage in PyRETIS is to write the output from
+a :py:class:`.Writer` to a file using a :py:class:`.FileIO` object.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FileIO
+FileIO (:py:class:`.FileIO`)
     A generic class for handling output to files.
 """
 import os
@@ -23,12 +23,13 @@ __all__ = ['FileIO']
 
 
 class FileIO(object):
-    """FileIO(object) - A generic file writer class.
+    """A generic file writer class.
 
     This class defines a simple object for writing to files.
-    Formatting etc. is handled by objects like `Writers` from
-    `pyretis.inout.writers.writers`, The `FileIO` class handle the
-    creation/opening of the file with backup/overwriting etc.
+    Formatting etc. is handled by objects like :py:class:`.Writer`
+    from :py:mod:`pyretis.inout.writers.writers`. This class
+    handle the creation/opening of the file with backup/overwriting
+    etc.
 
     Attributes
     ----------
@@ -37,7 +38,7 @@ class FileIO(object):
     oldfile : string
         Determines if we should backup, overwrite or append if a file
         exist with the given `filename`.
-    fileh : object like `file` (`io.IOBase`).
+    fileh : object like :py:class:`io.IOBase`
         The file handle we are using.
     """
     OLDFILE = ('append', 'overwrite', 'backup')
@@ -126,13 +127,13 @@ class FileIO(object):
 
         Returns
         -------
-        out : boolean
+        status : boolean
             True if we managed to write, False otherwise.
         """
+        status = False
         if towrite is None:
-            return False
+            return status
         if self.fileh is not None and not self.fileh.closed:
-            status = False
             try:
                 if end is not None:
                     self.fileh.write('{}{}'.format(towrite, end))
@@ -150,7 +151,12 @@ class FileIO(object):
                 logger.warning('Ignored writing to closed file.')
             if self.fileh is None:
                 logger.warning('File handle is empty.')
-            return False
+            return status
+
+    def force_flush(self):
+        """Attempt to force flushing of data to the file."""
+        if self.fileh is not None and not self.fileh.closed:
+            os.fsync(self.fileh.fileno())
 
     def close(self):
         """Close the file, in case that is explicitly needed."""
@@ -161,11 +167,10 @@ class FileIO(object):
         """Close a file in case the object is deleted.
 
         This method will just close the file in case the program
-        crashes or exits in some other way. It is used here as it's not
-        so nice to add a with statement to the main script running the
-        simulation.
+        crashes or exits in some other way.
         """
         if self.fileh is not None and not self.fileh.closed:
+            os.fsync(self.fileh.fileno())
             self.fileh.close()
 
     def __str__(self):

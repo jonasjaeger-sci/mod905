@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Module defining the system class
-
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-System
+System (:py:class:`.System`)
     A class representing a system. A system object defines the system
     the simulation acts and contains information about particles,
     force fields etc.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
-# from the pyretis package
 from pyretis.core.units import CONSTANTS
-from pyretis.core.particles import Particles
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)
 from pyretis.core.random_gen import create_random_generator
@@ -29,11 +25,11 @@ __all__ = ['System']
 
 
 class System(object):
-    """This class defines a generic system for simulation.
+    """This class defines a generic system for simulations.
 
     Attributes
     ----------
-    box : object like `Box` from `pyretis.core.box`
+    box : object like :py:class:`.Box`
         Defines the simulation box.
     temperature : dict
         This dictionary contains information on the temperature. The
@@ -43,9 +39,7 @@ class System(object):
         * `beta`: The derived property ``1.0/(k_B*T)``.
         * `dof`: Information about the degrees of freedom for the
           system.
-    v_pot : float
-        The potential energy of the system.
-    particles : object like `pyretis.core.particles.Particles`
+    particles : object like :py:class:`.Particles`
         Defines the particle list which represents the particles and the
         properties of the particles (positions, velocities, forces etc.)
     post_setup : list of tuples
@@ -54,13 +48,9 @@ class System(object):
         should only be called after the system is fully set up. The
         tuples should correspond to ('function', args) where
         such that ``system.function(*args)`` can be called.
-    forcefield : object like `ForceField` from `pyretis.forcefield`
+    forcefield : object like :py:class:`.ForceField`
         Defines the force field to use and implements the actual force
         and potential calculation.
-    order_function : object like `OrderParameter` from `.orderparameter`
-        Defines the an order parameter to use for the system. See
-        :py:mod:`pyretis.core.orderparameter` for the definition
-        of order parameters.
     units : string
         Units to use for the system/simulation. Should match the defined
         units in :py:mod:`pyretis.core.units`.
@@ -71,7 +61,7 @@ class System(object):
 
         Parameters
         ----------
-        box : object like `Box` from `pyretis.core.box`
+        box : object like :py:class:`.Box`
             This variable represents the simulation box. It is used to
             determine the number of dimensions
         temperature : float
@@ -95,11 +85,8 @@ class System(object):
         self.box = box
         self._adjust_dof_according_to_box()
         # initialize other variables:
-        self.v_pot = 0.0  # TODO: Consider making v_pot a particle attrib.!
-        self.particles = Particles(dim=self.get_dim())  # empty particle list
+        self.particles = None
         self.forcefield = None
-        self.order_function = None
-        self.orderp = None
         self.post_setup = []
 
     def adjust_dof(self, dof):
@@ -200,16 +187,16 @@ class System(object):
         ----------
         pos : numpy.array,
             Position of the particle.
-        vel : numpy.array, optional.
+        vel : numpy.array, optional
             Velocity of the particle. If not given numpy.zeros will be
             used.
-        force : numpy.array, optional.
+        force : numpy.array, optional
             Force on the particle. If not given np.zeros will be used.
-        mass : float, optional.
+        mass : float, optional
             Mass of the particle, default is 1.0.
-        name : string, optional.
+        name : string, optional
             Name of the particle, default is '?'.
-        ptype : integer, optional. Particle type.
+        ptype : integer, optional
             Particle type, default is 0.
 
         Returns
@@ -225,18 +212,6 @@ class System(object):
         self.particles.add_particle(pos, vel, force, mass=mass,
                                     name=name, ptype=ptype)
 
-    def calculate_order(self):
-        """Calculates and updates the order parameter"""
-        if self.order_function:
-            order = self.order_function.__call__(self)
-            # TODO: Maybe consider if we should create a new object that
-            # is a composition of system, orderparameter and force field,
-            # i.e. newobject.system, newobject.orderparameter, newobject.ff
-            # etc. Then we could do newobject.calculate_order() which does
-            # self.orderparameter(self.system, self.forcefield) for instance...
-            self.orderp = order
-        return self.orderp
-
     def force(self):
         """Update the forces and virial
 
@@ -244,10 +219,10 @@ class System(object):
 
         Returns
         -------
-        out[1] : numpy.array.
+        out[1] : numpy.array
             Forces on the particles. Note that `self.particles.force`
             will also be updated.
-        out[2] : float.
+        out[2] : float
             The virial. Note that `self.particles.virial` will be
             updated.
         """
@@ -257,36 +232,37 @@ class System(object):
         return self.particles.force, virial
 
     def potential(self):
-        """Update the potential energy in `self.v_pot`.
+        """Update the potential energy.
 
         Returns
         -------
-        out : float.
-            The potential energy, note `self.v_pot` is also updated.
+        out : float
+            The potential energy.
         """
-        self.v_pot = self.forcefield.evaluate_potential(self)
-        return self.v_pot
+        self.particles.vpot = self.forcefield.evaluate_potential(self)
+        return self.particles.vpot
 
     def potential_and_force(self):
         """Update the potential energy and forces.
 
-        The potential in `self.v_pot` and the forces in
+        The potential in `self.particles.vpot` and the forces in
         `self.particles.force` are here updated by calling
         `forcefield.evaluate_potential_force()`.
 
         Returns
         -------
         out[1] : float
-            The potential energy, note self.v_pot is also updated.
-        out[2] : numpy.array.
-            Forces on the particles. Note that self.particles.force will
-            also be updated.
-        out[3] : float.
+            The potential energy, note `self.particles.vpot` is also
+            updated.
+        out[2] : numpy.array
+            Forces on the particles. Note that `self.particles.force`
+            will also be updated.
+        out[3] : float
             The virial. Note that `self.particles.virial` will also be
             updated.
         """
         pot, force, viri = self.forcefield.evaluate_potential_and_force(self)
-        self.v_pot = pot
+        self.particles.vpot = pot
         self.particles.force = force
         self.particles.virial = viri
         return pot, force, viri
@@ -318,9 +294,10 @@ class System(object):
 
         Note
         ----
-        This function will not update `self.v_pot` but it will just
+        This function will not update the potential, but it will just
         return it's value for the (possibly given) configuration.
-        The function `self.potential` can be used to update `self.v_pot`.
+        The function `self.potential` can be used to update the
+        potential for the particles in the system.
         """
         return self.forcefield.evaluate_potential(self)
 
@@ -338,8 +315,8 @@ class System(object):
 
         Note
         ----
-        This function will not update the forces on the particles nor
-        `self.v_pot`. To update these, call `self.potential_and_force`.
+        This function will not update the forces/potential energy for the
+        particles. To update these, call `self.potential_and_force`.
         """
         return self.forcefield.evaluate_potential_and_force(self)
 
@@ -432,9 +409,9 @@ class System(object):
         ekin, _ = calculate_kinetic_energy(self.particles)
         ekin_new = energy - vpot
         if ekin_new < 0:
-            msg = ('Can not rescale velocities. '
-                   'Target: {}, Pot = {}'.format(energy, vpot))
-            logger.warning(msg)
+            logger.warning(('Can not rescale velocities. '
+                            'Target energy: %f, Potential: %f'), energy, vpot)
         else:
+            logger.debug('Rescaled energies to ekin: %f', ekin_new)
             alpha = np.sqrt(ekin_new / ekin)
             self.particles.vel = self.particles.vel * alpha

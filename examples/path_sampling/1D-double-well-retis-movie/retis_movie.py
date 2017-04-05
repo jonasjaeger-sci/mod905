@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2016, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This is a simple RETIS example animating the algorithm.
 
 You can play with the interfaces, the potential parameters,
@@ -8,16 +8,20 @@ the temperature, the ratio of the different RETIS moves etc.
 
 Have fun!
 """
-from pyretis.core import System, Box
+import colorama
+from pyretis.core import System, Box, Particles
+from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
-from pyretis.inout.settings import (create_force_field,
-                                    create_orderparameter, create_simulation)
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
+from pyretis.inout.common import print_to_screen
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pylab as plt
 from matplotlib import animation
 from matplotlib import gridspec as gridspec
+
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 PCROSS_LOG = True
@@ -29,20 +33,20 @@ SETTINGS['simulation'] = {'task': 'retis',
                           'steps': 150,
                           'interfaces': INTERFACES}
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
-SETTINGS['integrator'] = {'class': 'Langevin',
-                          'gamma': 0.3,
-                          'high_friction': False,
-                          'seed': 0,
-                          'timestep': 0.002}
+SETTINGS['engine'] = {'class': 'Langevin',
+                      'gamma': 0.3,
+                      'high_friction': False,
+                      'seed': 0,
+                      'timestep': 0.002}
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
                           'class': 'DoubleWell'}]
 # Settings for the order parameter:
 SETTINGS['orderparameter'] = {'class': 'OrderParameterPosition',
-                              'dim': 'x', 'index': 0, 'name': 'Position',
+                              'dim': 'x', 'index': 0,
                               'periodic': False}
 # TIS specific settings:
 SETTINGS['tis'] = {'freq': 0.5,
@@ -52,8 +56,8 @@ SETTINGS['tis'] = {'freq': 0.5,
                    'sigma_v': -1,
                    'seed': 0,
                    'zero_momentum': False,
-                   'rescale_energy': False,
-                   'initial_path': 'kick'}
+                   'rescale_energy': False}
+SETTINGS['initial-path'] = {'method': 'kick'}
 # RETIS specific settings:
 SETTINGS['retis'] = {'swapfreq': 0.5,
                      'relative_shoots': None,
@@ -61,7 +65,7 @@ SETTINGS['retis'] = {'swapfreq': 0.5,
                      'swapsimul': True}
 
 # For convenience:
-TIMESTEP = SETTINGS['integrator']['timestep']
+TIMESTEP = SETTINGS['engine']['timestep']
 ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
 # Set up for plotting:
@@ -72,10 +76,10 @@ NINT = len(INTERFACES)
 CMAP = plt.get_cmap('Set1')
 COLORS = [CMAP(float(i)/float(NINT)) for i in range(NINT)]
 TXTCOLOR = {'SW': '#006BA4', 'NU': '#FF800E',
-            'TR': '#ABABAB', 'SH': '#595959'}
-
-
+            'TR': '#ABABAB', 'SH': '#595959',
+            'IN': '#808080'}
 FTOT = 0
+
 
 def set_up_system(settings):
     """Just a method to help set up the system.
@@ -87,7 +91,7 @@ def set_up_system(settings):
 
     Returns
     -------
-    sys : object like System from pyretis.core
+    sys : object like :py:class:`.System`
         A system object we can use in a simulation.
     """
     box = Box(periodic=[False])
@@ -95,6 +99,7 @@ def set_up_system(settings):
                  units=settings['system']['units'], box=box)
     sys.forcefield = create_force_field(settings)
     sys.order_function = create_orderparameter(settings)
+    sys.particles = Particles(dim=1)
     sys.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     return sys
 
@@ -104,7 +109,7 @@ def get_path(path):
 
     Parameters
     ----------
-    path : object like Path from pyretis.core
+    path : object like :py:class:`.PathBase`
         The path/trajectory we are collecting points from.
 
     Returns
@@ -130,9 +135,9 @@ def get_path(path):
         freq = 20
     for i, point in enumerate(path.trajectory()):
         if i == 0 or i == leng-1 or i % freq == 0:
-            order.append(point[0])
-            pos.append(point[1][0])
-            vel.append(point[2][0])
+            order.append(point['order'])
+            pos.append(point['pos'][0])
+            vel.append(point['vel'][0])
     return np.array(order), np.array(pos), np.array(vel)
 
 
@@ -168,9 +173,9 @@ def step_txt(ensembles, retis_result, prun):
         accepted = result[1]
         line = []
         if name_of_move == 'swap':
-            name2 = ensembles[result[2]].ensemble_name
+            name2 = ensembles[result[-1]].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
-            if i == 0 or (i == 1 and result[2] == 0):
+            if i == 0 or (i == 1 and result[-1] == 0):
                 force += ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
             trial_path = result[2]
@@ -487,7 +492,7 @@ def update(frame, simulation, plot_patches, variables, axes):
             return patches
         step = result['cycle']['step']
         ensembles = simulation.path_ensembles
-        print('# Current cycle: {}'.format(step))
+        print_to_screen('# Current cycle: {}'.format(step), level='info')
         anr = analyse_path_ensembles(ensembles, step, variables)
         retis_txt, force = step_txt(ensembles, result['retis'],
                                     variables['prun'])
@@ -558,12 +563,25 @@ def update(frame, simulation, plot_patches, variables, axes):
 
 def main():
     """Just run the simulation :-)"""
-    print('# CREATING SYSTEM')
+    colorama.init(autoreset=True)
+    print_to_screen('# CREATING SYSTEM', level='info')
     system = set_up_system(SETTINGS)
-    print('# CREATING SIMULATION:')
-    simulation = create_simulation(SETTINGS, system)
-    print(simulation)
-    print('# GENERATING INITIAL PATHS')
+    print_to_screen('# CREATING SIMULATION:', level='info')
+    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
+    simulation = create_simulation(SETTINGS, sim_args)
+    print_to_screen(simulation)
+    print_to_screen('# GENERATING INITIAL PATHS', level='info')
+
+    for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
+        ensemble = simulation.path_ensembles[i]
+        name = ensemble.ensemble_name
+        print_to_screen('Info about ensemble {}:'.format(name),
+                        level='success')
+        print_to_screen(ensemble)
+        print_to_screen('Info about the initial path:', level='success')
+        print_to_screen(ensemble.last_path)
+        print_to_screen('')
+
     fig, plot_patches, axes = matplotlib_setup()
     variables = {'length0': Property('Path length in [0^-]'),
                  'length1': Property('Path length in [0^+]'),

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
-"""A simple test module for the writers.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""A test module for the writers.
 
 Here we test that we can write and read different output formats.
 """
@@ -23,7 +23,7 @@ class WriterTest(unittest.TestCase):
         """Test that we write and read energy files."""
         energy_writer = EnergyWriter()
         energy_reader = EnergyWriter()
-        fields = ['vpot', 'ekin', 'etot', 'ham', 'temp']
+        fields = ['vpot', 'ekin', 'etot', 'temp']
         all_data = []
         with tempfile.NamedTemporaryFile() as temp:
             string = '{}\n'.format(energy_writer.header)
@@ -66,8 +66,8 @@ class WriterTest(unittest.TestCase):
             all_data = np.array(all_data)
             for block in order_reader.load(temp.name):
                 data = block['data']
-                for i, column in enumerate(data):
-                    for num1, num2 in zip(column, all_data[:, i]):
+                for row1, row2 in zip(all_data, data):
+                    for num1, num2 in zip(row1, row2):
                         self.assertAlmostEqual(num1, num2, 6)
 
     def test_cross_writer(self):
@@ -106,13 +106,15 @@ class TableWritersTest(unittest.TestCase):
         table = ThermoTable()
         data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
                     etot=3.456, press=1.011e9)
-        line = '       100        1.2345        5432.1         2.222         3.456     1.011e+09'
+        line = ('       100        1.2345        5432.1         '
+                '2.222         3.456     1.011e+09')
         for lines in table.generate_output(100, data):
             self.assertMultiLineEqual(lines, line)
             break
         data = dict(step=100, temp=1.2345, vpot=5.4321e3, ekin=2.222,
                     etot=3.456, press=101.11111111)
-        line = '       100        1.2345        5432.1         2.222         3.456       101.111'
+        line = ('       100        1.2345        5432.1         '
+                '2.222         3.456       101.111')
         for lines in table.generate_output(100, data):
             self.assertMultiLineEqual(lines, line)
             break

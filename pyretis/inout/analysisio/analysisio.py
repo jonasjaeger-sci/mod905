@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods that will output results from the analysis functions.
 
 The Methods defined here will also run the analysis and output
@@ -9,11 +9,11 @@ according to given settings.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_file
+analyse_file (:py:func:`.analyse_file`)
     Method to analyse a file. For example, it can be used as
 
     >>> from pyretis.inout.analysisio import analyse_file
-    >>> result, raw_data = analyse_file('cross', 'cross.dat', settings)
+    >>> result, raw_data = analyse_file('cross', 'cross.txt', settings)
 
     To output the results, for instance by plotting, one can do:
 
@@ -21,15 +21,13 @@ analyse_file
     >>> txt_file = output_results(file_type, txt_plotter, result, raw_data)
 
 
-run_analysis_files
+run_analysis_files (:py:func:`.run_analysis_files`)
     Methods to the analysis on a set of files. It will create some
     output that can be used for reporting.
 """
-from __future__ import absolute_import
 import logging
 import os
-# pyretis imports
-from pyretis.core.units import CONVERT, create_conversion_factors
+from pyretis.core.units import create_conversion_factors
 from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.analysis import (analyse_flux, analyse_energies, analyse_orderp,
                               analyse_path_ensemble, match_probabilities,
@@ -38,9 +36,10 @@ from pyretis.inout.common import print_to_screen, format_number
 from pyretis.inout.plotting import create_plotter
 from pyretis.inout.plotting import TxtPlotter
 from pyretis.inout.report import generate_report
-from pyretis.inout.settings.settings import SECTIONS, copy_settings
-from pyretis.inout.settings import is_single_tis
+from pyretis.inout.settings import (SECTIONS, copy_settings,
+                                    is_single_tis)
 from pyretis.inout.writers import get_writer, PathEnsembleFile
+from pyretis.inout.setup.createoutput import TASK_MAP
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -53,14 +52,21 @@ _ANALYSIS_FUNCTIONS = {'cross': analyse_flux,
                        'energy': analyse_energies,
                        'pathensemble': analyse_path_ensemble}
 
+
 # Input files for analysis
-FILES = {'md-flux': {'cross': 'cross.dat',
-                     'energy': 'energy.dat',
-                     'order': 'order.dat'},
-         'md-nve': {'energy': 'energy.dat'},
-         'tis-single': {'pathensemble': 'pathensemble.dat'},
-         'tis': {'pathensemble': 'pathensemble.dat'},
-         'retis': {'pathensemble': 'pathensemble.dat'}}
+_FILES = {'md-flux': {},
+          'md-nve': {},
+          'tis-single': {},
+          'tis': {},
+          'retis': {}}
+# Add files
+for key in ('cross', 'energy', 'order'):
+    _FILES['md-flux'][key] = TASK_MAP[key]['filename']
+for key in ('energy',):
+    _FILES['md-nve'][key] = TASK_MAP[key]['filename']
+for key in ('pathensemble',):
+    for key2 in ('tis-single', 'tis', 'retis'):
+        _FILES[key2][key] = TASK_MAP[key]['filename']
 
 
 def run_analysis(settings):
@@ -77,8 +83,11 @@ def run_analysis(settings):
         A dictionary with the results from the analysis. This dict
         can be used to generate a report.
     """
+    runners = {'retis': run_retis_analysis,
+               'tis': run_tis_analysis,
+               'md-flux': run_mdflux_analysis}
     sim = settings['simulation']
-    sim_task = sim['task']
+    sim_task = sim['task'].lower()
     report_dir = settings['analysis'].get('report-dir', None)
     plotter = create_plotter(settings['analysis']['plot'],
                              out_dir=report_dir)
@@ -86,11 +95,13 @@ def run_analysis(settings):
     txt_plotter = TxtPlotter(settings['analysis']['txt-output'],
                              backup=backup,
                              out_dir=report_dir)
-    if sim_task in set(('retis', 'tis')):
-        if sim_task == 'tis':
-            return run_tis_analysis(settings, plotter, txt_plotter)
-        elif sim_task == 'retis':
-            return run_retis_analysis(settings, plotter, txt_plotter)
+    if sim_task in runners.keys():
+        runner = runners[sim_task]
+        return runner(settings, plotter, txt_plotter)
+    else:
+        msgtxt = 'Unknown analysis task "{}" requested!'.format(sim_task)
+        logger.error(msgtxt)
+        raise ValueError(msgtxt)
 
 
 def get_path_ensemble_files(ensemble, settings, detect,
@@ -127,11 +138,14 @@ def get_path_ensemble_files(ensemble, settings, detect,
     lsetting['simulation']['detect'] = detect
     lsetting['simulation']['ensemble'] = ensemble
     files = []
-    for file_type in FILES[sim_task]:
+    for file_type in _FILES[sim_task]:
         filename = os.path.join(PATH_DIR_FMT.format(ensemble),
-                                FILES[sim_task][file_type])
+                                _FILES[sim_task][file_type])
         if os.path.isfile(filename):
             files.append((file_type, filename))
+            logger.debug('Adding file "%s" for analysis', filename)
+        else:
+            logger.debug('Could not find file %s', filename)
     return lsetting, files
 
 
@@ -192,14 +206,14 @@ def get_path_simulation_files(sim_settings):
     return all_settings, all_files
 
 
-def print_value_error(heading, value, rel_error):
+def print_value_error(heading, value, rel_error, level=None):
     """Just print out matched results"""
     val = format_number(value, 0.1, 100)
     msgtxt = '{}: {}'.format(heading, val)
-    print_to_screen(msgtxt.strip())
+    print_to_screen(msgtxt.strip(), level=level)
     fmt_scale = format_number(rel_error * 100, 0.1, 100)
     msgtxt = '(Relative error: {} %)'.format(fmt_scale.rstrip())
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level=level)
 
 
 def run_single_tis_analysis(settings, plotter, txt_plotter):
@@ -209,9 +223,9 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -225,11 +239,10 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
                                           sim['detect'],
                                           sim['interfaces'])
     msgtxt = 'Analysing ensemble {}'.format(sim['ensemble'])
-    print_to_screen(msgtxt)
+    print_to_screen(msgtxt, level='info')
     print_to_screen()
     result = run_analysis_files(sett, files, plotter, txt_plotter)
-    report_txt = generate_report('tis-single', result,
-                                 output='txt')[0]
+    report_txt = generate_report('tis-single', result, output='txt')[0]
     print_to_screen(''.join(report_txt))
     print_to_screen()
     return result
@@ -242,9 +255,9 @@ def run_tis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -263,10 +276,10 @@ def run_tis_analysis(settings, plotter, txt_plotter):
                 msgtxt = ('Initial flux is not calculated here.\n'
                           'Remember to calculate this separately!')
                 logger.info(msgtxt)
-                print_to_screen(msgtxt)
+                print_to_screen(msgtxt, level='warning')
             else:
                 msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-                print_to_screen(msgtxt)
+                print_to_screen(msgtxt, level='info')
                 print_to_screen()
                 result = run_analysis_files(sett, files, plotter, txt_plotter)
                 results['pathensemble'].append(result['pathensemble'])
@@ -278,11 +291,11 @@ def run_tis_analysis(settings, plotter, txt_plotter):
         out, fig, txt = analyse_and_output_matched(results['pathensemble'],
                                                    plotter, txt_plotter)
         results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-        print_to_screen('Overall results')
-        print_to_screen('===============')
+        print_to_screen('Overall results', level='success')
+        print_to_screen('===============', level='success')
         print_to_screen()
         print_value_error('TIS Crossing probability',
-                          out['prob'], out['relerror'])
+                          out['prob'], out['relerror'], level='success')
         return results
 
 
@@ -293,9 +306,9 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     ----------
     settings : dict
         The settings to use for an analysis/simulation.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
     """
     units = settings['system']['units']
@@ -311,7 +324,7 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     print_to_screen()
     for i, (sett, files) in enumerate(zip(all_settings, all_files)):
         msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-        print_to_screen(msgtxt)
+        print_to_screen(msgtxt, level='info')
         print_to_screen()
         if i == 0:
             result = run_analysis_files(sett, files, plotter, txt_plotter)
@@ -332,30 +345,59 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
     flux, flux_error = retis_flux(results['pathensemble0'],
                                   results['pathensemble'][0],
-                                  settings['integrator']['timestep'])
+                                  settings['engine']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}
-    results['fluxc'] = {'value': flux / CONVERT['time'][units, 'ns'],
-                        'error': flux_error,
-                        'unit': 'ns'}
     rate, rate_error = retis_rate(out['prob'], out['relerror'],
                                   flux, flux_error)
     results['rate'] = {'value': rate, 'error': rate_error,
                        'unit': units}
-    results['ratec'] = {'value': rate / CONVERT['time'][units, 'ns'],
-                        'error': rate_error, 'unit': 'ns'}
-    print_to_screen('Overall results')
-    print_to_screen('===============')
+    print_to_screen('Overall results', level='success')
+    print_to_screen('===============', level='success')
     print_to_screen()
     print_value_error('RETIS Crossing probability',
-                      out['prob'], out['relerror'])
+                      out['prob'], out['relerror'], level='success')
     print_to_screen()
     print_value_error('Initial flux (units 1/{})'.format(units), flux,
-                      flux_error)
+                      flux_error, level='success')
     print_to_screen()
     print_value_error('Rate constant (units 1/{})'.format(units), rate,
-                      rate_error)
+                      rate_error, level='success')
     return results
+
+
+def run_mdflux_analysis(settings, plotter, txt_plotter):
+    """Run the analysis for the md flux simulation.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to use for an analysis/simulation.
+    plotter : object like :py:class:`.Plotter`
+        This is the object that handles the plotting.
+    txt_plotter : object like :py:class:`.Plotter`
+        This is the object that handles the text output.
+
+    Returns
+    -------
+    out : list or dict or similar
+        The output from the analysis.
+    """
+    sim = settings['simulation']
+    sim_task = sim['task']
+    files = []
+    for file_type in _FILES[sim_task]:
+        filename = _FILES[sim_task][file_type]
+        if os.path.isfile(filename):
+            files.append((file_type, filename))
+    msgtxt = 'Running analysis of a MD flux simulation...'
+    print_to_screen(msgtxt, level='info')
+    print_to_screen()
+    result = run_analysis_files(settings, files, plotter, txt_plotter)
+    report_txt = generate_report('md-flux', result, output='txt')[0]
+    print_to_screen(''.join(report_txt))
+    print_to_screen()
+    return result
 
 
 def run_analysis_files(settings, files, plotter, txt_plotter):
@@ -370,9 +412,9 @@ def run_analysis_files(settings, files, plotter, txt_plotter):
     files : list of tuples
         This list contains the raw files to be analysed. The
         tuples are on format ('filetype', 'filename').
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -395,7 +437,7 @@ def read_first_block(fileobj, file_name):
 
     Parameters
     ----------
-    fileobj : object like `Writer`.
+    fileobj : object like :py:class:`.Writer`
         A object that supports a `load` function to read block
         of data from a file.
     file_name : string
@@ -431,11 +473,12 @@ def output_results(file_type, plotter, result, rawdata):
     ----------
     file_type : string
         This determines what we are going to plot.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
             This is the object that handles the plotting.
-    result : list of lists/dicts etc.
+    result : list of lists or dicts
         This contains the results from a specific analysis.
-    rawdata : list of floats, lists, objects, etc.
+    rawdata : list of floats, lists or objects
+        The raw data with analysis results.
 
     Returns
     -------
@@ -444,7 +487,7 @@ def output_results(file_type, plotter, result, rawdata):
     """
     if file_type == 'cross':
         return plotter.output_flux(result)
-    elif file_type == 'orderp':
+    elif file_type == 'order':
         return plotter.output_orderp(result, rawdata)
     elif file_type == 'energy':
         return plotter.output_energy(result, rawdata)
@@ -456,13 +499,12 @@ def analyse_file(file_type, file_name, settings):
     """Run analysis on the given file.
 
     This function is included for convenience so that we can call an
-    analysis like `analyse_file('cross', 'cross.dat')` i.e. it should
-    automatically open the file and apply the correct analysis according
-    to a given file type. Here we return a function to do the analysis,
-    so we are basically wrapping one of the analysis functions. This is
-    done in case we wish to rerun the analysis but with different
-    settings for instance.
-
+    analysis like ``analyse_file('cross', 'cross.txt')`` i.e. it should
+    automatically open the file and apply the correct analysis
+    according to a given file type. Here we return a function to do the
+    analysis, so we are basically wrapping one of the analysis
+    functions. This is done in case we wish to rerun the analysis but
+    with different settings for instance.
 
     Parameters
     ----------
@@ -477,9 +519,9 @@ def analyse_file(file_type, file_name, settings):
 
     Returns
     -------
-    results : list/dict
+    results : list or dict
         The output from the analysis
-    raw_data : list, numpy.array or other type of object.
+    raw_data : list, numpy.array or other type of object
         The raw data used in the analysis.
     """
     function = _ANALYSIS_FUNCTIONS.get(file_type, None)
@@ -510,11 +552,11 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
 
     Parameters
     ----------
-    raw_data : list, numpy.array or other type of object.
+    raw_data : list, numpy.array or other type of object
         The raw data used in the analysis.
-    plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    plotter : object like :py:class:`.Plotter`
         This is the object that handles the plotting.
-    txt_plotter : object like `Plotter` from `pyretis.inout.plotting`.
+    txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
 
     Returns
@@ -527,13 +569,18 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
         A list with the text files created (if any).
     """
     path_results, ensemble_names, detect = [], [], []
+    interface_left = None
     for ensemble in raw_data:
         path_results.append(ensemble['out'])
         ensemble_names.append(ensemble['out']['ensemble'])
         detect.append(ensemble['out']['detect'])
+        if interface_left is None:
+            interface_left = ensemble['out']['interfaces'][0]
     result = match_probabilities(path_results, detect)
+    # for the figure, we add the A interface:
+    detect_plot = [interface_left] + detect
     figures = plotter.output_matched_probability(ensemble_names,
-                                                 detect,
+                                                 detect_plot,
                                                  result)
     outtxt = txt_plotter.output_matched_probability(ensemble_names,
                                                     detect,

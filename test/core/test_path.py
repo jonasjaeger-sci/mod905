@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test functionality for the path classes."""
 import logging
 import unittest
 import numpy as np
-from pyretis.core.path import Path, ReservoirPath
+from pyretis.core.path import Path
+from pyretis.core.reservoirpath import ReservoirPath
 from pyretis.core.random_gen import RandomGenerator
 logging.disable(logging.CRITICAL)
 
@@ -18,27 +19,32 @@ class PathTest(unittest.TestCase):
         rgen = RandomGenerator(seed=0)
         path = Path(rgen)
         for _ in range(50):
-            path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
+            phasepoint = {'order': [rgen.rand()], 'pos': np.zeros(3),
+                          'vel': np.zeros(3), 'vpot': 0.0, 'ekin': 0.0}
+            path.append(phasepoint)
         path_rev = path.reverse()
         for original, rev in zip(path.trajectory(reverse=True),
                                  path_rev.trajectory()):
-            self.assertAlmostEqual(original[0][0], rev[0][0])
+            self.assertAlmostEqual(original['order'][0],
+                                   rev['order'][0])
 
     def test_reservoir_path_reverse(self):
         """Test if we reverse correctly for class ReservoirPath."""
         rgen = RandomGenerator(seed=0)
         path = ReservoirPath(rgen, res_length=3)
         for _ in range(100):
-            path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
+            phasepoint = {'order': [rgen.rand()], 'pos': np.zeros(3),
+                          'vel': np.zeros(3), 'vpot': 0.0, 'ekin': 0.0}
+            path.append(phasepoint)
         path_rev = path.reverse()
         for original, rev in zip(path.trajectory(reverse=True),
                                  path_rev.trajectory()):
-            self.assertAlmostEqual(original[0][0], rev[0][0])
+            self.assertAlmostEqual(original['order'][0], rev['order'][0])
         # check if reservoir point are equal
         for point, point_rev in zip(path.reservoir, path_rev.reservoir):
             ppoint = path.phasepoint(point[0])
             ppoint_rev = path_rev.phasepoint(point_rev[0])
-            self.assertAlmostEqual(ppoint[0], ppoint_rev[0], 12)
+            self.assertAlmostEqual(ppoint['order'], ppoint_rev['order'], 12)
         # check if we can exhaust the reservoir:
         for _ in range(path.res_length):
             shoot = path.get_shooting_point()
@@ -51,10 +57,14 @@ class PathTest(unittest.TestCase):
         rgen = RandomGenerator(seed=0)
         path = Path(rgen, maxlen=10)
         for _ in range(path.maxlen):
-            add = path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
+            phasepoint = {'order': [rgen.rand()], 'pos': np.zeros(3),
+                          'vel': np.zeros(3), 'vpot': 0.0, 'ekin': 0.0}
+            add = path.append(phasepoint)
             self.assertTrue(add)
         for _ in range(path.maxlen):
-            add = path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
+            phasepoint = {'order': [rgen.rand()], 'pos': np.zeros(3),
+                          'vel': np.zeros(3), 'vpot': 0.0, 'ekin': 0.0}
+            add = path.append(phasepoint)
             self.assertFalse(add)
 
     def test_empty_path_creation(self):
@@ -64,11 +74,13 @@ class PathTest(unittest.TestCase):
         path = Path(rgen, maxlen=maxlen)
         path_rev = ReservoirPath(rgen, maxlen=maxlen, res_length=2)
         for _ in range(maxlen + 5):
-            path.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
-            path_rev.append([rgen.rand()], np.zeros(3), np.zeros(3), 0.0)
+            phasepoint = {'order': [rgen.rand()], 'pos': np.zeros(3),
+                          'vel': np.zeros(3), 'vpot': 0.0, 'ekin': 0.0}
+            path.append(phasepoint)
+            path_rev.append(phasepoint)
 
-        path2 = path.empty_path()
-        path_rev2 = path_rev.empty_path()
+        path2 = path.empty_path(maxlen=maxlen)
+        path_rev2 = path_rev.empty_path(maxlen=maxlen)
 
         self.assertIsInstance(path2, Path)
         self.assertEqual(path.maxlen, path2.maxlen)

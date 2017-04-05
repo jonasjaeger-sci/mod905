@@ -1,37 +1,46 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test parsing from a settings input file.
 
 Here we test that we parse the input file correctly and also that
 we fail in predictable ways.
 """
-from __future__ import absolute_import
 import os
 import logging
 import tempfile
 import unittest
 import numpy as np
-from pyretis.inout.settings.common import (create_integrator,
-                                           create_orderparameter)
-from pyretis.inout.settings.createforcefield import (create_potentials,
-                                                     create_force_field)
-from pyretis.inout.settings.settings import (parse_settings_file,
-                                             _parse_raw_section,
-                                             _parse_all_raw_sections,
-                                             _parse_sections,
-                                             settings_to_text)
-from pyretis.inout.settings.createsystem import create_initial_positions
+from pyretis.inout.setup.common import (
+    create_engine,
+    create_orderparameter
+)
+from pyretis.inout.setup.createforcefield import (
+    create_potentials,
+    create_force_field
+)
+from pyretis.inout.setup.createsystem import create_initial_positions
+from pyretis.inout.settings import (
+    parse_settings_file,
+    _parse_raw_section,
+    _parse_all_raw_sections,
+    _parse_sections,
+    settings_to_text
+)
 from pyretis.core.units import create_conversion_factors, CONVERT
-from pyretis.core.integrators import Verlet, VelocityVerlet, Langevin
-from pyretis.core.orderparameter import (OrderParameter,
-                                         OrderParameterPosition,
-                                         OrderParameterDistance)
-from pyretis.forcefield.potentials import (PairLennardJonesCut,
-                                           PairLennardJonesCutnp,
-                                           DoubleWellWCA,
-                                           DoubleWell,
-                                           RectangularWell)
+from pyretis.engines import Verlet, VelocityVerlet, Langevin
+from pyretis.orderparameter import (
+    OrderParameter,
+    OrderParameterPosition,
+    OrderParameterDistance
+)
+from pyretis.forcefield.potentials import (
+    PairLennardJonesCut,
+    PairLennardJonesCutnp,
+    DoubleWellWCA,
+    DoubleWell,
+    RectangularWell
+)
 from pyretis.forcefield import PotentialFunction
 logging.disable(logging.CRITICAL)
 
@@ -76,8 +85,8 @@ class KeywordParsing(unittest.TestCase):
                              'temperature': 2.0}
         correct['simulation'] = {'task': 'md-nve',
                                  'steps': 100}
-        correct['integrator'] = {'class': 'velocityverlet',
-                                 'timestep': 0.002}
+        correct['engine'] = {'class': 'velocityverlet',
+                             'timestep': 0.002}
         correct['particles'] = {'position': {'file': 'initial.gro'},
                                 'velocity': {'generate': 'maxwell',
                                              'set-temperature': 2.0,
@@ -114,25 +123,30 @@ class KeywordParsing(unittest.TestCase):
         teststr = []
         correct = []
         # simple test:
-        teststr.append(['Integrator settings', '-------------------',
+        teststr.append(['Engine settings',
+                        '---------------',
                         'class = velocityverlet', 'timestep = 0.002'])
         correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
         # test with comment
-        teststr.append(['Integrator settings', '-------------------',
+        teststr.append(['Engine settings',
+                        '---------------',
                         'class = velocityverlet', 'timestep = 0.002 # fs'])
         correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
         # test with spaces etc
-        teststr.append(['Integrator settings', '-------------------', 'junk',
+        teststr.append(['Engine settings',
+                        '---------------', 'junk',
                         '    ', 'junk = 10',
                         'class =    velocityverlet', 'timestep=0.002'])
         correct.append({'timestep': 0.002, 'junk': 10,
                         'class': 'velocityverlet'})
-        teststr.append(['Integrator settings', '-------------------', 'junk',
+        teststr.append(['Engine settings',
+                        '---------------', 'junk',
                         '    ', 'junk = 10',
                         'class =    velocityverlet', 'timestep=0.002'])
         correct.append({'timestep': 0.002, 'class': 'velocityverlet',
                         'junk': 10})
-        teststr.append(['Integrator settings', '-------------------',
+        teststr.append(['Engine settings',
+                        '---------------',
                         'class = langevin', 'timestep = 0.002',
                         'gamma = 0.3', 'high_friction = False',
                         'seed = 0'])
@@ -141,7 +155,7 @@ class KeywordParsing(unittest.TestCase):
                         'seed': 0})
         for tst, corr in zip(teststr, correct):
             raw = _parse_sections(tst)
-            setting = _parse_raw_section(raw['integrator'], 'integrator')
+            setting = _parse_raw_section(raw['engine'], 'engine')
             self.assertEqual(setting, corr)
 
     def test_write_and_read(self):
@@ -157,12 +171,12 @@ System settings
 dimensions = 2
 temperature = 1.0
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = velocityverlet
 timestep = 0.002"""
-        correct = {'integrator': {'timestep': 0.002,
-                                  'class': 'velocityverlet'},
+        correct = {'engine': {'timestep': 0.002,
+                              'class': 'velocityverlet'},
                    'system': {'dimensions': 2, 'temperature': 1.0},
                    'simulation': {'task': 'md-nve', 'steps': 100}}
         settings = _test_correct_parsing(self, data, correct)
@@ -176,8 +190,8 @@ timestep = 0.002"""
     def test_ignore_section(self):
         """Test that we indeed ingnore unknow sections."""
         data = """
-Integrator settings
--------------------
+Engine settings
+---------------
 class = velocityverlet
 timestep = 0.002
 
@@ -187,125 +201,124 @@ This section should be ignored
 # and not give any problems
 Is this = True?
 """
-        correct = {'integrator': {'timestep': 0.002,
-                                  'class': 'velocityverlet'}}
+        correct = {'engine': {'timestep': 0.002,
+                              'class': 'velocityverlet'}}
         settings = _test_correct_parsing(self, data, correct)
         self.assertNotIn('junk', settings)
 
 
-class KeywordIntegrator(unittest.TestCase):
-    """Test the parsing of input settings for integrators."""
-    def test_load_external_integrator(self):
-        """Test that we can load external python modules for integrators."""
+class KeywordEngine(unittest.TestCase):
+    """Test the parsing of input settings for engines."""
+    def test_load_external_engine(self):
+        """Test that we can load external python modules for engines."""
         data = """
-Integrator settings
--------------------
+Engine settings
+---------------
 class = FooIntegrator
 module = foointegrator.py
 timestep = 0.5
 extra = 100
 """
-        correct = {'integrator': {'class': 'FooIntegrator',
-                                  'module': 'foointegrator.py',
-                                  'timestep': 0.5,
-                                  'extra': 100}}
+        correct = {'engine': {'class': 'FooIntegrator',
+                              'module': 'foointegrator.py',
+                              'timestep': 0.5,
+                              'extra': 100}}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
+        # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
-        foointegrator = create_integrator(settings)
+        foointegrator = create_engine(settings)
         self.assertEqual(foointegrator.delta_t,
-                         correct['integrator']['timestep'])
+                         correct['engine']['timestep'])
         self.assertEqual(foointegrator.extra,  # pylint: disable=no-member
-                         correct['integrator']['extra'])
+                         correct['engine']['extra'])
 
-    def test_fail_external_integrator(self):
+    def test_fail_external_engine(self):
         """Test that external loads fail in a predicable way."""
-        # First test: an integrator that forgot to define a required method.
+        # First test: an engine that forgot to define a required method.
         test_data, correct = [], []
-        test_data.append('Integrator settings\n'
-                         '-------------------\n'
+        test_data.append('Engine settings\n'
+                         '---------------\n'
                          'class = BarIntegrator\n'
                          'module = foointegrator.py')
-        correct.append({'integrator': {'class': 'BarIntegrator',
-                                       'module': 'foointegrator.py'}})
-        test_data.append('Integrator settings\n'
-                         '-------------------\n'
+        correct.append({'engine': {'class': 'BarIntegrator',
+                                   'module': 'foointegrator.py'}})
+        test_data.append('Engine settings\n'
+                         '---------------\n'
                          'class = BazIntegrator\n'
                          'module = foointegrator.py')
-        correct.append({'integrator': {'class': 'BazIntegrator',
-                                       'module': 'foointegrator.py'}})
-        test_data.append('Integrator\n'
-                         '----------\n'
+        correct.append({'engine': {'class': 'BazIntegrator',
+                                   'module': 'foointegrator.py'}})
+        test_data.append('Engine\n'
+                         '------\n'
                          'module =  dummy')
-        correct.append({'integrator': {'module': 'dummy'}})
-        test_data.append('Integrator\n'
-                         '----------\n'
+        correct.append({'engine': {'module': 'dummy'}})
+        test_data.append('Engine\n'
+                         '------\n'
                          'module = dummy\n'
                          'class = dummy')
-        correct.append({'integrator': {'module': 'dummy', 'class': 'dummy'}})
+        correct.append({'engine': {'module': 'dummy', 'class': 'dummy'}})
 
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
-            args = [settings]
-            self.assertRaises(ValueError, create_integrator, *args)
+            with self.assertRaises(ValueError):
+                create_engine(settings)
 
-    def test_internal_integrators(self):
-        """Test that we can load all internal integrators"""
+    def test_internal_engine(self):
+        """Test that we can load all internal engines"""
         klass, test_data, correct = [], [], []
         klass.append(Verlet)
-        test_data.append('Integrator\n'
-                         '----------\n'
+        test_data.append('Engine\n'
+                         '------\n'
                          'class = Verlet\n'
                          'timestep = 0.5')
-        correct.append({'integrator': {'class': 'Verlet', 'timestep': 0.5}})
+        correct.append({'engine': {'class': 'Verlet', 'timestep': 0.5}})
         klass.append(VelocityVerlet)
-        test_data.append('Integrator\n'
-                         '----------\n'
+        test_data.append('Engine\n'
+                         '------\n'
                          'class = VelocityVerlet\n'
                          'timestep = 0.314\n'
                          'desc = Test VV integrator')
-        correct.append({'integrator': {'class': 'VelocityVerlet',
-                                       'timestep': 0.314,
-                                       'desc': 'Test VV integrator'}})
+        correct.append({'engine': {'class': 'VelocityVerlet',
+                                   'timestep': 0.314,
+                                   'desc': 'Test VV integrator'}})
         klass.append(Langevin)
-        test_data.append('Integrator\n'
-                         '----------\n'
+        test_data.append('Engine\n'
+                         '------\n'
                          'class = Langevin\n'
                          'timestep = 0.1\n'
                          'gamma = 2.718281828\n'
                          'seed = 101\n'
                          'high_friction = True')
-        correct.append({'integrator': {'class': 'Langevin',
-                                       'timestep': 0.1,
-                                       'gamma': 2.718281828,
-                                       'seed': 101,
-                                       'high_friction': True}})
+        correct.append({'engine': {'class': 'Langevin',
+                                   'timestep': 0.1,
+                                   'gamma': 2.718281828,
+                                   'seed': 101,
+                                   'high_friction': True}})
         klass.append(Langevin)
-        test_data.append('Integrator\n'
-                         '----------\n'
+        test_data.append('Engine\n'
+                         '------\n'
                          'class = Langevin\n'
                          'timestep = 0.25\n'
                          'gamma = 2.718281828\n'
                          'seed = 11\n'
                          'high_friction = False')
-        correct.append({'integrator': {'class': 'Langevin',
-                                       'timestep': 0.25,
-                                       'gamma': 2.718281828,
-                                       'seed': 11,
-                                       'high_friction': False}})
+        correct.append({'engine': {'class': 'Langevin',
+                                   'timestep': 0.25,
+                                   'gamma': 2.718281828,
+                                   'seed': 11,
+                                   'high_friction': False}})
         for data, corr, cls in zip(test_data, correct, klass):
             settings = _test_correct_parsing(self, data, corr)
-            integ = create_integrator(settings)
-            self.assertIsInstance(integ, cls)
-            self.assertAlmostEqual(integ.delta_t,
-                                   corr['integrator']['timestep'])
-            for key in corr['integrator']:
-                if hasattr(integ, key):
-                    self.assertAlmostEqual(getattr(integ, key),
-                                           corr['integrator'][key])
+            engine = create_engine(settings)
+            self.assertIsInstance(engine, cls)
+            self.assertAlmostEqual(engine.delta_t,
+                                   corr['engine']['timestep'])
+            for key, val in corr['engine'].items():
+                if hasattr(engine, key):
+                    self.assertAlmostEqual(getattr(engine, key), val)
 
 
 class KeywordOrderPrameter(unittest.TestCase):
@@ -324,12 +337,10 @@ name = Dummy"""
                                       'name': 'Dummy'}}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
-        # pyretis where we are executing from. This is to locate the
+        # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         orderp = create_orderparameter(settings)
-        self.assertEqual(orderp.name,
-                         correct['orderparameter']['name'])
 
         def extra_function(args):
             """Dummy function for testing."""
@@ -348,19 +359,13 @@ name = Dummy"""
                          '--------------\n'
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = BazOrderParameter\n'
-                         'module =  fooorderparameter.py')
         correct.append({'orderparameter': {'class': 'BarOrderParameter',
-                                           'module': 'fooorderparameter.py'}})
-        correct.append({'orderparameter': {'class': 'BazOrderParameter',
                                            'module': 'fooorderparameter.py'}})
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
-            args = [settings]
-            self.assertRaises(ValueError, create_orderparameter, *args)
+            with self.assertRaises(ValueError):
+                create_orderparameter(settings)
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""

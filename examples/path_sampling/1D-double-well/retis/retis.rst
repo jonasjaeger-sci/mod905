@@ -9,7 +9,7 @@ interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 1
 temperature = 0.07
 
@@ -17,8 +17,8 @@ Box
 ---
 periodic = [False]
 
-Integrator
-----------
+Engine
+------
 class = Langevin
 timestep = 0.002
 gamma = 0.3
@@ -35,7 +35,6 @@ zero_momentum = False
 rescale_energy = False
 sigma_v =  -1
 seed = 0
-initial_path = kick
 
 RETIS settings
 --------------
@@ -43,6 +42,11 @@ swapfreq = 0.5
 relative_shoots = None
 nullmoves = True
 swapsimul = True
+
+Initial-path settings
+---------------------
+method = kick
+kick-from = initial
 
 Particles
 ---------
@@ -70,5 +74,11 @@ Orderparameter
 class = OrderParameterPosition
 dim = x
 index = 0
-name = Position
 periodic = False
+
+Output
+------
+trajectory-file = 100
+energy-file = 100
+order-file = 100
+write_vel = True

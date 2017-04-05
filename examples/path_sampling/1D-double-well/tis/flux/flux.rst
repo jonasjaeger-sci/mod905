@@ -13,8 +13,8 @@ units = lj
 dimensions = 1
 temperature = 0.07
 
-Integrator settings
--------------------
+Engine settings
+---------------
 class = Langevin
 timestep = 0.002
 gamma = 0.3
@@ -44,15 +44,14 @@ c = 0.0
 
 Orderparameter
 --------------
-class = OrderParameterPosition
+class = Position
 dim = x
 index = 0
-name = Position
 periodic = False
 
 Output
 ------
-backup = False
+backup = overwrite
 energy-file = 1000
 order-file = 1000
 cross-file = 1

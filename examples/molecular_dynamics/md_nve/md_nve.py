@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Example of running a MD NVE simulation.
-This system considered is a simple Lennard-Jones fluid.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Example of running a MD simulation using the PyRETIS library.
+
+The system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import (create_simulation, create_force_field,
-                                    create_system)
+from pyretis.inout.setup import (create_simulation, create_force_field,
+                                 create_system, create_engine,
+                                 create_output_tasks)
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout import create_output
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
@@ -22,9 +23,9 @@ settings['simulation'] = {'task': 'md-nve',
 settings['system'] = {'units': 'lj',
                       'temperature': 2.0,
                       'dimensions': 3}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.002}
-settings['output'] = {'backup': False,
-                      'write_vel': False,
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.002}
+settings['output'] = {'backup': 'overwrite',
+                      'write_vel': True,
                       'energy-file': 1,
                       'energy-screen': 10,
                       'trajectory-file': 1}
@@ -46,16 +47,16 @@ ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 msg = '# Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
-simulation_nve = create_simulation(settings, ljsystem)
+kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
+simulation_nve = create_simulation(settings, kwargs)
 
 # set up extra output:
 table = ThermoTable()
-thermo_file = FileIO('thermo.dat', header=table.header)
+thermo_file = FileIO('thermo-test.txt', header=table.header)
 store_results = []
 # also create some other outputs:
-output_tasks = [task for task in create_output(settings)]
+output_tasks = [task for task in create_output_tasks(settings)]
 # run the simulation :-)
-
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
     for lines in table.generate_output(stepno, result['thermo']):
@@ -64,6 +65,7 @@ for result in simulation_nve.run():
     store_results.append(result['thermo'])
     for task in output_tasks:
         task.output(result)
+
 # We are now done with the actual simulation. Let us now do some
 # simple plotting of energies:
 mpl_set_style()  # load pyretis style

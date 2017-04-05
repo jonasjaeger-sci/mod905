@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
 This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
-from pyretis.inout.settings import (create_simulation, create_force_field,
-                                    create_system)
+from pyretis.inout.setup import (create_simulation, create_force_field,
+                                 create_system, create_engine,
+                                 create_output_tasks)
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout import create_output
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
@@ -21,8 +22,8 @@ settings['simulation'] = {'task': 'md-nve',
 settings['system'] = {'units': 'lj',
                       'temperature': 2.5,
                       'dimensions': 2}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.002}
-settings['output'] = {'backup': False,
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.002}
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,
@@ -44,14 +45,15 @@ create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
-simulation_nve = create_simulation(settings, ljsystem)
+kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
+simulation_nve = create_simulation(settings, kwargs)
 
 # set up extra output:
 table = ThermoTable()
 thermo_file = FileIO('thermo.txt', header=table.header)
 store_results = []
 # also create some other outputs:
-output_tasks = [task for task in create_output(settings)]
+output_tasks = [task for task in create_output_tasks(settings)]
 # run the simulation :-)
 
 for result in simulation_nve.run():

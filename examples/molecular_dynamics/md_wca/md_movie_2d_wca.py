@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_output, create_system,
-                                    create_force_field, create_simulation)
+from pyretis.inout.setup import (create_output_tasks, create_system,
+                                 create_engine, create_force_field,
+                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -29,8 +31,8 @@ settings['system'] = {'temperature': 2.0,
 settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
 settings['simulation'] = {'task': 'md-nve',
                           'steps': 1100}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': False,
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,
@@ -58,15 +60,16 @@ system.forcefield = create_force_field(settings)
 system.particles.pos -= (np.average(system.particles.pos, axis=0) -
                          0.5 * system.box.length)  # center in box
 print('# Creating simulation from settings.')
-simulation = create_simulation(settings, system)
+kwargs = {'system': system, 'engine': create_engine(settings)}
+simulation = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
-outputs = [task for task in create_output(settings)]
+outputs = [task for task in create_output_tasks(settings)]
 
 size = system.box.size
 BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
 # some additional set-up for the animation
-timeunit = (settings['integrator']['timestep'] *
+timeunit = (settings['engine']['timestep'] *
             CONVERT['time'][UNIT, 'fs'])
 timeendfs = settings['simulation']['steps'] * timeunit
 
@@ -124,7 +127,7 @@ ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
 # add second axis for displaying energies:
 ax2 = fig.add_subplot(grid[0, 1])
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.55, 0.55)
+ax2.set_ylim(-0.6, 1.1)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.90, '', transform=ax2.transAxes)
@@ -158,6 +161,7 @@ def plot_dwca_potential():
     fakesize = np.array([[0.0, 10.0], [0.0, 10.0]])
     fakebox = Box(fakesize)
     fakesys = System(units='lj', box=fakebox)
+    fakesys.particles = Particles(dim=system.get_dim())
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     for ri in rpos:
@@ -381,9 +385,9 @@ def update(frame, sys, output_tasks, sim):
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
         patches.append(linepot)
-        linekin.set_data(time, (np.array(e_kin) - e_kin[0]))
+        linekin.set_data(time, (np.array(e_kin)))
         patches.append(linekin)
-        linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
+        linetot.set_data(time, (np.array(e_tot) - v_pot[0]))
         patches.append(linetot)
         # also display current simulation time;
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],

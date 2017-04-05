@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module defines some helper functions for pair potentials.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-mixing_parameters
+
+mixing_parameters (:py:func:`.mixing_parameters`)
     Definition of mixing rules which are used in some force fields
     for generating cross interactions.
 
-generate_pair_interactions
+generate_pair_interactions (:py:func:`generate_pair_interactions`)
     Function to generate pair parameters from atom parameters.
 """
 import itertools
@@ -129,15 +130,19 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
        * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
 
-       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times r_{\text{c},j}}{2}`
+       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times
+                r_{\text{c},j}}{2}`
 
     3. Sixthpower
 
-       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}} \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
+       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}}
+                \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
 
-       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times \sigma_{j}^6}{2} \right)^{1/6}`
+       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times
+                \sigma_{j}^6}{2} \right)^{1/6}`
 
-       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times r_{\text{c},j}^6}{2}\right)^{1/6}`
+       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times
+                r_{\text{c},j}^6}{2}\right)^{1/6}`
 
 
     Parameters

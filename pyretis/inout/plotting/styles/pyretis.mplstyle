@@ -2,10 +2,10 @@
 
 axes.edgecolor: 262626
 axes.labelcolor: 262626
-axes.labelsize: medium
+axes.labelsize: small
 axes.titlesize: x-small
 axes.grid: False
-axes.formatter.limits: -4, 4
+axes.formatter.limits: -3, 3
 axes.prop_cycle: cycler('color', ['4C72B0', '55A868', 'C44E52', '8172B2', 'CCB974', '64B5CD'])
 
 figure.subplot.left: 0.15
@@ -14,8 +14,8 @@ figure.subplot.bottom: 0.15
 figure.subplot.top: 0.93
 
 font.family: serif
-font.serif: Times
-font.size: 20
+font.serif: ['Droid Serif', 'FreeSerif', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', 'Palatino', 'Georgia', 'Garamond', 'Times']
+font.size: 16
 
 grid.color: 262626
 grid.linestyle: :
@@ -38,14 +38,14 @@ savefig.directory: None
 savefig.format: pdf
 
 text.color: 262626
-text.usetex: True
+text.usetex: False
 
 xtick.major.pad: 6
 xtick.color: 262626
-xtick.labelsize: medium
+xtick.labelsize: small
 
 ytick.major.pad: 6
 ytick.color: 262626
-ytick.labelsize: medium
+ytick.labelsize: small
 
-image.cmap: copper
+image.cmap: viridis

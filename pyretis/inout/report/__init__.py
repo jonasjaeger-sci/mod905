@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains methods for generating reports.
 
 The reports will typically summarize the results from different
@@ -13,29 +13,30 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, handles imports for pyretis and defines a method for
+    This file, handles imports for PyRETIS and defines a method for
     writing a report to a file.
 
-markup.py
+markup.py (:py:mod:`pyretis.inout.report.markup`)
     This module defines some methods for generating simple tables and
     formatting numbers for rst and latex.
 
-report_md.py
+report.py (:py:mod:`pyretis.inout.report.report`)
+    General methods for generating reports.
+
+report_md.py (:py:mod:`pyretis.inout.report.report_md`)
     This module defines the molecular dynamics reports. Specifically
     it defines the report that is made based on results from a MD Flux
     simulations.
 
-report_path.py
+report_path.py (:py:mod:`pyretis.inout.report.report_path`)
     This module defines the reports for path simulations like TIS and
     RETIS.
 
-report.py
-    General methods for generating reports.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-generate_report
+generate_report (:py:func:`.generate_report`)
     Method for generating reports.
 
 Folders
@@ -44,5 +45,4 @@ Folders
 templates
     A folder containing templates for generating reports.
 """
-from __future__ import absolute_import
 from .report import generate_report

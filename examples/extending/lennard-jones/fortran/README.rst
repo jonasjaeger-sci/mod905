@@ -1,10 +1,10 @@
-Extending pyretis with Fortran
+Extending pyretis with FORTRAN 
 ==============================
 
 This folder contains an example of extending pyretis with a new
-force field which is implemented in Fortran.
+force field which is implemented in FORTRAN.
 
-The Fortran code must be compiled before it can be executed and this
+The FORTRAN code must be compiled before it can be executed and this
 is done by running ``make``.
 
 Note that you may have to edit the makefile depending on your version

@@ -1,4 +1,5 @@
-
+/* Copyright (c) 2015, PyRETIS Development Team.
+Distributed under the LGPLv3 License. See LICENSE for more info. */
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
@@ -8,16 +9,25 @@ static PyObject *step1(PyObject *self, PyObject *args);
 static PyObject *step2(PyObject *self, PyObject *args); 
 
 // Boilerplate: function list.
-static PyMethodDef methods[] = {
+static PyMethodDef vvmethods[] = {
   { "step1", step1, METH_VARARGS, "Velocity Verlet - update positions and velocity"},
-  { "step2", step2, METH_VARARGS, "Velocity Verley - update velocity"},
+  { "step2", step2, METH_VARARGS, "Velocity Verlet - update velocity"},
   { NULL, NULL, 0, NULL } /* Sentinel */
 };
 
+static struct PyModuleDef vvintegrator =
+{
+    PyModuleDef_HEAD_INIT,
+    "vvintegrator",
+    "Velocity Verlet Integrator",
+    -1,
+    vvmethods
+};
+
 // Boilerplate: Module initialization.
-PyMODINIT_FUNC initvvintegrator(void) {
-  (void) Py_InitModule("vvintegrator", methods);
+PyMODINIT_FUNC PyInit_vvintegrator(void) {
   import_array();
+  return PyModule_Create(&vvintegrator);
 }
 
 

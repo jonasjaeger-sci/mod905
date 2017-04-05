@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-This is a simple example of how pyretis can be used
+This is a simple example of how PyRETIS can be used
 for running an umbrella simulation.
 
 In this simulation, we study a particle moving in a one-dimensional
 potential energy landscape and the goal is to determine this
 landscape by performing umbrella simulations.
 """
-from __future__ import print_function
-from pyretis.core import System, RandomGenerator, Box
-from pyretis.inout.settings import create_simulation
+from pyretis.core import System, RandomGenerator, Box, Particles
+from pyretis.inout.setup import create_simulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis import histogram, match_all_histograms
@@ -19,25 +20,26 @@ from matplotlib import pyplot as plt
 # Define system with a temperature in K
 dummybox = Box(periodic=[False])
 mysystem = System(temperature=500, units='eV/K', box=dummybox)
+mysystem.particles = Particles(dim=mysystem.get_dim())
 # We will only have one particle in the system:
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use
 # a simple double well potential
-potential_dw = DoubleWell()
+potential_dw = DoubleWell(a=1, b=1, c=0.02)
 # and a rectangular well potential
 potential_rw = RectangularWell()
 # do set up the unbiased force field
-forcefield = ForceField(desc='Double well', potential=[potential_dw])
+forcefield = ForceField('Double well', potential=[potential_dw])
 # and the biased
-forcefield_bias = ForceField(desc='Double well with rectangular bias',
+forcefield_bias = ForceField('Double well with rectangular bias',
                              potential=[potential_dw, potential_rw],
                              params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}, None])
 mysystem.forcefield = forcefield_bias
 
 # Next we create a list containing the location of the
 # different umbrellas:
-umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2], [0.1, 0.4],
-             [0.3, 0.6], [0.5, 1.0]]
+umbrellas = [[-1.0, -0.4], [-0.5, -0.2], [-0.3, 0.0], [-0.1, 0.2],
+             [0.1, 0.4], [0.3, 0.6], [0.5, 1.0]]
 n_umb = len(umbrellas)
 # and we initiate the random number generator we will use
 RANDSEED = 1  # seed for random number generator:
@@ -61,14 +63,15 @@ for i, umbrella in enumerate(umbrellas):
     # Calculate position we must cross for this window:
     settings['simulation']['over'] = umbrellas[min(i + 1, n_umb - 1)][0]
     # Create the umbrella simulation :-)
-    simulation = create_simulation(settings, mysystem)
+    sim_args = {'system': mysystem}
+    simulation = create_simulation(settings, sim_args)
     print(simulation)
     # Also create empy list for storing some data:
     traj, ener = [], []
     for result in simulation.run():
         for pos in mysystem.particles.pos:
             traj.append(pos)
-            ener.append(mysystem.v_pot)
+            ener.append(mysystem.particles.vpot)
     trajectory.append(np.array(traj))
     energy.append(np.array(ener))
     print('Done. Cycles: {}'.format(simulation.cycle['step'] -

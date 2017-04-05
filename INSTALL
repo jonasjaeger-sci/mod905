@@ -1,15 +1,19 @@
 
-Installing the pyretis library
+Installing the PyRETIS library
 ==============================
 
 0. Install the required packages listed in the file requirements.txt
 
-1. Place the pyretis library somewhere you can access it, to 
+1. Place the PyRETIS library somewhere you can access it, to 
    `/some/dir/pyretis`
 
-2. Export the python path:
+2. Export the PyRETIS path:
 
-export PYTHONPATH=$PYTHONPATH:/some/dir/pyretis
+   export PYTHONPATH=$PYTHONPATH:/some/dir/pyretis
+
+Alternatively:
+
+pip install pyretis
 
 
 Building the documentation

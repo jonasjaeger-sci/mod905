@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This module handles random number generation.
 
 It derives most of the random number procedures from `RandomState` in
@@ -10,19 +10,18 @@ pseudo-random numbers.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RandomGeneratorBase
+RandomGeneratorBase (:py:class:`.RandomGeneratorBase`)
     An abstract base class for random number generators.
 
-RandomGenerator
+RandomGenerator (:py:class:`.RandomGenerator`)
     A class representing a random number generator.
 
-ReservoirSampler
+ReservoirSampler (:py:class:`.ReservoirSampler`)
     A class for reservoir sampling.
 
-MockRandomGenerator
+MockRandomGenerator (:py:class:`.MockRandomGenerator`)
     A non-random number generator which is useful for testing.
 """
-from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
 import logging
 import numpy as np
@@ -33,11 +32,16 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['RandomGenerator', 'ReservoirSampler', 'MockRandomGenerator']
+__all__ = [
+    'RandomGeneratorBase',
+    'RandomGenerator',
+    'ReservoirSampler',
+    'MockRandomGenerator'
+]
 
 
-class RandomGeneratorBase(object):
-    """RandomGeneratorBase - A base class for the generators
+class RandomGeneratorBase(metaclass=ABCMeta):
+    """A base class for random number generators.
 
     This is a base class for random number generators. It does not
     actually implement a generator.
@@ -47,8 +51,6 @@ class RandomGeneratorBase(object):
     seed : int
         A seed for the generator
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, seed=0):
         """Initiate the random number generator.
@@ -74,10 +76,20 @@ class RandomGeneratorBase(object):
         out : float
             Pseudo random number in [0, 1)
         """
-        return
+        pass
 
     @abstractmethod
-    def random_integers(self, low, high, size=None):
+    def get_state(self):
+        """Return info about the current state."""
+        pass
+
+    @abstractmethod
+    def set_state(self, state):
+        """Set state for random generator."""
+        pass
+
+    @abstractmethod
+    def random_integers(self, low, high):
         """Draw random integers in [low, high].
 
         Parameters
@@ -86,16 +98,13 @@ class RandomGeneratorBase(object):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
 
         Returns
         -------
         out : int
             The pseudo random integers in [low, high].
         """
-        return
+        pass
 
     @abstractmethod
     def normal(self, loc=0.0, scale=1.0, size=None):
@@ -116,7 +125,7 @@ class RandomGeneratorBase(object):
         out : float, numpy.array of floats
             The random numbers generated
         """
-        return
+        pass
 
     @abstractmethod
     def multivariate_normal(self, mean, cov, cho=None, size=1):
@@ -131,7 +140,7 @@ class RandomGeneratorBase(object):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns
@@ -139,7 +148,7 @@ class RandomGeneratorBase(object):
         out : float or numpy.array of floats size
             The random numbers drawn.
         """
-        return
+        pass
 
     def generate_maxwellian_velocities(self, particles, boltzmann, temperature,
                                        dof, selection=None, momentum=True):
@@ -159,7 +168,7 @@ class RandomGeneratorBase(object):
 
         Parameters
         ----------
-        particles : object like `Particles` from `pyretis.core.particles`
+        particles : object like :py:class:`.Particles`
             These are the particles to set the velocity of.
         boltzmann : float
             The Boltzmann factor in correct units.
@@ -203,7 +212,7 @@ class RandomGeneratorBase(object):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             This is used to determine the temperature parameter(s) and
             the shape (number of particles and dimensionality)
         sigma_v : numpy.array, optional
@@ -212,27 +221,25 @@ class RandomGeneratorBase(object):
         """
         if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
+            # sigma_v is (n, 1) matrix
             sigma_v = np.sqrt(kbt*system.particles.imass)
-        vel = self.normal(loc=0.0, scale=sigma_v,
-                          size=system.particles.vel.shape)
+        npart, dim = system.particles.vel.shape
+        vel = self.normal(loc=0.0, scale=sigma_v, size=(npart, dim))
         return vel, sigma_v
 
 
 class RandomGenerator(RandomGeneratorBase):
-    """RandomGenerator(RandomGeneratorBase) - A random number generator.
+    """A random number generator from numpy.
 
     This class that defines a random number generator. It will use
     `numpy.random.RandomState` for the actual generation, and we refer
-    to the numpy documentation [1]_. Here we could inherit from
-    RandomState but here we do not wish (?) to inherit from an old-style
-    class. That is the cause of some small functions here that will
-    actually just call the corresponding function from `RandomState`.
+    to the numpy documentation [1]_.
 
     Attributes
     ----------
     seed : int
         A seed for the pseudo-random generator.
-    rgen : object like `RandomState`
+    rgen : object like :py:class:`numpy.random.RandomState`
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy [#]_.
 
@@ -253,7 +260,7 @@ class RandomGenerator(RandomGeneratorBase):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        super(RandomGenerator, self).__init__(seed=seed)
+        super().__init__(seed=seed)
         self.rgen = RandomState(seed=seed)
 
     def rand(self, shape=1):
@@ -268,10 +275,23 @@ class RandomGenerator(RandomGeneratorBase):
         -------
         out : float
             Pseudo random number in [0, 1)
+
+        Note
+        ----
+        Here, we will just draw a list of numbers and not for
+        an arbitrary shape.
         """
         return self.rgen.rand(shape)
 
-    def random_integers(self, low, high, size=None):
+    def get_state(self):
+        """Return current state."""
+        return self.rgen.get_state()
+
+    def set_state(self, state):
+        """Set state for random generator."""
+        return self.rgen.set_state(state)
+
+    def random_integers(self, low, high):
         """Draw random integers in [low, high].
 
         Parameters
@@ -280,16 +300,18 @@ class RandomGenerator(RandomGeneratorBase):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
 
         Returns
         -------
         out : int
             The pseudo random integers in [low, high].
+
+        Note
+        ----
+        np.random.randint(low, high) is defined as drawing
+        from `low` (inclusive) to `high` (exclusive).
         """
-        return self.rgen.random_integers(low, high, size=size)
+        return self.rgen.randint(low, high + 1)
 
     def normal(self, loc=0.0, scale=1.0, size=None):
         """Return values from a normal distribution.
@@ -329,7 +351,7 @@ class RandomGenerator(RandomGeneratorBase):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns
@@ -350,7 +372,7 @@ class RandomGenerator(RandomGeneratorBase):
 
 
 class ReservoirSampler(object):
-    """ReservoirSampler - A class for reservoir sampling.
+    """A class representing a reservoir sampler.
 
     The reservoir sampler will maintains a list of `k` items drawn
     randomly from a set of `N > k` items. The list is created and
@@ -362,7 +384,7 @@ class ReservoirSampler(object):
 
     Attributes
     ----------
-    rgen : object like `RandomState`
+    rgen : object like :py:class:`numpy.random.RandomState`
         This is a container for the Mersenne Twister pseudo-random
         number generator as implemented in numpy, see the documentation
         of `RandomGenerator`.
@@ -391,7 +413,7 @@ class ReservoirSampler(object):
             An integer used for seeding the generator.
         length : int, optional
             The maximum number of items to store.
-        rgen : object like `RandomGenerator`.
+        rgen : object like :py:class:`.RandomGenerator`
             In case we want to re-use a random generator object.
             If this is specified, the parameter `seed` is ignored.
         """
@@ -441,7 +463,7 @@ class ReservoirSampler(object):
 
 
 class MockRandomGenerator(RandomGeneratorBase):
-    """MockRandomGenerator - A "fake" random generator.
+    """A **mock** random generator, useful **only for testing**.
 
     This class represents a random generator that can be used for
     testing algorithms. It will simply return numbers from a
@@ -457,7 +479,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         seed : int, optional
             An integer used for seeding the generator if needed.
         """
-        super(MockRandomGenerator, self).__init__(seed=seed)
+        super().__init__(seed=seed)
         self.rgen = [0.78008018, 0.04459916, 0.76596775, 0.97676713,
                      0.53799598, 0.98657116, 0.36343553, 0.55356511,
                      0.03172585, 0.48984682, 0.73416687, 0.98453452,
@@ -488,7 +510,15 @@ class MockRandomGenerator(RandomGeneratorBase):
             self.seed += 1
         return np.array(numbers)
 
-    def random_integers(self, low, high, size=None):
+    def get_state(self):
+        """Return current state."""
+        return self.seed
+
+    def set_state(self, state):
+        """Set current state."""
+        self.seed = state
+
+    def random_integers(self, low, high):
         """Return random integers in [low, high].
 
         Parameters
@@ -497,18 +527,12 @@ class MockRandomGenerator(RandomGeneratorBase):
             This is the lower limit
         high : int
             This is the upper limit
-        size : int or tuple of ints, optional
-            Output shape. Default is None, in which case a
-            single value is returned.
-
 
         Returns
         -------
         out : int
             This is a pseudo random integer in [low, high]
         """
-        if size is not None:
-            logger.warning('The mock generator does not use a size variable')
         idx = self.rand()*(high-low+1)
         return int(idx) + low
 
@@ -556,7 +580,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         cho : numpy.array (2D, (2, 2)), optional
             Cholesky factorization of cov. If not given,
             it will be calculated here.
-        size : int, optional.
+        size : int, optional
             Number of samples to do.
 
         Returns
@@ -585,7 +609,7 @@ def create_random_generator(settings):
 
     Returns
     -------
-    out : object like `RandomGenerator`
+    out : object like :py:class:`.RandomGenerator`
         The random generator created.
     """
     if 'seed' not in settings:

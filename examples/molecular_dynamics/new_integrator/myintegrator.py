@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of numerical integrators.
 
 These integrators are typically used to integrate and propagate
 Newtons equations of motion in time, the dynamics in molecular dynamics.
 """
-from __future__ import absolute_import
 import logging
-import numpy as np
-from pyretis.core.integrators import Integrator
+from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class VVIntegrator(Integrator):
-    """VVIntegrator(Integrator).
+class VVIntegrator(MDEngine):
+    """VVIntegrator(MDEngine).
 
     This class defines the Velocity Verlet integrator.
 
@@ -25,22 +23,22 @@ class VVIntegrator(Integrator):
         The time step.
     half_delta_t : float
         Half of timestep.
-    desc : string
+    description : string
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='The velocity verlet integrator'):
+    def __init__(self, timestep,
+                 description='The velocity verlet integrator'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        description : string
             Description of the integrator.
         """
-        super(VVIntegrator, self).__init__(timestep, desc=desc,
-                                           dynamics='NVE')
+        super().__init__(timestep, description, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):
@@ -48,7 +46,7 @@ class VVIntegrator(Integrator):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 
@@ -66,8 +64,9 @@ class VVIntegrator(Integrator):
         particles.vel += self.half_delta_t * particles.force * imass
         return None
 
-class Euler(Integrator):
-    """Euler(Integrator).
+
+class Euler(MDEngine):
+    """Euler(MDEngine).
 
     This class defines the Euler integrator.
 
@@ -77,22 +76,21 @@ class Euler(Integrator):
         The time step.
     half_delta_t : float
         Half of timestep.
-    desc : string
+    description : string
         Description of the integrator.
     """
 
-    def __init__(self, timestep, desc='The Euler integrator'):
+    def __init__(self, timestep, description='The Euler integrator'):
         """Initiate the Euler integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        desc : string
+        descriotion : string
             Description of the integrator.
         """
-        super(Euler, self).__init__(timestep, desc=desc,
-                                    dynamics='NVE?')
+        super().__init__(timestep, description, dynamics='NVE?')
         self.half_delta_tsq = 0.5 * self.delta_t**2
 
     def integration_step(self, system):
@@ -100,7 +98,7 @@ class Euler(Integrator):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 

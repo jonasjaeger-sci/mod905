@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods and classes for text based output and input.
 
 This file contains some methods and classes that handle output and
@@ -11,7 +11,7 @@ output.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-txt_save_columns
+txt_save_columns (:py:class:`.txt_save_columns`)
     For writing a simple column-based output using numpy.
 """
 import logging
@@ -25,7 +25,7 @@ __all__ = ['txt_save_columns']
 
 
 def txt_save_columns(outputfile, header, variables, backup=False):
-    """Save variables to a text file using `numpy.savetxt`.
+    """Save variables to a text file using ``numpy.savetxt``.
 
     Note that the variables are assumed to be numpy.arrays of equal
     shape and that the output file may also be a compressed file in

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """A collection of simple position dependent potentials.
 
 This module defines some potential functions which are useful
 as simple models.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
@@ -32,16 +31,16 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        l1 : float, optional.
+        l1 : float, optional
             Parameter for the potential.
-        l1 : float, optional.
+        l1 : float, optional
             Parameter for the potential.
         g : float, optional
             Parameter for the potential.
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
-        super(DoublePendulumn, self).__init__(dim=2, desc=desc)
+        super().__init__(dim=2, desc=desc)
         self.params = {'g': g, 'l1': l1, 'l2': l2}
         self.l1 = l1
         self.l2 = l2
@@ -52,7 +51,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -73,7 +72,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -120,7 +119,7 @@ class DoublePendulumn(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like `System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 

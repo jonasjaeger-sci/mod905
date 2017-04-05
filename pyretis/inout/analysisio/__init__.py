@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This package contains functions for input/output for the analysis.
 
 The functions defined here will typically run the analysis on the
@@ -13,23 +13,22 @@ Package structure
 Modules
 ~~~~~~~
 
-analysisio.py
+analysisio.py (:py:mod:`.analysisio`)
     Methods that will output results from the analysis functions.
     The methods defined here can also be used to run an analysis on
-    output files from pyretis.
+    output files from PyRETIS.
 
 __init__.py
-    This file, handles imports for pyretis.
+    This file, handles imports for PyRETIS.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_file
+analyse_file (:py:func:`.analyse_file`)
     Method to analyse a file.
 
-run_analysis_files
+run_analysis_files (:py:func:`.run_analysis_files`)
     Method to analyse simulation data in output files. This is a
     post-processing step.
 """
-from __future__ import absolute_import
 from .analysisio import analyse_file, run_analysis_files

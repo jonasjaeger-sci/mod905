@@ -1,10 +1,10 @@
-Extending pyretis with Fortran
+Extending PyRETIS with FORTRAN 
 ==============================
 
-This folder contains an example of extending pyretis with a new
-force field which is implemented in Fortran.
+This folder contains an example of extending PyRETIS with a new
+force field which is implemented in FORTRAN.
 
-The Fortran code must be compiled before it can be executed and this
+The FORTRAN code must be compiled before it can be executed and this
 is done by running ``make``.
 
 Note that you may have to edit the makefile depending on your version
@@ -13,4 +13,4 @@ have several python versions installed (perhaps you are running in a virtual
 environment) you may have to specify which f2py to use more explicitly, e.g.
 ``f2py3.5``.
 
-In this example we try to align the memory better for usage with Fortran.
+In this example we try to align the memory better for usage with FORTRAN.

@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
 import logging
-import numpy as np
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
-logger.addHandler(logging.NullHandler())
-# pyretis imports
-from pyretis.forcefield.potentials import PairLennardJonesCut
-from pyretis.forcefield.potentials.pairpotentials import generate_pair_interactions
-# Just to handle imports of the library:
 import sys
 import os
+import numpy as np
+from pyretis.forcefield.potentials import PairLennardJonesCut
+from pyretis.forcefield.potentials.pairpotentials import (
+    generate_pair_interactions
+)
+# Just to handle imports of the library:
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 try:
     import ljc
 except ImportError:
@@ -83,8 +86,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         mixing : string
             Determines how we should mix potential parameters.
         """
-        super(PairLennardJonesCutC, self).__init__(dim=dim, desc=desc,
-                                                   mixing=mixing)
+        super().__init__(dim=dim, desc=desc, mixing=mixing)
         self.ntype = 0
 
     def set_parameters(self, parameters):
@@ -131,12 +133,12 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we are evaluating the potential in.
 
         Returns
         -------
-        v_pot : float.
+        v_pot : float
             The potential energy.
         """
         particles = system.particles
@@ -157,7 +159,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we are evaluating the force in.
 
         Returns
@@ -187,7 +189,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we are evaluating the potential and force in.
 
         Note
@@ -201,7 +203,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         Returns
         -------
         out[0] : float
-            The potential energy as a float.
+            The potential energy as a float
         out[1] : numpy.array
             The force as a numpy.array of the same shape as the
             positions in `particles.pos`.

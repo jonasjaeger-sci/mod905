@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """A simple test module for parsing a settings input file.
 
 Here we test that we understand the input file and that fail in
 a predictable way.
 """
-from __future__ import absolute_import
 import logging
 import unittest
 from pyretis.core.system import System
+from pyretis.core.particles import Particles
 from pyretis.forcefield import ForceField, PotentialFunction
 logging.disable(logging.CRITICAL)
 
@@ -18,7 +18,7 @@ class TestPotential(PotentialFunction):
     """A potential function to use in tests."""
 
     def __init__(self, desc='Test potential'):
-        super(TestPotential, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'a': 10}
 
     def potential(self, system):
@@ -44,8 +44,9 @@ class TestForceField(unittest.TestCase):
     def test_forcefield_class(self):
         """Test functionality of the ForceField class."""
         system = System()
+        system.particles = Particles(dim=system.get_dim())
         system.add_particle(1.0)
-        forcefield = ForceField()
+        forcefield = ForceField('Generic testing force field')
         param1 = {'a': 1.0}
         pot1 = TestPotential()
         forcefield.add_potential(pot1, parameters=param1)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
 It contains some functions that is used when generating reports,
@@ -9,45 +9,40 @@ typically to format tables and numbers.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyretisLogFormatter
-    A class representing a formatter for the pyretis log file.
-
-PyretisLogFormatterDebug
-    A class representing a formatter for the pyretis log file with
-    some extra information/details for a debug log file.
+PyretisLogFormatter (:py:class:`.PyretisLogFormatter`)
+    A class representing a formatter for the PyRETIS log file.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-apply_format
+apply_format (:py:func:`.apply_format`)
     Apply a format string to a given value.
 
-check_python_version
+check_python_version (:py:func:`.check_python_version`)
     Method that will give warnings when we use older and untested
     versions of python.
 
-create_backup
+create_backup (:py:func:`.create_backup`)
     A function to handle the creation of backups of old files.
 
-make_dirs
+make_dirs (:py:func:`.make_dirs`)
     Create directories (for path simulation).
 
-print_to_screen
+print_to_screen (:py:func:`.print_to_screen`)
     A method used for printing to screen.
 """
-from __future__ import absolute_import, print_function
 import errno
 import os
 import re
 import sys
 import logging
+import colorama
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['apply_format', 'check_python_version', 'create_backup',
-           'make_dirs', 'print_to_screen', 'PyretisLogFormatter',
-           'PyretisLogFormatterDebug']
+           'make_dirs', 'print_to_screen', 'PyretisLogFormatter']
 
 
 # Hard-coded patters for energy analysis output files.
@@ -70,9 +65,9 @@ ENERTITLE = {'vpot': 'Potential energy',
 FLUXFILES = {'runflux': 'runflux_{}',
              'block': 'errflux_{}'}
 # order files:
-ORDERFILES = {'order': 'orderp',
-              'ordervel': 'orderpv',
-              'run_order': 'runorderp',
+ORDERFILES = {'order': 'order',
+              'ordervel': 'orderv',
+              'run_order': 'runorder',
               'dist': 'orderdist',
               'block': 'ordererror',
               'msd': 'ordermsd'}
@@ -88,8 +83,14 @@ PATHFILES = {'pcross': '{}_pcross',
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
 # hard-coded formats to use for Log files:
-LOG_DEBUG_FMT = '%(name)s: [%(levelname)s]: %(message)s'
 LOG_FMT = '[%(levelname)s]: %(message)s'
+LOG_DEBUG_FMT = '[%(levelname)s] [%(name)s.%(funcName)s()]: %(message)s'
+# colors for printing:
+COLORS = {'error': colorama.Fore.RED,
+          'info': colorama.Fore.BLUE,
+          'warning': colorama.Fore.YELLOW,
+          'message': colorama.Fore.CYAN,
+          'success': colorama.Fore.GREEN}
 
 
 def create_backup(outputfile):
@@ -219,27 +220,33 @@ def make_dirs(dirname):
             msg = '"{}" is a file. Will abort!'
             raise OSError(errno.EEXIST, msg, dirname)
         if os.path.isdir(dirname):
-            msg = 'Directory "{}" exist. Will re-use it!'.format(dirname)
+            msg = 'Directory "{}" already exist.'.format(dirname)
             return msg
 
 
-def print_to_screen(txt=None):
+def print_to_screen(txt=None, level=None):
     """Method to print output to standard out.
 
-    This method is included to ensure that output from pyretis to the
+    This method is included to ensure that output from PyRETIS to the
     screen is written out in a uniform way across the library and
     application(s).
 
     Parameters
     ----------
     txt : string
-        The text to write to the screen
+        The text to write to the screen.
+    level : string
+        The level can be used to color the output.
     """
     if txt is None:
         print()
     else:
         out = '{}'.format(txt)
-        print(out)
+        color = COLORS.get(level, None)
+        if color is None:
+            print(out)
+        else:
+            print(color + out)
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
@@ -334,43 +341,18 @@ def check_python_version():
     """Method that will give a warning about old python version(s)."""
     pyversion = sys.version.split()[0]
     if sys.version_info < (3, 0):
-        warntxt = ('Please upgrade to Python 3.'
-                   '\nPython 2.7 support will be dropped in the near future!')
-        warntxt = warntxt.format(pyversion)
-        logger.warning(warntxt)
-        if sys.version_info < (2.7):
-            msgtxt = ('Your version of Python is NOT and supported.'
-                      ' Please upgrade!')
-            logger.critical(msgtxt)
+        msgtxt = ('Please upgrade to Python 3.'
+                  '\nPython {} is not supported!')
+        msgtxt = msgtxt.format(pyversion)
+        logger.error(msgtxt)
+        raise SystemExit(msgtxt)
 
 
 class PyretisLogFormatter(logging.Formatter):
-    """Hardcoded formatter for pyretis log file.
+    """Hardcoded formatter for the PyRETIS log file.
 
-    This formatter is using a format of type:
-
-    ``'[%(levelname)s]: %(message)s'``
-
-    and is less verbose than the ``PyretisLogFormatterDebug``.
-    """
-    def format(self, record):
-        out = logging.Formatter.format(self, record)
-        shortname = record.name.split('.')[-1]
-        out = out.replace(record.name, shortname)
-        header, _ = out.split(record.message)
-        out = out.replace('\n', '\n' + ' ' * len(header))
-        return out
-
-
-class PyretisLogFormatterDebug(logging.Formatter):
-    """Hardcoded formatter for pyretis log.
-
-    This formatter is intended for usage when more debugging
-    information is needed with a format for logging as:
-
-    ``'%(name)s: [%(levelname)s]: %(message)s'``
-
-    so that information about modules will be printed out as well.
+    This formatter will just adjust multiline messages to have some
+    indentation
     """
     def format(self, record):
         out = logging.Formatter.format(self, record)
@@ -405,3 +387,25 @@ def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
         return fmtf.format(number)
     else:
         return fmte.format(number)
+
+
+def get_log_formatter(level):
+    """Helper function to select a log format.
+
+    Here, it is just used to get a slightly more verbose format for
+    the debug level.
+
+    Parameters
+    ----------
+    level : integer
+        This integer defines the log level.
+
+    Returns
+    -------
+    out : object like :py:class:`logging.Formatter`
+        An object that can be used as a formatter for a logger.
+    """
+    if level <= logging.DEBUG:
+        return PyretisLogFormatter(LOG_DEBUG_FMT)
+    else:
+        return PyretisLogFormatter(LOG_FMT)

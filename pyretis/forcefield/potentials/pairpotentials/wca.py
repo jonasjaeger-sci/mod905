@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This file contains a WCA double well potential.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DoubleWellWCA
+DoubleWellWCA (:py:class:`.DoubleWellWCA`)
     This class defines a n-dimensional Double Well potential.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
@@ -21,7 +20,7 @@ __all__ = ['DoubleWellWCA']
 
 
 class DoubleWellWCA(PotentialFunction):
-    r"""DoubleWellWCA(PotentialFunction).
+    r"""A double well potential.
 
     This class defines a n-dimensional Double Well potential.
     The potential energy (:math:`V_\text{pot}`) for a pair of particles
@@ -66,10 +65,10 @@ class DoubleWellWCA(PotentialFunction):
         ----------
         dim : int, optional
             Setting for the dimensionality of the potential
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
-        super(DoubleWellWCA, self).__init__(dim=dim, desc=desc)
+        super().__init__(dim=dim, desc=desc)
         self.params = {'height': 0.0,
                        'height4': 0.0,
                        'rwidth': 0.0,
@@ -141,7 +140,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -171,7 +170,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns
@@ -211,7 +210,7 @@ class DoubleWellWCA(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System` for `pyretis.core.system`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential in.
 
         Returns

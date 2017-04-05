@@ -4,12 +4,12 @@ TIS 1D example
 Simulation
 ----------
 task = tis
-steps = 20001
+steps = 20000
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
 ------
-units = lj
+units = reduced
 dimensions = 1
 temperature = 0.07
 
@@ -17,13 +17,13 @@ Box
 ---
 periodic = [False]
 
-Integrator
-----------
+Engine
+------
 class = Langevin
 timestep = 0.002
 gamma = 0.3
 high_friction = False
-seed = 10
+seed = 0
 
 TIS settings
 ------------
@@ -34,15 +34,18 @@ allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
 sigma_v = -1
-seed = 1
-initial_path = kick
+seed = 0
+
+Initial-path
+------------
+method = kick
 
 Particles
 ---------
 position = {'file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
-            'seed': 10}
+            'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
 type = [0]
@@ -63,5 +66,4 @@ Orderparameter
 class = OrderParameterPosition
 dim = x
 index = 0
-name = Position
 periodic = False

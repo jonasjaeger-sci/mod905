@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of a class for a simulation box.
 
 The simulation box handles the periodic boundaries if needed.
-It is typically referenced via the `system`, i.e. as `system.box`.
+It is typically referenced via the :py:class:`.System` class,
+i.e. as ``System.box``.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box (:py:class:`pyretis.core.box.Box`)
+Box (:py:class:`.Box`)
     Class for a simulation box.
 
 Examples
@@ -28,7 +29,7 @@ __all__ = ['Box']
 
 
 class Box(object):
-    """Box(object).
+    """Class representing a rectangular simulation box.
 
     This class defines a simple simulation box. The box will handle
     periodic boundaries if needed. A non-periodic dummy-box can be
@@ -60,13 +61,13 @@ class Box(object):
 
         Parameters
         ----------
-        size : list.
+        size : list
             The size of the box, can be given with `size[i] = length_i`
             which defines the box-length in dimension `i`. The box will
             then be assumed to have `size[i] = [0, length_i]`.
             Alternatively the boundaries can be defined explicitly:
             `size[i] = [low, high]`.
-        periodic : list, optional.
+        periodic : list, optional
             `periodic[i]` is `True` if periodic boundaries will be
             applied in dimension `i`. Default is `True` for each
             dimension in `size`.
@@ -126,6 +127,32 @@ class Box(object):
             The volume of the box.
         """
         return np.product(self.length)
+
+    def update_size(self, new_size):
+        """Update the box size.
+
+        Parameters
+        ----------
+        new_size : list, tuple, numpy.array, or other iterable.
+            The new box size.
+        """
+        if new_size is None:
+            logger.warning('Tried to update box with empty size! Ignored!')
+        else:
+            # For the rectangular box we'll handle two options
+            # 1) Just giving the lengths
+            if new_size.size <= 3:
+                for i in range(self.dim):
+                    self.length[i] = new_size[i]
+                    self.high[i] = self.low[i] + new_size[i]
+            else:
+                # 2) Giving vectors, here we are lazy and just pick out
+                # the diagonal:
+                diag = np.diagonal(new_size)
+                for i in range(self.dim):
+                    self.length[i] = diag[i]
+                    self.high[i] = self.low[i] + diag[i]
+            self.ilength = 1.0 / self.length
 
     def pbc_coordinate_dim(self, pos, dim):
         """Apply periodic boundaries to a selected dimension only.
@@ -213,7 +240,7 @@ class Box(object):
 
         Parameters
         ----------
-        distance : numpy.array with shape `(self.dim,)`.
+        distance : numpy.array with shape `(self.dim,)`
             A distance vector.
 
         Returns
@@ -248,3 +275,11 @@ class Box(object):
             msg = 'Dim: {}, Low: {}, high: {}, periodic: {}'
             boxstr.append(msg.format(i, low, high, periodic))
         return '\n'.join(boxstr)
+
+    def print_length(self):
+        """Return a string with box lengths. Can be used for output."""
+        return ' '.join(('{}'.format(i) for i in self.length))
+
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        return {'size': self.size, 'periodic': self.periodic}

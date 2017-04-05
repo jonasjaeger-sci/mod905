@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Histogram functions for data analysis.
 
 This module defines some simple functions for histograms.
@@ -8,14 +8,14 @@ This module defines some simple functions for histograms.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-histogram
+histogram (:py:func:`.histogram`)
     Create a histogram from given data.
 
-match_all_histograms
+match_all_histograms (:py:func:`.match_all_histograms`)
     Function to match histograms, for instance from an umbrella
     sampling simulation.
 
-histogram_and_avg
+histogram_and_avg (:py:func:`.histogram_and_avg`)
     Create histogram an return bins, midpoints and simple statistics.
 """
 
@@ -138,7 +138,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
         This is the bin mid-points of the histograms. Note that we
         assume here that `histo1` and `histo2` are obtained using the
         same number of bins and limits.
-    overlap : object like list (or tuple or numpy.array).
+    overlap : object like list, tuple or numpy.array
         This is the overlapping region.
 
     Returns
@@ -174,7 +174,7 @@ def match_all_histograms(histograms, umbrellas):
     -------
     histograms_s : list of numpy.arrays
         The scaled histograms.
-    scale_factor : list of floats.
+    scale_factor : list of floats
         The scale factors.
     matched_count : numpy.array
         Count for overall matched histogram - a "averaged" histogram.

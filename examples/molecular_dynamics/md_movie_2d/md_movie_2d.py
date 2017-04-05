@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
 In this example we animate the output.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
-# pyretis imports:
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
-from pyretis.inout.settings import (create_force_field, create_system,
-                                    create_output, create_simulation)
+from pyretis.inout.setup import (create_force_field, create_system,
+                                 create_engine, create_output_tasks,
+                                 create_simulation)
 # imports for the plotting:
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -24,8 +25,8 @@ settings['system'] = {'temperature': 1.0, 'dimensions': 2,
 settings['box'] = {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
                    'periodic': [True, True]}
 settings['simulation'] = {'task': 'md-nve', 'steps': 950}
-settings['integrator'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': False,
+settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
+settings['output'] = {'backup': 'overwrite',
                       'write_vel': False,
                       'energy-file': 1,
                       'energy-screen': 10,
@@ -47,9 +48,10 @@ ljsystem.forcefield = create_force_field(settings)
 ljsystem.particles.pos -= (np.average(ljsystem.particles.pos, axis=0) -
                            0.5 * ljsystem.box.length)  # center in box
 print('# Creating simulation from settings.')
-simulation_nve = create_simulation(settings, ljsystem)
+kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
+simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
-outputs = [task for task in create_output(settings)]
+outputs = [task for task in create_output_tasks(settings)]
 size = ljsystem.box.size
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'
@@ -63,7 +65,7 @@ npart = float(npart)
 # In effect animation.FuncAnimation will run the simulation one step,
 # update the plot and display it and continue this loop until the
 # simulation is done.
-timeunit = (settings['integrator']['timestep'] *
+timeunit = (settings['engine']['timestep'] *
             CONVERT['time'][UNIT, 'fs'])
 timeendfs = settings['simulation']['steps'] * timeunit
 time, step, v_pot, e_kin, e_tot, temperature = [], [], [], [], [], []
@@ -114,7 +116,7 @@ ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
 # Add second axis for plotting the energies
 ax2 = fig.add_subplot(122)
 ax2.set_xlim(0, timeendfs)
-ax2.set_ylim(-0.25, 0.25)
+ax2.set_ylim(-0.05, 0.25)
 ax2.set_xlabel('Time / fs')
 ax2.set_ylabel('Energy / (kcal/mol)')
 time_text = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
@@ -193,9 +195,9 @@ def update(frame, sim, output_tasks):
     ----------
     frame : int
         The current frame number, supplied by `animation.FuncAnimation`.
-    sim : object like `Simulation`.
+    sim : object like `Simulation`
         The simulation we are running.
-    output_tasks : list of objects like `OutputTask`.
+    output_tasks : list of objects like `OutputTask`
         A list of output tasks to perform during the simulation.
 
     Returns
@@ -237,9 +239,9 @@ def update(frame, sim, output_tasks):
         # update plots with energies:
         linepot.set_data(time, (np.array(v_pot) - v_pot[0]))
         patches.append(linepot)
-        linekin.set_data(time, (np.array(e_kin) - e_kin[0]))
+        linekin.set_data(time, (np.array(e_kin)))
         patches.append(linekin)
-        linetot.set_data(time, (np.array(e_tot) - e_tot[0]))
+        linetot.set_data(time, (np.array(e_tot) - v_pot[0]))
         patches.append(linetot)
         # also display current simulation time;
         time_text.set_text('Time: {0:6.2f} fs (frame: {1})'.format(time[-1],

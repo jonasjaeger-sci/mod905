@@ -2,21 +2,19 @@ Extending pyretis with a new force field
 ========================================
 
 This folder contains an example on how pyretis can be extended with a new
-force field implemented in C or Fortran.
+force field implemented in C or FORTRAN.
 
 The sub-folders are:
 
-* ``c``: Lennard-Jones implementation in C for python2.7
-
 * ``c-python3``: Lennard-Jones implementation in C for python3
 
-* ``fortran``: Lennard-Jones implementation in Fortran.
+* ``fortran``: Lennard-Jones implementation in FORTRAN.
 
-* ``fortran-pointer``: Lennard-Jones implementation in Fortran, with
+* ``fortran-pointer``: Lennard-Jones implementation in FORTRAN, with
   better memory alignment.
 
 The examples in C are compiled with ``python setup.py build_ext --inplace``
-while the Fortran examples can be compiled with the makefiles in the folders.
+while the FORTRAN examples can be compiled with the makefiles in the folders.
 Note that you may have to specify which ``f2py`` to use (e.g. ``f2py``, ``f2py3``,
 ``f2py3.5``).
 

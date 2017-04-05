@@ -1,45 +1,54 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
 This system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.writers import FileIO, ThermoTable
-from pyretis.inout.settings import (create_system, create_simulation,
-                                    create_force_field, create_output)
+from pyretis.inout.setup import (create_system, create_simulation,
+                                 create_engine, create_force_field,
+                                 create_output_tasks)
 # for plotting:
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
-settings = {'task': 'md-nve',
-            'units': 'lj',
-            'integrator': {'class': 'VelocityVerletF', 'args': [0.002],
-                           'module': 'vvintegratorf.py'},
-            'steps': 1000,
-            'output-modify': [{'name': 'traj', 'when': {'every': 1},
-                               'filename': 'traj.gro'}],
-            'particles-velocity': {'generate': 'maxwell', 'momentum': True,
-                                   'seed': 0},
-            'temperature': 2.0,
-            'potentials': [{'class': 'PairLennardJonesCutnp', 'dim': 3,
-                            'shift': True}],
-            'potential-parameters': [{0: {'sigma': 1.0, 'epsilon': 1.0,
-                                          'rcut': 2.5}}],
-            'particles-position': {'generate': 'fcc', 'repeat': [3, 3, 3],
-                                   'density': 0.9}}
-
-create_conversion_factors(settings['units'])
+settings = {}
+settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
+settings['system'] = {'units': 'lj', 'temperature': 2.0,
+                      'dimensions': 3}
+settings['engine'] = {'class': 'VelocityVerletF',
+                      'delta_t': 0.002,
+                      'module': 'vvintegratorf.py'}
+settings['output'] = {'backup': 'overwrite',
+                      'write_vel': False,
+                      'energy-file': 1,
+                      'energy-screen': 10,
+                      'trajectory-file': 1}
+settings['potential'] = [{'class': 'PairLennardJonesCutnp', 'dim': 3,
+                          'shift': True,
+                          'parameter': {0: {'sigma': 1,
+                                            'epsilon': 1,
+                                            'factor': 2.5}}}]
+settings['particles'] = {'position': {'generate': 'fcc',
+                                      'repeat': [3, 3, 3],
+                                      'density': 0.9},
+                         'velocity': {'generate': 'maxwell',
+                                      'momentum': True,
+                                      'seed': 0}}
+create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 print('# Creating simulation from settings.')
-simulation_nve = create_simulation(settings, ljsystem)
+sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
+simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
-output_tasks = [task for task in create_output(settings)]
+output_tasks = [task for task in create_output_tasks(settings)]
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 

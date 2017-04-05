@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test the C implementation of the Lennard Jones potential.
 
 This test is comparing the three versions of the Lennard Jones
@@ -11,10 +13,9 @@ potential:
 3) The C implementation.
 """
 # pylint: disable=C0103
-from __future__ import print_function
 import unittest
 import numpy as np
-from pyretis.core import System, Box
+from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCut
@@ -31,6 +32,7 @@ def set_up_initial_state():
     lattice += np.random.randn(npart, 3) * 0.05
     box = Box(size, periodic=[True, True, True])
     system = System(temperature=1.0, units='lj', box=box)
+    system.particles = Particles(dim=3)
     for pos in lattice:
         system.add_particle(name='Ar', pos=pos, mass=1.0, ptype=0)
     msg = 'Created lattice with {} atoms.'
@@ -42,27 +44,27 @@ def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
     # Calculate with C:
     potential_ext = PairLennardJonesCutC(dim=3, shift=True)
-    forceField_ext = ForceField(potential=[potential_ext],
-                                params=[parameters],
-                                desc='Python + C')
+    forceField_ext = ForceField('Python + external c force field',
+                                potential=[potential_ext],
+                                params=[parameters])
     system.forcefield = forceField_ext
     print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
     vpot_ext, forces_ext, virial_ext = system.potential_and_force()
     vpot_ext /= float(system.particles.npart)
     # Calculate with pure python implementation:
     potential = PairLennardJonesCut(dim=3, shift=True)
-    forcefield = ForceField(potential=[potential],
-                            params=[parameters],
-                            desc='Python (vanilla)')
+    forcefield = ForceField('Pure Python force field',
+                            potential=[potential],
+                            params=[parameters])
     system.forcefield = forcefield
     print('Evaluating with: {}'.format(forcefield.print_potentials()))
     vpot, forces, virial = system.potential_and_force()
     vpot /= float(system.particles.npart)
     # Calculate with numpy python implementation:
     potentialnp = PairLennardJonesCutnp(dim=3, shift=True)
-    forcefieldnp = ForceField(potential=[potentialnp],
-                              params=[parameters],
-                              desc='Python (Numpy)')
+    forcefieldnp = ForceField('Python force field with numpy',
+                              potential=[potentialnp],
+                              params=[parameters])
     system.forcefield = forcefieldnp
     print('Evaluating with: {}'.format(forcefieldnp.print_potentials()))
     vpotnp, forcesnp, virialnp = system.potential_and_force()
@@ -104,8 +106,7 @@ class LennardJonesTest(unittest.TestCase):
         print('\nTesting for a two-component mixture')
         system = set_up_initial_state()
         param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5},
-                 'mixing': 'geometric'}
+                 1: {'sigma': 2.0, 'epsilon': 1.2, 'rcut': 3.5}}
         idx = [i for i in range(system.particles.npart)]
         idx2 = np.random.choice(idx, size=int(system.particles.npart * 0.5),
                                 replace=False)
@@ -133,11 +134,10 @@ class LennardJonesTest(unittest.TestCase):
 
     def test_lj_multi_mix(self):
         """Test for multi-mixture."""
-        ncomp = np.random.random_integers(3, high=10)
+        ncomp = np.random.randint(3, 11)
         print('\nTesting for a {}-component mixture'.format(ncomp))
         system = set_up_initial_state()
-        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5},
-                 'mixing': 'geometric'}
+        param = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
         maxcut = 0.5 * min(system.box.length)
         self.assertGreaterEqual(maxcut, param[0]['rcut'])
 
@@ -153,7 +153,7 @@ class LennardJonesTest(unittest.TestCase):
         natoms = {}
         for i in range(system.particles.npart):
             ptype = system.particles.ptype[i]
-            if not ptype in natoms:
+            if ptype not in natoms:
                 natoms[ptype] = 0
             natoms[ptype] += 1
         for atom in natoms:

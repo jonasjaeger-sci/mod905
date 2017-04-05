@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Definition of the base class for the plotter.
 
 This module just defines a base class for plotters. This is just to
@@ -10,7 +10,7 @@ can make use of them.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Plotter
+Plotter (:py:class:`.Plotter`)
     A generic class for creating plots.
 """
 from abc import ABCMeta, abstractmethod
@@ -18,8 +18,8 @@ from abc import ABCMeta, abstractmethod
 __all__ = ['Plotter']
 
 
-class Plotter(object):
-    """Class Plotter(object).
+class Plotter(metaclass=ABCMeta):
+    """Base class for PyRETIS plotters.
 
     This class defines a plotter. A plotter is just a object
     that supports certain functions which can be called by analysis
@@ -36,8 +36,6 @@ class Plotter(object):
     out_dir : string, optional
         Defines an output directory for the plotter.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, backup=True, plotter_type=None, out_dir=None):
         """Initiate the plotting object.

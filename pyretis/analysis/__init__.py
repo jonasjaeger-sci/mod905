@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
-"""This package defines analysis tools for the pyretis program.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""This package defines analysis tools for the PyRETIS program.
 
 The analysis tools are intended to be used for analysis of the
-simulation output from the pyretis program. The typically use of this
+simulation output from the PyRETIS program. The typically use of this
 package is in post-processing of the results from a simulation (or
 several simulations).
 
@@ -20,59 +20,59 @@ __init__.py
     make use of analysis tools from `energy_analysis.py` and
     `order_analysis.py`.
 
-analysis.py
+analysis.py (:py:mod:`pyretis.analysis.analysis`)
     General methods for numerical analysis.
 
-energy_analysis.py
+energy_analysis.py (:py:mod:`pyretis.analysis.energy_analysis`)
     Defines methods useful for analysing the energy output.
 
-histogram.py
+histogram.py (:py:mod:`pyretis.analysis.histogram`)
     Defines methods useful for generating histograms.
 
-order_analysis.py
+order_analysis.py (:py:mod:`pyretis.analysis.order_analysis`)
     Defines methods useful for analysis of order parameters.
 
-path_analysis.py
+path_analysis.py (:py:mod:`pyretis.analysis.path_analysis`)
     Defines methods for analysis of path ensembles.
 
 Important methods defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-analyse_energies
+analyse_energies (:py:func:`.analyse_energies`)
     Analyse energy data from a simulation. It will calculate a running
     average, a distribution and do a block error analysis.
 
-analyse_flux
+analyse_flux (:py:func:`.analyse_flux`)
     Analyse flux data from a MD flux simulation. It will calculate a
     running average, a distribution and do a block error analysis.
 
-analyse_orderp
+analyse_orderp (:py:func:`.analyse_orderp`)
     Analyse order parameter data. It will calculate a running average,
     a distribution and do a block error analysis. In addition if will
     analyse the mean square displacement (if requested).
 
-analyse_path_ensemble:
+analyse_path_ensemble (:py:func:`.analyse_path_ensemble`)
     Analyse the results from a single path ensemble. It will calculate
     a running average of the probabilities, a crossing probability,
     perform an block error analysis, analyse lengths of paths,
     type of Monte Carlo moves and calculate an efficiency.
 
-match_probabilities
+match_probabilities (:py:func:`.match_probabilities`)
     Method to match probabilities from several path simulations.
     Useful for obtaining the overall crossing probability.
 
-histogram
+histogram (:py:func:`.histogram`)
     Generates histogram, basically a wrapper around
     numpy's ``histogram``.
 
-match_all_histograms
+match_all_histograms (:py:func:`.match_all_histograms`)
     Method to match histograms from umbrella simulations.
 
-retis_flux
-    To obtain initial flux for RETIS simulations.
+retis_flux (:py:func:`.retis_flux`)
+    Method for calculating the initial flux for RETIS simulations.
 
-retis_rate
-    To obtain rate constant for RETIS simulations.
+retis_rate (:py:func:`.retis_rate`)
+    Method for calculating the rate constant for RETIS simulations.
 """
 from .analysis import running_average, block_error, block_error_corr
 from .energy_analysis import analyse_energies

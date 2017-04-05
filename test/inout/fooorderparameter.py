@@ -1,30 +1,26 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Dummy order parameter for running tests."""
-from pyretis.core.orderparameter import OrderParameter
-
-
-__all__ = []
+from pyretis.orderparameter import OrderParameter
 
 
 class FooOrderParameter(OrderParameter):
     """FooOrderParameter(OrderParameter) - Dummy order parameter for tests."""
-
     def __init__(self, name, desc='Dummy order parameter'):
-        super(FooOrderParameter, self).__init__(name, desc=desc)
+        super().__init__(description=desc)
 
 
 class BarOrderParameter(object):
-    """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    """BarOrderParameter(object) - Dummy order parameter for tests."""
+    def __init__(self, description='Dummy test order parameter'):
+        self.description = description
 
 
 class BazOrderParameter(object):
-    """FailingIntegrator(object) - Dummy integrator for tests."""
-    def __init__(self, desc='Dummy test integrator'):
-        self.desc = desc
+    """BazOrderParameter(object) - Dummy order parameter for tests."""
+    def __init__(self, description='Dummy test order parameter'):
+        self.description = description
 
     def calculate(self, system):
-        raise NotImplementedError
+        pass

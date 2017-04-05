@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Example of using a integration routine implemented in Fortran."""
-from __future__ import absolute_import
-from __future__ import print_function
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Example of using a integration routine implemented in FORTRAN."""
 import logging
+from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# pyretis imports
-from pyretis.core.integrators import Integrator
 try:
     from vvintegrator import vvintegrator
 except ImportError:
-    MSG = ('Could not import external Fortran library.'
+    MSG = ('Could not import external FORTRAN library.'
            '\nPlease compile with "make"!')
     logger.critical(MSG)
     raise ImportError(MSG)
@@ -19,8 +18,8 @@ except ImportError:
 __all__ = ['VelocityVerletF']
 
 
-class VelocityVerletF(Integrator):
-    """VelocityVerletF(Integrator).
+class VelocityVerletF(MDEngine):
+    """VelocityVerletF(MDEngine).
 
     This class defines the Velocity Verlet integrator.
 
@@ -35,7 +34,7 @@ class VelocityVerletF(Integrator):
     """
 
     def __init__(self, delta_t,
-                 desc='The velocity verlet integrator (Fortran)'):
+                 desc='The velocity verlet integrator (FORTRAN)'):
         """Initiate the Velocity Verlet integrator.
 
         Parameters
@@ -45,8 +44,7 @@ class VelocityVerletF(Integrator):
         desc : string
             Description of the integrator.
         """
-        super(VelocityVerletF, self).__init__(delta_t, desc=desc,
-                                              dynamics='NVE')
+        super().__init__(delta_t, desc, dynamics='NVE')
         self.half_delta_t = self.delta_t * 0.5
 
     def integration_step(self, system):

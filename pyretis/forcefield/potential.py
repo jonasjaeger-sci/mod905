@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Define the class for a generic potential function.
 
 This module defines the generic class for potential functions.
-This cass is sub-classed in all potential functions.
+This class is sub-classed in all potential functions.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PotentialFunction
+PotentialFunction (:py:class:`.PotentialFunction`)
     A class for representing generic potential functions.
 """
 import logging
@@ -21,7 +21,7 @@ __all__ = ['PotentialFunction']
 
 
 class PotentialFunction(object):
-    """PotentialFunction(object).
+    """Base class for a generic potential function.
 
     Generic class for potential functions.
 
@@ -41,10 +41,11 @@ class PotentialFunction(object):
 
         Parameters
         ----------
-        dim : int, optional.
+        dim : int, optional
             Represents the dimensionality.
-        desc : string, optional.
-            Description of the force field.
+        desc : string, optional
+            Description of the potential function. Used to print out
+            information about the potential.
         """
         self.dim = dim
         self.desc = desc

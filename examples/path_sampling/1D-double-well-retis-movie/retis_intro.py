@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2016, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """This is a simple RETIS example.
 
 Here we do nothing fancy, we will just get to know
-some of the objects in pyretis.
+some of the objects in PyRETIS.
 
 Have fun!
 """
-from pyretis.core import System, Box
-from pyretis.inout.settings import (create_force_field,
-                                    create_orderparameter, create_simulation)
+from pyretis.core import System, Box, Particles
+from pyretis.initiation import initiate_path_simulation
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_orderparameter, create_simulation)
 import numpy as np
 
 # Let us define the simulation:
@@ -22,20 +23,20 @@ SETTINGS['simulation'] = {'task': 'retis',
                                          -0.6, -0.5, -0.4,
                                          -0.3, 1.0]}
 # Basic settings for the system:
-SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
+SETTINGS['system'] = {'units': 'reduced', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
-SETTINGS['integrator'] = {'class': 'Langevin',
-                          'gamma': 0.3,
-                          'high_friction': False,
-                          'seed': 0,
-                          'timestep': 0.002}
+SETTINGS['engine'] = {'class': 'Langevin',
+                      'gamma': 0.3,
+                      'high_friction': False,
+                      'seed': 0,
+                      'timestep': 0.002}
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
                           'class': 'DoubleWell'}]
 # Settings for the order parameter:
 SETTINGS['orderparameter'] = {'class': 'OrderParameterPosition',
-                              'dim': 'x', 'index': 0, 'name': 'Position',
+                              'dim': 'x', 'index': 0,
                               'periodic': False}
 # TIS specific settings:
 SETTINGS['tis'] = {'freq': 0.5,
@@ -45,8 +46,8 @@ SETTINGS['tis'] = {'freq': 0.5,
                    'sigma_v': -1,
                    'seed': 0,
                    'zero_momentum': False,
-                   'rescale_energy': False,
-                   'initial_path': 'kick'}
+                   'rescale_energy': False}
+SETTINGS['initial-path'] = {'method': 'kick'}
 # RETIS specific settings:
 SETTINGS['retis'] = {'swapfreq': 0.5,
                      'relative_shoots': None,
@@ -64,7 +65,7 @@ def set_up_system(settings):
 
     Returns
     -------
-    sys : object like System from pyretis.core
+    sys : object like :py:class:`.System`
         A system object we can use in a simulation.
     """
     box = Box(periodic=[False])
@@ -72,6 +73,7 @@ def set_up_system(settings):
                  units=settings['system']['units'], box=box)
     sys.forcefield = create_force_field(settings)
     sys.order_function = create_orderparameter(settings)
+    sys.particles = Particles(dim=1)
     sys.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
     return sys
 
@@ -93,7 +95,7 @@ def print_step_results(ensembles, retis_result):
         accepted = result[1]
         print('\tType: {}'.format(name_of_move))
         if name_of_move == 'swap':
-            name2 = ensembles[result[2]].ensemble_name
+            name2 = ensembles[result[-1]].ensemble_name
             print('\tSwapping: {} -> {}'.format(name2, name))
         elif name_of_move == 'tis':
             trial_path = result[2]
@@ -112,13 +114,14 @@ def main():
     print('# CREATING SYSTEM...')
     system = set_up_system(SETTINGS)
     print('# CREATING SIMULATION...')
-    simulation = create_simulation(SETTINGS, system)
+    sim_args = {'system': system, 'engine': create_engine(SETTINGS)}
+    simulation = create_simulation(SETTINGS, sim_args)
     print(simulation)
     print('# INITIATING TRAJECTORIES...')
-    simulation.step()  # Run the first step of the simulation:
-    # Let us look at the resulting path ensembles and paths:
+
     ensembles = simulation.path_ensembles
-    for ensemble in ensembles:
+    for i, _ in enumerate(initiate_path_simulation(simulation, SETTINGS)):
+        ensemble = ensembles[i]
         name = ensemble.ensemble_name
         print('Info about ensemble {}:'.format(name))
         print(ensemble)
@@ -130,9 +133,9 @@ def main():
     path = ensembles[2].last_path
     first = True
     for i, point in enumerate(path.trajectory()):
-        order = point[0][0]
-        pos = point[1]
-        vel = point[2]
+        order = point['order'][0]
+        pos = point['pos']
+        vel = point['vel']
         if order > -0.8 and first:
             print('First crossing of -0.8 for [1^+]:')
             print('\tStep: {}'.format(i))
@@ -163,7 +166,7 @@ def main():
             # If this is the case, the result is on the form
             # [move, accpeted, swap-with] where swap-with is the ensemble
             # we are trying to swap with.
-            name2 = ensembles[retis_result[2]].ensemble_name
+            name2 = ensembles[retis_result[-1]].ensemble_name
             print('\tSwapping: {} -> {}'.format(name2, name))
         elif name_of_move == 'tis':
             trial_path = retis_result[2]
@@ -176,9 +179,7 @@ def main():
             print('\tTIS move: {}'.format(tis_move))
         print('\tResult: {}'.format(accepted))
 
-    # Let us just run the rest of the simulation.
-    # But first create a function to output results, i.e.
-    # write the code for the method `print_step_results`.
+    # Run the rest of the simulation:
     while not simulation.is_finished():
         result = simulation.step()
         print('Simulation step: {}'.format(result['cycle']['step']))

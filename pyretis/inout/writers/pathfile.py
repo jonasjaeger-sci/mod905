@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Methods and classes for input/output of path data.
 
 This module defines classes for writing path ensemble data.
@@ -8,15 +8,13 @@ This module defines classes for writing path ensemble data.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PathEnsembleWriter
+PathEnsembleWriter (:py:class:`.PathEnsembleWriter`)
     Writing/reading of path ensemble data.
 
-PathEnsembleFile
+PathEnsembleFile (:py:class:`.PathEnsembleFile`)
     Reading of path ensemble data. Mainly used for analysis.
 """
 import logging
-# pyretis imports:
-from pyretis.core.path import PathBase
 from pyretis.core.pathensemble import PathEnsemble
 from pyretis.inout.writers.writers import Writer
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -26,41 +24,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PathEnsembleWriter', 'PathEnsembleFile']
 
 
-def _line_to_path_object(line):
-    """Convert a text line to a `Path` object.
-
-    Parameters
-    ----------
-    line : string
-        The line of text to convert.
-
-    Returns
-    -------
-    out : object like `Path` from `pyretis.core.path`
-        The path created from the given input text.
-
-    Note
-    ----
-    TODO: This method is considered for deletion - is it going to be
-    useful or are we always going to create path data (rather than Path
-    objects) when we read files? It might be useful in the future for
-    restart files.
-    """
-    path = PathBase(None)
-    data = line.split()
-    path.ordermin = (float(data[9]), 0)
-    path.ordermax = (float(data[10]), -1)
-    path.path = [None] * int(data[6])
-    path.path[0] = [None, path.ordermin[0]]
-    path.path[-1] = [None, path.ordermax[0]]
-    path.status = str(data[7])
-    path.generated = [str(data[8]), float(data[13]),
-                      int(data[14]), int(data[15])]
-    return path
-
-
 class PathEnsembleWriter(Writer):
-    """PathEnsembleWriter(Writer) - A class for path ensemble data.
+    """A class for writing path ensemble data.
 
     This class handles writing/reading of path ensemble data to a file.
 
@@ -87,7 +52,7 @@ class PathEnsembleWriter(Writer):
                 '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
                 '{13:>16.9e} {14:>7d} {15:7d}')
 
-    def __init__(self, ensemble, interfaces):
+    def __init__(self):
         """Initialize the `PathEnsembleWriter`.
 
         Parameters
@@ -108,10 +73,7 @@ class PathEnsembleWriter(Writer):
                              'O-shoot', 'Idx-sh', 'Idx-shN'],
                   'width': [10, 10, 10, 1, 1, 1, 7, 3, 2, 16, 16, 7, 7,
                             16, 7, 7]}
-        super(PathEnsembleWriter, self).__init__('PathEnsembleWriter',
-                                                 header=header)
-        self.ensemble = ensemble  # Check if this can be deleted
-        self.interfaces = interfaces  # Check if this can be deleted
+        super().__init__('PathEnsembleWriter', header=header)
 
     @staticmethod
     def line_parser(line):
@@ -165,7 +127,7 @@ class PathEnsembleWriter(Writer):
 
         Yields
         ------
-        out : object like `Path` from `pyretis.core.path`
+        out : object like :py:class:`.Path`
             The current path in the file.
         """
         try:
@@ -182,31 +144,24 @@ class PathEnsembleWriter(Writer):
             logger.critical(msg)
             raise
 
-    def generate_output(self, cycle, path_ensemble, path=None):
+    def generate_output(self, cycle, path_ensemble):
         """Generate the output for the path ensemble writer
 
-        If the path is not explicitly given, the latest path from the
-        path ensemble will be written.
+        The latest path from the path ensemble will be written.
 
         Parameters
         ----------
         cycle : integer
             This is the current cycle number.
-        path_ensemble : object like `PathEnsemble` from `pyretis.core.path`
-            We will write the path defined by PathEnsemble.paths[-1]
-        path : object like `Path` from `pyretis.core.path`
-            This is the path to write to the file.
+        path_ensemble : object like :py:class:`.PathEnsemble`
+            We will write the path defined by ``PathEnsemble.paths[-1]``
 
         Yields
         ------
         out : string
             The line(s) to be written
         """
-        if path is None:
-            path_dict = path_ensemble.paths[-1]
-        else:
-            path_dict = path.get_path_data(path.status,
-                                           path_ensemble.interfaces)
+        path_dict = path_ensemble.paths[-1]
 
         interface_list = []
         for val in path_dict['interface']:
@@ -235,7 +190,7 @@ class PathEnsembleWriter(Writer):
 
 
 class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
-    """Class PathEnsembleFile(PathEnsemble, PathEnsembleWriter)
+    """A class for writing path ensemble data to files.
 
     This class is intended to mimic the `PathEnsemble` class but
     using files. It overloads the `get_paths()` from the PathEnsemble
@@ -255,8 +210,8 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
 
     def __init__(self, filename, ensemble, interfaces, detect=None):
         """Initiate the `PathEnsembleFile`."""
-        super(PathEnsembleFile, self).__init__(ensemble, interfaces,
-                                               detect=detect)
+        PathEnsemble.__init__(self, ensemble, interfaces, detect=detect)
+        PathEnsembleWriter.__init__(self)
         self.filename = filename
 
     def get_paths(self):
@@ -265,7 +220,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
             yield path
 
     def to_path_ensemble(self):
-        """Read a file and return a pure `PathEnsemble` object.
+        """Read a file and return a pure :py:class:`.PathEnsemble` object.
 
         This will read an entire file and return a path ensemble object.
         Note that this might not be the fastest way of using the path
@@ -275,7 +230,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
 
         Returns
         -------
-        out : object like `PathEnsemble` from `pyretis.core.path`
+        out : object like :py:class:`.PathEnsemble`
             The path ensemble read from the file.
         """
         path_ensemble = PathEnsemble(self.ensemble, self.interfaces,

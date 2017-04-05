@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """Test the Box class from pyretis.core"""
 import logging
 import unittest
 import numpy as np
-from pyretis.core import System, Box
-from pyretis.inout.settings import (create_force_field,
-                                    create_orderparameter, create_simulation)
+from pyretis.core import System, Box, Particles
+from pyretis.initiation import initiate_path_simulation
+from pyretis.inout.setup import (create_force_field, create_engine,
+                                 create_simulation)
 logging.disable(logging.CRITICAL)
 
 
@@ -30,15 +31,16 @@ def prepare_test_simulation():
     # Basic settings for the simulation:
     settings['simulation'] = {'task': 'tis',
                               'steps': 10,
+                              'exe-path': '',
                               'interfaces': [-0.9, -0.9, 1.0]}
     settings['system'] = {'units': 'lj', 'temperature': 0.07}
     # Basic settings for the Langevin integrator:
-    settings['integrator'] = {'class': 'Langevin',
-                              'gamma': 0.3,
-                              'high_friction': False,
-                              'seed': 1,
-                              'rgen': 'mock',
-                              'timestep': 0.002}
+    settings['engine'] = {'class': 'Langevin',
+                          'gamma': 0.3,
+                          'high_friction': False,
+                          'seed': 1,
+                          'rgen': 'mock',
+                          'timestep': 0.002}
     # Potential parameters:
     # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
     settings['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
@@ -56,21 +58,23 @@ def prepare_test_simulation():
                        'seed': 1,
                        'rgen': 'mock',
                        'zero_momentum': False,
-                       'rescale_energy': False,
-                       'initial_path': 'kick'}
+                       'rescale_energy': False}
+    settings['initial-path'] = {'method': 'kick'}
 
     box = Box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
+    system.particles = Particles(dim=system.get_dim())
     system.forcefield = create_force_field(settings)
-    system.order_function = create_orderparameter(settings)
     system.add_particle(np.array([-1.0]), mass=1, name='Ar', ptype=0)
-    simulation = create_simulation(settings, system)
+    engine = create_engine(settings)
+    kwargs = {'system': system, 'engine': engine}
+    simulation = create_simulation(settings, kwargs)
     # here we do a hack so that the simulation and langevin integrator
     # both use the same random generator:
-    simulation.rgen = simulation.integrator.rgen
+    simulation.rgen = simulation.engine.rgen
     system.particles.vel = np.array([[0.78008019924163818]])
-    return simulation
+    return simulation, settings
 
 
 class TISTest(unittest.TestCase):
@@ -78,10 +82,15 @@ class TISTest(unittest.TestCase):
 
     def test_tis_001(self):
         """Test a TIS simulation for 001."""
-        simulation = prepare_test_simulation()
+        simulation, in_settings = prepare_test_simulation()
         ensemble = simulation.path_ensemble
+        settings = simulation.settings['tis']
         for i in range(10):
-            simulation.step()
+            if i == 0:
+                for _ in initiate_path_simulation(simulation, in_settings):
+                    logging.debug('Running initialization')
+            else:
+                simulation.step()
             path = ensemble.paths[-1]
             path_data = [path['length'], path['status'], path['generated'][0],
                          path['ordermin'][0], path['ordermax'][0]]

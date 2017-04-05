@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
-# Distributed under the GPLV3 License. See LICENSE for more info.
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """A collection of simple position dependent potentials.
 
 This module defines some potential functions which are useful
@@ -9,13 +9,12 @@ as simple models.
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DoubleWell
+DoubleWell (:py:class:`.DoubleWell`)
     This class defines a one-dimensional double well potential.
 
-RectangularWell
+RectangularWell (:py:class:`.RectangularWell`)
     This class defines a one-dimensional rectangular well potential.
 """
-from __future__ import absolute_import
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
@@ -27,7 +26,7 @@ __all__ = ['DoubleWell', 'RectangularWell']
 
 
 class DoubleWell(PotentialFunction):
-    r"""DoubleWell(PotentialFunction).
+    r"""A 1D double well potential.
 
     This class defines a one-dimensional double well potential.
     The potential energy (:math:`V_\text{pot}`) is given by
@@ -60,16 +59,16 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        a : float, optional.
+        a : float, optional
             Parameter for the potential.
-        b : float, optional.
+        b : float, optional
             Parameter for the potential.
-        c : float, optional.
+        c : float, optional
             Parameter for the potential.
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         """
-        super(DoubleWell, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'a': a, 'b': b, 'c': c}
 
     def potential(self, system):
@@ -77,7 +76,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -96,7 +95,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -118,7 +117,7 @@ class DoubleWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 
@@ -143,7 +142,7 @@ class DoubleWell(PotentialFunction):
 
 
 class RectangularWell(PotentialFunction):
-    r"""RectangularWell(PotentialFunction).
+    r"""A 1D rectangular well potential.
 
     This class defines a one-dimensional rectangular well potential.
     The potential energy is zero within the potential well and infinite
@@ -168,18 +167,18 @@ class RectangularWell(PotentialFunction):
 
         Parameters
         ----------
-        left : float, optional.
+        left : float, optional
             The left boundary of the potential.
-        right : float, optional.
+        right : float, optional
             The right boundary of the potential.
-        largenumber : float, optional.
+        largenumber : float, optional
             The value of the potential outside (left, right).
-        desc : string, optional.
+        desc : string, optional
             Description of the force field.
         params : dict
             The parameters for this potential.
         """
-        super(RectangularWell, self).__init__(dim=1, desc=desc)
+        super().__init__(dim=1, desc=desc)
         self.params = {'left': left, 'right': right,
                        'largenumber': largenumber}
         self.check_parameters()
@@ -201,7 +200,7 @@ class RectangularWell(PotentialFunction):
 
         Parameters
         ----------
-        system : object like `System`.
+        system : object like :py:class:`.System`
             The system we evaluate the potential for. Here, we
             make use of the positions only.
 

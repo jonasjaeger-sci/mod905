@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
 """
-Example of running a simulation
+Animation of umbrella sampling.
 """
-from __future__ import print_function
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
-from pyretis.core import System, RandomGenerator, Box
-from pyretis.core.simulation.mc_simulation import UmbrellaWindowSimulation
+from pyretis.core import System, RandomGenerator, Box, Particles
+from pyretis.simulation import UmbrellaWindowSimulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis.histogram import histogram, match_all_histograms
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 
 # Define system with a temperature in K
 dummybox = Box(periodic=[False])
 mysystem = System(temperature=500, units='eV/K', box=dummybox)
+mysystem.particles = Particles(dim=mysystem.get_dim())
 # We will only have one particle in the system:
 mysystem.add_particle(name='X', pos=np.array([-0.7]))
 # In this particular example, we are going to use
@@ -26,9 +28,9 @@ potential_dw = DoubleWell(a=1, b=1, c=0.02)
 # and a rectangular well potential
 potential_rw = RectangularWell()
 # do set up the unbiased force field
-forcefield = ForceField(desc='Double well', potential=[potential_dw])
+forcefield = ForceField('Double well', potential=[potential_dw])
 # and the biased
-forcefield_bias = ForceField(desc='Double well with rectangular bias',
+forcefield_bias = ForceField('Double well with rectangular bias',
                              potential=[potential_dw, potential_rw])
 # attach biased force field to the system:
 mysystem.forcefield = forcefield_bias
@@ -64,7 +66,7 @@ for i, umbrella in enumerate(umbrellas):
         pos.append(mysystem.particles.pos)
         trial.append(result['displace_step'][2])
         success.append(result['displace_step'][3])
-        ener.append(mysystem.v_pot)
+        ener.append(mysystem.particles.vpot)
     trajectory.append([np.array(pos), np.array(trial), success])
     energy.append(np.array(ener))
 

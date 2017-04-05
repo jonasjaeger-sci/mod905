@@ -1,4 +1,5 @@
-
+/* Copyright (c) 2015, PyRETIS Development Team.
+Distributed under the LGPLv3 License. See LICENSE for more info. */
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
@@ -9,17 +10,26 @@ static PyObject *force(PyObject *self, PyObject *args);
 static PyObject *force_and_pot(PyObject *self, PyObject *args); 
 
 // Boilerplate: function list.
-static PyMethodDef methods[] = {
+static PyMethodDef ljmethods[] = {
   { "potential", potential, METH_VARARGS, "Calculate potential energy."},
   { "force", force, METH_VARARGS, "Calculate force."},
   { "force_and_pot", force_and_pot, METH_VARARGS, "Calculate force and potential energy."},
   { NULL, NULL, 0, NULL } /* Sentinel */
 };
 
+static struct PyModuleDef ljc =
+{
+    PyModuleDef_HEAD_INIT,
+    "ljc",
+    "Compute Lennard-Jones interactions",
+    -1,
+    ljmethods
+};
+
 // Boilerplate: Module initialization.
-PyMODINIT_FUNC initljc(void) {
-  (void) Py_InitModule("ljc", methods);
+PyMODINIT_FUNC PyInit_ljc(void) {
   import_array();
+  return PyModule_Create(&ljc);
 }
 
 
