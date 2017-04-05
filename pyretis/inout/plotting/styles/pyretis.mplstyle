@@ -14,7 +14,6 @@ figure.subplot.bottom: 0.15
 figure.subplot.top: 0.93
 
 font.family: serif
-font.serif: ['Droid Serif', 'FreeSerif', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', 'Palatino', 'Georgia', 'Garamond', 'Times']
 font.size: 16
 
 grid.color: 262626
