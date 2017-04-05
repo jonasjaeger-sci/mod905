@@ -97,6 +97,8 @@ def get_files_from_directory(ensemble, target):
     extract_energy(energy_file, target_energy, last_one)
 
     order_file = os.path.join(dirname, 'order.txt')
+    # Do force re-calculatoin of order parameters:
+    # target_order = os.path.join(target, 'order.txt.bak')
     target_order = os.path.join(target, 'order.txt')
     extract_order(order_file, target_order, last_one)
 
