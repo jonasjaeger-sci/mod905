@@ -18,28 +18,34 @@ from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
 settings = {}
-settings['simulation'] = {'task': 'md-nve',
-                          'steps': 1000}
-settings['system'] = {'units': 'lj',
-                      'temperature': 2.0,
-                      'dimensions': 3}
-settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.002}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': True,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 1}
-settings['potential'] = [{'class': 'PairLennardJonesCutnp',
-                          'parameter': {0: {'sigma': 1,
-                                            'epsilon': 1,
-                                            'factor': 2.5}},
-                          'shift': True}]
-settings['particles'] = {'position': {'generate': 'fcc',
-                                      'repeat': [3, 3, 3],
-                                      'density': 0.9},
-                         'velocity': {'generate': 'maxwell',
-                                      'momentum': True,
-                                      'seed': 0}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 1000
+}
+settings['system'] = {
+    'units': 'lj',
+    'temperature': 2.0,
+    'dimensions': 3
+}
+settings['engine'] = {
+    'class': 'velocityverlet',
+    'timestep': 0.002
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'energy-screen': 10,
+    'trajectory-file': 1
+}
+settings['potential'] = [
+    {'class': 'PairLennardJonesCutnp',
+     'parameter': {0: {'sigma': 1, 'epsilon': 1, 'factor': 2.5}},
+     'shift': True}
+]
+settings['particles'] = {
+    'position': {'generate': 'fcc', 'repeat': [3, 3, 3], 'density': 0.9},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')

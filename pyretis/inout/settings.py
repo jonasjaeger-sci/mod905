@@ -85,8 +85,7 @@ SECTIONS['output'] = {'backup': 'overwrite',
                       'pathensemble-screen': 10,
                       'trajectory-file': 100,
                       'energy-screen': 10,
-                      'restart-file': 10,
-                      'write_vel': False}
+                      'restart-file': 10}
 
 SECTIONS['tis'] = {'freq': None,
                    'maxlength': None,

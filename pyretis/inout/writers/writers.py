@@ -726,7 +726,7 @@ class TrajWriter(Writer):
     _FMT = '{:5s} {:15.9f} {:15.9f} {:15.9f}'
     _FMT_VEL = '{:5s} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f}'
 
-    def __init__(self, write_vel, fmt=None):
+    def __init__(self, write_vel=True, fmt=None):
         """Initialize the writer.
 
         Parameters

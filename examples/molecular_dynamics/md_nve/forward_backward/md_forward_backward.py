@@ -17,29 +17,35 @@ from pyretis.inout.writers import FileIO, ThermoTable
 from pyretis.inout.plotting import mpl_set_style
 # simulation settings:
 settings = {}
-settings['simulation'] = {'task': 'md-nve',
-                          'steps': 2000}
-settings['system'] = {'units': 'lj',
-                      'temperature': 2.5,
-                      'dimensions': 2}
-settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.002}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 1}
-settings['potential'] = [{'class': 'PairLennardJonesCutnp',
-                          'parameter': {0: {'sigma': 1,
-                                            'epsilon': 1,
-                                            'factor': 2.5},
-                                        1: {'sigma': 1,
-                                            'epsilon': 1,
-                                            'factor': 2.5}},
-                          'shift': True, 'dim': 2}]
-settings['particles'] = {'position': {'file': 'initial.gro'},
-                         'velocity': {'generate': 'maxwell',
-                                      'momentum': True,
-                                      'seed': 0}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 2000
+}
+settings['system'] = {
+    'units': 'lj',
+    'temperature': 2.5,
+    'dimensions': 2
+}
+settings['engine'] = {
+    'class': 'velocityverlet',
+    'timestep': 0.002
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'energy-screen': 10,
+    'trajectory-file': 1
+}
+settings['potential'] = [
+    {'class': 'PairLennardJonesCutnp',
+     'parameter': {0: {'sigma': 1, 'epsilon': 1, 'factor': 2.5},
+                   1: {'sigma': 1, 'epsilon': 1, 'factor': 2.5}},
+     'shift': True, 'dim': 2}
+]
+settings['particles'] = {
+    'position': {'file': 'initial.gro'},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')

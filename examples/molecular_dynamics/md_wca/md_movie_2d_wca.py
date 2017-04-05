@@ -20,37 +20,56 @@ import matplotlib.gridspec as gridspec
 
 PCOLOR = {'A': 'blue', 'B': 'magenta'}  # colors for visualization
 # Define potential parameters:
-WCA_PARAMETERS = {0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
-                  1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}}
-DWCA_PARAMETERS = {'types': [(1, 1)], 'rzero': 1.0 * (2.0**(1.0/6.0)),
-                   'height': 6.0, 'width': 0.25}
+WCA_PARAMETERS = {
+    0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
+    1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}
+}
+DWCA_PARAMETERS = {
+    'types': [(1, 1)],
+    'rzero': 1.0 * (2.0**(1.0/6.0)),
+    'height': 6.0,
+    'width': 0.25
+}
 # Give simulation settings:
 settings = {}
 settings['system'] = {'temperature': 2.0,
                       'units': 'lj'}
 settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
-settings['simulation'] = {'task': 'md-nve',
-                          'steps': 1100}
-settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 10}
-settings['potential'] = [{'class': 'PairLennardJonesCutnp',
-                          'dim': 2,
-                          'shift': True,
-                          'mixing': 'geometric',
-                          'parameter': WCA_PARAMETERS}]
-settings['potential'].append({'class': 'DoubleWellWCA', 'dim': 2,
-                              'parameter': DWCA_PARAMETERS})
-settings['particles'] = {'position': {'generate': 'sq', 'repeat': [3, 3],
-                                      'lcon': 1.0},
-                         'velocity': {'generate': 'maxwell', 'momentum': True,
-                                      'seed': 0},
-                         'type': [0, 1, 1, 0],
-                         'name': ['A', 'B', 'B', 'A'],
-                         'mass': {'A': 1.0, 'B': 1.0}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 1100
+}
+settings['engine'] = {
+    'class': 'velocityverlet',
+    'timestep': 0.0025
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'energy-screen': 10,
+    'trajectory-file': 10
+}
+settings['potential'] = [
+    {
+        'class': 'PairLennardJonesCutnp',
+        'dim': 2,
+        'shift': True,
+        'mixing': 'geometric',
+        'parameter': WCA_PARAMETERS
+    },
+    {
+        'class': 'DoubleWellWCA',
+        'dim': 2,
+        'parameter': DWCA_PARAMETERS
+    },
+]
+settings['particles'] = {
+    'position': {'generate': 'sq', 'repeat': [3, 3], 'lcon': 1.0},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0},
+    'type': [0, 1, 1, 0],
+    'name': ['A', 'B', 'B', 'A'],
+    'mass': {'A': 1.0, 'B': 1.0}
+}
 
 UNIT = settings['system']['units']
 create_conversion_factors(UNIT)

@@ -126,8 +126,7 @@ class TrajTest(unittest.TestCase):
     def test_txt_writer(self):
         """Test the TrajWriter."""
         system = create_test_system()
-        txt_writer = get_writer('trajtxt', {'write_vel': True,
-                                            'fmt': 'yes'})
+        txt_writer = get_writer('trajtxt', {'fmt': 'yes'})
         snapshot = txt_writer.generate_output(0, system)
         correct = os.path.join(LOCAL_DIR, 'generated.txt')
         with open(correct, 'r') as fileh:

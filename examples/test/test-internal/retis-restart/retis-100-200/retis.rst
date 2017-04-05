@@ -82,4 +82,3 @@ Output
 trajectory-file = 1
 energy-file = 1
 order-file = 1
-write_vel = True
