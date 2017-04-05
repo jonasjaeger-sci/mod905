@@ -3,7 +3,7 @@
 # Distributed under the LGPLv3 License. See LICENSE for more info.
 """Functions for generating plots using matplotlib.
 
-This module defines a class for using matplotlib and it also defines
+This module defines a plotter class for matplotlib and it also defines
 some standard plots that are used in the analysis.
 
 Important classes defined here
@@ -27,6 +27,7 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.collections import LineCollection
+from matplotlib.cm import get_cmap
 import matplotlib.style
 from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import create_backup, name_file
@@ -36,7 +37,6 @@ from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
-# import styles for newer matplotlibs:
 
 
 __all__ = ['MplPlotter']
@@ -52,12 +52,9 @@ _TITLE_SETTINGS = {'loc': 'right'}
 class MplPlotter(Plotter):
     """A plotter using matplotlib.
 
-    This class defines a plotter. A plotter is just a object that
-    supports certain functions which conveniently can be called in
-    different analysis output function. The ``MplPlotter`` will use
-    matplotlib and it can be used to create other plotters based
-    on other tools, for instance gnuplot or Veusz, visvis or your
-    favorite plotting tool.
+    This class defines a plotter which make use of matplotlib and
+    it can be used as a starting point to create other plotters
+    for PyRETIS bases on other tools (e.g. gnuplot etc.).
 
     Attributes
     ----------
@@ -68,10 +65,7 @@ class MplPlotter(Plotter):
     """
 
     def __init__(self, out_fmt, backup=False, style=None, out_dir=None):
-        """Initiate the plotting object.
-
-        Here we only define the style and check if the requested file
-        format is something that we actually can handle.
+        """Initiate, set style and check output format.
 
         Parameters
         ----------
@@ -284,8 +278,6 @@ def mpl_set_style(style='pyretis'):
 
 def mpl_savefig(canvas, outputfile, backup=False):
     """Write/save matplotlib figures to files.
-
-    It will save figures so that old ones are not overwritten.
 
     Parameters
     ----------
@@ -832,7 +824,7 @@ def mpl_plot_orderp(results, orderdata):
 
 
 def mpl_plot_energy(results, energies):
-    r"""Plot the output from the energy analysis using matplotlib.
+    """Plot the output from the energy analysis using matplotlib.
 
     Parameters
     ----------
@@ -964,6 +956,22 @@ def mpl_plot_flux(results):
     return canvas_run, canvas_err
 
 
+def get_color_map(ncolors):
+    """Return a color map with at least n colors."""
+    if ncolors <= 10:
+        name = 'Vega10'
+    elif 10 < ncolors <= 20:
+        name = 'Vega20'
+    else:
+        name = None
+    if name is None:
+        logger.info('Using default color map.')
+    else:
+        logger.info('Using color map %s', name)
+    cmap = get_cmap(name=name, lut=ncolors)
+    return cmap.colors
+
+
 def mpl_plot_matched(path_ensembles, detect, matched):
     """Plot matched probabilities using matplotlib.
 
@@ -995,7 +1003,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
         series.append({'type': 'vline', 'x': idetect,
                        'ls': '--', 'alpha': 0.8, 'lw': 1})
 
-    # Matplotlib changed some rc params, this is to be compatible with more
+    # color_cycle was deprecated in matplotlib 1.5, but to support old
     # versions:
     if 'axes.prop_cycle' in matplotlib.rcParams:
         ckey = 'axes.prop_cycle'
@@ -1003,8 +1011,8 @@ def mpl_plot_matched(path_ensembles, detect, matched):
         ckey = 'axes.color_cycle'
     # Check if we need to have more colors:
     if len(matplotlib.rcParams[ckey]) < len(path_ensembles):
-        logger.warning('Overriding color cycle')
-        colors = matplotlib.cm.Set1(np.linspace(0, 1, len(path_ensembles)))
+        logger.info('Overriding color cycle.')
+        colors = get_color_map(len(path_ensembles))
     else:
         colors = None
 
