@@ -110,7 +110,7 @@ TASK_MAP['traj-xyz'] = {
 TASK_MAP['thermo-screen'] = {
     'target': 'screen',
     'result': ('thermo',),
-    'when': 'energy-screen',
+    'when': 'screen',
     'writer': 'thermotable'
 }
 
@@ -133,7 +133,7 @@ TASK_MAP['pathensemble'] = {
 TASK_MAP['pathensemble-screen'] = {
     'target': 'screen',
     'result': ('pathensemble',),
-    'when': 'pathensemble-screen',
+    'when': 'screen',
     'writer': 'pathtable'
 }
 

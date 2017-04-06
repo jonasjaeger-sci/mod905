@@ -46,7 +46,7 @@ settings['engine'] = {
 settings['output'] = {
     'backup': 'overwrite',
     'energy-file': 1,
-    'energy-screen': 10,
+    'screen': 10,
     'trajectory-file': 10
 }
 settings['potential'] = [
@@ -315,11 +315,11 @@ def spring_bond(delta, dr, part1, part2):
     for pidx, add in enumerate(np.linspace(0.0, dr-1, 11)):
         point = part1 + (add + 0.5) * delta_u
         if pidx in [2, 4, 6, 8]:
-            try:
-                dperp = np.array([-delta_u[1] / delta_u[0], 1.0])
-                dperp = dperp / np.sqrt(np.dot(dperp, dperp))
-            except ZeroDivisionError:
-                dperp = 0.0
+            if delta_u[0] == 0:
+                dperp = np.array([0.0, 0.0])
+            else:
+                dperp_v = np.array([-delta_u[1] / delta_u[0], 1.0])
+                dperp = dperp_v / np.sqrt(np.dot(dperp_v, dperp_v))
             sig = 1 if delta_u[0] > 0.0 else -1.0
             if pidx in [2, 6]:
                 dvec = sig*0.2*dperp

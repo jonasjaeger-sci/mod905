@@ -28,7 +28,7 @@ settings['engine'] = {
 settings['output'] = {
     'backup': 'overwrite',
     'energy-file': 1,
-    'energy-screen': 10,
+    'screen': 10,
     'trajectory-file': 10
 }
 settings['potential'] = [

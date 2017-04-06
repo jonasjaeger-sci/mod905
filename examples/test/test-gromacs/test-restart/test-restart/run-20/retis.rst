@@ -53,9 +53,7 @@ module = ../orderp.py
 Output settings
 ---------------
 pathensemble-file = 1
-pathensemble-screen = 10
-energy-screen = 0
-cross-file = 0
+screen = 10
 order-file = 1
 energy-file = 1
 trajectory-file = 1

@@ -968,8 +968,8 @@ def get_color_map(ncolors):
         logger.info('Using default color map.')
     else:
         logger.info('Using color map %s', name)
-    cmap = get_cmap(name=name, lut=ncolors)
-    return cmap.colors
+    cmap = get_cmap(name=name)
+    return cmap(np.linspace(0, 1, ncolors))
 
 
 def mpl_plot_matched(path_ensembles, detect, matched):
