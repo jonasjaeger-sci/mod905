@@ -9,75 +9,103 @@ draw the frames as a very simple animation.
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
-# import and execute the simulation
-from umbrella_sampling_mc import (trajectory, energy, umbrellas, n_umb, VPOT,
-                                  XPOT)
-
-# Create very simple animation:
-fig = plt.figure()
-axs = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
-# plot the line we have to cross:
-linec = axs.axvline(x=-10, lw=2, ls=':', color='black')
-# plot the umbrella region
-axv = axs.axvspan(xmin=-10, xmax=-10, color="blue", alpha=0.1)
-# re-plot the potential:
-line, = axs.plot(XPOT, VPOT, lw=3, color='blue')
-# plot the particle:
-scat = axs.scatter(-10, -10, s=150, c='green')
-
-traj_data = []
-ener_data = []
-umbr = []  # id of current umbrella
-crossing = []  # position that must be crossed
-for i, (traj, ener) in enumerate(zip(trajectory, energy)):
-    pos, ene = traj[::50], ener[::50]
-    traj_data.extend(pos)
-    ener_data.extend(ene)
-    umbr.extend([i] * len(pos))
-    crossing.extend([umbrellas[min(i + 1, n_umb - 1)][0]] * len(pos))
+from umbrella_sampling_mc import (
+    UMBRELLA_WINDOWS,
+    set_up_system,
+    set_up_simulation,
+    plot_unbiased_potential,
+)
 
 
-def init():
-    """
-    Function to clear the frame
-    """
-    line.set_ydata(VPOT)
-    return line,
+def main_amination(windows):
+    """Run the animation!"""
+    system = set_up_system()
+    # For plotting umbiased:
+    xpos = np.linspace(-2, 2, 250)
+    vpot = plot_unbiased_potential(system, xpos)
+
+    fig = plt.figure()
+    axs = plt.axes(xlim=(-1.05, 1.05), ylim=(-0.3, 0.05))
+    axs.set_xlabel(r'Position ($x$)', fontsize='large')
+    axs.set_ylabel('Potential energy ($V(x)$) / eV', fontsize='large')
+    # Plot the line we have to cross:
+    linec = axs.axvline(x=-10, lw=2, ls=':', color='#262626')
+    # Plot the umbrella region
+    axv = axs.axvspan(xmin=-10, xmax=-10, alpha=0.1)
+    # Plot the potential:
+    axs.plot(xpos, vpot, lw=3)
+    # plot the particle:
+    scat = axs.scatter(-10, -10, s=150)
+    # txt with info
+    txt = axs.text(0.02, 0.95, '', transform=axs.transAxes,
+                   fontsize='large')
+
+    def init():
+        """Return what we have to re-draw."""
+        return [scat, txt]
+
+    n_umb = len(windows)
+    simulations = []
+    systems = []
+    for i, window in enumerate(windows):
+        over = windows[min(i + 1, n_umb - 1)][0]
+        system = set_up_system(pos=np.array([over]))
+        simulation = set_up_simulation(system, window, over, 1)
+        simulations.append(simulation)
+        systems.append(system)
+
+    anim = animation.FuncAnimation(
+        fig,
+        update_animation,
+        fargs=[simulations, systems, scat, linec, axv, txt],
+        repeat=False,
+        interval=10,
+        blit=True,
+        init_func=init
+    )
+    plt.show()
 
 
-def update(frame):
-    """
-    Function to update animation
+def update_animation(frame, simulations, systems, scat, linec, axv, txt):
+    """Update the animation."""
+    patches = []
+    finished = 0
+    for simulation in simulations:
+        if simulation.is_finished():
+            finished += 1
+    if finished == len(simulations):
+        print('Stopping animation at frame: {}'.format(frame))
+        raise StopIteration
+    simulation = simulations[finished]
+    system = systems[finished]
 
-    Parameters
-    ----------
-    frame : integer
-        The current frame we are at.
+    if simulation.cycle['step'] == 0:
+        over = simulation.overlap
+        window = simulation.umbrella
+        linec.set_data([over, over], linec.get_data()[1])
+        region = np.array([[window[0], 0.0], [window[0], 1.0],
+                           [window[1], 1.0], [window[1], 0.0],
+                           [window[0], 0.0]])
+        axv.set_xy(region)
+    patches.append(linec)
+    patches.append(axv)
+    for _ in range(50):
+        if not simulation.is_finished():
+            simulation.step()
+    if simulation.is_finished() and finished + 1 == len(simulations):
+        txt.set_text('Done!')
+        patches.append(txt)
+    else:
+        txt.set_text(
+            'Window {}, step {}'.format(finished, simulation.cycle['step'])
+        )
+    patches.append(txt)
+    ener = system.particles.vpot
+    offsets = [(xi, ener) for xi in system.particles.pos]
+    scat.set_offsets(offsets)
+    patches.append(scat)
+    return patches
 
-    Returns
-    -------
-    scat : object like `matplotlib.collections.PathCollection`
-        The scatter points with updated positions.
-    axv : object like `matplotlib.patches.Polygon`
-        The region to highlight.
-    linec : object like `matplotlib.lines.Line2D`
-        The crossing line.
-    """
-    pos_ener = np.array([traj_data[frame], ener_data[frame]])
-    scat.set_offsets(pos_ener)
-    linec.set_xdata(crossing[frame])
-    umpos1 = umbrellas[umbr[frame]][0]
-    umpos2 = umbrellas[umbr[frame]][1]
-    region = np.array([[umpos1, 0.0], [umpos1, 1.0],
-                       [umpos2, 1.0], [umpos2, 0.0],
-                       [umpos1, 0.0]])
-    axv.set_xy(region)
-    line.set_ydata(VPOT)
-    return scat, axv, linec, line
 
-anim = animation.FuncAnimation(fig, update, np.arange(len(traj_data)),
-                               init_func=init, interval=25, blit=True,
-                               repeat=False)
-# for making a movie:
-# anim.save('simple.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
-plt.show()
+if __name__ == '__main__':
+    main_amination(UMBRELLA_WINDOWS)
