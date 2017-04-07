@@ -4,8 +4,8 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 1000000
-interfaces = [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.60, 0.65, 0.7, 0.75, 0.8]
+steps = 100
+interfaces = [0.1, 0.3, 0.4, 0.5, 0.55, 0.60, 0.65, 0.7, 0.80]
 
 System
 ------
@@ -46,10 +46,11 @@ swapsimul = True
 Initial-path
 ------------
 method = kick
+kick-from = previous
 
 Particles
 ---------
-position = {'file': '../initial.xyz'}
+position = {'file': 'initial.xyz'}
 velocity = {'generate': 'maxwell',
             'momentum': False,
             'seed': 0}
@@ -80,3 +81,7 @@ Orderparameter
 class = OrderXY
 module = orderp.py
 index = 0
+inter_a = 0.15
+inter_b = 0.75
+energy_a = -9.0
+energy_b = -9.0
