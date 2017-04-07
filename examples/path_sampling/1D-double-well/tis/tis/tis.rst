@@ -67,3 +67,9 @@ class = OrderParameterPosition
 dim = x
 index = 0
 periodic = False
+
+Output settings
+---------------
+energy-file = 100
+order-file = 100
+trajectory-file = 100

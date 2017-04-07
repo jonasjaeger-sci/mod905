@@ -395,7 +395,9 @@ def create_simulation(settings, kwargs):
             else:
                 args.append(kwargs[key])
         simulation = function(settings, *args)
-        msgtxt = ('Created simulation:\n'
-                  '{}'.format(simulation))
-        logger.info(msgtxt)
+        if isinstance(simulation, list):
+            msgtxt = sim_type
+        else:
+            msgtxt = '{}'.format(simulation)
+        logger.info('Created simulation:\n%s', msgtxt)
         return simulation

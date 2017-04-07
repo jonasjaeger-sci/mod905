@@ -224,7 +224,7 @@ class SimulationSingleTIS(PathSimulation):
             self.settings['tis'],
             self.cycle['step'])
         results['accept'] = accept
-        results['trialpath'] = trial
+        results['path'] = trial
         results['status'] = status
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
