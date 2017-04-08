@@ -331,6 +331,18 @@ class PathEnsemble(object):
             msg += ['\tRatio accepted/total paths: {}'.format(ratio)]
         return '\n'.join(msg)
 
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        restart = {
+            'nstats': self.nstats,
+            'interfaces': self.interfaces,
+            'detect': self.detect,
+            'ensemble': self.ensemble,
+        }
+        if self.last_path:
+            restart['last_path'] = self.last_path.restart_info()
+        return restart
+
 
 class PathEnsembleExt(PathEnsemble):
     """Representation of a path ensemble.

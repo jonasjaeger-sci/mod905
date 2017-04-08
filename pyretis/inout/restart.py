@@ -11,15 +11,20 @@ read_restart_file (:py:func:`.read_restart_file`)
 
 write_restart_file (:py:func:`.write_restart_file`)
     Method for writing the restart file.
+
+write_path_ensemble_restart (:py:func`.write_path_ensemble_restart`)
+    Method for writing restart files for path ensembles.
 """
 import logging
+import os
 import pickle
 from pyretis.inout.settings import SECTIONS
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['read_restart_file', 'write_restart_file']
+__all__ = ['read_restart_file', 'write_restart_file',
+           'write_path_ensemble_restart']
 
 
 def write_restart_file(filename, simulation):
@@ -39,6 +44,22 @@ def write_restart_file(filename, simulation):
         pass
     with open(filename, 'wb') as outfile:
         pickle.dump(info, outfile)
+
+
+def write_path_ensemble_restart(path_ensemble):
+    """Write a restart file for a path ensemble.
+
+    Parameters
+    ----------
+    path_ensemble : object like :py:class:`.PathEnsemble`
+        The path ensemble we are writing restart info for.
+    """
+    filename = os.path.join(
+        path_ensemble.ensemble_name_simple,
+        'ensemble.restart'
+    )
+    with open(filename, 'wb') as outfile:
+        pickle.dump(path_ensemble.restart_info(), outfile)
 
 
 def read_restart_file(filename):
