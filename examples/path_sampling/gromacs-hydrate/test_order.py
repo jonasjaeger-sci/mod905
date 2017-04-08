@@ -16,7 +16,7 @@ if __name__ == '__main__':
     testo = RingDiffusion()
     print('Idx1', testo.idx1)
     print('Idx2', testo.idx2)
-    _, pos, _ = read_gromos96_file('ext_input/conf.g96')
+    _, pos, _ = read_gromos96_file('gromacs_input/conf.g96')
     system = System()
     system.particles = Particles(dim=3)
     system.particles.pos = pos
