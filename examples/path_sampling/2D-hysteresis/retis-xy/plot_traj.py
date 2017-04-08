@@ -62,10 +62,10 @@ def plot_potential(settings, axi, axj):
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.5)
     axi.set_xlim((minx, maxx))
     axi.set_ylim((miny, maxy))
-    axi.set_xlabel((r'Position ($x$)'))
-    axi.set_ylabel((r'Position ($y$)'))
-    axj.set_xlabel((r'Step number'))
-    axj.set_ylabel((r'Order parameter ($\lambda$)'))
+    axi.set_xlabel((r'Position ($x$)'), fontsize='large')
+    axi.set_ylabel((r'Position ($y$)'), fontsize='large')
+    axj.set_xlabel((r'Step number'), fontsize='large')
+    axj.set_ylabel((r'Order parameter ($\lambda$)'), fontsize='large')
 
 
 def plot_ensemble(settings, dirname, axi, axj, maxlines=100, minorder=None,
@@ -140,4 +140,6 @@ if __name__ == '__main__':
     ax2 = fig.add_subplot(122)
     plot_potential(sim_settings, ax1, ax2)
     plot_ensemble(sim_settings, ens, ax1, ax2, maxlines=25, minorder=None)
+    plt.subplots_adjust(right=0.95, left=0.10, top=0.95,
+                        bottom=0.10, wspace=0.3)
     plt.show()
