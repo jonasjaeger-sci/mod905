@@ -314,6 +314,18 @@ class Particles(object):
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)
 
+    def restart_info(self):
+        """Generate information for saving a restart file."""
+        info = {}
+        for attr in ('npart', 'pos', 'vel', 'force',
+                     'vpot', 'ekin', 'mass', 'imass',
+                     'name', 'ptype', 'virial', 'dim'):
+            try:
+                info[attr] = getattr(self, attr)
+            except AttributeError:
+                pass
+        return info
+
 
 class ParticlesExt(Particles):
     """Particles, when positions and velocities are stored in files.
@@ -405,6 +417,13 @@ class ParticlesExt(Particles):
         self.set_vel(phasepoint['vel'])
         self.ekin = phasepoint['ekin']
         self.vpot = phasepoint['vpot']
+
+    def restart_info(self):
+        """Generate information for saving a restart file."""
+        info = super().restart_info()
+        info['vel_rev'] = self.vel_rev
+        info['config'] = self.config
+        return info
 
 
 def get_particle_type(engine_type):
