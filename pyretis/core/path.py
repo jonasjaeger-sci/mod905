@@ -778,7 +778,7 @@ class Path(PathBase):
 
     def restart_info(self):
         """Return a dictionary with restart information."""
-        restart = {
+        info = {
             'generated': self.generated,
             'maxlen': self.maxlen,
             'order': self.order,
@@ -790,8 +790,15 @@ class Path(PathBase):
             'ekin': self.ekin,
             'pos': self.pos,
             'vel': self.vel,
+            'length': self.length,
         }
-        return restart
+        return info
+
+    def load_restart_info(self, info):
+        """Set up the path using restart information."""
+        for key in info:
+            if hasattr(self, key):
+                setattr(self, key, info[key])
 
 
 class PathExt(Path):
