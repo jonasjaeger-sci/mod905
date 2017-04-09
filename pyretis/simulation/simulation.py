@@ -46,6 +46,7 @@ class Simulation(object):
     system : object like :py:class:`.System`
         This is the system the simulation will act on.
     """
+    simulation_type = 'generic'
 
     def __init__(self, steps=0, startcycle=0):
         """Initialization of the simulation.
@@ -241,5 +242,6 @@ class Simulation(object):
 
     def restart_info(self):
         """Return information which can be used to restart the simulation."""
-        info = {'cycle': self.cycle}
+        info = {'cycle': self.cycle,
+                'type': self.simulation_type}
         return info
