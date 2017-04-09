@@ -14,16 +14,7 @@ timestep = 0.002
 
 System settings
 ---------------
-temperature = 2.0
 units = lj
-
-Particles
----------
-position = {'file': 'initial.txt'}
-
-mass = {'Ar': 1.0}
-name = ['Ar']
-type = [0]
 
 Forcefield settings
 --------------------

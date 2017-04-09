@@ -142,7 +142,7 @@ class PathSimulation(Simulation):
                 'type': self.simulation_type}
         try:
             rgen = self.engine.rgen
-            info['engine_rgen'] = rgen.get_state()
+            info['engine'] = {'rgen': rgen.get_state()}
         except AttributeError:
             pass
         return info

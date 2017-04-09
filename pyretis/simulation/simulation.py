@@ -245,3 +245,40 @@ class Simulation(object):
         info = {'cycle': self.cycle,
                 'type': self.simulation_type}
         return info
+
+    def load_restart_info(self, info):
+        """Load restart information.
+
+        Note, we do not change the ``end`` property here as we probably
+        are extending a simulation.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary with the restart information, should be
+            similar to the dict produced by :py:func:`.restart_info`.
+        """
+        for key, val in info['cycle'].items():
+            if key != 'end':
+                self.cycle[key] = val
+
+        if 'rgen' in info:
+            try:
+                rgen = self.rgen
+                rgen.set_state(info['rgen'])
+            except AttributeError:
+                logger.warning(('Restart: Failed setting simulation '
+                                'random number generator state!'))
+        if 'engine' in info:
+            try:
+                engine = self.engine
+                if 'rgen' in info['engine']:
+                    try:
+                        engine.rgen.set_state(info['engine']['rgen'])
+                    except AttributeError:
+                        logger.warning(('Restart: Failed setting engine '
+                                        'random number generator state!'))
+            except AttributeError:
+                logger.warning(('Restart: Tried setting engine state, but '
+                                'NO engine was present in simulation %s'),
+                               self.simulation_type)

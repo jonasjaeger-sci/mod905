@@ -282,4 +282,8 @@ class Box(object):
 
     def restart_info(self):
         """Return a dictionary with restart information."""
-        return {'size': self.size, 'periodic': self.periodic}
+        info = {
+            'size': self.size,
+            'periodic': self.periodic,
+        }
+        return info
