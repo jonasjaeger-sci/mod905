@@ -211,9 +211,14 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
     print_to_screen('Starting MD-Flux simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='MD-flux'):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 def run_md_simulation(sim, sim_settings, progress=False):
@@ -235,11 +240,13 @@ def run_md_simulation(sim, sim_settings, progress=False):
     print_to_screen('Starting MD simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='MD step'):
         for out_task in output_tasks:
             out_task.output(result)
-        write_restart_file('pyretis.restart', sim)
-    # Also write final restart file:
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
     write_restart_file('pyretis.restart', sim)
 
 
@@ -306,6 +313,8 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     # We perform the initiation here. The initiation method expects
     # a iterable of path ensembles so we just give that to it:
     _help_with_initialization(sim, sim_settings, (output_tasks,))
+    write_path_ensemble_restart(ensemble)
+    write_restart_file('pyretis.restart', sim)
 
     logtxt = 'Initialization done. Starting main TIS simulation'
     print_to_screen(logtxt, level='info')
@@ -314,9 +323,15 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     tqd = use_tqdm(progress)
     nsteps = (sim.cycle['end'] - sim.cycle['step'])
     desc = 'TIS Ensemble {}'.format(ensemble_name)
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc=desc):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+            write_path_ensemble_restart(ensemble)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 def _help_with_initialization(sim, sim_settings, output_tasks):
@@ -348,8 +363,9 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
             'status': result[2],
             'system': sim.system
         }
-        for out_task in output_tasks[i]:
-            out_task.output(ensemble_result)
+        if sim_settings['initial-path']['method'] != 'restart':
+            for out_task in output_tasks[i]:
+                out_task.output(ensemble_result)
 
 
 def run_retis_simulation(sim, sim_settings, progress=False):
@@ -400,6 +416,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
 
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='RETIS'):
         # Do output for each ensemble:
         for i, ensemble in enumerate(path_ensembles):
@@ -408,7 +425,6 @@ def run_retis_simulation(sim, sim_settings, progress=False):
                                'status': result['retis'][i][1],
                                'path': result['retis'][i][2],
                                'system': result['system']}
-            write_path_ensemble_restart(ensemble)
             for out_task in output_tasks[i]:
                 out_task.output(ensemble_result)
         if not progress:
@@ -422,7 +438,10 @@ def run_retis_simulation(sim, sim_settings, progress=False):
                 )
                 print_to_screen(logtxt)
             print_to_screen()
-        write_restart_file('pyretis.restart', sim)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            for ensemble in path_ensembles:
+                write_path_ensemble_restart(ensemble)
+            write_restart_file('pyretis.restart', sim)
     # Write final restart files:
     for ensemble in path_ensembles:
         write_path_ensemble_restart(ensemble)
@@ -507,9 +526,14 @@ def run_generic_simulation(sim, sim_settings, progress=False):
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     tqd = use_tqdm(progress)
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), desc='Step'):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 _RUNNERS = {'md-flux': run_md_flux_simulation,
@@ -559,6 +583,8 @@ def set_up_simulation(inputfile, runpath):
                         level='warning')
         logger.info('Reading restart file: "%s"', restart)
         restart_info = read_restart_file(restart)
+        sim_settings['output']['backup'] = 'append'
+        logger.info('Setting output setting backup to "append"')
 
     print_to_screen()
 
