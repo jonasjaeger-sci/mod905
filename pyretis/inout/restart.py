@@ -22,8 +22,11 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['read_restart_file', 'write_restart_file',
-           'write_path_ensemble_restart']
+__all__ = [
+    'read_restart_file',
+    'write_restart_file',
+    'write_path_ensemble_restart'
+]
 
 
 def write_restart_file(filename, simulation):
