@@ -1,7 +1,7 @@
-Testing of restart for GROMACS
-==============================
+Testing of load for GROMACS
+===========================
 
-This directory contains tests for restarting with GROMACS:
+This directory contains tests for loading paths with GROMACS:
 
 1. ``test-initialize``: This tests that we can initialize
    and run a RETIS simulation in two separate steps. This is
@@ -25,4 +25,3 @@ here to create engines that draw predictable random numbers so
 that the results can be compared. The ``gromacs`` engine of
 PyRETIS will ask GROMACS to randomly select a seed for generating
 velocities. Here, we explicitly set these seeds.
-
