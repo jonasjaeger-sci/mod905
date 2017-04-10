@@ -234,6 +234,7 @@ def main(input_file, run_path, report_dir):
     finally:
         bye_bye_world()
 
+
 if __name__ == '__main__':
     colorama.init(autoreset=True)
     parser = argparse.ArgumentParser(description=PROGRAM_NAME)

@@ -18,28 +18,34 @@ from pyretis.inout.setup import (create_system, create_simulation,
 from pyretis.inout.plotting import mpl_set_style
 # Define simulation settings:
 settings = {}
-settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
-settings['system'] = {'units': 'lj', 'temperature': 2.0,
-                      'dimensions': 3}
-settings['engine'] = {'class': 'VelocityVerletF',
-                      'delta_t': 0.002,
-                      'module': 'vvintegratorf.py'}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 1}
-settings['potential'] = [{'class': 'PairLennardJonesCutnp', 'dim': 3,
-                          'shift': True,
-                          'parameter': {0: {'sigma': 1,
-                                            'epsilon': 1,
-                                            'factor': 2.5}}}]
-settings['particles'] = {'position': {'generate': 'fcc',
-                                      'repeat': [3, 3, 3],
-                                      'density': 0.9},
-                         'velocity': {'generate': 'maxwell',
-                                      'momentum': True,
-                                      'seed': 0}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 1000
+}
+settings['system'] = {
+    'units': 'lj',
+    'temperature': 2.0,
+    'dimensions': 3
+}
+settings['engine'] = {
+    'class': 'VelocityVerletF',
+    'delta_t': 0.002,
+    'module': 'vvintegratorf.py'
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'screen': 10,
+    'trajectory-file': 1
+}
+settings['potential'] = [
+    {'class': 'PairLennardJonesCutnp', 'dim': 3, 'shift': True,
+     'parameter': {0: {'sigma': 1, 'epsilon': 1, 'factor': 2.5}}}
+]
+settings['particles'] = {
+    'position': {'generate': 'fcc', 'repeat': [3, 3, 3], 'density': 0.9},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)

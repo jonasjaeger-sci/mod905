@@ -34,87 +34,109 @@ TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
 SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
 
-SECTIONS['simulation'] = {'task': None,
-                          'steps': None,
-                          'startcycle': None,
-                          'endcycle': None,
-                          'restart': None,
-                          'exe-path': None,
-                          'interfaces': None,
-                          'ensemble': None,
-                          'detect': None}
+SECTIONS['simulation'] = {
+    'task': None,
+    'steps': None,
+    'startcycle': None,
+    'endcycle': None,
+    'restart': None,
+    'exe-path': None,
+    'interfaces': None,
+    'ensemble': None,
+    'detect': None
+}
 
-SECTIONS['system'] = {'dimensions': 3,
-                      'temperature': 1.0,
-                      'units': 'lj'}
+SECTIONS['system'] = {
+    'dimensions': 3,
+    'temperature': 1.0,
+    'units': 'lj'
+}
 
-SECTIONS['unit-system'] = {'name': None,
-                           'length': None,
-                           'mass': None,
-                           'energy': None,
-                           'charge': None}
+SECTIONS['unit-system'] = {
+    'name': None,
+    'length': None,
+    'mass': None,
+    'energy': None,
+    'charge': None
+}
 
-SECTIONS['engine'] = {'class': None,
-                      'module': None}
+SECTIONS['engine'] = {
+    'class': None,
+    'module': None
+}
 
-SECTIONS['box'] = {'size': None,
-                   'periodic': None}
+SECTIONS['box'] = {
+    'size': None,
+    'periodic': None
+}
 
-SECTIONS['particles'] = {'position': None,
-                         'velocity': None,
-                         'mass': None,
-                         'name': None,
-                         'type': None,
-                         'npart': None}
+SECTIONS['particles'] = {
+    'position': None,
+    'velocity': None,
+    'mass': None,
+    'name': None,
+    'type': None,
+    'npart': None
+}
 
 SECTIONS['forcefield'] = {'description': None}
 
-SECTIONS['potential'] = {'class': None,
-                         'parameter': None}
+SECTIONS['potential'] = {
+    'class': None,
+    'parameter': None
+}
 
-SECTIONS['orderparameter'] = {'class': None,
-                              'module': None}
+SECTIONS['orderparameter'] = {
+    'class': None,
+    'module': None
+}
 
 
-SECTIONS['output'] = {'backup': 'overwrite',
-                      'prefix': None,
-                      'energy-file': 10,
-                      'cross-file': 1,
-                      'order-file': 10,
-                      'pathensemble-file': 1,
-                      'pathensemble-screen': 10,
-                      'trajectory-file': 100,
-                      'energy-screen': 10,
-                      'restart-file': 10,
-                      'write_vel': False}
+SECTIONS['output'] = {
+    'backup': 'overwrite',
+    'prefix': None,
+    'screen': 10,
+    'energy-file': 10,
+    'cross-file': 1,
+    'order-file': 10,
+    'trajectory-file': 100,
+    'restart-file': 10,
+    'pathensemble-file': 1,
+}
 
-SECTIONS['tis'] = {'freq': None,
-                   'maxlength': None,
-                   'aimless': True,
-                   'allowmaxlength': False,
-                   'zero_momentum': False,
-                   'rescale_energy': False,
-                   'sigma_v': -1,
-                   'seed': 0}
+SECTIONS['tis'] = {
+    'freq': None,
+    'maxlength': None,
+    'aimless': True,
+    'allowmaxlength': False,
+    'zero_momentum': False,
+    'rescale_energy': False,
+    'sigma_v': -1,
+    'seed': 0
+}
 
 SECTIONS['initial-path'] = {'method': None}
 
-SECTIONS['retis'] = {'swapfreq': None,
-                     'relative_shoots': None,
-                     'nullmoves': None,
-                     'swapsimul': None}
+SECTIONS['retis'] = {
+    'swapfreq': None,
+    'relative_shoots': None,
+    'nullmoves': None,
+    'swapsimul': None
+}
 
-SECTIONS['analysis'] = {'skipcross': 1000,
-                        'maxblock': 1000,
-                        'blockskip': 1,
-                        'bins': 100,
-                        'ngrid': 1001,
-                        'maxordermsd': -1,
-                        'plot': {'plotter': 'mpl', 'output': 'png',
-                                 'style': 'pyretis'},
-                        'txt-output': 'txt.gz',
-                        'report': ['latex', 'rst', 'html'],
-                        'report-dir': None}
+SECTIONS['analysis'] = {
+    'skipcross': 1000,
+    'maxblock': 1000,
+    'blockskip': 1,
+    'bins': 100,
+    'ngrid': 1001,
+    'maxordermsd': -1,
+    'plot': {'plotter': 'mpl', 'output': 'png',
+             'style': 'pyretis'},
+    'txt-output': 'txt.gz',
+    'report': ['latex', 'rst', 'html'],
+    'report-dir': None
+}
 
 
 SPECIAL_KEY = set(('parameter', ))

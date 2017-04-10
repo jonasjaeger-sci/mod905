@@ -77,7 +77,7 @@ class PathEnsemble(object):
     just store an simplified abstraction of the path, which is obtained
     by the `Path.get_path_data()` function for a given `Path` object.
     The returned dictionary is stored in the list `PathEnsemble.paths`.
-    The only path we store, is the last accepted path. This is
+    The only full path we store, is the last accepted path. This is
     convenient for the RETIS method where paths may be swapped between
     path ensembles.
 
@@ -330,6 +330,41 @@ class PathEnsemble(object):
             ratio = float(nacc) / float(npath)
             msg += ['\tRatio accepted/total paths: {}'.format(ratio)]
         return '\n'.join(msg)
+
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        restart = {
+            'nstats': self.nstats,
+            'interfaces': self.interfaces,
+            'detect': self.detect,
+            'ensemble': self.ensemble,
+        }
+        if self.last_path:
+            restart['last_path'] = self.last_path.restart_info()
+        return restart
+
+    def load_restart_info(self, path, info, cycle=0):
+        """Load restart information.
+
+        Parameters
+        ----------
+        path : object like :py:class:`.PathBase`
+            A object we can load the stored path into.
+        info : dict
+            A dictionary with the restart information.
+        cycle : integer
+            The current simulation cycle.
+        """
+        self.nstats = info['nstats']
+        for attr in ('interfaces', 'detect', 'ensemble'):
+            if info[attr] != getattr(self, attr):
+                logger.warning('Inconsistent ensemble restart info for %s',
+                               attr)
+        path.load_restart_info(info['last_path'])
+        path_data = path.get_path_data('ACC', self.interfaces)
+        path_data['cycle'] = cycle
+        self.last_path = path
+        self.paths.append(path_data)
 
 
 class PathEnsembleExt(PathEnsemble):

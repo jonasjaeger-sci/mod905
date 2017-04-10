@@ -8,7 +8,7 @@ precision) of the units used. This script will test that by comparing:
 
 - the output in `thermo.txt`
 
-- the generated trajectory, `traj.gro`
+- the generated trajectory, `traj.xyz`
 
 For the energies, it will create a plot comparing the energies, the pressure
 and the temperature.
@@ -64,8 +64,8 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
     """
     print_to_screen('Comparing trajectories', level='info')
     print('Checking mean squared error...')
-    file1 = get_writer('trajtxt', {'write_vel': True}).load(traj1)
-    file2 = get_writer('trajtxt', {'write_vel': True}).load(traj2)
+    file1 = get_writer('trajtxt').load(traj1)
+    file2 = get_writer('trajtxt').load(traj2)
     error, error_v = 0.0, 0.0
     nsnap = 0
     for snap1, snap2 in zip(file1, file2):
@@ -95,7 +95,7 @@ def run_comparison():
     create_conversion_factors('lj')
     create_conversion_factors(UNIT)
     generate_system_conversions('lj', UNIT)
-    compare_traj('../traj.txt', 'traj.txt', UNIT, 'lj')
+    compare_traj('../traj.xyz', 'traj.xyz', UNIT, 'lj')
     # just make a bunch of plots comparing the energies
     return UNIT, 'lj'
 

@@ -20,24 +20,39 @@ import matplotlib as mpl
 ljparams = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
 # Define simulation settings:
 settings = {}
-settings['system'] = {'temperature': 1.0, 'dimensions': 2,
-                      'units': 'lj'}
-settings['box'] = {'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
-                   'periodic': [True, True]}
-settings['simulation'] = {'task': 'md-nve', 'steps': 950}
-settings['engine'] = {'class': 'velocityverlet', 'timestep': 0.0025}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 10}
-settings['potential'] = [{'class': 'PairLennardJonesCutnp',
-                          'dim': 2, 'shift': True,
-                          'mixing': 'geometric',
-                          'parameter': ljparams}]
-settings['particles'] = {'position': {'file': 'initial.xyz'},
-                         'velocity': {'generate': 'maxwell', 'momentum': True,
-                                      'seed': 0}}
+settings['system'] = {
+    'temperature': 1.0,
+    'dimensions': 2,
+    'units': 'lj'
+}
+settings['box'] = {
+    'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
+    'periodic': [True, True]
+}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 950
+}
+settings['engine'] = {
+    'class': 'velocityverlet',
+    'timestep': 0.0025
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'screen': 10,
+    'trajectory-file': 10
+}
+settings['potential'] = [
+    {'class': 'PairLennardJonesCutnp',
+     'dim': 2, 'shift': True,
+     'mixing': 'geometric',
+     'parameter': ljparams}
+]
+settings['particles'] = {
+    'position': {'file': 'initial.xyz'},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 UNIT = settings['system']['units']
 create_conversion_factors(UNIT)
 SIGMA = CONVERT['length'][UNIT, 'A']

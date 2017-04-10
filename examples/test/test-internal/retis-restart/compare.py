@@ -49,7 +49,6 @@ def compare_traj(traj11, traj12, traj2, tol=1e-12):
     print('Checking mean squared error...')
     file11 = get_writer('pathtrajint').load(traj11)
     file12 = get_writer('pathtrajint').load(traj12)
-    next(file12)  # skip first item
     file1 = itertools.chain(file11, file12)
     file2 = get_writer('pathtrajint').load(traj2)
     error, error_v = 0.0, 0.0
@@ -97,7 +96,6 @@ def compare_energy(traj11, traj12, traj2, tol=1e-12):
     print('Checking mean squared error...')
     file11 = get_writer('pathenergy').load(traj11)
     file12 = get_writer('pathenergy').load(traj12)
-    next(file12)  # skip first item
     file1 = itertools.chain(file11, file12)
     file2 = get_writer('pathenergy').load(traj2)
     errors = {}
@@ -138,7 +136,6 @@ def compare_order(traj11, traj12, traj2, tol=1e-12):
     print('Checking mean squared error...')
     file11 = get_writer('pathorder').load(traj11)
     file12 = get_writer('pathorder').load(traj12)
-    next(file12)  # skip first item
     file1 = itertools.chain(file11, file12)
     file2 = get_writer('pathorder').load(traj2)
     errors = {}

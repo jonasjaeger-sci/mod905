@@ -12,11 +12,6 @@ System
 ------
 units = reduced
 dimensions = 1
-temperature = 0.07
-
-Box
----
-periodic = [False]
 
 Engine
 ------
@@ -46,18 +41,8 @@ swapsimul = True
 
 Initial-path settings
 ---------------------
-method = load
-restart_folder = restart
-
-Particles
----------
-position = {'file': '../initial.xyz'}
-velocity = {'generate': 'maxwell',
-            'momentum': False,
-            'seed': 0}
-mass = {'Ar': 1.0}
-name = ['Ar']
-type = [0]
+method = restart
+restart_folder = ../retis-100/
 
 Forcefield settings
 -------------------
@@ -82,4 +67,3 @@ Output
 trajectory-file = 1
 energy-file = 1
 order-file = 1
-write_vel = True

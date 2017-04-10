@@ -5,7 +5,7 @@ Simulation
 ----------
 task = retis
 steps = 1000000
-interfaces = [-0.32, -0.21, -0.13, -0.08, -0.03, 0.03, 0.10, 0.20]
+interfaces = [-0.32, -0.21, -0.13, -0.08, -0.03, 0.03, 0.10, 0.40]
 
 System
 ------
@@ -77,7 +77,12 @@ parameter y0 = 0.4
 
 Orderparameter
 --------------
-class = Position
+class = HysterXY
+module = ../order.py
 dim = y
 index = 0
 periodic = False
+inter_a = -0.30
+inter_b = 0.37
+energy_a = -9.0
+energy_b = -9.0

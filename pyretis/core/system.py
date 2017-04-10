@@ -68,9 +68,6 @@ class System(object):
             The (desired) temperature of the system, if applicable.
         units : string
             The system of units to use in the simulation box.
-        energy : float, optional
-            In case we want to fix the total energy of the system to
-            a given value.
 
         Note
         ----
@@ -415,3 +412,17 @@ class System(object):
             logger.debug('Rescaled energies to ekin: %f', ekin_new)
             alpha = np.sqrt(ekin_new / ekin)
             self.particles.vel = self.particles.vel * alpha
+
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        info = {'temperature': self.temperature, 'units': self.units}
+        # Collect some more info:
+        try:
+            info['box'] = self.box.restart_info()
+        except AttributeError:
+            pass
+        try:
+            info['particles'] = self.particles.restart_info()
+        except AttributeError:
+            pass
+        return info

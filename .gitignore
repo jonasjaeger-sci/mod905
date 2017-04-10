@@ -68,29 +68,29 @@ docs/_build
 *.rst_*
 # md wca: energy and trajectory
 examples/molecular_dynamics/md_wca/thermo.txt*
-examples/molecular_dynamics/md_wca/traj.txt*
+examples/molecular_dynamics/md_wca/traj.xyz*
 examples/molecular_dynamics/md_wca/energy.txt*
 # md nve: energy, thermo and trajectory
 examples/molecular_dynamics/md_nve/energy.txt*
-examples/molecular_dynamics/md_nve/thermo.txt*
+examples/molecular_dynamics/md_nve/thermo.xyz*
 examples/molecular_dynamics/md_nve/traj.txt*
 # md movie 2D: energy and trajectory
 examples/molecular_dynamics/md_movie_2d/energy.txt*
-examples/molecular_dynamics/md_movie_2d/traj.txt*
+examples/molecular_dynamics/md_movie_2d/traj.xyz*
 # umbrella sampling, temp files for movie
 examples/umbrella_sampling/fancy_movie/*.png
 # tis, md-flux:
 examples/tis/1D-double-well/md_flux/cross.txt
 examples/tis/1D-double-well/md_flux/energy.txt
 examples/tis/1D-double-well/md_flux/order.txt
-examples/tis/1D-double-well/md_flux/traj.txt
+examples/tis/1D-double-well/md_flux/traj.xyz
 examples/tis/1D-double-well/md_flux/*.png
 examples/tis/1D-double-well/md_flux/*.txt.gz
 examples/tis/1D-double-well/md_flux/report
 # extending with fortran:
 examples/extending/fortran/*/energy.txt*
 examples/extending/fortran/*/thermo.txt*
-examples/extending/fortran/*/traj.xtt*
+examples/extending/fortran/*/traj.xyz*
 # tis examples
 examples/tis/1D-double-well/md_flux/cross.txt*
 examples/tis/1D-double-well/md_flux/energy.txt*

@@ -46,6 +46,7 @@ class SimulationMD(Simulation):
         The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
     """
+    simulation_type = 'md'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
         """Initialize the simulation.
@@ -85,10 +86,11 @@ class SimulationMD(Simulation):
         Here we report the cycle number and the random
         number generator status.
         """
-        info = {'cycle': self.cycle}
+        info = {'cycle': self.cycle,
+                'type': self.simulation_type}
         try:
             rgen = self.engine.rgen
-            info['engine_rgen'] = rgen.get_state()
+            info['engine'] = {'rgen': rgen.get_state()}
         except AttributeError:
             pass
         return info
@@ -109,6 +111,7 @@ class SimulationNVE(SimulationMD):
         The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
     """
+    simulation_type = 'md-nve'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
         """Initialization of a NVE simulation.
@@ -182,6 +185,7 @@ class SimulationMDFlux(SimulationMD):
         These are used to store the previous positions with respect
         to the interfaces.
     """
+    simulation_type = 'md-flux'
 
     def __init__(self, system, orderp, engine, interfaces,
                  steps=0, startcycle=0):
@@ -258,3 +262,18 @@ class SimulationMDFlux(SimulationMD):
         msg += ['Dynamics engine: {}'.format(self.engine)]
         msg += ['Time step: {}'.format(self.engine.delta_t)]
         return '\n'.join(msg)
+    
+    def restart_info(self):
+        """Return restart info.
+
+        Here we report the cycle number and the random
+        number generator status.
+        """
+        info = super().restart_info()
+        info['leftside_prev'] = self.leftside_prev
+        return info
+
+    def load_restart_info(self, info):
+        """Load the restart information."""
+        super().load_restart_info(info)
+        self.leftside_prev = info['leftside_prev']

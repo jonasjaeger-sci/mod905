@@ -60,9 +60,9 @@ from pyretis.inout.settings import (
     is_single_tis
 )
 from pyretis.inout.restart import (
+    read_restart_file,
     write_restart_file,
-    add_restart_settings,
-    add_restart_objects
+    write_path_ensemble_restart,
 )
 
 
@@ -211,9 +211,14 @@ def run_md_flux_simulation(sim, sim_settings, progress=False):
     print_to_screen('Starting MD-Flux simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='MD-flux'):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 def run_md_simulation(sim, sim_settings, progress=False):
@@ -235,10 +240,14 @@ def run_md_simulation(sim, sim_settings, progress=False):
     print_to_screen('Starting MD simulation', level='info')
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='MD step'):
         for out_task in output_tasks:
             out_task.output(result)
-        write_restart_file('pyretis.restart', sim)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 def create_pathensemble_directories(ensemble):
@@ -304,6 +313,8 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     # We perform the initiation here. The initiation method expects
     # a iterable of path ensembles so we just give that to it:
     _help_with_initialization(sim, sim_settings, (output_tasks,))
+    write_path_ensemble_restart(ensemble)
+    write_restart_file('pyretis.restart', sim)
 
     logtxt = 'Initialization done. Starting main TIS simulation'
     print_to_screen(logtxt, level='info')
@@ -312,9 +323,15 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     tqd = use_tqdm(progress)
     nsteps = (sim.cycle['end'] - sim.cycle['step'])
     desc = 'TIS Ensemble {}'.format(ensemble_name)
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc=desc):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+            write_path_ensemble_restart(ensemble)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 def _help_with_initialization(sim, sim_settings, output_tasks):
@@ -346,8 +363,9 @@ def _help_with_initialization(sim, sim_settings, output_tasks):
             'status': result[2],
             'system': sim.system
         }
-        for out_task in output_tasks[i]:
-            out_task.output(ensemble_result)
+        if sim_settings['initial-path']['method'] != 'restart':
+            for out_task in output_tasks[i]:
+                out_task.output(ensemble_result)
 
 
 def run_retis_simulation(sim, sim_settings, progress=False):
@@ -389,6 +407,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
     # Here we do the initialization:
     _help_with_initialization(sim, sim_settings, output_tasks)
     write_restart_file('pyretis.restart', sim)
+    for ensemble in path_ensembles:
+        write_path_ensemble_restart(ensemble)
 
     logtxt = 'Starting main RETIS simulation.'
     print_to_screen(logtxt, level='info')
@@ -396,6 +416,7 @@ def run_retis_simulation(sim, sim_settings, progress=False):
 
     tqd = use_tqdm(progress)
     nsteps = sim.cycle['end'] - sim.cycle['step']
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), total=nsteps, desc='RETIS'):
         # Do output for each ensemble:
         for i, ensemble in enumerate(path_ensembles):
@@ -417,7 +438,14 @@ def run_retis_simulation(sim, sim_settings, progress=False):
                 )
                 print_to_screen(logtxt)
             print_to_screen()
-        write_restart_file('pyretis.restart', sim)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            for ensemble in path_ensembles:
+                write_path_ensemble_restart(ensemble)
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart files:
+    for ensemble in path_ensembles:
+        write_path_ensemble_restart(ensemble)
+    write_restart_file('pyretis.restart', sim)
 
 
 def run_tis_simulation(settings_sim, settings_tis, progress=False):
@@ -498,9 +526,14 @@ def run_generic_simulation(sim, sim_settings, progress=False):
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
     tqd = use_tqdm(progress)
+    restart_freq = sim_settings['output']['restart-file']
     for result in tqd(sim.run(), desc='Step'):
         for out_task in output_tasks:
             out_task.output(result)
+        if result['cycle']['stepno'] % restart_freq == 0:
+            write_restart_file('pyretis.restart', sim)
+    # Write final restart file:
+    write_restart_file('pyretis.restart', sim)
 
 
 _RUNNERS = {'md-flux': run_md_flux_simulation,
@@ -549,7 +582,9 @@ def set_up_simulation(inputfile, runpath):
         print_to_screen('Reading restart file: "{}"'.format(restart),
                         level='warning')
         logger.info('Reading restart file: "%s"', restart)
-        restart_info = add_restart_settings(sim_settings, restart)
+        restart_info = read_restart_file(restart)
+        sim_settings['output']['backup'] = 'append'
+        logger.info('Setting output setting backup to "append"')
 
     print_to_screen()
 
@@ -574,7 +609,7 @@ def set_up_simulation(inputfile, runpath):
     logtxt = 'Creating system from settings.'
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
-    syst = create_system(sim_settings, engine=engine)
+    syst = create_system(sim_settings, engine=engine, restart=restart_info)
 
     logtxt = 'Creating force field'
     print_to_screen(logtxt, level='info')
@@ -588,7 +623,7 @@ def set_up_simulation(inputfile, runpath):
     keyargs = {'system': syst, 'engine': engine}
     sim = create_simulation(sim_settings, keyargs)
     if restart_info is not None:
-        add_restart_objects(restart_info, sim)
+        sim.load_restart_info(restart_info['simulation'])
 
     task = sim_settings['simulation']['task'].lower()
     logtxt = 'Will run simulation: "{}"'.format(task)

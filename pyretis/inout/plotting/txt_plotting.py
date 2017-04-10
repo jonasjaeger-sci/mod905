@@ -12,10 +12,13 @@ Important classes defined here
 TxtPlotter (:py:class:`.TxtPlotter`)
     A class for writing text output.
 """
+import gzip
 import logging
+import os
+import shutil
 import numpy as np
 from pyretis.inout.plotting.plotting import Plotter
-from pyretis.inout.common import create_backup, name_file
+from pyretis.inout.common import name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
 from pyretis.inout.writers.txtinout import txt_save_columns
@@ -293,32 +296,34 @@ class TxtPlotter(Plotter):
         outfile = name_file(PATH_MATCH['match'], self.out_fmt,
                             path=self.out_dir)
         if outfile.endswith('.gz'):
+            use_gzip = True
             outfile = outfile[:-3]
-            msgtxt = ('Writing gzipped matched probabilities'
-                      ' is not supported!\n'
-                      'File will be written as text.')
-
-            logger.warning(msgtxt)
-        if self.backup:
-            msgtxt = create_backup(outfile)
-            if msgtxt:
-                logger.warning(msgtxt)
-        outfiles.append(outfile)
+        else:
+            use_gzip = False
         with open(outfile, 'wb') as fhandle:
             for prob, ens, idet in zip(matched['matched-prob'],
                                        path_ensembles, detect):
                 header = 'Ensemble: {}, idetect: {}'.format(ens, idet)
                 np.savetxt(fhandle, prob, header=header)
+        if use_gzip:
+            outfilegz = '{}.gz'.format(outfile)
+            with open(outfile, 'rb') as fhandle:
+                with gzip.open(outfilegz, 'wb') as fhandle_out:
+                    shutil.copyfileobj(fhandle, fhandle_out)
+            os.remove(outfile)
+            outfiles.append(outfilegz)
+        else:
+            outfiles.append(outfile)
         # output the over-all matched probability:
         outfile = name_file(PATH_MATCH['total'], self.out_fmt,
                             path=self.out_dir)
-        outfiles.append(outfile)
         interf = ' , '.join([str(idet) for idet in detect])
         header = 'Total matched probability. Interfaces: {}'
         txt_save_columns(outfile, header.format(interf),
                          (matched['overall-prob'][:, 0],
                           matched['overall-prob'][:, 1]),
                          backup=self.backup)
+        outfiles.append(outfile)
         return outfiles
 
 

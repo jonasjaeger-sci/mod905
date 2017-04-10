@@ -69,6 +69,7 @@ class UmbrellaWindowSimulation(Simulation):
     maxdx : float
         Maximum allowed displacement in the Monte Carlo step.
     """
+    simulation_type = 'umbrella-window'
 
     def __init__(self, system, umbrella, overlap, rgen, maxdx,
                  mincycle=0, startcycle=0):
@@ -137,5 +138,6 @@ class UmbrellaWindowSimulation(Simulation):
         number generator status.
         """
         info = {'cycle': self.cycle,
-                'random_state': self.rgen.get_state()}
+                'random_state': self.rgen.get_state(),
+                'type': self.simulation_type}
         return info

@@ -35,6 +35,7 @@ import logging
 from pyretis.inout.common import print_to_screen
 from .initiate_kick import initiate_kick
 from .initiate_load import initiate_load
+from .initiate_restart import initiate_restart
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
@@ -50,8 +51,11 @@ def get_initiation_method(settings):
     settings : dict
         This dictionary contains the settings for the initiation.
     """
-    _methods = {'kick': initiate_kick,
-                'load': initiate_load}
+    _methods = {
+        'kick': initiate_kick,
+        'load': initiate_load,
+        'restart': initiate_restart,
+    }
     method = settings['initial-path']['method'].lower()
     if method not in _methods:
         logger.error('Unknown initiation method "%s" requrested', method)

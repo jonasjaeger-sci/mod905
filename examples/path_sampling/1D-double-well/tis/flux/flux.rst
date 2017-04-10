@@ -55,5 +55,4 @@ backup = overwrite
 energy-file = 1000
 order-file = 1000
 cross-file = 1
-trajectory-file = 1000
-write_vel = False
+trajectory-file = -1

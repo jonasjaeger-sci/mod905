@@ -29,28 +29,38 @@ DTHETA2 = 0.0
 STEPS_PER_FRAME = 10
 # Give simulation settings:
 settings = {}
-settings['simulation'] = {'task': 'md-nve',
-                          'steps': 100000,
-                          'exe-path': None}
-settings['system'] = {'units': 'gromacs',
-                      'temperature': 1.,
-                      'dimensions': 2}
-settings['engine'] = {'class': 'VVIntegrator',
-                      'timestep': 0.005,
-                      'module': 'myintegrator.py'}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 10}
-settings['potential'] = [{'class': 'DoublePendulumn',
-                          'module': 'doublependulum.py',
-                          'g': 1.0, 'l1': L1, 'l2': L2}]
-settings['particles'] = {'position': {'generate': 'sq', 'repeat': [2, 1],
-                                      'lcon': 1},
-                         'type': [0, 0],
-                         'name': ['A', 'B'],
-                         'mass': {'A': M1, 'B': M2}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 100000,
+    'exe-path': None
+}
+settings['system'] = {
+    'units': 'gromacs',
+    'temperature': 1.,
+    'dimensions': 2
+}
+settings['engine'] = {
+    'class': 'VVIntegrator',
+    'timestep': 0.005,
+    'module': 'myintegrator.py'
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'screen': 10,
+    'trajectory-file': 10
+}
+settings['potential'] = [
+    {'class': 'DoublePendulumn',
+     'module': 'doublependulum.py',
+     'g': 1.0, 'l1': L1, 'l2': L2}
+]
+settings['particles'] = {
+    'position': {'generate': 'sq', 'repeat': [2, 1], 'lcon': 1},
+    'type': [0, 0],
+    'name': ['A', 'B'],
+    'mass': {'A': M1, 'B': M2}
+}
 
 UNIT = settings['system']['units']
 create_conversion_factors(UNIT)

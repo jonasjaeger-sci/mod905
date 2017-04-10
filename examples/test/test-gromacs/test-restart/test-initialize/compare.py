@@ -9,6 +9,7 @@ and restarted after 100 steps.
 # pylint: disable=C0103
 import filecmp
 import os
+import itertools
 import colorama
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.settings import parse_settings_file
@@ -25,6 +26,24 @@ def compare_files(file1, file2):
         print_to_screen('\t-> Files are equal!', level='success')
     else:
         print_to_screen('\t-> Files are NOT equal!', level='error')
+
+
+def comment(line):
+    return line.startswith('#')
+    
+
+def compare_files_lines(file1, file2):
+    """Compare line by line but skip comments."""
+    with open(file1, 'r') as infile1, open(file2, 'r') as infile2:
+        lines1 = itertools.filterfalse(comment, infile1)
+        lines2 = itertools.filterfalse(comment, infile2)
+        similar = all([i == j for i, j in zip(lines1, lines2)])
+        if similar:
+            print_to_screen('\t-> Path ensemble files contain same data!',
+                            level='success')
+        else:
+            print_to_screen('\t-> Path ensemble files differ!',
+                            level='error')
 
 
 def compare_ensemble(ensemble):
@@ -44,6 +63,11 @@ def compare_ensemble(ensemble):
     order1 = os.path.join(RUN_FULL, ensemble, 'order.txt')
     order2 = os.path.join(RUN_RESTART, ensemble, 'order.txt')
     compare_files(order1, order2)
+    
+    print_to_screen('* Comparing pathensemble.txt files...')
+    pathe1 = os.path.join(RUN_FULL, ensemble, 'pathensemble.txt')
+    pathe2 = os.path.join(RUN_RESTART, ensemble, 'pathensemble.txt')
+    compare_files_lines(pathe1, pathe2)
 
 
 if __name__ == '__main__':

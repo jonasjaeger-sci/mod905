@@ -72,76 +72,94 @@ TASK_MAP['energy'] = {
     'filename': 'energy.txt',
     'result': ('thermo',),
     'when': 'energy-file',
-    'writer': 'energy'}
+    'writer': 'energy'
+}
 
 TASK_MAP['order'] = {
     'target': 'file',
     'filename': 'order.txt',
     'result': ('order',),
     'when': 'order-file',
-    'writer': 'order'}
+    'writer': 'order'
+}
 
 TASK_MAP['cross'] = {
     'target': 'file',
     'filename': 'cross.txt',
     'result': ('cross',),
     'when': 'cross-file',
-    'writer': 'cross'}
+    'writer': 'cross'
+}
 
 TASK_MAP['traj-txt'] = {
     'target': 'file',
     'filename': 'traj.txt',
     'result': ('system',),
     'when': 'trajectory-file',
-    'settings': {'output': ('write_vel',)},
-    'writer': 'trajtxt'}
+    'writer': 'trajtxt'
+}
+
+TASK_MAP['traj-xyz'] = {
+    'target': 'file',
+    'filename': 'traj.xyz',
+    'result': ('system',),
+    'when': 'trajectory-file',
+    'writer': 'trajtxt'
+}
 
 TASK_MAP['thermo-screen'] = {
     'target': 'screen',
     'result': ('thermo',),
-    'when': 'energy-screen',
-    'writer': 'thermotable'}
+    'when': 'screen',
+    'writer': 'thermotable'
+}
 
 TASK_MAP['thermo-file'] = {
     'target': 'file',
     'filename': 'thermo.txt',
     'result': ('thermo',),
     'when': 'energy-file',
-    'writer': 'thermotable'}
+    'writer': 'thermotable'
+}
 
 TASK_MAP['pathensemble'] = {
     'target': 'file',
     'filename': 'pathensemble.txt',
     'result': ('pathensemble',),
     'when': 'pathensemble-file',
-    'writer': 'pathensemble'}
+    'writer': 'pathensemble'
+}
 
 TASK_MAP['pathensemble-screen'] = {
     'target': 'screen',
     'result': ('pathensemble',),
-    'when': 'pathensemble-screen',
-    'writer': 'pathtable'}
+    'when': 'screen',
+    'writer': 'pathtable'
+}
 
 TASK_MAP['path-order'] = {
     'target': 'file',
     'filename': 'order.txt',
     'result': ('path', 'status'),
     'when': 'order-file',
-    'writer': 'pathorder'}
+    'writer': 'pathorder'
+}
 
 TASK_MAP['path-energy'] = {
     'target': 'file',
     'filename': 'energy.txt',
     'result': ('path', 'status'),
     'when': 'energy-file',
-    'writer': 'pathenergy'}
+    'writer': 'pathenergy'
+}
 
 TASK_MAP['path-traj-int'] = {
     'target': 'file',
     'filename': 'traj.txt',
     'result': ('path', 'status'),
     'when': 'trajectory-file',
-    'writer': 'pathtrajint'}
+    'writer': 'pathtrajint'
+}
 
 TASK_MAP['path-traj-ext'] = {
     'target': 'file',
@@ -149,7 +167,8 @@ TASK_MAP['path-traj-ext'] = {
     'result': ('path', 'status'),
     'when': 'trajectory-file',
     'special': True,
-    'writer': 'pathtrajext'}
+    'writer': 'pathtrajext'
+}
 
 _SIM_OUTPUT = {}
 """This dictionary gives a list of predefined output tasks for
@@ -169,7 +188,7 @@ _SIM_OUTPUT['md-nve'] = [
      'name': 'nve-energy-file'},
     {'type': 'thermo-file',
      'name': 'nve-thermo-file'},
-    {'type': 'traj-txt',
+    {'type': 'traj-xyz',
      'name': 'nve-traj-file'},
     {'type': 'thermo-screen',
      'name': 'nve-thermo-screen'}
@@ -178,7 +197,7 @@ _SIM_OUTPUT['md-nve'] = [
 _SIM_OUTPUT['md-flux'] = [
     {'type': 'energy',
      'name': 'flux-energy-file'},
-    {'type': 'traj-txt',
+    {'type': 'traj-xyz',
      'name': 'flux-traj-file'},
     {'type': 'thermo-screen',
      'name': 'flux-thermo-screen'},

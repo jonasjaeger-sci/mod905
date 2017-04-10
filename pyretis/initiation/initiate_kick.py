@@ -144,11 +144,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     rgen : object like :py:class:`.RandomGenerator`
         This is the random generator that will be used.
     tis_settings : dict
-        This dictionary contain the TIS settings. Here we set the
-        setting for the starting condition (``'start_cond'``) according
-        to the given path ensemble. We are also using the keyword
-        ``'initial_path'`` to determine how the initial path should be
-        initiated. The other ``tis_settings`` are just passed on.
+        This dictionary contain the TIS settings.
     cycle : integer, optional
         The cycle number we are initiating at, typically this will be 0
         which is the default value.
@@ -162,7 +158,6 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     out[2] : string
         Sthe status of the path.
     """
-    tis_settings['start_cond'] = path_ensemble.get_start_condition()
     initial_path = None
     status = ''
     accept = False
@@ -265,12 +260,12 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     # end at the same (wrong) interface - we now need to do some shooting moves
     # 3) We can start at wrong interface and end and the starting condition
     # we just have to reverse the path then.
-    if start == tis_settings['start_cond']:  # case 0 and 1
+    if start == path_ensemble.get_start_condition():  # case 0 and 1
         initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
     else:
         # Now we do the other cases:
-        if end == tis_settings['start_cond']:
+        if end == path_ensemble.get_start_condition():
             # Case 3 (and start != start_cond):
             logger.info('Initial path is in the wrong direction')
             initial_path = initial_path.reverse()
@@ -411,7 +406,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
     local_tis_settings['aimless'] = True,
     local_tis_settings['freq'] = 0.5
 
-    improved, check_ok = _get_help(local_tis_settings['start_cond'],
+    improved, check_ok = _get_help(path_ensemble.get_start_condition(),
                                    path_ensemble.interfaces)
 
     backup_path = True

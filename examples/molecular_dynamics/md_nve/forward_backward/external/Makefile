@@ -2,7 +2,7 @@
 	clean
 
 clean:
-	-rm traj.txt*
+	-rm traj.xyz*
 	-rm thermo.txt*
 	-rm energy.txt*
 	$(MAKE) -C fortran clean

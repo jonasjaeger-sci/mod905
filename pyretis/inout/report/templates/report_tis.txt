@@ -15,8 +15,8 @@ Combined results
 
 P_cross: @{{ numbers['pcross'] }}@ +- @{{ numbers['perr'] }}@ %
 
-sim.time: @{{ numbers['simt'] }}@ 
+sim.time: @{{ numbers['simt'] }}@
 
-tau_eff: @{{ numbers['teff'] }}@ 
+tau_eff: @{{ numbers['teff'] }}@
 
 Optimized P_cross tau_eff: @{{ numbers['opteff'] }}@

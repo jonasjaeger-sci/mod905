@@ -36,8 +36,7 @@ seed = 0
 
 Initial-path
 ------------
-method = load
-restart_folder = initial_path
+method = restart
 
 RETIS settings
 --------------
@@ -53,11 +52,8 @@ module = ../orderp.py
 
 Output settings
 ---------------
-write_vel = False
 pathensemble-file = 1
-pathensemble-screen = 10
-energy-screen = 0
-cross-file = 0
+screen = 10
 order-file = 1
 energy-file = 1
 trajectory-file = 1

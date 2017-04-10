@@ -217,6 +217,8 @@ class PathBase(object):
         in the variable `_STATUS`
     vpot : list of floats
         The potential energy as function of time.
+    ekin : list of floats
+        The kinetic energy as function of time.
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
@@ -626,6 +628,11 @@ class PathBase(object):
         return '\n'.join(msg)
 
     @abstractmethod
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        return
+
+    @abstractmethod
     def empty_path(self, **kwargs):
         """Return an empty path of same class as the current one.
 
@@ -769,6 +776,30 @@ class Path(PathBase):
         else:
             return None
 
+    def restart_info(self):
+        """Return a dictionary with restart information."""
+        info = {
+            'generated': self.generated,
+            'maxlen': self.maxlen,
+            'order': self.order,
+            'ordermin': self.ordermin,
+            'ordermax': self.ordermax,
+            'time_origin': self.time_origin,
+            'status': self.status,
+            'vpot': self.vpot,
+            'ekin': self.ekin,
+            'pos': self.pos,
+            'vel': self.vel,
+            'length': self.length,
+        }
+        return info
+
+    def load_restart_info(self, info):
+        """Set up the path using restart information."""
+        for key in info:
+            if hasattr(self, key):
+                setattr(self, key, info[key])
+
 
 class PathExt(Path):
     """A path where snapshots are not stored in memory.
@@ -781,7 +812,12 @@ class PathExt(Path):
     Attributes
     ----------
     pos : list of strings
-        Positions as function of time
+        Positions as function of time. Here, the positions are
+        actually files which contain the positions AND velocities
+    vel : list of booleans
+        If an item in this list is True, the the corresponding
+        velocities in the snapshot file in ``pos`` should be
+        reversed.
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):

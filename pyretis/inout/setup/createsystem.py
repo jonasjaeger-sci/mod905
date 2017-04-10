@@ -534,23 +534,48 @@ def create_velocities(system, settings, vel):
         return False
 
 
-def create_system(settings, engine=None):
-    """Method that will set up a system from settings.
+def create_system_from_restart(restart):
+    """Create a system from restart information.
 
-    In order to set up the system, there are several things we might
-    need to do:
+    Parameters
+    ----------
+    restart : dict
+        A dictionary with restart information.
 
-    1. Set the initial positions.
+    Returns
+    -------
+    system : object like :py:class:`.System`
+        The system object we create here.
+    """
+    settings = restart['system']
 
-    2. Create/set-up the simulation box.
+    klass = get_particle_type(settings['particles']['class'])
+    particles = klass(dim=settings['particles']['dim'])
+    particles.load_restart_info(settings['particles'])
 
-    3. Set initial velocities.
+    box = Box(
+        size=settings['box']['size'],
+        periodic=settings['box']['periodic']
+    )
+
+    system = System(
+        temperature=settings['temperature']['set'],
+        units=settings['units'],
+        box=box
+    )
+
+    system.particles = particles
+    return system
+
+
+def create_system_from_settings(settings, engine):
+    """Create a system from input settings.
 
     Parameters
     ----------
     settings : dict
         The dict with the simulation settings
-    engine : object like :py:class:`.EngineBase`
+    engine : object like :py:class:`.EngineBase`, optional
         The engine to be used for the simulation. This can be given
         in case we want to choose an external particle list type.
 
@@ -588,4 +613,38 @@ def create_system(settings, engine=None):
             vel_gen = False
         if not (vel_gen or vel):
             logger.warning('Velocities were not created/read: Set to zero!')
+    return system
+
+
+def create_system(settings, engine=None, restart=None):
+    """Method that will set up a system from settings.
+
+    In order to set up the system, there are several things we might
+    need to do:
+
+    1. Set the initial positions.
+
+    2. Create/set-up the simulation box.
+
+    3. Set initial velocities.
+
+    Parameters
+    ----------
+    settings : dict
+        The dict with the simulation settings
+    engine : object like :py:class:`.EngineBase`, optional
+        The engine to be used for the simulation. This can be given
+        in case we want to choose an external particle list type.
+    restart : dict, optional
+        A dict with restart information, if we are doing a restart.
+
+    Returns
+    -------
+    system : object like :py:class:`.System`
+        The system object we create here.
+    """
+    if restart is not None:
+        system = create_system_from_restart(restart)
+    else:
+        system = create_system_from_settings(settings, engine)
     return system

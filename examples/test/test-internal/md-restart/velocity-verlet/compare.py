@@ -51,12 +51,11 @@ def compare_traj(traj11, traj12, traj2, tol=1e-12):
     None, just prints out the result of the comparison.
     """
     print_to_screen('Comparing trajectories', level='info')
-    print('Checking mean squared error...')
-    file11 = get_writer('trajtxt', {'write_vel': True}).load(traj11)
-    file12 = get_writer('trajtxt', {'write_vel': True}).load(traj12)
-    next(file12)  # skip first item
+    print_to_screen('Checking mean squared error...')
+    file11 = get_writer('trajtxt').load(traj11)
+    file12 = get_writer('trajtxt').load(traj12)
     file1 = itertools.chain(file11, file12)
-    file2 = get_writer('trajtxt', {'write_vel': True}).load(traj2)
+    file2 = get_writer('trajtxt').load(traj2)
     error, error_v = 0.0, 0.0
     nsnap = 0
     for snap1, snap2 in zip(file1, file2):
@@ -153,9 +152,9 @@ def make_plots():
 if __name__ == '__main__':
     colorama.init(autoreset=True)
     compare_traj(
-        'run-100/md-100-traj.txt',
-        'run-100-1000/md-100-1000-traj.txt',
-        'run-full/md-full-traj.txt',
+        'run-100/md-100-traj.xyz',
+        'run-100-1000/md-100-1000-traj.xyz',
+        'run-full/md-full-traj.xyz',
         tol=1e-12
     )
     fig = make_plots()

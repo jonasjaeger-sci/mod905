@@ -10,7 +10,7 @@ The main results are the initial fluxes:
 @{{ tables['md-flux'] }}@
 
 Detailed results are given below and
-the flux results are summarized in the 
+the flux results are summarized in the
 section on `MD flux data`_.
 
 .. _md-flux-results:

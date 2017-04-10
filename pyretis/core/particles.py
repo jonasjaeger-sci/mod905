@@ -314,6 +314,29 @@ class Particles(object):
         msg += ['Names: {}'.format(set(self.name))]
         return '\n'.join(msg)
 
+    def restart_info(self):
+        """Generate information for saving a restart file."""
+        info = {'class': 'internal'}
+        for attr in ('npart', 'pos', 'vel', 'force',
+                     'vpot', 'ekin', 'mass', 'imass',
+                     'name', 'ptype', 'virial', 'dim'):
+            try:
+                info[attr] = getattr(self, attr)
+            except AttributeError:
+                pass
+        return info
+
+    def load_restart_info(self, info):
+        """Load restart information."""
+        for attr in ('npart', 'pos', 'vel', 'force',
+                     'vpot', 'ekin', 'mass', 'imass',
+                     'name', 'ptype', 'virial', 'dim'):
+            if attr in info:
+                setattr(self, attr, info[attr])
+            else:
+                logger.warning(('Could not set % for particles'
+                                ' from restart info'), attr)
+
 
 class ParticlesExt(Particles):
     """Particles, when positions and velocities are stored in files.
@@ -405,6 +428,25 @@ class ParticlesExt(Particles):
         self.set_vel(phasepoint['vel'])
         self.ekin = phasepoint['ekin']
         self.vpot = phasepoint['vpot']
+
+    def restart_info(self):
+        """Generate information for saving a restart file."""
+        info = super().restart_info()
+        info['class'] = 'external'
+        info['vel_rev'] = self.vel_rev
+        info['config'] = self.config
+        return info
+
+    def load_restart_info(self, info):
+        """Load restart information."""
+        super().load_restart_info(info)
+        for attr in ('vel_rev', 'config'):
+            try:
+                setattr(self, attr, info[attr])
+            except KeyError:
+                msg = 'Required restart info {} not found!'.format(attr)
+                logger.error(msg)
+                raise ValueError(msg)
 
 
 def get_particle_type(engine_type):

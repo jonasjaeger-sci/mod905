@@ -7,6 +7,7 @@ Here, we pick out the last accepted path.
 """
 # pylint: disable=C0103
 import os
+import shutil
 import colorama
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.settings import parse_settings_file
@@ -14,8 +15,8 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.writers import prepare_load, get_writer
 
 
-SOURCE = 'retis-100'
-TARGET = os.path.join('retis-100-200', 'restart')
+SOURCE = 'run-initialize'
+TARGET = os.path.join('run-restart', 'initial_path')
 
 
 def read_path_file(filename):
@@ -69,22 +70,17 @@ def extract_order(order_file, target_order, last_one):
 
 def extract_traj(traj_file, target_traj, last_one):
     """Extract a given path from a file."""
-    fmt = None
+    fmt = '{:>10}  {:>20s}  {:>10}  {:>5}\n'
     with open(target_traj, 'w') as output:
-        traj = prepare_load('pathtrajint', traj_file)
+        traj = prepare_load('pathtrajext', traj_file)
         for idx, path in enumerate(traj):
             if idx == last_one:
                 for lines in path['comment']:
                     output.write('{}\n'.format(lines))
-                for i, snapshot in enumerate(path['data']):
-                    output.write('Snapshot: {}\n'.format(i))
-                    pos = snapshot['pos']
-                    vel = snapshot['vel']
-                    for posj, velj in zip(pos, vel):
-                        if fmt is None:
-                            fmt = ('{} ' * (len(posj) + len(velj))).strip()
-                            fmt += '\n'
-                        output.write(fmt.format(*posj, *velj))
+                for snapshot in path['data']:
+                    snap = [i for i in snapshot]
+                    snap[1] = '_'.join(snap[1].split('_')[1:])
+                    output.write(fmt.format(*snap))
 
 
 def get_files_from_directory(ensemble, target):
@@ -116,8 +112,15 @@ def main():
     for i in range(nint):
         ens = PATH_DIR_FMT.format(i)
         target = os.path.join(TARGET, ens)
-        if not os.path.exists(target):
-            os.makedirs(target)
+        target_a = os.path.join(target, 'accepted')
+        for path in (target, target_a):
+            if not os.path.exists(path):
+                os.makedirs(path)
+        source_a = os.path.join(SOURCE, ens, 'accepted')
+        for files in os.listdir(source_a):
+            filepath = os.path.join(source_a, files)
+            if os.path.isfile(filepath):
+                shutil.copy(filepath, target_a)
         get_files_from_directory(ens, target)
 
 

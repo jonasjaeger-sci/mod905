@@ -392,8 +392,14 @@ def _create_shoot_histograms(shoot_stats, bins):
     scale = {}
     for key in shoot_stats:
         shoot_stats[key] = np.array(shoot_stats[key])
-        mind = shoot_stats[key].min()
-        maxd = shoot_stats[key].max()
+        if len(shoot_stats[key]) < 1:
+            logger.warning('No shoots data found for %s (empty histogram)',
+                           key)
+            mind = 0.0
+            maxd = 0.1
+        else:
+            mind = shoot_stats[key].min()
+            maxd = shoot_stats[key].max()
         histograms[key] = histogram(shoot_stats[key], bins=bins,
                                     limits=(mind, maxd), density=True)
         scale[key] = (float(len(shoot_stats[key])) /

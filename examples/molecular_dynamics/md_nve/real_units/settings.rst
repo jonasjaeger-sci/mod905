@@ -48,4 +48,3 @@ energy-file = 1
 order-file = 1
 cross-file = 1
 trajectory-file = 1
-write_vel = True

@@ -74,6 +74,7 @@ class PathSimulation(Simulation):
 
     required_settings = ('tis',)
     name = 'Generic path simulation'
+    simulation_type = 'generic-path'
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
@@ -137,10 +138,11 @@ class PathSimulation(Simulation):
         number generator status.
         """
         info = {'cycle': self.cycle,
-                'rgen': self.rgen.get_state()}
+                'rgen': self.rgen.get_state(),
+                'type': self.simulation_type}
         try:
             rgen = self.engine.rgen
-            info['engine_rgen'] = rgen.get_state()
+            info['engine'] = {'rgen': rgen.get_state()}
         except AttributeError:
             pass
         return info
@@ -164,6 +166,7 @@ class SimulationSingleTIS(PathSimulation):
 
     required_settings = ('tis',)
     name = 'Single TIS simulation'
+    simulation_type = 'tis'
 
     def __init__(self, system, order_function, engine, path_ensemble, rgen,
                  settings, steps=0, startcycle=0):
@@ -224,7 +227,7 @@ class SimulationSingleTIS(PathSimulation):
             self.settings['tis'],
             self.cycle['step'])
         results['accept'] = accept
-        results['trialpath'] = trial
+        results['path'] = trial
         results['status'] = status
         results['cycle'] = self.cycle
         results['pathensemble'] = self.path_ensemble
@@ -253,6 +256,7 @@ class SimulationRETIS(PathSimulation):
 
     required_settings = ('tis', 'retis')
     name = 'RETIS simulation'
+    simulation_type = 'retis'
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):

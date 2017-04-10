@@ -27,7 +27,7 @@ seed = 0
 
 TIS settings
 ------------
-freq =  0.5
+freq = 0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
@@ -77,7 +77,18 @@ parameter y0 = 0.4
 
 Orderparameter
 --------------
-class = Position
+class = HysterXY
+module = ../order.py
 dim = x
 index = 0
 periodic = False
+inter_a = -0.15
+inter_b = 0.18
+energy_a = -9.0
+energy_b = -9.0
+
+Output settings
+---------------
+trajectory-file = 10
+order-file = 10
+energy-file = 10

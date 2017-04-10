@@ -12,29 +12,36 @@ from pyretis.inout.setup import (create_simulation, create_system,
                                  create_output_tasks)
 from pyretis.inout.writers import FileIO, ThermoTable
 settings = {}
-settings['simulation'] = {'task': 'md-nve', 'steps': 1000}
-settings['system'] = {'units': 'lj', 'temperature': 2.0,
-                      'dimensions': 3}
-settings['engine'] = {'class': 'velocityverlet',
-                      'timestep': 0.002}
-settings['output'] = {'backup': 'overwrite',
-                      'write_vel': False,
-                      'energy-file': 1,
-                      'energy-screen': 10,
-                      'trajectory-file': 10}
-settings['potential'] = [{'class': 'PairLennardJonesCutF',
-                          'module': 'ljpotentialf.py',
-                          'dim': 3,
-                          'shift': True,
-                          'parameter': {0: {'sigma': 1,
-                                            'epsilon': 1,
-                                            'factor': 2.5}}}]
-settings['particles'] = {'position': {'generate': 'fcc',
-                                      'repeat': [3, 3, 3],
-                                      'density': 0.9},
-                         'velocity': {'generate': 'maxwell',
-                                      'momentum': True,
-                                      'seed': 0}}
+settings['simulation'] = {
+    'task': 'md-nve',
+    'steps': 1000
+}
+settings['system'] = {
+    'units': 'lj',
+    'temperature': 2.0,
+    'dimensions': 3
+}
+settings['engine'] = {
+    'class': 'velocityverlet',
+    'timestep': 0.002
+}
+settings['output'] = {
+    'backup': 'overwrite',
+    'energy-file': 1,
+    'screen': 10,
+    'trajectory-file': 10
+}
+settings['potential'] = [
+    {'class': 'PairLennardJonesCutF',
+     'module': 'ljpotentialf.py',
+     'dim': 3,
+     'shift': True,
+     'parameter': {0: {'sigma': 1, 'epsilon': 1, 'factor': 2.5}}}
+]
+settings['particles'] = {
+    'position': {'generate': 'fcc', 'repeat': [3, 3, 3], 'density': 0.9},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
