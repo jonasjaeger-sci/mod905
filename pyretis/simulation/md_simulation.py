@@ -262,3 +262,18 @@ class SimulationMDFlux(SimulationMD):
         msg += ['Dynamics engine: {}'.format(self.engine)]
         msg += ['Time step: {}'.format(self.engine.delta_t)]
         return '\n'.join(msg)
+    
+    def restart_info(self):
+        """Return restart info.
+
+        Here we report the cycle number and the random
+        number generator status.
+        """
+        info = super().restart_info()
+        info['leftside_prev'] = self.leftside_prev
+        return info
+
+    def load_restart_info(self, info):
+        """Load the restart information."""
+        super().load_restart_info(info)
+        self.leftside_prev = info['leftside_prev']

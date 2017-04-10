@@ -51,10 +51,9 @@ def compare_traj(traj11, traj12, traj2, tol=1e-12):
     None, just prints out the result of the comparison.
     """
     print_to_screen('Comparing trajectories', level='info')
-    print('Checking mean squared error...')
+    print_to_screen('Checking mean squared error...')
     file11 = get_writer('trajtxt').load(traj11)
     file12 = get_writer('trajtxt').load(traj12)
-    next(file12)  # skip first item
     file1 = itertools.chain(file11, file12)
     file2 = get_writer('trajtxt').load(traj2)
     error, error_v = 0.0, 0.0

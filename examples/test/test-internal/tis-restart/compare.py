@@ -46,7 +46,10 @@ def compare_traj(traj11, traj12, traj2, tol=1e-12):
     None, just prints out the result of the comparison.
     """
     print_to_screen('Comparing trajectories', level='info')
-    print('Checking mean squared error...')
+    print_to_screen('Loading files:')
+    for i in (traj11, traj12, traj2):
+        print_to_screen(i)
+    print_to_screen('Checking mean squared error...')
     file11 = get_writer('pathtrajint').load(traj11)
     file12 = get_writer('pathtrajint').load(traj12)
     file1 = itertools.chain(file11, file12)
@@ -93,7 +96,10 @@ def compare_energy(traj11, traj12, traj2, tol=1e-12):
     None, just prints out the result of the comparison.
     """
     print_to_screen('Comparing energies', level='info')
-    print('Checking mean squared error...')
+    print_to_screen('Loading files:')
+    for i in (traj11, traj12, traj2):
+        print_to_screen(i)
+    print_to_screen('Checking mean squared error...')
     file11 = get_writer('pathenergy').load(traj11)
     file12 = get_writer('pathenergy').load(traj12)
     file1 = itertools.chain(file11, file12)
@@ -133,7 +139,10 @@ def compare_order(traj11, traj12, traj2, tol=1e-12):
     None, just prints out the result of the comparison.
     """
     print_to_screen('Comparing order parameters', level='info')
-    print('Checking mean squared error...')
+    print_to_screen('Loading files:')
+    for i in (traj11, traj12, traj2):
+        print_to_screen(i)
+    print_to_screen('Checking mean squared error...')
     file11 = get_writer('pathorder').load(traj11)
     file12 = get_writer('pathorder').load(traj12)
     file1 = itertools.chain(file11, file12)
@@ -160,25 +169,23 @@ def compare_order(traj11, traj12, traj2, tol=1e-12):
 def compare_ensemble(ensemble):
     """Run the comparison for an ensemble"""
     print_to_screen('Comparing for "{}"'.format(ensemble), level='info')
-    traj11 = os.path.join('retis-100', ensemble, 'traj.txt')
-    traj12 = os.path.join('retis-100-200', ensemble, 'traj.txt')
-    traj2 = os.path.join('retis-full', ensemble, 'traj.txt')
+    traj11 = os.path.join('run-100', ensemble, 'traj.txt')
+    traj12 = os.path.join('run-100-200', ensemble, 'traj.txt')
+    traj2 = os.path.join('run-full', ensemble, 'traj.txt')
     compare_traj(traj11, traj12, traj2, tol=1e-12)
-    ener11 = os.path.join('retis-100', ensemble, 'energy.txt')
-    ener12 = os.path.join('retis-100-200', ensemble, 'energy.txt')
-    ener2 = os.path.join('retis-full', ensemble, 'energy.txt')
+    ener11 = os.path.join('run-100', ensemble, 'energy.txt')
+    ener12 = os.path.join('run-100-200', ensemble, 'energy.txt')
+    ener2 = os.path.join('run-full', ensemble, 'energy.txt')
     compare_energy(ener11, ener12, ener2, tol=1e-12)
-    order11 = os.path.join('retis-100', ensemble, 'order.txt')
-    order12 = os.path.join('retis-100-200', ensemble, 'order.txt')
-    order2 = os.path.join('retis-full', ensemble, 'order.txt')
+    order11 = os.path.join('run-100', ensemble, 'order.txt')
+    order12 = os.path.join('run-100-200', ensemble, 'order.txt')
+    order2 = os.path.join('run-full', ensemble, 'order.txt')
     compare_order(order11, order12, order2, tol=1e-12)
     print()
 
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    settings = parse_settings_file('retis-full/retis.rst')
-    inter = settings['simulation']['interfaces']
-    for i in range(len(inter)):
-        ens = PATH_DIR_FMT.format(i)
-        compare_ensemble(ens)
+    settings = parse_settings_file('run-full/tis-001.rst')
+    ens = PATH_DIR_FMT.format(settings['simulation']['ensemble'])
+    compare_ensemble(ens)

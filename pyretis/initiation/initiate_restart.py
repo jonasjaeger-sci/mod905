@@ -37,7 +37,7 @@ def initiate_restart(simulation, cycle, settings):
     """
     maxlen = settings['tis']['maxlength']
     klass = get_path_class(simulation.engine.engine_type)
-    folder = settings['initial-path'].get('restart_folder', 'load')
+    folder = settings['initial-path'].get('restart_folder', '')
     for ensemble in simulation.path_ensembles:
         name = ensemble.ensemble_name
         logger.info('Loading restart data for path ensemble %s:', name)
