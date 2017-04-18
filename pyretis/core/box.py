@@ -146,8 +146,9 @@ class Box(object):
                     self.length[i] = new_size[i]
                     self.high[i] = self.low[i] + new_size[i]
             else:
-                # 2) Giving vectors, here we are lazy and just pick out
-                # the diagonal:
+                # 2) Giving a 3x3 matrix. Currently, we are only supporing
+                # rectangular boxes, so we just pick out the diagonal and
+                # use this to set the lengths.
                 diag = np.diagonal(new_size)
                 for i in range(self.dim):
                     self.length[i] = diag[i]

@@ -569,11 +569,9 @@ class GromacsEngine(ExternalMDEngine):
         """
         box = None
         if self.ext == 'g96':
-            txt, xyz, vel = read_gromos96_file(filename)
-            box = np.array([float(i) for i in txt['BOX'][0].split()])
+            _, xyz, vel, box = read_gromos96_file(filename)
         elif self.ext == 'gro':
-            txt, xyz, vel = read_gromacs_gro_file(filename)
-            box = txt['box']
+            _, xyz, vel, box = read_gromacs_gro_file(filename)
         else:
             msg = 'GROMACS engine does not support reading "%s"'
             logger.error(msg, self.ext)
@@ -592,10 +590,10 @@ class GromacsEngine(ExternalMDEngine):
             reversed velocities.
         """
         if self.ext == 'g96':
-            txt, xyz, vel = read_gromos96_file(filename)
+            txt, xyz, vel, _ = read_gromos96_file(filename)
             write_gromos96_file(outfile, txt, xyz, -vel)
         elif self.ext == 'gro':
-            txt, xyz, vel = read_gromacs_gro_file(filename)
+            txt, xyz, vel, _ = read_gromacs_gro_file(filename)
             write_gromacs_gro_file(outfile, txt, xyz, -vel)
         else:
             msg = 'GROMACS engine does not support writing "%s"'

@@ -200,6 +200,7 @@ class ExternalMDEngine(EngineBase):
             The delimiter used for separation keywords from settings
         """
         reg = re.compile(r'(.*?){}'.format(delim))
+        written = set()
         with open(sourcefile, 'r') as infile, open(outputfile, 'w') as outfile:
             for line in infile:
                 to_write = line
@@ -210,7 +211,12 @@ class ExternalMDEngine(EngineBase):
                     if keyword_strip in settings:
                         to_write = '{} {}\n'.format(keyword,
                                                     settings[keyword_strip])
+                    written.add(keyword_strip)
                 outfile.write(to_write)
+            # Add settings not yet written:
+            for key, value in settings.items():
+                if key not in written:
+                    outfile.write('{} {} {}\n'.format(key, delim, value))
 
     @staticmethod
     def _read_input_settings(sourcefile, delim='='):

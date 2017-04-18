@@ -158,11 +158,9 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
     print_to_screen(msg)
     if ext == '.g96':
-        txt, xyz, vel = read_gromos96_file(traj_file)
-        box = np.array([float(i) for i in txt['BOX'][0].split()])
+        _, xyz, vel, box = read_gromos96_file(traj_file)
     elif ext == '.gro':
-        txt, xyz, vel = read_gromacs_gro_file(traj_file)
-        box = txt['box']
+        _, xyz, vel, box = read_gromacs_gro_file(traj_file)
     system.particles.pos = xyz
     system.particles.vel = vel
     if reverse:

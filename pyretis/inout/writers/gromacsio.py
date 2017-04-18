@@ -66,7 +66,7 @@ __all__ = [
 # Define formats for the trajectory output:
 _GRO_FMT = '{0:5d}{1:5s}{2:5s}{3:5d}{4:8.3f}{5:8.3f}{6:8.3f}'
 _GRO_VEL_FMT = _GRO_FMT + '{7:8.4f}{8:8.4f}{9:8.4f}'
-_GRO_BOX_FMT = '{0:12.6f} {1:12.6f} {2:12.6f}'
+_GRO_BOX_FMT = '{:15.9f}'
 _G96_FMT = '{0:}{1:15.9f}{2:15.9f}{3:15.9f}\n'
 _G96_FMT_FULL = '{0:5d} {1:5s} {2:5s}{3:7d}{4:15.9f}{5:15.9f}{6:15.9f}\n'
 _G96_BOX_FMT = '{:15.9f}' * 9 + '\n'
@@ -83,6 +83,17 @@ _HEAD_ITEMS = ('ir_size', 'e_size', 'box_size', 'vir_size', 'pres_size',
                'natoms', 'step', 'nre', 'time', 'lambda')
 TRR_DATA_ITEMS = ('box_size', 'vir_size', 'pres_size',
                   'x_size', 'v_size', 'f_size')
+
+
+def _get_gromacs_box(box_list):
+    """Convert a list of numbers to a box."""
+    if len(box_list) == 3:
+        box = np.array(box_list)
+    else:
+        box = np.zeros([[box_list[0], box_list[3], box_list[4]],
+                        [box_list[5], box_list[1], box_list[6]],
+                        [box_list[7], box_list[8], box_list[2]]])
+    return box
 
 
 def read_gromacs_lines(lines):
@@ -119,7 +130,7 @@ def read_gromacs_lines(lines):
             snapshot = {'header': line.strip()}
             read_natoms = True
         elif lines_to_read == 1:  # read box
-            snapshot['box'] = [float(boxl) for boxl in line.strip().split()]
+            snapshot['box'] = [float(i) for i in line.strip().split()]
             lines_to_read -= 1
         else:  # read atoms
             lines_to_read -= 1
@@ -177,8 +188,8 @@ def read_gromacs_gro_file(filename):
 
     Returns
     -------
-    rawdata : dict of list of strings
-        This is the raw data read from the file grouped into sections.
+    frame : dict
+        This dict contains all the data read from the file.
     xyz : numpy.array
         The positions.
     vel : numpy.array
@@ -192,11 +203,15 @@ def read_gromacs_gro_file(filename):
             xyz = [[i, j, k] for i, j, k in zip(frame['x'],
                                                 frame['y'],
                                                 frame['z'])]
-            vel = [[i, j, k] for i, j, k in zip(frame['vx'],
-                                                frame['vy'],
-                                                frame['vz'])]
+            try:
+                vel = [[i, j, k] for i, j, k in zip(frame['vx'],
+                                                    frame['vy'],
+                                                    frame['vz'])]
+            except KeyError:
+                pass
+            box = _get_gromacs_box(frame['box'])
             break
-    return frame, np.array(xyz), np.array(vel)
+    return frame, np.array(xyz), np.array(vel), box
 
 
 def write_gromacs_gro_file(outfile, txt, xyz, vel):
@@ -234,7 +249,7 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel):
                 vel[i, 1],
                 vel[i, 2])
             output.write('{}\n'.format(buff))
-        box = _GRO_BOX_FMT.format(*txt['box'])
+        box = ' '.join([_GRO_BOX_FMT.format(i) for i in txt['box']])
         output.write('{}\n'.format(box))
 
 
@@ -256,6 +271,8 @@ def read_gromos96_file(filename):
         The positions.
     vel : numpy.array
         The velocities.
+    box : numpy.array
+        The simulation box.
     """
     _len = 15
     _pos = 24
@@ -291,7 +308,8 @@ def read_gromos96_file(filename):
     if len(rawdata['VELOCITY']) == 0:
         # No velicities were found in the input file.
         xyzdata['VELOCITY'] = np.zeros_like(xyzdata['POSITION'])
-    return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY']
+    box = _get_gromacs_box([float(i) for i in rawdata['BOX'][0].split()])
+    return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY'], box
 
 
 def write_gromos96_file(filename, raw, xyz, vel):
