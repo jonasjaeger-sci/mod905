@@ -40,7 +40,7 @@ def initiate_load(simulation, cycle, settings):
     """
     maxlen = settings['tis']['maxlength']
     klass = get_path_class(simulation.engine.engine_type)
-    folder = settings['initial-path'].get('restart_folder', 'load')
+    folder = settings['initial-path'].get('load_folder', 'load')
     for ensemble in simulation.path_ensembles:
         name = ensemble.ensemble_name
         logger.info('Loading data for path ensemble %s:', name)

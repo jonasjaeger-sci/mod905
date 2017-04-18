@@ -502,6 +502,18 @@ class PathEnsembleExt(PathEnsemble):
                     tar.add(src, arcname=os.path.basename(dest))
         return path_copy
 
+    def load_restart_info(self, path, info, cycle=0):
+        """Load restart for external path."""
+        super().load_restart_info(path, info, cycle=cycle)
+        # Update file names:
+        directory = self.directory['accepted']
+        new_pos = []
+        for pos in path.pos:
+            filename = os.path.basename(pos[0])
+            new_file_name = os.path.join(directory, filename)
+            new_pos.append((new_file_name, pos[1]))
+        path.pos = new_pos
+
 
 def get_path_ensemble_class(ensemble_type):
     """Method to return the path ensemble class to work with an engine.
