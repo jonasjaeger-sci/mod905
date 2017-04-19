@@ -92,4 +92,4 @@ class OrderXY(OrderParameter):
         elif proj > self.inter_b:
             if system.particles.vpot > self.energy_b:
                 proj = self.inter_b
-        return proj
+        return [proj]

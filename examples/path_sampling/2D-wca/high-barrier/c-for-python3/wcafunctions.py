@@ -267,7 +267,6 @@ class WCAOrderParameter(OrderParameter):
         """
         super().__init__(description='WCA order parameter')
         self.index = index
-        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter and return it.
@@ -290,31 +289,12 @@ class WCAOrderParameter(OrderParameter):
                                 system.box.length,
                                 system.box.ilength,
                                 self.index[1], self.index[0])
-        return lamb
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter.
-        """
-        particles = system.particles
         lambv = wcalambda.orderv(particles.pos,
                                  particles.vel,
                                  system.box.length,
                                  system.box.ilength,
                                  self.index[1], self.index[0])
-        return lambv
+        return [lamb, lambv]
 
 
 class WCAOrderParameterp(OrderParameter):
@@ -340,7 +320,6 @@ class WCAOrderParameterp(OrderParameter):
         """
         super().__init__(description='WCA order parameter')
         self.index = index
-        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter and return it.
@@ -361,27 +340,7 @@ class WCAOrderParameterp(OrderParameter):
         particles = system.particles
         delta = system.box.pbc_dist_coordinate(particles.pos[self.index[1]] -
                                                particles.pos[self.index[0]])
-        return np.sqrt(np.dot(delta, delta))
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases system.forcefield can also be
-            used to include specific energies for the order parameter.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter.
-        """
-        particles = system.particles
-        delta = system.box.pbc_dist_coordinate(particles.pos[self.index[1]] -
-                                               particles.pos[self.index[0]])
-        delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
         lamb = np.sqrt(np.dot(delta, delta))
-        return np.dot(delta, delta_v) / lamb
+        delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
+        lamb_v = np.dot(delta, delta_v) / lamb
+        return [lamb, lamb_v]

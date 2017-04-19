@@ -90,4 +90,4 @@ class OrderParameterAngle(OrderParameter):
                   np.sqrt(np.dot(vector_ba, vector_ba) *
                           np.dot(vector_bc, vector_bc)))
         angleabc = np.arccos(cosabc)
-        return angleabc
+        return [angleabc]

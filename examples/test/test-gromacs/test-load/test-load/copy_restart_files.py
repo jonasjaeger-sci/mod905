@@ -16,7 +16,7 @@ from pyretis.inout.writers import prepare_load, get_writer
 
 
 SOURCE = 'run-20'
-TARGET = os.path.join('run-restart', 'initial_path')
+TARGET = os.path.join('run-load', 'initial_path')
 
 
 def read_path_file(filename):

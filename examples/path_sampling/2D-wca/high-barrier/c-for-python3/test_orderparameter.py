@@ -40,10 +40,8 @@ class WCAOrderTest(unittest.TestCase):
         for i in np.arange(0.001, 5.0, 0.1):
             particles.pos[1] = np.array([1.0, i])
             particles.vel = np.random.random(particles.vel.shape)
-            lmb1 = order1.calculate(system)
-            vel1 = order1.calculate_velocity(system)
-            lmb2 = order2.calculate(system)
-            vel2 = order2.calculate_velocity(system)
+            lmb1, vel1 = order1.calculate(system)
+            lmb2, vel2 = order2.calculate(system)
             self.assertAlmostEqual(lmb1, lmb2)
             self.assertAlmostEqual(vel1, vel2)
 

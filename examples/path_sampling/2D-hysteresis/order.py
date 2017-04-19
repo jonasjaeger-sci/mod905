@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class HysterXY(OrderParameter):
+class OrderX(OrderParameter):
     """A positional order parameter.
 
     Order parameter for the hysteresis example. In addition to using
@@ -103,6 +103,6 @@ class HysterXY(OrderParameter):
             if particles.vpot > self.energy_b:
                 lmb = self.inter_b
         if self.periodic:
-            return system.box.pbc_coordinate_dim(lmb, self.dim)
+            return [system.box.pbc_coordinate_dim(lmb, self.dim)]
         else:
-            return lmb
+            return [lmb]

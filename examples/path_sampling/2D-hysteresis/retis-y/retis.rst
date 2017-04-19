@@ -77,7 +77,7 @@ parameter y0 = 0.4
 
 Orderparameter
 --------------
-class = HysterXY
+class = OrderX
 module = ../order.py
 dim = y
 index = 0

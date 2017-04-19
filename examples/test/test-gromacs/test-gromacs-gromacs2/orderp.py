@@ -82,25 +82,7 @@ class RingDiffusion(OrderParameter):
         molvec = np.rint(pos[self.idxd] * resl) / resl
         molvec -= cm1
         orderp = -np.dot(cmvec, molvec) / np.sqrt(np.dot(cmvec, cmvec))
-        return orderp
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter it is given by the time derivative of
-        the distance vector.
-
-        Parameters
-        ----------
-        system : object like `System` from `pyretis.core.system`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        return 0.0
+        return [orderp]
 
 
 if __name__ == '__main__':

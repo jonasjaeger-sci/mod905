@@ -90,7 +90,7 @@ def _get_gromacs_box(box_list):
     if len(box_list) == 3:
         box = np.array(box_list)
     else:
-        box = np.zeros([[box_list[0], box_list[3], box_list[4]],
+        box = np.array([[box_list[0], box_list[3], box_list[4]],
                         [box_list[5], box_list[1], box_list[6]],
                         [box_list[7], box_list[8], box_list[2]]])
     return box

@@ -15,7 +15,7 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 
 RUN_FULL = 'run-100'
 RUN1 = 'run-20'
-RUN2 = 'run-restart'
+RUN2 = 'run-load'
 
 
 def compare_files(file1, file2, file3):

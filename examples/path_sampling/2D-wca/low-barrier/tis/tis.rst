@@ -10,7 +10,7 @@ interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
 System
 ------
-units = retis
+units = reduced
 dimensions = 2
 temperature = 1.0
 

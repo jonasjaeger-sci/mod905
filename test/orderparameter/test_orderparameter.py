@@ -35,11 +35,8 @@ class OrderPositionTest(unittest.TestCase):
                 orderp = OrderParameterPosition(0, dim=xdim, periodic=False)
                 if idim > ndim - 1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
-                    self.assertRaises(IndexError, orderp.calculate_velocity,
-                                      (system))
                 else:
-                    lmb = orderp.calculate(system)
-                    lmb_vel = orderp.calculate_velocity(system)
+                    lmb, lmb_vel = orderp.calculate(system)
                     lmb_correct = system.particles.pos[0][idim]
                     lmb_vel_correct = system.particles.vel[0][idim]
                     self.assertAlmostEqual(lmb, lmb_correct)
@@ -65,11 +62,8 @@ class OrderPositionTest(unittest.TestCase):
                                         ptype=0)
                 if idim > ndim-1:
                     self.assertRaises(IndexError, orderp.calculate, (system))
-                    self.assertRaises(IndexError, orderp.calculate_velocity,
-                                      (system))
                 else:
-                    lmb = orderp.calculate(system)
-                    lmb_vel = orderp.calculate_velocity(system)
+                    lmb, lmb_vel = orderp.calculate(system)
                     lmb_correct = system.particles.pos[0][idim]
                     lmb_vel_correct = system.particles.vel[0][idim]
                     self.assertAlmostEqual(lmb, lmb_correct)
@@ -92,7 +86,7 @@ class OrderPositionTest(unittest.TestCase):
                 for xdim in ['x', 'y', 'z'][:ndim]:
                     orderp = OrderParameterPosition(0, dim=xdim,
                                                     periodic=True)
-                    lmb = orderp.calculate(system)
+                    lmb, _ = orderp.calculate(system)
                     idim = dim_map[xdim]
                     lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
                     self.assertAlmostEqual(lmb, lmb_correct)
@@ -119,7 +113,7 @@ class OrderPositionTest(unittest.TestCase):
                     idim = dim_map[xdim]
                     pos = system.particles.pos[0]
                     lmb_correct = box.pbc_coordinate_dim(pos[idim], idim)
-                    self.assertAlmostEqual(lmb, lmb_correct)
+                    self.assertAlmostEqual(lmb[0], lmb_correct)
 
     def test_init_fail(self):
         """Check that the initiation fails if we supply strange input."""
@@ -144,12 +138,11 @@ class OrderDistanceTest(unittest.TestCase):
                 vel = np.random.random(box.dim)
                 system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
                                     ptype=0)
-            lmb = orderp.calculate(system)
+            lmb, lmb_vel = orderp.calculate(system)
             delta = system.particles.pos[1] - system.particles.pos[0]
             lmb_correct = np.sqrt(np.dot(delta, delta))
             self.assertAlmostEqual(lmb, lmb_correct)
             delta_v = system.particles.vel[1] - system.particles.vel[0]
-            lmb_vel = orderp.calculate_velocity(system)
             lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
             self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
@@ -170,13 +163,12 @@ class OrderDistanceTest(unittest.TestCase):
                                         vel=np.random.random(box.dim),
                                         mass=1.0,
                                         ptype=0)
-                lmb = orderp.calculate(system)
+                lmb, lmb_vel = orderp.calculate(system)
                 delta = box.pbc_dist_coordinate(system.particles.pos[1] -
                                                 system.particles.pos[0])
                 lmb_correct = np.sqrt(np.dot(delta, delta))
                 self.assertAlmostEqual(lmb, lmb_correct)
                 delta_v = system.particles.vel[1] - system.particles.vel[0]
-                lmb_vel = orderp.calculate_velocity(system)
                 lmb_vel_correct = np.dot(delta, delta_v) / lmb_correct
                 self.assertAlmostEqual(lmb_vel, lmb_vel_correct)
 
@@ -207,7 +199,7 @@ class OrderAngleTest(unittest.TestCase):
         system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
         system.add_particle(name='H', pos=np.array([0.137, 0.626, 0.150]))
         system.add_particle(name='H', pos=np.array([0.231, 0.589, 0.021]))
-        angle = orderp.calculate(system)
+        angle = orderp.calculate(system)[0]
         angle_deg = angle * 180. / np.pi
         self.assertAlmostEqual(angle_deg, 109.984398, places=3)
 
@@ -221,7 +213,7 @@ class OrderAngleTest(unittest.TestCase):
         system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
         system.add_particle(name='H', pos=np.array([0.137, 0.626, 0.150]))
         system.add_particle(name='H', pos=np.array([1.231, 0.589, 0.021]))
-        angle = orderp.calculate(system)
+        angle = orderp.calculate(system)[0]
         angle_deg = angle * 180. / np.pi
         self.assertAlmostEqual(angle_deg, 109.984398, places=3)
 
@@ -236,7 +228,7 @@ class OrderAngleTest(unittest.TestCase):
         for idx, correct in zip(((1, 0, 2), (0, 1, 2), (0, 2, 1)),
                                 (90., 45., 45.)):
             orderp = OrderParameterAngle(idx, periodic=False)
-            angle = orderp.calculate(system)
+            angle = orderp.calculate(system)[0]
             angle_deg = angle * 180. / np.pi
             self.assertAlmostEqual(angle_deg, correct)
 

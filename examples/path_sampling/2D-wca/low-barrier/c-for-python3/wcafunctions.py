@@ -7,7 +7,6 @@ import os
 import logging
 import numpy as np
 from pyretis.forcefield import PotentialFunction
-from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 # Just to handle imports of the library:

@@ -37,7 +37,7 @@ seed = 0
 Initial-path
 ------------
 method = load
-restart_folder = initial_path
+load_folder = initial_path
 
 RETIS settings
 --------------

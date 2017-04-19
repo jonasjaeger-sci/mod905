@@ -4,8 +4,8 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 100
-interfaces = [0.1, 0.3, 0.4, 0.5, 0.55, 0.60, 0.65, 0.7, 0.80]
+steps = 1000000
+interfaces = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8]
 
 System
 ------
@@ -81,7 +81,7 @@ Orderparameter
 class = OrderXY
 module = orderp.py
 index = 0
-inter_a = 0.15
-inter_b = 0.75
+inter_a = 0.12
+inter_b = 0.78
 energy_a = -9.0
 energy_b = -9.0

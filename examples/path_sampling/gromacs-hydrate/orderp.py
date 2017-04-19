@@ -83,7 +83,7 @@ class RingDiffusion(OrderParameter):
         molvec = np.rint(pos[self.idxd] * resl) / resl
         molvec -= cm1
         orderp = -np.dot(cmvec, molvec) / np.sqrt(np.dot(cmvec, cmvec))
-        return orderp
+        return [orderp]
 
 
 if __name__ == '__main__':

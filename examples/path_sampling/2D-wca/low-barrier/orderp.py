@@ -43,7 +43,6 @@ class OrderParameterWCAJCP1(OrderParameter):
         super().__init__(description=txt)
         self.periodic = periodic
         self.index = index
-        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.
@@ -94,28 +93,4 @@ class OrderParameterWCAJCP1(OrderParameter):
                 orderp = 1.44 + (5.0 - E) / 0.5 * 0.02
         else:
             orderp = r
-        return float(orderp)
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter it is given by the time derivative of
-        the distance vector.
-
-        Parameters
-        ----------
-        system : object like :py:class:`System`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        particles = system.particles
-        delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
-        if self.periodic:
-            delta = system.box.pbc_dist_coordinate(delta)
-        lamb = np.sqrt(np.dot(delta, delta))
-        delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
-        return np.dot(delta, delta_v) / lamb
+        return [float(orderp), dxdv]

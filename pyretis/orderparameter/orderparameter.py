@@ -78,8 +78,10 @@ class OrderParameter(object):
 
         Returns
         -------
-        out : float
-            The order parameter.
+        out : list of floats
+            The order parameter(s). The first order parameter returned
+            is used as the progress coordinate in path sampling
+            simulations!
         """
         pass
 
@@ -103,8 +105,7 @@ class OrderParameter(object):
         out[2, ...] : float(s)
             Additional order parameters, if any.
         """
-        orderp = self.calculate(system)
-        ret_val = [orderp]
+        ret_val = self.calculate(system)
         if self.extra is None:
             return ret_val
         else:
@@ -113,7 +114,7 @@ class OrderParameter(object):
                     extra = func(system)
                 except TypeError:
                     extra = float('nan')
-                ret_val.append(extra)
+                ret_val.extend(extra)
             return ret_val
 
     def add_orderparameter(self, func):
@@ -194,7 +195,6 @@ class OrderParameterPosition(OrderParameter):
             msg = 'Unknown dimension {} requested'.format(dim)
             logger.critical(msg)
             raise
-        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.
@@ -217,30 +217,14 @@ class OrderParameterPosition(OrderParameter):
         """
         particles = system.particles
         pos = particles.pos[self.index]
-        lmb = pos[self.dim]
+        lamb = pos[self.dim]
         if self.periodic:
-            return system.box.pbc_coordinate_dim(lmb, self.dim)
-        else:
-            return lmb
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter we just return the velocity.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        particles = system.particles
+            lamb = system.box.pbc_coordinate_dim(lamb, self.dim)
+        # Also return the velocity as an additional collective
+        # variable:
         vel = particles.vel[self.index]
-        return vel[self.dim]
+        cv1 = vel[self.dim]
+        return [lamb, cv1]
 
 
 class OrderParameterDistance(OrderParameter):
@@ -291,7 +275,6 @@ class OrderParameterDistance(OrderParameter):
         super().__init__(description=txt)
         self.periodic = periodic
         self.index = index
-        self.add_orderparameter(self.calculate_velocity)
 
     def calculate(self, system):
         """Calculate the order parameter.
@@ -317,28 +300,8 @@ class OrderParameterDistance(OrderParameter):
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
         if self.periodic:
             delta = system.box.pbc_dist_coordinate(delta)
-        return np.sqrt(np.dot(delta, delta))
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter.
-
-        For this order parameter it is given by the time derivative of
-        the distance vector.
-
-        Parameters
-        ----------
-        system : object like :py:class:`.System`
-            This object is used for the actual calculation.
-
-        Returns
-        -------
-        out : float
-            The velocity of the order parameter
-        """
-        particles = system.particles
-        delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
-        if self.periodic:
-            delta = system.box.pbc_dist_coordinate(delta)
         lamb = np.sqrt(np.dot(delta, delta))
+        # Add the velocity as an additional collective variable:
         delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
-        return np.dot(delta, delta_v) / lamb
+        cv1 = np.dot(delta, delta_v) / lamb
+        return [lamb, cv1]

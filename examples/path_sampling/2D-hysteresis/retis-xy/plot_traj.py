@@ -97,7 +97,7 @@ def plot_ensemble(settings, dirname, axi, axj, maxlines=100, minorder=None,
             fakesys.particles.pos[0, 0] = posi[0]
             fakesys.particles.pos[0, 1] = posi[1]
             fakesys.particles.vpot = forcefield.evaluate_potential(fakesys)
-            order.append(orderp.calculate(fakesys))
+            order.append(orderp.calculate(fakesys)[0])
         if minorder is not None:
             if max(order) < minorder:
                 continue
