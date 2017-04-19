@@ -439,7 +439,7 @@ class OutputTaskFile(OutputTask):
         self.print_header = writer.print_header
         self.fileh = FileIO(filename, oldfile=backup)
         if self.print_header:
-            if self.writer.header is not None:
+            if self.writer.header is not None and backup != 'append':
                 self.fileh.write(self.writer.header)
 
     def write(self, step, *result):

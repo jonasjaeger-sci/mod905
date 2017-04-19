@@ -72,4 +72,3 @@ seed = 0
 Initial-path settings
 ---------------------
 method = restart
-restart_folder = ../run-100

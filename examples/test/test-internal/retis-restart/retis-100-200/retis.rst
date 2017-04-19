@@ -42,7 +42,6 @@ swapsimul = True
 Initial-path settings
 ---------------------
 method = restart
-restart_folder = ../retis-100/
 
 Forcefield settings
 -------------------

@@ -584,7 +584,7 @@ def set_up_simulation(inputfile, runpath):
         logger.info('Reading restart file: "%s"', restart)
         restart_info = read_restart_file(restart)
         sim_settings['output']['backup'] = 'append'
-        logger.info('Setting output setting backup to "append"')
+        logger.info('Setting output setting "backup" to "append"')
 
     print_to_screen()
 
