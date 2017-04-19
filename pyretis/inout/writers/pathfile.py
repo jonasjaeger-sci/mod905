@@ -53,20 +53,7 @@ class PathEnsembleWriter(Writer):
                 '{13:>16.9e} {14:>7d} {15:7d}')
 
     def __init__(self):
-        """Initialize the `PathEnsembleWriter`.
-
-        Parameters
-        ----------
-        ensemble : str
-            This is a string representation of the path ensemble.
-            Typically something like '0-', '0+', '1', '2', ..., '001'
-            and so on.
-        interfaces : list of floats
-            These are the interfaces specified with the values
-            for the order parameters: [left, middle, right]
-        detect : float
-            The detect interface to use for analysis.
-        """
+        """Initialize the `PathEnsembleWriter`."""
         header = {'labels': ['Step', 'No. acc', 'No. shoot',
                              'l', 'm', 'r', 'Length', 'Acc', 'Mc',
                              'Min-O', 'Max-O', 'Idx-Min', 'Idx-Max',
@@ -209,7 +196,19 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
     """
 
     def __init__(self, filename, ensemble, interfaces, detect=None):
-        """Initiate the `PathEnsembleFile`."""
+        """Initiate the `PathEnsembleFile`.
+
+        Parameters
+        ----------
+        filename : string
+            The file we are working with.
+        ensemble : integer
+            An integer which identifies the ensemble.
+        interfaces : list of floats
+            The interfaces defining the ensemble.
+        detect : float
+            The detect interface for this ensemble.
+        """
         PathEnsemble.__init__(self, ensemble, interfaces, detect=detect)
         PathEnsembleWriter.__init__(self)
         self.filename = filename
