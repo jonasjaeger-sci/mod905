@@ -278,7 +278,7 @@ def read_gromos96_file(filename):
     _pos = 24
     rawdata = {'TITLE': [], 'POSITION': [], 'VELOCITY': [], 'BOX': []}
     section = None
-    with open(filename, 'r') as gromosfile:
+    with open(filename, 'r', errors='replace') as gromosfile:
         for lines in gromosfile:
             new_section = False
             stripline = lines.strip()
