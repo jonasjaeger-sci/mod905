@@ -195,23 +195,23 @@ def read_gromacs_gro_file(filename):
     vel : numpy.array
         The velocities.
     """
-    xyz = []
-    vel = []
+    xyz = None
+    vel = None
     frame = None
     with open(filename, 'r') as fileh:
         for frame in read_gromacs_lines(fileh):
-            xyz = [[i, j, k] for i, j, k in zip(frame['x'],
-                                                frame['y'],
-                                                frame['z'])]
+            xyz = np.array([[i, j, k] for i, j, k in zip(frame['x'],
+                                                         frame['y'],
+                                                         frame['z'])])
             try:
                 vel = [[i, j, k] for i, j, k in zip(frame['vx'],
                                                     frame['vy'],
                                                     frame['vz'])]
             except KeyError:
-                pass
+                vel = np.zeros_like(xyz)
             box = _get_gromacs_box(frame['box'])
             break
-    return frame, np.array(xyz), np.array(vel), box
+    return frame, xyz, vel, box
 
 
 def write_gromacs_gro_file(outfile, txt, xyz, vel):

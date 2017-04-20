@@ -135,7 +135,6 @@ def _load_order_parameters_ext(traj, dirname, order_function):
     """
     order_file_name = os.path.join(dirname, 'order.txt')
     orderfile = prepare_load('pathorder', order_file_name, required=False)
-    print(orderfile)
     if orderfile is not None:
         print_to_screen('Loading order parameters from file!')
         order = next(orderfile)
@@ -151,7 +150,10 @@ def _load_order_parameters_ext(traj, dirname, order_function):
             if filename not in files:
                 files[filename] = {'minidx': None, 'maxidx': None,
                                    'reverse': snapshot[3]}
-            idx = int(snapshot[2])
+            if snapshot[2] is None:
+                idx = 0
+            else:
+                idx = int(snapshot[2])
             minidx = files[filename]['minidx']
             if minidx is None or idx < minidx:
                 files[filename]['minidx'] = idx

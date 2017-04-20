@@ -123,6 +123,7 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
             continue
         print_to_screen(msg.format(i))
         box, xyz, vel, _ = convert_snapshot(snapshot)
+        system.particles.config = (traj_file, i)
         system.particles.pos = xyz
         system.particles.vel = vel
         if reverse:
@@ -161,6 +162,7 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
         _, xyz, vel, box = read_gromos96_file(traj_file)
     elif ext == '.gro':
         _, xyz, vel, box = read_gromacs_gro_file(traj_file)
+    system.particles.config = (traj_file, 0)
     system.particles.pos = xyz
     system.particles.vel = vel
     if reverse:
