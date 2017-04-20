@@ -10,7 +10,8 @@ OrderParameterAngle (:py:class:`.OrderParameterAngle`)
     An angle defined by three atoms.
 """
 import logging
-import numpy as np
+from numpy import dot, arccos, clip
+from numpy.linalg import norm
 from pyretis.orderparameter.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -28,12 +29,12 @@ class OrderParameterAngle(OrderParameter):
 
     Attributes
     ----------
-    index : integer
-        This is the index of the atom which will be used, i.e.
-        system.particles.pos[index] will be used.
+    index : list of integers
+        This is the indexes of atoms to be used for he angle,
+        i.e. system.particles.pos[index] will be used.
     periodic : boolean
         This determines if periodic boundaries should be applied to
-        the position or not.
+        the positions/distances.
     """
 
     def __init__(self, index, periodic=False):
@@ -41,8 +42,8 @@ class OrderParameterAngle(OrderParameter):
 
         Parameters
         ----------
-        index : int
-            This is the index of the atom we will use the position of.
+        index : list/tuple of integers
+            The indexes for the atoms defining the angle.
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the distance vectors.
@@ -65,7 +66,7 @@ class OrderParameterAngle(OrderParameter):
         self.index = [int(i) for i in index]
 
     def calculate(self, system):
-        """Calculate the order parameter.
+        """Calculate the angle.
 
         Parameters
         ----------
@@ -86,8 +87,7 @@ class OrderParameterAngle(OrderParameter):
         if self.periodic:
             vector_ba = system.box.pbc_dist_coordinate(vector_ba)
             vector_bc = system.box.pbc_dist_coordinate(vector_bc)
-        cosabc = (np.dot(vector_ba, vector_bc) /
-                  np.sqrt(np.dot(vector_ba, vector_ba) *
-                          np.dot(vector_bc, vector_bc)))
-        angleabc = np.arccos(cosabc)
-        return [angleabc]
+        vector_ba /= norm(vector_ba)
+        vector_bc /= norm(vector_bc)
+        angle = arccos(clip(dot(vector_ba, vector_bc), -1, 1))
+        return [angle]

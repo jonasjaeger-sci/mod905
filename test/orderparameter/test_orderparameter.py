@@ -190,7 +190,7 @@ class OrderAngleTest(unittest.TestCase):
     """Run the tests for the OrderParameterAngle class."""
 
     def test_without_pbc(self):
-        """Test the distance order parameter without pbc."""
+        """Test the angle order parameter without pbc."""
         orderp = OrderParameterAngle((1, 0, 2), periodic=False)
         # Test for SPC water
         box = Box(periodic=[False, False, False])
@@ -204,7 +204,7 @@ class OrderAngleTest(unittest.TestCase):
         self.assertAlmostEqual(angle_deg, 109.984398, places=3)
 
     def test_witht_pbc(self):
-        """Test the distance order parameter with pbc."""
+        """Test the angle order parameter with pbc."""
         orderp = OrderParameterAngle((1, 0, 2), periodic=True)
         # Test for SPC water
         box = Box(periodic=[True, True, True], size=[1., 1., 1.])
@@ -218,7 +218,7 @@ class OrderAngleTest(unittest.TestCase):
         self.assertAlmostEqual(angle_deg, 109.984398, places=3)
 
     def test_triangle(self):
-        """Test the distance order parameter for a 2D case."""
+        """Test the angle order parameter for a 2D case."""
         box = Box(periodic=[False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
@@ -244,6 +244,33 @@ class OrderAngleTest(unittest.TestCase):
             OrderParameterAngle((0, 1), periodic=False)
         with self.assertRaises(ValueError):
             OrderParameterAngle((0, 1, 2, 3), periodic=False)
+
+    def test_special_cases(self):
+        """Test the angle order parameter for some special cases:
+
+        1. The angle between (1, 0, 0) and (0, 1, 0)
+        2. The angle between (1, 0, 0) and (1, 0, 0)
+        3. The angle between (1, 0, 0) and (-1, 0, 0)
+        """
+        orderp = OrderParameterAngle((0, 1, 2), periodic=False)
+        box = Box(periodic=[False, False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        system.add_particle(name='A', pos=np.array([-1.0, 0.0, 0.0]))
+        system.add_particle(name='B', pos=np.array([0.0, 0.0, 0.0]))
+        system.add_particle(name='C', pos=np.array([0.0, 1.0, 0.0]))
+        angle = orderp.calculate(system)[0]
+        self.assertAlmostEqual(angle, np.pi*0.5)
+        system.particles.pos[0] = np.array([1.0, 0.0, 0.0])
+        system.particles.pos[1] = np.array([0.0, 0.0, 0.0])
+        system.particles.pos[2] = np.array([1.0, 0.0, 0.0])
+        angle = orderp.calculate(system)[0]
+        self.assertAlmostEqual(angle, 0.0)
+        system.particles.pos[0] = np.array([1.0, 0.0, 0.0])
+        system.particles.pos[1] = np.array([0.0, 0.0, 0.0])
+        system.particles.pos[2] = np.array([-1.0, 0.0, 0.0])
+        angle = orderp.calculate(system)[0]
+        self.assertAlmostEqual(angle, np.pi)
 
 
 class OrderFactoryTest(unittest.TestCase):
