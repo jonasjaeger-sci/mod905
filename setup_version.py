@@ -132,7 +132,7 @@ def write_version_in_setup_py(version):
     with open(SETUP_PY, 'r') as sfile:
         for lines in sfile:
             if lines.startswith('FULL_VERSION ='):
-                tmp.append(('FULL_VERSION = {}\n'.format(version)))
+                tmp.append(("FULL_VERSION = '{}'\n".format(version)))
             else:
                 tmp.append(lines)
     with open(SETUP_PY, 'wt') as sfile:
