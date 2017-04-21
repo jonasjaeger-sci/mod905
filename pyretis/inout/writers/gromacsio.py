@@ -204,9 +204,9 @@ def read_gromacs_gro_file(filename):
                                                          frame['y'],
                                                          frame['z'])])
             try:
-                vel = [[i, j, k] for i, j, k in zip(frame['vx'],
-                                                    frame['vy'],
-                                                    frame['vz'])]
+                vel = np.array([[i, j, k] for i, j, k in zip(frame['vx'],
+                                                             frame['vy'],
+                                                             frame['vz'])])
             except KeyError:
                 vel = np.zeros_like(xyz)
             box = _get_gromacs_box(frame['box'])
