@@ -19,6 +19,7 @@ recalculate_from_gro (:py:func:`.recalculate_from_gro`)
     Recalculate order parameters using a .gro or .g96 file.
 """
 import collections
+import logging
 import os
 import numpy as np
 from pyretis.core import System, Box, ParticlesExt
@@ -30,6 +31,8 @@ from pyretis.inout.writers.gromacsio import (
 )
 from pyretis.inout.writers.xyzio import read_xyz_file, convert_snapshot
 from pyretis.inout.writers import prepare_load
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger.addHandler(logging.NullHandler())
 
 
 __all__ = [
@@ -81,7 +84,8 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
             if reverse:
                 system.particles.vel *= -1
         else:
-            system.particles.vel = None
+            logger.warning('No velocities found in .trr file! Set to zero.')
+            system.particles.vel = np.zeros_like(data['x'])
         system.box.update_size(np.diagonal(data['box']))
         all_order.append(order_parameter.calculate_all(system))
     return all_order

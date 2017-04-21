@@ -627,6 +627,11 @@ def read_trr_file(filename, read_data=True):
                 yield header, data
             except EOFError:
                 raise StopIteration
+            except struct.error:
+                logger.warning(
+                    'Could not read frame from .trr file. Stopping!'
+                )
+                raise StopIteration
 
 
 def read_trr_frame(filename, index):
