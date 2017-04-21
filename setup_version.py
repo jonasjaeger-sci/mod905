@@ -14,8 +14,8 @@ import subprocess
 # For setting version. This is copied from Numpy's setup.py.
 MAJOR = 0
 MINOR = 9
-MICRO = 0
-DEV = 4
+MICRO = 1
+DEV = 0
 ISRELEASED = False
 if not ISRELEASED:
     VERSION = '{:d}.{:d}.{:d}.dev{:d}'.format(MAJOR, MINOR, MICRO, DEV)
@@ -39,6 +39,9 @@ RELEASE = {4:}
 if not RELEASE:
     VERSION = GIT_VERSION
 '''
+
+
+SETUP_PY = 'setup.py'
 
 
 def get_git_version():
@@ -120,6 +123,24 @@ def write_version_py():
             vfile.write(version_txt.encode('utf-8'))
     return full_version
 
+
+def write_version_in_setup_py(version):
+    """Update version for setup.py as well.
+
+    setup.py is a small file so we just read it into memory here."""
+    tmp = []
+    with open(SETUP_PY, 'r') as sfile:
+        for lines in sfile:
+            if lines.startswith('FULL_VERSION ='):
+                tmp.append(('FULL_VERSION = {}\n'.format(version)))
+            else:
+                tmp.append(lines)
+    with open(SETUP_PY, 'wt') as sfile:
+        for lines in tmp:
+            sfile.write(lines)
+
+
 if __name__ == '__main__':
-    fullversion = write_version_py()
-    print('Setting version to: {}'.format(fullversion))
+    FULL_VERSION = write_version_py()
+    print('Setting version to: {}'.format(FULL_VERSION))
+    write_version_in_setup_py(FULL_VERSION)
