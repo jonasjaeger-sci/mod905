@@ -12,6 +12,7 @@ from pyretis.orderparameter.orderparameter import (
     OrderParameterDistance
 )
 from pyretis.orderparameter.orderangle import OrderParameterAngle
+from pyretis.orderparameter.orderdihedral import OrderParameterDihedral
 from pyretis.core import System, Box, Particles
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
@@ -229,7 +230,7 @@ class OrderAngleTest(unittest.TestCase):
                                 (90., 45., 45.)):
             orderp = OrderParameterAngle(idx, periodic=False)
             angle = orderp.calculate(system)[0]
-            angle_deg = angle * 180. / np.pi
+            angle_deg = np.degrees(angle)  # pylint: disable=no-member
             self.assertAlmostEqual(angle_deg, correct)
 
     def test_initiate_fail(self):
@@ -273,6 +274,120 @@ class OrderAngleTest(unittest.TestCase):
         self.assertAlmostEqual(angle, np.pi)
 
 
+class OrderDihedralTest(unittest.TestCase):
+    """Run the tests for the OrderParameterDihedral class."""
+
+    test_cases = [
+        {'angle': 180.0, 'pos': np.array([[0.0, 1.0, 0.0],
+                                          [0.0, 0.0, 0.0],
+                                          [1.0, 0.0, 0.0],
+                                          [1.0, -1.0, 0.0]])},
+        {'angle': 0.0, 'pos': np.array([[0.0, 1.0, 0.0],
+                                        [0.0, 0.0, 0.0],
+                                        [1.0, 0.0, 0.0],
+                                        [1.0, 1.0, 0.0]])},
+        {'angle': -90.0, 'pos': np.array([[0.0, 0.0, 1.0],
+                                          [0.0, 0.0, 0.0],
+                                          [1.0, 0.0, 0.0],
+                                          [1.0, 1.0, 0.0]])},
+        {'angle': 90.0, 'pos': np.array([[0.0, 0.0, -1.0],
+                                         [0.0, 0.0, 0.0],
+                                         [1.0, 0.0, 0.0],
+                                         [1.0, 1.0, 0.0]])},
+        {'angle': -60.0127, 'pos': np.array([[0.354, -2.210, -7.248],
+                                             [-0.290, -2.221, -6.483],
+                                             [0.472, -2.265, -5.191],
+                                             [1.036, -3.090, -5.164]])},
+        {'angle': 60.0319, 'pos': np.array([[0.354, -2.210, -7.248],
+                                            [-0.290, -2.221, -6.483],
+                                            [0.472, -2.265, -5.191],
+                                            [1.058, -1.458, -5.122]])},
+        {'angle': 0.0, 'pos': np.array([[1.499, -0.043, 0.000],
+                                        [2.055, 1.361, 0.000],
+                                        [3.481, 1.470, 0.000],
+                                        [3.898, 0.528, 0.000]])},
+        {'angle': -59.365971, 'pos': np.array([[0.039, -0.028, 0.000],
+                                               [1.499, -0.043, 0.000],
+                                               [1.956, -0.866, -1.217],
+                                               [1.571, -1.903, -1.181]])},
+        {'angle': 60.833130, 'pos': np.array([[0.039, -0.028, 0.000],
+                                              [1.499, -0.043, 0.000],
+                                              [1.956, -0.866, -1.217],
+                                              [1.610, -0.425, -2.172]])},
+        {'angle': -62.290916, 'pos': np.array([[-0.543, -0.938, 0.000],
+                                               [0.039, -0.028, 0.000],
+                                               [1.499, -0.043, 0.000],
+                                               [1.847, -0.534, 0.928]])},
+    ]
+
+    def test_without_pbc(self):
+        """Test the angle order parameter without pbc."""
+        orderp = OrderParameterDihedral((3, 2, 1, 0), periodic=False)
+        box = Box(periodic=[False, False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        for _ in range(4):
+            system.add_particle(name='A', pos=np.array([0.0, 0.0, 0.0]))
+        # Test some pre-defined cases:
+        for case in self.test_cases:
+            system.particles.pos = case['pos']
+            angle = orderp.calculate(system)[0]
+            angle_deg = np.degrees(angle)  # pylint: disable=no-member
+            self.assertAlmostEqual(angle_deg, case['angle'], places=4)
+
+    def test_with_pbc(self):
+        """Test the angle order parameter with pbc."""
+        orderp = OrderParameterDihedral((3, 2, 1, 0), periodic=True)
+        box = Box(periodic=[True, True, True], size=[8., 8., 8.])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        for _ in range(4):
+            system.add_particle(name='A', pos=np.array([0.0, 0.0, 0.0]))
+        # Test some pre-defined cases:
+        for case in self.test_cases:
+            system.particles.pos = case['pos']
+            xmin = np.argmin(system.particles.pos[:, 0])
+            displace = np.array([8., 8., 8.]) - system.particles.pos[xmin]
+            for i in range(4):
+                system.particles.pos[i] += displace
+            system.particles.pos = box.pbc_wrap(system.particles.pos)
+            angle = orderp.calculate(system)[0]
+            angle_deg = np.degrees(angle)  # pylint: disable=no-member
+            self.assertAlmostEqual(angle_deg, case['angle'], places=4)
+
+    def test_order(self):
+        """Test if we get the same angle if we reverse indexes"""
+        order1 = OrderParameterDihedral((0, 1, 2, 3), periodic=False)
+        order2 = OrderParameterDihedral((3, 2, 1, 0), periodic=False)
+        box = Box(periodic=[False, False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        for _ in range(4):
+            system.add_particle(name='A', pos=np.array([0.0, 0.0, 0.0]))
+        for _ in range(10):
+            for i in range(4):
+                # pylint: disable=no-member
+                system.particles.pos[i] = np.random.rand(3)
+            angle1 = order1.calculate(system)[0]
+            angle2 = order2.calculate(system)[0]
+            self.assertAlmostEqual(angle1, angle2)
+
+    def test_initiate_fail(self):
+        """Test that we fail if we give incorrect number of indices."""
+        with self.assertRaises(TypeError):
+            OrderParameterDihedral((0), periodic=False)
+        with self.assertRaises(TypeError):
+            OrderParameterDihedral(0, periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterDihedral((0,), periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterDihedral((0, 1), periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterDihedral((0, 1, 2), periodic=False)
+        with self.assertRaises(ValueError):
+            OrderParameterDihedral((0, 1, 2, 'tre'), periodic=False)
+
+
 class OrderFactoryTest(unittest.TestCase):
     """Test the order factory."""
 
@@ -287,12 +402,15 @@ class OrderFactoryTest(unittest.TestCase):
              'index': (0, 1), 'periodic': True},
             {'class': 'orderparameterangle', 'index': (0, 1, 2),
              'periodic': True},
+            {'class': 'orderparameterdihedral', 'index': (0, 1, 2, 3),
+             'periodic': True},
         ]
         correct_class = [OrderParameter,
                          OrderParameter,
                          OrderParameterPosition,
                          OrderParameterDistance,
-                         OrderParameterAngle]
+                         OrderParameterAngle,
+                         OrderParameterDihedral]
         for setting, correct in zip(test_settings, correct_class):
             orderp = order_factory(setting)
             self.assertIsInstance(orderp, correct)

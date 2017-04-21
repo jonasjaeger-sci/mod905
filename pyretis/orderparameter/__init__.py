@@ -27,6 +27,7 @@ from .orderparameter import (OrderParameter,
                              OrderParameterPosition,
                              OrderParameterDistance)
 from .orderangle import OrderParameterAngle
+from .orderdihedral import OrderParameterDihedral
 
 
 def order_factory(settings):
@@ -53,5 +54,7 @@ def order_factory(settings):
         'distance': {'cls': OrderParameterDistance},
         'orderparameterangle': {'cls': OrderParameterAngle},
         'angle': {'cls': OrderParameterAngle},
+        'dihedral': {'cls': OrderParameterDihedral},
+        'orderparameterdihedral': {'cls': OrderParameterDihedral},
     }
     return generic_factory(settings, factory_map, name='orderparameter')

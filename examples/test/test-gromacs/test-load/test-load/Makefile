@@ -14,7 +14,7 @@ clean:
 	find -name \*.tpr -delete
 	rm -rf run-20/0*
 	rm -rf run-100/0*
-	rm -rf run-restart/0*
-	rm -rf run-restart/initial_path
+	rm -rf run-load/0*
+	rm -rf run-load/initial_path
 	rm -rf gromacs_input/pyretis.mdp
     

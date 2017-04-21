@@ -10,7 +10,9 @@ OrderParameterAngle (:py:class:`.OrderParameterAngle`)
     An angle defined by three atoms.
 """
 import logging
-from numpy import dot, arccos, clip
+from numpy import dot
+from numpy import arccos  # pylint: disable=no-name-in-module
+from numpy import clip
 from numpy.linalg import norm
 from pyretis.orderparameter.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -38,7 +40,7 @@ class OrderParameterAngle(OrderParameter):
     """
 
     def __init__(self, index, periodic=False):
-        """Initialize `OrderParameterAngle`.
+        """Initialize the order parameter.
 
         Parameters
         ----------
