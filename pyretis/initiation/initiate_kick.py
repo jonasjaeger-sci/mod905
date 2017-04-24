@@ -214,74 +214,85 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     """
     initial_state = system.particles.get_particle_state()
     interfaces = path_ensemble.interfaces
-    logger.info('Seaching crossing with middle interface')
-    leftpoint, _ = engine.kick_across_middle(system,
-                                             order_function,
-                                             rgen, interfaces[1],
-                                             tis_settings)
-    logger.info('Propagating from crossing points')
-    # kick_across_middle will return two points, one immediately
-    # left of the interface and one immediately right of the
-    # interface. So we have two points (`leftpoint` and the
-    # current `system.particles`). We then propagate the current
-    # phase point forward:
-    maxlen = tis_settings['maxlength']
-    klass = get_path_class(engine.engine_type)
-    path_forw = klass(rgen, maxlen=maxlen)
-    success, msg = engine.propagate(path_forw, system, order_function,
-                                    interfaces, reverse=False)
-    if not success:
-        msgtxt = 'Forward path not successful: {}'.format(msg)
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
-    # And we propagate the `leftpoint` backward:
-    system.particles.set_particle_state(leftpoint)
-    path_back = klass(rgen, maxlen=maxlen)
-    success, msg = engine.propagate(path_back, system, order_function,
+    while True:
+        logger.info('Seaching crossing with middle interface')
+        leftpoint, _ = engine.kick_across_middle(system,
+                                                 order_function,
+                                                 rgen, interfaces[1],
+                                                 tis_settings)
+        logger.info('Propagating from crossing points')
+        # kick_across_middle will return two points, one immediately
+        # left of the interface and one immediately right of the
+        # interface. So we have two points (`leftpoint` and the
+        # current `system.particles`). We then propagate the current
+        # phase point forward:
+        maxlen = tis_settings['maxlength']
+        klass = get_path_class(engine.engine_type)
+        status = 'NEX'
+
+        logger.info('Generate Initial Path')
+        path_forw = klass(rgen, maxlen=maxlen)
+        success, msg = engine.propagate(path_forw, system, order_function,
+                                        interfaces, reverse=False)
+        if not success:
+            msgtxt = 'Forward path not successful: {}'.format(msg)
+            logger.warning(msgtxt)
+            continue
+#            raise ValueError(msgtxt)
+        # And we propagate the `leftpoint` backward:
+        system.particles.set_particle_state(leftpoint)
+        path_back = klass(rgen, maxlen=maxlen)
+        success, msg = engine.propagate(path_back, system, order_function,
                                     interfaces, reverse=True)
-    if not success:
-        msgtxt = 'Backward path not successful: {}'.format(msg)
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
-    # Merge backward and forward, here we do not set maxlen since
-    # both backward and forward may have this length
-    initial_path = paste_paths(path_back, path_forw, overlap=False)
-    if initial_path.length >= maxlen:
-        msgtxt = 'Initial path too long (exceeded "MAXLEN")'
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
-    start, end, _, _ = initial_path.check_interfaces(interfaces)
-    # OK, now its time to check the path:
-    # 0) We can start at the starting condition, pass the middle
-    # and continue all the way to the end - perfect!
-    # 1) we can start at the starting condition, pass the middle
-    # and return to starting condition - this is perfectly fine
-    # 2) We can start at the wrong interface, pass the middle and
-    # end at the same (wrong) interface - we now need to do some shooting moves
-    # 3) We can start at wrong interface and end and the starting condition
-    # we just have to reverse the path then.
-    if start == path_ensemble.get_start_condition():  # case 0 and 1
-        initial_path.generated = ('ki', 0, 0, 0)
-        initial_path.status = 'ACC'
-    else:
-        # Now we do the other cases:
-        if end == path_ensemble.get_start_condition():
-            # Case 3 (and start != start_cond):
-            logger.info('Initial path is in the wrong direction')
-            initial_path = initial_path.reverse()
+        if not success:
+            msgtxt = 'Backward path not successful: {}'.format(msg)
+            logger.warning(msgtxt)
+            continue
+#            raise ValueError(msgtxt)
+        # Merge backward and forward, here we do not set maxlen since
+        # both backward and forward may have this length
+        initial_path = paste_paths(path_back, path_forw, overlap=False)
+        if initial_path.length >= maxlen:
+            msgtxt = 'Initial path too long (exceeded "MAXLEN")'
+            logger.warning(msgtxt)
+            continue
+#            raise ValueError(msgtxt)
+        start, end, _, _ = initial_path.check_interfaces(interfaces)
+        # OK, now its time to check the path:
+        # 0) We can start at the starting condition, pass the middle
+        # and continue all the way to the end - perfect!
+        # 1) we can start at the starting condition, pass the middle
+        # and return to starting condition - this is perfectly fine
+        # 2) We can start at the wrong interface, pass the middle and
+        # end at the same (wrong) interface - we now need to do some shooting moves
+        # 3) We can start at wrong interface and end and the starting condition
+        # we just have to reverse the path then.
+        if start == path_ensemble.get_start_condition():  # case 0 and 1
             initial_path.generated = ('ki', 0, 0, 0)
-            initial_path.status = 'ACC'
-            logger.info('Path has been reversed!')
-        elif end == start:
-            # Case 2
-            logger.info('Initial path start/end at wrong interfaces')
-            logger.info('Will perform TIS moves to try to fix it!')
-            initial_path = _fix_path_by_tis(initial_path, system,
-                                            order_function, path_ensemble,
-                                            engine, rgen, tis_settings)
+            break 
         else:
-            logger.error('Could not generate initial path!')
-            raise ValueError('Could not generate initial path!')
+            # Now we do the other cases:
+            if end == path_ensemble.get_start_condition():
+                # Case 3 (and start != start_cond):
+                logger.info('Initial path is in the wrong direction')
+                initial_path = initial_path.reverse()
+                initial_path.generated = ('ki', 0, 0, 0)
+                logger.info('Path has been reversed!')
+                break
+            elif end == start:
+                # Case 2
+                logger.info('Initial path start/end at wrong interfaces')
+                logger.info('Will perform TIS moves to try to fix it!')
+                initial_path = _fix_path_by_tis(initial_path, system,
+                                                order_function, path_ensemble,
+                                                engine, rgen, tis_settings)
+                continue
+            else:
+                logger.warning('Could not generate initial path!')
+                continue
+#                raise ValueError('Could not generate initial path!')
+     
+    initial_path.status = 'ACC'
     # Reset system:
     system.particles.set_particle_state(initial_state)
     return initial_path
