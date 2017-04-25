@@ -592,10 +592,10 @@ class GromacsEngine(ExternalMDEngine):
         """
         if self.ext == 'g96':
             txt, xyz, vel, _ = read_gromos96_file(filename)
-            write_gromos96_file(outfile, txt, xyz, -vel)
+            write_gromos96_file(outfile, txt, xyz, -1 * vel)
         elif self.ext == 'gro':
             txt, xyz, vel, _ = read_gromacs_gro_file(filename)
-            write_gromacs_gro_file(outfile, txt, xyz, -vel)
+            write_gromacs_gro_file(outfile, txt, xyz, -1 * vel)
         else:
             msg = 'GROMACS engine does not support writing "%s"'
             logger.error(msg, self.ext)

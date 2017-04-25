@@ -98,15 +98,14 @@ def _load_order_parameters(traj, dirname, system, order_function):
         print_to_screen('Loading order parameters')
         order = next(orderfile)
         return order['data'][:, 1:]
-    else:
-        orderdata = []
-        print_to_screen('Recalculating order parameters for input path')
-        logger.info('Recalculating order parameters for input path')
-        for snapshot in traj['data']:
-            system.particles.pos = snapshot['pos']
-            system.particles.vel = snapshot['vel']
-            orderdata.append(order_function.calculate_all(system))
-        return orderdata
+    orderdata = []
+    print_to_screen('Recalculating order parameters for input path')
+    logger.info('Recalculating order parameters for input path')
+    for snapshot in traj['data']:
+        system.particles.pos = snapshot['pos']
+        system.particles.vel = snapshot['vel']
+        orderdata.append(order_function.calculate_all(system))
+    return orderdata
 
 
 def _load_order_parameters_ext(traj, dirname, order_function):
@@ -139,38 +138,37 @@ def _load_order_parameters_ext(traj, dirname, order_function):
         print_to_screen('Loading order parameters from file!')
         order = next(orderfile)
         return order['data'][:, 1:]
-    else:
-        orderdata = []
-        print_to_screen('Recalculating order parameters for input path!')
-        logger.info('Recalculating order parameters for input path')
-        # First get unique files and indexes for them:
-        files = collections.OrderedDict()
-        for snapshot in traj['data']:
-            filename = snapshot[1]
-            if filename not in files:
-                files[filename] = {'minidx': None, 'maxidx': None,
-                                   'reverse': snapshot[3]}
-            if snapshot[2] is None:
-                idx = 0
-            else:
-                idx = int(snapshot[2])
-            minidx = files[filename]['minidx']
-            if minidx is None or idx < minidx:
-                files[filename]['minidx'] = idx
-            maxidx = files[filename]['maxidx']
-            if maxidx is None or idx > maxidx:
-                files[filename]['maxidx'] = idx
-        # ok now we have the files, calculate the order parameters:
-        for filename, info in files.items():
-            new_order = recalculate_order(order_function, filename,
-                                          reverse=info['reverse'],
-                                          maxidx=info['maxidx'],
-                                          minidx=info['minidx'])
-            orderdata += new_order
-        # Store the re-calculated order parameters so we don't have
-        # to re-calculate again later:
-        write_order_parameters(order_file_name, orderdata)
-        return orderdata
+    orderdata = []
+    print_to_screen('Recalculating order parameters for input path!')
+    logger.info('Recalculating order parameters for input path')
+    # First get unique files and indexes for them:
+    files = collections.OrderedDict()
+    for snapshot in traj['data']:
+        filename = snapshot[1]
+        if filename not in files:
+            files[filename] = {'minidx': None, 'maxidx': None,
+                               'reverse': snapshot[3]}
+        if snapshot[2] is None:
+            idx = 0
+        else:
+            idx = int(snapshot[2])
+        minidx = files[filename]['minidx']
+        if minidx is None or idx < minidx:
+            files[filename]['minidx'] = idx
+        maxidx = files[filename]['maxidx']
+        if maxidx is None or idx > maxidx:
+            files[filename]['maxidx'] = idx
+    # ok now we have the files, calculate the order parameters:
+    for filename, info in files.items():
+        new_order = recalculate_order(order_function, filename,
+                                      reverse=info['reverse'],
+                                      maxidx=info['maxidx'],
+                                      minidx=info['minidx'])
+        orderdata += new_order
+    # Store the re-calculated order parameters so we don't have
+    # to re-calculate again later:
+    write_order_parameters(order_file_name, orderdata)
+    return orderdata
 
 
 def write_order_parameters(order_file_name, orderdata):
@@ -222,7 +220,7 @@ def _check_path(path, ensemble):
         The ensemble the path could be added to.
     """
     start, end, _, cross = path.check_interfaces(ensemble.interfaces)
-    start_condition = ensemble.get_start_condition()
+    start_condition = ensemble.start_condition
     accept = True
     status = 'ACC'
 

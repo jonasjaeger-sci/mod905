@@ -260,12 +260,12 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     # end at the same (wrong) interface - we now need to do some shooting moves
     # 3) We can start at wrong interface and end and the starting condition
     # we just have to reverse the path then.
-    if start == path_ensemble.get_start_condition():  # case 0 and 1
+    if start == path_ensemble.start_condition:  # case 0 and 1
         initial_path.generated = ('ki', 0, 0, 0)
         initial_path.status = 'ACC'
     else:
         # Now we do the other cases:
-        if end == path_ensemble.get_start_condition():
+        if end == path_ensemble.start_condition:
             # Case 3 (and start != start_cond):
             logger.info('Initial path is in the wrong direction')
             initial_path = initial_path.reverse()
@@ -403,10 +403,10 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
 
     local_tis_settings = _copy_tis_settings(tis_settings)
     local_tis_settings['allowmaxlength'] = True
-    local_tis_settings['aimless'] = True,
+    local_tis_settings['aimless'] = True
     local_tis_settings['freq'] = 0.5
 
-    improved, check_ok = _get_help(path_ensemble.get_start_condition(),
+    improved, check_ok = _get_help(path_ensemble.start_condition,
                                    path_ensemble.interfaces)
 
     backup_path = True
@@ -427,7 +427,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
             engine,
             rgen,
             local_tis_settings,
-            path_ensemble.get_start_condition()
+            path_ensemble.start_condition
         )
 
         if accept:

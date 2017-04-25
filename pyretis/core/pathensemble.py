@@ -147,8 +147,10 @@ class PathEnsemble(object):
         self.maxpath = maxpath
         if self.ensemble == 0:
             self.ensemble_name = '[0^-]'
+            self.start_condition = 'R'
         else:
             self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
+            self.start_condition = 'L'
         self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
         self.directory = collections.OrderedDict()
         self.directory['path-ensemble'] = None
@@ -293,24 +295,6 @@ class PathEnsemble(object):
         """
         for path in self.paths:
             yield path
-
-    def get_start_condition(self):
-        """Return the appropriate start condition for an ensemble.
-
-        This is useful for RETIS simulations where we for ``[0^-]``
-        (that is ``self.ensemble == 0``)  will have the start condition
-        equal to 'R'ight. For all other ensembles we assume that we
-        start from the 'L'eft.
-
-        Returns
-        -------
-        out : string
-            'R' for right or 'L' for left start condition.
-        """
-        if self.ensemble == 0:
-            return 'R'
-        else:
-            return 'L'
 
     def move_path_to_generated(self, path, prefix=None):
         """Move a path for temporary storing."""
@@ -500,6 +484,11 @@ class PathEnsembleExt(PathEnsemble):
             with tarfile.open(self._traj_file, 'w') as tar:
                 for src, dest in source.items():
                     tar.add(src, arcname=os.path.basename(dest))
+        except OSError:
+            logger.warning(
+                'Could not find trajectory: "%s". Will not write.',
+                self._traj_file
+            )
         return path_copy
 
     def load_restart_info(self, path, info, cycle=0):

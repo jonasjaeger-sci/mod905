@@ -79,7 +79,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
     out[2] : string
         The status of the path
     """
-    start_cond = path_ensemble.get_start_condition()
+    start_cond = path_ensemble.start_condition
     logger.info('TIS move in: %s', path_ensemble.ensemble_name)
     engine.exe_dir = path_ensemble.directory['generate']
     accept, trial, status = make_tis_step(path_ensemble.last_path,
