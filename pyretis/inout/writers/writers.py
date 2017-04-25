@@ -647,16 +647,16 @@ def adjust_coordinate(coord):
     else:
         npart, dim = coord.shape
     if dim == 3:
+        # correct dimensionality, just stop here:
         return coord
-    else:
-        adjusted = np.zeros((npart, 3))
-        try:
-            for i in range(dim):
-                adjusted[:, i] = coord[:, i]
-        except IndexError:
-            if dim == 1:
-                adjusted[:, 0] = coord
-        return adjusted
+    adjusted = np.zeros((npart, 3))
+    try:
+        for i in range(dim):
+            adjusted[:, i] = coord[:, i]
+    except IndexError:
+        if dim == 1:
+            adjusted[:, 0] = coord
+    return adjusted
 
 
 def read_txt_snapshots(filename, data_keys=None):
@@ -740,7 +740,7 @@ class TrajWriter(Writer):
         super().__init__('TrajWriter', header=None)
         self.print_header = False
         self.write_vel = write_vel
-        if fmt is 'full':
+        if fmt == 'full':
             self.fmt = self._FMT_FULL
             self.fmt_vel = self._FMT_FULL_VEL
         else:
@@ -785,7 +785,8 @@ class TrajWriter(Writer):
         pos = adjust_coordinate(particles.pos)
         vel = adjust_coordinate(particles.vel)
         for namei, posi, veli in zip(particles.name, pos, vel):
-            yield self.fmt_vel.format(namei, *posi, *veli)
+            yield self.fmt_vel.format(namei, posi[0], posi[1], posi[2],
+                                      veli[0], veli[1], veli[2])
 
     def format_snapshot(self, step, system):
         """Format the given snapshot.
@@ -906,8 +907,9 @@ class PathIntWriter(Writer):
             vel = phasepoint['vel']
             for posj, velj in zip(pos, vel):
                 if self.fmt is None:
-                    self.fmt = ('{} ' * (len(posj) + len(velj))).strip()
-                yield self.fmt.format(*posj, *velj)
+                    self.fmt = ('{} ' * len(posj)).strip()
+                yield ' '.join([self.fmt.format(*posj),
+                                self.fmt.format(*velj)])
 
     @staticmethod
     def read_snapshots(data):

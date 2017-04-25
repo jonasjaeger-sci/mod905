@@ -158,7 +158,7 @@ def read_cp2k_input(filename):
     with open(filename, 'r') as infile:
         for lines in infile:
             lstrip = lines.strip()
-            if len(lstrip) == 0:
+            if not lstrip:
                 # skip empty lines
                 continue
             if lstrip.startswith('&'):

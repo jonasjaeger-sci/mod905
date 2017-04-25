@@ -159,8 +159,7 @@ def get_writer(file_type, settings=None):
         cls = _CLASS_MAP[file_type]
         if settings is None:
             return initiate_instance(cls, {})
-        else:
-            return initiate_instance(cls, settings)
+        return initiate_instance(cls, settings)
     except KeyError:
         msg = 'Unknown file type {} requested. Ignored'.format(file_type)
         logger.error(msg)

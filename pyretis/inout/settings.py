@@ -202,8 +202,7 @@ def look_for_keyword(line):
             if keyword_low.startswith(i):
                 return keyword, i, True
         return keyword, keyword_low, True
-    else:
-        return None, None, False
+    return None, None, False
 
 
 def _parse_sections(inputtxt):
@@ -279,16 +278,15 @@ def _parse_raw_section(raw_section, section):
         # unknown section, just ignore silently
         return None
     if section == 'heading':
-        if len(raw_section) == 0:
+        if not raw_section:
             return None
-        else:
-            return {'text': '\n'.join(raw_section)}
+        return {'text': '\n'.join(raw_section)}
     merged = []
     # first we merge text that is split across line.
     # this is done by assuming that keyword separate settings
     for line in raw_section:
         _, _, found_keyword = look_for_keyword(line)
-        if found_keyword or len(merged) == 0:
+        if found_keyword or not merged:
             merged.append(line)
         else:
             merged[-1] = ''.join((merged[-1], line))

@@ -350,10 +350,9 @@ def _reverse_xyz_buffer(buff, output):
         if lines.find('# Step') != -1:
             # need just one more line to complete the frame
             finish_next = True
-    if len(frame) == 0:
+    if not frame:
         return None
-    else:
-        return '\n'.join(frame[::-1])
+    return '\n'.join(frame[::-1])
 
 
 def reverse_xyz_file(filename, outputfile):
