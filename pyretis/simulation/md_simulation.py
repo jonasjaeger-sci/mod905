@@ -262,7 +262,7 @@ class SimulationMDFlux(SimulationMD):
         msg += ['Dynamics engine: {}'.format(self.engine)]
         msg += ['Time step: {}'.format(self.engine.delta_t)]
         return '\n'.join(msg)
-    
+
     def restart_info(self):
         """Return restart info.
 

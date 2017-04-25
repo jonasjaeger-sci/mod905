@@ -261,9 +261,7 @@ class Simulation(object):
         for key, val in info['cycle'].items():
             if key != 'end':
                 self.cycle[key] = val
-        
         self.first_step = False
-
         if 'rgen' in info:
             try:
                 rgen = self.rgen

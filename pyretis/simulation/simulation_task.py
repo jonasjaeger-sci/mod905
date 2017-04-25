@@ -39,7 +39,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
         of the given `function` will probably fail. True otherwise.
     """
     arguments = inspect_function(function)
-    args = [arg for arg in arguments['args'] if arg is not 'self']
+    args = [arg for arg in arguments['args'] if arg != 'self']
     defaults = [arg for arg in arguments['kwargs']]
     # first test, do we give correct number of required arguments?
     if given_args is not None:
@@ -181,15 +181,11 @@ class SimulationTask(object):
             if args is None:
                 if kwargs is None:
                     return self.function()
-                else:
-                    return self.function(**kwargs)
-            else:
-                if kwargs is None:
-                    return self.function(*args)
-                else:
-                    return self.function(*args, **kwargs)
-        else:
-            return None
+                return self.function(**kwargs)
+            if kwargs is None:
+                return self.function(*args)
+            return self.function(*args, **kwargs)
+        return None
 
     def update_when(self, when):
         """Update when to new value(s).
