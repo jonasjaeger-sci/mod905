@@ -245,8 +245,7 @@ def reopen_file(filename, fileh, inode, bytes_read):
         new_inode = os.fstat(new_fileh.fileno()).st_ino
         new_fileh.seek(bytes_read)
         return new_fileh, new_inode
-    else:
-        return None, None
+    return None, None
 
 
 def read_remaining_trr(filename, fileh, start):
@@ -460,10 +459,11 @@ class GromacsRunner():
     def stop(self):
         """Stop the current GROMACS execution."""
         if self.running is not None:
-            logger.debug('Terminating GROMACS execution')
-            self.running.terminate()
-            logger.debug('Waiting for GROMACS termination')
-            self.running.wait(timeout=120)
+            if self.running.returncode is None:
+                logger.debug('Terminating GROMACS execution')
+                self.running.terminate()
+                logger.debug('Waiting for GROMACS termination')
+                self.running.wait(timeout=360)
         self.stop_read = True
         self.close()  # close trr file.
 
