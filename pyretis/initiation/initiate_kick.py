@@ -228,70 +228,61 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
         # phase point forward:
         maxlen = tis_settings['maxlength']
         klass = get_path_class(engine.engine_type)
-        status = 'NEX'
 
-        logger.info('Generate Initial Path')
+        logger.info('Propagating forward for initial path')
         path_forw = klass(rgen, maxlen=maxlen)
         success, msg = engine.propagate(path_forw, system, order_function,
                                         interfaces, reverse=False)
         if not success:
-            msgtxt = 'Forward path not successful: {}'.format(msg)
-            logger.warning(msgtxt)
+            logger.warning('Forward path not successful: %s', msg)
             continue
-#            raise ValueError(msgtxt)
         # And we propagate the `leftpoint` backward:
         system.particles.set_particle_state(leftpoint)
         path_back = klass(rgen, maxlen=maxlen)
         success, msg = engine.propagate(path_back, system, order_function,
-                                    interfaces, reverse=True)
+                                        interfaces, reverse=True)
         if not success:
-            msgtxt = 'Backward path not successful: {}'.format(msg)
-            logger.warning(msgtxt)
+            logger.warning('Backward path not successful: %s', msg)
             continue
-#            raise ValueError(msgtxt)
         # Merge backward and forward, here we do not set maxlen since
         # both backward and forward may have this length
         initial_path = paste_paths(path_back, path_forw, overlap=False)
         if initial_path.length >= maxlen:
-            msgtxt = 'Initial path too long (exceeded "MAXLEN")'
-            logger.warning(msgtxt)
+            logger.warning('Initial path too long (exceeded "MAXLEN")')
             continue
-#            raise ValueError(msgtxt)
         start, end, _, _ = initial_path.check_interfaces(interfaces)
         # OK, now its time to check the path:
         # 0) We can start at the starting condition, pass the middle
-        # and continue all the way to the end - perfect!
-        # 1) we can start at the starting condition, pass the middle
-        # and return to starting condition - this is perfectly fine
+        #    and continue all the way to the end - perfect!
+        # 1) We can start at the starting condition, pass the middle
+        #    and return to starting condition - this is perfectly fine
         # 2) We can start at the wrong interface, pass the middle and
-        # end at the same (wrong) interface - we now need to do some shooting moves
-        # 3) We can start at wrong interface and end and the starting condition
-        # we just have to reverse the path then.
-        if start == path_ensemble.get_start_condition():  # case 0 and 1
+        #    end at the same (wrong) interface - we fix it by TIS moves.
+        # 3) We can start at wrong interface and end at the starting
+        #    condition - we just have to reverse the path.
+        if start == path_ensemble.start_condition:  # case 0 and 1
             initial_path.generated = ('ki', 0, 0, 0)
-            break 
+            break
         else:
             # Now we do the other cases:
-            if end == path_ensemble.get_start_condition():
+            if end == path_ensemble.start_condition:
                 # Case 3 (and start != start_cond):
                 logger.info('Initial path is in the wrong direction')
                 initial_path = initial_path.reverse()
                 initial_path.generated = ('ki', 0, 0, 0)
-                logger.info('Path has been reversed!')
+                logger.info('Initial path has been reversed!')
                 break
             elif end == start:
                 # Case 2
                 logger.info('Initial path start/end at wrong interfaces')
-                logger.info('Will perform TIS moves to try to fix it!')
+                logger.info('Will perform TIS moves to fix it!')
                 initial_path = _fix_path_by_tis(initial_path, system,
                                                 order_function, path_ensemble,
                                                 engine, rgen, tis_settings)
-                continue
+                break
             else:
-                logger.warning('Could not generate initial path!')
+                logger.warning('Could not generate initial path, will retry!')
                 continue
-#                raise ValueError('Could not generate initial path!')
-     
     initial_path.status = 'ACC'
     # Reset system:
     system.particles.set_particle_state(initial_state)
@@ -414,10 +405,10 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
 
     local_tis_settings = _copy_tis_settings(tis_settings)
     local_tis_settings['allowmaxlength'] = True
-    local_tis_settings['aimless'] = True,
+    local_tis_settings['aimless'] = True
     local_tis_settings['freq'] = 0.5
 
-    improved, check_ok = _get_help(path_ensemble.get_start_condition(),
+    improved, check_ok = _get_help(path_ensemble.start_condition,
                                    path_ensemble.interfaces)
 
     backup_path = True
@@ -438,7 +429,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
             engine,
             rgen,
             local_tis_settings,
-            path_ensemble.get_start_condition()
+            path_ensemble.start_condition
         )
 
         if accept:
