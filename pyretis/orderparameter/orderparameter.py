@@ -108,14 +108,13 @@ class OrderParameter(object):
         ret_val = self.calculate(system)
         if self.extra is None:
             return ret_val
-        else:
-            for func in self.extra:
-                try:
-                    extra = func(system)
-                except TypeError:
-                    extra = float('nan')
-                ret_val.extend(extra)
-            return ret_val
+        for func in self.extra:
+            try:
+                extra = func(system)
+            except TypeError:
+                extra = float('nan')
+            ret_val.extend(extra)
+        return ret_val
 
     def add_orderparameter(self, func):
         """Add an extra order parameter to calculate.
@@ -139,9 +138,8 @@ class OrderParameter(object):
             msg = 'The given function is not callable, it will not be added!'
             logger.warning(msg)
             return False
-        else:
-            self.extra.append(func)
-            return True
+        self.extra.append(func)
+        return True
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""
