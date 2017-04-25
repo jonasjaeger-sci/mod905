@@ -85,14 +85,15 @@ def use_tqdm(progress):
     progress : boolean
         If True, we should use a progress bar, otherwise not."""
     if progress:
-        return tqdm.tqdm
+        pbar = tqdm.tqdm
     else:
         def empty_tqdm(*args, **kwargs):
             """Dummy function to replace tqdm when it's not used."""
             if args:
                 return args[0]
             return kwargs.get('iterable', None)
-        return empty_tqdm
+        pbar = empty_tqdm
+    return pbar
 
 
 def hello_world(infile, rundir, logfile):
@@ -676,7 +677,7 @@ def main(infile, indir, exe_dir, progress):
             if 'particles' not in settings:
                 settings['particles'] = {}
             settings['particles']['npart'] = system.particles.npart
-        if len(settings) != 0:
+        if settings:
             out_file = os.path.join(indir, 'out.rst')
             logtxt = 'Writing simulation settings: {}'.format(out_file)
             print_to_screen(logtxt)
