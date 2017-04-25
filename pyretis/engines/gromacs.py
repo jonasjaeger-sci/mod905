@@ -352,6 +352,7 @@ class GromacsEngine(ExternalMDEngine):
         separated uniformly.
         """
         logger.debug('Extracting .trr frame, idx = %i', idx)
+        logger.debug('Trr file: %s, out file: %s', trr_file, out_file)
         time1 = (idx - 1) * self.timestep * self.subcycles
         time2 = idx * self.timestep * self.subcycles
         cmd = [self.gmx, 'trjconv',
