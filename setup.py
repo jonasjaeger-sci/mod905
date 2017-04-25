@@ -36,7 +36,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.9.1.dev0'
+FULL_VERSION = '0.9.1.dev1'
 
 # create copies of scripts:
 try:
