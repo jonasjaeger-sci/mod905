@@ -91,12 +91,13 @@ def make_retis_step(ensembles, system, order_function, engine, rgen,
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
         logger.info('Performing RETIS swapping move(s).')
-        return retis_moves(ensembles, system, order_function, engine,
-                           rgen, settings, cycle)
+        results = retis_moves(ensembles, system, order_function, engine,
+                              rgen, settings, cycle)
     else:
         logger.info('Performing RETIS TIS move(s)')
-        return retis_tis_moves(ensembles, system, order_function, engine,
-                               rgen, settings, cycle)
+        results = retis_tis_moves(ensembles, system, order_function, engine,
+                                  rgen, settings, cycle)
+    return results
 
 
 def _relative_shoots_select(ensembles, rgen, relative):
@@ -446,9 +447,11 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     """
     ensemble0 = ensembles[0]
     ensemble1 = ensembles[1]
-    # 1) Generate path for [0^-] from [0^+]:
+    # 1. Generate path for [0^-] from [0^+]:
     # We generate from the first point of the path in [0^+]:
+    logger.debug('Swapping [0^-] <-> [0^+]')
     logger.debug('Creating path for [0^-]')
+    logger.debug('Initial point is: %s', ensemble1.last_path.phasepoint(0))
     system.particles.set_particle_state(ensemble1.last_path.phasepoint(0))
     # Propagate it backward in time:
     maxlen = settings['tis']['maxlength']
@@ -460,13 +463,21 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     path0 = path_tmp.empty_path(maxlen=maxlen)
     for phasepoint in path_tmp.trajectory(reverse=True):
         _ = path0.append(phasepoint)
-    # And add second point from [0^+] at the end:
+    # Add second point from [0^+] at the end:
+    logger.debug('Adding second point from [0^+]:')
     phase_point = ensemble1.last_path.phasepoint(1)
+    logger.debug('Point is %s', phase_point)
     engine.dump_phasepoint(phase_point, 'second')
     path0.append(phase_point)
-    path0.status = 'BTX' if path0.length == maxlen else 'ACC'
+    if path0.length == maxlen:
+        path0.status = 'BTX'
+    elif path0.length < 3:
+        path0.status = 'BTX'
+    else:
+        path0.status = 'ACC'
     path0.set_move('s+')
-    # 2) Generate path for [0^+] from [0^-]:
+
+    # 2. Generate path for [0^+] from [0^-]:
     logger.debug('Creating path for [0^+]')
     # This path will be generated starting from the LAST point of [0^-] which
     # should be on the right side of the interface. We will also add the
@@ -476,6 +487,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     path_tmp = path0.empty_path(maxlen=maxlen-1)
     # We start the generation from the LAST point
     system.particles.set_particle_state(ensemble0.last_path.phasepoint(-1))
+    logger.debug('Initial point is %s', ensemble0.last_path.phasepoint(-1))
     engine.exe_dir = ensemble1.directory['generate']
     logger.debug('Propagating for [0^+]')
     engine.propagate(path_tmp, system, order_function,
@@ -484,24 +496,31 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     # the first point for the path:
     path1 = path_tmp.empty_path(maxlen=maxlen)
     phase_point = ensemble0.last_path.phasepoint(-2)
+    logger.debug('Add second last point: %s', phase_point)
     engine.dump_phasepoint(phase_point, 'second_last')
     path1.append(phase_point)
     path1 += path_tmp  # add rest of the path
     path1.set_move('s-')
-    path1.status = 'FTX' if path1.length == maxlen else 'ACC'
+    if path1.length == maxlen:
+        path1.status = 'FTX'
+    elif path1.length < 3:
+        path1.status = 'FTX'
+    else:
+        path1.status = 'ACC'
     # Update status, etc
     status = 'ACC'  # we are optimistic and hope that this is the default
     accept = True
-    if path0.status == 'BTX':
-        path1.status = 'BTX'
-        status = 'BTX'
+    if path0.status != 'ACC':
+        path1.status = path0.status
+        status = path0.status
         accept = False
-        logger.debug('Rejecting path in [0^-], BTX')
-    if path1.status == 'FTX':
-        path0.status = 'FTX'
-        status = 'FTX'
+        logger.debug('Rejecting swap path in [0^-], %s', path0.status)
+    if path1.status != 'ACC':
+        path0.status = path1.status
+        status = path1.status
         accept = False
-        logger.debug('Rejecting path in [0^+], FTX')
+        logger.debug('Rejecting swap path in [0^+], %s', path1.status)
+    logger.debug('Done with swap zero!')
     ensemble0.add_path_data(path0, status, cycle=cycle)
     ensemble1.add_path_data(path1, status, cycle=cycle)
     return accept, (path0, path1), status
