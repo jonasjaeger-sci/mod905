@@ -1,0 +1,342 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv3 License. See LICENSE for more info.
+"""Simple script to compare outcome of two simulations.
+
+Here we compare a full simulation with one where we have stopped
+and restarted after 100 steps.
+"""
+# pylint: disable=C0103
+import filecmp
+from collections import OrderedDict
+from math import isclose
+import os
+import colorama
+import numpy as np
+from pyretis.inout.common import print_to_screen
+from pyretis.inout.settings import parse_settings_file
+from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.inout.setup.createsimulation import create_path_ensembles
+from pyretis.inout.writers import prepare_load
+
+
+RESULTS = 'results'
+
+
+def compare_files(file1, file2):
+    """Compare two files."""
+    print_to_screen('Comparing: {} {}'.format(file1, file2))
+    similar = filecmp.cmp(file1, file2)
+    if similar:
+        print_to_screen('\t-> Files are equal!', level='success')
+    else:
+        print_to_screen('\t-> Files are NOT equal!', level='error')
+
+
+def check_path_file(ens):
+    """Check that the accepted paths seem ok.
+
+    Parameters
+    ----------
+    ens : object like :py:class:`.PathEnsemble`
+        The path ensemble to plot for.
+
+    Returns
+    -------
+    paths : dict
+        Information about the paths in the ensemble.
+    """
+    print_to_screen('\nReading for {}'.format(ens.ensemble_name))
+    filename = os.path.join(PATH_DIR_FMT.format(ens.ensemble),
+                            'pathensemble.txt')
+    print_to_screen('Reading: {}'.format(filename))
+    start = ens.start_condition
+    end = ('R') if ens.ensemble == 0 else ('R', 'L')
+    something_weird = False
+    with open(filename, 'r') as inputfile:
+        for lines in inputfile:
+            if lines.startswith('#'):
+                continue
+            splitline = lines.strip().split()
+            status = splitline[7]
+            if status != 'ACC':
+                continue
+            step = int(splitline[0])
+            left = splitline[3]
+            middle = splitline[4]
+            right = splitline[5]
+            length = int(splitline[6])
+            mino = float(splitline[9])
+            maxo = float(splitline[10])
+
+            if length < 3:
+                print_to_screen('Suspicious length for path {}'.format(step),
+                                level='error')
+                something_weird = True
+            if start != left:
+                print_to_screen(
+                    'Inconsistent start: {} != {} (step {})'.format(start,
+                                                                    left,
+                                                                    step),
+                    level='error')
+                something_weird = True
+            if middle != 'M':
+                print_to_screen(
+                    'Middle differ: M != {} (step {})'.format(middle,
+                                                              step),
+                    level='error')
+                something_weird = True
+            if right not in end:
+                print_to_screen(
+                    'Inconsistent end: {} (step {})'.format(right, step),
+                    level='error')
+                something_weird = True
+            cross = [mino < interpos < maxo for interpos in ens.interfaces]
+            if ens.ensemble == 0:
+                idx1, idx2 = 1, 2
+            else:
+                idx1, idx2 = 0, 1
+            if not cross[idx1] or not cross[idx2]:
+                something_weird = True
+                print_to_screen(
+                    'Inconsistent crossings: {} {} (step {})'.format(
+                        cross[idx1],
+                        cross[idx2],
+                        step
+                    ),
+                    level='error'
+                )
+    if not something_weird:
+        print_to_screen('Accepted paths are OK!', level='success')
+
+
+def run_check_path_file(settings):
+    """Check paths using given simulation settings."""
+    include_zero = settings['simulation']['task'] == 'retis'
+    ensembles, _ = create_path_ensembles(
+        settings['simulation']['interfaces'],
+        'internal',
+        include_zero=include_zero)
+    for ens in ensembles:
+        check_path_file(ens)
+
+
+def read_path_file(ens):
+    """Read information about paths from pathensemble.txt
+
+    Parameters
+    ----------
+    ens : object like :py:class:`.PathEnsemble`
+        The path ensemble to plot for.
+
+    Returns
+    -------
+    paths : dict
+        Information about the paths in the ensemble.
+    """
+    print_to_screen('\nReading for {}'.format(ens.ensemble_name))
+    filename = os.path.join(PATH_DIR_FMT.format(ens.ensemble),
+                            'pathensemble.txt')
+    print_to_screen('Reading: {}'.format(filename))
+    paths = OrderedDict()
+    path_acc = OrderedDict()
+    current_acc = None
+    with open(filename, 'r') as inputfile:
+        for lines in inputfile:
+            if lines.startswith('#'):
+                continue
+            else:
+                splitline = lines.strip().split()
+                step = int(splitline[0])
+                status = splitline[7]
+                move = splitline[8]
+                paths[step] = {'status': status,
+                               'move': move,
+                               'parent': current_acc,
+                               'swap-parent': (None, None)}
+                if status == 'ACC':
+                    current_acc = step
+                path_acc[step] = current_acc
+    return paths, path_acc
+
+
+def get_swap_parent(paths, ensl, ensr, accl, accr):
+    """Get the swapping parent for paths."""
+    for key in paths:
+        idx = key - 1
+        if paths[key]['move'] == 's+':
+            paths[key]['swap-parent'] = (ensr, accr[idx])
+        elif paths[key]['move'] == 's-':
+            paths[key]['swap-parent'] = (ensl, accl[idx])
+
+
+def check_order_swap(data0, data1, special=2):
+    """Check that order parameters are consistent for swapping.
+
+    Here, we compare order parameters from paths that are generated by
+    swapping.
+
+    Parameters
+    ----------
+    data0 : numpy.array
+        The order parameters from the first path.
+    data1 : numpy.array
+        The order parameters from the second path.
+    special : integer
+        For the two cases, [0-] -> [0+] and [0-] <- [0+] we have
+        to do special comparisons.
+
+    Returns
+    -------
+    out : True if everything is fine, False otherwise.
+    """
+    if special == 0:
+        # for [0-] generated from [0+]:
+        # - two last of 0- should equal two first in 0+
+        ok0 = isclose(data0[-2][1], data1[0][1])
+        ok1 = isclose(data0[-1][1], data1[1][1])
+        ok = ok0 and ok1
+    elif special == 1:
+        # for [0+] generated from [0-]:
+        # - two first of 0+ should equal two last from 0-
+        ok0 = isclose(data0[0][1], data1[-2][1])
+        ok1 = isclose(data0[1][1], data1[-1][1])
+        ok = ok0 and ok1
+    else:
+        ok = np.allclose(data0, data1)
+    return ok
+
+
+def get_index(traj):
+    """Just return index from a comment."""
+    return int(traj['comment'][0].split('Cycle:')[1].split(',')[0])
+
+
+def check_swaps(paths, accepted, ens, kind):
+    """Check accepted right swaps."""
+    traj0 = prepare_load(
+        'pathorder',
+        os.path.join(PATH_DIR_FMT.format(ens), 'order.txt')
+    )
+    if kind == 'left':
+        special = 1 if ens == 1 else 2
+        ens2 = ens - 1
+        move = 's-'
+    else:
+        special = 0 if ens == 0 else 2
+        ens2 = ens + 1
+        move = 's+'
+    traj1 = prepare_load(
+        'pathorder',
+        os.path.join(PATH_DIR_FMT.format(ens2), 'order.txt')
+    )
+    traj1i, idx1 = None, None
+    errors, ok_ones = set(), set()
+    everything_is_ok = True
+    for traj0i in traj0:
+        idx0 = get_index(traj0i)
+        if idx0 in accepted and paths[idx0]['move'] == move:
+            parent = paths[idx0]['swap-parent']
+            assert parent[0] == ens2
+            ok = False
+            found = False
+            if traj1i is not None:
+                # just check if we should use this one again:
+                if idx1 == parent[1]:
+                    found = True
+                    ok = check_order_swap(traj0i['data'], traj1i['data'],
+                                          special=special)
+            if not found:
+                for traj1i in traj1:
+                    idx1 = get_index(traj1i)
+                    if idx1 == parent[1]:
+                        found = True
+                        ok = check_order_swap(traj0i['data'], traj1i['data'],
+                                              special=special)
+                        break
+            if not found:
+                print_to_screen('Could not find parent for {}'.format(idx0),
+                                level='warning')
+                everything_is_ok = False
+            else:
+                if ok:
+                    ok_ones.add(idx0)
+                else:
+                    print_to_screen('Comparison failed for {}'.format(idx0),
+                                    level='error')
+                    everything_is_ok = False
+                    errors.add(idx0)
+    if everything_is_ok:
+        print_to_screen('All swaps are ok!', level='success')
+    else:
+        print_to_screen('Error for some swaps:', level='error')
+    return everything_is_ok
+
+
+def check_ensemble_swaps(settings):
+    """Check swaps for ensebles from settings."""
+    include_zero = settings['simulation']['task'] == 'retis'
+    ensembles, _ = create_path_ensembles(
+        settings['simulation']['interfaces'],
+        'internal',
+        include_zero=include_zero)
+    path_info = {}
+    path_acc = {}
+    names = []
+    for i, ens in enumerate(ensembles):
+        pathi, patha = read_path_file(ens)
+        path_info[i] = pathi
+        path_acc[i] = patha
+        names.append(ens.ensemble_name)
+    for i in range(len(ensembles)):
+        if i == 0:
+            get_swap_parent(path_info[i], None, i+1, None, path_acc[i+1])
+            print_to_screen(
+                '\nChecking {} <- {} swaps...'.format(names[i], names[i+1]),
+                level='info'
+            )
+            check_swaps(path_info[i], path_acc[i], i, kind='right')
+        elif i == len(ensembles) - 1:
+            get_swap_parent(path_info[i], i-1, None, path_acc[i-1], None)
+            print_to_screen(
+                '\nChecking {} <- {} swaps...'.format(names[i], names[i-1]),
+                level='info'
+            )
+            check_swaps(path_info[i], path_acc[i], i, kind='left')
+        else:
+            get_swap_parent(path_info[i], i-1, i+1,
+                            path_acc[i-1], path_acc[i+1])
+            print_to_screen(
+                '\nChecking {} -> {} swaps...'.format(names[i], names[i+1]),
+                level='info'
+            )
+            check_swaps(path_info[i], path_acc[i], i, kind='right')
+            print_to_screen(
+                'Checking {} <- {} swaps...'.format(names[i], names[i-1]),
+                level='info'
+            )
+            check_swaps(path_info[i], path_acc[i], i, kind='left')
+
+
+def compare_path_files(settings):
+    """Compare pathensemble.txt files."""
+    inter = settings['simulation']['interfaces']
+    for i in range(len(inter)):
+        ens_dir = PATH_DIR_FMT.format(i)
+        fil1 = os.path.join(ens_dir, 'pathensemble.txt')
+        fil2 = os.path.join(RESULTS, ens_dir, 'pathensemble.txt')
+        compare_files(fil1, fil2)
+
+
+if __name__ == '__main__':
+    colorama.init(autoreset=True)
+    sets = parse_settings_file('retis.rst')
+    print_to_screen('\nComparing pathensemble.txt files', level='message')
+    print_to_screen('================================', level='message')
+    compare_path_files(sets)
+    print_to_screen('\nCheck swaps', level='message')
+    print_to_screen('===========', level='message')
+    check_ensemble_swaps(sets)
+    print_to_screen('\nCheck accepted paths', level='message')
+    print_to_screen('====================', level='message')
+    run_check_path_file(sets)
