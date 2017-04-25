@@ -308,8 +308,7 @@ def add_dirname(filename, dirname):
     """
     if dirname is not None:
         return os.path.join(dirname, filename)
-    else:
-        return filename
+    return filename
 
 
 def name_file(name, extension, path=None):
@@ -385,8 +384,7 @@ def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
         The formatted number."""
     if minf <= number <= maxf:
         return fmtf.format(number)
-    else:
-        return fmte.format(number)
+    return fmte.format(number)
 
 
 def get_log_formatter(level):
@@ -407,5 +405,4 @@ def get_log_formatter(level):
     """
     if level <= logging.DEBUG:
         return PyretisLogFormatter(LOG_DEBUG_FMT)
-    else:
-        return PyretisLogFormatter(LOG_FMT)
+    return PyretisLogFormatter(LOG_FMT)

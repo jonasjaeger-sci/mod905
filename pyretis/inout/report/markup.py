@@ -142,8 +142,7 @@ def latexify_number(str_float):
     if 'e' in str_float:
         base, exp = str_float.split('e')
         return r'${0} \times 10^{{{1}}}$'.format(base, int(exp))
-    else:
-        return r'${}$'.format(str_float)
+    return r'${}$'.format(str_float)
 
 
 def mathexify_number(str_float):

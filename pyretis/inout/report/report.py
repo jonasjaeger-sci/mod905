@@ -184,8 +184,7 @@ def render_report(report, output, template, path):
     # pylint: enable=maybe-no-member
     if output == 'html':
         return _rst_to_html(render), _EXT[output]
-    else:
-        return render, _EXT[output]
+    return render, _EXT[output]
 
 
 def generate_report(report_type, analysis_results, output, template=None):

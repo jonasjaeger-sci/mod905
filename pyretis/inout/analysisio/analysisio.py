@@ -267,36 +267,35 @@ def run_tis_analysis(settings, plotter, txt_plotter):
     """
     if is_single_tis(settings):
         return run_single_tis_analysis(settings, plotter, txt_plotter)
-    else:
-        results = {'cross': None, 'pathensemble': [], 'matched': None}
-        all_settings, all_files = get_path_simulation_files(settings)
-        nens = len(all_settings) - 1
-        for i, (sett, files) in enumerate(zip(all_settings, all_files)):
-            if i == 0:
-                msgtxt = ('Initial flux is not calculated here.\n'
-                          'Remember to calculate this separately!')
-                logger.info(msgtxt)
-                print_to_screen(msgtxt, level='warning')
-            else:
-                msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
-                print_to_screen(msgtxt, level='info')
-                print_to_screen()
-                result = run_analysis_files(sett, files, plotter, txt_plotter)
-                results['pathensemble'].append(result['pathensemble'])
-                report_txt = generate_report('tis-single', result,
-                                             output='txt')[0]
-                print_to_screen(''.join(report_txt))
-                print_to_screen()
-        # match probabilities:
-        out, fig, txt = analyse_and_output_matched(results['pathensemble'],
-                                                   plotter, txt_plotter)
-        results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-        print_to_screen('Overall results', level='success')
-        print_to_screen('===============', level='success')
-        print_to_screen()
-        print_value_error('TIS Crossing probability',
-                          out['prob'], out['relerror'], level='success')
-        return results
+    results = {'cross': None, 'pathensemble': [], 'matched': None}
+    all_settings, all_files = get_path_simulation_files(settings)
+    nens = len(all_settings) - 1
+    for i, (sett, files) in enumerate(zip(all_settings, all_files)):
+        if i == 0:
+            msgtxt = ('Initial flux is not calculated here.\n'
+                      'Remember to calculate this separately!')
+            logger.info(msgtxt)
+            print_to_screen(msgtxt, level='warning')
+        else:
+            msgtxt = 'Analysing ensemble {} of {}'.format(i, nens)
+            print_to_screen(msgtxt, level='info')
+            print_to_screen()
+            result = run_analysis_files(sett, files, plotter, txt_plotter)
+            results['pathensemble'].append(result['pathensemble'])
+            report_txt = generate_report('tis-single', result,
+                                         output='txt')[0]
+            print_to_screen(''.join(report_txt))
+            print_to_screen()
+    # match probabilities:
+    out, fig, txt = analyse_and_output_matched(results['pathensemble'],
+                                               plotter, txt_plotter)
+    results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
+    print_to_screen('Overall results', level='success')
+    print_to_screen('===============', level='success')
+    print_to_screen()
+    print_value_error('TIS Crossing probability',
+                      out['prob'], out['relerror'], level='success')
+    return results
 
 
 def run_retis_analysis(settings, plotter, txt_plotter):
@@ -462,8 +461,7 @@ def read_first_block(fileobj, file_name):
             break
     if first_block is None:
         return None
-    else:
-        return first_block['data']
+    return first_block['data']
 
 
 def output_results(file_type, plotter, result, rawdata):
