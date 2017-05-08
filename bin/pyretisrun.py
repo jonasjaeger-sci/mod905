@@ -634,6 +634,24 @@ def set_up_simulation(inputfile, runpath):
     return runner, sim, syst, sim_settings
 
 
+def store_simulation_settings(settings, indir, backup):
+    """Store the parsed input settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The simulation settings.
+    indir : string
+        The directory which contains the input script.
+    """
+    if settings:
+        out_file = os.path.join(indir, 'out.rst')
+        logtxt = 'Writing simulation settings: {}'.format(out_file)
+        print_to_screen(logtxt)
+        logger.info(logtxt)
+        write_settings_file(settings, out_file, backup=backup)
+
+
 def main(infile, indir, exe_dir, progress):
     """The main method for executing PyRETIS.
 
@@ -654,6 +672,8 @@ def main(infile, indir, exe_dir, progress):
     try:
         run, simulation, system, settings = set_up_simulation(infile,
                                                               exe_dir)
+        store_simulation_settings(settings, indir,
+                                  settings['output']['backup'])
         # Run the simulation:
         run(simulation, settings, progress=progress)
     except Exception as error:  # Exceptions should subclass BaseException.
@@ -677,13 +697,7 @@ def main(infile, indir, exe_dir, progress):
             if 'particles' not in settings:
                 settings['particles'] = {}
             settings['particles']['npart'] = system.particles.npart
-        if settings:
-            out_file = os.path.join(indir, 'out.rst')
-            logtxt = 'Writing simulation settings: {}'.format(out_file)
-            print_to_screen(logtxt)
-            logger.info(logtxt)
-            write_settings_file(settings, out_file,
-                                backup=settings['output']['backup'])
+        store_simulation_settings(settings, indir, 'overwrite')
         bye_bye_world()
 
 if __name__ == '__main__':

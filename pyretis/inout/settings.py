@@ -539,7 +539,7 @@ def write_settings_file(settings, outfile, backup=True):
             logger.warning(msg)
     with open(outfile, 'w') as fileh:
         txt = settings_to_text(settings)
-        fileh.write(txt)
+        fileh.write(txt.strip())
 
 
 def copy_settings(settings):
