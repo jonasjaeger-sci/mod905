@@ -44,7 +44,7 @@ class SectionNode():
         section.
     """
 
-    def __init__(self, title, parent, settings):
+    def __init__(self, title, parent, settings, data=None):
         """Initiate the node.
 
         Parameters
@@ -59,7 +59,10 @@ class SectionNode():
         self.title = title
         self.parent = parent
         self.settings = settings
-        self.data = []
+        if data:
+            self.data = [i for i in data]
+        else:
+            self.data = []
         self.children = set()
         self.level = 0
         self.parents = None
@@ -184,22 +187,27 @@ def read_cp2k_input(filename):
     return nodes
 
 
-def _add_node(target, settings, node_ref):
+def _add_node(target, settings, data, nodes, node_ref):
     """Just add a new node"""
-    parents = target.split('->')
-    title = parents[-1]
-    if len(parents) < 1:
-        par = None
+    # check if this is a root node:
+    root = target.find('->') == -1
+    if root:
+        new_node = SectionNode(target, None, settings, data=data)
+        nodes.append(new_node)
     else:
-        par = node_ref['->'.join(parents[:-1])]
-        new_node = SectionNode(title, par, settings)
-    if par is not None:
-        new_node.level = par.level + 1
-        par.add_child(new_node)
+        parents = target.split('->')
+        title = parents[-1]
+        par = '->'.join(parents[:-1])
+        if par not in node_ref:
+            _add_node(par, None, None, nodes, node_ref)
+        parent = node_ref['->'.join(parents[:-1])]
+        new_node = SectionNode(title, parent, settings, data=data)
+        new_node.level = parent.level + 1
+        parent.add_child(new_node)
     node_ref[target] = new_node
 
 
-def update_node(target, settings, data, node_ref,
+def update_node(target, settings, data, node_ref, nodes,
                 replace=False):
     """Update the given target node.
 
@@ -215,6 +223,8 @@ def update_node(target, settings, data, node_ref,
         The data for the node.
     node_ref : dict of :py:class:`.SectionNode`
         A dict of all nodes in the tree.
+    nodes : list of :py:class:`.SectionNode`
+        The root nodes.
     replace : boolean
         If True and if the nodes has some data, the already existing
         data will be ignored. We also assume that the data is already
@@ -222,9 +232,10 @@ def update_node(target, settings, data, node_ref,
     """
     if target not in node_ref:  # add node
         try:
-            _add_node(target, settings, node_ref)
+            _add_node(target, settings, data, nodes, node_ref)
         except KeyError:
-            return
+            pass
+        return
     node = node_ref[target]
     new_data = []
     done = set()
@@ -315,7 +326,7 @@ def update_cp2k_input(template, output, update=None, remove=None):
             settings = value.get('settings', None)
             replace = value.get('replace', False)
             data = value.get('data', [])
-            update_node(target, settings, data, node_ref,
+            update_node(target, settings, data, node_ref, nodes,
                         replace=replace)
     if remove is not None:
         for nodei in remove:
