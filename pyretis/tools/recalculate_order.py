@@ -67,7 +67,7 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
     out : list of lists of floats
         The order parameters as a list for each frame in the .trr file.
     """
-    system = System(box=Box([100, 100, 100]))  # add dummy system
+    system = System(box=Box([100., 100., 100.]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
     all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
@@ -86,7 +86,7 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
         else:
             logger.warning('No velocities found in .trr file! Set to zero.')
             system.particles.vel = np.zeros_like(data['x'])
-        system.box.update_size(np.diagonal(data['box']))
+        system.box.update_size(data['box'])
         all_order.append(order_parameter.calculate_all(system))
     return all_order
 
@@ -115,7 +115,7 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
     out : list of lists of floats
         The order parameters as a list for each frame in the file.
     """
-    system = System(box=Box([100, 100, 100]))  # add dummy system
+    system = System(box=Box([100., 100., 100.]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
     all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
@@ -158,7 +158,7 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     out : list of lists of floats
         The order parameters as a list for each frame.
     """
-    system = System(box=Box([100, 100, 100]))  # add dummy system
+    system = System(box=Box([100., 100., 100.]))  # add dummy system
     system.particles = ParticlesExt(dim=3)  # add dummy particles
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
     print_to_screen(msg)
