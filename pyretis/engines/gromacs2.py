@@ -164,7 +164,7 @@ class GromacsEngine2(GromacsEngine):
                     system.particles.vel *= -1
             else:
                 system.particles.vel = None
-            system.box.update_size(np.diagonal(data['box']))
+            system.box.update_size(data['box'])
             order = order_function.calculate_all(system)
             phase_point = {'order': order,
                            'pos': (trr_file, i),
