@@ -9,7 +9,7 @@ be read from a file.
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-create_box (:py:func:`.create_box`)
+set_up_box (:py:func:`.set_up_box`)
     Create a simulation box from simulation settings.
 
 create_initial_positions (:py:func:`.create_initial_positions`)
@@ -34,7 +34,7 @@ import logging
 import os
 import numpy as np
 from pyretis.tools import generate_lattice
-from pyretis.core.box import Box
+from pyretis.core.box import create_box
 from pyretis.core.system import System
 from pyretis.core.particles import Particles, get_particle_type
 from pyretis.core.units import CONVERT
@@ -46,7 +46,7 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_initial_positions', 'create_system', 'create_velocities',
-           'create_box', 'initial_positions_file', 'initial_positions_lattice']
+           'set_up_box', 'initial_positions_file', 'initial_positions_lattice']
 
 
 PERIODIC_TABLE = {'H': 1.007975, 'He': 4.002602, 'Li': 6.9675,
@@ -204,7 +204,10 @@ def initial_positions_lattice(settings):
     logger.info('Initiated %i particles on lattice "%s"',
                 particles.npart, lattice_type)
     logger.info('Lattice is %iD', ndim)
-    return particles, size
+
+    size = np.array(size)
+    box = {'low': size[:, 0], 'high': size[:, 1]}
+    return particles, box
 
 
 def _get_snapshot_from_file(pos_settings, units):
@@ -339,14 +342,17 @@ def initial_positions_file(settings):
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
     try:
-        size = [lng * convert['length'] for lng in snapshot['box'][:ndim]]
+        box = {}
+        box['length'] = [i * convert['length'] for i in snapshot['box']]
+        if ndim < 3:
+            box['length'] = box['lenght'][:ndim]
     except (KeyError, IndexError, TypeError) as err:
         logger.debug('No box read from file: %s', err)
-        size = None
+        box = None
     if vel_read:
         msg = 'Used velocities found in {}.'.format(pos_settings['file'])
         logger.info(msg)
-    return particles, size, vel_read
+    return particles, box, vel_read
 
 
 def create_initial_positions(settings):
@@ -377,8 +383,8 @@ def create_initial_positions(settings):
     logger.debug(debugtxt)
     particles = None
     if 'generate' in settings['particles']['position']:
-        particles, size = initial_positions_lattice(settings)
-        return particles, size, False
+        particles, box = initial_positions_lattice(settings)
+        return particles, box, False
     elif 'file' in settings['particles']['position']:
         # First check if we need to add a path to the file:
         filename = settings['particles']['position']['file']
@@ -387,8 +393,8 @@ def create_initial_positions(settings):
             filename = os.path.join(settings['simulation']['exe-path'],
                                     filename)
             settings['particles']['position']['file'] = filename
-        particles, size, vel = initial_positions_file(settings)
-        return particles, size, vel
+        particles, box, vel = initial_positions_file(settings)
+        return particles, box, vel
     else:
         msg = 'Unknown settings for initial positions: {}'
         msgtxt = msg.format(settings['particles']['position'])
@@ -396,83 +402,49 @@ def create_initial_positions(settings):
         raise ValueError(msgtxt)
 
 
-def create_box(settings, size, dim=3):
+def set_up_box(settings, boxs, dim=3):
     """Method that will try to set up a box from settings.
 
     Parameters
     ----------
     settings : dict
         The dict with the simulation settings
-    size : list of floats
+    boxs : dict
         If no box settings are given, we can still create a box,
-        inferred from the positions of the particles. The ``size`` are
-        the min/max positions derived from particle positions.
+        inferred from the positions of the particles. This dict
+        contains the settings to do so.
     dim : integer
         Number of dimensions for the box. This is used only as a last
         resort when no information about the box is given.
 
     Returns
     -------
-    box : object like :py:class:`.Box` or None
+    box : object like :py:class:`.BoxBase` or None
         The box if we managed to create it, otherwise None.
     """
     msg = 'Box created {}:\n{}'
+    box = None
     if settings.get('box', None) is not None:
-        box = Box(**settings['box'])
+        print(settings['box'])
+        box = create_box(**settings['box'])
         msgtxt = msg.format('from settings', box)
         logger.info(msgtxt)
         debugtxt = 'Settings used:\n{}'.format(settings['box'])
         logger.debug(debugtxt)
     else:
-        if size is not None:
-            box = Box(size=size)
+        if boxs is not None:
+            box = create_box(**boxs)
             msgtxt = msg.format('from initial positions', box)
             logger.info(msgtxt)
             msgwarn = 'The box was assumed periodic in all directions.'
             logger.warning(msgwarn)
         else:
-            box = Box(periodic=[False]*dim)
-            msgtxt = msg.format('without specifications', box)
-            logger.info(msgtxt)
-            msgwarn = 'The box was assumed *nonperiodic* in all directions.'
-            logger.warning(msgwarn)
-    return box
-
-
-def create_box_external(settings, dim=3):
-    """Method that will try to set up a box from settings.
-
-    This method is indented to be used when creating a box for
-    external simualtion. In this case we very often do not specify
-    the box. This method is just here because we do not need to give
-    some many warnings.
-
-    Parameters
-    ----------
-    settings : dict
-        The dict with the simulation settings
-    dim : integer
-        Number of dimensions for the box. This is used only as a last
-        resort when no information about the box is given.
-
-    Returns
-    -------
-    box : object like :py:class:`.Box` or None
-        The box if we managed to create it, otherwise None.
-    """
-    msg = 'Box created {}:\n{}'
-    if settings.get('box', None) is not None:
-        box = Box(**settings['box'])
-        msgtxt = msg.format('from settings', box)
-        logger.info(msgtxt)
-        debugtxt = 'Settings used:\n{}'.format(settings['box'])
-        logger.debug(debugtxt)
-    else:
-        # We just set a size for now, this needs to be updated later.
-        size = [100] * dim
-        box = Box(size=size)
-        msgtxt = msg.format('with default values', box)
-        logger.info(msgtxt)
+            if dim > 0:
+                box = create_box(periodic=[False]*dim)
+                msgtxt = msg.format('without specifications', box)
+                logger.info(msgtxt)
+                msgwarn = 'The box was assumed nonperiodic in all directions.'
+                logger.warning(msgwarn)
     return box
 
 
@@ -553,8 +525,10 @@ def create_system_from_restart(restart):
     particles = klass(dim=settings['particles']['dim'])
     particles.load_restart_info(settings['particles'])
 
-    box = Box(
-        size=settings['box']['size'],
+    box = create_box(
+        length=settings['box']['length'],
+        low=settings['box']['low'],
+        high=settings['box']['high'],
         periodic=settings['box']['periodic']
     )
 
@@ -586,8 +560,8 @@ def create_system_from_settings(settings, engine):
     """
     internal = engine is None or engine.engine_type == 'internal'
     if internal:
-        particles, size, vel = create_initial_positions(settings)
-        box = create_box(settings, size, dim=particles.dim)
+        particles, box, vel = create_initial_positions(settings)
+        box = set_up_box(settings, box, dim=particles.dim)
     else:
         # engine is not None and not internal -> external
         klass = get_particle_type(engine.engine_type)
@@ -596,7 +570,7 @@ def create_system_from_settings(settings, engine):
                       'vel': False, 'ekin': None, 'vpot': None}
         particles.set_particle_state(phasepoint)
         vel = None
-        box = create_box_external(settings, dim=particles.dim)
+        box = set_up_box(settings, None, dim=0)
 
     system = System(
         temperature=settings['system']['temperature'],

@@ -7,7 +7,7 @@ The system considered is a simple Lennard-Jones fluid.
 """
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import Box, Particles, System
+from pyretis.core import create_box, Particles, System
 from pyretis.simulation import SimulationNVE
 from pyretis.engines import VelocityVerlet
 from pyretis.tools import generate_lattice
@@ -23,7 +23,8 @@ plt.style.use('seaborn')
 
 print('Creating box:')
 xyz, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-box = Box(size=size)
+size = np.array(size)
+box = create_box(low=size[:, 0], high=size[:, 1])
 print(box)
 
 print('Creating system:')

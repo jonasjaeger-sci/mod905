@@ -10,7 +10,7 @@ implementation.
 import unittest
 import itertools
 import numpy as np
-from pyretis.core import Particles, Box, System
+from pyretis.core import Particles, create_box, System
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWellWCA
@@ -25,7 +25,8 @@ def set_up_initial_state():
     lattice, size = generate_lattice('sq', [3, 3], density=0.6)
     npart = len(lattice)
     lattice += np.random.random((lattice.shape)) * 0.05
-    box = Box(size, periodic=[True, True])
+    size = np.array(size)
+    box = create_box(low=size[:, 0], high=size[:, 1], periodic=[True, True])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(dim=2)
     for i, pos in enumerate(lattice):

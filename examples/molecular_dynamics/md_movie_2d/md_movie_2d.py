@@ -26,7 +26,8 @@ settings['system'] = {
     'units': 'lj'
 }
 settings['box'] = {
-    'size': [[0.0, 1.1*3.405], [0.0, 1.1*3.405]],
+    'low': [0.0, 0.0],
+    'high': [1.1*3.405, 1.1*3.405],
     'periodic': [True, True]
 }
 settings['simulation'] = {
@@ -67,7 +68,7 @@ kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
 outputs = [task for task in create_output_tasks(settings)]
-size = ljsystem.box.size
+size = ljsystem.box.bounds()
 npart = ljsystem.particles.npart
 msg = 'Added {:d} particles to a simple square lattice'
 print(msg.format(npart))

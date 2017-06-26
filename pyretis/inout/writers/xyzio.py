@@ -66,32 +66,6 @@ __all__ = [
 ]
 
 
-def get_box_from_header(header):
-    """Get the box dimensions from the header.
-
-    Parameters
-    ----------
-    header : string
-        The header string we will try to extract the box from.
-
-    Returns
-    -------
-    box : numpy.array or None
-        The box as read from the header (if any).
-
-    Note
-    ----
-    Currently, we only support 3D boxes.
-    """
-    box = None
-    if header.find('Box:') != -1:
-        split = header.split('Box:')[1].strip()
-        box = np.array([float(i) for i in split.split()])
-        if box.size == 9:
-            box = box.reshape((3, 3))
-    return box
-
-
 def read_xyz_file(filename):
     """A method for reading files in XYZ format.
 
@@ -120,7 +94,6 @@ def read_xyz_file(filename):
     """
     xyz_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
     for snapshot in read_txt_snapshots(filename, data_keys=xyz_keys):
-        snapshot['box'] = get_box_from_header(snapshot['header'])
         yield snapshot
 
 
@@ -271,10 +244,7 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
     We will here append to the file.
     """
     npart = len(pos)
-    if box is not None:
-        box_fmt = '{:8.3f} ' * box.size
-    else:
-        box_fmt = ''
+
     filemode = 'a' if append else 'w'
     with open(filename, filemode) as output_file:
         output_file.write('{}\n'.format(npart))
@@ -282,9 +252,7 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
         if step is not None:
             header.append('Step: {}'.format(step))
         if box is not None:
-            box_str = box_fmt.format(*box.flatten()).strip()
-            header.append('Box:')
-            header.append(box_str)
+            header.append('Box: {}'.format(box.print_length(fmt='{:9.4f}')))
         header.append('\n')
         header_str = ' '.join(header)
         output_file.write(header_str)

@@ -248,18 +248,17 @@ def create_tis_simulations(settings, system, engine):
     product = interfaces[-1]
     if is_single_tis(settings):
         return _create_tis_single_simulation(settings, system, engine)
-    else:
-        for i, middle in enumerate(interfaces[:-1]):
-            lsetting = copy_settings(settings)
-            lsetting['simulation']['interfaces'] = [reactant, middle, product]
-            lsetting['simulation']['ensemble'] = i + 1
-            lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)
-            try:
-                lsetting['simulation']['detect'] = interfaces[i + 1]
-            except IndexError:
-                lsetting['simulation']['detect'] = product
-            sim_settings.append(lsetting)
-        return sim_settings
+    for i, middle in enumerate(interfaces[:-1]):
+        lsetting = copy_settings(settings)
+        lsetting['simulation']['interfaces'] = [reactant, middle, product]
+        lsetting['simulation']['ensemble'] = i + 1
+        lsetting['output']['directory'] = PATH_DIR_FMT.format(i + 1)
+        try:
+            lsetting['simulation']['detect'] = interfaces[i + 1]
+        except IndexError:
+            lsetting['simulation']['detect'] = product
+        sim_settings.append(lsetting)
+    return sim_settings
 
 
 def _create_tis_single_simulation(settings, system, engine):

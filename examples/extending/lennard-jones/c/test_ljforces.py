@@ -15,7 +15,7 @@ potential:
 # pylint: disable=C0103
 import unittest
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCut
@@ -30,7 +30,7 @@ def set_up_initial_state():
     lattice, size = generate_lattice('fcc', [5, 5, 5], density=0.9)
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = Box(size, periodic=[True, True, True])
+    box = create_box(size, periodic=[True, True, True])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(dim=3)
     for pos in lattice:

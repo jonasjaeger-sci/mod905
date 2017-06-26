@@ -8,7 +8,7 @@ In this example we re-run a LAMMPS simulation using PyRETIS.
 # pylint: disable=C0103
 import os
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.simulation import Simulation
 from pyretis.engines import VelocityVerlet
@@ -22,8 +22,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib import gridspec as gridspec
 
 create_conversion_factors('lj')
-size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
-box = Box(size)
+box = create_box(low=[0.0]*3, high=[8.39798]*3)
 ljsystem = System(box=box, units='lj')
 ljsystem.particles = Particles(dim=ljsystem.get_dim())
 

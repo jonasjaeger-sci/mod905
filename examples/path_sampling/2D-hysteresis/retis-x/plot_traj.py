@@ -8,7 +8,7 @@ import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
-from pyretis.core import Box, System, Particles
+from pyretis.core import create_box, System, Particles
 from pyretis.inout.setup import create_force_field, create_orderparameter
 from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.writers import prepare_load
@@ -17,7 +17,7 @@ from pyretis.inout.writers import prepare_load
 def plot_potential(settings, axi, axj):
     """Just plot the potential in the given axis"""
     forcefield = create_force_field(settings)
-    box = Box(periodic=[False, False])
+    box = create_box(periodic=[False, False])
     fakesys = System(units='reduced', box=box)
     fakesys.particles = Particles(dim=2)
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
@@ -54,7 +54,7 @@ def plot_ensemble(settings, dirname, axi, axj, maxlines=100, minorder=None,
                   skip=1):
     """Plot trajectories from an ensemble."""
     orderp = create_orderparameter(settings)
-    box = Box(periodic=[False, False])
+    box = create_box(periodic=[False, False])
     fakesys = System(units='reduced', box=box)
     fakesys.particles = Particles(dim=2)
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)

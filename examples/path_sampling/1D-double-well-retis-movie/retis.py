@@ -8,7 +8,7 @@ aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.setup import (create_force_field, create_engine,
@@ -74,7 +74,7 @@ def set_up_system(settings):
     sys : object like :py:class:`.System`
         A system object we can use in a simulation.
     """
-    box = Box(periodic=[False])
+    box = create_box(periodic=[False])
     sys = System(temperature=settings['system']['temperature'],
                  units=settings['system']['units'], box=box)
     sys.forcefield = create_force_field(settings)

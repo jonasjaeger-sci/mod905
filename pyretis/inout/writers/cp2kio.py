@@ -12,6 +12,7 @@ update_cp2k_input (:py:func`.update_cp2k_input`)
 read_cp2k_input (:py:func:`.read_cp2k_input`)
     A method to read a CP2K input file.
 """
+from pyretis.core.box import box_matrix_to_list
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -354,10 +355,11 @@ def read_box_data(box_data):
                 elif val == 'string':
                     data[key] = ' '.join(lines.split()[1:])
     if all(('A' in data, 'B' in data, 'C' in data)):
-        box = np.zeros((3, 3))
-        box[0, :] = data['A']
-        box[1, :] = data['B']
-        box[2, :] = data['C']
+        box_matrix = np.zeros((3, 3))
+        box_matrix[:, 0] = data['A']
+        box_matrix[:, 1] = data['B']
+        box_matrix[:, 2] = data['C']
+        box = box_matrix_to_list(box_matrix)
     elif 'ABC' in data:
         box = np.array(data['ABC'])
     else:

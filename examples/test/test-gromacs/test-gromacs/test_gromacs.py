@@ -20,7 +20,7 @@ import time
 import colorama
 from matplotlib import pyplot as plt
 import numpy as np
-from pyretis.core import System, Box, ParticlesExt, PathExt
+from pyretis.core import System, create_box, ParticlesExt, PathExt
 from pyretis.orderparameter.orderparameter import OrderParameterPosition
 from pyretis.inout.common import make_dirs, print_to_screen
 from pyretis.inout.settings import parse_settings_file
@@ -162,7 +162,7 @@ def main(select=1):
     print_to_screen('GMX format: {}'.format(gro.ext))
     # create dummy variables for the test:
     system = System(units='gromacs',
-                    box=Box(size=[100, 100, 100]),
+                    box=create_box(length=[100, 100, 100]),
                     temperature=200)
     system.particles = ParticlesExt(dim=3)
     initial_conf = gro.input_files['conf']

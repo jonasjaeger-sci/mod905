@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Test the Box class from pyretis.core"""
+"""Test the integrator classes"""
 import logging
 import unittest
 import numpy as np
 from pyretis.engines import Langevin, VelocityVerlet
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials.potentials import DoubleWell
 logging.disable(logging.CRITICAL)
@@ -85,7 +85,7 @@ TISMOL_VEL_VV = np.array([0.78008020, 0.78006775, 0.78003045, 0.77996842,
 
 def prepare_test_system():
     """Prepare a small system we can integrate."""
-    box = Box(periodic=[False])
+    box = create_box(periodic=[False])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(system.get_dim())
     pos = np.array([-1.0])

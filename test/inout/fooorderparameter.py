@@ -9,6 +9,7 @@ class FooOrderParameter(OrderParameter):
     """FooOrderParameter(OrderParameter) - Dummy order parameter for tests."""
     def __init__(self, name, desc='Dummy order parameter'):
         super().__init__(description=desc)
+        self.name = name
 
 
 class BarOrderParameter(object):
@@ -23,4 +24,5 @@ class BazOrderParameter(object):
         self.description = description
 
     def calculate(self, system):
+        """Obtain the order parameter."""
         pass

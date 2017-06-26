@@ -6,7 +6,7 @@ Example of running a MD NVE simulation
 """
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import CONVERT, create_conversion_factors
 from pyretis.inout.plotting import COLORS, COLOR_SCHEME
 from pyretis.inout.setup import (create_output_tasks, create_system,
@@ -34,7 +34,7 @@ DWCA_PARAMETERS = {
 settings = {}
 settings['system'] = {'temperature': 2.0,
                       'units': 'lj'}
-settings['box'] = {'size': [[0.0, 3.6], [0.0, 3.6]]}
+settings['box'] = {'low': [0.0, 0.0], 'high': [3.6, 3.6]}
 settings['simulation'] = {
     'task': 'md-nve',
     'steps': 1100
@@ -84,7 +84,7 @@ simulation = create_simulation(settings, kwargs)
 print('# Creating output tasks from settings.')
 outputs = [task for task in create_output_tasks(settings)]
 
-size = system.box.size
+size = system.box.bounds()
 BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
 # some additional set-up for the animation
@@ -177,8 +177,7 @@ def plot_dwca_potential():
     """
     rpos = np.linspace(0.1, 5, 500)
     potdwca = []
-    fakesize = np.array([[0.0, 10.0], [0.0, 10.0]])
-    fakebox = Box(fakesize)
+    fakebox = create_box(low=[0.0, 0.0], high=[10.0, 10.0])
     fakesys = System(units='lj', box=fakebox)
     fakesys.particles = Particles(dim=system.get_dim())
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)

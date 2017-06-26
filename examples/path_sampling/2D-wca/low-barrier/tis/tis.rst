@@ -16,7 +16,7 @@ temperature = 1.0
 
 Box
 ---
-size =  [3.872983346207417, 3.872983346207417]
+length = [3.872983346207417, 3.872983346207417]
 periodic = [True, True]
 
 Engine

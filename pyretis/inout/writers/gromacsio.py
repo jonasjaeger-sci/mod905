@@ -85,17 +85,6 @@ TRR_DATA_ITEMS = ('box_size', 'vir_size', 'pres_size',
                   'x_size', 'v_size', 'f_size')
 
 
-def _get_gromacs_box(box_list):
-    """Convert a list of numbers to a box."""
-    if len(box_list) == 3:
-        box = np.array(box_list)
-    else:
-        box = np.array([[box_list[0], box_list[3], box_list[4]],
-                        [box_list[5], box_list[1], box_list[6]],
-                        [box_list[7], box_list[8], box_list[2]]])
-    return box
-
-
 def read_gromacs_lines(lines):
     """A method for reading GROMACS GRO data.
 
@@ -125,7 +114,7 @@ def read_gromacs_lines(lines):
             lines_to_read = int(line.strip()) + 1
             continue  # just skip to next line
         if lines_to_read == 0:  # new shapshot
-            if len(snapshot) > 0:
+            if snapshot:
                 yield snapshot
             snapshot = {'header': line.strip()}
             read_natoms = True
@@ -137,7 +126,7 @@ def read_gromacs_lines(lines):
             current = 0
             for i, key, gtype in zip(gro, gro_keys, gro_type):
                 val = line[current:current+i].strip()
-                if len(val) == 0:
+                if not val:
                     # This typically happens if we try to read velocities
                     # and they are not present in the file.
                     break
@@ -147,7 +136,7 @@ def read_gromacs_lines(lines):
                     snapshot[key].append(value)
                 except KeyError:
                     snapshot[key] = [value]
-    if len(snapshot) > 1:
+    if snapshot:
         yield snapshot
 
 
@@ -209,7 +198,7 @@ def read_gromacs_gro_file(filename):
                                                              frame['vz'])])
             except KeyError:
                 vel = np.zeros_like(xyz)
-            box = _get_gromacs_box(frame['box'])
+            box = np.array(frame['box'])
             break
     return frame, xyz, vel, box
 
@@ -305,10 +294,11 @@ def read_gromos96_file(filename):
         xyzdata[key] = np.array(xyzdata[key])
     rawdata['POSITION'] = txtdata['POSITION']
     rawdata['VELOCITY'] = txtdata['VELOCITY']
-    if len(rawdata['VELOCITY']) == 0:
+    if not rawdata['VELOCITY']:
         # No velicities were found in the input file.
         xyzdata['VELOCITY'] = np.zeros_like(xyzdata['POSITION'])
-    box = _get_gromacs_box([float(i) for i in rawdata['BOX'][0].split()])
+        logger.info('Input g96 did not contain velocities')
+    box = np.array([float(i) for i in rawdata['BOX'][0].split()])
     return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY'], box
 
 

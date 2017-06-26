@@ -13,7 +13,7 @@ correctly.
 # pylint: disable=C0103
 import unittest
 import numpy as np
-from pyretis.core import Particles, Box, System
+from pyretis.core import Particles, create_box, System
 from pyretis.core.units import create_conversion_factors
 from wcafunctions import WCAOrderParameter
 from pyretis.orderparameter import OrderParameterDistance
@@ -24,7 +24,7 @@ class WCAOrderTest(unittest.TestCase):
 
     def test_wca_orderp(self):
         """Test evaluation of the order parameter."""
-        box = Box(size=[[0., 3.], [0., 3.]])
+        box = create_box(low=[0., 0.], high=[3., 3.])
         particles = Particles(dim=2)
         particles.add_particle(np.array([1.0, 1.0]), np.zeros(2), np.zeros(2),
                                mass=1.0, name='A', ptype=0)

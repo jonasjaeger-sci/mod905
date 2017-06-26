@@ -66,8 +66,8 @@ units.py (:py:mod:`pyretis.core.units`)
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Box (:py:class:`.Box`)
-    A class which defines the simulation box. This box will also
+BoxBase (:py:class:`.BoxBase`)
+    A base class for a simulation box, This box will also
     handle the periodic boundaries.
 
 System (:py:class:`.System`)
@@ -102,7 +102,7 @@ RandomGenerator (:py:class:`.RandomGenerator`)
     A class for generating random numbers.
 """
 from .system import System
-from .box import Box
+from .box import create_box
 from .particles import Particles, ParticlesExt
 from .path import Path, PathExt
 from .reservoirpath import ReservoirPath

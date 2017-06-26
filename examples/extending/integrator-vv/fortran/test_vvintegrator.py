@@ -12,7 +12,7 @@ This test is comparing:
 # pylint: disable=C0103
 import unittest
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.simulation import Simulation
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
@@ -26,7 +26,7 @@ def create_positions():
     """Create particles for test"""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-    box = Box(size, periodic=[True, True, True])
+    box = create_box(size, periodic=[True, True, True])
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
     particles = Particles(dim=3)

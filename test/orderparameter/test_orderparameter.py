@@ -13,7 +13,7 @@ from pyretis.orderparameter.orderparameter import (
 )
 from pyretis.orderparameter.orderangle import OrderParameterAngle
 from pyretis.orderparameter.orderdihedral import OrderParameterDihedral
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
 
@@ -25,7 +25,7 @@ class OrderPositionTest(unittest.TestCase):
         """Test the position order parameter for a one-particle system."""
         create_conversion_factors('lj')
         for ndim in [1, 2, 3]:
-            box = Box(periodic=[False]*ndim)
+            box = create_box(periodic=[False]*ndim)
             system = System(temperature=1.0, units='lj', box=box)
             system.particles = Particles(system.get_dim())
             pos = np.random.random(box.dim)
@@ -53,7 +53,7 @@ class OrderPositionTest(unittest.TestCase):
                                             periodic=False)
             # Test for n-component system
             for ndim in [1, 2, 3]:
-                box = Box(periodic=[False]*ndim)
+                box = create_box(periodic=[False]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
                 system.particles = Particles(system.get_dim())
                 for _ in range(10):
@@ -76,8 +76,9 @@ class OrderPositionTest(unittest.TestCase):
         dim_map = {'x': 0, 'y': 1, 'z': 2}
         for disp in [0.0, 1.5, -1.5, 100., -100.]:
             for ndim in [1, 2, 3]:
-                size = [[0.0, 1.0] for _ in range(ndim)]
-                box = Box(size, periodic=[True]*ndim)
+                low = [0]
+                box = create_box(low=[0]*ndim, high=[1]*ndim,
+                                 periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
                 system.particles = Particles(system.get_dim())
                 pos = np.random.random(box.dim) * np.ones(box.dim)*disp
@@ -98,8 +99,8 @@ class OrderPositionTest(unittest.TestCase):
         dim_map = {'x': 0, 'y': 1, 'z': 2}
         for disp in [0.0, 1.5, -1.5, 100., -100.]:
             for ndim in [1, 2, 3]:
-                size = [[0.0, 1.0] for _ in range(ndim)]
-                box = Box(size, periodic=[True]*ndim)
+                box = create_box(low=[0]*ndim, high=[1]*ndim,
+                                 periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
                 system.particles = Particles(system.get_dim())
                 for _ in range(10):
@@ -131,7 +132,7 @@ class OrderDistanceTest(unittest.TestCase):
                                         periodic=False)
         # Test for a one-particle system:
         for ndim in [1, 2, 3]:
-            box = Box(periodic=[False]*ndim)
+            box = create_box(periodic=[False]*ndim)
             system = System(temperature=1.0, units='lj', box=box)
             system.particles = Particles(system.get_dim())
             for _ in range(2):
@@ -154,8 +155,8 @@ class OrderDistanceTest(unittest.TestCase):
         # Test for a one-particle system:
         for disp in [0.0, 1.5, -1.5, 100., -100.]:
             for ndim in [1, 2, 3]:
-                size = [[0.0, 1.0] for _ in range(ndim)]
-                box = Box(size, periodic=[True]*ndim)
+                box = create_box(low=[0]*ndim, high=[1]*ndim,
+                                 periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
                 system.particles = Particles(system.get_dim())
                 for _ in range(2):
@@ -194,7 +195,7 @@ class OrderAngleTest(unittest.TestCase):
         """Test the angle order parameter without pbc."""
         orderp = OrderParameterAngle((1, 0, 2), periodic=False)
         # Test for SPC water
-        box = Box(periodic=[False, False, False])
+        box = create_box(periodic=[False, False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
@@ -208,7 +209,7 @@ class OrderAngleTest(unittest.TestCase):
         """Test the angle order parameter with pbc."""
         orderp = OrderParameterAngle((1, 0, 2), periodic=True)
         # Test for SPC water
-        box = Box(periodic=[True, True, True], size=[1., 1., 1.])
+        box = create_box(periodic=[True, True, True], length=[1., 1., 1.])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         system.add_particle(name='O', pos=np.array([0.230, 0.628, 0.113]))
@@ -220,7 +221,7 @@ class OrderAngleTest(unittest.TestCase):
 
     def test_triangle(self):
         """Test the angle order parameter for a 2D case."""
-        box = Box(periodic=[False, False])
+        box = create_box(periodic=[False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         system.add_particle(name='X', pos=np.array([0.0, 0.0]))
@@ -254,7 +255,7 @@ class OrderAngleTest(unittest.TestCase):
         3. The angle between (1, 0, 0) and (-1, 0, 0)
         """
         orderp = OrderParameterAngle((0, 1, 2), periodic=False)
-        box = Box(periodic=[False, False, False])
+        box = create_box(periodic=[False, False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         system.add_particle(name='A', pos=np.array([-1.0, 0.0, 0.0]))
@@ -323,7 +324,7 @@ class OrderDihedralTest(unittest.TestCase):
     def test_without_pbc(self):
         """Test the angle order parameter without pbc."""
         orderp = OrderParameterDihedral((3, 2, 1, 0), periodic=False)
-        box = Box(periodic=[False, False, False])
+        box = create_box(periodic=[False, False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         for _ in range(4):
@@ -338,7 +339,7 @@ class OrderDihedralTest(unittest.TestCase):
     def test_with_pbc(self):
         """Test the angle order parameter with pbc."""
         orderp = OrderParameterDihedral((3, 2, 1, 0), periodic=True)
-        box = Box(periodic=[True, True, True], size=[8., 8., 8.])
+        box = create_box(periodic=[True, True, True], length=[8., 8., 8.])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         for _ in range(4):
@@ -359,7 +360,7 @@ class OrderDihedralTest(unittest.TestCase):
         """Test if we get the same angle if we reverse indexes"""
         order1 = OrderParameterDihedral((0, 1, 2, 3), periodic=False)
         order2 = OrderParameterDihedral((3, 2, 1, 0), periodic=False)
-        box = Box(periodic=[False, False, False])
+        box = create_box(periodic=[False, False, False])
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = Particles(system.get_dim())
         for _ in range(4):

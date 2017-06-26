@@ -11,7 +11,7 @@ landscape by performing umbrella simulations.
 """
 import colorama
 from tqdm import tqdm
-from pyretis.core import System, RandomGenerator, Box, Particles
+from pyretis.core import System, RandomGenerator, create_box, Particles
 from pyretis.inout.setup import create_simulation
 from pyretis.inout.common import print_to_screen
 from pyretis.forcefield import ForceField
@@ -39,7 +39,7 @@ plt.style.use('seaborn')
 def set_up_system(pos=np.array([-0.7])):
     """Method to set up the initial system."""
     # Define system with a temperature in K
-    dummybox = Box(periodic=[False])
+    dummybox = create_box(periodic=[False])
     mysystem = System(temperature=500, units='eV/K', box=dummybox)
     mysystem.particles = Particles(dim=mysystem.get_dim())
     # We will only have one particle in the system:

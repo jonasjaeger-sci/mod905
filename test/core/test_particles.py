@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Test the Box class from pyretis.core"""
+"""Test the Particles class from pyretis.core"""
 import logging
 import unittest
 import numpy as np
@@ -16,6 +16,9 @@ class ParticleTest(unittest.TestCase):
         """Test the creation a particle list."""
         particles = Particles(dim=1)
         particles.add_particle(np.zeros(1), np.zeros(1), np.zeros(1))
+        self.assertEqual(particles.dim, 1)
+        self.assertEqual(particles.npart, 1)
+        self.assertEqual(particles.virial.shape, (1, 1))
 
 
 if __name__ == '__main__':

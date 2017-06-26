@@ -19,7 +19,7 @@ import itertools
 import colorama
 import numpy as np
 from matplotlib import pyplot as plt
-from pyretis.core import System, Box, ParticlesExt, PathExt
+from pyretis.core import System, create_box, ParticlesExt, PathExt
 from pyretis.orderparameter.orderparameter import OrderParameterPosition
 from pyretis.inout.common import make_dirs, print_to_screen
 from pyretis.inout.settings import parse_settings_file
@@ -203,7 +203,7 @@ def main():
     print_to_screen('Time step: {}'.format(engine.timestep))
     print_to_screen('Subcycles: {}'.format(engine.subcycles))
     system = System(units='gromacs',
-                    box=Box(size=[100, 100, 100]),
+                    box=create_box(size=[100, 100, 100]),
                     temperature=500)
     system.particles = ParticlesExt(dim=3)
     initial_conf = engine.input_files['conf']

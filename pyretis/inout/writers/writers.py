@@ -189,7 +189,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
         yield new_block
 
 
-class Writer(object):
+class Writer():
     """A generic class for writing output from PyRETIS.
 
     The writer class handles output and input of some data for PyRETIS.
@@ -289,7 +289,7 @@ class Writer(object):
                          'data': blocks['data']}
             yield data_dict
 
-    def generate_output(self, step, data):
+    def generate_output(self, step, *data):
         """Use the writer to generate output."""
         raise NotImplementedError
 
@@ -351,7 +351,7 @@ class CrossWriter(Writer):
         except IndexError:
             return None
 
-    def generate_output(self, step, cross):
+    def generate_output(self, step, *data):
         """Generate output data to be written to a file or screen.
 
         It will just write a space separated file without fancy
@@ -364,7 +364,7 @@ class CrossWriter(Writer):
             debugging and can possibly be removed. However, it's useful
             to have here since this gives a common write interface for
             all writers.
-        cross : list of tuples
+        data : list of tuples
             The tuples are crossing with interfaces (if any) on the form
             `(timestep, interface, direction)` where the direction
             is '-' or '+'.
@@ -387,6 +387,7 @@ class CrossWriter(Writer):
         """
         msgtxt = 'Generating crossing data at step: {}'.format(step)
         logger.debug(msgtxt)
+        cross = data[0]
         for cro in cross:
             yield self.CROSS_FMT.format(cro[0], cro[1] + 1, cro[2])
 
@@ -475,8 +476,9 @@ class EnergyWriter(Writer):
                 towrite.append(self.ENERGY_FMT[i + 1].format(value))
         return ' '.join(towrite)
 
-    def generate_output(self, step, energy):
+    def generate_output(self, step, *data):
         """Yield formatted energy data."""
+        energy = data[0]
         yield self.format_data(step, energy)
 
 
@@ -491,7 +493,7 @@ class EnergyPathWriter(EnergyWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, path, status):
+    def generate_output(self, step, *data):
         """Format the order parameter data from a path.
 
         Parameters
@@ -500,12 +502,15 @@ class EnergyPathWriter(EnergyWriter):
             The cycle number we are creating output for.
         path : object like :py:class:`.PathBase`
             The path we are creating output for.
+        status : string
+            Status for the path (accepted/rejected).
 
         Yields
         ------
         out : string
             The strings to be written.
         """
+        path, status = data[0], data[1]
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -590,8 +595,9 @@ class OrderWriter(Writer):
         out = ' '.join(towrite)
         return out
 
-    def generate_output(self, step, orderdata):
+    def generate_output(self, step, *data):
         """Yield formatted order parameter data."""
+        orderdata = data[0]
         yield self.format_data(step, orderdata)
 
 
@@ -603,7 +609,7 @@ class OrderPathWriter(OrderWriter):
         super().__init__()
         self.print_header = False
 
-    def generate_output(self, step, path, status):
+    def generate_output(self, step, *data):
         """Format the order parameter data from a path.
 
         Parameters
@@ -618,6 +624,7 @@ class OrderPathWriter(OrderWriter):
         out : string
             The strings to be written.
         """
+        path, status = data[0], data[1]
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -657,6 +664,26 @@ def adjust_coordinate(coord):
         if dim == 1:
             adjusted[:, 0] = coord
     return adjusted
+
+
+def get_box_from_header(header):
+    """Get box lengths from a text header.
+
+    Parameters
+    ----------
+    header : string
+        Header from which we will extract the box.
+
+    Returns
+    -------
+    out : numpy.array or None
+        The box lengths.
+    """
+    low = header.lower()
+    if low.find('box:') != -1:
+        txt = low.split('box:')[1].strip()
+        return np.array([float(i) for i in txt.split()])
+    return None
 
 
 def read_txt_snapshots(filename, data_keys=None):
@@ -705,6 +732,7 @@ def read_txt_snapshots(filename, data_keys=None):
                     except KeyError:
                         snapshot[key] = [value]
     if snapshot is not None:
+        snapshot['box'] = get_box_from_header(snapshot['header'])
         yield snapshot
 
 
@@ -747,8 +775,9 @@ class TrajWriter(Writer):
             self.fmt = self._FMT
             self.fmt_vel = self._FMT_VEL
 
-    def generate_output(self, step, system):
+    def generate_output(self, step, *data):
         """Generate the snapshot output."""
+        system = data[0]
         for lines in self.format_snapshot(step, system):
             yield lines
 
@@ -856,7 +885,9 @@ class PathExtWriter(Writer):
         """Just format the output."""
         return self.FMT.format(time, filename, index, vel)
 
-    def generate_output(self, step, path, status):
+    def generate_output(self, step, *data):
+        """Output path data."""
+        path, status = data[0], data[1]
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -899,7 +930,9 @@ class PathIntWriter(Writer):
         self.print_header = False
         self.fmt = None
 
-    def generate_output(self, step, path, status):
+    def generate_output(self, step, *data):
+        """Output path data."""
+        path, status = data[0], data[1]
         yield '# Cycle: {}, status: {}'.format(step, status)
         for i, phasepoint in enumerate(path.trajectory()):
             yield 'Snapshot: {}'.format(i)
@@ -925,7 +958,7 @@ class PathIntWriter(Writer):
         dim = None
         for lines in data:
             if lines.startswith('Snapshot'):
-                if len(pos) > 0:
+                if pos:
                     snapshots.append({'pos': np.array(pos),
                                       'vel': np.array(vel)})
                     pos, vel = [], []
@@ -937,7 +970,7 @@ class PathIntWriter(Writer):
                         raise ValueError('Malformed trajectory data!')
                 pos.append(raw[:dim])
                 vel.append(raw[dim:])
-        if len(pos) > 0:
+        if pos:
             snapshots.append({'pos': np.array(pos),
                               'vel': np.array(vel)})
         return snapshots

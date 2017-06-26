@@ -434,7 +434,10 @@ units = lj"""
         settings = _test_correct_parsing(self, data, correct)
         create_conversion_factors(settings['system']['units'])
         particles, size, _ = create_initial_positions(settings)
-        self.assertEqual(size, [[0.0, 6.0], [0.0, 6.0], [0.0, 6.0]])
+        correct_size = {'low': np.array([ 0.,  0.,  0.]),
+                        'high': np.array([ 6.,  6.,  6.])}
+        for key, val in correct_size.items():
+            self.assertTrue(np.allclose(size[key], val))
         self.assertEqual(particles.npart, 4 * 6 * 6 * 6)
         self.assertAlmostEqual(particles.mass[0][0], 1.0)
         self.assertAlmostEqual(particles.imass[0][0], 1.0)
@@ -490,7 +493,9 @@ units = lj"""
         lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
         for _ in settings['particles']['position']['repeat']:
             correct_size.append([0.0, lcon])
-        self.assertTrue(np.allclose(size, correct_size))
+        correct_size = np.array(correct_size)
+        self.assertTrue(np.allclose(size['low'], correct_size[:, 0]))
+        self.assertTrue(np.allclose(size['high'], correct_size[:, 1]))
         for i in range(particles.npart):
             self.assertEqual(particles.name[i], 'Ar')
             self.assertEqual(particles.ptype[i], 0)
@@ -521,7 +526,9 @@ units = lj"""
         lcon = 3.0 * (4.0 / 0.9)**(1.0 / 3.0)
         for _ in settings['particles']['position']['repeat']:
             correct_size.append([0.0, lcon])
-        self.assertTrue(np.allclose(size, correct_size))
+        correct_size = np.array(correct_size)
+        self.assertTrue(np.allclose(size['low'], correct_size[:, 0]))
+        self.assertTrue(np.allclose(size['high'], correct_size[:, 1]))
 
     def test_lattice_and_mass(self):
         """Test initialization on a lattice and setting of masses/types."""
@@ -634,7 +641,7 @@ units = gromacs"""
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
-        self.assertTrue(np.allclose(size, [2., 2., 2.]))
+        self.assertTrue(np.allclose(size['length'], [2., 2., 2.]))
         correct_pos = np.array([[0., 0., 0.], [0.05, 0.05, 0.05],
                                 [0.05, 0.05, 0.], [0.05, 0., 0.05],
                                 [0., 0.05, 0.05]])
@@ -692,7 +699,7 @@ units = lj
                                              83.798, 83.798]))
 
 
-class Keywordforcefield(unittest.TestCase):
+class KeywordForcefield(unittest.TestCase):
     """Test initialization of force fields."""
 
     def test_forcefield(self):

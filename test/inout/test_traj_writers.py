@@ -9,7 +9,7 @@ import logging
 import unittest
 import os
 import numpy as np
-from pyretis.core import Box, System, Particles, Path, PathExt
+from pyretis.core import create_box, System, Particles, Path, PathExt
 from pyretis.tools.lattice import generate_lattice
 from pyretis.inout.writers.writers import adjust_coordinate
 from pyretis.inout.writers import get_writer
@@ -22,7 +22,11 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
 def create_test_system():
     """Create a system we can use for testing."""
     xyz, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-    box = Box(size=size)
+    low, high = [], []
+    for i in size:
+        low.append(i[0])
+        high.append(i[1])
+    box = create_box(low=low, high=high)
     system = System(units='lj', box=box)
     system.particles = Particles(dim=3)
     for xyzi in xyz:
@@ -35,7 +39,7 @@ def create_path():
     """Setup a simple path for a test."""
     system = create_test_system()
     system.particles.name = ['X'] * system.particles.npart
-    system.box = Box(size=[222.2, 222.2, 222.2])
+    system.box = create_box(length=[222.2, 222.2, 222.2])
     path = Path(None)
     phasepoints = []
     for _ in range(10):

@@ -22,7 +22,8 @@ import collections
 import logging
 import os
 import numpy as np
-from pyretis.core import System, Box, ParticlesExt
+from pyretis.core import System, create_box, ParticlesExt
+from pyretis.core.box import box_matrix_to_list
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.writers.gromacsio import (
     read_trr_file,
@@ -67,8 +68,7 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
     out : list of lists of floats
         The order parameters as a list for each frame in the .trr file.
     """
-    system = System(box=Box([100., 100., 100.]))  # add dummy system
-    system.particles = ParticlesExt(dim=3)  # add dummy particles
+    system = System(box=None)  # add dummy system
     all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
            ' Step {}, time {}')
@@ -78,6 +78,8 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
         if minidx is not None and i < minidx:
             continue
         print_to_screen(msg.format(header['step'], header['time']))
+        if system.particles is None:
+            system.particles = ParticlesExt(dim=data['x'].shape[1])
         system.particles.pos = data['x']
         if 'v' in data:
             system.particles.vel = data['v']
@@ -86,7 +88,11 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
         else:
             logger.warning('No velocities found in .trr file! Set to zero.')
             system.particles.vel = np.zeros_like(data['x'])
-        system.box.update_size(data['box'])
+        length = box_matrix_to_list(data['box'])
+        if system.box is None:
+            system.box = create_box(length=length)
+        else:
+            system.box.update_size(length)
         all_order.append(order_parameter.calculate_all(system))
     return all_order
 
@@ -115,8 +121,7 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
     out : list of lists of floats
         The order parameters as a list for each frame in the file.
     """
-    system = System(box=Box([100., 100., 100.]))  # add dummy system
-    system.particles = ParticlesExt(dim=3)  # add dummy particles
+    system = System(box=None)
     all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
            ' Step {}')
@@ -128,11 +133,16 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
         print_to_screen(msg.format(i))
         box, xyz, vel, _ = convert_snapshot(snapshot)
         system.particles.config = (traj_file, i)
+        if system.particles is None:
+            system.particles = ParticlesExt(dim=xyz.shape[1])
         system.particles.pos = xyz
         system.particles.vel = vel
         if reverse:
             system.particles.vel *= -1
-        system.box.update_size(box)
+        if system.box is None:
+            system.box = create_box(length=box)
+        else:
+            system.box.update_size(box)
         all_order.append(order_parameter.calculate_all(system))
     return all_order
 
@@ -158,20 +168,24 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     out : list of lists of floats
         The order parameters as a list for each frame.
     """
-    system = System(box=Box([100., 100., 100.]))  # add dummy system
-    system.particles = ParticlesExt(dim=3)  # add dummy particles
+    system = System(box=None)
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
     print_to_screen(msg)
     if ext == '.g96':
         _, xyz, vel, box = read_gromos96_file(traj_file)
     elif ext == '.gro':
         _, xyz, vel, box = read_gromacs_gro_file(traj_file)
+    if system.particles is None:
+        system.particles = ParticlesExt(dim=xyz.shape[1])
     system.particles.config = (traj_file, 0)
     system.particles.pos = xyz
     system.particles.vel = vel
     if reverse:
         system.particles.vel *= -1
-    system.box.update_size(box)
+    if system.box is None:
+        system.box = create_box(length=box)
+    else:
+        system.box.update_size(box)
     return [order_parameter.calculate_all(system)]
 
 

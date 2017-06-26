@@ -6,7 +6,7 @@ Animation of umbrella sampling.
 """
 import matplotlib.gridspec as gridspec
 import numpy as np
-from pyretis.core import System, RandomGenerator, Box, Particles
+from pyretis.core import System, RandomGenerator, create_box, Particles
 from pyretis.simulation import UmbrellaWindowSimulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 
 
 # Define system with a temperature in K
-dummybox = Box(periodic=[False])
+dummybox = create_box(periodic=[False])
 mysystem = System(temperature=500, units='eV/K', box=dummybox)
 mysystem.particles = Particles(dim=mysystem.get_dim())
 # We will only have one particle in the system:

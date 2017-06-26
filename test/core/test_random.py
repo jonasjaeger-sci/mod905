@@ -6,7 +6,7 @@ import logging
 import unittest
 import numpy as np
 from pyretis.core.system import System
-from pyretis.core.box import Box
+from pyretis.core.box import create_box
 from pyretis.core.particles import Particles
 from pyretis.core.random_gen import RandomGenerator
 logging.disable(logging.CRITICAL)
@@ -109,7 +109,7 @@ class RandomTest(unittest.TestCase):
             system = System(
                 temperature=temperature,
                 units='reduced',
-                box=Box(periodic=[False]*dim))
+                box=create_box(periodic=[False]*dim))
             system.particles = Particles(dim=dim)
             for i in mass:
                 system.add_particle(np.zeros(dim), mass=i, name='Ar', ptype=0)

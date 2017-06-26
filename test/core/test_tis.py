@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Test the Box class from pyretis.core"""
+"""Test the TIS method"""
 import logging
 import unittest
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
 from pyretis.inout.setup import (create_force_field, create_engine,
                                  create_simulation)
@@ -61,7 +61,7 @@ def prepare_test_simulation():
                        'rescale_energy': False}
     settings['initial-path'] = {'method': 'kick'}
 
-    box = Box(periodic=[False])
+    box = create_box(periodic=[False])
     system = System(temperature=settings['system']['temperature'],
                     units=settings['system']['units'], box=box)
     system.particles = Particles(dim=system.get_dim())
@@ -84,7 +84,6 @@ class TISTest(unittest.TestCase):
         """Test a TIS simulation for 001."""
         simulation, in_settings = prepare_test_simulation()
         ensemble = simulation.path_ensemble
-        settings = simulation.settings['tis']
         for i in range(10):
             if i == 0:
                 for _ in initiate_path_simulation(simulation, in_settings):

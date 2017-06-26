@@ -66,7 +66,9 @@ SECTIONS['engine'] = {
 }
 
 SECTIONS['box'] = {
-    'size': None,
+    'low': None,
+    'high': None,
+    'length': None,
     'periodic': None
 }
 
