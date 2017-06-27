@@ -263,6 +263,7 @@ class BoxBase(metaclass=ABCMeta):
                     for i in range(self.dim):
                         self.length[i] = new_size[i]
                         self.high[i] = self.low[i] + new_size[i]
+                        self.cell[i] = new_size[i]
                     self.ilength = 1.0 / self.length
             else:
                 try:

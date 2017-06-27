@@ -106,13 +106,10 @@ class OrderParameter(object):
             Additional order parameters, if any.
         """
         ret_val = self.calculate(system)
-        if self.extra is None:
+        if not self.extra:
             return ret_val
         for func in self.extra:
-            try:
-                extra = func(system)
-            except TypeError:
-                extra = float('nan')
+            extra = func(system)
             ret_val.extend(extra)
         return ret_val
 

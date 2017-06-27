@@ -18,6 +18,52 @@ from pyretis.core.units import create_conversion_factors
 logging.disable(logging.CRITICAL)
 
 
+class SimpleOrder(OrderParameter):
+
+    def __init__(self):
+        super().__init__(description='Simple order parameter')
+
+    def calculate(self, system):
+        return [system.temperature['set']]
+
+
+def system_units(system):
+    """Just return the units."""
+    return [system.units]
+
+
+def system_faker(system):
+    """Just try to return some parameter."""
+    return [system.does_not_exist]
+
+
+class OrderGenericTest(unittest.TestCase):
+    """Test that we can create a class and define some parameters."""
+
+    def test_simple_order(self):
+        """Test that we can create a very simple order parameter."""
+        system = System(temperature=123.0, units='lj', box=None)
+        order = SimpleOrder()
+        correct = [123.0, 'lj']
+        val = order.calculate(system)
+        self.assertAlmostEqual(val[0], correct[0])
+        self.assertEqual(len(val), 1)
+
+        vals = order.calculate_all(system)
+        self.assertAlmostEqual(vals[0], correct[0])
+        self.assertEqual(len(vals), 1)
+
+        order.add_orderparameter(system_units)
+        vals = order.calculate_all(system)
+        self.assertEqual(len(vals), 2)
+        for i, j in zip(vals, correct):
+            self.assertEqual(i, j)
+
+        order.add_orderparameter(system_faker)
+        with self.assertRaises(AttributeError):
+            vals = order.calculate_all(system)
+
+
 class OrderPositionTest(unittest.TestCase):
     """Run the tests for the OrderParameterPosition class."""
 

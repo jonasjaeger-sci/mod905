@@ -199,10 +199,16 @@ class MDEngine(EngineBase):
             The new kinetic energy.
         """
         particles = system.particles
-        if rescale is not None and rescale is not False and rescale > 0:
-            kin_old = rescale - particles.vpot
+        if rescale is not None and rescale is not False:
+            if rescale > 0:
+                kin_old = rescale - particles.vpot
+                do_rescale = True
+            else:
+                logger.warning('Ignored rescale 6.2%f < 0.0.', rescale)
+                return 0.0, calculate_kinetic_energy(particles)[0]
         else:
             kin_old = calculate_kinetic_energy(particles)[0]
+            do_rescale = False
         if aimless:
             vel, _ = rgen.draw_maxwellian_velocities(system)
             particles.vel = vel
@@ -211,7 +217,7 @@ class MDEngine(EngineBase):
             particles.vel = particles.vel + dvel
         if momentum:
             reset_momentum(particles)
-        if rescale:
+        if do_rescale:
             system.rescale_velocities(rescale)
         kin_new = calculate_kinetic_energy(particles)[0]
         dek = kin_new - kin_old
@@ -272,11 +278,10 @@ class MDEngine(EngineBase):
         """
         if any((xyz is None, vel is None, box is None)):
             return order_function.calculate_all(system)
-        else:
-            system.particles.pos = xyz
-            system.particles.vel = vel
-            system.box.update_size(box)
-            return order_function.calculate_all(system)
+        system.particles.pos = xyz
+        system.particles.vel = vel
+        system.box.update_size(box)
+        return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
@@ -612,7 +617,8 @@ class Langevin(MDEngine):
                 c_1 = (1.0 - c_0) / gammadt
                 c_2 = (1.0 - c_1) / gammadt
             else:
-                c_0, c_1, c_2 = 1.0, 1.0, 0.5
+                raise ValueError('Langevin: Found gamma = %6.2f < 0.',
+                                 self.gamma)
 
             self.param_iner['c0'] = c_0
             self.param_iner['a1'] = c_1 * self.delta_t
@@ -656,8 +662,7 @@ class Langevin(MDEngine):
             self.init_params = False
         if self.high_friction:
             return self.integration_step_overdamped(system)
-        else:
-            return self.integration_step_inertia(system)
+        return self.integration_step_inertia(system)
 
     def integration_step_overdamped(self, system):
         """Over damped Langevin integration, one time step.

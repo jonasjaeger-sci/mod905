@@ -434,8 +434,8 @@ units = lj"""
         settings = _test_correct_parsing(self, data, correct)
         create_conversion_factors(settings['system']['units'])
         particles, size, _ = create_initial_positions(settings)
-        correct_size = {'low': np.array([ 0.,  0.,  0.]),
-                        'high': np.array([ 6.,  6.,  6.])}
+        correct_size = {'low': np.array([0.,  0.,  0.]),
+                        'high': np.array([6.,  6.,  6.])}
         for key, val in correct_size.items():
             self.assertTrue(np.allclose(size[key], val))
         self.assertEqual(particles.npart, 4 * 6 * 6 * 6)
@@ -762,6 +762,14 @@ parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
         self.assertAlmostEqual(potparam[(0, 1)]['epsilon'], 1.4142135623730951)
         self.assertAlmostEqual(potparam[(0, 1)]['sigma'], 1.4142135623730951)
         self.assertAlmostEqual(potparam[(0, 1)]['rcut'], 2.5)
+
+    def test_empty_create_potential(self):
+        """Test the create potential method."""
+        correct = {'potential': [{'class': 'Fake'}]}
+        potentials, pot_par = create_potentials(correct)
+        for i, j in zip(potentials, pot_par):
+            self.assertIsNone(i)
+            self.assertIsNone(j)
 
     def test_potential_inconsitentdim(self):
         """Test creation of potentials with inconsistent dims."""

@@ -5,8 +5,10 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.engines import Langevin, VelocityVerlet
+from pyretis.engines import MDEngine, Langevin, VelocityVerlet, Verlet
 from pyretis.core import System, create_box, Particles
+from pyretis.core.random_gen import MockRandomGenerator
+from pyretis.orderparameter import OrderParameterPosition
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials.potentials import DoubleWell
 logging.disable(logging.CRITICAL)
@@ -102,6 +104,63 @@ def prepare_test_system():
 class EngineTest(unittest.TestCase):
     """Run the tests for the different Engines."""
 
+    def test_invert_dt(self):
+        """Test that we can invert time."""
+        eng = MDEngine(1, description='Mock engine for testing')
+        invert = eng.invert_dt()
+        self.assertFalse(invert)
+        self.assertAlmostEqual(eng.delta_t, -1)
+        invert = eng.invert_dt()
+        self.assertTrue(invert)
+        self.assertAlmostEqual(eng.delta_t, 1)
+
+    def test_calculate_order(self):
+        """Test that we can calculate the order parameter."""
+        system = prepare_test_system()
+        _box = create_box(periodic=[False], low=[0.0])
+        system.box = _box
+        eng = MDEngine(1, description='Mock engine for testing')
+        order_function = OrderParameterPosition(0, dim='x', periodic='False')
+        order = eng.calculate_order(order_function, system)
+        self.assertAlmostEqual(order[0], system.particles.pos[0])
+        self.assertAlmostEqual(order[1], system.particles.vel[0])
+        pos = np.array([[1.0], ])
+        vel = np.array([[-1.0], ])
+        box = [100.0]
+        order = eng.calculate_order(order_function, system,
+                                    xyz=pos, vel=vel, box=box)
+        self.assertTrue(np.allclose(order, [1.0, -1.0]))
+        self.assertTrue(np.allclose(system.box.cell, box))
+
+    def test_modify_velocities(self):
+        system = prepare_test_system()
+        eng = MDEngine(1, description='Mock engine for testing')
+        rgen = MockRandomGenerator(seed=1)
+        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
+                              momentum=False, rescale=None)
+        self.assertAlmostEqual(system.particles.vel[0][0], rgen.rgen[1])
+        deltav = np.ones_like(system.particles.vel)
+        eng.modify_velocities(system, rgen, sigma_v=deltav, aimless=False,
+                              momentum=False, rescale=None)
+        self.assertAlmostEqual(system.particles.vel[0][0],
+                               rgen.rgen[1] + rgen.rgen[2])
+        eng.modify_velocities(system, rgen, sigma_v=None, aimless=True,
+                              momentum=True, rescale=None)
+        self.assertAlmostEqual(system.particles.vel[0][0], 0.0)
+
+        system.particles.pos = np.ones_like(system.particles.pos)
+        system.particles.vpot = system.potential()
+        dek, kin_new = eng.modify_velocities(system, rgen, sigma_v=None,
+                                             aimless=True, momentum=False,
+                                             rescale=6)
+        self.assertAlmostEqual(6, kin_new + system.particles.vpot)
+        kin_old = kin_new
+        dek, kin_new2 = eng.modify_velocities(system, rgen, sigma_v=None,
+                                              aimless=True, momentum=False,
+                                              rescale=-1)
+        self.assertAlmostEqual(kin_old, kin_new2)
+        self.assertAlmostEqual(dek, 0.0)
+
     def test_langevin_inertia(self):
         """Test the Langevin engine.
 
@@ -119,6 +178,13 @@ class EngineTest(unittest.TestCase):
             self.assertTrue(np.allclose(system.particles.vel,
                                         TISMOL_VEL[i]))
             eng.integration_step(system)
+
+    def test_langevin_negative_gamma_fail(self):
+        """Test that we fail for a negative gamma value."""
+        system = prepare_test_system()
+        eng = Langevin(0.002, -0.3, rgen='mock', seed=1, high_friction=False)
+        with self.assertRaises(ValueError):
+            eng._init_parameters(system)
 
     def test_langevin_hf(self):
         """Test the high friction variant of the Langevin engine."""
@@ -141,6 +207,29 @@ class EngineTest(unittest.TestCase):
             self.assertTrue(np.allclose(system.particles.vel,
                                         TISMOL_VEL_VV[i]))
             eng.integration_step(system)
+
+    def test_velocityverlet2(self):
+        """Test that the engine is callable."""
+        system = prepare_test_system()
+        eng = VelocityVerlet(0.002)
+        eng(system)
+        self.assertTrue(np.allclose(system.particles.pos, TISMOL_POS_VV[1]))
+        self.assertTrue(np.allclose(system.particles.vel, TISMOL_VEL_VV[1]))
+
+    def test_verlet(self):
+        """Test the Verlet engine."""
+        system = prepare_test_system()
+        eng = Verlet(0.002)
+        eng.set_initial_positions(system.particles)
+        self.assertAlmostEqual(eng.previous_pos[0][0], -1.00156016)
+        correct_pos = np.array([-0.99843984, -0.99687973, -0.99531972,
+                                -0.99375986, -0.99220019])
+        correct_vel = np.array([0.78008018, 0.78006773, 0.78003043,
+                                0.77996841, 0.77988177])
+        for i in range(5):
+            eng.integration_step(system)
+            self.assertAlmostEqual(system.particles.pos[0][0], correct_pos[i])
+            self.assertAlmostEqual(system.particles.vel[0][0], correct_vel[i])
 
 
 if __name__ == '__main__':
