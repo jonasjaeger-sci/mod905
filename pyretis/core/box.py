@@ -85,9 +85,9 @@ def array_to_box_matrix(length):
                                [0.0, length[1], length[5]],
                                [0.0, 0.0, length[2]]])
     elif len(length) == 9:
-        return 1.0 * np.array([[length[0], length[5], length[7]],
-                               [length[3], length[1], length[8]],
-                               [length[4], length[6], length[2]]])
+        return 1.0 * np.array([[length[0], length[3], length[4]],
+                               [length[5], length[1], length[6]],
+                               [length[7], length[8], length[2]]])
     else:
         logger.error('%d box parameters given, need 1, 2 3, 6, or 9.',
                      len(length))
@@ -115,7 +115,7 @@ def box_matrix_to_list(matrix):
         return np.diag(matrix)
     return [matrix[0, 0], matrix[1, 1], matrix[2, 2],
             matrix[0, 1], matrix[0, 2], matrix[1, 0],
-            matrix[1, 2], matrix[2, 0], matrix[1, 2]]
+            matrix[1, 2], matrix[2, 0], matrix[2, 1]]
 
 
 class BoxBase(metaclass=ABCMeta):
@@ -478,6 +478,11 @@ class RectangularBox(BoxBase):
         -------
         out : numpy.array, same shape as parameter `distance`
             The pbc-wrapped distances.
+
+        Note
+        ----
+        This will modify the given input matrix inplace. This can be
+        changed by setting ``pbcdist = np.copy(distance)``.
         """
         pbcdist = distance
         for i, (periodic, length, ilength) in enumerate(zip(self.periodic,
