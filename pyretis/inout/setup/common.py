@@ -65,7 +65,7 @@ def import_from(module_path, function_name):
     Note
     ----
     Here we need to handle different versions of python. This is due
-    to the ``imp`` module being deprecated and and the same time
+    to the ``imp`` module being deprecated and the same time
     ``importlib`` is changing between versions 3.4 and 3.5 [#]_.
 
     References
