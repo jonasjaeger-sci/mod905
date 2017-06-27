@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv3 License. See LICENSE for more info.
-"""Test the integrator classes"""
+"""Test the engine classes"""
 import logging
 import unittest
 import numpy as np
@@ -99,48 +99,48 @@ def prepare_test_system():
     return system
 
 
-class IntegratorTest(unittest.TestCase):
-    """Run the tests for the different Integrators."""
+class EngineTest(unittest.TestCase):
+    """Run the tests for the different Engines."""
 
     def test_langevin_inertia(self):
-        """Test the Langevin integrator.
+        """Test the Langevin engine.
 
         In this test we compare the trajectory obtained by PyRETIS
         with a trajectory obtained independently by the TISMOL program.
-        Since we are using a Langevin integrator, we are using a mock
+        Since we are using a Langevin engine, we are using a mock
         random generator. This random generator is implemented identically
         in TISMOL and PyRETIS.
         """
         system = prepare_test_system()
-        inth = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)
+        eng = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=False)
         for i in range(51):
             self.assertTrue(np.allclose(system.particles.pos,
                                         TISMOL_POS[i]))
             self.assertTrue(np.allclose(system.particles.vel,
                                         TISMOL_VEL[i]))
-            inth.integration_step(system)
+            eng.integration_step(system)
 
     def test_langevin_hf(self):
-        """Test the high friction variant of the Langevin integrator."""
+        """Test the high friction variant of the Langevin engine."""
         system = prepare_test_system()
-        inth = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=True)
+        eng = Langevin(0.002, 0.3, rgen='mock', seed=1, high_friction=True)
         for i in range(51):
             self.assertTrue(np.allclose(system.particles.pos,
                                         TISMOL_POS_HF[i]))
             self.assertTrue(np.allclose(system.particles.vel,
                                         TISMOL_VEL_HF[i]))
-            inth.integration_step(system)
+            eng.integration_step(system)
 
     def test_velocityverlet(self):
-        """Test the velocity verlet integrator."""
+        """Test the velocity verlet engine."""
         system = prepare_test_system()
-        intg = VelocityVerlet(0.002)
+        eng = VelocityVerlet(0.002)
         for i in range(21):
             self.assertTrue(np.allclose(system.particles.pos,
                                         TISMOL_POS_VV[i]))
             self.assertTrue(np.allclose(system.particles.vel,
                                         TISMOL_VEL_VV[i]))
-            intg.integration_step(system)
+            eng.integration_step(system)
 
 
 if __name__ == '__main__':
