@@ -10,6 +10,7 @@ __all__ = []
 
 class FooIntegrator(MDEngine):
     """FooIntegrator(MDEngine) - Dummy integrator for tests."""
+    foo_bar = 1.0
 
     def __init__(self, timestep, extra=0.0,
                  description='Dummy test integrator'):
