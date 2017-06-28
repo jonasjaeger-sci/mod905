@@ -9,15 +9,40 @@ import logging
 import unittest
 import tempfile
 import itertools
+import os
 import numpy as np
 from pyretis.inout.writers.writers import (EnergyWriter, OrderWriter,
                                            CrossWriter)
 from pyretis.inout.writers.tablewriter import ThermoTable
-logging.disable(logging.CRITICAL)
+from pyretis.inout.writers import get_writer, prepare_load
 
+
+logging.disable(logging.CRITICAL)
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 class WriterTest(unittest.TestCase):
     """Test that writers work as intended."""
+
+    def test_get_writer(self):
+        """Test that the get_writer method works."""
+        wri = get_writer('cross')
+        self.assertIsInstance(wri, CrossWriter)
+        logging.disable(logging.INFO)
+        with self.assertLogs('pyretis.inout.writers', level='ERROR'):
+            wri = get_writer('Does not exist')
+        logging.disable(logging.CRITICAL)
+        self.assertTrue(wri is None)
+
+    def test_prepare_load(self):
+        """Test the prepare load method."""
+        with self.assertRaises(FileNotFoundError):
+            prepare_load('cross', 'no such filename', required=True)
+        load = prepare_load('cross', 'no such filename', required=False)
+        self.assertTrue(load is None)
+        filename = os.path.join(HERE, 'cross.txt')
+        prepare_load('cross', filename, required=False)
+        with self.assertRaises(ValueError):
+            prepare_load('cross-which-is-not', filename, required=False)
 
     def test_energy_file_writer(self):
         """Test that we write and read energy files."""

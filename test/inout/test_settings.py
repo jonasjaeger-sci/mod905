@@ -434,8 +434,8 @@ units = lj"""
         settings = _test_correct_parsing(self, data, correct)
         create_conversion_factors(settings['system']['units'])
         particles, size, _ = create_initial_positions(settings)
-        correct_size = {'low': np.array([0.,  0.,  0.]),
-                        'high': np.array([6.,  6.,  6.])}
+        correct_size = {'low': np.array([0., 0., 0.]),
+                        'high': np.array([6., 6., 6.])}
         for key, val in correct_size.items():
             self.assertTrue(np.allclose(size[key], val))
         self.assertEqual(particles.npart, 4 * 6 * 6 * 6)

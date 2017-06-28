@@ -1,0 +1,50 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015, PyRETIS Development Team.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
+"""A test module for the writers.
+
+Here we test that we can write and read different output formats.
+"""
+import logging
+import unittest
+import os
+import pickle
+import numpy as np
+from pyretis.analysis.energy_analysis import analyse_energies
+from pyretis.inout.writers import prepare_load
+from pyretis.inout.settings import SECTIONS
+
+logging.disable(logging.CRITICAL)
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+class EnergyTest(unittest.TestCase):
+    """Test that we can analyse energies."""
+
+    def test_prepare_load(self):
+        """Test the prepare load method."""
+        filename = os.path.join(HERE, 'energy.txt')
+        data = prepare_load('energy', filename, required=True)
+        settings = {
+            'particles': {'npart': 1},
+            'system': {'dimensions': 1, 'beta': 1, 'temperature': 1},
+        }
+        settings['analysis'] = SECTIONS['analysis']
+
+        correct_file = os.path.join(HERE, 'energy-results.dat')
+        for i in data:
+            results = analyse_energies(i['data'], settings)
+            break
+        correct_data = {}
+        with open(correct_file, 'rb') as infile:
+            correct_data = pickle.load(infile)
+        for key0 in ('time', 'temp', 'etot', 'vpot', 'ekin'):
+            self.assertTrue(key0 in correct_data)
+            self.assertTrue(key0 in results)
+            for key, val in correct_data[key0].items():
+                for i, j in zip(val, results[key0][key]):
+                    self.assertTrue(np.allclose(i, j))
+
+
+if __name__ == '__main__':
+    unittest.main()

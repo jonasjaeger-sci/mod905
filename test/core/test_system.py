@@ -50,7 +50,6 @@ def prepare_test_system():
     particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3))
     particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3))
     particles.add_particle(np.zeros(3), np.zeros(3), np.zeros(3))
-    pos = particles.pos
     syst = System(box=box, temperature=10)
     syst.particles = particles
     forcefield = ForceField('Testing force field')
@@ -88,9 +87,9 @@ class SystemTest(unittest.TestCase):
         correct = {
             'temperature': {'set': 10.0, 'dof': np.array([1, 1, 1]),
                             'beta': 0.1},
-            'box': {'high': np.array([ 1.,  2.,  3.]),
+            'box': {'high': np.array([1., 2., 3.]),
                     'periodic': [True, True, True],
-                    'low': np.array([ 0.,  0.,  0.]),
+                    'low': np.array([0., 0., 0.]),
                     'length': np.array([1., 2., 3.])},
             'units': 'lj'}
         for key in correct:
@@ -130,7 +129,7 @@ class SystemTest(unittest.TestCase):
         """Test that we can generate velocities."""
         syst = prepare_test_system()
         vel = syst.particles.vel
-        syst.generate_velocities(rgen='mock', seed=0, momentum=True, 
+        syst.generate_velocities(rgen='mock', seed=0, momentum=True,
                                  temperature=None, distribution='maxwell')
         correct_vel = np.array([[0.61114808, -2.78504494, 1.42713429],
                                 [2.25062036, 1.32763469, 3.26596079],
@@ -140,20 +139,19 @@ class SystemTest(unittest.TestCase):
         with self.assertLogs('pyretis.core.system', level='ERROR'):
             syst.generate_velocities(rgen='mock', distribution='fake news')
         logging.disable(logging.CRITICAL)
-    
+
     def test_calculate_temp(self):
         """Test that we can calculate temperatures."""
         syst = prepare_test_system()
-        syst.generate_velocities(rgen='mock', seed=0, momentum=True, 
+        syst.generate_velocities(rgen='mock', seed=0, momentum=True,
                                  temperature=None, distribution='maxwell')
         temp = syst.calculate_temperature()
         self.assertAlmostEqual(temp, 10.)
 
-    
     def test_rescale_velocities(self):
         """Test that we can rescale velocities."""
         syst = prepare_test_system()
-        syst.generate_velocities(rgen='mock', seed=0, momentum=True, 
+        syst.generate_velocities(rgen='mock', seed=0, momentum=True,
                                  temperature=None, distribution='maxwell')
         syst.rescale_velocities(13)
         temp = syst.calculate_temperature()
@@ -166,7 +164,7 @@ class SystemTest(unittest.TestCase):
     def test_extra_setup(self):
         """Test that we can do extra set-up."""
         syst = prepare_test_system()
-        syst.generate_velocities(rgen='mock', seed=0, momentum=True, 
+        syst.generate_velocities(rgen='mock', seed=0, momentum=True,
                                  temperature=None, distribution='maxwell')
         temp = syst.calculate_temperature()
         self.assertAlmostEqual(temp, 10.)

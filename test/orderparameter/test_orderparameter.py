@@ -122,7 +122,6 @@ class OrderPositionTest(unittest.TestCase):
         dim_map = {'x': 0, 'y': 1, 'z': 2}
         for disp in [0.0, 1.5, -1.5, 100., -100.]:
             for ndim in [1, 2, 3]:
-                low = [0]
                 box = create_box(low=[0]*ndim, high=[1]*ndim,
                                  periodic=[True]*ndim)
                 system = System(temperature=1.0, units='lj', box=box)
