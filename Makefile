@@ -1,10 +1,15 @@
 .PHONY:	
-	    tests
-	    tests-silent
-	    tests3
-	    tests-silent3
-	    clean
-	    upload-docs
+	tests
+	tests-silent
+	tests3
+	tests-silent3
+	clean
+	upload-docs
+	coverage
+
+coverage:
+	coverage run -m unittest discover -s test
+	coverage html
  
 tests:
 	python -m unittest discover -v -s test
