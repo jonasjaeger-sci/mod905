@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Classes and functions for path ensembles.
 
 The classes and functions defined in this module are useful for
@@ -393,11 +393,20 @@ class PathEnsembleExt(PathEnsemble):
         prefix : string or None
             To give a prefix to the name of moved files.
         """
+        logger.debug('Moving path to %s', target_dir)
         new_pos, source = _generate_file_names(path, target_dir,
                                                prefix=prefix)
         path.pos = new_pos
         for src, dest in source.items():
-            shutil.move(src, dest)
+            if src == dest:
+                logger.debug('Skipping move %s -> %s', src, dest)
+            else:
+                if os.path.exists(dest):
+                    if os.path.isfile(dest):
+                        logger.debug('Removing %s as it exists', dest)
+                        os.remove(dest)
+                logger.debug('Moving %s -> %s', src, dest)
+                shutil.move(src, dest)
 
     @staticmethod
     def _copy_path(path, target_dir, prefix=None):

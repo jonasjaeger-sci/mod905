@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This sub-package handle writers for PyRETIS data.
 
 Writers are basically formatting the data created from PyRETIS.

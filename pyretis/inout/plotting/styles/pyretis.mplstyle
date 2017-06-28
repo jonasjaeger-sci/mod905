@@ -1,4 +1,4 @@
-# This is the pyretis mpl style.
+# This is the pyretis mpl style. License is: LGPLv2.1+
 
 axes.edgecolor: 262626
 axes.labelcolor: 262626

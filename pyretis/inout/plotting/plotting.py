@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Definition of the base class for the plotter.
 
 This module just defines a base class for plotters. This is just to

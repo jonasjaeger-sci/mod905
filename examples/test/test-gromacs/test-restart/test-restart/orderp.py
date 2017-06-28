@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, pyretis Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file defines the order parameter used for the WCA example.
 """
 import logging

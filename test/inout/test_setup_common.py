@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test setup functions."""
 import os
 import logging
@@ -21,20 +21,20 @@ class TestImportFrom(unittest.TestCase):
 
     def test_import(self):
         """Test that we can import."""
-        module = os.path.join(LOCAL_DIR, 'foointegrator.py')
-        klass = 'FooIntegrator'
+        module = os.path.join(LOCAL_DIR, 'fooengine.py')
+        klass = 'FooEngine'
         imp = import_from(module, klass)
         sys.path.insert(0, LOCAL_DIR)
-        from foointegrator import FooIntegrator
+        from fooengine import FooEngine
         del sys.path[0]
         self.assertEqual(
             inspect.getsource(imp),
-            inspect.getsource(FooIntegrator)
+            inspect.getsource(FooEngine)
         )
 
     def test_import_importerror(self):
         """Test that we can import."""
-        module = os.path.join(LOCAL_DIR, 'foointegrator.py')
+        module = os.path.join(LOCAL_DIR, 'fooengine.py')
         klass = 'DoesNotExist'
         with self.assertRaises(ValueError):
             import_from(module, klass)
@@ -66,13 +66,13 @@ class TestCreateExternal(unittest.TestCase):
 
     def test_create_from_module(self):
         """Test that we can import."""
-        module = os.path.join(LOCAL_DIR, 'foointegrator.py')
+        module = os.path.join(LOCAL_DIR, 'fooengine.py')
 
         settings = {}
         obj = create_external(settings, 'foo', None, None, key_settings=None)
         self.assertIs(obj, None)
 
-        settings = {'foo': {'module': module, 'class': 'FooIntegrator'}}
+        settings = {'foo': {'module': module, 'class': 'FooEngine'}}
         with self.assertRaises(ValueError):  # missing an argument:
             obj = create_external(settings, 'foo', None, [],
                                   key_settings=None)

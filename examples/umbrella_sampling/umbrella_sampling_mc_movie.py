@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 This is an simple example of how we can create a simple animation.
 It will run the umbrella sampling defined in `umbrella_sampling_mc.py` and

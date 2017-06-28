@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 PyRETIS - A simulation package for rare event simulations.
 Copyright (C) 2015  The PyRETIS team
@@ -9,7 +9,7 @@ This file is part of PyRETIS.
 
 PyRETIS is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+the Free Software Foundation, either version 2.1 of the License, or
 (at your option) any later version.
 
 PyRETIS is distributed in the hope that it will be useful,
@@ -52,12 +52,12 @@ setup(name='pyretis',
       url='http://www.pyretis.org',
       author='The PyRETIS team',
       author_email='pyretis@pyretis.org',
-      license='LGPLv3',
+      license='LGPLv2.1+',
       classifiers=['Development Status :: 3 - Alpha',
                    'Environment :: Console',
                    'Intended Audience :: Science/Research',
                    ('License :: OSI Approved :: '
-                    'GNU Lesser General Public License v3 (LGPLv3)'),
+                    'GNU Lesser General Public License v2.1 or later (LGPLv2.1+)'),
                    'Natural Language :: English',
                    'Operating System :: MacOS :: MacOS X',
                    'Operating System :: POSIX',

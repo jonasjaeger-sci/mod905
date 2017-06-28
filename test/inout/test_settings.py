@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
-# Distributed under the LGPLv3 License. See LICENSE for more info.
+# Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test parsing from a settings input file.
 
 Here we test that we parse the input file correctly and also that
@@ -214,13 +214,13 @@ class KeywordEngine(unittest.TestCase):
         data = """
 Engine settings
 ---------------
-class = FooIntegrator
-module = foointegrator.py
+class = FooEngine
+module = fooengine.py
 timestep = 0.5
 extra = 100
 """
-        correct = {'engine': {'class': 'FooIntegrator',
-                              'module': 'foointegrator.py',
+        correct = {'engine': {'class': 'FooEngine',
+                              'module': 'fooengine.py',
                               'timestep': 0.5,
                               'extra': 100}}
         settings = _test_correct_parsing(self, data, correct)
@@ -228,10 +228,10 @@ extra = 100
         # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
-        foointegrator = create_engine(settings)
-        self.assertEqual(foointegrator.delta_t,
+        fooengine = create_engine(settings)
+        self.assertEqual(fooengine.delta_t,
                          correct['engine']['timestep'])
-        self.assertEqual(foointegrator.extra,  # pylint: disable=no-member
+        self.assertEqual(fooengine.extra,  # pylint: disable=no-member
                          correct['engine']['extra'])
 
     def test_fail_external_engine(self):
@@ -240,16 +240,16 @@ extra = 100
         test_data, correct = [], []
         test_data.append('Engine settings\n'
                          '---------------\n'
-                         'class = BarIntegrator\n'
-                         'module = foointegrator.py')
-        correct.append({'engine': {'class': 'BarIntegrator',
-                                   'module': 'foointegrator.py'}})
+                         'class = BarEngine\n'
+                         'module = fooengine.py')
+        correct.append({'engine': {'class': 'BarEngine',
+                                   'module': 'fooengine.py'}})
         test_data.append('Engine settings\n'
                          '---------------\n'
-                         'class = BazIntegrator\n'
-                         'module = foointegrator.py')
-        correct.append({'engine': {'class': 'BazIntegrator',
-                                   'module': 'foointegrator.py'}})
+                         'class = BazEngine\n'
+                         'module = fooengine.py')
+        correct.append({'engine': {'class': 'BazEngine',
+                                   'module': 'fooengine.py'}})
         test_data.append('Engine\n'
                          '------\n'
                          'module =  dummy')
@@ -280,10 +280,10 @@ extra = 100
                          '------\n'
                          'class = VelocityVerlet\n'
                          'timestep = 0.314\n'
-                         'desc = Test VV integrator')
+                         'desc = Test VV engine')
         correct.append({'engine': {'class': 'VelocityVerlet',
                                    'timestep': 0.314,
-                                   'desc': 'Test VV integrator'}})
+                                   'desc': 'Test VV engine'}})
         klass.append(Langevin)
         test_data.append('Engine\n'
                          '------\n'

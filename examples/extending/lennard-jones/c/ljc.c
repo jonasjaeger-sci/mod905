@@ -1,5 +1,5 @@
 /* Copyright (c) 2015, PyRETIS Development Team.
-Distributed under the LGPLv3 License. See LICENSE for more info. */
+Distributed under the LGPLv2.1+ License. See LICENSE for more info. */
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
