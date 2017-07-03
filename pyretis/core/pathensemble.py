@@ -232,6 +232,13 @@ class PathEnsemble(object):
             path_data = {'status': status, 'generated': ('', 0, 0, 0)}
         else:
             path_data = path.get_path_data(status, self.interfaces)
+            #if move is not None:
+            #    path_data['generated'] = (
+            #        move,
+            #        path_data['generated'][1],
+            #        path_data['generated'][2],
+            #        path_data['generated'][3]
+            #    )
             if path_data['status'] == 'ACC':  # store the path
                 self.store_path(path)
                 if path_data['generated'][0] == 'sh':

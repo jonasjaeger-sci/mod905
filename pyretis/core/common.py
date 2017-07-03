@@ -18,7 +18,6 @@ generic_factory (:py:func:`.generic_factory`)
 """
 import logging
 import inspect
-import sys
 from pyretis.core.path import Path, PathExt
 from pyretis.core.reservoirpath import ReservoirPath
 
@@ -52,6 +51,8 @@ def _arg_kind(arg):
             kind = 'args'
         else:
             kind = 'kwargs'
+    elif arg.kind == arg.POSITIONAL_ONLY:
+        kind = 'args'
     elif arg.kind == arg.VAR_POSITIONAL:
         kind = 'varargs'
     elif arg.kind == arg.VAR_KEYWORD:
@@ -88,35 +89,15 @@ def inspect_function(function):
     """
     out = {'args': [], 'kwargs': [],
            'varargs': [], 'keywords': []}
-    if sys.version_info > (3, 3):
-        arguments = inspect.signature(function)  # pylint: disable=no-member
-        for arg in arguments.parameters.values():
-            kind = _arg_kind(arg)
-            if kind is not None:
-                out[kind].append(arg.name)
-            else:
-                logger.critical('Unknown variable kind "%s" for "%s"',
-                                arg.kind, arg.name)
-        return out
-    else:
-        # We get a pylint warning here, but it is not
-        # deprecated for versions =< (3,3) which we are in fact
-        # assuming here.
-        arguments = inspect.getargspec(function)
-        if not arguments.defaults:
-            out['args'] = [arg for arg in arguments.args]
-        else:
-            defaults = arguments.args[-len(arguments.defaults):]
-            for arg in arguments.args:
-                if arg not in defaults:
-                    out['args'].append(arg)
-                else:
-                    out['kwargs'].append(arg)
-        if arguments.varargs is not None:
-            out['varargs'] = [arguments.varargs]
-        if arguments.keywords is not None:
-            out['keywords'] = [arguments.keywords]
-        return out
+    arguments = inspect.signature(function)  # pylint: disable=no-member
+    for arg in arguments.parameters.values():
+        kind = _arg_kind(arg)
+        if kind is not None:
+            out[kind].append(arg.name)
+        else:  # pragma: no cover
+            logger.critical('Unknown variable kind "%s" for "%s"',
+                            arg.kind, arg.name)
+    return out
 
 
 def _pick_out_arg_kwargs(klass, settings):
@@ -176,21 +157,18 @@ def initiate_instance(klass, settings):
     msg = 'Initiated "%s" from "%s" %s'
     name = klass.__name__
     mod = klass.__module__
-    if len(args) == 0:
-        if len(kwargs) == 0:
+    if not args:
+        if not kwargs:
             logger.debug(msg, name, mod, 'without arguments.')
             return klass()
-        else:
-            logger.debug(msg, name, mod, 'with keyword arguments.')
-            return klass(**kwargs)
-    else:
-        if len(kwargs) == 0:
-            logger.debug(msg, name, mod, 'with positional arguments.')
-            return klass(*args)
-        else:
-            logger.debug(msg, name, mod,
-                         'with positional and keyword arguments.')
-            return klass(*args, **kwargs)
+        logger.debug(msg, name, mod, 'with keyword arguments.')
+        return klass(**kwargs)
+    if not kwargs:
+        logger.debug(msg, name, mod, 'with positional arguments.')
+        return klass(*args)
+    logger.debug(msg, name, mod,
+                 'with positional and keyword arguments.')
+    return klass(*args, **kwargs)
 
 
 def generic_factory(settings, object_map, name='generic'):

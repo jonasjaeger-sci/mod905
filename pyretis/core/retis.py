@@ -37,6 +37,7 @@ References
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
 """
+import copy
 import logging
 from pyretis.core.tis import make_tis_step_ensemble
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -128,9 +129,10 @@ def _relative_shoots_select(ensembles, rgen, relative):
     freq = rgen.rand()
     cumulative = 0.0
     idx = None
-    for idx, path_freq in enumerate(relative):
+    for i, path_freq in enumerate(relative):
         cumulative += path_freq
         if freq < cumulative:
+            idx = i
             break
     # just a sanity check, we should crash if idx is None
     try:
@@ -204,7 +206,7 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
             for other, path_ensemble in enumerate(ensembles):
                 if other != idx:
                     accept, trial, status = null_move(path_ensemble, cycle)
-                    output[idx] = ['nullmove', status, trial, accept]
+                    output[other] = ['nullmove', status, trial, accept]
     else:  # just do TIS for them all
         output = []
         for path_ensemble in ensembles:
@@ -369,26 +371,33 @@ def retis_swap(ensembles, idx, system, order_function, engine,
         path2 = ensemble2.last_path
         # Check if path1 can be accepted in ensemble 2:
         cross = path1.check_interfaces(ensemble2.interfaces)[-1]
-        # Do the swap
-        path1, path2 = path2, path1
-        # And set moves:
-        path1.set_move('s+')  # came from right
-        path2.set_move('s-')  # came from left
         accept = cross[1]
         if accept:  # accept the swap
             status = 'ACC'
+            # Do the swap
+            path1, path2 = path2, path1
+            # And set moves:
+            path1.set_move('s+')  # came from right
+            path2.set_move('s-')  # came from left
             logger.info('Swap was accepted.')
             # To avoid overwriting files, we move the paths to the
             # generate directory here. They will be moved into the
             # accepted directory by the `add_path_data` below.
             ensemble1.move_path_to_generated(path1)
             ensemble2.move_path_to_generated(path2)
-        else:  # reject:
-            status = 'NCR'
-            logger.info('Swap was rejected. (%s)', status)
-        ensemble1.add_path_data(path1, status, cycle=cycle)
-        ensemble2.add_path_data(path2, status, cycle=cycle)
-        return accept, (path1, path2), status
+            ensemble1.add_path_data(path1, status, cycle=cycle)
+            ensemble2.add_path_data(path2, status, cycle=cycle)
+            return accept, (path1, path2), status
+        status = 'NCR'
+        logger.info('Swap was rejected. (%s)', status)
+        # Make shallow copies
+        trial1 = copy.copy(path2)
+        trial2 = copy.copy(path1)
+        trial1.set_move('s+')  # came from right
+        trial2.set_move('s-')  # came from left
+        ensemble1.add_path_data(trial1, status, cycle=cycle)
+        ensemble2.add_path_data(trial2, status, cycle=cycle)
+        return accept, (trial1, trial2), status
 
 
 def retis_swap_zero(ensembles, system, order_function, engine,
@@ -472,7 +481,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     if path0.length == maxlen:
         path0.status = 'BTX'
     elif path0.length < 3:
-        path0.status = 'BTX'
+        path0.status = 'BTS'
     else:
         path0.status = 'ACC'
     path0.set_move('s+')
@@ -504,7 +513,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     if path1.length == maxlen:
         path1.status = 'FTX'
     elif path1.length < 3:
-        path1.status = 'FTX'
+        path1.status = 'FTS'
     else:
         path1.status = 'ACC'
     # Update status, etc

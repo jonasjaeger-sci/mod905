@@ -84,11 +84,11 @@ def create_path_ensemble(settings, ensemble_type):
 
 def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
                           exe_dir=None):
-    """Create a list of `PathEnsemble` objects given a list of interfaces.
+    """Create :py:class:`.PathEnsemble` like objects..
 
     This function will create and return a set of objects representing
     path ensembles for a given set of interfaces. This is useful when
-    setting up simulations like RETIS. Here we assume that the given
+    setting up TIS/RETIS imulations. Here we assume that the given
     interfaces define the path ensembles as follows:
     ``[0^-] | [0^+] | [1^+] | ... | [(n-1)^+] | state B``, where ``|``
     is the specified interface locations in the input `interfaces`.

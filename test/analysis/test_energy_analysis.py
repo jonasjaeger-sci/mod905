@@ -21,8 +21,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class EnergyTest(unittest.TestCase):
     """Test that we can analyse energies."""
 
-    def test_prepare_load(self):
-        """Test the prepare load method."""
+    def test_energy_analysis(self):
+        """Test the energy analysis."""
         filename = os.path.join(HERE, 'energy.txt')
         data = prepare_load('energy', filename, required=True)
         settings = {

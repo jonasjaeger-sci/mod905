@@ -43,9 +43,11 @@ _STATUS = {'ACC': 'The path has been accepted',
            'BWI': 'Backward trajectory end at wrong interface',
            'BTL': 'Backward trajectory too long (detailed balance condition)',
            'BTX': 'Backward trajectory too long (max-path exceeded)',
+           'BTS': 'Backward trajectory too short',
            'KOB': 'Kicked outside of boundaries',
            'FTL': 'Forward trajectory too long (detailed balance condition)',
            'FTX': 'Forward trajectory too long (max-path exceeded)',
+           'FTS': 'Forward trajectory too short',
            'NCR': 'No crossing with middle interface'}
 
 _GENERATED = {'sh': 'Path was generated with a shooting move',
@@ -624,7 +626,9 @@ class PathBase(object):
         if self.status:
             msg += ['Status: {}'.format(_STATUS[self.status])]
         if self.generated:
-            msg += ['Generated: {}'.format(_GENERATED[self.generated[0]])]
+            move = self.generated[0]
+            txtmove = _GENERATED.get(move, 'unknown move')
+            msg += ['Generated: {}'.format(txtmove)]
         return '\n'.join(msg)
 
     @abstractmethod
