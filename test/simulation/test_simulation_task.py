@@ -14,7 +14,7 @@ class SimulationTaskTest(unittest.TestCase):
     def test_create_task(self):
         """Test that we can create simulation tasks."""
 
-        def some_function(): #pylint: disable=missing-docstring
+        def some_function():  # pylint: disable=missing-docstring
             return 'Hello!'
 
         SimulationTask(some_function)
@@ -26,7 +26,7 @@ class SimulationTaskTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             SimulationTask(not_a_function, args=['dummy'])
 
-        def some_function2(test='hello'): #pylint: disable=missing-docstring
+        def some_function2(test='hello'):  # pylint: disable=missing-docstring
             return test
 
         inkw = {'test': 'yes'}
@@ -54,16 +54,16 @@ class SimulationTaskTest(unittest.TestCase):
     def test_execute(self):
         """Test that we can execute the task."""
 
-        def some_function(): #pylint: disable=missing-docstring
+        def some_function():  # pylint: disable=missing-docstring
             return [10, 9, 8]
 
-        def some_function2(pos): #pylint: disable=missing-docstring
+        def some_function2(pos):  # pylint: disable=missing-docstring
             return pos * pos
 
-        def some_function3(pos, exp=10): #pylint: disable=missing-docstring
+        def some_function3(pos, exp=10):  # pylint: disable=missing-docstring
             return pos**exp
 
-        def some_function4(exp=10): #pylint: disable=missing-docstring
+        def some_function4(exp=10):  # pylint: disable=missing-docstring
             return 2**exp
 
         task1 = SimulationTask(some_function, when={'every': 2},

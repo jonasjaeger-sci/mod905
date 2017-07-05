@@ -186,7 +186,6 @@ class SystemTest(unittest.TestCase):
         syst.update_box(length2)
         for i, j in zip(syst.box.cell, length):
             self.assertEqual(i, j)
-        
 
 
 if __name__ == '__main__':

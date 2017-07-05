@@ -189,7 +189,7 @@ class CP2KIOTest(unittest.TestCase):
             _, periodic = read_cp2k_box(temp.name)
             for i, j in zip(periodic, [True, True, True]):
                 self.assertEqual(i, j)
-    
+
     def test_update_node(self):
         """Test that we can update nodes."""
         infile = os.path.join(HERE, 'cp2k.inp')
@@ -207,11 +207,11 @@ class CP2KIOTest(unittest.TestCase):
         update_node(target, None, data, node_ref, nodes, replace=False)
         for i in ('STEPS 666', 'EXTRA yes', 'EXTRAEXTRA'):
             self.assertTrue(i in node_ref[target].data)
-        settings = ['one', 'two']   
+        settings = ['one', 'two']
         update_node(target, settings, [], node_ref, nodes, replace=False)
         for i, j in zip(settings, node_ref[target].settings):
             self.assertEqual(i, j)
-        settings = ['three']   
+        settings = ['three']
         update_node(target, settings, [], node_ref, nodes, replace=True)
         for i, j in zip(settings, node_ref[target].settings):
             self.assertEqual(i, j)
@@ -221,7 +221,6 @@ class CP2KIOTest(unittest.TestCase):
         update_node(target, settings, data, node_ref, nodes, replace=False)
         self.assertEqual(node_ref[target].data[0], 'setting1 100')
         self.assertEqual(node_ref[target].settings[0], 'nope')
-        
 
 
 if __name__ == '__main__':

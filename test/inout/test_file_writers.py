@@ -20,6 +20,7 @@ from pyretis.inout.writers import get_writer, prepare_load
 logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+
 class WriterTest(unittest.TestCase):
     """Test that writers work as intended."""
 

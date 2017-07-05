@@ -51,7 +51,7 @@ def function7(arg1, arg2, arg3=100, *args, arg4, arg5=10):  # pylint: disable=un
     return
 
 
-def function8(arg1, arg2=100, self='something'):
+def function8(arg1, arg2=100, self='something'):  # pylint: disable=unused-argument
     """Test name for val."""
     return
 
@@ -99,6 +99,7 @@ class InspectTest(unittest.TestCase):
         settings = {'arg1': 10, 'arg2': 100, 'self': 'text'}
 
         class Abomination():
+            """Just to allow redefination of __init__."""
             pass
 
         abo = Abomination()
