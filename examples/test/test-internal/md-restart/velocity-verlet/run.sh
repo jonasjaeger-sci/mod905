@@ -1,3 +1,4 @@
+#!/bin/bash
 make clean
 cd run-full
 pyretisrun -i md-full.rst -p

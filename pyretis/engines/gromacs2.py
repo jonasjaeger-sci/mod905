@@ -17,7 +17,7 @@ import shlex
 import subprocess
 from time import sleep
 import numpy as np
-from pyretis.core.box import create_box, box_matrix_to_list
+from pyretis.core.box import box_matrix_to_list
 from pyretis.engines.gromacs import GromacsEngine
 from pyretis.inout.writers.gromacsio import (read_trr_header,
                                              read_trr_data,
@@ -166,10 +166,7 @@ class GromacsEngine2(GromacsEngine):
             else:
                 system.particles.vel = None
             length = box_matrix_to_list(data['box'])
-            if system.box is None:
-                system.box = create_box(length=length)
-            else:
-                system.box.update_size(length)
+            system.update_box(length)
             order = order_function.calculate_all(system)
             phase_point = {'order': order,
                            'pos': (trr_file, i),

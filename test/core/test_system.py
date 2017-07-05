@@ -175,6 +175,19 @@ class SystemTest(unittest.TestCase):
         temp = syst.calculate_temperature()
         self.assertAlmostEqual(temp, 1.333333333)
 
+    def test_update_box(self):
+        """Test that we can update the system box."""
+        syst = System()
+        length = [1, 2, 3, 4, 5, 6]
+        syst.update_box(length)
+        for i, j in zip(syst.box.cell, length):
+            self.assertEqual(i, j)
+        length2 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        syst.update_box(length2)
+        for i, j in zip(syst.box.cell, length):
+            self.assertEqual(i, j)
+        
+
 
 if __name__ == '__main__':
     unittest.main()

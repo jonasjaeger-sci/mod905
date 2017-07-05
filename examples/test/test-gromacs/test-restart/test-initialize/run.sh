@@ -1,3 +1,4 @@
+#!/bin/bash
 make clean
 cd run-25
 pyretisrun -i retis.rst -p

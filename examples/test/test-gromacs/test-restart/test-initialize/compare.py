@@ -30,7 +30,7 @@ def compare_files(file1, file2):
 
 def comment(line):
     return line.startswith('#')
-    
+
 
 def compare_files_lines(file1, file2):
     """Compare line by line but skip comments."""

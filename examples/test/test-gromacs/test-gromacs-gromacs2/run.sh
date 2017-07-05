@@ -1,3 +1,4 @@
+#!/bin/bash
 make clean
 cd run-gromacs1
 pyretisrun -i retis.rst -p -l DEBUG

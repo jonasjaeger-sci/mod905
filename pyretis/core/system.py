@@ -14,6 +14,7 @@ System (:py:class:`.System`)
 import logging
 import numpy as np
 from pyretis.core.units import CONSTANTS
+from pyretis.core.box import create_box
 from pyretis.core.particlefunctions import (calculate_kinetic_temperature,
                                             calculate_kinetic_energy)
 from pyretis.core.random_gen import create_random_generator
@@ -426,3 +427,16 @@ class System(object):
         except AttributeError:
             pass
         return info
+
+    def update_box(self, length):
+        """Update the system box, create if needed.
+
+        Parameters
+        ----------
+        length : numpy.array, list or iterable.
+            The box vectors, represented as a list.
+        """
+        if self.box is None:
+            self.box = create_box(length=length)
+        else:
+            self.box.update_size(length)

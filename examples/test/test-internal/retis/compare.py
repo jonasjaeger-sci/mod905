@@ -237,7 +237,8 @@ def check_swaps(paths, accepted, ens, kind):
         idx0 = get_index(traj0i)
         if idx0 in accepted and paths[idx0]['move'] == move:
             parent = paths[idx0]['swap-parent']
-            assert parent[0] == ens2
+            if not parent[0] == ens2:
+                raise ValueError('Wrong parent!')
             ok = False
             found = False
             if traj1i is not None:

@@ -1,3 +1,4 @@
+#!/bin/bash
 make clean
 cd run-full
 pyretisrun -i tis-001.rst -p

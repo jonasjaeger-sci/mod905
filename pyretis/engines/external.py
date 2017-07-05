@@ -19,7 +19,6 @@ import logging
 import subprocess
 import shutil
 import os
-from pyretis.core.box import create_box
 from pyretis.inout.common import print_to_screen
 from pyretis.engines.engine import EngineBase
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -389,10 +388,7 @@ class ExternalMDEngine(EngineBase):
                 system.particles.vel = -vel
         else:
             system.particles.vel = vel
-        if system.box is None:
-            system.box = create_box(length=box)
-        else:
-            system.box.update_size(box)
+        system.update_box(box)
         return order_function.calculate_all(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,

@@ -151,7 +151,6 @@ class Hyst2D(PotentialFunction):
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
         """
-        pos = system.particles.pos
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         x = system.particles.pos[:, 0]
         y = system.particles.pos[:, 1]

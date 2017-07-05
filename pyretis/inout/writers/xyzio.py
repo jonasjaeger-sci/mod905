@@ -107,7 +107,7 @@ def convert_snapshot(snapshot):
 
     Returns
     -------
-    box : numpy.array
+    box : numpy.array, 1D
         The box dimensions if we mange to read it.
     xyz : numpy.array
         The positions.
@@ -252,7 +252,9 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
         if step is not None:
             header.append('Step: {}'.format(step))
         if box is not None:
-            header.append('Box: {}'.format(box.print_length(fmt='{:9.4f}')))
+            header.append('Box: {}'.format(
+                ' '.join(['{:9.4f}'.format(i) for i in box])
+            ))
         header.append('\n')
         header_str = ' '.join(header)
         output_file.write(header_str)

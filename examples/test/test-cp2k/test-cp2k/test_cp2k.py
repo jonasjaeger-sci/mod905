@@ -203,7 +203,7 @@ def main():
     print_to_screen('Time step: {}'.format(engine.timestep))
     print_to_screen('Subcycles: {}'.format(engine.subcycles))
     system = System(units='gromacs',
-                    box=create_box(size=[100, 100, 100]),
+                    box=create_box(length=[100, 100, 100]),
                     temperature=500)
     system.particles = ParticlesExt(dim=3)
     initial_conf = engine.input_files['conf']

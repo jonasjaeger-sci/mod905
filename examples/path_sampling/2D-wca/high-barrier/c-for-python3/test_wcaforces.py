@@ -23,7 +23,6 @@ def set_up_initial_state():
     """Create particles for the test."""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('sq', [3, 3], density=0.6)
-    npart = len(lattice)
     lattice += np.random.random((lattice.shape)) * 0.05
     size = np.array(size)
     box = create_box(low=size[:, 0], high=size[:, 1], periodic=[True, True])
@@ -40,6 +39,7 @@ def set_up_initial_state():
 
 
 def set_up_python_forcefield():
+    """Create internal Python WCA force field."""
     wca_pot = PairLennardJonesCutnp(dim=2, shift=True, mixing='geometric')
     wca_params = {0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
                   1: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)}}
@@ -54,6 +54,7 @@ def set_up_python_forcefield():
 
 
 def set_up_c_forcefield():
+    """Create external C WCA force field."""
     wca_pot_c = WCAPotential()
     wca_paramsc = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.**(1./6.),
                    'idxi': 0, 'idxj': 1, 'rzero': 2.0**(1./6),
