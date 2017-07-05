@@ -118,6 +118,61 @@ def box_matrix_to_list(matrix):
             matrix[1, 2], matrix[2, 0], matrix[2, 1]]
 
 
+def _cos(angle):
+    """Return cosine of an angle.
+
+    Here, we also check if the angle is close to 90.0 and
+    if so, we return just a zero.
+
+    Parameters
+    ----------
+    angle : float
+        The angle in degrees.
+
+    Returns
+    -------
+    out : float
+        The cosine of the angle.
+    """
+    if np.isclose(angle, 90.):
+        return 0.
+    return np.cos(np.radians(angle))  # pylint: disable=no-member
+
+
+def box_vector_angles(length, alpha, beta, gamma):
+    """Return the box matrix from lengths ang angles.
+
+    Parameters
+    ----------
+    length : np.array, 1D
+        The box-lengths on form ``[a, b, c]``
+    alpha : float
+        The alpha angle.
+    beta : float
+        The beta angle.
+    gamma : float
+        The gamma angle.
+
+    Returns
+    -------
+    out : np.array, 3D
+        The box matrix.
+    """
+    box_matrix = np.zeros((3, 3))
+    cos_alpha = _cos(alpha)
+    cos_beta = _cos(beta)
+    cos_gamma = _cos(gamma)
+    box_matrix[0, 0] = length[0]
+    box_matrix[0, 1] = length[1] * cos_gamma
+    box_matrix[0, 2] = length[2] * cos_beta
+    box_matrix[1, 1] = np.sqrt(length[1]**2 - box_matrix[0, 1]**2)
+    box_matrix[1, 2] = (length[1] * length[2] * cos_alpha -
+                        box_matrix[0, 1] * box_matrix[0, 2]) / box_matrix[1, 1]
+    box_matrix[2, 2] = np.sqrt(length[2]**2 - box_matrix[0, 2]**2 -
+                               box_matrix[1, 2]**2)
+    return box_matrix
+
+
 class BoxBase(metaclass=ABCMeta):
     """Class for a generic simulation box.
 

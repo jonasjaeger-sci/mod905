@@ -5,8 +5,13 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.core.box import (create_box, RectangularBox, TriclinicBox,
-                              box_matrix_to_list)
+from pyretis.core.box import (
+    create_box,
+    RectangularBox,
+    TriclinicBox,
+    box_matrix_to_list,
+    box_vector_angles,
+)
 logging.disable(logging.CRITICAL)
 
 
@@ -245,6 +250,25 @@ class TriBoxTest(unittest.TestCase):
         for i, j in zip(new_size, out):
             self.assertAlmostEqual(i, j)
         self.assertIsNone(box_matrix_to_list(None))
+
+    def test_box_vector_angles(self):
+        """Test conversion from a,b,c, alpha, beta, gamma."""
+        test_data = [
+            {'length': [3., 3., 3.],
+             'alpha': 100., 'beta': 80., 'gamma': 75.,
+             'correct': np.array([[3.0, 0.77646, 0.52094],
+                                  [0.0, 2.89778, -0.67891],
+                                  [0.0, 0.0, 2.87536]])},
+            {'length': [3., 5.1, 1.9],
+             'alpha': 100., 'beta': 85., 'gamma': 66.,
+             'correct': np.array([[3.0, 2.07436, 0.16559],
+                                  [0.0, 4.65908, -0.43488],
+                                  [0.0, 0.0, 1.84213]])},
+        ]
+        for i in test_data:
+            box_matrix = box_vector_angles(i['length'], i['alpha'],
+                                           i['beta'], i['gamma'])
+            self.assertTrue(np.allclose(box_matrix, i['correct'], atol=1e-4))
 
 
 if __name__ == '__main__':

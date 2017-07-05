@@ -1,0 +1,7 @@
+&FORCE_EVAL
+  &SUBSYS
+    &CELL
+      PERIODIC xyz
+    &END CELL
+  &END SUBSYS
+&END FORCE_EVAL

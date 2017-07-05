@@ -12,7 +12,7 @@ update_cp2k_input (:py:func`.update_cp2k_input`)
 read_cp2k_input (:py:func:`.read_cp2k_input`)
     A method to read a CP2K input file.
 """
-from pyretis.core.box import box_matrix_to_list
+from pyretis.core.box import box_matrix_to_list, box_vector_angles
 import logging
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -99,7 +99,7 @@ def dfs_print(node, visited):
     """
     out = []
     pre = (' ') * (2 * node.level)
-    if node.settings is None:
+    if not node.settings:
         out.append('{}&{}'.format(pre, node.title))
     else:
         out.append('{}&{} {}'.format(
@@ -361,7 +361,16 @@ def read_box_data(box_data):
         box_matrix[:, 2] = data['C']
         box = box_matrix_to_list(box_matrix)
     elif 'ABC' in data:
-        box = np.array(data['ABC'])
+        if 'ALPHA_BETA_GAMMA' in data:
+            box_matrix = box_vector_angles(
+                data['ABC'],
+                data['ALPHA_BETA_GAMMA'][0],
+                data['ALPHA_BETA_GAMMA'][1],
+                data['ALPHA_BETA_GAMMA'][2],
+            )
+            box = box_matrix_to_list(box_matrix)
+        else:
+            box = np.array(data['ABC'])
     else:
         box = None
     periodic = []

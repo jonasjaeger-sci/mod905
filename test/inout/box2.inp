@@ -1,0 +1,11 @@
+&FORCE_EVAL
+  &SUBSYS
+    &CELL
+      A 1 2 3
+      B 4 5 6
+      C 7 8 9
+      PERIODIC  XYZ
+      MULTIPLE_UNIT_CELL  1 1 1
+    &END CELL
+  &END SUBSYS
+&END FORCE_EVAL
