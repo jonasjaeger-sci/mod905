@@ -11,7 +11,12 @@ from pyretis.orderparameter.orderparameter import OrderParameterPosition
 from pyretis.inout.common import make_dirs, print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
-from cp2k import CP2KEngine, write_for_step_vel, convert_snapshot
+from pyretis.engines.cp2k import (
+    CP2KEngine,
+    write_for_step_vel,
+    convert_snapshot
+)
+
 
 
 def clean_dir(dirname):
@@ -85,7 +90,7 @@ def main():
     print_to_screen('Time step: {}'.format(engine.timestep))
     print_to_screen('Subcycles: {}'.format(engine.subcycles))
     system = System(units='gromacs',
-                    box=create_box(size=[100, 100, 100]),
+                    box=create_box(length=[100, 100, 100]),
                     temperature=500)
     system.particles = ParticlesExt(dim=3)
     initial_conf = engine.input_files['conf']
@@ -104,7 +109,7 @@ def main():
     print_to_screen('Time spent: {}'.format(end - start), level='info')
 
     start = time.perf_counter()
-    test_genvel(engine, 'cp2k_input/tmp.xyz', exe_dir='genvel')
+    test_genvel(engine, 'cp2k_input/initial.xyz', exe_dir='genvel')
     end = time.perf_counter()
     print_to_screen('Time spent: {}'.format(end - start), level='info')
 

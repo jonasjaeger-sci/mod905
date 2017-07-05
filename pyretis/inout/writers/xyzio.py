@@ -117,7 +117,7 @@ def convert_snapshot(snapshot):
         The atom names found in the file.
     """
     names = snapshot['atomname']
-    box = snapshot['box']
+    box = snapshot.get('box', None)
     natom = len(names)
     xyz = np.zeros((natom, 3))
     vel = np.zeros_like(xyz)
