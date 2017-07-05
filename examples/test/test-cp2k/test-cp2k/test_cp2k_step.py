@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
+"""Test a single step with the CP2K external engine."""
 import os
-import shutil
 import time
 import colorama
-import numpy as np
-from pyretis.core import System, create_box, ParticlesExt, PathExt
-from pyretis.orderparameter.orderparameter import OrderParameterPosition
+from pyretis.core import System, create_box, ParticlesExt
 from pyretis.inout.common import make_dirs, print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
 from pyretis.engines.cp2k import (
     CP2KEngine,
-    write_for_step_vel,
-    convert_snapshot
 )
-
 
 
 def clean_dir(dirname):
@@ -27,8 +21,7 @@ def clean_dir(dirname):
             os.remove(filename)
 
 
-def run_step(engine, system, order_parameter, interfaces,
-             exe_dir='forward-single-step'):
+def run_step(engine, system, exe_dir='forward-single-step'):
     """Run the engine forward in time, in steps.
 
     Parameters
@@ -37,11 +30,6 @@ def run_step(engine, system, order_parameter, interfaces,
         Engine to use for propagation.
     system : object like :py:class:`.System`
         The system we are propagation.
-    order_parameter : object like :py:class:`.OrderParameter`
-        An order parameter to calculate.
-    interfaces : list of floats
-        Interfaces to consider, here typically just set to
-        ``[-float('inf'), float('inf'), float('inf')]``
     exe_dir : string
         The foler to use for the execution.
     """
@@ -76,8 +64,8 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
 
 
 def main():
+    """Execute the test."""
     settings = parse_settings_file('engine.rst')
-    steps = settings['simulation']['steps']
     engine_settings = settings['engine']
     engine = CP2KEngine(
         engine_settings['cp2k'],
@@ -99,12 +87,9 @@ def main():
                    'vpot': None,
                    'ekin': None}
     system.particles.set_particle_state(phase_point)
-    interfaces = [-float('inf'), float('inf'), float('inf')]
-    order_parameter = OrderParameterPosition(0, dim='x', periodic=True)
 
     start = time.perf_counter()
-    pathf = run_step(engine, system, order_parameter, interfaces,
-                     exe_dir='forward-single-step')
+    run_step(engine, system, exe_dir='forward-single-step')
     end = time.perf_counter()
     print_to_screen('Time spent: {}'.format(end - start), level='info')
 
