@@ -17,7 +17,7 @@ from umbrella_sampling_mc import (
 )
 
 
-def main_amination(windows):
+def main_amination(windows, save=False):
     """Run the animation!"""
     system = set_up_system()
     # For plotting umbiased:
@@ -63,7 +63,10 @@ def main_amination(windows):
         blit=True,
         init_func=init
     )
-    plt.show()
+    if save:
+        anim.save('movie.mp4')
+    else:
+        plt.show()
 
 
 def update_animation(frame, simulations, systems, scat, linec, axv, txt):
@@ -108,4 +111,4 @@ def update_animation(frame, simulations, systems, scat, linec, axv, txt):
 
 
 if __name__ == '__main__':
-    main_amination(UMBRELLA_WINDOWS)
+    main_amination(UMBRELLA_WINDOWS, save=True)
