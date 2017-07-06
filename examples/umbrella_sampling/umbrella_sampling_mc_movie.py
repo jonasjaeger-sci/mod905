@@ -111,4 +111,4 @@ def update_animation(frame, simulations, systems, scat, linec, axv, txt):
 
 
 if __name__ == '__main__':
-    main_amination(UMBRELLA_WINDOWS, save=True)
+    main_amination(UMBRELLA_WINDOWS, save=False)
