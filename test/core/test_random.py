@@ -125,5 +125,6 @@ class RandomTest(unittest.TestCase):
                 std_diff = np.abs(std[:, i] - sigv) / sigv
                 self.assertTrue(all([i < tol for i in std_diff]))
 
+
 if __name__ == '__main__':
     unittest.main()

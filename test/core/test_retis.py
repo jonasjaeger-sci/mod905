@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test methods from pyretis.core.common"""
+"""Test the RETIS method(s)"""
 import logging
 import unittest
 import numpy as np

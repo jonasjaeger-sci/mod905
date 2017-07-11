@@ -122,7 +122,7 @@ def metropolis_accept_reject(rgen, system, deltae):
         return True
     else:
         pacc = np.exp(-system.temperature['beta'] * deltae)
-        return rgen.rand() < pacc
+        return rgen.rand(shape=1)[0] < pacc
 
 
 def max_displace_step(rgen, system, maxdx=0.1, idx=None):
