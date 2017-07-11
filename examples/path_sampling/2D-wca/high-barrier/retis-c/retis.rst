@@ -18,45 +18,6 @@ Box
 length = [5.9761430466719681, 5.9761430466719681]
 periodic = [True, True]
 
-Box
----
-length = [4, 4, 4]
-
-Box
----
-low = [-1, -1]
-high = [1, 1]
-
-Box
----
-length = [10, 10]
-periodic = [True, True]
-
-Box
----
-low = [0, -5, 0]
-length = [5, 5, 5]
-
-Box
----
-high = [10, 10, 10]
-length = [5, 5, 5]
-
-Box
----
-low = [1, 1, 1]
-length = xx yy zz bx cx cy
-
-Box
----
-a = 10
-b = 10
-c = 10
-alpha = 5.0
-beta = 0.0
-gamma = 0.0
-
-
 Engine
 ------
 class = VelocityVerlet
