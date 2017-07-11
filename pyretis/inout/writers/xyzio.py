@@ -291,7 +291,7 @@ def xyz_merge(backward, forward, merged):
 
 
 def _reverse_xyz_buffer(buff, output):
-    """Reverse the xyz buffer and extract frames.
+    """Reverse the order in a xyz buffer and extract frames.
 
     Parameters
     ----------
@@ -326,7 +326,7 @@ def _reverse_xyz_buffer(buff, output):
 
 
 def reverse_xyz_file(filename, outputfile):
-    """Reverse the given xyz-file.
+    """Reverse the order for frames in a given xyz-file.
 
     Parameters
     ----------
@@ -334,6 +334,10 @@ def reverse_xyz_file(filename, outputfile):
         The input .xyz file to open.
     outputfile : string
         The .xyz file to write.
+
+    Note
+    ----
+    This method will *NOT* reverse velocities.
     """
     buff_size = io.DEFAULT_BUFFER_SIZE
     left_over = None
@@ -379,7 +383,13 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
         based on the status.
     nzero : integer
         The number of zeros we use to pad trajectory names.
+
+    Returns
+    -------
+    out : list of strings
+        The files we created
     """
+    all_output = []
     out = ''.join([outputfile, '-{:0', '{}d'.format(nzero), '}-{}.xyz'])
     for traj in PathIntWriter().load(inputfile):
         split = traj['comment'][0].split()
@@ -388,6 +398,7 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
         if selection is not None and status.lower() != selection.lower():
             continue
         output = out.format(cycle, status)
+        all_output.append(output)
         with open(output, 'w') as outh:
             for j, snapshot in enumerate(traj['data']):
                 for lines in format_xyz_data(snapshot['pos'],
@@ -395,3 +406,4 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
                                              names=atoms,
                                              header='Snapshot: {}'.format(j)):
                     outh.write('{}\n'.format(lines))
+    return all_output

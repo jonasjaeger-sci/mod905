@@ -711,6 +711,7 @@ def read_txt_snapshots(filename, data_keys=None):
         for lines in fileh:
             if read_header:
                 snapshot = {'header': lines.strip()}
+                snapshot['box'] = get_box_from_header(snapshot['header'])
                 read_header = False
                 continue
             if lines_to_read == 0:  # new shapshot
@@ -732,7 +733,6 @@ def read_txt_snapshots(filename, data_keys=None):
                     except KeyError:
                         snapshot[key] = [value]
     if snapshot is not None:
-        snapshot['box'] = get_box_from_header(snapshot['header'])
         yield snapshot
 
 
