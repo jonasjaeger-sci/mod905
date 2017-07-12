@@ -168,7 +168,7 @@ class Particles(object):
             The forces to set.
         """
         self.force = np.copy(force)
-    
+
     def get_force(self):
         """Return (a copy of) the forces."""
         return np.copy(self.force)
