@@ -499,7 +499,7 @@ class PathEnsembleExt(PathEnsemble):
             with tarfile.open(self._traj_file, 'w') as tar:
                 for src, dest in source.items():
                     tar.add(src, arcname=os.path.basename(dest))
-        except OSError:
+        except OSError:  # pragma: no cover
             logger.warning(
                 'Could not find trajectory: "%s". Will not write.',
                 self._traj_file
