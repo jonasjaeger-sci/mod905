@@ -445,7 +445,7 @@ class PathEnsembleExt(PathEnsemble):
         for entry in self.list_superfluous():
             try:
                 os.remove(entry)
-            except OSError:
+            except OSError:  # pragma: no cover
                 pass
 
     def list_superfluous(self):
@@ -515,6 +515,9 @@ class PathEnsembleExt(PathEnsemble):
         for pos in path.pos:
             filename = os.path.basename(pos[0])
             new_file_name = os.path.join(directory, filename)
+            if not os.path.isfile(new_file_name):
+                logger.critical('The restart path "%s" does not exist',
+                                new_file_name)
             new_pos.append((new_file_name, pos[1]))
         path.pos = new_pos
 

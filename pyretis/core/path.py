@@ -176,7 +176,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase(object):
+class PathBase():
     """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of

@@ -371,7 +371,7 @@ class RandomGenerator(RandomGeneratorBase):
         return meanm + np.dot(norm, cho.T)
 
 
-class ReservoirSampler(object):
+class ReservoirSampler():
     """A class representing a reservoir sampler.
 
     The reservoir sampler will maintains a list of `k` items drawn
