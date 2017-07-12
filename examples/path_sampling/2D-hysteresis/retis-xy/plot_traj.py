@@ -49,8 +49,8 @@ def plot_potential(settings, axi, axj):
         axi.plot([posx[0], posy[0]], [posx[1], posy[1]], lw=2, ls=':',
                  color='#262626', alpha=0.8)
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.8)
-    extra_int = [settings['orderparameter']['inter_a'],
-                 settings['orderparameter']['inter_b']]
+    extra_int = [settings['orderparameter'][0]['inter_a'],
+                 settings['orderparameter'][0]['inter_b']]
     for inter in extra_int:
         posi = origin + inter * vec
         alpha1 = (1.0 - posi[1]) / normal[1]

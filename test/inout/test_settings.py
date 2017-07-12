@@ -332,9 +332,9 @@ Orderparameter
 class = FooOrderParameter
 module = fooorderparameter.py
 name = Dummy"""
-        correct = {'orderparameter': {'class': 'FooOrderParameter',
-                                      'module': 'fooorderparameter.py',
-                                      'name': 'Dummy'}}
+        correct = {'orderparameter': [{'class': 'FooOrderParameter',
+                                       'module': 'fooorderparameter.py',
+                                       'name': 'Dummy'}]}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
         # PyRETIS where we are executing from. This is to locate the
@@ -359,8 +359,10 @@ name = Dummy"""
                          '--------------\n'
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
-        correct.append({'orderparameter': {'class': 'BarOrderParameter',
-                                           'module': 'fooorderparameter.py'}})
+        correct.append(
+            {'orderparameter': [{'class': 'BarOrderParameter',
+                                 'module': 'fooorderparameter.py'}]}
+        )
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
@@ -369,47 +371,44 @@ name = Dummy"""
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        test_data, correct, klass = [], [], []
-        klass.append(OrderParameter)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameter\n'
-                         'name =  test')
-        correct.append({'orderparameter': {'class': 'OrderParameter',
-                                           'name': 'test'}})
-        klass.append(OrderParameterPosition)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameterPosition\n'
-                         'name = Position\n'
-                         'index = 0\n'
-                         'dim = x\n'
-                         'periodic = False')
-        correct.append({'orderparameter': {'class': 'OrderParameterPosition',
-                                           'name': 'Position', 'index': 0,
-                                           'dim': 'x', 'periodic': False}})
-        klass.append(OrderParameterDistance)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameterDistance\n'
-                         'name = My distance\n'
-                         'index = (100, 101)\n'
-                         'periodic = False')
-        correct.append({'orderparameter': {'class': 'OrderParameterDistance',
-                                           'name': 'My distance',
-                                           'index': (100, 101),
-                                           'periodic': False}})
-        for data, corr, cls in zip(test_data, correct, klass):
-            settings = _test_correct_parsing(self, data, corr)
-            insta = create_orderparameter(settings)
-            self.assertIsInstance(insta, cls)
-            for key in corr['orderparameter']:
-                if hasattr(insta, key):
-                    if key == 'dim':
-                        self.assertAlmostEqual(insta.dim, 0)
-                    else:
-                        self.assertAlmostEqual(getattr(insta, key),
-                                               corr['orderparameter'][key])
+        test_data = """
+Orderparameter
+--------------
+class = OrderParameter
+name =  test
+
+Orderparameter
+--------------
+class = OrderParameterPosition
+name = Position
+index = 0
+dim = x
+periodic = False
+
+Orderparameter
+--------------
+class = OrderParameterDistance
+name = My distance
+index = (100, 101)
+periodic = False"""
+        klass = [OrderParameter,
+                 OrderParameterPosition,
+                 OrderParameterDistance]
+        correct = [
+            {'class': 'OrderParameter', 'name': 'test'},
+            {'class': 'OrderParameterPosition', 'name': 'Position',
+             'index': 0, 'dim': 'x', 'periodic': False},
+            {'class': 'OrderParameterDistance', 'name': 'My distance',
+             'index': (100, 101), 'periodic': False},
+        ]
+        raw = _parse_sections(test_data.split('\n'))
+        settings = _parse_all_raw_sections(raw)
+        for setting, corr in zip(settings['orderparameter'], correct):
+            for key, val in setting.items():
+                self.assertEqual(val, corr[key])
+        order = create_orderparameter(settings)
+        for i, j in zip(order.order_parameters(), klass):
+            self.assertIsInstance(i, j)
 
 
 class KeywordParticles(unittest.TestCase):

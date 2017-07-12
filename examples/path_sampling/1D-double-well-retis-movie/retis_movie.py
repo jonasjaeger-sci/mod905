@@ -45,9 +45,9 @@ SETTINGS['engine'] = {'class': 'Langevin',
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
                           'class': 'DoubleWell'}]
 # Settings for the order parameter:
-SETTINGS['orderparameter'] = {'class': 'OrderParameterPosition',
-                              'dim': 'x', 'index': 0,
-                              'periodic': False}
+SETTINGS['orderparameter'] = [{'class': 'OrderParameterPosition',
+                               'dim': 'x', 'index': 0,
+                               'periodic': False}]
 # TIS specific settings:
 SETTINGS['tis'] = {'freq': 0.5,
                    'maxlength': 20000,
@@ -449,7 +449,7 @@ def analyse_prob(ensemble, props, idx, step):
     orderp = ensemble.last_path.ordermax[0]
     success = 1 if orderp > ensemble.detect else 0
     prun = props['prun'][idx]
-    if len(prun) == 0:
+    if not prun:
         prun.append(success)
     else:
         npath = step + 1

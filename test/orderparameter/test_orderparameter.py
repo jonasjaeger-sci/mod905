@@ -502,7 +502,7 @@ class CollectionTest(unittest.TestCase):
         cv3 = OrderParameterDistance((0, 2), periodic=False)
         orderp.add_orderparameter(cv3)
         orderp2 = CompositeOrderParameter(order_parameters=[cv1, cv2, cv3])
-        for i, j in zip(orderp.extra, orderp2.extra):
+        for i, j in zip(orderp.order_parameters(), orderp2.order_parameters()):
             self.assertTrue(i is j)
         box = create_box(periodic=[False, False, False])
         system = System(temperature=1.0, units='lj', box=box)

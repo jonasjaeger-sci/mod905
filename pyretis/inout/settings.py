@@ -28,7 +28,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['parse_settings_file', 'write_settings_file']
 
 
-MAX_POT = 99  # For practical reasons, just limit this.
+MAX_SEC = {'potential': 99,
+           'orderparameter': 99}  # Just a practical limit.
 SECTIONS = OrderedDict()
 TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
@@ -222,7 +223,7 @@ def _parse_sections(inputtxt):
         in the input file. `raw_data[key]` contains the raw data
         for the section corresponding to `key`.
     """
-    potentials = 0
+    multiple = {'potential': 0, 'orderparameter': 0}
     raw_data = {'heading': []}
     current_line = None
     previous_line = None
@@ -236,14 +237,17 @@ def _parse_sections(inputtxt):
             if previous_line is None:
                 continue
             section_title = previous_line.split()[0].lower()
-            if section_title == 'potential':
-                if potentials < MAX_POT:
-                    section_title = 'potential{:02d}'.format(potentials)
-                    potentials += 1
+            if section_title in ('potential', 'orderparameter'):
+                if multiple[section_title] < MAX_SEC[section_title]:
+                    new_section_title = '{}{:02d}'.format(
+                        section_title,
+                        multiple[section_title]
+                    )
+                    multiple[section_title] += 1
+                    section_title = new_section_title
                 else:
-                    logger.critical('If you are having potential-function'
-                                    'problems if feel bad for you son. \n'
-                                    "I got 99 problems but a pot ain't one")
+                    logger.critical('Too many %s sections defined.'
+                                    ' Ignoring the rest', section_title)
             if section_title not in raw_data:
                 raw_data[section_title] = []
             raw_data[add_section].extend(data[:-1])
@@ -336,18 +340,19 @@ def _parse_all_raw_sections(raw_sections):
     """
     settings = {}
     for key in sorted(raw_sections.keys()):
-        if key.startswith('potential'):
-            new_setting = _parse_raw_section(raw_sections[key], 'potential')
-            if 'potential' not in settings:
-                settings['potential'] = []
-            settings['potential'].append(new_setting)
-        else:
-            new_setting = _parse_raw_section(raw_sections[key], key)
-            if new_setting is None:
-                continue
-            settings[key] = {}
-            for sub_key in new_setting:
-                settings[key][sub_key] = new_setting[sub_key]
+        for special in ('potential', 'orderparameter'):
+            if key.startswith(special):
+                new_setting = _parse_raw_section(raw_sections[key], special)
+                if special not in settings:
+                    settings[special] = []
+                settings[special].append(new_setting)
+            else:
+                new_setting = _parse_raw_section(raw_sections[key], key)
+                if new_setting is None:
+                    continue
+                settings[key] = {}
+                for sub_key in new_setting:
+                    settings[key][sub_key] = new_setting[sub_key]
     return settings
 
 
@@ -396,7 +401,7 @@ def _clean_settings(settings):
             msgtxt = 'Ignoring unknown section "{}"'.format(sec)
             logger.warning(msgtxt)
             continue
-        if sec == 'potential':
+        if sec in ('potential', 'orderparameter'):
             settingc[sec] = [i for i in settings[sec]]
         else:
             settingc[sec] = {}
@@ -462,7 +467,7 @@ def settings_to_text(settings):
     for section in SECTIONS:
         if section not in settings:
             continue
-        if section == 'potential':
+        if section in ('potential', 'orderparameter'):
             for pot in settings[section]:
                 title = section.capitalize()
                 line = ('-') * len(title)
@@ -560,7 +565,7 @@ def copy_settings(settings):
     lsetting = {}
     for sec in settings:  # this is common for all simulations:
         lsetting[sec] = {}
-        if sec == 'potential':
+        if sec in ('potential', 'orderparameter'):
             lsetting[sec] = [j for j in settings[sec]]
         else:
             for key in settings[sec]:

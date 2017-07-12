@@ -19,6 +19,11 @@ OrderParameterPosition (:py:class:`.OrderParameterPosition`)
 
 OrderParameterDistance (:py:class:`.OrderParameterDistance`)
     A class for a particle-particle distance order parameter.
+
+CompositeOrderParameter (:py:class:`.CompositeOrderParameter`)
+    A class for an order parameter which is made up of several order
+    parameters, i.e. of several objects like
+    :py:class:`.OrderParameter`.
 """
 from abc import abstractmethod
 import logging
@@ -396,6 +401,11 @@ class CompositeOrderParameter(OrderParameter):
                 raise ValueError(msg)
         self.extra.append(orderp)
         return True
+
+    def order_parameters(self):
+        """Just return the order objects."""
+        for i in self.extra:
+            yield i
 
     def __str__(self):
         """Return a simple string representation of the order parameter."""

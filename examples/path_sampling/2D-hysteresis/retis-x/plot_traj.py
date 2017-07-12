@@ -37,8 +37,8 @@ def plot_potential(settings, axi, axj):
     for inter in settings['simulation']['interfaces']:
         axi.axvline(x=inter, lw=2, ls=':', color='#262626', alpha=0.8)
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.8)
-    extra_int = [settings['orderparameter']['inter_a'],
-                 settings['orderparameter']['inter_b']]
+    extra_int = [settings['orderparameter'][0]['inter_a'],
+                 settings['orderparameter'][0]['inter_b']]
     for inter in extra_int:
         axi.axvline(x=inter, lw=2, ls=':', color='#262626', alpha=0.5)
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.5)

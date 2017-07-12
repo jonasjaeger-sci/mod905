@@ -37,9 +37,9 @@ SETTINGS['engine'] = {'class': 'Langevin',
 SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
                           'class': 'DoubleWell'}]
 # Settings for the order parameter:
-SETTINGS['orderparameter'] = {'class': 'OrderParameterPosition',
-                              'dim': 'x', 'index': 0,
-                              'periodic': False}
+SETTINGS['orderparameter'] = [{'class': 'OrderParameterPosition',
+                               'dim': 'x', 'index': 0,
+                               'periodic': False}]
 # TIS specific settings:
 SETTINGS['tis'] = {'freq': 0.5,
                    'maxlength': 20000,

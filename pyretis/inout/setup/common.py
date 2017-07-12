@@ -33,6 +33,7 @@ import os
 from pyretis.core.common import initiate_instance
 from pyretis.engines import engine_factory
 from pyretis.orderparameter import order_factory
+from pyretis.orderparameter.orderparameter import CompositeOrderParameter
 from pyretis.forcefield.factory import potential_factory
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -229,13 +230,21 @@ def create_orderparameter(settings):
     out : object like :py:class:`.OrderParameter`
         This object represents the order parameter.
     """
-    order = create_external(
-        settings,
-        'orderparameter',
-        order_factory,
-        ('calculate',))
-    logger.info('Created order parameter:\n%s', order)
-    return order
+    all_order = []
+    order_settings = settings.get('orderparameter', [])
+    for order_setting in order_settings:
+        order = create_external(
+            settings,
+            'orderparameter',
+            order_factory,
+            ('calculate',),
+            key_settings=order_setting
+        )
+        logger.info('Created order parameter:\n%s', order)
+        all_order.append(order)
+    if len(all_order) == 1:
+        return all_order[0]
+    return CompositeOrderParameter(order_parameters=all_order)
 
 
 def create_engine(settings):
