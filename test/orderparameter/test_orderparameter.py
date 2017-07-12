@@ -9,7 +9,8 @@ from pyretis.orderparameter import order_factory
 from pyretis.orderparameter.orderparameter import (
     OrderParameter,
     OrderParameterPosition,
-    OrderParameterDistance
+    OrderParameterDistance,
+    CompositeOrderParameter,
 )
 from pyretis.orderparameter.orderangle import OrderParameterAngle
 from pyretis.orderparameter.orderdihedral import OrderParameterDihedral
@@ -19,11 +20,37 @@ logging.disable(logging.CRITICAL)
 
 
 class SimpleOrder(OrderParameter):
+    """An order parameter which equals the system temperature."""
 
     def __init__(self):
         super().__init__(description='Simple order parameter')
 
     def calculate(self, system):
+        return [system.temperature['set']]
+
+
+class SimpleOrderFaulty(object):  # pylint: disable=too-few-public-methods
+    """An order parameter which is faulty - missing calculate_all"""
+
+    def calculate(self, system):  # pylint: disable=no-self-use
+        """Just return the set temperature"""
+        return [system.temperature['set']]
+
+
+class SimpleOrderFaulty2(object):  # pylint: disable=too-few-public-methods
+    """An order parameter which is faulty - missing calculate_all"""
+
+    def calculate_all(self, system):  # pylint: disable=no-self-use
+        """Just return the set temperature"""
+        return [system.temperature['set']]
+
+
+class SimpleOrderFaulty3(object):  # pylint: disable=too-few-public-methods
+    """An order parameter which is faulty - missing calculate_all"""
+    calculate = 100
+
+    def calculate_all(self, system):  # pylint: disable=no-self-use
+        """Just return the set temperature"""
         return [system.temperature['set']]
 
 
@@ -460,6 +487,49 @@ class OrderFactoryTest(unittest.TestCase):
         for setting, correct in zip(test_settings, correct_class):
             orderp = order_factory(setting)
             self.assertIsInstance(orderp, correct)
+
+
+class CollectionTest(unittest.TestCase):
+    """Test that we can create collections of order parameters."""
+
+    def test_init(self):
+        """Test creation of an object."""
+        orderp = CompositeOrderParameter()
+        cv1 = OrderParameterDistance((0, 1), periodic=False)
+        orderp.add_orderparameter(cv1)
+        cv2 = OrderParameterDistance((1, 2), periodic=False)
+        orderp.add_orderparameter(cv2)
+        cv3 = OrderParameterDistance((0, 2), periodic=False)
+        orderp.add_orderparameter(cv3)
+        orderp2 = CompositeOrderParameter(order_parameters=[cv1, cv2, cv3])
+        for i, j in zip(orderp.extra, orderp2.extra):
+            self.assertTrue(i is j)
+        box = create_box(periodic=[False, False, False])
+        system = System(temperature=1.0, units='lj', box=box)
+        system.particles = Particles(system.get_dim())
+        system.add_particle(name='O', pos=np.array([0.0, 0.0, 0.0]))
+        system.add_particle(name='H', pos=np.array([0.0, 0.0, 0.1]))
+        system.add_particle(name='H', pos=np.array([0.0, 0.0, 0.3]))
+        order = orderp.calculate_all(system)
+        correct = [0.1, 0.0, 0.2, 0.0, 0.3, 0.0]
+        for i, j in zip(order, correct):
+            self.assertAlmostEqual(i, j)
+
+    def test_faulty_input(self):
+        """Test if we supply faulty input."""
+        orderp = CompositeOrderParameter()
+        cv1 = SimpleOrder()
+        orderp.add_orderparameter(cv1)
+        self.assertTrue(cv1 is orderp.extra[0])
+        cv2 = SimpleOrderFaulty()
+        with self.assertRaises(ValueError):
+            orderp.add_orderparameter(cv2)
+        cv3 = SimpleOrderFaulty2()
+        with self.assertRaises(ValueError):
+            orderp.add_orderparameter(cv3)
+        cv4 = SimpleOrderFaulty3()
+        with self.assertRaises(ValueError):
+            orderp.add_orderparameter(cv4)
 
 
 if __name__ == '__main__':
