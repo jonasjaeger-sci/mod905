@@ -340,19 +340,22 @@ def _parse_all_raw_sections(raw_sections):
     """
     settings = {}
     for key in sorted(raw_sections.keys()):
-        for special in ('potential', 'orderparameter'):
-            if key.startswith(special):
-                new_setting = _parse_raw_section(raw_sections[key], special)
-                if special not in settings:
-                    settings[special] = []
-                settings[special].append(new_setting)
-            else:
-                new_setting = _parse_raw_section(raw_sections[key], key)
-                if new_setting is None:
-                    continue
-                settings[key] = {}
-                for sub_key in new_setting:
-                    settings[key][sub_key] = new_setting[sub_key]
+        special = None
+        for i in ('potential', 'orderparameter'):
+            if key.startswith(i):
+                special = i
+        if special is not None:
+            new_setting = _parse_raw_section(raw_sections[key], special)
+            if special not in settings:
+                settings[special] = []
+            settings[special].append(new_setting)
+        else:
+            new_setting = _parse_raw_section(raw_sections[key], key)
+            if new_setting is None:
+                continue
+            settings[key] = {}
+            for sub_key in new_setting:
+                 settings[key][sub_key] = new_setting[sub_key]
     return settings
 
 
