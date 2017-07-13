@@ -321,7 +321,7 @@ def _parse_raw_section(raw_section, section):
                         setting[keyword][var] = parsed
                 else:
                     setting[keyword] = parsed
-            else:
+            else:  # pragma: no cover
                 msg = ['Could read keyword {}'.format(keyword)]
                 msg += ['Keyword was skipped, please check your input!']
                 msg += ['Input setting: {}'.format(raw)]
