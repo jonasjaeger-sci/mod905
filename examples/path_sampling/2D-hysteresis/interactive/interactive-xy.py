@@ -124,7 +124,7 @@ class PlotHelper(object):
             alpha2 = (-1.0 - posi[1]) / normal[1]
             posy = posi + alpha1 * normal
             posx = posi + alpha2 * normal
-            axi.plot([posx[0], posy[0]], [posx[1], posy[1]], lw=2, ls=':', 
+            axi.plot([posx[0], posy[0]], [posx[1], posy[1]], lw=2, ls=':',
                      alpha=0.8, color='#BAACE6')
             axj.axhline(y=inter, lw=2, ls=':', alpha=0.8, color='#BAACE6')
         axi.set_xlim((self.minx, self.maxx))
