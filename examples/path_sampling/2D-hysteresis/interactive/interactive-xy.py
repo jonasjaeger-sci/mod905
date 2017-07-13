@@ -87,8 +87,8 @@ class PlotHelper(object):
         self.xpos = xpos
         self.ypos = ypos
         self.interfaces = settings['simulation']['interfaces']
-        self.inter_a = settings['orderparameter'][0]['inter_a']
-        self.inter_b = settings['orderparameter'][0]['inter_b']
+        self.inter_a = settings['orderparameter']['inter_a']
+        self.inter_b = settings['orderparameter']['inter_b']
         self.minx = minx
         self.maxx = maxx
         self.miny = miny

@@ -332,9 +332,9 @@ Orderparameter
 class = FooOrderParameter
 module = fooorderparameter.py
 name = Dummy"""
-        correct = {'orderparameter': [{'class': 'FooOrderParameter',
-                                       'module': 'fooorderparameter.py',
-                                       'name': 'Dummy'}]}
+        correct = {'orderparameter': {'class': 'FooOrderParameter',
+                                      'module': 'fooorderparameter.py',
+                                      'name': 'Dummy'}}
         settings = _test_correct_parsing(self, data, correct)
         # Here we add the exe-path key to the settings to tell
         # PyRETIS where we are executing from. This is to locate the
@@ -360,8 +360,8 @@ name = Dummy"""
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
         correct.append(
-            {'orderparameter': [{'class': 'BarOrderParameter',
-                                 'module': 'fooorderparameter.py'}]}
+            {'orderparameter': {'class': 'BarOrderParameter',
+                                'module': 'fooorderparameter.py'}}
         )
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
@@ -377,16 +377,16 @@ Orderparameter
 class = OrderParameter
 name =  test
 
-Orderparameter
---------------
+Collective-variable
+-------------------
 class = OrderParameterPosition
 name = Position
 index = 0
 dim = x
 periodic = False
 
-Orderparameter
---------------
+Collective-variable
+-------------------
 class = OrderParameterDistance
 name = My distance
 index = (100, 101)
@@ -394,16 +394,23 @@ periodic = False"""
         klass = [OrderParameter,
                  OrderParameterPosition,
                  OrderParameterDistance]
-        correct = [
-            {'class': 'OrderParameter', 'name': 'test'},
-            {'class': 'OrderParameterPosition', 'name': 'Position',
-             'index': 0, 'dim': 'x', 'periodic': False},
-            {'class': 'OrderParameterDistance', 'name': 'My distance',
-             'index': (100, 101), 'periodic': False},
-        ]
+        correct = {
+            'orderparameter': {'class': 'OrderParameter', 'name': 'test'},
+            'collective-variable': [{'class': 'OrderParameterPosition',
+                                     'name': 'Position',
+                                     'index': 0, 'dim': 'x',
+                                     'periodic': False},
+                                    {'class': 'OrderParameterDistance',
+                                     'name': 'My distance',
+                                     'index': (100, 101), 'periodic': False}],
+        }
         raw = _parse_sections(test_data.split('\n'))
         settings = _parse_all_raw_sections(raw)
-        for setting, corr in zip(settings['orderparameter'], correct):
+        # Compare for order parameter:
+        for key, val in settings['orderparameter'].items():
+            self.assertEqual(val, correct['orderparameter'][key])
+        for setting, corr in zip(settings['collective-variable'],
+                                 correct['collective-variable']):
             for key, val in setting.items():
                 self.assertEqual(val, corr[key])
         order = create_orderparameter(settings)

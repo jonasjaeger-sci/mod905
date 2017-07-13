@@ -230,20 +230,29 @@ def create_orderparameter(settings):
     out : object like :py:class:`.OrderParameter`
         This object represents the order parameter.
     """
-    all_order = []
-    order_settings = settings.get('orderparameter', [])
+    main_order = create_external(
+        settings,
+        'orderparameter',
+        order_factory,
+        ('calculate',),
+    )
+    logger.info('Created main order parameter:\n%s', main_order)
+
+    extra_cv = []
+    order_settings = settings.get('collective-variable', [])
     for order_setting in order_settings:
         order = create_external(
             settings,
-            'orderparameter',
+            'collective-variable',
             order_factory,
             ('calculate',),
             key_settings=order_setting
         )
-        logger.info('Created order parameter:\n%s', order)
-        all_order.append(order)
-    if len(all_order) == 1:
-        return all_order[0]
+        logger.info('Created additional collective variable:\n%s', order)
+        extra_cv.append(order)
+    if not extra_cv:
+        return main_order
+    all_order = [main_order] + extra_cv
     order = CompositeOrderParameter(order_parameters=all_order)
     logger.info('Composite order parameter:\n%s', order)
     return order

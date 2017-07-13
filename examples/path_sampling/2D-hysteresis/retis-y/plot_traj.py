@@ -37,8 +37,8 @@ def plot_potential(settings, axi, axj):
     for inter in settings['simulation']['interfaces']:
         axi.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.8)
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.8)
-    extra_int = [settings['orderparameter'][0]['inter_a'],
-                 settings['orderparameter'][0]['inter_b']]
+    extra_int = [settings['orderparameter']['inter_a'],
+                 settings['orderparameter']['inter_b']]
     for inter in extra_int:
         axi.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.5)
         axj.axhline(y=inter, lw=2, ls=':', color='#262626', alpha=0.5)
@@ -121,7 +121,8 @@ if __name__ == '__main__':
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
     plot_potential(sim_settings, ax1, ax2)
-    plot_ensemble(sim_settings, ens, ax1, ax2, maxlines=25, skip=2, minorder=None)
+    plot_ensemble(sim_settings, ens, ax1, ax2, maxlines=25, skip=2,
+                  minorder=None)
     plt.subplots_adjust(right=0.95, left=0.10, top=0.95,
                         bottom=0.10, wspace=0.3)
     plt.show()
