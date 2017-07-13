@@ -3,8 +3,6 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
 # pylint: disable=C0103
-import os
-import sys
 import numpy as np
 import colorama
 from matplotlib import pyplot as plt
@@ -17,10 +15,8 @@ from pyretis.core.retis import retis_swap
 from pyretis.initiation import initiate_path_simulation
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.writers import prepare_load
 from pyretis.inout.setup import (
     create_force_field,
-    create_orderparameter,
     create_system,
     create_simulation,
     create_engine
@@ -69,6 +65,7 @@ class PlotHelper(object):
         self.idx = 0
 
     def potential_setup(self, settings):
+        """Just do setup for the potential function."""
         # Set up raw data:
         forcefield = create_force_field(settings)
         box = create_box(periodic=[False, False])
@@ -131,6 +128,7 @@ class PlotHelper(object):
                       self.colors[i], alphai=0.9, alphaj=alpha)
 
     def do_shoot(self, event):
+        """Perform the shooting."""
         ensembles = self.simulation.path_ensembles
         ensemble = ensembles[self.idx]
         accept, trial, status = shoot(
@@ -162,6 +160,7 @@ class PlotHelper(object):
         plt.draw()
 
     def do_timereversal(self, event):
+        """Perform time reversal."""
         ensembles = self.simulation.path_ensembles
         ensemble = ensembles[self.idx]
         accept, trial, status = time_reversal(
@@ -181,20 +180,22 @@ class PlotHelper(object):
         plt.draw()
 
     def do_accept_last_move(self, event):
+        """Button for accepting the last move."""
         self.accept_last_move()
 
     def accept_last_move(self):
+        """Check if we can accept the last move."""
         if self.last_result is not None:
-            move, ensemble, accept, trial, status, idx = self.last_result
+            move, ensemble, accept, trial, status, _ = self.last_result
             if move == 'Swap':
-                idxs = (idx, idx + 1)
+                # idxs = (idx, idx + 1)
                 print_to_screen(
                     'Swap: {} <-> {}'.format(ensemble[0].ensemble_name,
                                              ensemble[1].ensemble_name),
                     level='message'
                 )
             else:
-                idxs = (idx,)
+                # idxs = (idx,)
                 ensemble.add_path_data(trial, status)
                 print_to_screen(
                     'In ensemble: {}'.format(ensemble.ensemble_name),
@@ -218,12 +219,14 @@ class PlotHelper(object):
             plt.draw()
 
     def set_idx(self, label):
+        """Just to define indexes for the ensembles."""
         idx = {'$[0^-]$': 0, '$[0^+]$': 1, '$[1^+]$': 2,
                '$[2^+]$': 3, '$[3^+]$': 4, '$[4^+]$': 5,
                '$[5^+]$': 6}
         self.idx = idx.get(label, 0)
 
     def do_swap(self, event):
+        """Perform swapping when button is pressed."""
         if self.idx == len(self.simulation.path_ensembles) - 1:
             return
         accept, trial, status = retis_swap(
@@ -249,6 +252,7 @@ class PlotHelper(object):
 
 
 def set_up_simulation(settings):
+    """To all the set-ups to create the simulation."""
     units_from_settings(settings)
     engine = create_engine(settings)
     system = create_system(settings, engine=engine)
@@ -269,6 +273,7 @@ def set_up_simulation(settings):
 
 
 def main(inputfile='retis.rst'):
+    """To run the whole interactive plotting."""
     # setup simulation
     sim_settings = parse_settings_file(inputfile)
     simulation = set_up_simulation(sim_settings)
