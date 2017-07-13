@@ -244,7 +244,9 @@ def create_orderparameter(settings):
         all_order.append(order)
     if len(all_order) == 1:
         return all_order[0]
-    return CompositeOrderParameter(order_parameters=all_order)
+    order = CompositeOrderParameter(order_parameters=all_order)
+    logger.info('Composite order parameter:\n%s', order)
+    return order
 
 
 def create_engine(settings):
