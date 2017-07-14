@@ -51,28 +51,11 @@ class ReservoirPath(Path):
         self.res_length = res_length
         self.reservoir = []
 
-    def trajectory(self, reverse=False):
-        """Iterate over the phase-space points in the path.
-
-        Parameters
-        ----------
-        reverse : boolean
-            If this is True, we iterate in the reverse direction.
-
-        Yields
-        ------
-        out : tuple
-            The phase-space points in the path.
-        """
-        if reverse:
-            for i in range(self.length - 1, -1, -1):
-                yield self.phasepoint(i)
-        else:
-            for i in range(self.length):
-                yield self.phasepoint(i)
-
     def phasepoint(self, idx):
         """Return a specific phase point.
+
+        We do not return positions and velocities here, as they might
+        not have been stored in the reservoir.
 
         Parameters
         ----------
@@ -115,13 +98,12 @@ class ReservoirPath(Path):
         if len(self.reservoir) < 1:
             logger.critical('Reservoir empty, need to regenerate path!')
             return None
-        else:
-            item = self.reservoir.pop()
-            idx = item[0]
-            phasepoint = {'order': self.order[idx],
-                          'pos': item[1], 'vel': item[2],
-                          'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
-            return phasepoint, idx
+        item = self.reservoir.pop()
+        idx = item[0]
+        phasepoint = {'order': self.order[idx],
+                      'pos': item[1], 'vel': item[2],
+                      'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
+        return phasepoint, idx
 
     def add_to_reservoir(self, items, idx, pos, vel):
         """Try to add a point to the reservoir.

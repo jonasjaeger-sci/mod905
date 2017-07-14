@@ -25,7 +25,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['Particles', 'ParticlesExt']
 
 
-class Particles(object):
+class Particles():
     """Base class for a collection of particles.
 
     This is a simple particle list. It stores the positions,
@@ -132,7 +132,7 @@ class Particles(object):
 
         Parameters
         ----------
-        pos : tuple of (string, int)
+        pos : numpy.array
             The positions to set.
         """
         self.pos = np.copy(pos)
@@ -148,7 +148,7 @@ class Particles(object):
 
         Parameters
         ----------
-        vel : tuple of (string, int)
+        vel : numpy.array
             The velocities to set.
         """
         self.vel = np.copy(vel)
@@ -164,10 +164,14 @@ class Particles(object):
 
         Parameters
         ----------
-        vel : tuple of (string, int)
-            The velocities to set.
+        force : numpy.array
+            The forces to set.
         """
         self.force = np.copy(force)
+
+    def get_force(self):
+        """Return (a copy of) the forces."""
+        return np.copy(self.force)
 
     def set_particle_state(self, phasepoint):
         """Set the position, velocities (and forces) for the particles.
@@ -382,11 +386,12 @@ class ParticlesExt(Particles):
     def set_vel(self, vel):
         """Set the velocities for the particles.
 
-        This will copy the input velocities.
+        Here we just store information which tells if the
+        velocities should be reversed or not.
 
         Parameters
         ----------
-        vel : tuple of (string, int)
+        vel : boolean
             The velocities to set.
         """
         self.vel_rev = vel

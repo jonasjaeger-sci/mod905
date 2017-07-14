@@ -176,7 +176,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase(object):
+class PathBase():
     """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of
@@ -415,7 +415,6 @@ class PathBase(object):
         """
         pass
 
-    @abstractmethod
     def trajectory(self, reverse=False):
         """Iterate over the phase-space points in the path.
 
@@ -429,7 +428,12 @@ class PathBase(object):
         out : tuple
             The phase-space points in the path.
         """
-        pass
+        if reverse:
+            for i in range(self.length - 1, -1, -1):
+                yield self.phasepoint(i)
+        else:
+            for i in range(self.length):
+                yield self.phasepoint(i)
 
     @abstractmethod
     def phasepoint(self, idx):
@@ -484,10 +488,9 @@ class PathBase(object):
             self.ekin.append(phasepoint['ekin'])
             self.length += 1
             return True
-        else:
-            msg = 'Max length exceeded! Could not append to path!'
-            logger.debug(msg)
-            return False
+        msg = 'Max length exceeded! Could not append to path!'
+        logger.debug(msg)
+        return False
 
     def get_path_data(self, status, interfaces):
         """Return information about the Path.
@@ -688,26 +691,6 @@ class Path(PathBase):
         self.pos = []
         self.vel = []
 
-    def trajectory(self, reverse=False):
-        """Iterate over the phase-space points in the path.
-
-        Parameters
-        ----------
-        reverse : boolean
-            If this is True, we iterate in the reverse direction.
-
-        Yields
-        ------
-        out : tuple
-            The phase-space points in the path.
-        """
-        if reverse:
-            for i in range(self.length - 1, -1, -1):
-                yield self.phasepoint(i)
-        else:
-            for i in range(self.length):
-                yield self.phasepoint(i)
-
     def phasepoint(self, idx):
         """Return a specific phase point.
 
@@ -777,8 +760,7 @@ class Path(PathBase):
             The reversed velocities."""
         if vel is not None:
             return vel * -1
-        else:
-            return None
+        return None
 
     def restart_info(self):
         """Return a dictionary with restart information."""

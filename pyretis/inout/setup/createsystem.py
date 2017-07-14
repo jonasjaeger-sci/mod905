@@ -425,7 +425,6 @@ def set_up_box(settings, boxs, dim=3):
     msg = 'Box created {}:\n{}'
     box = None
     if settings.get('box', None) is not None:
-        print(settings['box'])
         box = create_box(**settings['box'])
         msgtxt = msg.format('from settings', box)
         logger.info(msgtxt)

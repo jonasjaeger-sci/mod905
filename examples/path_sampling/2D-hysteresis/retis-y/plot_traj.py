@@ -121,7 +121,8 @@ if __name__ == '__main__':
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
     plot_potential(sim_settings, ax1, ax2)
-    plot_ensemble(sim_settings, ens, ax1, ax2, maxlines=25, skip=2, minorder=None)
+    plot_ensemble(sim_settings, ens, ax1, ax2, maxlines=25, skip=2,
+                  minorder=None)
     plt.subplots_adjust(right=0.95, left=0.10, top=0.95,
                         bottom=0.10, wspace=0.3)
     plt.show()

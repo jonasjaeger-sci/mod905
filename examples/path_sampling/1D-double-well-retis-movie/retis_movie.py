@@ -449,7 +449,7 @@ def analyse_prob(ensemble, props, idx, step):
     orderp = ensemble.last_path.ordermax[0]
     success = 1 if orderp > ensemble.detect else 0
     prun = props['prun'][idx]
-    if len(prun) == 0:
+    if not prun:
         prun.append(success)
     else:
         npath = step + 1

@@ -25,7 +25,11 @@ from pyretis.inout.settings import (
     _parse_raw_section,
     _parse_all_raw_sections,
     _parse_sections,
-    settings_to_text
+    settings_to_text,
+    MAX_SEC,
+    copy_settings,
+    write_settings_file,
+    _clean_settings,
 )
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.engines import Verlet, VelocityVerlet, Langevin
@@ -46,6 +50,14 @@ logging.disable(logging.CRITICAL)
 
 
 LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def _remove_file(filename):
+    """Remove a file, fail silently if somethings fails."""
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
 
 
 def _test_correct_parsing(test, data, correct):
@@ -153,6 +165,7 @@ class KeywordParsing(unittest.TestCase):
         correct.append({'timestep': 0.002, 'class': 'langevin',
                         'gamma': 0.3, 'high_friction': False,
                         'seed': 0})
+
         for tst, corr in zip(teststr, correct):
             raw = _parse_sections(tst)
             setting = _parse_raw_section(raw['engine'], 'engine')
@@ -179,6 +192,8 @@ timestep = 0.002"""
                               'class': 'velocityverlet'},
                    'system': {'dimensions': 2, 'temperature': 1.0},
                    'simulation': {'task': 'md-nve', 'steps': 100}}
+        raw = _parse_sections(data.split('\n'))
+        settings = _parse_all_raw_sections(raw)
         settings = _test_correct_parsing(self, data, correct)
         with tempfile.NamedTemporaryFile() as temp:
             txt = settings_to_text(settings)
@@ -238,7 +253,8 @@ extra = 100
         """Test that external loads fail in a predicable way."""
         # First test: an engine that forgot to define a required method.
         test_data, correct = [], []
-        test_data.append('Engine settings\n'
+        test_data.append('---------------\n'
+                         'Engine settings\n'
                          '---------------\n'
                          'class = BarEngine\n'
                          'module = fooengine.py')
@@ -359,8 +375,10 @@ name = Dummy"""
                          '--------------\n'
                          'class = BarOrderParameter\n'
                          'module = fooorderparameter.py')
-        correct.append({'orderparameter': {'class': 'BarOrderParameter',
-                                           'module': 'fooorderparameter.py'}})
+        correct.append(
+            {'orderparameter': {'class': 'BarOrderParameter',
+                                'module': 'fooorderparameter.py'}}
+        )
         for data, corr in zip(test_data, correct):
             settings = _test_correct_parsing(self, data, corr)
             settings['simulation'] = {'exe-path': LOCAL_DIR}
@@ -369,47 +387,51 @@ name = Dummy"""
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        test_data, correct, klass = [], [], []
-        klass.append(OrderParameter)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameter\n'
-                         'name =  test')
-        correct.append({'orderparameter': {'class': 'OrderParameter',
-                                           'name': 'test'}})
-        klass.append(OrderParameterPosition)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameterPosition\n'
-                         'name = Position\n'
-                         'index = 0\n'
-                         'dim = x\n'
-                         'periodic = False')
-        correct.append({'orderparameter': {'class': 'OrderParameterPosition',
-                                           'name': 'Position', 'index': 0,
-                                           'dim': 'x', 'periodic': False}})
-        klass.append(OrderParameterDistance)
-        test_data.append('Orderparameter\n'
-                         '--------------\n'
-                         'class = OrderParameterDistance\n'
-                         'name = My distance\n'
-                         'index = (100, 101)\n'
-                         'periodic = False')
-        correct.append({'orderparameter': {'class': 'OrderParameterDistance',
-                                           'name': 'My distance',
-                                           'index': (100, 101),
-                                           'periodic': False}})
-        for data, corr, cls in zip(test_data, correct, klass):
-            settings = _test_correct_parsing(self, data, corr)
-            insta = create_orderparameter(settings)
-            self.assertIsInstance(insta, cls)
-            for key in corr['orderparameter']:
-                if hasattr(insta, key):
-                    if key == 'dim':
-                        self.assertAlmostEqual(insta.dim, 0)
-                    else:
-                        self.assertAlmostEqual(getattr(insta, key),
-                                               corr['orderparameter'][key])
+        test_data = """
+Orderparameter
+--------------
+class = OrderParameter
+name =  test
+
+Collective-variable
+-------------------
+class = OrderParameterPosition
+name = Position
+index = 0
+dim = x
+periodic = False
+
+Collective-variable
+-------------------
+class = OrderParameterDistance
+name = My distance
+index = (100, 101)
+periodic = False"""
+        klass = [OrderParameter,
+                 OrderParameterPosition,
+                 OrderParameterDistance]
+        correct = {
+            'orderparameter': {'class': 'OrderParameter', 'name': 'test'},
+            'collective-variable': [{'class': 'OrderParameterPosition',
+                                     'name': 'Position',
+                                     'index': 0, 'dim': 'x',
+                                     'periodic': False},
+                                    {'class': 'OrderParameterDistance',
+                                     'name': 'My distance',
+                                     'index': (100, 101), 'periodic': False}],
+        }
+        raw = _parse_sections(test_data.split('\n'))
+        settings = _parse_all_raw_sections(raw)
+        # Compare for order parameter:
+        for key, val in settings['orderparameter'].items():
+            self.assertEqual(val, correct['orderparameter'][key])
+        for setting, corr in zip(settings['collective-variable'],
+                                 correct['collective-variable']):
+            for key, val in setting.items():
+                self.assertEqual(val, corr[key])
+        order = create_orderparameter(settings)
+        for i, j in zip(order.order_parameters(), klass):
+            self.assertIsInstance(i, j)
 
 
 class KeywordParticles(unittest.TestCase):
@@ -914,6 +936,80 @@ parameter a = 10.0"""
         self.assertIsInstance(forcefield.potential[0], PairLennardJonesCutnp)
         self.assertIsInstance(forcefield.potential[1], DoubleWellWCA)
         self.assertIsInstance(forcefield.potential[2], PotentialFunction)
+
+    def test_too_many(self):
+        """Test what happens when we add too many potentials."""
+        settings = {
+            'forcefield': {'description': 'My force field mix'},
+            'potential': [],
+        }
+        for _ in range(MAX_SEC['potential'] + 5):
+            settings['potential'].append(
+                {'class': 'DoubleWellWCA',
+                 'parameter': {'types': [(0, 0)],
+                               'rzero': 1. * (2.**(1./6.))}}
+            )
+        txt = settings_to_text(settings)
+        logging.disable(logging.INFO)
+        with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+            raw = _parse_sections(txt.split('\n'))
+        logging.disable(logging.CRITICAL)
+        settings2 = _parse_all_raw_sections(raw)
+        self.assertEqual(len(settings2['potential']),
+                         MAX_SEC['potential'] + 1)
+
+    def test_copy_settings(self):
+        """Test that the copy method works as intended."""
+        inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
+        settings = parse_settings_file(inputfile)
+        settings2 = copy_settings(settings)
+        for key, val in settings.items():
+            self.assertTrue(key in settings2)
+            self.assertEqual(val, settings2[key])
+
+    def test_settings_to_txt(self):
+        """Test the settings to text in more detail."""
+        inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
+        settings = parse_settings_file(inputfile)
+        txt = settings_to_text(settings)
+        to_find = ['RETIS EXAMPLE FOR TESTING',
+                   'TIS settings', 'RETIS settings']
+        found = [False for _ in to_find]
+        for lines in txt.split('\n'):
+            for i, key in enumerate(to_find):
+                if found[i]:
+                    continue
+                if lines.startswith(key):
+                    found[i] = True
+        self.assertTrue(all(found))
+
+    def test_write_settings(self):
+        """Test that we can write settings to a file."""
+        inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
+        settings = parse_settings_file(inputfile)
+        out_file = os.path.join(LOCAL_DIR, '_pyretis_settings_temp.rst')
+        _remove_file(out_file)
+        write_settings_file(settings, out_file)
+        out_file = os.path.join(LOCAL_DIR, '_pyretis_settings_temp.rst')
+        write_settings_file(settings, out_file, backup=True)
+        settings2 = parse_settings_file(out_file)
+        _remove_file(out_file)
+        _remove_file(out_file + '_000')
+        for key, val in settings.items():
+            self.assertTrue(key in settings2)
+            self.assertEqual(val, settings2[key])
+
+    def test_clean_settings(self):
+        """Test that we can clean settings."""
+        inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
+        settings = parse_settings_file(inputfile)
+        settings['junk'] = {'some': 'junk'}
+        settings['system']['junk'] = 'this is junk'
+        settings['box'] = []
+        settings_c = _clean_settings(settings)
+        self.assertFalse('junk' in settings_c)
+        self.assertFalse('junk' in settings_c['system'])
+        self.assertFalse('box' in settings_c)
 
 
 if __name__ == '__main__':

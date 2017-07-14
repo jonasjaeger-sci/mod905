@@ -28,7 +28,6 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['parse_settings_file', 'write_settings_file']
 
 
-MAX_POT = 99  # For practical reasons, just limit this.
 SECTIONS = OrderedDict()
 TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
@@ -93,6 +92,11 @@ SECTIONS['orderparameter'] = {
     'module': None
 }
 
+SECTIONS['collective-variable'] = {
+    'class': None,
+    'module': None
+}
+
 
 SECTIONS['output'] = {
     'backup': 'overwrite',
@@ -142,7 +146,11 @@ SECTIONS['analysis'] = {
 
 
 SPECIAL_KEY = set(('parameter', ))
-ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine', 'initial-path'))
+ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine',
+                      'collective-variable', 'initial-path'))
+SPECIAL_MULTIPLE = set(('potential', 'collective-variable'))
+MAX_SEC = {'potential': 99,
+           'collective-variable': 99}  # Just a practical limit.
 
 
 def parse_primitive(text):
@@ -222,7 +230,7 @@ def _parse_sections(inputtxt):
         in the input file. `raw_data[key]` contains the raw data
         for the section corresponding to `key`.
     """
-    potentials = 0
+    multiple = {key: 0 for key in SPECIAL_MULTIPLE}
     raw_data = {'heading': []}
     current_line = None
     previous_line = None
@@ -236,14 +244,17 @@ def _parse_sections(inputtxt):
             if previous_line is None:
                 continue
             section_title = previous_line.split()[0].lower()
-            if section_title == 'potential':
-                if potentials < MAX_POT:
-                    section_title = 'potential{:02d}'.format(potentials)
-                    potentials += 1
+            if section_title in SPECIAL_MULTIPLE:
+                if multiple[section_title] < MAX_SEC[section_title]:
+                    new_section_title = '{}{:02d}'.format(
+                        section_title,
+                        multiple[section_title]
+                    )
+                    multiple[section_title] += 1
+                    section_title = new_section_title
                 else:
-                    logger.critical('If you are having potential-function'
-                                    'problems if feel bad for you son. \n'
-                                    "I got 99 problems but a pot ain't one")
+                    logger.critical('Too many %s sections defined.'
+                                    ' Ignoring the rest', section_title)
             if section_title not in raw_data:
                 raw_data[section_title] = []
             raw_data[add_section].extend(data[:-1])
@@ -310,7 +321,7 @@ def _parse_raw_section(raw_section, section):
                         setting[keyword][var] = parsed
                 else:
                     setting[keyword] = parsed
-            else:
+            else:  # pragma: no cover
                 msg = ['Could read keyword {}'.format(keyword)]
                 msg += ['Keyword was skipped, please check your input!']
                 msg += ['Input setting: {}'.format(raw)]
@@ -336,11 +347,15 @@ def _parse_all_raw_sections(raw_sections):
     """
     settings = {}
     for key in sorted(raw_sections.keys()):
-        if key.startswith('potential'):
-            new_setting = _parse_raw_section(raw_sections[key], 'potential')
-            if 'potential' not in settings:
-                settings['potential'] = []
-            settings['potential'].append(new_setting)
+        special = None
+        for i in SPECIAL_MULTIPLE:
+            if key.startswith(i):
+                special = i
+        if special is not None:
+            new_setting = _parse_raw_section(raw_sections[key], special)
+            if special not in settings:
+                settings[special] = []
+            settings[special].append(new_setting)
         else:
             new_setting = _parse_raw_section(raw_sections[key], key)
             if new_setting is None:
@@ -396,7 +411,7 @@ def _clean_settings(settings):
             msgtxt = 'Ignoring unknown section "{}"'.format(sec)
             logger.warning(msgtxt)
             continue
-        if sec == 'potential':
+        if sec in SPECIAL_MULTIPLE:
             settingc[sec] = [i for i in settings[sec]]
         else:
             settingc[sec] = {}
@@ -462,11 +477,11 @@ def settings_to_text(settings):
     for section in SECTIONS:
         if section not in settings:
             continue
-        if section == 'potential':
-            for pot in settings[section]:
+        if section in SPECIAL_MULTIPLE:
+            for sec in settings[section]:
                 title = section.capitalize()
                 line = ('-') * len(title)
-                raw_data = section_to_text(pot)
+                raw_data = section_to_text(sec)
                 txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
         elif section == 'heading':
             txt.append('{}\n\n'.format(settings[section]['text']))
@@ -560,7 +575,7 @@ def copy_settings(settings):
     lsetting = {}
     for sec in settings:  # this is common for all simulations:
         lsetting[sec] = {}
-        if sec == 'potential':
+        if sec in SPECIAL_MULTIPLE:
             lsetting[sec] = [j for j in settings[sec]]
         else:
             for key in settings[sec]:

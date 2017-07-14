@@ -25,7 +25,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['System']
 
 
-class System(object):
+class System():
     """This class defines a generic system for simulations.
 
     Attributes

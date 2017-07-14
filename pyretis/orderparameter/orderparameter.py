@@ -19,6 +19,11 @@ OrderParameterPosition (:py:class:`.OrderParameterPosition`)
 
 OrderParameterDistance (:py:class:`.OrderParameterDistance`)
     A class for a particle-particle distance order parameter.
+
+CompositeOrderParameter (:py:class:`.CompositeOrderParameter`)
+    A class for an order parameter which is made up of several order
+    parameters, i.e. of several objects like
+    :py:class:`.OrderParameter`.
 """
 from abc import abstractmethod
 import logging
@@ -31,7 +36,7 @@ __all__ = ['OrderParameter', 'OrderParameterPosition',
            'OrderParameterDistance']
 
 
-class OrderParameter(object):
+class OrderParameter():
     """Base class for order parameters.
 
     This class represents an order parameter and other collective
@@ -113,7 +118,7 @@ class OrderParameter(object):
             ret_val.extend(extra)
         return ret_val
 
-    def add_orderparameter(self, func):
+    def add_orderparameter(self, orderp):
         """Add an extra order parameter to calculate.
 
         The given function should accept an object like
@@ -121,7 +126,7 @@ class OrderParameter(object):
 
         Parameters
         ----------
-        func : function
+        orderp : callable
             Extra function for calculation of an extra order parameter.
             It is assumed to accept only a :py:class:`.System` object
             as its parameter.
@@ -131,11 +136,11 @@ class OrderParameter(object):
         out : boolean
             Return True if we added the function, False otherwise.
         """
-        if not callable(func):
-            msg = 'The given function is not callable, it will not be added!'
+        if not callable(orderp):
+            msg = 'The given method is not callable, it will not be added!'
             logger.warning(msg)
             return False
-        self.extra.append(func)
+        self.extra.append(orderp)
         return True
 
     def __str__(self):
@@ -300,3 +305,112 @@ class OrderParameterDistance(OrderParameter):
         delta_v = particles.vel[self.index[1]] - particles.vel[self.index[0]]
         cv1 = np.dot(delta, delta_v) / lamb
         return [lamb, cv1]
+
+
+class CompositeOrderParameter(OrderParameter):
+    """A composite order parameter
+
+    This class represents a composite order parameter. It does not
+    actually calculate order parameters itself, but it has references
+    to several objects like :py:class:`.OrderParameter` which it can
+    use to obtain the order parameters.
+
+    Attributes
+    ----------
+    description : string
+        This is a short description of the order parameter.
+    extra : list of objects like :py:class:`OrderParameter`
+        This is a list of order parameters to calculate.
+    """
+
+    def __init__(self, order_parameters=None):
+        """Just initialize.
+
+        Parameters
+        ----------
+        desc : string
+            Short description of the order parameter.
+        order_parameters : list of objects like :py:class:`.OrderParameter`.
+            A list of order parameters we can add.
+        """
+        super().__init__(description='Combined order parameter')
+        self.extra = []
+        if order_parameters is not None:
+            for orderp in order_parameters:
+                self.add_orderparameter(orderp)
+
+    def calculate(self, system):
+        """Calculate the main order parameter and return it.
+
+        This is defined as a method just to ensure that at least this
+        method will be defined in the different order parameters.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            This object is used for the actual calculation, typically
+            only `system.particles.pos` and/or `system.particles.vel`
+            will be used. In some cases system.forcefield can also be
+            used to include specific energies for the order parameter.
+
+        Returns
+        -------
+        out : list of floats
+            The order parameter(s). The first order parameter returned
+            is used as the progress coordinate in path sampling
+            simulations!
+        """
+        all_order = []
+        for orderp in self.extra:
+            all_order.extend(orderp.calculate_all(system))
+        return all_order
+
+    def calculate_all(self, system):
+        """Identical to calculate, so just call it."""
+        return self.calculate(system)
+
+    def add_orderparameter(self, orderp):
+        """Add an extra order parameter to calculate.
+
+        Parameters
+        ----------
+        orderp : object like :py:class:`.OrderParameter`.
+            An object we can use to calculate the order parameter.
+
+        Returns
+        -------
+        out : boolean
+            Return True if we added the function, False otherwise.
+        """
+        # We check that we can call .calculate() and .calculate_all():
+        for func in ('calculate', 'calculate_all'):
+            objfunc = getattr(orderp, func, None)
+            name = orderp.__class__.__name__
+            if not objfunc:
+                msg = 'Missing method "{}" in order parameter {}'.format(
+                    func,
+                    name,
+                )
+                logger.error(msg)
+                raise ValueError(msg)
+            if not callable(objfunc):
+                msg = '"{}" in order parameter {} is not callable!'.format(
+                    func,
+                    name,
+                )
+                raise ValueError(msg)
+        self.extra.append(orderp)
+        return True
+
+    def order_parameters(self):
+        """Just return the order objects."""
+        for i in self.extra:
+            yield i
+
+    def __str__(self):
+        """Return a simple string representation of the order parameter."""
+        txt = ['Order parameter, combination of:']
+        for i, order in enumerate(self.extra):
+            txt.append('{}: {}'.format(i, str(order)))
+        msg = '\n'.join(txt)
+        return msg

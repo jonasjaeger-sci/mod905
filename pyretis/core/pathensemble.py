@@ -69,7 +69,7 @@ def _generate_file_names(path, target_dir, prefix=None):
     return new_pos, source
 
 
-class PathEnsemble(object):
+class PathEnsemble():
     """Representation of a path ensemble.
 
     This class represents a collection of `Paths` in a path ensemble.
@@ -232,13 +232,6 @@ class PathEnsemble(object):
             path_data = {'status': status, 'generated': ('', 0, 0, 0)}
         else:
             path_data = path.get_path_data(status, self.interfaces)
-            #if move is not None:
-            #    path_data['generated'] = (
-            #        move,
-            #        path_data['generated'][1],
-            #        path_data['generated'][2],
-            #        path_data['generated'][3]
-            #    )
             if path_data['status'] == 'ACC':  # store the path
                 self.store_path(path)
                 if path_data['generated'][0] == 'sh':
@@ -450,15 +443,18 @@ class PathEnsembleExt(PathEnsemble):
         self._move_path(path, self.directory['accepted'])
         self.last_path = path
         for entry in self.list_superfluous():
-            if os.path.isfile(entry):
+            try:
                 os.remove(entry)
+            except OSError:  # pragma: no cover
+                pass
 
     def list_superfluous(self):
         """List files in accpeted directory that we do not need."""
         last = set()
-        for phasepoint in self.last_path.trajectory(reverse=False):
-            pos_file, _ = phasepoint['pos']
-            last.add(pos_file)
+        if self.last_path:
+            for phasepoint in self.last_path.trajectory(reverse=False):
+                pos_file, _ = phasepoint['pos']
+                last.add(pos_file)
         for entry in os.scandir(self.directory['accepted']):
             if entry.is_file() and entry.path not in last:
                 yield entry.path
@@ -503,7 +499,7 @@ class PathEnsembleExt(PathEnsemble):
             with tarfile.open(self._traj_file, 'w') as tar:
                 for src, dest in source.items():
                     tar.add(src, arcname=os.path.basename(dest))
-        except OSError:
+        except OSError:  # pragma: no cover
             logger.warning(
                 'Could not find trajectory: "%s". Will not write.',
                 self._traj_file
@@ -519,6 +515,9 @@ class PathEnsembleExt(PathEnsemble):
         for pos in path.pos:
             filename = os.path.basename(pos[0])
             new_file_name = os.path.join(directory, filename)
+            if not os.path.isfile(new_file_name):
+                logger.critical('The restart path "%s" does not exist',
+                                new_file_name)
             new_pos.append((new_file_name, pos[1]))
         path.pos = new_pos
 

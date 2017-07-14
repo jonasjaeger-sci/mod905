@@ -371,7 +371,7 @@ class RandomGenerator(RandomGeneratorBase):
         return meanm + np.dot(norm, cho.T)
 
 
-class ReservoirSampler(object):
+class ReservoirSampler():
     """A class representing a reservoir sampler.
 
     The reservoir sampler will maintains a list of `k` items drawn
@@ -556,11 +556,10 @@ class MockRandomGenerator(RandomGeneratorBase):
         """
         if size is None:
             return self.rand(shape=1)
-        else:
-            numbers = np.zeros(size)
-            for i in np.nditer(numbers, op_flags=['readwrite']):
-                i[...] = self.rand(shape=1)[0]
-            return numbers
+        numbers = np.zeros(size)
+        for i in np.nditer(numbers, op_flags=['readwrite']):
+            i[...] = self.rand(shape=1)[0]
+        return numbers
 
     def multivariate_normal(self, mean, cov, cho=None, size=1):
         """Draw numbers from a multi-variate distribution.
@@ -621,5 +620,4 @@ def create_random_generator(settings):
     rgen = settings.get('rgen', None)
     if rgen is not None and rgen == 'mock':
         return MockRandomGenerator(seed=seed)
-    else:
-        return RandomGenerator(seed=seed)
+    return RandomGenerator(seed=seed)

@@ -36,7 +36,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.9.1.dev2'
+FULL_VERSION = '0.9.2.dev2'
 
 # create copies of scripts:
 try:
@@ -57,7 +57,7 @@ setup(name='pyretis',
                    'Environment :: Console',
                    'Intended Audience :: Science/Research',
                    ('License :: OSI Approved :: '
-                    'GNU Lesser General Public License v2.1 or later (LGPLv2.1+)'),
+                    'GNU Lesser General Public License v2 or later (LGPLv2+)'),
                    'Natural Language :: English',
                    'Operating System :: MacOS :: MacOS X',
                    'Operating System :: POSIX',

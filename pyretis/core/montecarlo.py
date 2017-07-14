@@ -59,9 +59,8 @@ def accept_reject_displace(rgen, system, trial):
     deltae = v_trial - system.particles.vpot
     if metropolis_accept_reject(rgen, system, deltae):
         return trial, v_trial, trial, v_trial, True
-    else:
-        return (system.particles.pos, system.particles.vpot,
-                trial, v_trial, False)
+    return (system.particles.pos, system.particles.vpot,
+            trial, v_trial, False)
 
 
 def accept_reject_momenta(rgen, system, dke, aimless=True):
@@ -87,8 +86,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
     """
     if aimless:  # for the aimless shooting we accept
         return True
-    else:
-        return metropolis_accept_reject(rgen, system, dke)
+    return metropolis_accept_reject(rgen, system, dke)
 
 
 def metropolis_accept_reject(rgen, system, deltae):
@@ -120,9 +118,8 @@ def metropolis_accept_reject(rgen, system, deltae):
     """
     if deltae < 0.0:  # short-cut to avoid calculating np.exp()
         return True
-    else:
-        pacc = np.exp(-system.temperature['beta'] * deltae)
-        return rgen.rand() < pacc
+    pacc = np.exp(-system.temperature['beta'] * deltae)
+    return rgen.rand(shape=1)[0] < pacc
 
 
 def max_displace_step(rgen, system, maxdx=0.1, idx=None):
