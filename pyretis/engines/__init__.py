@@ -40,6 +40,7 @@ from .external import ExternalMDEngine
 from .gromacs import GromacsEngine
 from .gromacs2 import GromacsEngine2
 from .cp2k import CP2KEngine
+from .vasp import VASPEngine
 
 
 def engine_factory(settings):
@@ -64,6 +65,7 @@ def engine_factory(settings):
         'langevin': {'cls': Langevin},
         'gromacs': {'cls': GromacsEngine},
         'gromacs2': {'cls': GromacsEngine2},
-        'cp2k': {'cls': CP2KEngine}
+        'cp2k': {'cls': CP2KEngine},
+        'vasp': {'cls': VASPEngine}
     }
     return generic_factory(settings, engine_map, name='engine')

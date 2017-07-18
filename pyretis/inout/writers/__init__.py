@@ -14,7 +14,7 @@ Package structure
 Modules
 ~~~~~~~
 
-cp2k.py (:py:mod:`pyretis.inout.writers.ck2kio`)
+cp2k.py (:py:mod:`pyretis.inout.writers.cp2kio`)
     Module for handling input/output from CP2K.
 
 fileio.py (:py:mod:`pyretis.inout.writers.fileio`)
