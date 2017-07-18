@@ -117,6 +117,37 @@ def _simple_line_parser(line):
     return [float(col) for col in line.split()]
 
 
+def _read_line_data(ncol, stripline, line_parser):
+    """Helper method to read data for :py:func:`.read_some_lines.`
+
+    Parameters
+    ----------
+    ncol : integer
+        The expected number of columns to read. If this is less than 1
+        it is not yet set. Note that we skip data which appear
+        inconsistent. A warning will be issued about this.
+    stripline : string
+        The line to read. Note that we assume that leading and
+        trailing spaces have been removed.
+    line_parser : callable
+        A method we use to parse a single line.
+    """
+    if line_parser is None:
+        # Just return data without any parsing:
+        return stripline, True, ncol
+    try:
+        linedata = line_parser(stripline)
+    except (ValueError, IndexError):
+        return None, False, -1
+    newcol = len(linedata)
+    if ncol == -1:  # first item
+        ncol = newcol
+    if newcol == ncol:
+        return linedata, True, ncol
+    # We assume that this is line is malformed --- skip it!
+    return None, False, -1
+
+
 def read_some_lines(filename, line_parser=_simple_line_parser,
                     block_label='#'):
     """Open a file and try to read as many lines as possible.
@@ -144,15 +175,14 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     data : list
         The data read from the file, arranged in dicts
     """
-    nblock = len(block_label)
     ncol = -1  # The number of columns
     new_block = {'comment': [], 'data': []}
     yield_block = False
     read_comment = False
     with open(filename, 'r') as fileh:
-        for line in fileh:
+        for i, line in enumerate(fileh):
             stripline = line.strip()
-            if stripline[:nblock] == block_label:
+            if stripline.startswith(block_label):
                 # this is a comment, then a new block will follow,
                 # unless this is a multi-line comment.
                 if read_comment:  # part of multiline comment...
@@ -160,7 +190,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
                 else:
                     if yield_block:
                         # Yield the current block
-                        yield_block = False  # just for completeness
+                        yield_block = False
                         yield new_block
                     new_block = {'comment': [stripline], 'data': []}
                     yield_block = True  # Data has been added
@@ -168,24 +198,18 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
                     read_comment = True
             else:
                 read_comment = False
-                if line_parser is None:
-                    new_block['data'].append(line)  # Note: Full line added
-                    yield_block = True  # Data has been added
+                data, _yieldb, _ncol = _read_line_data(ncol, stripline,
+                                                       line_parser)
+                if data:
+                    new_block['data'].append(data)
+                    ncol = _ncol
+                    yield_block = _yieldb
                 else:
-                    linedata = line_parser(stripline)
-                    newcol = len(linedata)
-                    if ncol == -1:  # first item
-                        ncol = newcol
-                    if newcol == ncol:
-                        new_block['data'].append(linedata)
-                        yield_block = True  # Data has been added
-                    else:
-                        # We assume that this is mal-formed data
-                        break
+                    logger.warning('Skipped malformed data in "%s", line: %i',
+                                   filename, i)
     # if the block has not been yielded, yield it
     if yield_block:
-        # Yield the current block if any
-        yield_block = False  # just for completeness
+        yield_block = False
         yield new_block
 
 
@@ -223,7 +247,7 @@ class Writer():
         self._header = None
         self.print_header = True
         if header is not None:
-            if 'width' in header:
+            if 'width' in header and 'labels' in header:
                 self._header = _make_header(header['labels'],
                                             header['width'],
                                             spacing=header.get('spacing', 1))
@@ -344,12 +368,9 @@ class CrossWriter(Writer):
         code.
         """
         linessplit = line.strip().split()
-        try:
-            step, inter = int(linessplit[0]), int(linessplit[1])
-            direction = -1 if linessplit[2] == '-' else 1
-            return step, inter, direction
-        except IndexError:
-            return None
+        step, inter = int(linessplit[0]), int(linessplit[1])
+        direction = -1 if linessplit[2] == '-' else 1
+        return step, inter, direction
 
     def generate_output(self, step, *data):
         """Generate output data to be written to a file or screen.
