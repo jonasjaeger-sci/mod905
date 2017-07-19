@@ -108,21 +108,6 @@ class WriterTest(unittest.TestCase):
         writer.header = txt
         self.assertEqual(writer.header, txt)
 
-    def test_adjust_coordinate(self):
-        """Test that the adjustment of coordinates work as intented."""
-        coord = np.array([10, ])
-        coord_ = adjust_coordinate(coord)
-        self.assertTrue(np.allclose(coord_, [[10., 0., 0.]]))
-        coord = np.array([i for i in range(10)])
-        coord.reshape(10, 1)
-        coord_ = adjust_coordinate(coord)
-        self.assertEqual(coord_.shape[0], 10)
-        self.assertEqual(coord_.shape[1], 3)
-        self.assertTrue(np.allclose(coord_[:, 1:], np.zeros((10, 2))))
-        coord = np.ones((10, 3))
-        coord_ = adjust_coordinate(coord)
-        self.assertTrue(coord is coord_)
-
     def test_read_txt_snapshot(self):
         """Test the read_txt_snapshot method."""
         filename = os.path.join(HERE, 'config.txt')

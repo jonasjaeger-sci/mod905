@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A simple test module for the writers.
-
-Here we test that we can write and read different output formats.
-"""
+"""A simple test module for the trajectory writers."""
 import logging
 import unittest
 import os
@@ -71,6 +68,10 @@ class TrajTest(unittest.TestCase):
 
     def test_adjust_coordinates(self):
         """Test that we can adjust coordinates."""
+        # 1D
+        coord = np.array([10, ])
+        coord_ = adjust_coordinate(coord)
+        self.assertTrue(np.allclose(coord_, [[10., 0., 0.]]))
         # 1 particle, 1D
         particles = Particles(dim=1)
         particles.add_particle(np.array([1.0]),
