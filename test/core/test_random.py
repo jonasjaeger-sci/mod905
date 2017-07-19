@@ -5,10 +5,20 @@
 import logging
 import unittest
 import numpy as np
+from numpy.random import RandomState
 from pyretis.core.system import System
 from pyretis.core.box import create_box
 from pyretis.core.particles import Particles
-from pyretis.core.random_gen import RandomGenerator
+from pyretis.core.particlefunctions import (
+    calculate_linear_momentum,
+    calculate_kinetic_temperature,
+)
+from pyretis.core.random_gen import (
+    RandomGenerator,
+    MockRandomGenerator,
+    ReservoirSampler,
+    create_random_generator,
+)
 logging.disable(logging.CRITICAL)
 
 
@@ -124,6 +134,167 @@ class RandomTest(unittest.TestCase):
             for i in range(dim):
                 std_diff = np.abs(std[:, i] - sigv) / sigv
                 self.assertTrue(all([i < tol for i in std_diff]))
+
+    def test_generate_maxwellian(self):
+        """Test the generate_maxwellian_velocities method."""
+        particles = Particles(dim=3)
+        dof = [1., 1., 1.]
+        heavy = []
+        light = []
+        for i in range(10):
+            if i % 2 == 0:
+                mass = 1
+                light.append(i)
+            else:
+                mass = 2
+                heavy.append(i)
+            particles.add_particle(np.zeros(3), np.zeros(3),
+                                   np.zeros(3), mass=mass)
+        rgen = RandomGenerator(seed=0)
+        for mom in (True, False):
+            rgen.generate_maxwellian_velocities(particles, 1.0, 2.0,
+                                                dof=dof, momentum=mom)
+            _, temp, _ = calculate_kinetic_temperature(particles, 1.0,
+                                                       dof=dof)
+            self.assertAlmostEqual(temp, 2.0)
+            close = np.allclose(np.zeros(3),
+                                calculate_linear_momentum(particles))
+            if mom:
+                self.assertTrue(mom)
+            else:
+                self.assertFalse(mom)
+        rgen.generate_maxwellian_velocities(particles, 1.0, 2.0,
+                                            dof=dof, momentum=True,
+                                            selection=heavy)
+        rgen.generate_maxwellian_velocities(particles, 1.0, 2.0,
+                                            dof=None, momentum=False,
+                                            selection=light)
+        _, temp, _ = calculate_kinetic_temperature(particles, 1.0,
+                                                   dof=dof)
+        self.assertAlmostEqual(temp, 2.0)
+        close = np.allclose(
+            np.zeros(3),
+            calculate_linear_momentum(particles, selection=heavy)
+        )
+        self.assertTrue(close)
+        close = np.allclose(
+            np.zeros(3),
+            calculate_linear_momentum(particles, selection=light)
+        )
+        self.assertFalse(close)
+
+    def test_state(self):
+        """Test that we can set and get the state of the generator."""
+        rgen = RandomGenerator(seed=123)
+        for _ in range(5):
+            rgen.random_integers(1, 1000)
+        state = rgen.get_state()
+        numbers1 = [rgen.random_integers(1, 1000) for _ in range(10)]
+        rgen.set_state(state)
+        numbers2 = [rgen.random_integers(1, 1000) for _ in range(10)]
+        for i, j in zip(numbers1, numbers2):
+            self.assertEqual(i, j)
+
+    def test_create(self):
+        """Test that we create random generators from settings."""
+        settings = {}
+        rgen = create_random_generator(settings)
+        self.assertEqual(rgen.seed, 0)
+        self.assertIsInstance(rgen, RandomGenerator)
+
+        settings = {'seed': 100}
+        rgen = create_random_generator(settings)
+        self.assertEqual(rgen.seed, 100)
+        self.assertIsInstance(rgen, RandomGenerator)
+
+        settings = {'rgen': 'mock', 'seed': 101}
+        rgen = create_random_generator(settings)
+        self.assertEqual(rgen.seed, 101)
+        self.assertIsInstance(rgen, MockRandomGenerator)
+
+
+class TestReservoirSampler(unittest.TestCase):
+    """Run the tests for the ReservoirSampler classe."""
+
+    def test_init(self):
+        """Test the initialization."""
+        rgen = ReservoirSampler()
+        self.assertIsInstance(rgen.rgen, RandomState)
+        rgen = ReservoirSampler(length=10, rgen=RandomGenerator(seed=1))
+        self.assertIsInstance(rgen.rgen, RandomGenerator)
+
+    def test_add_get(self):
+        """Test that we can add to the reservoir."""
+        rgen = ReservoirSampler(length=10, rgen=MockRandomGenerator(seed=1))
+        correct = [21, 0, 0, 0, 2, 2, 18, 29, 1, 0]
+        for i in range(30):
+            rgen.append(i)
+            self.assertEqual(len(rgen.reservoir), 10)
+        for i, j in zip(correct, rgen.reservoir):
+            self.assertEqual(i, j)
+        for i in range(10):
+            j = rgen.get_item()
+            self.assertEqual(correct[i], j)
+        logging.disable(logging.INFO)
+        with self.assertLogs('pyretis.core.random_gen', level='CRITICAL'):
+            j = rgen.get_item()
+        self.assertEqual(correct[0], j)
+        logging.disable(logging.CRITICAL)
+
+
+class TestMockRandomGenerator(unittest.TestCase):
+    """Run some tests for the MockRandomGenerator."""
+
+    def test_state(self):
+        """Test that we can get and set the state of the generator."""
+        rgen = MockRandomGenerator(seed=987)
+        for _ in range(5):
+            rgen.random_integers(1, 100)
+        state = rgen.get_state()
+        numbers1 = [rgen.random_integers(1, 100) for _ in range(10)]
+        rgen.set_state(state)
+        numbers2 = [rgen.random_integers(1, 100) for _ in range(10)]
+        for i, j in zip(numbers1, numbers2):
+            self.assertEqual(i, j)
+
+    def test_rand(self):
+        """Test that we can draw fake random numbers in [0, 1)."""
+        rgen = MockRandomGenerator(seed=0)
+        numbers = rgen.rand(shape=5)
+        self.assertTrue(np.allclose(numbers, rgen.rgen[0:5]))
+
+    def test_random_integers(self):
+        """Test that we can draw fake random integers."""
+        rgen = MockRandomGenerator(seed=0)
+        correct = [14, 10, 14, 15, 13]
+        for i in correct:
+            j = rgen.random_integers(10, 15)
+            self.assertEqual(i, j)
+        rgen = MockRandomGenerator(seed=0)
+        for _ in range(len(rgen.rgen)):
+            j = rgen.random_integers(4, 9)
+            self.assertTrue(4 <= j <= 9)
+
+    def test_normal(self):
+        """Test that we can draw fake normal numbers."""
+        rgen = MockRandomGenerator(seed=0)
+        numbers = rgen.normal()
+        self.assertAlmostEqual(numbers[0], rgen.rgen[0])
+        numbers = rgen.normal(loc=1.0, scale=10, size=5)
+        for i, j in zip(numbers, rgen.rgen[1:6]):
+            self.assertAlmostEqual(i, j)
+
+    def test_multivariate_normal(self):
+        """Test that we can draw fake normal numbers."""
+        rgen = MockRandomGenerator(seed=0)
+        correct = np.array([[0.0178008, 0.01044599]])
+        numbers = rgen.multivariate_normal(1.0, None)
+        self.assertTrue(np.allclose(correct, numbers))
+        numbers = rgen.multivariate_normal([1.0, 1.0], None, size=3)
+        correct = np.array([[0.01765968, 0.01976767],
+                            [0.01537996, 0.01986571],
+                            [0.01363436, 0.01553565]])
+        self.assertTrue(np.allclose(correct, numbers))
 
 
 if __name__ == '__main__':
