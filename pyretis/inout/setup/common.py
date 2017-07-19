@@ -78,7 +78,7 @@ def import_from(module_path, function_name):
         module_name = os.path.splitext(module_name)[0]
         # imp is deprecated for python 3.5 -> we need to check if we are
         # using python3.5 or earlier:
-        if sys.version_info < (3, 5):
+        if sys.version_info < (3, 5):  # pragma: no cover
             module = imp.load_source(module_name, module_path)
         else:
             spec = importlib.util.spec_from_file_location(

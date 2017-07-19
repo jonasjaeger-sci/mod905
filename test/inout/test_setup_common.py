@@ -41,6 +41,9 @@ class TestImportFrom(unittest.TestCase):
         module = 'path-that-should-not-be'
         with self.assertRaises(ValueError):
             import_from(module, klass)
+        module = os.path.join(LOCAL_DIR, 'isnothere.py')
+        with self.assertRaises(ValueError):
+            import_from(module, klass)
 
 
 class TestCheckSettings(unittest.TestCase):
