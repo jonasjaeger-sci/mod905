@@ -80,19 +80,21 @@ class ForceField(object):
 
         Returns
         -------
-        out : None
-            Returns `None` and updates `self.potential` and
-            `self.params`.
+        out : boolean
+            Returns `True` and updates `self.potential` and
+            `self.params` if the potential was added. Returns
+            `False` otherwise.
         """
         if potential is None:
             msg = ('Trying to add empty potential to force field.\n'
                    'This was ignored -- please check your settings.')
             logger.warning(msg)
-            return None
+            return False
         self.potential.append(potential)
         if parameters is not None:
             potential.set_parameters(parameters)
         self.params.append(parameters)
+        return True
 
     def remove_potential(self, potential):
         """Remove a selected potential from the force field.
@@ -115,7 +117,7 @@ class ForceField(object):
             return potrm, paramrm
         else:
             logger.warning('Potential not found in the force field functions')
-            return None
+            return None, None
 
     def update_potential_parameters(self, potential, params):
         """Update the potential parameters of the given potential function.
