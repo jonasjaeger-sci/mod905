@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test functionality for the path classes."""
+"""Test functionality for the PathEnsemble classes."""
 import logging
 import os
 import unittest

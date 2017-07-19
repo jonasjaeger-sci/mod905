@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the engine classes"""
+"""Test the SimulationTask class."""
 import logging
 import unittest
 from pyretis.simulation.simulation_task import SimulationTask, execute_now

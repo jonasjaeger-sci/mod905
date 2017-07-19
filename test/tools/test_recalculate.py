@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the tools in pyretis.tools."""
+"""Test the recalculate orderparameter tools in pyretis.tools"""
 import logging
 import os
 import tarfile

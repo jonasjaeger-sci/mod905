@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A test module for the  xyzio module."""
+"""A test module for the xyzio module."""
 import logging
 import unittest
 import tempfile
