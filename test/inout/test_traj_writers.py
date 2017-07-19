@@ -7,18 +7,20 @@ import unittest
 import tempfile
 import os
 import numpy as np
-from numpy.random import rand, random
+from numpy.random import rand, random, randint
 from pyretis.core import create_box, System, Particles, Path, PathExt
 from pyretis.tools.lattice import generate_lattice
 from pyretis.inout.writers.writers import (
     adjust_coordinate,
     TrajWriter,
+    PathIntWriter,
+    PathExtWriter,
 )
 from pyretis.inout.writers import get_writer
 logging.disable(logging.CRITICAL)
 
 
-LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def create_test_system():
@@ -54,6 +56,45 @@ def create_path():
         phasepoints.append(phasepoint)
         path.append(phasepoint)
     return system, phasepoints, path
+
+
+def _add_path_data(path_data, phasepoint):
+    """Add path data for storage."""
+    if not path_data:
+        step = 0
+    else:
+        step = path_data[-1][0] + 1
+    new_data = [step, phasepoint['pos'][0], phasepoint['pos'][1],
+                phasepoint['vel']]
+    path_data.append(new_data)
+
+
+def create_external_path(random_length=False):
+    """Create an external path for testing."""
+    path_data = []
+    path = PathExt(None)
+    phasepoint = {'pos': ('initial.g96', None), 'vel': False,
+                  'order': [random(), None], 'vpot': None,
+                  'ekin': None}
+    path.append(phasepoint)
+    _add_path_data(path_data, phasepoint)
+    if random_length:
+        length = randint(10, 100)
+    else:
+        length = 5
+    for i in range(length, 0, -1):
+        phasepoint = {'pos': ('trajB.trr', i), 'vel': True,
+                      'order': [random(), None], 'vpot': None,
+                      'ekin': None}
+        path.append(phasepoint)
+        _add_path_data(path_data, phasepoint)
+    for i in range(0, length):
+        phasepoint = {'pos': ('trajF.trr', i), 'vel': False,
+                      'order': [random(), None], 'vpot': None,
+                      'ekin': None}
+        path.append(phasepoint)
+        _add_path_data(path_data, phasepoint)
+    return path, path_data
 
 
 def generate_snaplines(path_writer, conf_writer, phasepoints, system, path):
@@ -138,7 +179,7 @@ class TrajTest(unittest.TestCase):
         system = create_test_system()
         txt_writer = get_writer('trajtxt', {'fmt': 'yes'})
         snapshot = txt_writer.generate_output(0, system)
-        correct = os.path.join(LOCAL_DIR, 'generated.txt')
+        correct = os.path.join(HERE, 'generated.txt')
         with open(correct, 'r') as fileh:
             for lines1, lines2 in zip(fileh, snapshot):
                 self.assertEqual(lines1.rstrip(), lines2.rstrip())
@@ -209,23 +250,45 @@ class TrajTest(unittest.TestCase):
                     self.assertEqual(lines, posvel)
                     idx += 1
 
+    def test_pathint_read_write(self):
+        """Test that we can read write with PathIntWriter."""
+        writer = PathIntWriter()
+        reader = PathIntWriter()
+        statuses = ('ACC', 'BWI', 'FTL')
+        path_phasepoints = []
+        with tempfile.NamedTemporaryFile() as tmp:
+            for i, status in zip(range(3), statuses):
+                _, phasepoints, path = create_path()
+                path_phasepoints.append(phasepoints)
+                for line in writer.generate_output(i, path, status):
+                    tmp.write('{}\n'.format(line).encode('utf-8'))
+            tmp.flush()
+            del writer
+            for status, path, phasepoints in zip(statuses,
+                                                 reader.load(tmp.name),
+                                                 path_phasepoints):
+                self.assertEqual(status, path['comment'][0].split()[-1])
+                for snapshot, phasepoint in zip(path['data'], phasepoints):
+                    for key in ('pos', 'vel'):
+                        self.assertTrue(np.allclose(snapshot[key],
+                                                    phasepoint[key]))
+
+    def test_pathint_read_error(self):
+        """Test what happens in we read faulty input with PathIntWriter."""
+        filename = os.path.join(HERE, 'traj-error1.txt')
+        reader = PathIntWriter().load(filename)
+        next(reader)
+        next(reader)
+        with self.assertRaises(ValueError):
+            next(reader)
+        filename = os.path.join(HERE, 'traj-error2.txt')
+        reader = PathIntWriter().load(filename)
+        with self.assertRaises(ValueError):
+            next(reader)
+
     def test_path_ext_writer(self):
         """Test the path external writer."""
-        path = PathExt(None)
-        phasepoint = {'pos': ('initial.g96', None), 'vel': False,
-                      'order': [random(), None], 'vpot': None,
-                      'ekin': None}
-        path.append(phasepoint)
-        for i in range(5, 0, -1):
-            phasepoint = {'pos': ('trajB.trr', i), 'vel': True,
-                          'order': [random(), None], 'vpot': None,
-                          'ekin': None}
-            path.append(phasepoint)
-        for i in range(0, 5):
-            phasepoint = {'pos': ('trajF.trr', i), 'vel': False,
-                          'order': [random(), None], 'vpot': None,
-                          'ekin': None}
-            path.append(phasepoint)
+        path, _ = create_external_path()
         writer = get_writer('pathtrajext')
         correct = ['# Cycle: 0, status: ACC',
                    '#     Step              Filename       index    vel',
@@ -244,6 +307,33 @@ class TrajTest(unittest.TestCase):
         for corr, snap in zip(correct, writer.generate_output(0, path, 'ACC')):
             self.assertEqual(corr, snap)
 
+    def test_path_ext_read_write(self):
+        """Test the read write for the PathExtWriter class."""
+        writer = PathExtWriter()
+        reader = PathExtWriter()
+        statuses = ('ACC', 'BWI', 'FTL')
+        all_path_data = []
+        with tempfile.NamedTemporaryFile() as tmp:
+            for i, status in zip(range(3), statuses):
+                path, data = create_external_path(random_length=True)
+                all_path_data.append(data)
+                for line in writer.generate_output(i, path, status):
+                    string = '{}\n'.format(line)
+                    tmp.write(string.encode('utf-8'))
+            tmp.flush()
+            del writer
+            for status, path, data in zip(statuses, reader.load(tmp.name),
+                                          all_path_data):
+                self.assertEqual(status, path['comment'][0].split()[-1])
+                for snapshot, datai in zip(path['data'], data):
+                    self.assertEqual(int(snapshot[0]), datai[0])
+                    self.assertEqual(snapshot[1], datai[1])
+                    if datai[2] is None:
+                        self.assertEqual(int(snapshot[2]), 0)
+                    else:
+                        self.assertEqual(int(snapshot[2]), datai[2])
+                    vel = True if snapshot[3] == '-1' else False
+                    self.assertEqual(vel, datai[3])
 
 if __name__ == '__main__':
     unittest.main()
