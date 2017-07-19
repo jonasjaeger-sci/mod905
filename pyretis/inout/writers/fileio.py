@@ -141,7 +141,7 @@ class FileIO(object):
                 else:
                     self.fileh.write(towrite)
                     status = True
-            except (OSError, IOError) as error:
+            except (OSError, IOError) as error:  # pragma: no cover
                 msg = 'Write I/O error ({}): {}'.format(error.errno,
                                                         error.strerror)
                 logger.critical(msg)
