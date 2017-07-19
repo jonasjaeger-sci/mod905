@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A simple test module for the trajectory writers."""
+"""Test the trajectory writers."""
 import logging
 import unittest
+import tempfile
 import os
 import numpy as np
+from numpy.random import rand, random
 from pyretis.core import create_box, System, Particles, Path, PathExt
 from pyretis.tools.lattice import generate_lattice
-from pyretis.inout.writers.writers import adjust_coordinate
+from pyretis.inout.writers.writers import (
+    adjust_coordinate,
+    TrajWriter,
+)
 from pyretis.inout.writers import get_writer
 logging.disable(logging.CRITICAL)
 
@@ -36,14 +41,14 @@ def create_path():
     """Setup a simple path for a test."""
     system = create_test_system()
     system.particles.name = ['X'] * system.particles.npart
-    system.box = create_box(length=[222.2, 222.2, 222.2])
+    system.box = create_box(length=rand(3))
     path = Path(None)
     phasepoints = []
     for _ in range(10):
-        pos = np.random.rand(*system.particles.pos.shape)
-        vel = np.random.rand(*pos.shape)
-        vpot = np.random.random()
-        ekin = np.random.random()
+        pos = rand(*system.particles.pos.shape)
+        vel = rand(*pos.shape)
+        vpot = random()
+        ekin = random()
         phasepoint = {'order': [pos[0][0], pos[1][0]], 'pos': pos,
                       'vel': vel, 'vpot': vpot, 'ekin': ekin}
         phasepoints.append(phasepoint)
@@ -138,6 +143,50 @@ class TrajTest(unittest.TestCase):
             for lines1, lines2 in zip(fileh, snapshot):
                 self.assertEqual(lines1.rstrip(), lines2.rstrip())
 
+    def test_traj_writer_novel(self):
+        """Test the TrajWriter class when we include velocities."""
+        writer = TrajWriter(write_vel=False, fmt='full')
+        reader = TrajWriter()
+        system, phasepoints, path = create_path()
+        with tempfile.NamedTemporaryFile() as tmp:
+            for step, snapshot in enumerate(path.trajectory()):
+                system.particles.set_particle_state(snapshot)
+                for line in writer.format_snapshot(step, system):
+                    string = '{}\n'.format(line)
+                    tmp.write(string.encode('utf-8'))
+            tmp.flush()
+            del writer
+            for block, snapshot in zip(reader.load(tmp.name), phasepoints):
+                self.assertTrue(np.allclose(block['box'], system.box.length))
+                xyz = np.transpose(np.vstack((block['x'],
+                                              block['y'],
+                                              block['z'])))
+                self.assertTrue(np.allclose(xyz, snapshot['pos']))
+
+    def test_traj_writer_vel(self):
+        """Test the TrajWriter class when we exclude velocities."""
+        writer = TrajWriter(write_vel=True, fmt='full')
+        reader = TrajWriter()
+        system, phasepoints, path = create_path()
+        with tempfile.NamedTemporaryFile() as tmp:
+            for step, snapshot in enumerate(path.trajectory()):
+                system.particles.set_particle_state(snapshot)
+                for line in writer.format_snapshot(step, system):
+                    string = '{}\n'.format(line)
+                    tmp.write(string.encode('utf-8'))
+            tmp.flush()
+            del writer
+            for block, snapshot in zip(reader.load(tmp.name), phasepoints):
+                self.assertTrue(np.allclose(block['box'], system.box.length))
+                xyz = np.transpose(np.vstack((block['x'],
+                                              block['y'],
+                                              block['z'])))
+                vel = np.transpose(np.vstack((block['vx'],
+                                              block['vy'],
+                                              block['vz'])))
+                self.assertTrue(np.allclose(xyz, snapshot['pos']))
+                self.assertTrue(np.allclose(vel, snapshot['vel']))
+
     def test_path_int_writer(self):
         """Test the path internal writer."""
         _, phasepoints, path = create_path()
@@ -164,17 +213,17 @@ class TrajTest(unittest.TestCase):
         """Test the path external writer."""
         path = PathExt(None)
         phasepoint = {'pos': ('initial.g96', None), 'vel': False,
-                      'order': [np.random.random(), None], 'vpot': None,
+                      'order': [random(), None], 'vpot': None,
                       'ekin': None}
         path.append(phasepoint)
         for i in range(5, 0, -1):
             phasepoint = {'pos': ('trajB.trr', i), 'vel': True,
-                          'order': [np.random.random(), None], 'vpot': None,
+                          'order': [random(), None], 'vpot': None,
                           'ekin': None}
             path.append(phasepoint)
         for i in range(0, 5):
             phasepoint = {'pos': ('trajF.trr', i), 'vel': False,
-                          'order': [np.random.random(), None], 'vpot': None,
+                          'order': [random(), None], 'vpot': None,
                           'ekin': None}
             path.append(phasepoint)
         writer = get_writer('pathtrajext')
