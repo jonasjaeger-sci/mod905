@@ -16,7 +16,9 @@ Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 apply_format (:py:func:`.apply_format`)
-    Apply a format string to a given value.
+    Apply a format string to a given float value. This method
+    can be used for formatting text for tables (i.e. if we want
+    a fixed width).
 
 check_python_version (:py:func:`.check_python_version`)
     Method that will give warnings when we use older and untested
@@ -129,7 +131,7 @@ def create_backup(outputfile):
 
 
 def apply_format(value, fmt):
-    """Apply a format string to a given value.
+    """Apply a format string to a given float value.
 
     Here we check the formatting of a float. We are *forcing* a
     *maximum length* on the resulting string. This is to avoid problems
@@ -186,7 +188,7 @@ def _remove_extension(filename):
     """
     try:
         return os.path.splitext(filename)[0]
-    except IndexError:
+    except IndexError:  # pragma: no cover
         return filename
 
 
@@ -214,7 +216,7 @@ def make_dirs(dirname):
         msg = 'Created directory: "{}"'.format(dirname)
         return msg
     except OSError as err:
-        if err.errno != errno.EEXIST:
+        if err.errno != errno.EEXIST:  # pragma: no cover
             raise err
         if os.path.isfile(dirname):
             msg = '"{}" is a file. Will abort!'
@@ -224,7 +226,7 @@ def make_dirs(dirname):
             return msg
 
 
-def print_to_screen(txt=None, level=None):
+def print_to_screen(txt=None, level=None):  # pragma: no cover
     """Method to print output to standard out.
 
     This method is included to ensure that output from PyRETIS to the
@@ -336,7 +338,7 @@ def name_file(name, extension, path=None):
     return add_dirname(os.extsep.join([name, extension]), path)
 
 
-def check_python_version():
+def check_python_version():  # pragma: no cover
     """Method that will give a warning about old python version(s)."""
     pyversion = sys.version.split()[0]
     if sys.version_info < (3, 0):
@@ -347,11 +349,11 @@ def check_python_version():
         raise SystemExit(msgtxt)
 
 
-class PyretisLogFormatter(logging.Formatter):
+class PyretisLogFormatter(logging.Formatter):  # pragma: no cover
     """Hardcoded formatter for the PyRETIS log file.
 
     This formatter will just adjust multiline messages to have some
-    indentation
+    indentation.
     """
     def format(self, record):
         out = logging.Formatter.format(self, record)
