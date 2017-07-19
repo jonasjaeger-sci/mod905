@@ -988,9 +988,11 @@ class PathIntWriter(Writer):
                 if dim is None:
                     dim = len(raw) // 2
                     if dim > 3 or dim < 1:
-                        raise ValueError('Malformed trajectory data!')
+                        raise ValueError(
+                            'Malformed trajectory data: dim = {}?'.format(dim)
+                        )
                 pos.append(raw[:dim])
-                vel.append(raw[dim:])
+                vel.append(raw[dim:2*dim])
         if pos:
             snapshots.append({'pos': np.array(pos),
                               'vel': np.array(vel)})
