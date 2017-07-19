@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A simple test module for parsing a settings input file.
-
-Here we test that we understand the input file and that fail in
-a predictable way.
-"""
+"""A test of the pairpotential module."""
 import logging
 import unittest
 from pyretis.forcefield.potentials.pairpotentials.pairpotential import (
