@@ -65,7 +65,7 @@ class EngineBase(metaclass=ABCMeta):
         if not add:
             if path.length >= path.maxlen:
                 status = 'Max. path length exceeded'
-            else:
+            else:  # pragma: no cover
                 status = 'Could not add for unknown reason'
             success = False
             stop = True

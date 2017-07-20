@@ -5,8 +5,14 @@
 import logging
 import unittest
 import numpy as np
-from pyretis.engines import MDEngine, Langevin, VelocityVerlet, Verlet
+from pyretis.engines import (
+    MDEngine,
+    Langevin,
+    VelocityVerlet,
+    Verlet,
+)
 from pyretis.core import System, create_box, Particles
+from pyretis.core.path import Path
 from pyretis.core.random_gen import MockRandomGenerator
 from pyretis.orderparameter import OrderParameterPosition
 from pyretis.forcefield import ForceField
@@ -133,6 +139,7 @@ class EngineTest(unittest.TestCase):
         self.assertTrue(np.allclose(system.box.cell, box))
 
     def test_modify_velocities(self):
+        """Test that the engine can modify velocities."""
         system = prepare_test_system()
         eng = MDEngine(1, description='Mock engine for testing')
         rgen = MockRandomGenerator(seed=1)
@@ -179,12 +186,12 @@ class EngineTest(unittest.TestCase):
                                         TISMOL_VEL[i]))
             eng.integration_step(system)
 
-    def test_langevin_negative_gamma_fail(self):
+    def test_langevin_negative_gamma(self):
         """Test that we fail for a negative gamma value."""
         system = prepare_test_system()
         eng = Langevin(0.002, -0.3, rgen='mock', seed=1, high_friction=False)
         with self.assertRaises(ValueError):
-            eng._init_parameters(system)
+            eng._init_parameters(system)  # pylint: disable=protected-access
 
     def test_langevin_hf(self):
         """Test the high friction variant of the Langevin engine."""
@@ -230,6 +237,46 @@ class EngineTest(unittest.TestCase):
             eng.integration_step(system)
             self.assertAlmostEqual(system.particles.pos[0][0], correct_pos[i])
             self.assertAlmostEqual(system.particles.vel[0][0], correct_vel[i])
+
+    def test_add_to_path(self):
+        """Test that we can add to paths from the engine."""
+        eng = MDEngine(1.0, 'Just testing')
+        path = Path(None, maxlen=10)
+        left = -1.0
+        right = 8.0
+        for i in range(8):
+            phasepoint = {'order': [1.0 * i], 'pos': np.ones(3) * i,
+                          'vel': np.ones(3) * i, 'vpot': i, 'ekin': i}
+            status, success, stop, add = eng.add_to_path(path, phasepoint,
+                                                         left, right)
+            self.assertEqual(status, 'Running propagate...')
+            self.assertFalse(success)
+            self.assertFalse(stop)
+            self.assertTrue(add)
+        phasepoint = {'order': [10.], 'pos': np.ones(3),
+                      'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        status, success, stop, add = eng.add_to_path(path, phasepoint,
+                                                     left, right)
+        self.assertEqual(status, 'Crossed right interface!')
+        self.assertTrue(success)
+        self.assertTrue(stop)
+        self.assertTrue(add)
+        phasepoint = {'order': [9.], 'pos': np.ones(3),
+                      'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        status, success, stop, add = eng.add_to_path(path, phasepoint,
+                                                     left, right)
+        self.assertEqual(status, 'Max. path length exceeded!')
+        self.assertFalse(success)
+        self.assertTrue(stop)
+        self.assertTrue(add)
+        phasepoint = {'order': [9.], 'pos': np.ones(3),
+                      'vel': np.ones(3), 'vpot': 0.0, 'ekin': 0.0}
+        status, success, stop, add = eng.add_to_path(path, phasepoint,
+                                                     left, right)
+        self.assertEqual(status, 'Max. path length exceeded!')
+        self.assertFalse(success)
+        self.assertTrue(stop)
+        self.assertFalse(add)
 
 
 if __name__ == '__main__':
