@@ -1,0 +1,31 @@
+# This file was created Mon Jan  9 13:51:17 2017
+# Created by:
+#                  :-) GROMACS - gmx energy, VERSION 5.1.4 (-:
+# 
+# Executable:   /home/andersle/opt/gromacs/5.1.4-single/bin/gmx_5.1.4
+# Data prefix:  /home/andersle/opt/gromacs/5.1.4-single
+# Command line:
+#   gmx_5.1.4 energy -f minim.edr
+# gmx energy is part of G R O M A C S:
+#
+# Good ROcking Metal Altar for Chronical Sinners
+#
+@    title "GROMACS Energies"
+@    xaxis  label "Time (ps)"
+@    yaxis  label "(kJ/mol), (bar), (K)"
+@TYPE xy
+@ view 0.15, 0.15, 0.75, 0.85
+@ legend on
+@ legend box on
+@ legend loctype view
+@ legend 0.78, 0.8
+@ legend length 2
+@ s0 legend "Potential"
+@ s1 legend "Pressure"
+@ s2 legend "T-rest"
+    0.000000  -937898.125000  -22567.054688    0.000000
+    1.000000  -965421.687500  -22762.349609    0.000000
+    2.000000  -992991.000000  -22956.455078    0.000000
+    3.000000  -1015228.375000  -23085.162109    0.000000
+    4.000000  -1037830.125000  -23215.666016    0.000000
+    5.000000  -1046103.312500  -23260.259766    0.000000

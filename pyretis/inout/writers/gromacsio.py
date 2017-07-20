@@ -616,12 +616,12 @@ def read_trr_file(filename, read_data=True):
                     data = None
                 yield header, data
             except EOFError:
-                raise StopIteration
+                return
             except struct.error:
                 logger.warning(
                     'Could not read frame from .trr file. Stopping!'
                 )
-                raise StopIteration
+                return
 
 
 def read_trr_frame(filename, index):
@@ -639,9 +639,9 @@ def read_trr_frame(filename, index):
                 idx += 1
                 if idx > index:
                     logger.error('Frame %i not found in %s', index, filename)
-                    return None
+                    return None, None
             except EOFError:
-                return None
+                return None, None
 
 
 def trr_frame_to_g96(trr_file, index, outfile):
@@ -717,7 +717,7 @@ def reverse_trr(filename, outname, print_progress=True):
                 break
         # Loop through headers in reverse and write data.
         for header, header_loc, header_size in reversed(all_headers):
-            if print_progress:
+            if print_progress:  # pragma: no cover
                 print('Processing step {} time {}'.format(header['step'],
                                                           header['time']))
             data_size = sum([header[key] for key in TRR_DATA_ITEMS])
