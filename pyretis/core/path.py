@@ -611,7 +611,7 @@ class PathBase():
             new_point = {key: val for key, val in phasepoint.items()}
             new_point['vel'] = self.reverse_velocities(new_point['vel'])
             app = new_path.append(new_point)
-            if not app:
+            if not app:  # pragma: no cover
                 msg = 'Could not reverse path'
                 logger.error(msg)
                 return None
