@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PotentialFunction']
 
 
-class PotentialFunction(object):
+class PotentialFunction():
     """Base class for a generic potential function.
 
     Generic class for potential functions.
@@ -72,7 +72,7 @@ class PotentialFunction(object):
         out : boolean
             True if the check(s) pass.
         """
-        if len(self.params) == 0:
+        if not self.params:
             logger.warning('No parameters are set for the potential')
             return False
         return True
