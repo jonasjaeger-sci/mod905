@@ -23,7 +23,7 @@ Examples
 ~~~~~~~~
 >>> from pyretis.core.box import create_box
 
->>> box = create_box(size=[10, 10, 10], periodic=[True, False, True])
+>>> box = create_box(length=[10, 10, 10], periodic=[True, False, True])
 """
 from abc import ABCMeta, abstractmethod
 import logging
