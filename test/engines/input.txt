@@ -1,0 +1,4 @@
+This files contains some settings
+a = 1
+b = 100
+another setting = text

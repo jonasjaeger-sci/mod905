@@ -320,9 +320,12 @@ class ExternalMDEngine(EngineBase):
     @staticmethod
     def _removefile(filename):
         """Remove a given file if it exist."""
-        if os.path.isfile(filename):
-            logger.debug('Removing: %s', filename)
+        try:
             os.remove(filename)
+            logger.debug('Removing: %s', filename)
+        except OSError:
+            logger.debug('Could not remove: %s', filename)
+            pass
 
     def _remove_files(self, dirname, files):
         """Remove files from a directory.
