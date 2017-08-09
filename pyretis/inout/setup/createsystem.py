@@ -493,9 +493,11 @@ def create_velocities(system, settings, vel):
         target = vel_settings['scale']
         # just set the velocities to some temperature for now
         # the scaling is done later by calling system.extra_setup()
-        gen_settings = {'distribution': 'maxwell',
-                        'momentum': system.particles.npart != 1,
-                        'temperature': settings['system']['temperature']}
+        gen_settings = {
+            'distribution': 'maxwell',
+            'momentum': system.particles.npart != 1,
+            'temperature': settings['system'].get('temperature', 1.0),
+        }
         system.generate_velocities(**gen_settings)
         msg = 'Scaling velocities to total energy {}'.format(target)
         logger.debug(msg)

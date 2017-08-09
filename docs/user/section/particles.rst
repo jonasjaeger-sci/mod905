@@ -21,7 +21,7 @@ Example:
 
     position = {'file': 'initial.gro'}
     velocity = {'generate': 'maxwell',
-                'set-temperature': 2.0,
+                'temperature': 2.0,
                 'momentum': True,
                 'seed': 0}
     mass = {'Ar': 1.0}
@@ -133,7 +133,7 @@ Example:
 .. code-block:: rst
 
     velocity = {'generate': 'maxwell',
-                'set-temperature': 2.0,
+                'temperature': 2.0,
                 'momentum': True,
                 'seed': 0}
 
@@ -146,7 +146,7 @@ The following settings must be provided:
 
 The following settings are optional:
 
-* ``'set-temperature'`` which specifies the desired temperature in
+* ``'temperature'`` which specifies the desired temperature in
   internal units. If this is not provided, the value set by the
   input keyword ``temperature`` is used.
 

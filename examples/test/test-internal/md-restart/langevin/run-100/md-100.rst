@@ -26,7 +26,7 @@ position = {'generate': 'fcc',
             'density': 0.9}
 
 velocity = {'generate': 'maxwell',
-            'set-temperature': 2.0,
+            'temperature': 2.0,
             'momentum': True,
             'seed': 0}
 
