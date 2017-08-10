@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
+"""This is just for testing that we can execute external programs."""
 import sys
 
 
 if __name__ == '__main__':
+    # pylint: disable=invalid-name
     args = sys.argv
     if len(args) > 1:
         sys.exit(1)

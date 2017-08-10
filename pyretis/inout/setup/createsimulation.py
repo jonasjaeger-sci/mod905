@@ -189,6 +189,11 @@ def create_mdflux_simulation(settings, system, engine):
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
     sim = settings['simulation']
+    for key in ('steps', 'interfaces'):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     return SimulationMDFlux(system, order_function, engine,
                             sim['interfaces'],
                             steps=sim['steps'],
@@ -207,11 +212,16 @@ def create_umbrellaw_simulation(settings, system):
 
     Returns
     -------
-    out : list of object(s) like :py:class:`.UmbrellaWindowSimulation`
-        The object(s) representing the simulation(s) to run.
+    out : object like :py:class:`.UmbrellaWindowSimulation`
+        The object representing the simulation to run.
     """
     sim = settings['simulation']
     rgen = create_random_generator(sim)
+    for key in ('umbrella', 'over', 'maxdx', 'mincycle'):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     return UmbrellaWindowSimulation(system, sim['umbrella'],
                                     sim['over'], rgen,
                                     sim['maxdx'],
@@ -283,12 +293,14 @@ def _create_tis_single_simulation(settings, system, engine):
         msgtxt = 'No order parameter created!'
         logger.critical(msgtxt)
         raise ValueError(msgtxt)
-    if 'path-ensemble' in settings:
-        path_ensemble = settings['path-ensemble']
-    else:
-        path_ensemble = create_path_ensemble(settings, engine.engine_type)
+    path_ensemble = create_path_ensemble(settings, engine.engine_type)
     rgen = create_random_generator(settings['tis'])
     sim = settings['simulation']
+    for key in ('steps',):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     return SimulationSingleTIS(system, order_function, engine,
                                path_ensemble,
                                rgen,
@@ -326,6 +338,11 @@ def create_retis_simulation(settings, system, engine):
                                               include_zero=True,
                                               exe_dir=exe_dir)
     rgen = create_random_generator(settings['tis'])
+    for key in ('steps',):
+        if key not in sim:
+            msgtxt = 'Simulation setting "{}" is missing!'.format(key)
+            logger.critical(msgtxt)
+            raise ValueError(msgtxt)
     return SimulationRETIS(system, order_function, engine,
                            path_ensembles,
                            rgen,

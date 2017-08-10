@@ -713,7 +713,7 @@ def generate_system_conversions(system1, system2):
                            system1, system2, dim)
 
 
-def print_table(unit, system=False):
+def print_table(unit, system=False):  # pragma: no cover
     """Print out tables with conversion factors.
 
     This is a table in rst format which is useful for displaying
@@ -874,9 +874,9 @@ def _check_input_unit(unit, dim, input_unit):
                 raise LookupError(msg)
             else:
                 return value, unit_dim
-        except ValueError:
+        except TypeError:
             msg = 'Could not understand {} unit: {}'.format(dim, input_unit)
-            raise ValueError(msg)
+            raise TypeError(msg)
     else:  # Try do get values from default:
         try:
             value, unit_dim = UNIT_SYSTEMS[unit][dim]
@@ -980,7 +980,7 @@ def units_from_settings(settings):
     return msg
 
 
-def _examples():
+def _examples():  # pragma: no cover
     """Just some examples of usage."""
     # Create new system and print it out:
     new_system = {'pyretis': {'length': (10, 'A'),
@@ -1020,5 +1020,5 @@ def _examples():
                 generate_system_conversions(sys1, sys2)
     write_conversions(filename='units-example.txt')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     _examples()

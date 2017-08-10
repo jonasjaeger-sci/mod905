@@ -8,10 +8,17 @@ We also do some test to check the correctness of values.
 import logging
 import os
 import unittest
-from pyretis.core.units import (create_conversion_factors,
-                                generate_system_conversions,
-                                read_conversions,
-                                CONVERT, UNITS)
+import tempfile
+from pyretis.core.units import (
+    create_conversion_factors,
+    generate_system_conversions,
+    generate_conversion_factors,
+    read_conversions,
+    CONVERT,
+    UNITS,
+    write_conversions,
+    units_from_settings,
+)
 logging.disable(logging.CRITICAL)
 
 
@@ -95,20 +102,30 @@ class UnitsTest(unittest.TestCase):
 
     def test_creation_of_units(self):
         """Test that creation of units works and fails as expected."""
-        self.assertRaises(ValueError, create_conversion_factors, ['test'],
-                          dict(length=None, energy=None, mass=None,
-                               charge=None))
-        self.assertRaises(ValueError, create_conversion_factors, ['test'],
-                          dict(length=(1.0, 'm'), energy=(1.0, 'J'),
-                               mass=(1.0, 'kg'), charge=None))
-        self.assertRaises(ValueError, create_conversion_factors, ['test'],
-                          dict(length=(1.0, 'm'), energy=(1.0, 'J'),
-                               mass=(1.0, 'kg'),
-                               charge='a non-existing unit'))
+        with self.assertRaises(ValueError):
+            create_conversion_factors('test', length=None, energy=None,
+                                      mass=None, charge=None)
+        with self.assertRaises(ValueError):
+            create_conversion_factors('test', length=(1.0, 'm'),
+                                      energy=(1.0, 'J'), mass=(1.0, 'kg'),
+                                      charge=None)
+        with self.assertRaises(ValueError):
+            create_conversion_factors('test', length=(1.0, 'm'),
+                                      energy=(1.0, 'J'), mass=(1.0, 'kg'),
+                                      charge='a non-existing unit')
+        with self.assertRaises(LookupError):
+            create_conversion_factors('test', length=(1.0, 'strange_unit'),
+                                      energy=(1.0, 'J'), mass=(1.0, 'kg'),
+                                      charge='e')
+        with self.assertRaises(TypeError):
+            create_conversion_factors('test', length=1.0,
+                                      energy=(1.0, 'J'), mass=(1.0, 'kg'),
+                                      charge='e')
         # the next one should be successful
         create_conversion_factors('test', length=(1.0, 'm'),
                                   energy=(1.0, 'J'), mass=(1.0, 'kg'),
                                   charge='e')
+        generate_system_conversions('test', 'real')
         # check if we indeed created all conversions
         for key in CONVERT:
             dimtxt = 'for dimension "{}"'.format(key)
@@ -122,9 +139,10 @@ class UnitsTest(unittest.TestCase):
                 msgtxt = ' '.join([msg, dimtxt])
                 self.assertIn(pair, CONVERT[key], msgtxt)
 
-        self.assertRaises(ValueError, create_conversion_factors, ['test'],
-                          dict(length=(1.0, 'm'), energy=(1.0, 'J'),
-                               mass=(1.0, 'kg'), charge=(100, 'e')))
+        with self.assertRaises(ValueError):
+            create_conversion_factors('test', length=(1.0, 'm'),
+                                      energy=(1.0, 'J'),
+                                      mass=(1.0, 'kg'), charge=(100, 'e'))
 
     def test_read_from_file(self):
         """Test that we can read units from a input file."""
@@ -151,6 +169,79 @@ class UnitsTest(unittest.TestCase):
         self.assertAlmostEqual(conv['velocity']['m/s', 'test_system'],
                                2.0, 12)
 
+    def test_write_conversions(self):
+        """Test that we can write out the conversions."""
+        with tempfile.NamedTemporaryFile() as temp:
+            write_conversions(filename=temp.name)
+            temp.flush()
+            conv = read_conversions(filename=temp.name)
+            for key, val in conv.items():
+                self.assertTrue(key in CONVERT)
+                self.assertAlmostEqual(val, CONVERT[key])
+
+    def test_generate_conversion(self):
+        """Test the generator of conversion factors."""
+        generate_conversion_factors('myunit', (1.0, 'm'), (1.0, 'J'),
+                                    (1.0, 'kg'), charge='e')
+        self.assertAlmostEqual(CONVERT['mass']['myunit', 'g'], 1000.)
+        generate_conversion_factors('myunit2', (1.0, 'm'), (1.0, 'J'),
+                                    (1.0, 'kg'), charge='C')
+        # Test with missing kB
+        with self.assertRaises(ValueError):
+            generate_conversion_factors('myunit3', (1.0, 'm'), (1.0, 'JJ'),
+                                        (1.0, 'kg'), charge='e')
+
+    def test_units_from_settings(self):
+        """Test that we can create units from settings."""
+        # Using a predefined unit system
+        settings = {'system': {'units': 'real'}}
+        msg = units_from_settings(settings)
+        self.assertEqual(msg, 'Creating unit: real')
+        # Using a custom system:
+        settings = {'system': {'units': 'my_new_system1'}}
+        settings['unit-system'] = {
+            'name': 'my_new_system1',
+            'length': (1.0, 'bohr'),
+            'mass': (1.0, 'g'),
+            'energy': (1.0, 'J'),
+            'charge': 'e'
+        }
+        msg = units_from_settings(settings)
+        self.assertEqual(msg, 'Creating unit system: my_new_system1')
+        # Test for errors:
+        with self.assertRaises(ValueError):
+            settings = {'system': {'units': 'my_new_system2'}}
+            settings['unit-system'] = {
+                'length': (1.0, 'bohr'),
+                'mass': (1.0, 'g'),
+                'energy': (1.0, 'J'),
+                'charge': 'e'
+            }
+            units_from_settings(settings)
+        # Inconsistent name:
+        with self.assertRaises(ValueError):
+            settings = {'system': {'units': 'my_new_system2'}}
+            settings['unit-system'] = {
+                'name': 'my_new_system3',
+                'length': (1.0, 'bohr'),
+                'mass': (1.0, 'g'),
+                'energy': (1.0, 'J'),
+                'charge': 'e'
+            }
+            units_from_settings(settings)
+        # Missing one of length, mass, energy, charge
+        for i in ('length', 'mass', 'energy', 'charge'):
+            settings = {'system': {'units': 'my_new_system2'}}
+            settings['unit-system'] = {
+                'name': 'my_new_system2',
+                'length': (1.0, 'bohr'),
+                'mass': (1.0, 'g'),
+                'energy': (1.0, 'J'),
+                'charge': 'e'
+            }
+            del settings['unit-system'][i]
+            with self.assertRaises(ValueError):
+                units_from_settings(settings)
 
 if __name__ == '__main__':
     unittest.main()

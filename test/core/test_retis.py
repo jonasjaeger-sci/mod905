@@ -61,18 +61,21 @@ class MockPotential(PotentialFunction):
     def __init__(self):
         super().__init__(dim=1, desc='Potey McPotentialface')
 
-    def potential(self, system):  # pylint: disable=no-self-use,missing-docstring
+    def potential(self, system):
+        # pylint: disable=no-self-use,missing-docstring
         pos = system.particles.pos
         vpot = pos**2
         return vpot.sum()
 
-    def force(self, system):  # pylint: disable=missing-docstring
+    def force(self, system):
+        # pylint: disable=missing-docstring
         pos = system.particles.pos
         forces = pos * 1.0
         virial = np.zeros((self.dim, self.dim))
         return forces, virial
 
-    def potential_and_force(self, system):  # pylint: disable=missing-docstring
+    def potential_and_force(self, system):
+        # pylint: disable=missing-docstring
         pot = self.potential(system)
         force, virial = self.force(system)
         return pot, force, virial

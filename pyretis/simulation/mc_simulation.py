@@ -138,6 +138,6 @@ class UmbrellaWindowSimulation(Simulation):
         number generator status.
         """
         info = {'cycle': self.cycle,
-                'random_state': self.rgen.get_state(),
+                'rgen': self.rgen.get_state(),
                 'type': self.simulation_type}
         return info

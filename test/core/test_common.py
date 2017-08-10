@@ -16,42 +16,50 @@ logging.disable(logging.CRITICAL)
 
 
 # define some functions used for testing:
-def function1(arg1, arg2, arg3, arg4):  # pylint: disable=unused-argument
+def function1(arg1, arg2, arg3, arg4):
+    # pylint: disable=unused-argument
     """To test positional arguments."""
     return
 
 
-def function2(arg1, arg2, arg3, arg4=10):  # pylint: disable=unused-argument
+def function2(arg1, arg2, arg3, arg4=10):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments"""
     return
 
 
-def function3(arg1, arg2, arg3, arg4=100, arg5=10):  # pylint: disable=unused-argument
+def function3(arg1, arg2, arg3, arg4=100, arg5=10):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments"""
     return
 
 
-def function4(*args, **kwargs):  # pylint: disable=unused-argument
+def function4(*args, **kwargs):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments"""
     return
 
 
-def function5(arg1, arg2, *args, arg3=100, arg4=100):  # pylint: disable=unused-argument
+def function5(arg1, arg2, *args, arg3=100, arg4=100):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments, python3 specific"""
     return
 
 
-def function6(arg1, arg2, arg3=100, *, arg4=10):  # pylint: disable=unused-argument
+def function6(arg1, arg2, arg3=100, *, arg4=10):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments, python3 specific"""
     return
 
 
-def function7(arg1, arg2, arg3=100, *args, arg4, arg5=10):  # pylint: disable=unused-argument
+def function7(arg1, arg2, arg3=100, *args, arg4, arg5=10):
+    # pylint: disable=unused-argument
     """To test positional and keyword arguments, python3 specific"""
     return
 
 
-def function8(arg1, arg2=100, self='something'):  # pylint: disable=unused-argument
+def function8(arg1, arg2=100, self='something'):
+    # pylint: disable=unused-argument
     """Test name for val."""
     return
 
@@ -99,6 +107,7 @@ class InspectTest(unittest.TestCase):
         settings = {'arg1': 10, 'arg2': 100, 'self': 'text'}
 
         class Abomination():
+            # pylint: disable=too-few-public-methods
             """Just to allow redefination of __init__."""
             pass
 

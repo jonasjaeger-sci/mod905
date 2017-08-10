@@ -143,6 +143,5 @@ class TestGeneratePairInteraction(unittest.TestCase):
         self.assertAlmostEqual(parameters[0]['rcut'], 123.)
 
 
-
 if __name__ == '__main__':
     unittest.main()

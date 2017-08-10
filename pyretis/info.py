@@ -10,6 +10,6 @@ PROGRAM_NAME = 'PyRETIS'
 URL = 'http://www.pyretis.org'
 GIT_URL = 'https://gitlab.com/pyretis/pyretis'
 CITE = """
-[1] A. Lervik, E. Riccardi and T. S. van Erp, In preparation, 42, pp. 101--102
-    doi: doi/number/here
+[1] A. Lervik, E. Riccardi and T. S. van Erp, J. Comput. Chem., 2017
+    doi: http://dx.doi.org/10.1002/jcc.24900
 """

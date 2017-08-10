@@ -1,0 +1,104 @@
+&GLOBAL                                                                                             
+  PROJECT MD
+  RUN_TYPE MD
+  PRINT_LEVEL LOW                                                                                   
+&END GLOBAL
+                                                                                                    
+&MOTION 
+  &MD                                                                                             
+    STEPS 1                                                                                         
+ TIMESTEP   0.50000000000000000                                                                     
+    TEMPERATURE 3.00000000E+02                                                                      
+  &END MD                                                                                           
+  &PRINT                                                                                            
+    &RESTART                                                                                        
+      FILENAME RESTART                                                                              
+      BACKUP_COPIES 0                                                                               
+      &EACH                                                                                         
+        MD 1                                                                                        
+      &END EACH                                                                                     
+    &END RESTART                                                                                    
+    &VELOCITIES                                                                                     
+      &EACH                                                                                         
+        MD 1                                                                                        
+      &END EACH                                                                                     
+    &END VELOCITIES                                                                                 
+    &TRAJECTORY                                                                                     
+      &EACH                                                                                         
+        MD 1                                                                                        
+      &END EACH                                                                                     
+    &END TRAJECTORY                                                                                 
+  &END PRINT                                                                                        
+&END MOTION                                                                                         
+                                                                                                    
+&EXT_RESTART                                                                                        
+  RESTART_FILE_NAME MD-RESTART-2.restart                                                            
+&END EXT_RESTART                                                                                    
+                                                                                                    
+&FORCE_EVAL                                                                                         
+  METHOD Quickstep                                                                                  
+  &DFT                                                                                            
+    BASIS_SET_FILE_NAME  BASIS_SET                                                           
+    POTENTIAL_FILE_NAME  GTH_POTENTIALS 
+                                            
+    &SCF                                                                                            
+      SCF_GUESS RESTART                                                                             
+                                                                                                    
+      &PRINT                                                                                        
+        &RESTART                                                                                    
+          LOG_PRINT_KEY                                                                             
+          FILENAME WAVE-2                                                                           
+          BACKUP_COPIES 0                                                                           
+          &EACH                                                                                     
+            MD 1                                                                                    
+          &END EACH                                                                                 
+        &END RESTART                                                                                
+      &END PRINT                                                                                    
+      EPS_SCF 1.0E-7                                                                                
+      MAX_SCF 300                                                                                   
+      &DIAGONALIZATION  ON                                                                          
+        ALGORITHM STANDARD                                                                          
+      &END DIAGONALIZATION                                                                          
+      &MIXING  T                                                                                    
+        METHOD BROYDEN_MIXING                                                                       
+        ALPHA 0.4                                                                                   
+        NBROYDEN 8                                                                                  
+      &END MIXING                                                                                   
+    &END SCF                                                                                        
+    &QS                                                                                             
+      EPS_DEFAULT 1.0E-10                                                                           
+    &END QS                                                                                         
+    &MGRID                                                                                          
+      NGRIDS 4                                                                                      
+      CUTOFF 300                                                                                    
+      REL_CUTOFF 60                                                                                 
+    &END MGRID                                                                                      
+    &XC                                                                                             
+      &XC_FUNCTIONAL PADE                                                                           
+      &END XC_FUNCTIONAL                                                                            
+    &END XC                                                                                         
+  &END DFT                                                                                          
+  &SUBSYS                                                                                           
+    &KIND Si                                                                                        
+      ELEMENT Si                                                                                    
+      BASIS_SET DZVP-GTH-PADE                                                                       
+      POTENTIAL GTH-PADE-q4                                                                         
+    &END KIND                                                                                       
+    &KIND H                                                                                         
+      ELEMENT H                                                                                     
+      BASIS_SET DZV-ALL                                                                             
+      POTENTIAL GTH-BLYP-q1                                                                         
+    &END KIND                                                                                       
+    &CELL                                                                                           
+      ABC    6.000000000    6.000000000    6.000000000                                              
+    &END CELL                                                                                       
+    &TOPOLOGY                                                                                       
+      COORD_FILE_NAME GEOMETRY00                                                                    
+      COORD_FILE_FORMAT xyz                                                                         
+    &END TOPOLOGY                                                                                   
+  &END SUBSYS                                                                                       
+  &PRINT                                                                                            
+    &FORCES ON                                                                                      
+    &END FORCES                                                                                     
+  &END PRINT                                                                                        
+&END FORCE_EVAL                                                                                     

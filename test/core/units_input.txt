@@ -7,3 +7,4 @@ pressure Pa test_system 0.10
 temperature K test_system 1.0
 time s test_system 0.5
 velocity m/s test_system 2.0
+a_dim_that_does_not_exist_and_could_raise_an_error kg g 0.001
