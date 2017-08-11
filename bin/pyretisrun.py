@@ -432,6 +432,8 @@ def run_retis_simulation(sim, sim_settings, progress=False):
             logtxt = '\nStep: {}'.format(result['cycle']['step'])
             print_to_screen(logtxt)
             for res, ensemble in zip(result['retis'], sim.path_ensembles):
+                if res[0] is None:
+                    continue
                 logtxt = '{:>10s}: {:>8s} {:>5s}'.format(
                     ensemble.ensemble_name,
                     res[0],

@@ -193,7 +193,7 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
     """
     relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
-        output = [None for path_ensemble in ensembles]
+        output = [[None, None, None, None] for path_ensemble in ensembles]
         idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
                                                      relative)
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
@@ -266,7 +266,7 @@ def retis_moves(ensembles, system, order_function, engine, rgen,
         `out[i]` contains the results of the swapping/nullmove for path
         ensemble no. `i`.
     """
-    output = [None for path_ensemble in ensembles]
+    output = [[None, None, None, None] for path_ensemble in ensembles]
     if settings['retis']['swapsimul']:
         # here we have to schemes:
         # scheme == 0: [0^-] <-> [0^+], [1^+] <-> [2^+], ...
