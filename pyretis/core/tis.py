@@ -288,6 +288,7 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
 
     time_shoot = path.time_origin + idx
     path_back.time_origin = time_shoot
+    trial_path.time_origin = time_shoot
     if not success_back:
         # Something went wrong, most probably the path length was exceeded
         # BTL is backward trajectory too long (maxlenb was exceeded)

@@ -13,11 +13,13 @@ from pyretis.inout.setup.createsimulation import create_path_ensembles
 from pyretis.orderparameter import OrderParameter
 from pyretis.engines.internal import MDEngine
 from pyretis.forcefield import ForceField, PotentialFunction
-from pyretis.core.retis import (retis_swap,
-                                make_retis_step,
-                                null_move,
-                                retis_moves,
-                                _relative_shoots_select)
+from pyretis.core.retis import (
+    retis_swap,
+    make_retis_step,
+    null_move,
+    retis_moves,
+    _relative_shoots_select,
+)
 
 
 logging.disable(logging.CRITICAL)
