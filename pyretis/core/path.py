@@ -359,9 +359,9 @@ class PathBase():
             String representing where the end point is ('L' - left,
             'R' - right or None).
         """
-        if self.order[-1][0] < left:
+        if self.order[-1][0] <= left:
             end = 'L'
-        elif self.order[-1][0] > right:
+        elif self.order[-1][0] >= right:
             end = 'R'
         else:
             end = None

@@ -532,6 +532,8 @@ class EnergyPathWriter(EnergyWriter):
             The strings to be written.
         """
         path, status = data[0], data[1]
+        if not path:  # when nullmoves = False
+            return
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -646,6 +648,8 @@ class OrderPathWriter(OrderWriter):
             The strings to be written.
         """
         path, status = data[0], data[1]
+        if not path:  # when nullmoves = False
+            return
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -909,6 +913,8 @@ class PathExtWriter(Writer):
     def generate_output(self, step, *data):
         """Output path data."""
         path, status = data[0], data[1]
+        if not path:  # when nullmoves = False
+            return
         yield '# Cycle: {}, status: {}'.format(step, status)
         yield self.header
         for i, phasepoint in enumerate(path.trajectory()):
@@ -954,6 +960,8 @@ class PathIntWriter(Writer):
     def generate_output(self, step, *data):
         """Output path data."""
         path, status = data[0], data[1]
+        if not path:  # when nullmoves = False
+            return
         yield '# Cycle: {}, status: {}'.format(step, status)
         for i, phasepoint in enumerate(path.trajectory()):
             yield 'Snapshot: {}'.format(i)

@@ -42,8 +42,6 @@ class PathEnsembleWriter(Writer):
     interfaces : list of ints
         These are the interfaces specified with the values
         for the order parameters: [left, middle, right]
-        This variable is used when creating a `PathEnsemble` object
-        in `to_path_ensemble`.
     """
     # Define a format used for the path files. Here it's not really needed,
     # we are going to assume that these files will be comma separated anyway.
@@ -217,23 +215,3 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
         """Load paths from the file."""
         for path in self.load(self.filename):
             yield path
-
-    def to_path_ensemble(self):
-        """Read a file and return a pure :py:class:`.PathEnsemble` object.
-
-        This will read an entire file and return a path ensemble object.
-        Note that this might not be the fastest way of using the path
-        ensemble file and that this can require a lot of memory.
-        For analysis purposes, this object also supports a on-line
-        analysis.
-
-        Returns
-        -------
-        out : object like :py:class:`.PathEnsemble`
-            The path ensemble read from the file.
-        """
-        path_ensemble = PathEnsemble(self.ensemble, self.interfaces,
-                                     detect=self.detect)
-        for path in self.get_paths():
-            path_ensemble.add_path_data(path, path.status)
-        return path_ensemble

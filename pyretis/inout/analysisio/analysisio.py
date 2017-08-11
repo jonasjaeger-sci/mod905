@@ -342,8 +342,8 @@ def run_retis_analysis(settings, plotter, txt_plotter):
     out, fig, txt = analyse_and_output_matched(results['pathensemble'],
                                                plotter, txt_plotter)
     results['matched'] = {'out': out, 'figures': fig, 'txtfile': txt}
-    flux, flux_error = retis_flux(results['pathensemble0'],
-                                  results['pathensemble'][0],
+    flux, flux_error = retis_flux(results['pathensemble0']['out'],
+                                  results['pathensemble'][0]['out'],
                                   settings['engine']['timestep'])
     results['flux'] = {'value': flux, 'error': flux_error,
                        'unit': units}

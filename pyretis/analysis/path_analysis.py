@@ -279,19 +279,16 @@ def _get_path_length(path, ensemble):
             return path['length'] - 2
         elif move == 's-' and ensemble == 1:
             return path['length'] - 2
-        else:
-            return return_table[move]
-    else:
-        if move == 'sh':
-            return path['length'] - 1
-        elif move == 'ki':
-            msg = 'Skipped initial path: {}'.format(move)
-            logger.info(msg)
-            return None
-        else:
-            msg = 'Skipped unknown mc move: {}'.format(move)
-            logger.warning(msg)
-            return None
+        return return_table[move]
+    if move == 'sh':
+        return path['length'] - 1
+    elif move == 'ki':
+        msg = 'Skipped initial path: {}'.format(move)
+        logger.info(msg)
+        return None
+    msg = 'Skipped unknown mc move: {}'.format(move)
+    logger.warning(msg)
+    return None
 
 
 def _shoot_analysis(path_ensemble, bins=1000):
@@ -462,7 +459,9 @@ def analyse_path_ensemble_object(path_ensemble, settings):
     prun, pdata = _running_pcross(path_ensemble, path_ensemble.detect)
     result['prun'] = prun
     try:
-        result['cycle'] = np.array([path['cycle'] for path in path_ensemble])
+        result['cycle'] = np.array(
+            [path['cycle'] for path in path_ensemble.get_paths()]
+        )
     except KeyError:
         msg = 'Could not obtain cycle number! Will assume (1, 2, ..., len(p))'
         logger.warning(msg)
@@ -567,7 +566,7 @@ def analyse_path_ensemble(path_ensemble, settings):
         else:  # just increase the weigths
             weights[-1] += 1
         # we also update the running average of the probability here:
-        if len(result['prun']) == 0:
+        if not result['prun']:
             result['prun'] = [success]
         else:  # update average
             result['prun'].append(float(success +
@@ -783,8 +782,8 @@ def retis_flux(results0, results1, timestep):
     flux_error : float
         The relative error in the initial flux.
     """
-    flux0 = results0['out']['fluxlength']
-    flux1 = results1['out']['fluxlength']
+    flux0 = results0['fluxlength']
+    flux1 = results1['fluxlength']
     tsum = flux0[0] + flux1[0]
     flux = 1.0 / (tsum * timestep)
     flux_error = (np.sqrt((flux0[1]*flux0[0])**2 + (flux1[1]*flux1[0])**2) /
