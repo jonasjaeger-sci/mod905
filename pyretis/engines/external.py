@@ -325,7 +325,6 @@ class ExternalMDEngine(EngineBase):
             logger.debug('Removing: %s', filename)
         except OSError:
             logger.debug('Could not remove: %s', filename)
-            pass
 
     def _remove_files(self, dirname, files):
         """Remove files from a directory.
@@ -388,7 +387,7 @@ class ExternalMDEngine(EngineBase):
         system.particles.pos = xyz
         if system.particles.vel_rev:
             if vel is not None:
-                system.particles.vel = -vel
+                system.particles.vel = -1.0 * vel
         else:
             system.particles.vel = vel
         system.update_box(box)
