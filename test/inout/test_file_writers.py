@@ -22,7 +22,6 @@ from pyretis.inout.writers.writers import (
     EnergyPathWriter,
     OrderPathWriter,
     read_some_lines,
-    adjust_coordinate,
     read_txt_snapshots,
 )
 from pyretis.inout.writers.tablewriter import ThermoTable
