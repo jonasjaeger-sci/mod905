@@ -60,6 +60,7 @@ class CP2KEngineTest(unittest.TestCase):
     def test_single_step(self):
         """Test that the single step method work as we intend."""
         cmd = os.path.join(HERE, 'mockcp2k.py')
+        cmd = 'python {}'.format(cmd)
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
         engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
