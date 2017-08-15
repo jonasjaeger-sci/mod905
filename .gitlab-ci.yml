@@ -10,7 +10,6 @@ before_script:
 
 test:
   script:
-  - python test/engines/test_cp2k.py
   - python -m unittest discover -v -s test
 
 coverage:
