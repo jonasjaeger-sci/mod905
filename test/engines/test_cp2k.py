@@ -18,8 +18,8 @@ from pyretis.inout.writers.xyzio import (
 from pyretis.orderparameter.orderparameter import (
     OrderParameterPosition,
 )
-logging.disable(logging.CRITICAL)
-
+#logging.disable(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -60,11 +60,6 @@ class CP2KEngineTest(unittest.TestCase):
     def test_single_step(self):
         """Test that the single step method work as we intend."""
         cmd = os.path.join(HERE, 'mockcp2k.py')
-        cmd = 'python {}'.format(cmd)
-        print('Command: {}'.format(cmd))
-        for stuff in os.listdir(HERE):
-            exe = os.access(os.path.join(HERE, stuff), os.X_OK) 
-            print(stuff, exe)
         dir_name = os.path.join(HERE, 'cp2k_input')
         extra_files = ['extra_file']
         engine = CP2KEngine(cmd, dir_name, 0.002, 10, extra_files)
