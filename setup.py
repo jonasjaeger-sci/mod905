@@ -36,7 +36,7 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '0.9.2.dev2'
+FULL_VERSION = '1.0.0'
 
 # create copies of scripts:
 try:
@@ -70,11 +70,11 @@ setup(name='pyretis',
       packages=find_packages(exclude=['docs']),
       package_data={'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']},
       include_package_data=True,
-      install_requires=['numpy>=1.6.0',
-                        'scipy>=0.13.3',
-                        'matplotlib>=1.5',
-                        'jinja2>=2.7.2',
-                        'docutils>=0.11',
-                        'tqdm>=4.7.0',
-                        'colorama>=0.3.7'],
+      install_requires=['numpy>=1.13.1',
+                        'scipy>=0.19.1',
+                        'matplotlib>=2.0.2',
+                        'jinja2>=2.9.6',
+                        'docutils>=0.14',
+                        'tqdm>=4.15.0',
+                        'colorama>=0.3.9'],
       scripts=['bin/pyretisrun', 'bin/pyretisanalyse'])
