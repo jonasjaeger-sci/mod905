@@ -22,6 +22,7 @@ from pyretis.inout.writers.gromacsio import (
     read_trr_frame,
     reverse_trr,
     trr_frame_to_g96,
+    write_trr_frame,
 )
 
 
@@ -81,6 +82,25 @@ CORRECT_XVG = {
     't-rest': np.array([0.0] * 6),
     'step': np.array([i for i in range(6)]),
 }
+
+
+def generate_trr_data(output, steps, natoms, double=False, endian=None):
+    """Generate some random TRR data."""
+    all_data = []
+    for i in range(steps):
+        data = {
+            'natoms': natoms,
+            'step': i,
+            'time': 0.002*i,
+            'lambda': 0.0,
+            'box': np.random.ranf(size=(3, 3)),
+            'x': np.random.ranf(size=(natoms, 3)),
+            'v': np.random.ranf(size=(natoms, 3)),
+        }
+        header = write_trr_frame(output, data, double=double, append=True,
+                                 endian=endian)
+        all_data.append((header, data))
+    return all_data
 
 
 class TestGromacsIO(unittest.TestCase):
@@ -268,6 +288,36 @@ class TestGromacsTRR(unittest.TestCase):
                                    places=5)
             self.assertTrue(double[0]['double'])
             self.assertFalse(single[0]['double'])
+
+    def test_write_trr(self):
+        """Test that we can write simple TRR files."""
+        compare_direct = set(('natoms', 'vir_size', 'ir_size',
+                              'sym_size', 'top_size', 'v_size',
+                              'f_size', 'box_size', 'x_size', 'step',
+                              'pres_size', 'nre', 'e_size', 'double'))
+        cases = (
+            {'double': False},
+            {'double': True},
+            {'double': False, 'endian': '<'},
+            {'double': False, 'endian': '>'},
+        )
+        for case in cases:
+            with tempfile.NamedTemporaryFile() as tmp:
+                all_data = generate_trr_data(tmp.name, 10, 11,
+                                             double=case.get('double', False),
+                                             endian=case.get('endian', None))
+                tmp.flush()
+                for frame, correct in zip(read_trr_file(tmp.name), all_data):
+                    header, data = frame
+                    header2, data2 = correct
+                    for key in compare_direct:
+                        self.assertEqual(header[key], header2[key])
+                    for key in ('time', 'lambda'):
+                        self.assertAlmostEqual(header[key], header2[key])
+                    for key, val in data.items():
+                        self.assertTrue(np.allclose(val, data2[key]))
+                    if header2['endian']:
+                        self.assertEqual(header['endian'], header2['endian'])
 
 
 if __name__ == '__main__':

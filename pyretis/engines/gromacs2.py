@@ -155,31 +155,29 @@ class GromacsEngine2(GromacsEngine):
         cmd = shlex.split(self.mdrun.format(tpr_file, name, confout))
         # 3) Fire off GROMACS mdrun:
         logger.debug('Executing GROMACS.')
-        gro = GromacsRunner(cmd, trr_file, edr_file, self.exe_dir)
-        gro.start()  # Start GROMACS run.
-        for i, data in enumerate(gro.get_gromacs_frames()):
-            system.particles.pos = data['x']
-            if 'v' in data:
-                system.particles.vel = data['v']
-                if reverse:
-                    system.particles.vel *= -1
-            else:
-                system.particles.vel = None
-            length = box_matrix_to_list(data['box'])
-            system.update_box(length)
-            order = order_function.calculate_all(system)
-            phase_point = {'order': order,
-                           'pos': (trr_file, i),
-                           'vel': reverse,
-                           'vpot': None,
-                           'ekin': None}
-            status, success, stop, _ = self.add_to_path(path, phase_point,
-                                                        left, right)
-            if stop:
-                logger.debug('Ending propagate at %i. Reason: %s', i, status)
-                break
-        # Ask GROMACS to stop and close open files
-        gro.stop()
+        with GromacsRunner(cmd, trr_file, edr_file, self.exe_dir) as gro:
+            for i, data in enumerate(gro.get_gromacs_frames()):
+                system.particles.pos = data['x']
+                if 'v' in data:
+                    system.particles.vel = data['v']
+                    if reverse:
+                        system.particles.vel *= -1
+                else:
+                    system.particles.vel = None
+                length = box_matrix_to_list(data['box'])
+                system.update_box(length)
+                order = order_function.calculate_all(system)
+                phase_point = {'order': order,
+                               'pos': (trr_file, i),
+                               'vel': reverse,
+                               'vpot': None,
+                               'ekin': None}
+                status, success, stop, _ = self.add_to_path(path, phase_point,
+                                                            left, right)
+                if stop:
+                    logger.debug('Ending propagate at %i. Reason: %s',
+                                 i, status)
+                    break
         logger.debug('GROMACS propagation done, obtaining energies!')
         energy = self.get_energies(out_files['edr'])
         if len(energy['potential']) < len(path.pos):
@@ -354,27 +352,50 @@ class GromacsRunner():
         self.stop_read = True
         self.data_size = 0
         self.header_size = 0
+        self.stdout_name = None
+        self.stderr_name = None
+        self.stdout = None
+        self.stderr = None
 
     def start(self):
         """Start execution of GROMACS and wait for output file creation."""
         logger.debug('Starting GROMACS execution in %s', self.exe_dir)
+
+        self.stdout_name = os.path.join(self.exe_dir, 'stdout.txt')
+        self.stderr_name = os.path.join(self.exe_dir, 'stderr.txt')
+        self.stdout = open(self.stdout_name, 'wb')
+        self.stderr = open(self.stderr_name, 'wb')
+
         self.running = subprocess.Popen(
-            self.cmd, stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            self.cmd,
+            stdin=subprocess.PIPE,
+            stdout=self.stdout,
+            stderr=self.stderr,
             shell=False,
             cwd=self.exe_dir
         )
-        # Wait for the trr/edr file to appear
+        present = []
+        # Wait for the trr/edr filaes to appear
         for fname in (self.trr_file, self.edr_file):
             while not os.path.isfile(fname):
                 logger.debug('Waiting for GROMACS file "%s"', fname)
                 sleep(self.SLEEP)
+                poll = self.check_poll()
+                if poll is not None:
+                    logger.debug('GROMACS execution stopped')
+                    break
+            if os.path.isfile(fname):
+                present.append(fname)
         # Prepare and open the trr file:
         self.bytes_read = 0
-        self.fileh = open(self.trr_file, 'rb')
-        self.ino = os.fstat(self.fileh.fileno()).st_ino
-        self.stop_read = False
+        # Ok, so GROMACS might have crashed in between writing the
+        # files. Chech that both files are indeed here:
+        if self.trr_file in present and self.edr_file in present:
+            self.fileh = open(self.trr_file, 'rb')
+            self.ino = os.fstat(self.fileh.fileno()).st_ino
+            self.stop_read = False
+        else:
+            self.stop_read = True
 
     def __enter__(self):
         """Start running GROMACS, for a context manager."""
@@ -385,7 +406,7 @@ class GromacsRunner():
         """Read the GROMACS .trr file on-the-fly."""
         first_header = True
         while not self.stop_read:
-            poll = self.running.poll()
+            poll = self.check_poll()
             if poll is not None:
                 # GROMACS is done, read remaining data.
                 self.stop_read = True
@@ -457,15 +478,25 @@ class GromacsRunner():
         if self.fileh is not None and not self.fileh.closed:
             logger.debug('Closing GROMACS file: "%s"', self.trr_file)
             self.fileh.close()
+        for handle in (self.stdout, self.stderr):
+            if handle is not None and not handle.closed:
+                handle.close()
 
     def stop(self):
         """Stop the current GROMACS execution."""
-        if self.running is not None:
+        if self.running:
+            for handle in (self.running.stdin, self.running.stdout,
+                           self.running.stderr):
+                if handle:
+                    try:
+                        handle.close()
+                    except AttributeError:
+                        pass
             if self.running.returncode is None:
                 logger.debug('Terminating GROMACS execution')
                 self.running.terminate()
                 logger.debug('Waiting for GROMACS termination')
-                self.running.wait(timeout=360)
+            self.running.wait(timeout=360)
         self.stop_read = True
         self.close()  # close trr file.
 
@@ -476,3 +507,18 @@ class GromacsRunner():
     def __del__(self):
         """Just stop execution and close file."""
         self.stop()
+
+    def check_poll(self):
+        """Check the current status of the running subprocess."""
+        if self.running:
+            poll = self.running.poll()
+            if poll is not None:
+                logger.debug('Execution of GROMACS stopped')
+                logger.debug('Return code was: %i', poll)
+                if poll != 0:
+                    logger.error('STDOUT, see file: %s', self.stdout_name)
+                    logger.error('STDERR, see file: %s', self.stderr_name)
+                    raise RuntimeError('Error in GROMACS execution.')
+            return poll
+        else:
+            raise RuntimeError('GROMACS is not running.')

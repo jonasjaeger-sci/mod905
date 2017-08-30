@@ -39,6 +39,9 @@ read_trr_file (:py:func:`.read_trr_file`)
 
 trr_frame_to_g96 (:py:func:`.trr_frame_to_g96`)
     Dump a specific frame from a .trr file to a .g96 file.
+
+write_trr_frame (:py:func:`.write_trr_frame`)
+    Simple method to write to a .trr file.
 """
 import logging
 import struct
@@ -59,8 +62,9 @@ __all__ = [
     'read_trr_data',
     'skip_trr_data',
     'read_trr_file',
-    'trr_frame_to_g96'
-    ]
+    'trr_frame_to_g96',
+    'write_trr_frame',
+]
 
 
 # Define formats for the trajectory output:
@@ -75,6 +79,7 @@ _G96_BOX_FMT = '{:15.9f}' * 9 + '\n'
 _GROMACS_MAGIC = 1993
 _DIM = 3
 _TRR_VERSION = 'GMX_trn_file'
+_TRR_VERSION_B = b'GMX_trn_file'
 _SIZE_FLOAT = struct.calcsize('f')
 _SIZE_DOUBLE = struct.calcsize('d')
 _HEAD_FMT = '{}13i'
@@ -303,7 +308,7 @@ def read_gromos96_file(filename):
 
 
 def write_gromos96_file(filename, raw, xyz, vel):
-    """Write configuration in GROMACS g96 format.
+    """Write configuration in GROMACS .g96 format.
 
     Parameters
     ----------
@@ -369,7 +374,7 @@ def swap_endian(endian):
 
 
 def read_struct_buff(fileh, fmt):
-    """Unpack from a filehandle with a given format.
+    """Unpack from a file handle with a given format.
 
     Parameters
     ----------
@@ -566,7 +571,7 @@ def skip_trr_data(fileh, header):
 
 
 def read_trr_data(fileh, header):
-    """Read box, cooridnates etc. from a .trr file.
+    """Read box, coordinates etc. from a .trr file.
 
     Parameters
     ----------
@@ -726,3 +731,88 @@ def reverse_trr(filename, outname, print_progress=True):
             end = start + header_size + data_size
             for _, chunk_size in _get_chunks(start, end, buff_size):
                 outfile.write(infile.read(chunk_size))
+
+
+def write_trr_frame(filename, data, endian=None, double=False, append=False):
+    """Write data in trr format to a file.
+
+    Parameters
+    ----------
+    filename : string
+        The name/path of the file to write to.
+    data : dict
+        The data we will write to the file.
+    endian : string, optional
+        Select the byte order; big-endian or little-endian. If not
+        specified, the native byte order will be used.
+    double : boolean, optional
+        If True, we will write in double precision.
+    append : boolean, optional
+        If True, we will append to the file, otherwise, the file
+        will be overwritten."""
+    if append:
+        mode = 'ab'
+    else:
+        mode = 'wb'
+
+    if double:
+        size = _SIZE_DOUBLE
+        floatfmt = '{}d'
+    else:
+        floatfmt = '{}f'
+        size = _SIZE_FLOAT
+
+    if endian:
+        floatfmt = endian + floatfmt
+
+    header = {}
+    for key in _HEAD_ITEMS:
+        header[key] = 0
+
+    header['natoms'] = data['natoms']
+    header['step'] = data['step']
+    header['box_size'] = size * _DIM * _DIM
+    for i in ('x', 'v', 'f'):
+        if i in data:
+            header['{}_size'.format(i)] = data['natoms'] * size * _DIM
+    header['endian'] = endian
+    header['double'] = double
+    header['time'] = data['time']
+    header['lambda'] = data['lambda']
+
+    with open(filename, mode) as outfile:
+        write_trr_header(outfile, header, floatfmt, endian=endian)
+        for key in TRR_DATA_ITEMS:
+            if header[key] != 0:
+                matrix = data[key.split('_')[0]]
+                fmt = floatfmt.format(matrix.size)
+                outfile.write(struct.pack(fmt, *matrix.flatten()))
+    return header
+
+
+def write_trr_header(outfile, header, floatfmt, endian=None):
+    """Helper method to write the trr header.
+
+    Parameters
+    ----------
+    outfile : filehandle
+        The file we can write to.
+    header : dict
+        The header data for the trr file.
+    floatfmt : string
+        The string which gives the format for floats. It should indicate
+        if we are writing for double or single precision.
+    endian : string, optional
+        Can be used to force endianess.
+    """
+    slen = (13, 12)
+    fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+    if endian:
+        fmt = [endian + i for i in fmt]
+    outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
+    outfile.write(struct.pack(fmt[1], *slen))
+    outfile.write(struct.pack(fmt[2], _TRR_VERSION_B))
+    head = [header[key] for key in _HEAD_ITEMS[:13]]
+    outfile.write(struct.pack(fmt[3], *head))
+    outfile.write(struct.pack(floatfmt.format(1), header['time']))
+    outfile.write(struct.pack(floatfmt.format(1), header['lambda']))

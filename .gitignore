@@ -60,6 +60,8 @@ bin/pyretisanalyse
 *.egg-info
 # for sphinx
 docs/_build
+# coverage
+.coverage
 
 # for examples:
 # backup files

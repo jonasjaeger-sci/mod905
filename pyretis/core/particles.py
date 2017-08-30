@@ -354,7 +354,7 @@ class ParticlesExt(Particles):
         The location of the file with positions and the index
         for locating a frame.
     vel_rev : boolean
-        True if velocities should be reversed or not before using
+        True if velocities should be reversed before using
         the phase point.
     """
 

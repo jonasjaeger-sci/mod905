@@ -272,38 +272,53 @@ class ExternalMDEngine(EngineBase):
 
         Returns
         -------
-        out[0] : tuple of strings
-            The output (stdout, stderr) from the command.
-        out[1] : int
+        out : int
             The return code of the command.
         """
         cmd2 = ' '.join(cmd)
         logger.debug('Executing: %s', cmd2)
         if inputs is not None:
             logger.debug('With input: %s', inputs)
-        exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               shell=False,
-                               cwd=cwd)
-        out = exe.communicate(input=inputs)
-        # Note: communicate will wait untill process terminates.
-        return_code = exe.returncode
-        if return_code != 0:
-            stdout, stderr = out[0], out[1]
-            logger.error('Execution of external program (%s) failed!',
-                         self.description)
-            logger.error('Attempted command: "%s"', cmd2)
-            logger.error('Execution directory: "%s"', cwd)
-            if inputs is not None:
-                logger.error('Input to external program was: "%s"', inputs)
-            logger.error('Return code from external program %i', return_code)
-            logger.error('STDOUT: %s', stdout.decode('utf-8'))
-            logger.error('STDERR: %s', stderr.decode('utf-8'))
-            msg = ('Execution of external program "{}" failed. '
-                   'Return code: {}').format(self.description, return_code)
-            raise RuntimeError(msg)
-        return out, exe.returncode
+
+        out_name = 'stdout.txt'
+        err_name = 'stderr.txt'
+
+        if cwd:
+            out_name = os.path.join(cwd, out_name)
+            err_name = os.path.join(cwd, err_name)
+
+        return_code = None
+
+        with open(out_name, 'wb') as fout, open(err_name, 'wb') as ferr:
+            exe = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=fout,
+                stderr=ferr,
+                shell=False,
+                cwd=cwd
+            )
+            exe.communicate(input=inputs)
+            # Note: communicate will wait untill process terminates.
+            return_code = exe.returncode
+            if return_code != 0:
+                logger.error('Execution of external program (%s) failed!',
+                             self.description)
+                logger.error('Attempted command: %s', cmd2)
+                logger.error('Execution directory: %s', cwd)
+                if inputs is not None:
+                    logger.error('Input to external program was: %s', inputs)
+                logger.error('Return code from external program: %i',
+                             return_code)
+                logger.error('STDOUT, see file: %s', out_name)
+                logger.error('STDERR, see file: %s', err_name)
+                msg = ('Execution of external program ({}) failed. '
+                       'Return code: {}').format(self.description, return_code)
+                raise RuntimeError(msg)
+            else:
+                self._removefile(out_name)
+                self._removefile(err_name)
+        return return_code
 
     @staticmethod
     def _movefile(source, dest):
@@ -565,20 +580,21 @@ class ExternalMDEngine(EngineBase):
         else:
             initial_conf = initial_file
 
-        # Update system to be at the configuration file:
+        # Update system to point to the configuration file:
         phase_point = {'pos': (initial_conf, None),
                        'vel': reverse,
                        'vpot': None,
                        'ekin': None}
         system.particles.set_particle_state(phase_point)
-        # Perform propagate from this point
+        # Propagate from this point:
         success, status = self._propagate_from(
             name,
             path,
             system,
             order_function,
             interfaces,
-            reverse=reverse)
+            reverse=reverse
+        )
         # Reset system to initial state:
         system.particles.set_particle_state(initial_state)
         return success, status
