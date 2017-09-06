@@ -62,6 +62,9 @@ bin/pyretisanalyse
 docs/_build
 # coverage
 .coverage
+codacycov.sh
+coverage.xml
+htmlcov/
 
 # for examples:
 # backup files
