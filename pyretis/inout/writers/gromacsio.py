@@ -303,7 +303,11 @@ def read_gromos96_file(filename):
         # No velicities were found in the input file.
         xyzdata['VELOCITY'] = np.zeros_like(xyzdata['POSITION'])
         logger.info('Input g96 did not contain velocities')
-    box = np.array([float(i) for i in rawdata['BOX'][0].split()])
+    if rawdata['BOX']:
+        box = np.array([float(i) for i in rawdata['BOX'][0].split()])
+    else:
+        box = None
+        logger.info('Input g96 did not contain box vectors.')
     return rawdata, xyzdata['POSITION'], xyzdata['VELOCITY'], box
 
 
@@ -324,6 +328,8 @@ def write_gromos96_file(filename, raw, xyz, vel):
     _keys = ('TITLE', 'POSITION', 'VELOCITY', 'BOX')
     with open(filename, 'w') as outfile:
         for key in _keys:
+            if key not in raw:
+                continue
             outfile.write('{}\n'.format(key))
             for i, line in enumerate(raw[key]):
                 if key == 'POSITION':

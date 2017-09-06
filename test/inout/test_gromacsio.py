@@ -6,9 +6,12 @@ import logging
 import unittest
 import tempfile
 import os
+import struct
 import numpy as np
 from pyretis.core.box import box_matrix_to_list
 from pyretis.inout.writers.gromacsio import (
+    _GROMACS_MAGIC,
+    _TRR_VERSION_B,
     read_gromacs_lines,
     read_gromacs_file,
     read_gromacs_gro_file,
@@ -178,6 +181,18 @@ class TestGromacsIO(unittest.TestCase):
             self.assertTrue(np.allclose(box, box2))
             for key, val in frame.items():
                 self.assertEqual(val, frame2[key])
+        # Test that we can write without some fields:
+        del frame['VELOCITY']
+        del frame['TITLE']
+        del frame['BOX']
+        with tempfile.NamedTemporaryFile() as tmp:
+            write_gromos96_file(tmp.name, frame, xyz, vel)
+            tmp.flush()
+            frame2, xyz2, vel2, box2 = read_gromos96_file(tmp.name)
+            self.assertEqual(None, box2)
+            self.assertTrue(np.allclose(vel2, np.zeros_like(xyz2)))
+            self.assertEqual(len(frame2['TITLE']), 0)
+            self.assertTrue(np.allclose(xyz, xyz2))
 
     def test_read_xvg_file(self):
         """Test that we can read GROMACS xvg files."""
@@ -318,6 +333,78 @@ class TestGromacsTRR(unittest.TestCase):
                         self.assertTrue(np.allclose(val, data2[key]))
                     if header2['endian']:
                         self.assertEqual(header['endian'], header2['endian'])
+
+    def test_read_wrong_header(self):
+        """Test that we get an error when reading wrong version of trr."""
+        slen = (13, 12)
+        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, 'wb') as outfile:
+                outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
+                outfile.write(struct.pack(fmt[1], *slen))
+                outfile.write(struct.pack(fmt[2], b'NOT_GMX_FILE'))
+                head = [0, 0, 26, 0, 0, 0, 0, 1000, 0, 0, 10, 0, 0]
+                outfile.write(struct.pack(fmt[3], *head))
+                outfile.write(struct.pack('1f', 0.0))
+                outfile.write(struct.pack('1f', 0.0))
+            with self.assertRaises(ValueError):
+                for _ in read_trr_file(tmp.name):
+                    pass
+
+    def test_read_size(self):
+        """Test that we can get double/float when box is missing."""
+        slen = (13, 12)
+        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, 'wb') as outfile:
+                outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
+                outfile.write(struct.pack(fmt[1], *slen))
+                outfile.write(struct.pack(fmt[2], _TRR_VERSION_B))
+                x_size = 3 * 10 * struct.calcsize('f')
+                head = [0, 0, 0, 0, 0, 0, 0, x_size, 0, 0, 10, 0, 0]
+                outfile.write(struct.pack(fmt[3], *head))
+                outfile.write(struct.pack('1f', 0.0))
+                outfile.write(struct.pack('1f', 0.0))
+            for frame, _ in read_trr_file(tmp.name, read_data=False):
+                self.assertFalse(frame['double'])
+
+    def test_read_size_fail(self):
+        """Test that we fail when we can't find precision."""
+        slen = (13, 12)
+        fmt = ['1i', '2i', '{}s'.format(slen[0] - 1), '13i']
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, 'wb') as outfile:
+                outfile.write(struct.pack(fmt[0], _GROMACS_MAGIC))
+                outfile.write(struct.pack(fmt[1], *slen))
+                outfile.write(struct.pack(fmt[2], _TRR_VERSION_B))
+                x_size = 3 * 10 * (struct.calcsize('d') + 1)
+                head = [0, 0, 0, 0, 0, 0, 0, x_size, 0, 0, 10, 0, 0]
+                outfile.write(struct.pack(fmt[3], *head))
+                outfile.write(struct.pack('1f', 0.0))
+                outfile.write(struct.pack('1f', 0.0))
+            with self.assertRaises(ValueError):
+                for _ in read_trr_file(tmp.name, read_data=False):
+                    pass
+
+    def test_overwrite_trr(self):
+        """Test that we indeed can turn off the append to trr."""
+        with tempfile.NamedTemporaryFile() as tmp:
+            all_data = []
+            for i in range(5):
+                data = {
+                    'natoms': 4,
+                    'step': i,
+                    'time': 0.002*i,
+                    'lambda': 0.0,
+                    'box': np.random.ranf(size=(3, 3)),
+                    'x': np.random.ranf(size=(4, 3)),
+                }
+                header = write_trr_frame(tmp.name, data, double=False,
+                                         append=False)
+                all_data.append((header, data))
+            for frame in read_trr_file(tmp.name):
+                self.assertTrue(np.allclose(frame[1]['x'],
+                                            all_data[-1][1]['x']))
 
 
 if __name__ == '__main__':
