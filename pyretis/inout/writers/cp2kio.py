@@ -111,7 +111,8 @@ def dfs_print(node, visited):
     visited.add(node)
     for child in node.children:
         if child not in visited:
-            out += dfs_print(child, visited)
+            for lines in dfs_print(child, visited):
+                out.append(lines)
     out.append('{}&END {}'.format(pre, node.title))
     return out
 
