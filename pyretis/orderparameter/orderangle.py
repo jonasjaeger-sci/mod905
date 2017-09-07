@@ -40,7 +40,7 @@ class OrderParameterAngle(OrderParameter):
     """
 
     def __init__(self, index, periodic=False):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------

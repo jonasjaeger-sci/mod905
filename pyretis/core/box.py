@@ -42,10 +42,15 @@ def create_box(low=None, high=None, length=None, periodic=None):
 
     Parameters
     ----------
-    size : list
-        The size of the box.
-    periodic : list of floats, optional
-        Determines if periodic boundaries should be applied.
+    low : numpy.array (1D)
+        The lower bounds of the cell.
+    high : numpy.array (1D)
+        The higher bounds of the cell.
+    length : numpy.array (1D)
+        The length of the sides of the cell.
+    periodic : list of boolean
+        If `periodic[i]` then we should apply periodic boundaries
+        to dimension `i`.
 
     Returns
     -------
@@ -198,7 +203,7 @@ class BoxBase(metaclass=ABCMeta):
     """
 
     def __init__(self, low=None, high=None, length=None, periodic=None):
-        """Initialize the base class."""
+        """Initialise the BoxBase class."""
 
         case = (length is not None, low is not None, high is not None)
 

@@ -185,7 +185,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
             if stripline.startswith(block_label):
                 # this is a comment, then a new block will follow,
                 # unless this is a multi-line comment.
-                if read_comment:  # part of multiline comment...
+                if read_comment:  # part of multi-line comment...
                     new_block['comment'].append(stripline)
                 else:
                     if yield_block:
@@ -228,7 +228,7 @@ class Writer():
         output data.
     print_header : boolean
         Determines if we are to print the header or not on the first
-        use of `generate_output`. Note that the behavior can be
+        use of `generate_output`. Note that the behaviour can be
         overridden in child classes so that the print_header is
         ignored.
     """
@@ -236,8 +236,8 @@ class Writer():
     def __init__(self, file_type, header=None):
         """Initiate the Writer.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         file_type : string
             A string which identifies the output type of this writer.
         header : string
@@ -341,7 +341,7 @@ class CrossWriter(Writer):
     CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
     def __init__(self):
-        """Initialize a `CrossWriter`."""
+        """Initialise a `CrossWriter`."""
         header = {'labels': ['Step', 'Int', 'Dir'], 'width': [10, 4, 3]}
         super().__init__('CrossWriter', header=header)
 
@@ -364,7 +364,7 @@ class CrossWriter(Writer):
         Note
         ----
         The interface will be subtracted '1' in the analysis.
-        This is just for backwards compatibility with the old Fortran
+        This is just for backwards compatibility with the old FORTRAN
         code.
         """
         linessplit = line.strip().split()
@@ -403,7 +403,7 @@ class CrossWriter(Writer):
         Note
         ----
         We add 1 to the interface number here. This is for
-        compatibility with the old Fortran code where the interfaces
+        compatibility with the old FORTRAN code where the interfaces
         are numbered 1, 2, ... rather than 0, 1, ... .
         """
         msgtxt = 'Generating crossing data at step: {}'.format(step)
@@ -437,7 +437,7 @@ class EnergyWriter(Writer):
               'width': [10, 14]}
 
     def __init__(self):
-        """Initialize a `EnergyWriter`."""
+        """Initialise a `EnergyWriter`."""
         super().__init__('EnergyWriter', header=self.HEADER)
 
     def load(self, filename):
@@ -510,7 +510,7 @@ class EnergyPathWriter(EnergyWriter):
               'width': [10, 14]}
 
     def __init__(self):
-        """Initialize."""
+        """Initialise."""
         super().__init__()
         self.print_header = False
 
@@ -521,10 +521,10 @@ class EnergyPathWriter(EnergyWriter):
         ----------
         step : int
             The cycle number we are creating output for.
-        path : object like :py:class:`.PathBase`
-            The path we are creating output for.
-        status : string
-            Status for the path (accepted/rejected).
+        data : tuple
+            Here we assume that ``data[0]`` contains an object
+            like :py:class:`.PathBase` and ``data[1]`` contains
+            the status string for the path.
 
         Yields
         ------
@@ -561,7 +561,7 @@ class OrderWriter(Writer):
     ORDER_FMT = ['{:>10d}', '{:>12.6f}']
 
     def __init__(self):
-        """Initialize a `OrderWriter`."""
+        """Initialise a `OrderWriter`."""
         header = {'labels': ['Time', 'Orderp'], 'width': [10, 12]}
         super().__init__('OrderWriter', header=header)
 
@@ -628,7 +628,7 @@ class OrderPathWriter(OrderWriter):
     """A class for writing out order parameter data for paths."""
 
     def __init__(self):
-        """Initialize."""
+        """Initialise."""
         super().__init__()
         self.print_header = False
 
@@ -739,7 +739,7 @@ def read_txt_snapshots(filename, data_keys=None):
                 snapshot['box'] = get_box_from_header(snapshot['header'])
                 read_header = False
                 continue
-            if lines_to_read == 0:  # new shapshot
+            if lines_to_read == 0:  # new snapshot
                 if snapshot is not None:
                     yield snapshot
                 lines_to_read = int(lines.strip())
@@ -762,7 +762,7 @@ def read_txt_snapshots(filename, data_keys=None):
 
 
 class TrajWriter(Writer):
-    """Generic class for writing system shapshots.
+    """Generic class for writing system snapshots.
 
     Attributes
     ----------
@@ -780,7 +780,7 @@ class TrajWriter(Writer):
     _FMT_VEL = '{:5s} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f} {:15.9f}'
 
     def __init__(self, write_vel=True, fmt=None):
-        """Initialize the writer.
+        """Initialise the writer.
 
         Parameters
         ----------
@@ -899,7 +899,7 @@ class PathExtWriter(Writer):
     FMT = '{:>10}  {:>20s}  {:>10}  {:>5}'
 
     def __init__(self):
-        """Initialization of the PathExtWriter writer."""
+        """Initialisation of the PathExtWriter writer."""
         header = {'labels': ['Step', 'Filename', 'index', 'vel'],
                   'width': [10, 20, 10, 5], 'spacing': 2}
 
@@ -952,7 +952,7 @@ class PathIntWriter(Writer):
     """
 
     def __init__(self):
-        """Initialization of the PathIntWriter writer."""
+        """Initialisation of the PathIntWriter writer."""
         super().__init__('PathIntWriter', header=None)
         self.print_header = False
         self.fmt = None

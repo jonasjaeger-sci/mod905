@@ -63,7 +63,7 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
     timestep : float
         The time-step to use for the simulation.
     subcycles : integer
-        The number of subcycles to perform.
+        The number of sub-cycles to perform.
     posfile : string
         The (base)name for the input file to read positions from.
     vel : numpy.array
@@ -127,7 +127,7 @@ def write_for_continue(infile, outfile, timestep, subcycles,
                        name='md_continue'):
     """Create input file for a single step.
 
-    Note, the single step actually consist of a number of subcycles.
+    Note, the single step actually consist of a number of sub-cycles.
     But from PyRETIS' point of view, this is a single step.
     Here, we make use of restart files named ``previous.restart``
     and ``previous.wfn`` to continue a run.
@@ -141,7 +141,7 @@ def write_for_continue(infile, outfile, timestep, subcycles,
     timestep : float
         The time-step to use for the simulation.
     subcycles : integer
-        The number of subcycles to perform.
+        The number of sub-cycles to perform.
     name : string
         A name given to the CP2K project.
     """
@@ -607,7 +607,7 @@ class CP2KEngine(ExternalMDEngine):
     def _prepare_shooting_point(self, input_file):
         """Create initial configuration for a shooting move.
 
-        This creates a new initial configuratino with random velocities.
+        This creates a new initial configuration with random velocities.
 
         Parameters
         ----------
@@ -672,8 +672,8 @@ class CP2KEngine(ExternalMDEngine):
         momentum : boolean, optional
             If True, we reset the linear momentum to zero after generating.
         rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
+            In some NVE simulations, we may wish to re-scale the energy to
+            a fixed value. If `rescale` is a float > 0, we will re-scale
             the energy (after modification of the velocities) to match the
             given float.
 
@@ -686,7 +686,7 @@ class CP2KEngine(ExternalMDEngine):
         """
         dek, kin_old, kin_new = None, None, None
         if rescale is not None and rescale is not False and rescale > 0:
-            msgtxt = 'CP2K engine does not support energy rescale.'
+            msgtxt = 'CP2K engine does not support energy re-scale.'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
         else:

@@ -630,7 +630,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
     histograms : list
         These are the histograms obtained in the shoots analysis.
     scale : dict
-        These are the scale factors for normalizing the histograms
+        These are the scale factors for normalising the histograms
         obtained in the shoots analysis.
     ensemble : string
         This is the ensemble identifier, e.g. 001, 002, etc.

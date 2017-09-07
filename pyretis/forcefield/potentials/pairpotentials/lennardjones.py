@@ -322,7 +322,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         box = system.box
         pot = 0.0
         # the particle list may implement a list which we can
-        # loop over. This could be some kind of fancy neighborlist
+        # loop over. This could be some kind of fancy neighbour list
         # here, we ignore this and loop over all pairs using numpy.
         for i, particle_i in enumerate(particles.pos[:-1]):
             itype = particles.ptype[i]

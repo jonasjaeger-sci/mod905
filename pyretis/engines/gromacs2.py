@@ -34,31 +34,8 @@ TRR_HEAD_SIZE = 1000
 class GromacsEngine2(GromacsEngine):
     """A class for interfacing GROMACS.
 
-    This class defines the interface to GROMACS.
-
-    Attributes
-    ----------
-    gmx : string
-        The command for executing GROMACS. Note that we are assuming
-        that we are using version 5 of GROMACS.
-    mdrun : string
-        The command for executing GROMACS mdrun. In some cases this
-        executable can be different from ``gmx mdrun``.
-    mdrun_c : string
-        The command for executing GROMACS mdrun when continuing a
-        simulation. This is derived from the ``mdrun`` command.
-    input_path : string
-        The directory where the input files are stored.
-    input_files : dict of strings
-        The names of the input files. We expect to find the keys
-        ``'conf'``, ``'input'`` ``'topology'``.
-    ext_time : float
-        The time to extend simulations by. It is equal to
-        ``timestep * subcycles``.
-    maxwarn : integer
-        Setting for the GROMACS grompp ``maxwarn` option.
-    ext : string
-        This string selects the output format for GROMACS.
+    This class defines the interface to GROMACS. Attributes are similar
+    to :py:class:`.GromacsEngine`.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
@@ -82,6 +59,10 @@ class GromacsEngine2(GromacsEngine):
             Setting for the GROMACS grompp ``maxwarn` option.
         gmx_format : string
             The format used for GROMACS configurations.
+        write_vel : boolean
+            Determines if GROMACS should write velocities or not.
+        write_force : boolean
+            Determines if GROMACS should write forces or not.
         """
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
                          maxwarn=maxwarn, gmx_format=gmx_format,
@@ -312,8 +293,8 @@ class GromacsRunner():
         The process running GROMACS.
     bytes_read : integer
         The number of bytes we have read so far from the .trr file.
-    inode : integer
-        The current inode we are using.
+    ino : integer
+        The current inode we are using for the file.
     stop_read : boolean
         If this is set to True, we will stop the reading.
     SLEEP : float
@@ -375,7 +356,7 @@ class GromacsRunner():
             cwd=self.exe_dir
         )
         present = []
-        # Wait for the trr/edr filaes to appear
+        # Wait for the trr/edr files to appear
         for fname in (self.trr_file, self.edr_file):
             while not os.path.isfile(fname):
                 logger.debug('Waiting for GROMACS file "%s"', fname)
@@ -389,7 +370,7 @@ class GromacsRunner():
         # Prepare and open the trr file:
         self.bytes_read = 0
         # Ok, so GROMACS might have crashed in between writing the
-        # files. Chech that both files are indeed here:
+        # files. Check that both files are indeed here:
         if self.trr_file in present and self.edr_file in present:
             self.fileh = open(self.trr_file, 'rb')
             self.ino = os.fstat(self.fileh.fileno()).st_ino
@@ -405,6 +386,7 @@ class GromacsRunner():
     def get_gromacs_frames(self):
         """Read the GROMACS .trr file on-the-fly."""
         first_header = True
+        header = None
         while not self.stop_read:
             poll = self.check_poll()
             if poll is not None:

@@ -259,7 +259,7 @@ def set_up_simulation(settings):
     system.forcefield = create_force_field(settings)
     keyargs = {'system': system, 'engine': engine}
     simulation = create_simulation(settings, keyargs)
-    # also do the initialization here:
+    # also do the initialisation here:
     for i, _ in enumerate(initiate_path_simulation(simulation, settings)):
         ensemble = simulation.path_ensembles[i]
         name = ensemble.ensemble_name

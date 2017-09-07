@@ -39,7 +39,7 @@ class OrderParameterDihedral(OrderParameter):
     """
 
     def __init__(self, index, periodic=False):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------
@@ -90,7 +90,7 @@ class OrderParameterDihedral(OrderParameter):
             vector1 = system.box.pbc_dist_coordinate(vector1)
             vector2 = system.box.pbc_dist_coordinate(vector2)
             vector3 = system.box.pbc_dist_coordinate(vector3)
-        # norm vector 2 to simplyfy formulas
+        # norm vector 2 to simplify formulas
         vector2 /= norm(vector2)
         denom = (dot(vector1, vector3) -
                  dot(vector1, vector2) * dot(vector2, vector3))

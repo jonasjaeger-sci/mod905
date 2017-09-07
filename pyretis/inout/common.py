@@ -350,9 +350,9 @@ def check_python_version():  # pragma: no cover
 
 
 class PyretisLogFormatter(logging.Formatter):  # pragma: no cover
-    """Hardcoded formatter for the PyRETIS log file.
+    """Hard-coded formatter for the PyRETIS log file.
 
-    This formatter will just adjust multiline messages to have some
+    This formatter will just adjust multi-line messages to have some
     indentation.
     """
     def format(self, record):

@@ -44,7 +44,7 @@ class FileIO(object):
     OLDFILE = ('append', 'overwrite', 'backup')
 
     def __init__(self, filename, oldfile='backup', header=None):
-        """Just a simple initialize of the file object.
+        """Initialise the FileIO object.
 
         Parameters
         ----------

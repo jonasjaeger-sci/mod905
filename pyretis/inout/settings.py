@@ -333,7 +333,7 @@ def _parse_raw_section(raw_section, section):
 def _parse_all_raw_sections(raw_sections):
     """Helper method to parse all raw sections.
 
-    This method is helpfull for running tests etc.
+    This method is helpful for running tests etc.
 
     Parameters
     ----------
@@ -369,8 +369,8 @@ def _parse_all_raw_sections(raw_sections):
 def _add_default_settings(settings):
     """Add default settings.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     settings : dict
         The current input settings.
 
@@ -471,7 +471,7 @@ def settings_to_text(settings):
     Returns
     ------
     out : string
-        Text represeting the settings.
+        Text representing the settings.
     """
     txt = []
     for section in SECTIONS:
@@ -503,6 +503,9 @@ def section_to_text(settings, prefix=None):
     ----------
     settings : dict
         A dictionary with settings to transform.
+    prefix : string, optional
+        If this string is given, it will be prepended to
+        the setting we are writing.
 
     Returns
     -------

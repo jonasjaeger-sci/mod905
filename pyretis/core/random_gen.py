@@ -138,7 +138,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorization of cov. If not given,
+            Cholesky factorisation of cov. If not given,
             it will be calculated here.
         size : int, optional
             Number of samples to do.
@@ -349,7 +349,7 @@ class RandomGenerator(RandomGeneratorBase):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorization of cov. If not given,
+            Cholesky factorisation of cov. If not given,
             it will be calculated here.
         size : int, optional
             Number of samples to do.
@@ -395,7 +395,7 @@ class ReservoirSampler():
     length : integer
         The maximum number of items to store in the reservoir
         (i.e. `k`).
-    returnidx : integer
+    ret_idx : integer
         This is the index of the item to return if we are requesting
         items from the reservoir.
 
@@ -577,7 +577,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         cov : numpy array (2D, (2, 2))
             Covariance matrix of the distribution.
         cho : numpy.array (2D, (2, 2)), optional
-            Cholesky factorization of cov. If not given,
+            Cholesky factorisation of cov. If not given,
             it will be calculated here.
         size : int, optional
             Number of samples to do.

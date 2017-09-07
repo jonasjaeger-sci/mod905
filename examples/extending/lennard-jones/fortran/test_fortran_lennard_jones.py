@@ -18,8 +18,8 @@ from ljpotentialf import PairLennardJonesCutF
 def set_up_simulation():
     """Create the simulation object."""
     create_conversion_factors('lj')
-    size = [[0.0, 8.39798] for _ in range(3)]  # hard coded box-size
-    box = create_box(size)
+    size = np.array([[0.0, 8.39798] for _ in range(3)])  # hard-coded box-size
+    box = create_box(low=size[:, 0], high=size[:, 1])
     ljsystem = System(box=box, units='lj')
     ljsystem.particles = Particles(dim=3)
     ljpot = PairLennardJonesCutF(shift=True, mixing='geometric')
@@ -30,7 +30,8 @@ def set_up_simulation():
                             potential=[ljpot], params=[lj_parameters])
     ljsystem.forcefield = forcefield
     # read initial position and velocity:
-    dirname = 'molecular_dynamics/initial_lammps/input_data'
+    dirname = os.path.join('test', 'test-internal',
+                           'compare-internal-with-lammps', 'input_data')
     for _ in range(3):
         dirname = os.path.join(os.pardir, dirname)
     pos = np.loadtxt(os.path.join(dirname, 'initial_pos_mixture.txt.gz'))
@@ -53,15 +54,15 @@ def set_up_simulation():
         print('{0:>4d} atoms of type {1}'.format(int(natoms[atom]), atom))
     ljsystem.potential_and_force()
     numberofsteps = 100
-    simulationLAMMPS = Simulation(steps=numberofsteps)
+    simulationlammps = Simulation(steps=numberofsteps)
     engine = VelocityVerlet(0.0025)
     task_integrate = {'func': engine.integration_step,
                       'args': [ljsystem]}
-    simulationLAMMPS.add_task(task_integrate)
-    return simulationLAMMPS, ljsystem
+    simulationlammps.add_task(task_integrate)
+    return simulationlammps, ljsystem
 
 
-def run_simulation(simulationLAMMPS, ljsystem):
+def run_simulation(simulationlammps, ljsystem):
     """Run the simulation."""
     thermo_output = {}
     step = []
@@ -69,15 +70,15 @@ def run_simulation(simulationLAMMPS, ljsystem):
     outfmt2 = '# {0:>6s} {1:>12s} {2:>12s} {3:>12s} {4:>12s} {5:>12s}'
     print('Running simulation...')
     print(outfmt2.format('Step', 'Temp', 'Press', 'Pot', 'Kin', 'Total'))
-    while not simulationLAMMPS.is_finished():
-        simulationLAMMPS.step()
+    while not simulationlammps.is_finished():
+        simulationlammps.step()
         thermo = calculate_thermo(ljsystem)
         for key in thermo:
             try:
                 thermo_output[key].append(thermo[key])
             except KeyError:
                 thermo_output[key] = [thermo[key]]
-        step.append(simulationLAMMPS.cycle['step'])
+        step.append(simulationlammps.cycle['step'])
         if step[-1] % 10 == 0:
             print(outfmt.format(step[-1], thermo['temp'], thermo['press'],
                                 thermo['vpot'], thermo['ekin'],
@@ -92,9 +93,10 @@ class LennardJonesTest(unittest.TestCase):
 
     def setUp(self):
         """Run the simulation and get the outputs."""
-        simulationLAMMPS, ljsystem = set_up_simulation()
-        thermo_output = run_simulation(simulationLAMMPS, ljsystem)
-        dirname = 'molecular_dynamics/initial_lammps/output_data'
+        simulationlammps, ljsystem = set_up_simulation()
+        thermo_output = run_simulation(simulationlammps, ljsystem)
+        dirname = os.path.join('test', 'test-internal',
+                               'compare-internal-with-lammps', 'output_data')
         for _ in range(3):
             dirname = os.path.join(os.pardir, dirname)
         lmp_out = os.path.join(dirname, 'lammps-output_mixture.txt.gz')
@@ -103,7 +105,7 @@ class LennardJonesTest(unittest.TestCase):
         self.lmp_data = lmp_data
 
     def test_ljfortran(self):
-        """Test the creation of boxes with no arguments."""
+        """Test the evaluation of forces."""
         n = min(len(self.thermo_output['vpot']), len(self.lmp_data[:, 0]))
         print('Comparing with LAMMPS')
         lammps_idx = [1, 2, 3, 4, 5]
@@ -132,6 +134,7 @@ class LennardJonesTest(unittest.TestCase):
             print(' -> Root mean squared error: {}'.format(rmse))
             self.assertTrue(close)
             self.assertGreater(TOL, rmse)
+
 
 if __name__ == '__main__':
     unittest.main()

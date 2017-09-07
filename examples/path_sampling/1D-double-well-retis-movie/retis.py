@@ -150,9 +150,6 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         for this ensemble.
     orderp : numpy.array
         The maximum order parameters for all accepted paths.
-    variables : dict of objects
-        This dict contains variables we can use for updating derived data
-        for the different path ensembles.
 
     Returns
     -------

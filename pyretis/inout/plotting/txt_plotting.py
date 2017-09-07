@@ -216,7 +216,7 @@ class TxtPlotter(Plotter):
         ----------
         results : dict
             This dict contains the result from the analysis.
-        path_ensemble : object
+        path_ensemble : object like :py:class:`.PathEnsemble`
             This is the path ensemble we have analysed.
 
         Returns
@@ -381,7 +381,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
     histograms : list
         These are the histograms obtained in the shoots analysis.
     scale : dict
-        These are the scale factors for normalizing the histograms
+        These are the scale factors for normalising the histograms
         obtained in the shoots analysis.
     ensemble : string
         This is the ensemble identifier, e.g. 001, 002, etc.

@@ -58,7 +58,7 @@ class MDEngine(EngineBase):
     engine_type = 'internal'
 
     def __init__(self, timestep, description, dynamics=None):
-        """Initialization of the integrator.
+        """Initialisation of the integrator.
 
         Parameters
         ----------
@@ -186,8 +186,8 @@ class MDEngine(EngineBase):
         momentum : boolean, optional
             If True, we reset the linear momentum to zero after generating.
         rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
+            In some NVE simulations, we may wish to re-scale the energy to
+            a fixed value. If `rescale` is a float > 0, we will re-scale
             the energy (after modification of the velocities) to match the
             given float.
 
@@ -204,7 +204,7 @@ class MDEngine(EngineBase):
                 kin_old = rescale - particles.vpot
                 do_rescale = True
             else:
-                logger.warning('Ignored rescale 6.2%f < 0.0.', rescale)
+                logger.warning('Ignored re-scale 6.2%f < 0.0.', rescale)
                 return 0.0, calculate_kinetic_energy(particles)[0]
         else:
             kin_old = calculate_kinetic_energy(particles)[0]
@@ -247,7 +247,7 @@ class MDEngine(EngineBase):
 
         This method is just to help calculating the order parameter
         in cases where only the engine can do it! This creates
-        a uniform behavior for both internal and external engines.
+        a uniform behaviour for both internal and external engines.
         For internal engine this may not be so useful in it self, since
         we could just call `order.calculate(system)`. But for external
         engines, we can not assume that the system is able
@@ -305,7 +305,7 @@ class MDEngine(EngineBase):
             This dictionary contains settings for TIS. Explicitly used here:
 
             * `zero_momentum`: boolean, determines if the momentum is zeroed
-            * `rescale_energy`: boolean, determines if energy is rescaled.
+            * `rescale_energy`: boolean, determines if energy is re-scaled.
 
         Returns
         -------
@@ -557,9 +557,9 @@ class Langevin(MDEngine):
         """Initiate the Langevin integrator.
 
         Actually, it is very convenient to set some variables for the
-        different particles. However, to have a uniform initialization
+        different particles. However, to have a uniform initialisation
         for the different integrators, we postpone this.
-        This initialization can be done later by calling explicitly the
+        This initialisation can be done later by calling explicitly the
         function `self._init_parameters(system)` or it will be called
         the first time `self.integration_step` is invoked.
 
@@ -590,7 +590,7 @@ class Langevin(MDEngine):
         self.init_params = True
 
     def _init_parameters(self, system):
-        """Extra initialization of the Langevin integrator.
+        """Extra initialisation of the Langevin integrator.
 
         Parameters
         ----------

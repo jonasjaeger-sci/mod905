@@ -4,7 +4,7 @@
 """Definition of external engines.
 
 This module defines the base class for external MD engines.
-This class is subclassed by all other external MD engines.
+This class is sub-classed by all other external MD engines.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +40,7 @@ class ExternalMDEngine(EngineBase):
     * :py:meth:`ExternalMDEngine.step`
         A method for performing a MD step with the external
         engine. Note that the MD step can consist of a number
-        of subcycles.
+        of sub-cycles.
     * :py:meth:`ExternalMDEngine._read_configuration`
         For reading output (configurations) from the external engine.
         This is used for calculating the order parameter(s).
@@ -75,7 +75,7 @@ class ExternalMDEngine(EngineBase):
     engine_type = 'external'
 
     def __init__(self, description, timestep, subcycles):
-        """Initialization of the external engine.
+        """Initialisation of the external engine.
 
         Here we just set up some common properties which are useful
         for the execution.
@@ -89,7 +89,7 @@ class ExternalMDEngine(EngineBase):
         timestep : float
             The time step used in the simulation.
         subcycles : integer
-            The number of steps each external interation run is
+            The number of sub-cycles each external integration step is
             composed of.
         """
         super().__init__(description)
@@ -120,7 +120,7 @@ class ExternalMDEngine(EngineBase):
         MD simulations.
 
         If it's absolutely needed, there is a `self.step()` method
-        which can be used, for instance in the initialization.
+        which can be used, for instance in the initialisation.
         """
         msg = 'External engine does not support "integration_step()"!'
         logger.error(msg)
@@ -183,7 +183,7 @@ class ExternalMDEngine(EngineBase):
     def _modify_input(sourcefile, outputfile, settings, delim='='):
         """Modify input file for external software.
 
-        Here we assume that the input file has a syntax consiting of
+        Here we assume that the input file has a syntax consisting of
         ``keyword = setting``. We will only replace settings for
         the keywords we find in the file that is also inside the
         ``settings`` dictionary.
@@ -222,7 +222,7 @@ class ExternalMDEngine(EngineBase):
     def _read_input_settings(sourcefile, delim='='):
         """Read input settings for simulation input files.,
 
-        Here we assume that the input file has a syntax consiting of
+        Here we assume that the input file has a syntax consisting of
         ``keyword = setting``, where ``=`` can be any string given
         in the input parameter ``delim``.
 
@@ -299,7 +299,7 @@ class ExternalMDEngine(EngineBase):
                 cwd=cwd
             )
             exe.communicate(input=inputs)
-            # Note: communicate will wait untill process terminates.
+            # Note: communicate will wait until process terminates.
             return_code = exe.returncode
             if return_code != 0:
                 logger.error('Execution of external program (%s) failed!',
@@ -355,13 +355,7 @@ class ExternalMDEngine(EngineBase):
             self._removefile(os.path.join(dirname, thefile))
 
     def clean_up(self):
-        """Remove all files from a given directory.
-
-        Parameters
-        ----------
-        dirname : string
-            The directory to remove files from.
-        """
+        """Will remove all files from the current directory."""
         dirname = self.exe_dir
         logger.debug('Running engine clean-up in "%s"', dirname)
         files = [item.name for item in os.scandir(dirname) if item.is_file()]
@@ -372,7 +366,7 @@ class ExternalMDEngine(EngineBase):
         """Calculate order parameter from configuration in a file.
 
         Note, if ``xyz``, ``vel`` or ``box`` are given, we will
-        **NOT** read positions, velicity and box information from the
+        **NOT** read positions, velocity and box information from the
         current configuration file.
 
         Parameters
@@ -430,7 +424,7 @@ class ExternalMDEngine(EngineBase):
             This dictionary contains settings for TIS. Explicitly used here:
 
             * `zero_momentum`: boolean, determines if the momentum is zeroed
-            * `rescale_energy`: boolean, determines if energy is rescaled.
+            * `rescale_energy`: boolean, determines if energy is re-scaled.
 
         Returns
         -------
@@ -531,7 +525,7 @@ class ExternalMDEngine(EngineBase):
         """Propagate the equations of motion with the external code.
 
         This method will explicitly do the common set-up, before
-        calling more specialized code for doing the actual propagation.
+        calling more specialised code for doing the actual propagation.
 
         Parameters
         ----------

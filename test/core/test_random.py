@@ -217,7 +217,7 @@ class TestReservoirSampler(unittest.TestCase):
     """Run the tests for the ReservoirSampler classe."""
 
     def test_init(self):
-        """Test the initialization."""
+        """Test the initialisation."""
         rgen = ReservoirSampler()
         self.assertIsInstance(rgen.rgen, RandomState)
         rgen = ReservoirSampler(length=10, rgen=RandomGenerator(seed=1))

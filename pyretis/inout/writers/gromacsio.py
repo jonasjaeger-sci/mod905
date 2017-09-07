@@ -25,7 +25,7 @@ read_xvg_file (:py:func:`.read_xvg_file`)
     For reading .xvg files from GROMACS.
 
 read_trr_header (:py:func:`.read_trr_header`)
-    Read a header from an open .trr
+    Read a header from an open .trr file.
 
 read_trr_data (:py:func:`.read_trr_data`)
     Read data from an open .trr file.
@@ -118,7 +118,7 @@ def read_gromacs_lines(lines):
             read_natoms = False
             lines_to_read = int(line.strip()) + 1
             continue  # just skip to next line
-        if lines_to_read == 0:  # new shapshot
+        if lines_to_read == 0:  # new snapshot
             if snapshot:
                 yield snapshot
             snapshot = {'header': line.strip()}
@@ -188,10 +188,13 @@ def read_gromacs_gro_file(filename):
         The positions.
     vel : numpy.array
         The velocities.
+    box : numpy.array
+        The box dimensions.
     """
     xyz = None
     vel = None
     frame = None
+    box = None
     with open(filename, 'r') as fileh:
         for frame in read_gromacs_lines(fileh):
             xyz = np.array([[i, j, k] for i, j, k in zip(frame['x'],
@@ -213,10 +216,11 @@ def write_gromacs_gro_file(outfile, txt, xyz, vel):
 
     Parameters
     ----------
-    filename : string
+    outfile : string
         The name of the file to create.
-    raw : dict of lists of strings
-        This contains the raw data read from a .gro file.
+    txt : dict of lists of strings
+        This dict contains the information on residue-numbers, names,
+        etc. required to write the GRO file.
     xyz : numpy.array
         The positions to write.
     vel : numpy.array
@@ -300,7 +304,7 @@ def read_gromos96_file(filename):
     rawdata['POSITION'] = txtdata['POSITION']
     rawdata['VELOCITY'] = txtdata['VELOCITY']
     if not rawdata['VELOCITY']:
-        # No velicities were found in the input file.
+        # No velocities were found in the input file.
         xyzdata['VELOCITY'] = np.zeros_like(xyzdata['POSITION'])
         logger.info('Input g96 did not contain velocities')
     if rawdata['BOX']:
@@ -615,7 +619,7 @@ def read_trr_data(fileh, header):
 
 
 def read_trr_file(filename, read_data=True):
-    """Yields frames in a trr file."""
+    """Yields frames from a .trr file."""
     with open(filename, 'rb') as infile:
         while True:
             try:
@@ -700,7 +704,7 @@ def _get_chunks(start, end, size):
 
 
 def reverse_trr(filename, outname, print_progress=True):
-    """Reverse a gromacs .trr file.
+    """Reverse a GROMACS .trr file.
 
     Parameters
     ----------
@@ -740,7 +744,7 @@ def reverse_trr(filename, outname, print_progress=True):
 
 
 def write_trr_frame(filename, data, endian=None, double=False, append=False):
-    """Write data in trr format to a file.
+    """Write data in .trr format to a file.
 
     Parameters
     ----------
@@ -797,14 +801,14 @@ def write_trr_frame(filename, data, endian=None, double=False, append=False):
 
 
 def write_trr_header(outfile, header, floatfmt, endian=None):
-    """Helper method to write the trr header.
+    """Helper method to write the .trr header.
 
     Parameters
     ----------
     outfile : filehandle
         The file we can write to.
     header : dict
-        The header data for the trr file.
+        The header data for the .trr file.
     floatfmt : string
         The string which gives the format for floats. It should indicate
         if we are writing for double or single precision.

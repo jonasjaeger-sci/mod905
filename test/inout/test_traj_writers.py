@@ -335,5 +335,6 @@ class TrajTest(unittest.TestCase):
                     vel = True if snapshot[3] == '-1' else False
                     self.assertEqual(vel, datai[3])
 
+
 if __name__ == '__main__':
     unittest.main()

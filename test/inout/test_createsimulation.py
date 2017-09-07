@@ -375,5 +375,6 @@ class TestMethods(unittest.TestCase):
         sim = create_simulation(settings, kwargs)
         self.assertIsInstance(sim, SimulationRETIS)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -45,7 +45,7 @@ class Property():
     """
 
     def __init__(self, desc=''):
-        """Initialize the property.
+        """Initialise the property.
 
         Parameters
         ----------

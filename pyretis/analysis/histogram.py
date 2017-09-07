@@ -37,7 +37,7 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
     limits : tuple/list
         The max/min values to consider.
     density : boolean
-        If True the histogram will be normalized.
+        If True the histogram will be normalised.
     weights : numpy.array
         Weighting factors for data.
 
@@ -83,7 +83,7 @@ def histogram_and_avg(data, bins, density=True):
     bins : int
         The number of bins to use for the histogram.
     density : boolean, optional
-        If `density` is true, the histogram will be normalized.
+        If `density` is true, the histogram will be normalised.
 
     Returns
     -------

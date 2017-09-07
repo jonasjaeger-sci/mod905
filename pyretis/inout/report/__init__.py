@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package contains methods for generating reports.
 
-The reports will typically summarize the results from different
+The reports will typically summarise the results from different
 analysis and present it as a text file, pdf or web-page.
 
 Package structure

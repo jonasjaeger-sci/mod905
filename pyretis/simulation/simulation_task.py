@@ -126,7 +126,7 @@ class SimulationTask(object):
 
     def __init__(self, function, args=None, kwargs=None, when=None,
                  result=None, first=False):
-        """Initialize the task.
+        """Initialise the task.
 
         Parameters
         ----------

@@ -4,7 +4,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This is a mock engine for testing of an external GROMACS engine.
 
-This script is intended to spoof the behavior of the grompp program.
+This script is intended to spoof the behaviour of the grompp program.
 It does not actually do the things grompp does, it is just here so we
 can have a script for testing the GROMACS engine.
 """

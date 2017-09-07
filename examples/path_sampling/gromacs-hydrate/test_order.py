@@ -27,7 +27,6 @@ class TestOrder(unittest.TestCase):
         self.assertAlmostEqual(lambpy, lambf)
 
 
-
 if __name__ == '__main__':
     ordr = RingDiffusion()
     print('Indexes for the two groups:')

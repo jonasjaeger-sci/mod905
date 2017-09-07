@@ -45,6 +45,8 @@ def compare_traj(traj11, traj12, traj2, tol=1e-12):
         A trajectory to open, part 2.
     traj2 : string
         A trajectory file to open.
+    tol : float
+        A tolerance for comparing numbers.
 
     Returns
     -------

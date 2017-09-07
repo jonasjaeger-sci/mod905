@@ -97,7 +97,7 @@ def mock_mdrun(args, crash=False, sleep_time=None):
 
 
 def write_mock_trr(filename, steps, nstxout, xyz, vel, pause=None):
-# pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     """Write a mock TRR file."""
     xyzc = np.copy(xyz)
     velc = np.copy(vel)

@@ -49,7 +49,7 @@ class SimulationMD(Simulation):
     simulation_type = 'md'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
-        """Initialize the simulation.
+        """Initialise the simulation.
 
         Here we just add variables and do not do any other setup.
 
@@ -114,7 +114,7 @@ class SimulationNVE(SimulationMD):
     simulation_type = 'md-nve'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
-        """Initialization of a NVE simulation.
+        """Initialisation of a NVE simulation.
 
         Here we will set up the tasks that are to be performed in the
         simulation, such as the integration and thermodynamics
@@ -189,7 +189,7 @@ class SimulationMDFlux(SimulationMD):
 
     def __init__(self, system, orderp, engine, interfaces,
                  steps=0, startcycle=0):
-        """Initialization of the MD-Flux simulation.
+        """Initialisation of the MD-Flux simulation.
 
         Parameters
         ----------

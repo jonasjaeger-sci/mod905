@@ -50,8 +50,10 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     ----------
     engine : object like :py:class:`.ExternalMDEngine
         Engine to use for propagation.
-    system : object like :py:class:`.System`
-        The system we are propagation.
+    input_file : string
+        The input configuration used for CP2K.
+    exe_dir : string, optional
+        The directory where we will be running CP2K.
     """
     print_to_screen('\nRunning CP2K genvel step in "{}"'.format(exe_dir),
                     level='message')

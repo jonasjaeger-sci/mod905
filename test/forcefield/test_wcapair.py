@@ -147,5 +147,6 @@ class TestWCAPairPotential(unittest.TestCase):
         self.assertTrue(np.allclose(virial, CORRECT_VIRIAL))
         self.assertAlmostEqual(vpot, CORRECT_VPOT)
 
+
 if __name__ == '__main__':
     unittest.main()

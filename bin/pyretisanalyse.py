@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""pyretisanalysis - An application for analysing PyRETIS simulations
+"""pyretisanalyse - An application for analysing PyRETIS simulations.
 
 This script is a part of the PyRETIS library and can be used for
 analysing the result from simulations.
@@ -110,7 +110,7 @@ def create_reports(settings, analysis_results, report_path):
     Yields
     ------
     out : string
-        The reprot files created
+        The report files created.
     """
     if is_single_tis(settings):
         task = 'tis-single'
@@ -226,7 +226,7 @@ def main(input_file, run_path, report_dir):
         for outfile in create_reports(settings, results, report_dir):
             relfile = os.path.relpath(outfile, start=runpath)
             print_to_screen('Report created: {}'.format(relfile), level='info')
-    except Exception as error:  # Exceptions should subclass BaseException.
+    except Exception as error:  # Exceptions should sub-class BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         print_to_screen(errtxt, level='error')
         print_to_screen('Execution failed! Exiting...', level='error')

@@ -175,6 +175,8 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
         _, xyz, vel, box = read_gromos96_file(traj_file)
     elif ext == '.gro':
         _, xyz, vel, box = read_gromacs_gro_file(traj_file)
+    else:
+        raise ValueError('Unknown format {}'.format(ext))
     if system.particles is None:
         system.particles = ParticlesExt(dim=xyz.shape[1])
     system.particles.config = (traj_file, 0)

@@ -54,7 +54,7 @@ class DummyExternal(ExternalMDEngine):
     """A dummy external engine. Only useful for testing!"""
 
     def __init__(self, input_path, timestep, subcycles):
-        """Initialize the dummy engine."""
+        """Initialise the dummy engine."""
         super().__init__('External engine for testing!', timestep,
                          subcycles)
         self.input_path = os.path.abspath(input_path)
@@ -301,6 +301,7 @@ class TestMethods(unittest.TestCase):
         engine = MDEngine(1.0, 'Just for testing')
         system3 = create_system(settings, engine)
         self.assertIsInstance(system3.particles, Particles)
+
 
 if __name__ == '__main__':
     unittest.main()

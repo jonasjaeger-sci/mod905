@@ -78,7 +78,7 @@ class PathSimulation(Simulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the path simulation class.
+        """Initialisation of the path simulation class.
 
         Parameters
         ----------
@@ -170,7 +170,7 @@ class SimulationSingleTIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensemble, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the TIS simulation.
+        """Initialisation of the TIS simulation.
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class SimulationRETIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the RETIS simulation.
+        """Initialisation of the RETIS simulation.
 
         Parameters
         ----------

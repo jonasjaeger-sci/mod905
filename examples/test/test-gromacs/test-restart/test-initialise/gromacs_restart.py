@@ -12,7 +12,7 @@ logger.addHandler(logging.NullHandler())
 
 
 RND = RandomState(42)
-inputfile = os.path.join('..', 'run-initialize', 'rnd.state')
+inputfile = os.path.join('..', 'run-initialise', 'rnd.state')
 with open(inputfile, 'rb') as inputf:
     state = pickle.load(inputf)
 RND.set_state(state)

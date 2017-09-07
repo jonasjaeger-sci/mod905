@@ -31,7 +31,7 @@ class Particles():
     This is a simple particle list. It stores the positions,
     velocities, forces, masses (and inverse masses) and type information
     for a set of particles. In general the particle lists are intended
-    to define neighbor lists etc. This class will just define an
+    to define neighbour lists etc. This class will just define an
     all-pairs list.
 
     Attributes
@@ -67,7 +67,7 @@ class Particles():
     """
 
     def __init__(self, dim=1):
-        """Initialize the Particle list.
+        """Initialise the Particle list.
 
         Here we just create an empty particle list.
         """
@@ -301,7 +301,7 @@ class Particles():
         """Iterate over all pairs of particles.
 
         For more sophisticated particle lists this can/should be an
-        implementation of a 'smart' neighbor list.
+        implementation of a 'smart' neighbour list.
 
         Returns
         -------
@@ -359,7 +359,7 @@ class ParticlesExt(Particles):
     """
 
     def __init__(self, dim=1):
-        """Initialize the Particle list.
+        """Initialise the ParticleExt list.
 
         Here we just create an empty particle list.
         """

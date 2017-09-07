@@ -58,5 +58,6 @@ class TestUmbrellaWindow(unittest.TestCase):
         self.assertEqual(restart['type'], simulation.simulation_type)
         self.assertTrue('rgen' in restart)
 
+
 if __name__ == '__main__':
     unittest.main()

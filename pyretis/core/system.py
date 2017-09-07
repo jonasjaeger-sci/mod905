@@ -58,7 +58,7 @@ class System():
     """
 
     def __init__(self, units='lj', box=None, temperature=None):
-        """Initialization of the system.
+        """Initialisation of the system.
 
         Parameters
         ----------
@@ -82,7 +82,6 @@ class System():
         self.temperature['beta'] = self.calculate_beta()
         self.box = box
         self._adjust_dof_according_to_box()
-        # initialize other variables:
         self.particles = None
         self.forcefield = None
         self.post_setup = []
@@ -392,7 +391,7 @@ class System():
                 func(*args)
 
     def rescale_velocities(self, energy):
-        """Rescale the kinetic energy to a given total energy.
+        """Re-scale the kinetic energy to a given total energy.
 
         Parameters
         ----------
@@ -407,10 +406,10 @@ class System():
         ekin, _ = calculate_kinetic_energy(self.particles)
         ekin_new = energy - vpot
         if ekin_new < 0:
-            logger.warning(('Can not rescale velocities. '
+            logger.warning(('Can not re-scale velocities. '
                             'Target energy: %f, Potential: %f'), energy, vpot)
         else:
-            logger.debug('Rescaled energies to ekin: %f', ekin_new)
+            logger.debug('Re-scaled energies to ekin: %f', ekin_new)
             alpha = np.sqrt(ekin_new / ekin)
             self.particles.vel = self.particles.vel * alpha
 

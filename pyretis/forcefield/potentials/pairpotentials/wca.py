@@ -111,10 +111,9 @@ class DoubleWellWCA(PotentialFunction):
         """
         if self.params['types'] is None:
             return True
-        else:
-            pair1, pair2 = (itype, jtype), (jtype, itype)
-            return (pair1 in self.params['types'] or
-                    pair2 in self.params['types'])
+        pair1, pair2 = (itype, jtype), (jtype, itype)
+        return (pair1 in self.params['types'] or
+                pair2 in self.params['types'])
 
     def min_max(self):
         """Return the minima & maximum of the `DoubleWellWCA` potential.

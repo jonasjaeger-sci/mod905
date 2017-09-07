@@ -68,5 +68,6 @@ def make_plot():
                        toolbar_location='right')
     show(subplot)
 
+
 if __name__ == '__main__':
     make_plot()

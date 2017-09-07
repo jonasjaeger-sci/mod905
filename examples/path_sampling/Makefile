@@ -11,5 +11,9 @@ clean:
 	find -name \*.log* -delete
 	-rm -rf 1D-double-well/retis/0*
 	-rm -rf gromacs-hydrate/0*
+	-rm -rf cp2k-hydrogen/0*
+	-rm -rf 2D-wca/*/retis-c/0*
+	-rm -rf 2D-wca/*/retis-c/0*
+	-rm -rf 2D-wca/*/tis/0*
 	find -name \*.tpr -delete
 	find -name \pyretis.mdp -delete

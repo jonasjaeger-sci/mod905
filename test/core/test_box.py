@@ -28,7 +28,7 @@ class RectBoxTest(unittest.TestCase):
         self.assertEqual(box.periodic, [False])
 
     def test_create_missing_periodic(self):
-        """Test default behavior of creation without periodic arguments."""
+        """Test default behaviour of creation without periodic arguments."""
         box = create_box(length=[10, 10, 10], periodic=None)
         self.assertIsInstance(box, RectangularBox)
         self.assertEqual(box.periodic, [True, True, True])
@@ -86,7 +86,7 @@ class RectBoxTest(unittest.TestCase):
         self.assertAlmostEqual(box4.calculate_volume(), 20.*5.*8.)
 
     def test_faulty_input(self):
-        """Test that the initialization fails as we expect."""
+        """Test that the initialisation fails as we expect."""
         with self.assertRaises(ValueError):
             create_box(length=[10, -10, 10])
         with self.assertRaises(TypeError):

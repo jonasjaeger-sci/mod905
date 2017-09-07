@@ -117,7 +117,7 @@ class PathEnsemble():
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
-        """Initialize the PathEnsemble object.
+        """Initialise the PathEnsemble object.
 
         Parameters
         ----------
@@ -361,7 +361,7 @@ class PathEnsembleExt(PathEnsemble):
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
-        """Initialize the PathEnsemble object.
+        """Initialise the PathEnsembleExt object.
 
         Parameters
         ----------
@@ -449,7 +449,7 @@ class PathEnsembleExt(PathEnsemble):
                 pass
 
     def list_superfluous(self):
-        """List files in accpeted directory that we do not need."""
+        """List files in accepted directory that we do not need."""
         last = set()
         if self.last_path:
             for phasepoint in self.last_path.trajectory(reverse=False):

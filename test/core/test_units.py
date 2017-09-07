@@ -243,5 +243,6 @@ class UnitsTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 units_from_settings(settings)
 
+
 if __name__ == '__main__':
     unittest.main()

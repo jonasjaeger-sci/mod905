@@ -164,8 +164,11 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     ----------
     engine : object like :py:class:`.ExternalMDEngine
         Engine to use for propagation.
-    system : object like :py:class:`.System`
-        The system we are propagation.
+    input_file : string
+        A file containing the input configuratio for CP2K.
+    exe_dir : string, optional
+        The folder where we will be executing CP2K.
+
 
     Returns
     -------

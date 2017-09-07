@@ -56,7 +56,7 @@ class OrderParameter():
     """
 
     def __init__(self, description='Generic order parameter'):
-        """Initialize the OrderParameter object.
+        """Initialise the OrderParameter object.
 
         Parameters
         ----------
@@ -171,7 +171,7 @@ class OrderParameterPosition(OrderParameter):
     """
 
     def __init__(self, index, dim='x', periodic=False):
-        """Initialize `OrderParameterPosition`.
+        """Initialise `OrderParameterPosition`.
 
         Parameters
         ----------
@@ -247,7 +247,7 @@ class OrderParameterDistance(OrderParameter):
     """
 
     def __init__(self, index, periodic=True):
-        """Initialize `OrderParameterDistance`.
+        """Initialise `OrderParameterDistance`.
 
         Parameters
         ----------
@@ -324,7 +324,7 @@ class CompositeOrderParameter(OrderParameter):
     """
 
     def __init__(self, order_parameters=None):
-        """Just initialize.
+        """Just initialise.
 
         Parameters
         ----------

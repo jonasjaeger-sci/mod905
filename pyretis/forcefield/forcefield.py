@@ -115,9 +115,8 @@ class ForceField(object):
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
             return potrm, paramrm
-        else:
-            logger.warning('Potential not found in the force field functions')
-            return None, None
+        logger.warning('Potential not found in the force field functions')
+        return None, None
 
     def update_potential_parameters(self, potential, params):
         """Update the potential parameters of the given potential function.

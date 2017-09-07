@@ -27,7 +27,7 @@ class RingDiffusion(OrderParameter):
     """
 
     def __init__(self):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------

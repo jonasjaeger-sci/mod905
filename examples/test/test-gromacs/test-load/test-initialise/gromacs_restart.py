@@ -12,13 +12,10 @@ logger.addHandler(logging.NullHandler())
 
 
 RND = RandomState(42)
-
-
-def store_rnd_state():
-    """Store the state of the random generator."""
-    state = RND.get_state()
-    with open('rnd.state', 'wb') as outfile:
-        pickle.dump(state, outfile)
+inputfile = os.path.join('..', 'run-initialise', 'rnd.state')
+with open(inputfile, 'rb') as inputf:
+    state = pickle.load(inputf)
+RND.set_state(state)
 
 
 def prepare_shooting_point(gro, input_file):
@@ -41,7 +38,6 @@ def prepare_shooting_point(gro, input_file):
     gen_mdp = os.path.join(gro.exe_dir, 'genvel.mdp')
     # Use specific seed:
     seed = RND.randint(1, 10000000)
-    store_rnd_state()
     settings = {'gen_vel': 'yes', 'gen_seed': seed, 'nsteps': 0,
                 'continuation': 'no'}
     gro._modify_input(gro.input_files['input'], gen_mdp, settings,

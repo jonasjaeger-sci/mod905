@@ -102,7 +102,7 @@ class TestRectangularWell(unittest.TestCase):
         for i in pos:
             system.particles.pos[0][0] = i
             pot = function.potential(system)
-            if params['left'] < i and params['right'] > i:
+            if params['left'] < i < params['right']:
                 self.assertEqual(pot, 0.0)
             else:
                 self.assertEqual(pot, float('inf'))

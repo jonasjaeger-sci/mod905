@@ -74,7 +74,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
     """
 
     def __init__(self, dim=3, shift=True, mixing='geometric',
-                 desc='Lennard-Jones pair potential (fortran)'):
+                 desc='Lennard-Jones pair potential (FORTRAN)'):
         """Initiate the Lennard-Jones potential.
 
         Parameters

@@ -73,7 +73,7 @@ class UmbrellaWindowSimulation(Simulation):
 
     def __init__(self, system, umbrella, overlap, rgen, maxdx,
                  mincycle=0, startcycle=0):
-        """Initialization of a umbrella simulation.
+        """Initialisation of a umbrella simulation.
 
         Parameters
         ----------
