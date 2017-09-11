@@ -63,13 +63,12 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
         This is the first frame we will read. Can be used in case we
         want to skip some frames from the .trr file.
 
-    Returns
-    -------
+    Yields
+    ------
     out : list of lists of floats
-        The order parameters as a list for each frame in the .trr file.
+        The order parameters, calculated per frame.
     """
     system = System(box=None)  # add dummy system
-    all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
            ' Step {}, time {}')
     for i, (header, data) in enumerate(read_trr_file(trr_file)):
@@ -91,8 +90,8 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
             system.particles.vel = np.zeros_like(data['x'])
         length = box_matrix_to_list(data['box'])
         system.update_box(length)
-        all_order.append(order_parameter.calculate_all(system))
-    return all_order
+        order = order_parameter.calculate_all(system)
+        yield order
 
 
 def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
@@ -114,13 +113,12 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
         This is the first frame we will read. Can be used in case we
         want to skip some frames from the file.
 
-    Returns
-    -------
+    Yields
+    ------
     out : list of lists of floats
-        The order parameters as a list for each frame in the file.
+        The order parameters as a list.
     """
     system = System(box=None)
-    all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
            ' Step {}')
     for i, snapshot in enumerate(read_xyz_file(traj_file)):
@@ -138,8 +136,8 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
         system.particles.pos = xyz
         system.particles.vel = vel
         system.update_box(box)
-        all_order.append(order_parameter.calculate_all(system))
-    return all_order
+        order = order_parameter.calculate_all(system)
+        yield order
 
 
 def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
@@ -161,7 +159,7 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     Returns
     -------
     out : list of lists of floats
-        The order parameters as a list for each frame.
+        The order parameters for the current frame.
     """
     system = System(box=None)
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
@@ -214,7 +212,7 @@ def recalculate_order(order_parameter, traj_file, reverse=False,
         all_order = helpers[ext](order_parameter, traj_file, reverse=reverse,
                                  maxidx=maxidx, minidx=minidx)
     if reverse:
-        all_order.reverse()
+        return reversed(list(all_order))
     return all_order
 
 

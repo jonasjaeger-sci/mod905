@@ -160,11 +160,11 @@ def _load_order_parameters_ext(traj, dirname, order_function):
             files[filename]['maxidx'] = idx
     # ok now we have the files, calculate the order parameters:
     for filename, info in files.items():
-        new_order = recalculate_order(order_function, filename,
-                                      reverse=info['reverse'],
-                                      maxidx=info['maxidx'],
-                                      minidx=info['minidx'])
-        orderdata += new_order
+        for new_order in recalculate_order(order_function, filename,
+                                           reverse=info['reverse'],
+                                           maxidx=info['maxidx'],
+                                           minidx=info['minidx']):
+            orderdata.append(new_order)
     # Store the re-calculated order parameters so we don't have
     # to re-calculate again later:
     write_order_parameters(order_file_name, orderdata)
