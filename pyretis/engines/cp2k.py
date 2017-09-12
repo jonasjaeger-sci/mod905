@@ -286,7 +286,7 @@ class CP2KEngine(ExternalMDEngine):
             The time step used in the CP2K simulation.
         subcycles : integer
             The number of steps each CP2K run is composed of.
-        extra_file : list
+        extra_files : list
             List of extra files which may be required to run CP2K.
         seed : integer
             A seed for the random number generator.

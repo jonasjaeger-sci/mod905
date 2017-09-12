@@ -383,12 +383,12 @@ class Verlet(MDEngine):
 
     Attributes
     ----------
-    delta_t : float
-        The integrator time step.
     half_idt : float
         Half of inverse time step: `0.5 / delta_t`
     delta_t2 : float
         Squared time step: `delta_t**2`
+    previous_pos : numpy.array
+        Stores the previous positions of the particles.
     """
 
     def __init__(self, timestep):
@@ -409,7 +409,7 @@ class Verlet(MDEngine):
 
         Parameters
         ----------
-        particles : object
+        particles : object like :py:class:`.Particles`
             The initial configuration. Positions and velocities are
             required.
         """

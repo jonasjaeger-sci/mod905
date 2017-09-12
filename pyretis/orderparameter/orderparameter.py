@@ -60,7 +60,7 @@ class OrderParameter():
 
         Parameters
         ----------
-        desc : string
+        description : string
             Short description of the order parameter.
         """
         self.description = description
@@ -157,8 +157,6 @@ class OrderParameterPosition(OrderParameter):
 
     Attributes
     ----------
-    name : string
-        A human readable name for the order parameter
     index : integer
         This is the index of the atom which will be used, i.e.
         system.particles.pos[index] will be used.
@@ -235,8 +233,6 @@ class OrderParameterDistance(OrderParameter):
 
     Attributes
     ----------
-    name : string
-        A human readable name for the order parameter
     index : tuple of integers
         These are the indices used for the two particles.
         `system.particles.pos[index[0]]` and
@@ -251,8 +247,6 @@ class OrderParameterDistance(OrderParameter):
 
         Parameters
         ----------
-        name : string
-            The name for the order parameter
         index : tuple of ints
             This is the indices of the atom we will use the position of.
         periodic : boolean, optional
@@ -317,8 +311,6 @@ class CompositeOrderParameter(OrderParameter):
 
     Attributes
     ----------
-    description : string
-        This is a short description of the order parameter.
     extra : list of objects like :py:class:`OrderParameter`
         This is a list of order parameters to calculate.
     """
@@ -328,8 +320,6 @@ class CompositeOrderParameter(OrderParameter):
 
         Parameters
         ----------
-        desc : string
-            Short description of the order parameter.
         order_parameters : list of objects like :py:class:`.OrderParameter`.
             A list of order parameters we can add.
         """

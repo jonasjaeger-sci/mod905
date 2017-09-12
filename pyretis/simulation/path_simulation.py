@@ -84,7 +84,7 @@ class PathSimulation(Simulation):
         ----------
         system : object like :py:class:`.System`
             This is the system we are investigating.
-        order_fucntion : object like :py:class:`.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
