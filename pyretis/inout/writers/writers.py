@@ -240,7 +240,7 @@ class Writer():
         ----------
         file_type : string
             A string which identifies the output type of this writer.
-        header : string
+        header : dict, optional
             The header for the output data
         """
         self.file_type = file_type
@@ -784,11 +784,11 @@ class TrajWriter(Writer):
 
         Parameters
         ----------
-        name : string
-            Just a name to identify the writer when printing it.
-        write_vel : boolean
+        write_vel : boolean, optional
             If True, the writer will attempt to output velocities. This may
             or may not be supported by the writer.
+        fmt : string, optional
+            Selects the format to use.
         """
         super().__init__('TrajWriter', header=None)
         self.print_header = False
