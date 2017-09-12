@@ -260,11 +260,13 @@ def _table_interface(results, fmt='rst'):
     """
     table = []
     for result in results:
-        row = ['{:^8s}'.format(result['out']['ensemble'])]
         interf = result['out']['interfaces']
-        row.append(apply_format(interf[0], '{:^8.4f}'))
-        row.append(apply_format(interf[1], '{:^8.4f}'))
-        row.append(apply_format(interf[2], '{:^8.4f}'))
+        row = [
+            '{:^8s}'.format(result['out']['ensemble']),
+            apply_format(interf[0], '{:^8.4f}'),
+            apply_format(interf[1], '{:^8.4f}'),
+            apply_format(interf[2], '{:^8.4f}'),
+        ]
         detect = result['out']['detect']
         if detect is None:
             row.append('')
@@ -350,11 +352,12 @@ def _table_probability(results, fmt='rst'):
     """
     table = []
     for result in results:
-        row = ['{:^8s}'.format(result['out']['ensemble'])]
-        row.append(apply_format(result['out']['prun'][-1], '{:^10.6f}'))
-        row.append(apply_format(result['out']['blockerror'][2], '{:^10.6f}'))
-        row.append(apply_format(result['out']['blockerror'][4] * 100,
-                                '{:^10.6f}'))
+        row = [
+            '{:^8s}'.format(result['out']['ensemble']),
+            apply_format(result['out']['prun'][-1], '{:^10.6f}'),
+            apply_format(result['out']['blockerror'][2], '{:^10.6f}'),
+            apply_format(result['out']['blockerror'][4] * 100, '{:^10.6f}'),
+        ]
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, r'Probabilities',
@@ -437,12 +440,14 @@ def _table_efficiencies(results, fmt='rst'):
     """
     table = []
     for result in results:
-        row = ['{:^8s}'.format(result['out']['ensemble'])]
-        row.append(apply_format(result['out']['tis-cycles'], '{:^10.0f}'))
-        row.append(apply_format(result['out']['efficiency'][1], '{:^10.6f}'))
-        row.append(apply_format(result['out']['efficiency'][0], '{:^10.6f}'))
-        row.append(apply_format(result['out']['blockerror'][6], '{:^10.6f}'))
-        row.append(apply_format(result['out']['efficiency'][2], '{:^10.6f}'))
+        row = [
+            '{:^8s}'.format(result['out']['ensemble']),
+            apply_format(result['out']['tis-cycles'], '{:^10.0f}'),
+            apply_format(result['out']['efficiency'][1], '{:^10.6f}'),
+            apply_format(result['out']['efficiency'][0], '{:^10.6f}'),
+            apply_format(result['out']['blockerror'][6], '{:^10.6f}'),
+            apply_format(result['out']['efficiency'][2], '{:^10.6f}'),
+        ]
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Efficiency',

@@ -77,11 +77,13 @@ def _table_md_efficiency(results, fmt='rst'):
         teff = results['teffMD'][i]
         corr = results['corrMD'][i]
         prel = results['1-p'][i]
-        row = ['{:^10d}'.format(i + 1)]
-        row.append(apply_format(pmd, '{:^10.6f}'))
-        row.append(apply_format(prel, '{:^10.6f}'))
-        row.append(apply_format(teff, '{:^10.6f}'))
-        row.append(apply_format(corr, '{:^10.6f}'))
+        row = [
+            '{:^10d}'.format(i + 1),
+            apply_format(pmd, '{:^10.6f}'),
+            apply_format(prel, '{:^10.6f}'),
+            apply_format(teff, '{:^10.6f}'),
+            apply_format(corr, '{:^10.6f}'),
+        ]
         table.append(row)
 
     if fmt in ['tex', 'latex']:
@@ -130,12 +132,13 @@ def _table_md_flux_cycles(results, fmt='rst'):
         the table.
     """
     # table for interfaces:
-    table = []
-    table.append(['A', '{:8d}'.format(results['times']['A'])])
-    table.append(['B', '{:8d}'.format(results['times']['B'])])
-    table.append(['overall A', '{:8d}'.format(results['times']['OA'])])
-    table.append(['overall B', '{:8d}'.format(results['times']['OB'])])
-    table.append(['Total cycles', '{:8d}'.format(results['totalcycle'])])
+    table = [
+        ['A', '{:8d}'.format(results['times']['A'])],
+        ['B', '{:8d}'.format(results['times']['B'])],
+        ['overall A', '{:8d}'.format(results['times']['OA'])],
+        ['overall B', '{:8d}'.format(results['times']['OB'])],
+        ['Total cycles', '{:8d}'.format(results['totalcycle'])],
+    ]
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Cycles spent in state',
                                          ['State', 'Cycles'],
@@ -172,15 +175,17 @@ def _table_md_flux(results, fmt='rst'):
         flux = results['runflux'][i][-1]
         error = results['errflux'][i][2]
         relerror = results['errflux'][i][4]
-        row = ['{:^4d}'.format(i + 1)]
-        row.append(apply_format(idet, '{:^8.4f}'))
-        row.append(apply_format(flux, '{:^10.6f}'))
-        row.append(apply_format(error, '{:^10.6f}'))
-        row.append(apply_format(relerror, '{:^10.6f}'))
-        row.append('{:^8d}'.format(results['ncross'][i]))
-        row.append('{:^8d}'.format(results['neffcross'][i]))
-        row.append(apply_format(results['neffc/nc'][i], '{:^10.6f}'))
-        row.append(apply_format(results['cross_time'][i], '{:^10.6f}'))
+        row = [
+            '{:^4d}'.format(i + 1),
+            apply_format(idet, '{:^8.4f}'),
+            apply_format(flux, '{:^10.6f}'),
+            apply_format(error, '{:^10.6f}'),
+            apply_format(relerror, '{:^10.6f}'),
+            '{:^8d}'.format(results['ncross'][i]),
+            '{:^8d}'.format(results['neffcross'][i]),
+            apply_format(results['neffc/nc'][i], '{:^10.6f}'),
+            apply_format(results['cross_time'][i], '{:^10.6f}'),
+        ]
         table.append(row)
     if fmt in ['tex', 'latex']:
         table_str = generate_latex_table(table, 'Flux for interfaces',

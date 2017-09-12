@@ -858,10 +858,13 @@ class TrajWriter(Writer):
             The formatted snapshot
         """
         npart = system.particles.npart
-        buff = ['{}'.format(npart)]
-        buff.append('Snapshot, step: {} box: {}'.format(
-            step,
-            system.box.print_length()))
+        buff = [
+            '{}'.format(npart),
+            'Snapshot, step: {} box: {}'.format(
+                step,
+                system.box.print_length()
+            ),
+        ]
         if self.write_vel:
             formatter = self._format_with_vel
         else:
