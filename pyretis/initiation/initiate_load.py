@@ -214,8 +214,6 @@ def _check_path(path, ensemble):
     ----------
     path : object like :py:class:`.PathBase`
         The path we are to set up/fill.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     ensemble : object like :py:class:`.PathEnsemble`
         The ensemble the path could be added to.
     """
@@ -290,8 +288,6 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
         they are not given.
     engine : object like :py:class:`.EngineBase`
         The engine we use for the dynamics.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     """
     left, _, right = ensemble.interfaces
     traj = _load_trajectory(dirname)
@@ -383,8 +379,6 @@ def read_path_files_ext(path, ensemble, dirname, order_function, engine):
         they are not given.
     engine : object like :py:class:`.ExternalMDEngine`
         The engine we use for the dynamics.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     """
     left, _, right = ensemble.interfaces
     traj = _load_external_trajectory(dirname, engine)
