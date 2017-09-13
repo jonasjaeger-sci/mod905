@@ -99,7 +99,7 @@ def execute_now(step, when):
         return exe
 
 
-class SimulationTask(object):
+class SimulationTask:
     """Representation of simulation tasks.
 
     This class defines a task object. A task is executed at specific

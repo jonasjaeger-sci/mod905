@@ -274,7 +274,7 @@ class MDEngine(EngineBase):
         Returns
         -------
         out : list of floats
-            The calculated order parameters
+            The calculated order parameter(s).
         """
         if any((xyz is None, vel is None, box is None)):
             return order_function.calculate_all(system)

@@ -131,6 +131,7 @@ def write_mock_cpt(filename, steps, xyz):
 def read_mock_cpt(filename):
     """Read coordinates."""
     xyz = []
+    steps = -1
     with open(filename, 'r') as infile:
         for i, lines in enumerate(infile):
             if i == 0:

@@ -529,11 +529,14 @@ def read_trr_header(fileh):
     start = fileh.tell()
     endian = '>'
     magic = read_struct_buff(fileh, '{}1i'.format(endian))[0]
-
     if magic == _GROMACS_MAGIC:
         pass
     else:
         magic = swap_integer(magic)
+        if not magic == _GROMACS_MAGIC:
+            logger.critical(
+                'TRR file might be inconsistent! Could find _GROMACS_MAGIC'
+            )
         endian = swap_endian(endian)
     slen = read_struct_buff(fileh, '{}2i'.format(endian))
     raw = read_struct_buff(fileh, '{}{}s'.format(endian, slen[0]-1))

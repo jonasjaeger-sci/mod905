@@ -25,7 +25,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['System']
 
 
-class System():
+class System:
     """This class defines a generic system for simulations.
 
     Attributes
@@ -78,13 +78,13 @@ class System():
         possibly have a more general temperature object.
         """
         self.units = units
-        self.temperature = {'set': temperature, 'dof': None}
-        self.temperature['beta'] = self.calculate_beta()
+        self.temperature = {'set': temperature, 'dof': None, 'beta': None}
         self.box = box
         self._adjust_dof_according_to_box()
         self.particles = None
         self.forcefield = None
         self.post_setup = []
+        self.temperature['beta'] = self.calculate_beta()
 
     def adjust_dof(self, dof):
         """Adjust the degrees of freedom to neglect in the system.

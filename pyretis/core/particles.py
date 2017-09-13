@@ -25,7 +25,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['Particles', 'ParticlesExt']
 
 
-class Particles():
+class Particles:
     """Base class for a collection of particles.
 
     This is a simple particle list. It stores the positions,

@@ -51,7 +51,7 @@ def plot_path(path, axi, axj, color, alphai=0.9, alphaj=0.9, lsj='-'):
                 alpha=alphaj)
 
 
-class PlotHelper(object):
+class PlotHelper:
     """A class for handling the plotting."""
 
     def __init__(self, simulation, settings, axi, axj, colors):

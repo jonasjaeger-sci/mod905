@@ -232,7 +232,7 @@ _SIM_OUTPUT['retis'] = [
 ]
 
 
-class OutputTask(object):
+class OutputTask:
     """A base class for writing simulation output.
 
     This class will handle a output task for a simulation. The

@@ -72,14 +72,12 @@ class OrderParameterDihedral(OrderParameter):
         Parameters
         ----------
         system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases `system.forcefield` can also be
-            used to include specific energies for the order parameter.
+            The object containing the information we need to calculate
+            the order parameter.
 
         Returns
         -------
-        out : float
+        out : list of floats
             The order parameter.
         """
         pos = system.particles.pos

@@ -29,7 +29,7 @@ class SimpleOrder(OrderParameter):
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
 
     def calculate(self, system):  # pylint: disable=no-self-use
@@ -37,7 +37,7 @@ class SimpleOrderFaulty(object):  # pylint: disable=too-few-public-methods
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty2(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty2:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
 
     def calculate_all(self, system):  # pylint: disable=no-self-use
@@ -45,7 +45,7 @@ class SimpleOrderFaulty2(object):  # pylint: disable=too-few-public-methods
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty3(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty3:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
     calculate = 100
 

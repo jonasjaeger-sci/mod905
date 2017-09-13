@@ -65,7 +65,8 @@ def initiate_load(simulation, cycle, settings):
                 simulation.order_function,
                 simulation.engine,
             )
-
+        else:
+            raise ValueError('Unknown engine type!')
         ensemble.add_path_data(path, status, cycle)
         yield accept, path, status
 

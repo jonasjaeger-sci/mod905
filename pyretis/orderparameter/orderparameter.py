@@ -36,7 +36,7 @@ __all__ = ['OrderParameter', 'OrderParameterPosition',
            'OrderParameterDistance']
 
 
-class OrderParameter():
+class OrderParameter:
     """Base class for order parameters.
 
     This class represents an order parameter and other collective
@@ -103,12 +103,8 @@ class OrderParameter():
 
         Returns
         -------
-        out[0] : float
-            The order parameter.
-        out[1] : float
-            The velocity of the order parameter.
-        out[2, ...] : float(s)
-            Additional order parameters, if any.
+        out : list of floats
+            The order parameters(s),
         """
         ret_val = self.calculate(system)
         if not self.extra:
@@ -210,8 +206,9 @@ class OrderParameterPosition(OrderParameter):
 
         Returns
         -------
-        out : float
-            The order parameter.
+        out : list of float
+            The order parameters, here the position and in addition
+            (as a extra collective variable) the velocity.
         """
         particles = system.particles
         pos = particles.pos[self.index]
@@ -287,8 +284,9 @@ class OrderParameterDistance(OrderParameter):
 
         Returns
         -------
-        out : float
-            The order parameter.
+        out : list of floats
+            The order parameter and the velocity as an additional
+            collective variable.
         """
         particles = system.particles
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]

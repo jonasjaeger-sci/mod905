@@ -73,15 +73,13 @@ class OrderParameterAngle(OrderParameter):
         Parameters
         ----------
         system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases `system.forcefield` can also be
-            used to include specific energies for the order parameter.
+            Object containing the positions and box info we use for
+            the calculation.
 
         Returns
         -------
-        out : float
-            The order parameter.
+        out : list of floats
+            The order parameters.
         """
         pos = system.particles.pos
         vector_ba = pos[self.index[1]] - pos[self.index[0]]

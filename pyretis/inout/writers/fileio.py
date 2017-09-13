@@ -22,7 +22,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['FileIO']
 
 
-class FileIO(object):
+class FileIO:
     """A generic file writer class.
 
     This class defines a simple object for writing to files.

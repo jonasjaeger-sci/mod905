@@ -106,7 +106,7 @@ class InspectTest(unittest.TestCase):
         """Test pick out of self for kwargs."""
         settings = {'arg1': 10, 'arg2': 100, 'self': 'text'}
 
-        class Abomination():
+        class Abomination:
             # pylint: disable=too-few-public-methods
             """Just to allow redefination of __init__."""
             pass
@@ -135,7 +135,7 @@ class TestGetPathClass(unittest.TestCase):
             get_path_class('Not so classy')
 
 
-class Klass1():
+class Klass1:
     """A class for testing."""
 
     def __init__(self):

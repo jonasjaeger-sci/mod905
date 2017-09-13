@@ -360,7 +360,6 @@ def retis_swap(ensembles, idx, system, order_function, engine,
     """
     logger.info('Swapping: %s <-> %s', ensembles[idx].ensemble_name,
                 ensembles[idx+1].ensemble_name)
-    status = None
     if idx == 0:
         return retis_swap_zero(ensembles, system, order_function, engine,
                                settings, cycle)

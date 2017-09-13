@@ -265,7 +265,7 @@ class ExternalMDEngine(EngineBase):
             The command to execute.
         cwd : string or None
             The current working directory to set for the command.
-        inputs : string or None
+        inputs : bytes or None
             Possible input to give to the command. This are not arguments
             but more akin to keystrokes etc. that the external command
             may take.
@@ -348,7 +348,7 @@ class ExternalMDEngine(EngineBase):
         ----------
         dirname : string
             Where we are removing.
-        file_names : list of strings
+        files : list of strings
             A list with files to remove.
         """
         for thefile in files:
@@ -385,8 +385,8 @@ class ExternalMDEngine(EngineBase):
 
         Returns
         -------
-        out : float
-            The calculated order parameter.
+        out : list of floats
+            The calculated order parameter(s).
         """
         if any((xyz is None, vel is None, box is None)):
             out = self._read_configuration(system.particles.config[0])

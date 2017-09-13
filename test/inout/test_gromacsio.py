@@ -250,8 +250,14 @@ class TestGromacsTRR(unittest.TestCase):
 
         filename = os.path.join(HERE, 'error.trr')
         logging.disable(logging.INFO)
+
         with self.assertLogs('pyretis.inout.writers.gromacsio',
                              level='WARNING'):
+            for i in read_trr_file(filename):
+                pass
+
+        with self.assertLogs('pyretis.inout.writers.gromacsio',
+                             level='CRITICAL'):
             for i in read_trr_file(filename):
                 pass
         logging.disable(logging.CRITICAL)
@@ -306,10 +312,10 @@ class TestGromacsTRR(unittest.TestCase):
 
     def test_write_trr(self):
         """Test that we can write simple TRR files."""
-        compare_direct = set(('natoms', 'vir_size', 'ir_size',
-                              'sym_size', 'top_size', 'v_size',
-                              'f_size', 'box_size', 'x_size', 'step',
-                              'pres_size', 'nre', 'e_size', 'double'))
+        compare_direct = {'natoms', 'vir_size', 'ir_size', 'sym_size',
+                          'top_size', 'v_size', 'f_size', 'box_size',
+                          'x_size', 'step', 'pres_size', 'nre', 'e_size',
+                          'double'}
         cases = (
             {'double': False},
             {'double': True},

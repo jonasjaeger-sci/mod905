@@ -21,7 +21,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['Simulation']
 
 
-class Simulation(object):
+class Simulation:
     """This class defines a generic simulation.
 
     Attributes

@@ -51,13 +51,11 @@ def generate_report_tis_path(analysis, output='rst'):
     """
     result = analysis['pathensemble']
     report = {'ensemble': result['out']['ensemble'],
-              'figures': {},
+              'figures': _get_path_figures(result['figures']),
               'tables': {'interfaces': None,
                          'probability': None,
                          'path': None,
                          'efficiency': None}}
-    # Get figures (if any):
-    report['figures'] = _get_path_figures(result['figures'])
     # Create tables
     results = [result]
     tables = report['tables']
@@ -524,8 +522,8 @@ def _get_path_figures(figures):
         A dict which can be used in the report.
     """
     path_figures = {}
-    for fig in set(('pcross', 'prun', 'perror', 'lpath',
-                    'shoots', 'shoots_scaled')):
+    for fig in {'pcross', 'prun', 'perror', 'lpath',
+                'shoots', 'shoots_scaled'}:
         for key in figures:
             if key.endswith(fig):
                 path_figures[fig] = figures[key]

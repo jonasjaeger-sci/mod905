@@ -69,7 +69,7 @@ def _generate_file_names(path, target_dir, prefix=None):
     return new_pos, source
 
 
-class PathEnsemble():
+class PathEnsemble:
     """Representation of a path ensemble.
 
     This class represents a collection of `Paths` in a path ensemble.
@@ -470,9 +470,10 @@ class PathEnsembleExt(PathEnsemble):
 
         Parameters
         ----------
-        cycle : int
-            The current cycle number. This is used to generate a
-            unique name for the output file.
+        cycle : dict
+            The current cycle number dictionary as obtained from the
+            simulation object. This is used to generate a unique name
+            for the output file.
         path : object like :py:class:`.PathBase`
             The path to output.
 

@@ -22,14 +22,14 @@ class FooEngine(MDEngine):
         raise NotImplementedError
 
 
-class BarEngine():
-    """FailingEngine() - Dummy engine for tests."""
+class BarEngine:
+    """BarEngine - Dummy engine for tests."""
     def __init__(self, description='Dummy test engine'):
         self.description = description
 
 
-class BazEngine():
-    """BazEngine() - Dummy engine for tests."""
+class BazEngine:
+    """BazEngine - Dummy engine for tests."""
     def __init__(self, description='Dummy test enginer'):
         self.description = description
         self.integration_step = 'fake_step'

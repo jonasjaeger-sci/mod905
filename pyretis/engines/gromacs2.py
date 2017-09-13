@@ -274,7 +274,7 @@ def read_remaining_trr(filename, fileh, start):
                 continue
 
 
-class GromacsRunner():
+class GromacsRunner:
     """A helper class for running GROMACS.
 
     Attributes

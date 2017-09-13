@@ -145,12 +145,23 @@ SECTIONS['analysis'] = {
 }
 
 
-SPECIAL_KEY = set(('parameter', ))
-ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine',
-                      'collective-variable', 'initial-path'))
-SPECIAL_MULTIPLE = set(('potential', 'collective-variable'))
-MAX_SEC = {'potential': 99,
-           'collective-variable': 99}  # Just a practical limit.
+SPECIAL_KEY = {'parameter'}
+ALLOW_MULTIPLE = {
+    'potential',
+    'orderparameter',
+    'engine',
+    'collective-variable',
+    'initial-path'
+}
+SPECIAL_MULTIPLE = {
+    'potential',
+    'collective-variable'
+}
+# 99 is just a practical limit.
+MAX_SEC = {
+    'potential': 99,
+    'collective-variable': 99,
+}
 
 
 def parse_primitive(text):
@@ -232,7 +243,6 @@ def _parse_sections(inputtxt):
     """
     multiple = {key: 0 for key in SPECIAL_MULTIPLE}
     raw_data = {'heading': []}
-    current_line = None
     previous_line = None
     add_section = 'heading'
     data = []

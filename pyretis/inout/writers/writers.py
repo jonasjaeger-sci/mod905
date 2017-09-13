@@ -213,7 +213,7 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
         yield new_block
 
 
-class Writer():
+class Writer:
     """A generic class for writing output from PyRETIS.
 
     The writer class handles output and input of some data for PyRETIS.
@@ -639,8 +639,11 @@ class OrderPathWriter(OrderWriter):
         ----------
         step : int
             The cycle number we are creating output for.
-        path : object like :py:class:`.PathBase`
-            The path we are creating output for.
+        data : tuple or list
+            Here, data[0] contains a object
+            like :py:class:`.PathBase` which is the path we are
+            creating output for. data[1] contains the status for
+            this path.
 
         Yields
         ------

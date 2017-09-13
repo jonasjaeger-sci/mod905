@@ -176,7 +176,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase():
+class PathBase:
     """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of
@@ -420,7 +420,7 @@ class PathBase():
 
         Yields
         ------
-        out : tuple
+        out : dict
             The phase-space points in the path.
         """
         if reverse:

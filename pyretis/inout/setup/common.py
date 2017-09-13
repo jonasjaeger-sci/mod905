@@ -234,7 +234,7 @@ def create_orderparameter(settings):
         settings,
         'orderparameter',
         order_factory,
-        ('calculate',),
+        ['calculate'],
     )
     logger.info('Created main order parameter:\n%s', main_order)
 
@@ -245,7 +245,7 @@ def create_orderparameter(settings):
             settings,
             'collective-variable',
             order_factory,
-            ('calculate',),
+            ['calculate'],
             key_settings=order_setting
         )
         logger.info('Created additional collective variable:\n%s', order)
