@@ -31,7 +31,7 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 SECTIONS = OrderedDict()
 TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
-SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
+SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
 
 SECTIONS['simulation'] = {
     'task': None,
@@ -480,7 +480,7 @@ def settings_to_text(settings):
         if section in SPECIAL_MULTIPLE:
             for sec in settings[section]:
                 title = section.capitalize()
-                line = ('-') * len(title)
+                line = '-' * len(title)
                 raw_data = section_to_text(sec)
                 txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
         elif section == 'heading':
@@ -490,7 +490,7 @@ def settings_to_text(settings):
                 title = '{} settings'.format(section.upper())
             else:
                 title = '{} settings'.format(section.capitalize())
-            line = ('-') * len(title)
+            line = '-' * len(title)
             raw_data = section_to_text(settings[section])
             txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
     return ''.join(txt)
