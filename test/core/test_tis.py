@@ -140,6 +140,11 @@ def make_internal_path(start, end, maxorder, interface, points=100):
         The ending point for the path.
     maxorder : tuple of floats
         The maximum order parameter the path should attain.
+    interface : integer or None
+        The interface can be used to remove points from the path so
+        that the path will be valid.
+    points : integer, optional
+        The number of points to add to the path.
     """
     # pylint: disable=too-many-locals
     x = [start[0], maxorder[0], end[0]]  # pylint: disable=invalid-name
@@ -273,7 +278,7 @@ class TISTest(unittest.TestCase):
         for i in range(10):
             if i == 0:
                 for _ in initiate_path_simulation(simulation, in_settings):
-                    logging.debug('Running initialization')
+                    logging.debug('Running initialisation')
             else:
                 simulation.step()
             path = ensemble.paths[-1]

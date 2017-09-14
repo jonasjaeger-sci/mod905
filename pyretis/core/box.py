@@ -42,10 +42,15 @@ def create_box(low=None, high=None, length=None, periodic=None):
 
     Parameters
     ----------
-    size : list
-        The size of the box.
-    periodic : list of floats, optional
-        Determines if periodic boundaries should be applied.
+    low : numpy.array
+        1D array containing the lower bounds of the cell.
+    high : numpy.array
+        1D array containing the higher bounds of the cell.
+    length : numpy.array
+        1D array containing the size lengths of the cell.
+    periodic : list of boolean
+        If `periodic[i]` then we should apply periodic boundaries
+        to dimension `i`.
 
     Returns
     -------
@@ -63,8 +68,12 @@ def array_to_box_matrix(length):
 
     Parameters
     ----------
-    length : list or numpy.array (1D)
-        An array containing 1, 2, 3, 6 or 9 items.
+    length : list or numpy.array
+        An (1D) array containing 1, 2, 3, 6 or 9 items. These are
+        the xx, yy, zz, xy, xz, yx, yz, zx, zy elements. Setting
+        x = 0, y = 1 and z = 2 will give the indices in the matrix,
+        e.g. yx -> (1, 0) will correspond to the item in row 1 and
+        column 0.
 
     Returns
     -------
@@ -102,7 +111,7 @@ def box_matrix_to_list(matrix):
     Parameters
     ----------
     matrix : numpy.array
-        A matrix representing the box.
+        A matrix (2D) representing the box.
 
     Returns
     -------
@@ -144,8 +153,8 @@ def box_vector_angles(length, alpha, beta, gamma):
 
     Parameters
     ----------
-    length : np.array, 1D
-        The box-lengths on form ``[a, b, c]``
+    length : numpy.array
+        1D array, the box-lengths on form ``[a, b, c]``
     alpha : float
         The alpha angle.
     beta : float
@@ -155,8 +164,8 @@ def box_vector_angles(length, alpha, beta, gamma):
 
     Returns
     -------
-    out : np.array, 3D
-        The box matrix.
+    out : np.array
+        The box matrix (2D).
     """
     box_matrix = np.zeros((3, 3))
     cos_alpha = _cos(alpha)
@@ -180,25 +189,28 @@ class BoxBase(metaclass=ABCMeta):
 
     Attributes
     ----------
-    low : numpy.array (1D)
-        The lower bounds of the cell.
-    high : numpy.array (1D)
-        The higher bounds of the cell.
-    length : numpy.array (1D)
-        The length of the sides of the simulation box.
-    ilength : numpy.array (1D)
-        Inverse box lengths for the simulation box.
+    low : numpy.array
+        1D array containing the lower bounds of the cell.
+    high : numpy.array
+        1D array containing the higher bounds of the cell.
+    length : numpy.array
+        1D array containing the length of the sides of the
+        simulation box.
+    ilength : numpy.array
+        1D array containing the inverse box lengths for the
+        simulation box.
     periodic : list of boolean
         If `periodic[i]` then we should apply periodic boundaries
         to dimension `i`.
-    box_matrix : numpy.array (2D)
-        The simulation cell, represented as a matrix.
-    cell : numpy.array (1D)
-        The simulation cell, represented as a flattened array.
+    box_matrix : numpy.array
+        2D matrix, representing the simulation cell.
+    cell : numpy.array
+        1D array representing the simulation cell (flattened
+        version of the 2D box matrix).
     """
 
     def __init__(self, low=None, high=None, length=None, periodic=None):
-        """Initialize the base class."""
+        """Initialise the BoxBase class."""
 
         case = (length is not None, low is not None, high is not None)
 

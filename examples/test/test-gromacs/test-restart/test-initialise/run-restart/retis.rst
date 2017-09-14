@@ -6,7 +6,7 @@ Simulation
 task = retis
 steps = 25
 interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
-restart = ../run-initialize/pyretis.restart
+restart = ../run-initialise/pyretis.restart
 
 
 System
@@ -36,8 +36,7 @@ seed = 0
 
 Initial-path
 ------------
-method = load
-load_folder = initial_path
+method = restart
 
 RETIS settings
 --------------

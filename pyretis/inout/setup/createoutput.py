@@ -232,7 +232,7 @@ _SIM_OUTPUT['retis'] = [
 ]
 
 
-class OutputTask(object):
+class OutputTask:
     """A base class for writing simulation output.
 
     This class will handle a output task for a simulation. The
@@ -465,7 +465,7 @@ class OutputTaskFile(OutputTask):
 class OutputTaskFileCombine(OutputTaskFile):
     """A class for handling output where we combine several results.
 
-    Currently, this class is rather specialized and is only used for
+    Currently, this class is rather specialised and is only used for
     storing external paths. But it can be made more general in the
     future if such combinations are needed for other outputs.
     Here we model it as one type of output that applies a function
@@ -603,8 +603,6 @@ def get_task_type(task, engine):
     ----------
     task : dict
         Settings related to the specific task.
-    settings : dict
-        Settings for the simulation.
     engine : object like :py:class:`.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do
@@ -638,6 +636,8 @@ def task_from_settings(task, settings, directory, engine):
         Settings related to the specific task.
     settings : dict
         Settings for the simulation.
+    directory : string
+        The directory to write output files to.
     engine : object like :py:class:`.EngineBase`
         This object is used to determine if we need to do something
         special for external engines. If no engine is given, we do

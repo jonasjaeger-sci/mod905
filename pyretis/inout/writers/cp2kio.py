@@ -12,14 +12,14 @@ update_cp2k_input (:py:func`.update_cp2k_input`)
 read_cp2k_input (:py:func:`.read_cp2k_input`)
     A method to read a CP2K input file.
 """
-from pyretis.core.box import box_matrix_to_list, box_vector_angles
 import logging
+from pyretis.core.box import box_matrix_to_list, box_vector_angles
 import numpy as np
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
-class SectionNode():
+class SectionNode:
     """A class representing a section in the CP2K input.
 
     Attributes
@@ -98,7 +98,7 @@ def dfs_print(node, visited):
         These strings represent the CP2K input file.
     """
     out = []
-    pre = (' ') * (2 * node.level)
+    pre = ' ' * (2 * node.level)
     if not node.settings:
         out.append('{}&{}'.format(pre, node.title))
     else:
@@ -111,7 +111,8 @@ def dfs_print(node, visited):
     visited.add(node)
     for child in node.children:
         if child not in visited:
-            out += dfs_print(child, visited)
+            for lines in dfs_print(child, visited):
+                out.append(lines)
     out.append('{}&END {}'.format(pre, node.title))
     return out
 

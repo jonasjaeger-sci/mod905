@@ -24,7 +24,9 @@ def set_up_initial_state(nlattice=5):
     lattice, size = generate_lattice('fcc', [nlattice] * 3, density=0.9)
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = create_box(size, periodic=[True, True, True])
+    size = np.array(size)
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     sys = System(temperature=1.0, units='lj', box=box)
     sys.particles = Particles(dim=3)
     for pos in lattice:

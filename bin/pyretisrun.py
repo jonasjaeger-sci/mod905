@@ -313,11 +313,11 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
 
     # We perform the initiation here. The initiation method expects
     # a iterable of path ensembles so we just give that to it:
-    _help_with_initialization(sim, sim_settings, (output_tasks,))
+    _help_with_init(sim, sim_settings, (output_tasks,))
     write_path_ensemble_restart(ensemble)
     write_restart_file('pyretis.restart', sim)
 
-    logtxt = 'Initialization done. Starting main TIS simulation'
+    logtxt = 'Initialisation done. Starting main TIS simulation'
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
 
@@ -335,8 +335,8 @@ def run_tis_single_simulation(sim, sim_settings, progress=False):
     write_restart_file('pyretis.restart', sim)
 
 
-def _help_with_initialization(sim, sim_settings, output_tasks):
-    """Just a helper method do initialization and output results.
+def _help_with_init(sim, sim_settings, output_tasks):
+    """Just a helper method do initialisation and output results.
 
     Parameters
     ----------
@@ -399,14 +399,14 @@ def run_retis_simulation(sim, sim_settings, progress=False):
         )
         output_tasks.append(ensemble_task)
     print_to_screen('')
-    logtxt = 'Initializing RETIS simulation'
+    logtxt = 'Initialising RETIS simulation'
     print_to_screen(logtxt, level='info')
     logger.info(logtxt)
-    logtxt = 'Initializing path ensembles'
+    logtxt = 'Initialising path ensembles'
     print_to_screen(logtxt)
     logger.info(logtxt)
-    # Here we do the initialization:
-    _help_with_initialization(sim, sim_settings, output_tasks)
+    # Here we do the initialisation:
+    _help_with_init(sim, sim_settings, output_tasks)
     write_restart_file('pyretis.restart', sim)
     for ensemble in path_ensembles:
         write_path_ensemble_restart(ensemble)
@@ -645,6 +645,8 @@ def store_simulation_settings(settings, indir, backup):
         The simulation settings.
     indir : string
         The directory which contains the input script.
+    backup : boolean
+        If True, an existing settings file will be backed up.
     """
     if settings:
         out_file = os.path.join(indir, 'out.rst')
@@ -663,7 +665,7 @@ def main(infile, indir, exe_dir, progress):
         The input file to open with settings for PyRETIS.
     indir : string
         The folder containing the settings file.
-    run_path : string
+    exe_dir : string
         The directory we are working from.
     progress : boolean
         Determines if we should use a progress bar or not."""
@@ -678,7 +680,7 @@ def main(infile, indir, exe_dir, progress):
                                   settings['output']['backup'])
         # Run the simulation:
         run(simulation, settings, progress=progress)
-    except Exception as error:  # Exceptions should subclass BaseException.
+    except Exception as error:  # Exceptions should sub-class BaseException.
         errtxt = '{}: {}'.format(type(error).__name__, error.args)
         logger.error(errtxt)
         print_to_screen('ERROR - execution stopped.', level='error')
@@ -701,6 +703,7 @@ def main(infile, indir, exe_dir, progress):
             settings['particles']['npart'] = system.particles.npart
         store_simulation_settings(settings, indir, 'overwrite')
         bye_bye_world()
+
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)

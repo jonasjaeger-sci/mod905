@@ -10,6 +10,7 @@
 coverage:
 	coverage run -m unittest discover -s test
 	coverage html
+	coverage xml
  
 tests:
 	python -m unittest discover -v -s test

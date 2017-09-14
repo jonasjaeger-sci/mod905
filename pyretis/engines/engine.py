@@ -20,7 +20,7 @@ __all__ = ['EngineBase']
 class EngineBase(metaclass=ABCMeta):
     """Abstract base class for engines.
 
-    The engines perform molecular dynamics (or Monte Carolo) and they
+    The engines perform molecular dynamics (or Monte Carlo) and they
     are assumed to act on a system. Typically they will integrate
     Newtons equation of motion in time for that system.
 
@@ -110,8 +110,8 @@ class EngineBase(metaclass=ABCMeta):
         momentum : boolean, optional
             If True, we reset the linear momentum to zero after generating.
         rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
+            In some NVE simulations, we may wish to re-scale the energy to
+            a fixed value. If `rescale` is a float > 0, we will re-scale
             the energy (after modification of the velocities) to match the
             given float.
 

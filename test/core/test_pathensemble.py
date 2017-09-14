@@ -231,7 +231,7 @@ class PathEnsembleTest(unittest.TestCase):
             ensemble.add_path_data(path, 'ACC')
         for _ in range(5):
             ensemble.add_path_data(None, 'KOB')
-            correct.append(10 + i + 5)
+            correct.append(10 + 2 + 5)  # "+2" is from the previous for loop.
         for i, path in enumerate(ensemble.get_paths()):
             if i in (5, 6, 10, 11, 12, 13, 14):
                 self.assertEqual(path['status'], 'KOB')

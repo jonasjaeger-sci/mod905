@@ -120,8 +120,7 @@ class LangevinF(MDEngine):
             self.init_params = False
         if self.high_friction:
             return self.integration_step_overdamped(system)
-        else:
-            return self.integration_step_inertia(system)
+        return self.integration_step_inertia(system)
 
     def integration_step_overdamped(self, system):
         """Over damped Langevin integration, one time step.

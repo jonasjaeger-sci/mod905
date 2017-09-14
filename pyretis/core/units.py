@@ -1020,5 +1020,6 @@ def _examples():  # pragma: no cover
                 generate_system_conversions(sys1, sys2)
     write_conversions(filename='units-example.txt')
 
+
 if __name__ == '__main__':  # pragma: no cover
     _examples()

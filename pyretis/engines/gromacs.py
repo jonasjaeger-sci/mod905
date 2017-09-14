@@ -138,7 +138,7 @@ class GromacsEngine(ExternalMDEngine):
     def _name_output(self, basename):
         """Return the name of output file for dumping.
 
-        Here, we just add the corect extension for GROMACS-
+        Here, we just add the correct extension for GROMACS-
         """
         out_file = '{}.{}'.format(basename, self.ext)
         return os.path.join(self.exe_dir, out_file)
@@ -538,10 +538,10 @@ class GromacsEngine(ExternalMDEngine):
                         'continuation': 'no'}
             self._modify_input(self.input_files['input'], gen_mdp, settings,
                                delim='=')
-        # Run grompp for this input file:
+        # Run GROMACS grompp for this input file:
         out_grompp = self._execute_grompp(gen_mdp, input_file, 'genvel')
         remove = [val for _, val in out_grompp.items()]
-        # Run gromacs for this tpr file:
+        # Run GROMACS mdrun for this tpr file:
         out_mdrun = self._execute_mdrun(out_grompp['tpr'], 'genvel')
         remove += [val for key, val in out_mdrun.items() if key != 'conf']
         confout = os.path.join(self.exe_dir, out_mdrun['conf'])
@@ -623,10 +623,10 @@ class GromacsEngine(ExternalMDEngine):
         momentum : boolean, optional
             If True, we reset the linear momentum to zero after generating.
         rescale : float, optional
-            In some NVE simulations, we may wish to rescale the energy to
-            a fixed value. If `rescale` is a float > 0, we will rescale
-            the energy (after modification of the velocities) to match the
-            given float.
+            In some NVE simulations, we may wish to re-scale the energy
+            to a fixed value. If `rescale` is a float > 0, we will
+            re-scale the energy (after modification of the velocities)
+            to match the given float.
 
         Returns
         -------
@@ -639,7 +639,7 @@ class GromacsEngine(ExternalMDEngine):
         kin_old = None
         kin_new = None
         if rescale is not None and rescale is not False and rescale > 0:
-            msgtxt = 'GROMACS engine does not support energy rescale.'
+            msgtxt = 'GROMACS engine does not support energy re-scale.'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)
         else:

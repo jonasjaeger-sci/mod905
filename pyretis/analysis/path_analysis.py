@@ -201,7 +201,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
             pass
         else:
             pcross[:idx + 1] += weight  # +1 to include up to idx
-    pcross /= sumw  # normalization
+    pcross /= sumw  # normalisation
     return pcross, lamb
 
 
@@ -486,7 +486,7 @@ def analyse_path_ensemble_object(path_ensemble, settings):
     result['efficiency'].append(result['efficiency'][1] *
                                 result['blockerror'][4]**2)
     result['tis-cycles'] = path_ensemble.nstats['npath']
-    # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
+    # results['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
 
@@ -563,7 +563,7 @@ def analyse_path_ensemble(path_ensemble, settings):
             length_acc.append(path['length'])
             success = 1 if path['ordermax'][0] > detect else 0
             pdata.append(success)  # Store data for block analysis
-        else:  # just increase the weigths
+        else:  # just increase the weights
             weights[-1] += 1
         # we also update the running average of the probability here:
         if not result['prun']:
@@ -626,7 +626,7 @@ def analyse_path_ensemble(path_ensemble, settings):
         result['fluxlength'] = [hist1[2][0]-2.0, lenge2,
                                 lenge2 * (hist1[2][0]-2.)]
         result['fluxlength'].append(result['efficiency'][1] * lenge2**2)
-    # retults['efficiency'] is [acceptance rate, totsim , tis-eff]
+    # results['efficiency'] is [acceptance rate, totsim , tis-eff]
     return result
 
 
@@ -673,7 +673,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
             nacc += 1
             weights.append(1)
             length_acc.append(path['length'])
-        else:  # just increase the weigths
+        else:  # just increase the weights
             weights[-1] += 1
         result['cycle'].append(path['cycle'])
         length = _get_path_length(path, ensemble)
@@ -759,9 +759,12 @@ def match_probabilities(path_results, detect):
     results['overall-prob'] = np.transpose(results['overall-prob'])
     results['prob'] = accprob
     results['relerror'] = np.sqrt(accprob_err)
-    results['simtime'] = prob_simtime  # simulation time: cycles * path-lenght
-    results['opteff'] = prob_opt_eff**2  # optimized TIS efficiency
-    results['eff'] = accprob_err * prob_simtime  # over-all TIS efficiency
+    # simulation time: cycles * path-length:
+    results['simtime'] = prob_simtime
+    # optimised TIS efficiency:
+    results['opteff'] = prob_opt_eff**2
+    # over-all TIS efficiency:
+    results['eff'] = accprob_err * prob_simtime
     return results
 
 
@@ -774,6 +777,8 @@ def retis_flux(results0, results1, timestep):
         Results from the analysis of ensemble [0^-]
     results1 : dict
         Results from the analysis of ensemble [0^+]
+    timestep : float
+        The simulation timestep.
 
     Returns
     -------

@@ -102,12 +102,17 @@ def generate_latex_table(table, title, headings, fixnum=None):
         These integers identifies the columns where `latexify_number` is
         to be applied.
     """
-    str_table = [r'\renewcommand{\arraystretch}{1.25}',
-                 r'\noindent', r'\begin{minipage}{\textwidth}', r'\centering',
-                 r'\textbf{' + title + r'} \\', r'\medskip'
-                 r'\begin{tabular}{' + len(headings) * '| c ' + '|}']
-    str_table.append(r'\hline')
-    str_table.append(' & '.join(headings) + r'\\ \hline')
+    str_table = [
+        r'\renewcommand{\arraystretch}{1.25}',
+        r'\noindent',
+        r'\begin{minipage}{\textwidth}',
+        r'\centering',
+        r'\textbf{' + title + r'} \\',
+        r'\medskip',
+        r'\begin{tabular}{' + len(headings) * '| c ' + '|}',
+        r'\hline',
+        r' & '.join(headings) + r'\\ \hline',
+    ]
     for row in table:
         if fixnum:
             rowl = [latexify_number(col) if i in fixnum else col for i, col

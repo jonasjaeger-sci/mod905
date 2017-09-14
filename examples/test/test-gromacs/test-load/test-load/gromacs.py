@@ -49,7 +49,7 @@ def prepare_shooting_point(gro, input_file):
     # Run grompp for this input file:
     out_grompp = gro._execute_grompp(gen_mdp, input_file, 'genvel')
     remove = [val for _, val in out_grompp.items()]
-    # Run gromacs for this tpr file:
+    # Run GROMACS for this tpr file:
     out_mdrun = gro._execute_mdrun(out_grompp['tpr'], 'genvel')
     remove += [val for key, val in out_mdrun.items() if key != 'conf']
     confout = os.path.join(gro.exe_dir, out_mdrun['conf'])

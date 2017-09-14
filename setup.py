@@ -20,6 +20,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with PyRETIS. If not, see <http://www.gnu.org/licenses/>
 """
+import ast
 from codecs import open as openc
 import os
 import shutil
@@ -36,7 +37,32 @@ def get_long_description():
     return long_description
 
 
-FULL_VERSION = '1.0.0'
+def get_version():
+    """Read the version from version.py"""
+    here = os.path.abspath(os.path.dirname(__file__))
+    filename = os.path.join(here, 'pyretis', 'version.py')
+    with openc(filename, encoding='utf-8') as fileh:
+        for lines in fileh:
+            if lines.startswith('FULL_VERSION ='):
+                version = ast.literal_eval(lines.split('=')[1].strip())
+                return version
+    return '1.0.0.dev1'
+
+
+def get_requirements(docs=False):
+    """Read requirements.txt"""
+    here = os.path.abspath(os.path.dirname(__file__))
+    requirements = []
+    doc_package = ('sphinx', 'sphinx_bootstrap_theme')
+    filename = os.path.join(here, 'requirements.txt')
+    with openc(filename, encoding='utf-8') as fileh:
+        for lines in fileh:
+            package = lines.split('>=')[1].strip()
+            if not docs and package in doc_package:
+                continue
+            requirements.append(lines.strip())
+    return requirements
+
 
 # create copies of scripts:
 try:
@@ -45,36 +71,37 @@ try:
 except FileNotFoundError:
     pass
 
-setup(name='pyretis',
-      version=FULL_VERSION,
-      description='A simulation package for rare events',
-      long_description=get_long_description(),
-      url='http://www.pyretis.org',
-      author='The PyRETIS team',
-      author_email='pyretis@pyretis.org',
-      license='LGPLv2.1+',
-      classifiers=['Development Status :: 3 - Alpha',
-                   'Environment :: Console',
-                   'Intended Audience :: Science/Research',
-                   ('License :: OSI Approved :: '
-                    'GNU Lesser General Public License v2 or later (LGPLv2+)'),
-                   'Natural Language :: English',
-                   'Operating System :: MacOS :: MacOS X',
-                   'Operating System :: POSIX',
-                   'Programming Language :: Python :: 3',
-                   'Programming Language :: Python :: 3.4',
-                   'Programming Language :: Python :: 3.5',
-                   'Programming Language :: Python :: 3.6',
-                   'Topic :: Scientific/Engineering :: Physics'],
-      keywords='rare-events md mc tps simulation tis retis',
-      packages=find_packages(exclude=['docs']),
-      package_data={'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']},
-      include_package_data=True,
-      install_requires=['numpy>=1.13.1',
-                        'scipy>=0.19.1',
-                        'matplotlib>=2.0.2',
-                        'jinja2>=2.9.6',
-                        'docutils>=0.14',
-                        'tqdm>=4.15.0',
-                        'colorama>=0.3.9'],
-      scripts=['bin/pyretisrun', 'bin/pyretisanalyse'])
+
+setup(
+    name='pyretis',
+    version=get_version(),
+    description='A simulation package for rare events',
+    long_description=get_long_description(),
+    url='http://www.pyretis.org',
+    author='The PyRETIS team',
+    author_email='pyretis@pyretis.org',
+    license='LGPLv2.1+',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        ('License :: OSI Approved :: '
+         'GNU Lesser General Public License v2 or later (LGPLv2+)'),
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Scientific/Engineering :: Physics'
+    ],
+    keywords='rare-events md mc tps simulation tis retis',
+    packages=find_packages(exclude=['docs']),
+    package_data={
+        'pyretis': ['pyretis.mplstyle', 'pyretis/inout/report/templates/*']
+    },
+    include_package_data=True,
+    install_requires=get_requirements(docs=False),
+    scripts=['bin/pyretisrun', 'bin/pyretisanalyse'],
+)

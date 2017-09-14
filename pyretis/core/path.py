@@ -176,14 +176,14 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
     return leftside_curr, cross
 
 
-class PathBase():
+class PathBase:
     """Base class for representation of paths.
 
     This class represents a path. A path consist of a series of
     consecutive snapshots (the trajectory) with the corresponding order
     parameter. We are going to assume that we always store the order
     parameter as a function of the time. For the other properties, the
-    different sub-classes might not store all the intformation.
+    different sub-classes might not store all the information.
 
     Attributes
     ----------
@@ -224,7 +224,7 @@ class PathBase():
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
-        """Initialize the Path object.
+        """Initialise the PathBase object.
 
         Parameters
         ----------
@@ -400,11 +400,6 @@ class PathBase():
     def get_shooting_point(self):
         """Return a shooting point from the path.
 
-        Parameters
-        ----------
-        rgen : object like :py:class:`.RandomGenerator`
-            This object is used to draw a random integer.
-
         Returns
         -------
         phasepoint : tuple
@@ -425,7 +420,7 @@ class PathBase():
 
         Yields
         ------
-        out : tuple
+        out : dict
             The phase-space points in the path.
         """
         if reverse:
@@ -644,7 +639,7 @@ class PathBase():
         """Return an empty path of same class as the current one.
 
         This function is intended to spawn child paths that share some
-        propertis and also some characteristics of the current path.
+        properties and also some characteristics of the current path.
         The idea here is that a path of a certain class should only be
         able to create paths of the same class.
 
@@ -673,7 +668,7 @@ class Path(PathBase):
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
-        """Initialize the Path object.
+        """Initialise the Path object.
 
         Parameters
         ----------
@@ -807,7 +802,7 @@ class PathExt(Path):
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
-        """Initialize the Path object.
+        """Initialise the PathExt object.
 
         Parameters
         ----------

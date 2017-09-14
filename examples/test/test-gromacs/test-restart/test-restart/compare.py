@@ -30,7 +30,7 @@ def compare_files(file1, file2):
 
 def comment(line):
     return line.startswith('#')
-    
+
 
 def compare_files_lines(file1, file2):
     """Compare line by line but skip comments."""
@@ -63,7 +63,7 @@ def compare_ensemble(ensemble):
     order1 = os.path.join(RUN_FULL, ensemble, 'order.txt')
     order2 = os.path.join(RUN_RESTART, ensemble, 'order.txt')
     compare_files(order1, order2)
-    
+
     print_to_screen('* Comparing pathensemble.txt files...')
     pathe1 = os.path.join(RUN_FULL, ensemble, 'pathensemble.txt')
     pathe2 = os.path.join(RUN_RESTART, ensemble, 'pathensemble.txt')

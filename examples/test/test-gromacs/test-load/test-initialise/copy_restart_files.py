@@ -15,7 +15,7 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 from pyretis.inout.writers import prepare_load, get_writer
 
 
-SOURCE = 'run-initialize'
+SOURCE = 'run-initialise'
 TARGET = os.path.join('run-restart', 'initial_path')
 
 

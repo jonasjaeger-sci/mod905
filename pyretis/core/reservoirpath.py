@@ -32,7 +32,7 @@ class ReservoirPath(Path):
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0, res_length=10):
-        """Initialize the Path object.
+        """Initialise the ReservoirPath object.
 
         Parameters
         ----------

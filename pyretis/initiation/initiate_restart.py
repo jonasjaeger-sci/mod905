@@ -32,7 +32,7 @@ def initiate_restart(simulation, cycle, settings):
         The simulation we are setting up.
     cycle : integer
         The simulation cycles we are starting at.
-    init_settings : dictionary
+    settings : dictionary
         A dictionary with settings for the initiation.
     """
     maxlen = settings['tis']['maxlength']

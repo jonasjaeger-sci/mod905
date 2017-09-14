@@ -12,10 +12,13 @@ logger.addHandler(logging.NullHandler())
 
 
 RND = RandomState(42)
-inputfile = os.path.join('..', 'run-initialize', 'rnd.state')
-with open(inputfile, 'rb') as inputf:
-    state = pickle.load(inputf)
-RND.set_state(state)
+
+
+def store_rnd_state():
+    """Store the state of the random generator."""
+    state = RND.get_state()
+    with open('rnd.state', 'wb') as outfile:
+        pickle.dump(state, outfile)
 
 
 def prepare_shooting_point(gro, input_file):
@@ -38,6 +41,7 @@ def prepare_shooting_point(gro, input_file):
     gen_mdp = os.path.join(gro.exe_dir, 'genvel.mdp')
     # Use specific seed:
     seed = RND.randint(1, 10000000)
+    store_rnd_state()
     settings = {'gen_vel': 'yes', 'gen_seed': seed, 'nsteps': 0,
                 'continuation': 'no'}
     gro._modify_input(gro.input_files['input'], gen_mdp, settings,
@@ -45,7 +49,7 @@ def prepare_shooting_point(gro, input_file):
     # Run grompp for this input file:
     out_grompp = gro._execute_grompp(gen_mdp, input_file, 'genvel')
     remove = [val for _, val in out_grompp.items()]
-    # Run gromacs for this tpr file:
+    # Run GROMACS for this tpr file:
     out_mdrun = gro._execute_mdrun(out_grompp['tpr'], 'genvel')
     remove += [val for key, val in out_mdrun.items() if key != 'conf']
     confout = os.path.join(gro.exe_dir, out_mdrun['conf'])

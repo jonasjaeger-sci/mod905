@@ -59,6 +59,7 @@ def compare_energies(file1, file2):
     equal = True
     for block1, block2 in zip(ener1, ener2):
         equal &= (block1['comment'] == block2['comment'])
+        termok = False
         for key in block1['data']:
             if key == 'vpot':
                 print_to_screen('Skipping potential energy', level='warning')
@@ -99,15 +100,15 @@ def main():
             if not equal:
                 print_to_screen('NOTE: Files are NOT equal!', level='error')
                 errors.append((file1, file2))
-    if len(errors) > 0:
+    if not errors:
+        print()
+        print_to_screen('Comparison is done and it was successful!',
+                        level='success')
+    else:
         print()
         print_to_screen('Comparison is done and it FAILED!', level='error')
         for file1, file2 in errors:
             print_to_screen('{} != {}'.format(file1, file2), level='error')
-    else:
-        print()
-        print_to_screen('Comparison is done and it was successful!',
-                        level='success')
 
 
 if __name__ == '__main__':

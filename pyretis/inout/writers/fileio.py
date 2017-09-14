@@ -22,7 +22,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['FileIO']
 
 
-class FileIO(object):
+class FileIO:
     """A generic file writer class.
 
     This class defines a simple object for writing to files.
@@ -44,7 +44,7 @@ class FileIO(object):
     OLDFILE = ('append', 'overwrite', 'backup')
 
     def __init__(self, filename, oldfile='backup', header=None):
-        """Just a simple initialize of the file object.
+        """Initialise the FileIO object.
 
         Parameters
         ----------

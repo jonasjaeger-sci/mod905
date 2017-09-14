@@ -18,8 +18,7 @@ from pyretis.inout.writers.xyzio import (
 from pyretis.orderparameter.orderparameter import (
     OrderParameterPosition,
 )
-#logging.disable(logging.DEBUG)
-logging.basicConfig(level=logging.DEBUG)
+logging.disable(logging.DEBUG)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -72,7 +71,7 @@ class CP2KEngineTest(unittest.TestCase):
         # Run a single step:
         out = engine.step(system, 'cp2k_step')
         # Check that we have the expected files after the step:
-        for i in ['extra_file', 'step.inp', 'conf.xyz', 'cp2k_step.xyz']:
+        for i in ('extra_file', 'step.inp', 'conf.xyz', 'cp2k_step.xyz'):
             self.assertTrue(os.path.isfile(os.path.join(rundir, i)))
         state = system.particles.get_particle_state()
         self.assertAlmostEqual(state['ekin'], 0.9)
@@ -177,6 +176,7 @@ class CP2KEngineTest(unittest.TestCase):
         self.assertTrue(np.allclose(vel, -1.0 * rvel))
         engine.clean_up()
         remove_dir(rundir)
+
 
 if __name__ == '__main__':
     unittest.main()

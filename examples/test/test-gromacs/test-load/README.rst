@@ -3,7 +3,7 @@ Testing of load for GROMACS
 
 This directory contains tests for loading paths with GROMACS:
 
-1. ``test-initialize``: This tests that we can initialize
+1. ``test-initialise``: This tests that we can initialise
    and run a RETIS simulation in two separate steps. This is
    compared to the outcome of just running the full simulation
    (i.e. in one step).

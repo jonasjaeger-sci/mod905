@@ -35,7 +35,7 @@ def initiate_load(simulation, cycle, settings):
         The simulation we are setting up.
     cycle : integer
         The simulation cycles we are starting at.
-    init_settings : dictionary
+    settings : dictionary
         A dictionary with settings for the initiation.
     """
     maxlen = settings['tis']['maxlength']
@@ -65,7 +65,8 @@ def initiate_load(simulation, cycle, settings):
                 simulation.order_function,
                 simulation.engine,
             )
-
+        else:
+            raise ValueError('Unknown engine type!')
         ensemble.add_path_data(path, status, cycle)
         yield accept, path, status
 
@@ -160,11 +161,11 @@ def _load_order_parameters_ext(traj, dirname, order_function):
             files[filename]['maxidx'] = idx
     # ok now we have the files, calculate the order parameters:
     for filename, info in files.items():
-        new_order = recalculate_order(order_function, filename,
-                                      reverse=info['reverse'],
-                                      maxidx=info['maxidx'],
-                                      minidx=info['minidx'])
-        orderdata += new_order
+        for new_order in recalculate_order(order_function, filename,
+                                           reverse=info['reverse'],
+                                           maxidx=info['maxidx'],
+                                           minidx=info['minidx']):
+            orderdata.append(new_order)
     # Store the re-calculated order parameters so we don't have
     # to re-calculate again later:
     write_order_parameters(order_file_name, orderdata)
@@ -214,8 +215,6 @@ def _check_path(path, ensemble):
     ----------
     path : object like :py:class:`.PathBase`
         The path we are to set up/fill.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     ensemble : object like :py:class:`.PathEnsemble`
         The ensemble the path could be added to.
     """
@@ -290,8 +289,6 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
         they are not given.
     engine : object like :py:class:`.EngineBase`
         The engine we use for the dynamics.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     """
     left, _, right = ensemble.interfaces
     traj = _load_trajectory(dirname)
@@ -383,8 +380,6 @@ def read_path_files_ext(path, ensemble, dirname, order_function, engine):
         they are not given.
     engine : object like :py:class:`.ExternalMDEngine`
         The engine we use for the dynamics.
-    interfaces : list of floats
-        The position of the interfaces for a particular ensemble.
     """
     left, _, right = ensemble.interfaces
     traj = _load_external_trajectory(dirname, engine)

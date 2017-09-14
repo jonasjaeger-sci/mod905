@@ -69,7 +69,7 @@ def _generate_file_names(path, target_dir, prefix=None):
     return new_pos, source
 
 
-class PathEnsemble():
+class PathEnsemble:
     """Representation of a path ensemble.
 
     This class represents a collection of `Paths` in a path ensemble.
@@ -117,7 +117,7 @@ class PathEnsemble():
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
-        """Initialize the PathEnsemble object.
+        """Initialise the PathEnsemble object.
 
         Parameters
         ----------
@@ -361,7 +361,7 @@ class PathEnsembleExt(PathEnsemble):
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
-        """Initialize the PathEnsemble object.
+        """Initialise the PathEnsembleExt object.
 
         Parameters
         ----------
@@ -449,7 +449,7 @@ class PathEnsembleExt(PathEnsemble):
                 pass
 
     def list_superfluous(self):
-        """List files in accpeted directory that we do not need."""
+        """List files in accepted directory that we do not need."""
         last = set()
         if self.last_path:
             for phasepoint in self.last_path.trajectory(reverse=False):
@@ -470,9 +470,10 @@ class PathEnsembleExt(PathEnsemble):
 
         Parameters
         ----------
-        cycle : int
-            The current cycle number. This is used to generate a
-            unique name for the output file.
+        cycle : dict
+            The current cycle number dictionary as obtained from the
+            simulation object. This is used to generate a unique name
+            for the output file.
         path : object like :py:class:`.PathBase`
             The path to output.
 

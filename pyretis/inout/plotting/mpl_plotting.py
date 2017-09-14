@@ -630,7 +630,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
     histograms : list
         These are the histograms obtained in the shoots analysis.
     scale : dict
-        These are the scale factors for normalizing the histograms
+        These are the scale factors for normalising the histograms
         obtained in the shoots analysis.
     ensemble : string
         This is the ensemble identifier, e.g. 001, 002, etc.
@@ -686,30 +686,45 @@ def mpl_plot_path(results, path_ensemble):
         out[key] = PATHFILES[key].format(ens_simplified)
     if 'pcross' in results:
         # First plot `pcross` vs `lambda` with the `detect` surface:
-        series = [{'type': 'xy', 'x': results['pcross'][0],
-                   'y': results['pcross'][1]}]
-        series.append({'type': 'vline', 'x': detect, 'ls': '--',
-                       'alpha': 0.8})
+        series = [
+            {'type': 'xy',
+             'x': results['pcross'][0],
+             'y': results['pcross'][1]},
+            {'type': 'vline',
+             'x': detect,
+             'ls': '--',
+             'alpha': 0.8},
+        ]
         figset = {'xlabel': r'Order parameter ($\lambda$)',
                   'ylabel': 'Probability',
                   'title': r'Ensemble ${0}$'.format(ens)}
         canvas[out['pcross']] = mpl_simple_plot(series, fig_settings=figset)
     if 'prun' in results:
         # Next plot running ` pcross`:
-        series = [{'type': 'xy', 'x': results['cycle'],
-                   'y': results['prun']}]
-        series.append({'type': 'hline', 'y': results['prun'][-1],
-                       'ls': '--', 'alpha': 0.8})
+        series = [
+            {'type': 'xy',
+             'x': results['cycle'],
+             'y': results['prun']},
+            {'type': 'hline',
+             'y': results['prun'][-1],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
         figset = {'xlabel': 'Cycle number',
                   'ylabel': 'Probability (running avg.)',
                   'title': r'Ensemble ${0}$'.format(ens)}
         canvas[out['prun']] = mpl_simple_plot(series, fig_settings=figset)
     if 'blockerror' in results:
         # Plot results of block-error analysis:
-        series = [{'type': 'xy', 'x': results['blockerror'][0],
-                   'y': results['blockerror'][3]}]
-        series.append({'type': 'hline', 'y': results['blockerror'][4],
-                       'ls': '--', 'alpha': 0.8})
+        series = [
+            {'type': 'xy',
+             'x': results['blockerror'][0],
+             'y': results['blockerror'][3]},
+            {'type': 'hline',
+             'y': results['blockerror'][4],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
         title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
         figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
                   'title': title.format(ens, results['blockerror'][4],
@@ -717,10 +732,15 @@ def mpl_plot_path(results, path_ensemble):
         canvas[out['perror']] = mpl_simple_plot(series, fig_settings=figset)
     if 'lengtherror' in results:
         # Plot results of length-error analysis:
-        series = [{'type': 'xy', 'x': results['lengtherror'][0],
-                   'y': results['lengtherror'][3]}]
-        series.append({'type': 'hline', 'y': results['lengtherror'][4],
-                       'ls': '--', 'alpha': 0.8})
+        series = [
+            {'type': 'xy',
+             'x': results['lengtherror'][0],
+             'y': results['lengtherror'][3]},
+            {'type': 'hline',
+             'y': results['lengtherror'][4],
+             'ls': '--',
+             'alpha': 0.8},
+        ]
         title = r'Ensemble ${0}$: Rel. err.: {1:9.6e}, Ncor: {2:9.6f}'
         figset = {'xlabel': 'Block length', 'ylabel': 'Estimated error',
                   'title': title.format(ens, results['lengtherror'][4],
@@ -730,16 +750,18 @@ def mpl_plot_path(results, path_ensemble):
 
     # Plot length-histogram:
     labfmt = r'{0}: {1:6.2f} $\pm$  {2:6.2f}'
-    series = [{'type': 'xy', 'x': results['pathlength'][0][1],
-               'y': results['pathlength'][0][0],
-               'label': labfmt.format('Accepted',
-                                      results['pathlength'][0][2][0],
-                                      results['pathlength'][0][2][1])}]
-    series.append({'type': 'xy', 'x': results['pathlength'][1][1],
-                   'y': results['pathlength'][1][0],
-                   'label': labfmt.format('All',
-                                          results['pathlength'][1][2][0],
-                                          results['pathlength'][1][2][1])})
+    series = [
+        {'type': 'xy',
+         'x': results['pathlength'][0][1],
+         'y': results['pathlength'][0][0],
+         'label': labfmt.format('Accepted', results['pathlength'][0][2][0],
+                                results['pathlength'][0][2][1])},
+        {'type': 'xy',
+         'x': results['pathlength'][1][1],
+         'y': results['pathlength'][1][0],
+         'label': labfmt.format('All', results['pathlength'][1][2][0],
+                                results['pathlength'][1][2][1])},
+    ]
     figset = {'xlabel': 'No. of MD steps', 'ylabel': 'Frequency',
               'title': r'Ensemble ${0}$'.format(ens)}
     canvas[out['pathlength']] = mpl_simple_plot(series, fig_settings=figset)
@@ -788,9 +810,10 @@ def mpl_plot_orderp(results, orderdata):
                                                       fig_settings=figset)
     # plot block-error results:
     block = results[0]['blockerror']
-    series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
-    series.append({'type': 'hline', 'y': block[4],
-                   'ls': '--', 'alpha': 0.8})
+    series = [
+        {'type': 'xy', 'x': block[0], 'y': block[3]},
+        {'type': 'hline', 'y': block[4], 'ls': '--', 'alpha': 0.8}
+    ]
     title = 'Order parameter. Rel. err.: {0:9.6e}, Ncor: {1:9.6f}'
     figset = {'xlabel': 'Block length',
               'ylabel': 'Estimated error',
@@ -881,9 +904,10 @@ def mpl_plot_energy(results, energies):
             continue
         plot = ENERFILES['block'].format(key)
         block = results[key]['blockerror']
-        series = [{'type': 'xy', 'x': block[0], 'y': block[3]}]
-        series.append({'type': 'hline', 'y': block[4],
-                       'ls': '--', 'alpha': 0.8})
+        series = [
+            {'type': 'xy', 'x': block[0], 'y': block[3]},
+            {'type': 'hline', 'y': block[4], 'ls': '--', 'alpha': 0.8}
+        ]
         figset = {'xlabel': 'Block length',
                   'ylabel': 'Estimated error',
                   'title': title.format(ENERTITLE[key], block[4], block[6])}

@@ -26,7 +26,9 @@ def create_positions():
     """Create particles for test"""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
-    box = create_box(size, periodic=[True, True, True])
+    size = np.array(size)
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
     particles = Particles(dim=3)

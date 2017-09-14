@@ -33,25 +33,16 @@ class PathEnsembleWriter(Writer):
     data be read in portions, or the full path file could be read if
     it's small enough to fit in the memory. A line-by-line analysis as
     it is right now might not be the most efficient way.
-
-    Attributes
-    ----------
-    ensemble : str
-        This is a string representation of the path ensemble. Typically
-        something like '0-', '0+', '1', '2', ..., '001' and so on.
-    interfaces : list of ints
-        These are the interfaces specified with the values
-        for the order parameters: [left, middle, right]
     """
     # Define a format used for the path files. Here it's not really needed,
     # we are going to assume that these files will be comma separated anyway.
-    # It is included to be compatible with the previous fortran version.
+    # It is included to be compatible with the old FORTRAN program (TISMOL).
     PATH_FMT = ('{0:>10d} {1:>10d} {2:>10d} {3:1s} {4:1s} {5:1s} {6:>7d} ' +
                 '{7:3s} {8:2s} {9:>16.9e} {10:>16.9e} {11:>7d} {12:>7d} ' +
                 '{13:>16.9e} {14:>7d} {15:7d}')
 
     def __init__(self):
-        """Initialize the `PathEnsembleWriter`."""
+        """Initialise the `PathEnsembleWriter`."""
         header = {'labels': ['Step', 'No. acc', 'No. shoot',
                              'l', 'm', 'r', 'Length', 'Acc', 'Mc',
                              'Min-O', 'Max-O', 'Idx-Min', 'Idx-Max',

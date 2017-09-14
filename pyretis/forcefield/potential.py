@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['PotentialFunction']
 
 
-class PotentialFunction():
+class PotentialFunction:
     """Base class for a generic potential function.
 
     Generic class for potential functions.

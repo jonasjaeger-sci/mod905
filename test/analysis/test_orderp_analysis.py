@@ -30,15 +30,15 @@ class TestOrderAnalysis(unittest.TestCase):
         correct_file = os.path.join(HERE, 'order-results.dat')
         with open(correct_file, 'rb') as infile:
             correct_data = pickle.load(infile)
-        for i, j in zip(correct_data, results):
-            for itemi, itemj in zip(i['blockerror'], j['blockerror']):
-                self.assertTrue(np.allclose(itemi, itemj))
-            self.assertTrue(np.allclose(i['running'], j['running']))
-            if 'msd' in i:
-                self.assertTrue(np.allclose(i['msd'], j['msd']))
-            for itemi, itemj in zip(i['distribution'], j['distribution']):
-                self.assertTrue(np.allclose(itemi, itemj))
-                self.assertTrue(np.allclose(itemi, itemj))
+            for i, j in zip(correct_data, results):
+                for itemi, itemj in zip(i['blockerror'], j['blockerror']):
+                    self.assertTrue(np.allclose(itemi, itemj))
+                self.assertTrue(np.allclose(i['running'], j['running']))
+                if 'msd' in i:
+                    self.assertTrue(np.allclose(i['msd'], j['msd']))
+                for itemi, itemj in zip(i['distribution'], j['distribution']):
+                    self.assertTrue(np.allclose(itemi, itemj))
+                    self.assertTrue(np.allclose(itemi, itemj))
 
 
 if __name__ == '__main__':

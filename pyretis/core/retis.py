@@ -117,7 +117,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
         `rgen.rand()` to draw random uniform numbers.
     relative : list of floats
         These are the relative probabilities for the ensembles. We
-        assume here that these numbers are normalized.
+        assume here that these numbers are normalised.
 
     Returns
     -------
@@ -193,7 +193,7 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
     """
     relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
-        output = [[None, None, None, None] for path_ensemble in ensembles]
+        output = [[None, None, None, None] for _ in ensembles]
         idx, path_ensemble = _relative_shoots_select(ensembles, rgen,
                                                      relative)
         accept, trial, status = make_tis_step_ensemble(path_ensemble, system,
@@ -266,7 +266,7 @@ def retis_moves(ensembles, system, order_function, engine, rgen,
         `out[i]` contains the results of the swapping/nullmove for path
         ensemble no. `i`.
     """
-    output = [[None, None, None, None] for path_ensemble in ensembles]
+    output = [[None, None, None, None] for _ in ensembles]
     if settings['retis']['swapsimul']:
         # here we have to schemes:
         # scheme == 0: [0^-] <-> [0^+], [1^+] <-> [2^+], ...
@@ -360,7 +360,6 @@ def retis_swap(ensembles, idx, system, order_function, engine,
     """
     logger.info('Swapping: %s <-> %s', ensembles[idx].ensemble_name,
                 ensembles[idx+1].ensemble_name)
-    status = None
     if idx == 0:
         return retis_swap_zero(ensembles, system, order_function, engine,
                                settings, cycle)

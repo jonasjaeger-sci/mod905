@@ -37,7 +37,7 @@ class DummyExternal(ExternalMDEngine):
     """A dummy external engine. Only useful for testing!"""
 
     def __init__(self, input_path, timestep, subcycles):
-        """Initialize the dummy engine."""
+        """Initialise the dummy engine."""
         super().__init__('External engine for testing!', timestep,
                          subcycles)
         self.input_path = os.path.abspath(input_path)

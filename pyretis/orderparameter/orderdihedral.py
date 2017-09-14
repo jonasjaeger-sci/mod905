@@ -39,7 +39,7 @@ class OrderParameterDihedral(OrderParameter):
     """
 
     def __init__(self, index, periodic=False):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------
@@ -72,14 +72,12 @@ class OrderParameterDihedral(OrderParameter):
         Parameters
         ----------
         system : object like :py:class:`.System`
-            This object is used for the actual calculation, typically
-            only `system.particles.pos` and/or `system.particles.vel`
-            will be used. In some cases `system.forcefield` can also be
-            used to include specific energies for the order parameter.
+            The object containing the information we need to calculate
+            the order parameter.
 
         Returns
         -------
-        out : float
+        out : list of floats
             The order parameter.
         """
         pos = system.particles.pos
@@ -90,7 +88,7 @@ class OrderParameterDihedral(OrderParameter):
             vector1 = system.box.pbc_dist_coordinate(vector1)
             vector2 = system.box.pbc_dist_coordinate(vector2)
             vector3 = system.box.pbc_dist_coordinate(vector3)
-        # norm vector 2 to simplyfy formulas
+        # norm vector 2 to simplify formulas
         vector2 /= norm(vector2)
         denom = (dot(vector1, vector3) -
                  dot(vector1, vector2) * dot(vector2, vector3))

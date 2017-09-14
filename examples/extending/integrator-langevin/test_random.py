@@ -33,11 +33,13 @@ def test_rangaussian(sigma, numbers=10000, bins=100):
     mid = 0.5 * (edges[1:] + edges[:-1])
     ax1.plot(midf, histf, 'bo-', label='FORTRAN', lw=2, alpha=0.5)
     ax1.plot(mid, hist, 'gs-', label='numpy', lw=2, alpha=0.5)
+    ax1.set_title('Numbers = {}, bins = {}'.format(numbers, bins))
     ax1.legend()
     plt.show()
 
 
 def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
+    """Test the gaussian bivariate distribution."""
     rndf = []
     for _ in range(numbers):
         rndf.append(vvintegrator.gssbivar(s12os11, sqrts11, sqrtsos11))
@@ -49,6 +51,7 @@ def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
     ax1 = fig.add_subplot(111)
     ax1.pcolormesh(xvarf, yvarf, histf)
     plt.show()
+
 
 if __name__ == '__main__':
     SEED = 1000

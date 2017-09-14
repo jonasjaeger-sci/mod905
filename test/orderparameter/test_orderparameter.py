@@ -29,7 +29,7 @@ class SimpleOrder(OrderParameter):
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
 
     def calculate(self, system):  # pylint: disable=no-self-use
@@ -37,7 +37,7 @@ class SimpleOrderFaulty(object):  # pylint: disable=too-few-public-methods
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty2(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty2:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
 
     def calculate_all(self, system):  # pylint: disable=no-self-use
@@ -45,7 +45,7 @@ class SimpleOrderFaulty2(object):  # pylint: disable=too-few-public-methods
         return [system.temperature['set']]
 
 
-class SimpleOrderFaulty3(object):  # pylint: disable=too-few-public-methods
+class SimpleOrderFaulty3:  # pylint: disable=too-few-public-methods
     """An order parameter which is faulty - missing calculate_all"""
     calculate = 100
 
@@ -108,7 +108,8 @@ class OrderPositionTest(unittest.TestCase):
             for idim, xdim in enumerate(('x', 'y', 'z')):
                 orderp = OrderParameterPosition(0, dim=xdim, periodic=False)
                 if idim > ndim - 1:
-                    self.assertRaises(IndexError, orderp.calculate, (system))
+                    with self.assertRaises(IndexError):
+                        orderp.calculate(system)
                 else:
                     lmb, lmb_vel = orderp.calculate(system)
                     lmb_correct = system.particles.pos[0][idim]
@@ -135,7 +136,8 @@ class OrderPositionTest(unittest.TestCase):
                     system.add_particle(name='Ar', pos=pos, vel=vel, mass=1.0,
                                         ptype=0)
                 if idim > ndim-1:
-                    self.assertRaises(IndexError, orderp.calculate, (system))
+                    with self.assertRaises(IndexError):
+                        orderp.calculate(system)
                 else:
                     lmb, lmb_vel = orderp.calculate(system)
                     lmb_correct = system.particles.pos[0][idim]
@@ -250,8 +252,6 @@ class OrderDistanceTest(unittest.TestCase):
         """Check that the initiation fails if we supply strange input."""
         with self.assertRaises(TypeError):
             OrderParameterDistance(0)
-        with self.assertRaises(TypeError):
-            OrderParameterDistance((0))
         with self.assertRaises(ValueError):
             OrderParameterDistance([0])
         with self.assertRaises(ValueError):
@@ -308,8 +308,6 @@ class OrderAngleTest(unittest.TestCase):
 
     def test_initiate_fail(self):
         """Test that we fail if we give incorrect number of indices."""
-        with self.assertRaises(TypeError):
-            OrderParameterAngle((0), periodic=False)
         with self.assertRaises(TypeError):
             OrderParameterAngle(0, periodic=False)
         with self.assertRaises(ValueError):
@@ -447,8 +445,6 @@ class OrderDihedralTest(unittest.TestCase):
 
     def test_initiate_fail(self):
         """Test that we fail if we give incorrect number of indices."""
-        with self.assertRaises(TypeError):
-            OrderParameterDihedral((0), periodic=False)
         with self.assertRaises(TypeError):
             OrderParameterDihedral(0, periodic=False)
         with self.assertRaises(ValueError):

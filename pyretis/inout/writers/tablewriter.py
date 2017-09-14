@@ -80,7 +80,7 @@ class TxtTable(Writer):
         A title for the table.
     """
     def __init__(self, variables, title, **kwargs):
-        """Initialize the `TxtTable` object.
+        """Initialise the TxtTable object.
 
         Parameters
         ----------

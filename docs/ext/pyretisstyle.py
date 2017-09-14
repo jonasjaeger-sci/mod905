@@ -47,7 +47,7 @@ class PyretisStyle(Style):
         Name.Variable:          '#000000',
         Name.Tag:               '#000000',
         Name.Decorator:         '#000000',
-        # Workaround for a BUG here: lexer treats multiline method signatres as labels
+        # Workaround for a BUG here: lexer treats multi-line method signatres as labels
         Name.Label:             '#000000',
 
         Literal:                '#1C01CE',

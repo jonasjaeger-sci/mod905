@@ -342,8 +342,7 @@ def initial_positions_file(settings):
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
     try:
-        box = {}
-        box['length'] = [i * convert['length'] for i in snapshot['box']]
+        box = {'length': [i * convert['length'] for i in snapshot['box']]}
         if ndim < 3:
             box['length'] = box['lenght'][:ndim]
     except (KeyError, IndexError, TypeError) as err:

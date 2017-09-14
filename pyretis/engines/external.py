@@ -4,7 +4,7 @@
 """Definition of external engines.
 
 This module defines the base class for external MD engines.
-This class is subclassed by all other external MD engines.
+This class is sub-classed by all other external MD engines.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +40,7 @@ class ExternalMDEngine(EngineBase):
     * :py:meth:`ExternalMDEngine.step`
         A method for performing a MD step with the external
         engine. Note that the MD step can consist of a number
-        of subcycles.
+        of sub-cycles.
     * :py:meth:`ExternalMDEngine._read_configuration`
         For reading output (configurations) from the external engine.
         This is used for calculating the order parameter(s).
@@ -75,7 +75,7 @@ class ExternalMDEngine(EngineBase):
     engine_type = 'external'
 
     def __init__(self, description, timestep, subcycles):
-        """Initialization of the external engine.
+        """Initialisation of the external engine.
 
         Here we just set up some common properties which are useful
         for the execution.
@@ -89,7 +89,7 @@ class ExternalMDEngine(EngineBase):
         timestep : float
             The time step used in the simulation.
         subcycles : integer
-            The number of steps each external interation run is
+            The number of sub-cycles each external integration step is
             composed of.
         """
         super().__init__(description)
@@ -120,7 +120,7 @@ class ExternalMDEngine(EngineBase):
         MD simulations.
 
         If it's absolutely needed, there is a `self.step()` method
-        which can be used, for instance in the initialization.
+        which can be used, for instance in the initialisation.
         """
         msg = 'External engine does not support "integration_step()"!'
         logger.error(msg)
@@ -183,7 +183,7 @@ class ExternalMDEngine(EngineBase):
     def _modify_input(sourcefile, outputfile, settings, delim='='):
         """Modify input file for external software.
 
-        Here we assume that the input file has a syntax consiting of
+        Here we assume that the input file has a syntax consisting of
         ``keyword = setting``. We will only replace settings for
         the keywords we find in the file that is also inside the
         ``settings`` dictionary.
@@ -222,7 +222,7 @@ class ExternalMDEngine(EngineBase):
     def _read_input_settings(sourcefile, delim='='):
         """Read input settings for simulation input files.,
 
-        Here we assume that the input file has a syntax consiting of
+        Here we assume that the input file has a syntax consisting of
         ``keyword = setting``, where ``=`` can be any string given
         in the input parameter ``delim``.
 
@@ -265,45 +265,60 @@ class ExternalMDEngine(EngineBase):
             The command to execute.
         cwd : string or None
             The current working directory to set for the command.
-        inputs : string or None
+        inputs : bytes or None
             Possible input to give to the command. This are not arguments
             but more akin to keystrokes etc. that the external command
             may take.
 
         Returns
         -------
-        out[0] : tuple of strings
-            The output (stdout, stderr) from the command.
-        out[1] : int
+        out : int
             The return code of the command.
         """
         cmd2 = ' '.join(cmd)
         logger.debug('Executing: %s', cmd2)
         if inputs is not None:
             logger.debug('With input: %s', inputs)
-        exe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               shell=False,
-                               cwd=cwd)
-        out = exe.communicate(input=inputs)
-        # Note: communicate will wait untill process terminates.
-        return_code = exe.returncode
-        if return_code != 0:
-            stdout, stderr = out[0], out[1]
-            logger.error('Execution of external program (%s) failed!',
-                         self.description)
-            logger.error('Attempted command: "%s"', cmd2)
-            logger.error('Execution directory: "%s"', cwd)
-            if inputs is not None:
-                logger.error('Input to external program was: "%s"', inputs)
-            logger.error('Return code from external program %i', return_code)
-            logger.error('STDOUT: %s', stdout.decode('utf-8'))
-            logger.error('STDERR: %s', stderr.decode('utf-8'))
-            msg = ('Execution of external program "{}" failed. '
-                   'Return code: {}').format(self.description, return_code)
-            raise RuntimeError(msg)
-        return out, exe.returncode
+
+        out_name = 'stdout.txt'
+        err_name = 'stderr.txt'
+
+        if cwd:
+            out_name = os.path.join(cwd, out_name)
+            err_name = os.path.join(cwd, err_name)
+
+        return_code = None
+
+        with open(out_name, 'wb') as fout, open(err_name, 'wb') as ferr:
+            exe = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=fout,
+                stderr=ferr,
+                shell=False,
+                cwd=cwd
+            )
+            exe.communicate(input=inputs)
+            # Note: communicate will wait until process terminates.
+            return_code = exe.returncode
+            if return_code != 0:
+                logger.error('Execution of external program (%s) failed!',
+                             self.description)
+                logger.error('Attempted command: %s', cmd2)
+                logger.error('Execution directory: %s', cwd)
+                if inputs is not None:
+                    logger.error('Input to external program was: %s', inputs)
+                logger.error('Return code from external program: %i',
+                             return_code)
+                logger.error('STDOUT, see file: %s', out_name)
+                logger.error('STDERR, see file: %s', err_name)
+                msg = ('Execution of external program ({}) failed. '
+                       'Return code: {}').format(self.description, return_code)
+                raise RuntimeError(msg)
+            else:
+                self._removefile(out_name)
+                self._removefile(err_name)
+        return return_code
 
     @staticmethod
     def _movefile(source, dest):
@@ -333,20 +348,14 @@ class ExternalMDEngine(EngineBase):
         ----------
         dirname : string
             Where we are removing.
-        file_names : list of strings
+        files : list of strings
             A list with files to remove.
         """
         for thefile in files:
             self._removefile(os.path.join(dirname, thefile))
 
     def clean_up(self):
-        """Remove all files from a given directory.
-
-        Parameters
-        ----------
-        dirname : string
-            The directory to remove files from.
-        """
+        """Will remove all files from the current directory."""
         dirname = self.exe_dir
         logger.debug('Running engine clean-up in "%s"', dirname)
         files = [item.name for item in os.scandir(dirname) if item.is_file()]
@@ -357,7 +366,7 @@ class ExternalMDEngine(EngineBase):
         """Calculate order parameter from configuration in a file.
 
         Note, if ``xyz``, ``vel`` or ``box`` are given, we will
-        **NOT** read positions, velicity and box information from the
+        **NOT** read positions, velocity and box information from the
         current configuration file.
 
         Parameters
@@ -376,8 +385,8 @@ class ExternalMDEngine(EngineBase):
 
         Returns
         -------
-        out : float
-            The calculated order parameter.
+        out : list of floats
+            The calculated order parameter(s).
         """
         if any((xyz is None, vel is None, box is None)):
             out = self._read_configuration(system.particles.config[0])
@@ -415,7 +424,7 @@ class ExternalMDEngine(EngineBase):
             This dictionary contains settings for TIS. Explicitly used here:
 
             * `zero_momentum`: boolean, determines if the momentum is zeroed
-            * `rescale_energy`: boolean, determines if energy is rescaled.
+            * `rescale_energy`: boolean, determines if energy is re-scaled.
 
         Returns
         -------
@@ -516,7 +525,7 @@ class ExternalMDEngine(EngineBase):
         """Propagate the equations of motion with the external code.
 
         This method will explicitly do the common set-up, before
-        calling more specialized code for doing the actual propagation.
+        calling more specialised code for doing the actual propagation.
 
         Parameters
         ----------
@@ -565,20 +574,21 @@ class ExternalMDEngine(EngineBase):
         else:
             initial_conf = initial_file
 
-        # Update system to be at the configuration file:
+        # Update system to point to the configuration file:
         phase_point = {'pos': (initial_conf, None),
                        'vel': reverse,
                        'vpot': None,
                        'ekin': None}
         system.particles.set_particle_state(phase_point)
-        # Perform propagate from this point
+        # Propagate from this point:
         success, status = self._propagate_from(
             name,
             path,
             system,
             order_function,
             interfaces,
-            reverse=reverse)
+            reverse=reverse
+        )
         # Reset system to initial state:
         system.particles.set_particle_state(initial_state)
         return success, status

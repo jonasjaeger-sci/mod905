@@ -21,7 +21,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['Simulation']
 
 
-class Simulation(object):
+class Simulation:
     """This class defines a generic simulation.
 
     Attributes
@@ -49,7 +49,7 @@ class Simulation(object):
     simulation_type = 'generic'
 
     def __init__(self, steps=0, startcycle=0):
-        """Initialization of the simulation.
+        """Initialisation of the simulation.
 
         Parameters
         ----------

@@ -3,7 +3,7 @@ make clean
 cd run-25
 pyretisrun -i retis.rst -p
 cd ..
-cd run-initialize
+cd run-initialise
 pyretisrun -i retis.rst -p
 cd ..
 python copy_restart_files.py

@@ -22,7 +22,7 @@ import collections
 import logging
 import os
 import numpy as np
-from pyretis.core import System, create_box, ParticlesExt
+from pyretis.core import System, ParticlesExt
 from pyretis.core.box import box_matrix_to_list
 from pyretis.inout.common import print_to_screen
 from pyretis.inout.writers.gromacsio import (
@@ -63,13 +63,12 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
         This is the first frame we will read. Can be used in case we
         want to skip some frames from the .trr file.
 
-    Returns
-    -------
+    Yields
+    ------
     out : list of lists of floats
-        The order parameters as a list for each frame in the .trr file.
+        The order parameters, calculated per frame.
     """
     system = System(box=None)  # add dummy system
-    all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
            ' Step {}, time {}')
     for i, (header, data) in enumerate(read_trr_file(trr_file)):
@@ -82,19 +81,17 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
             system.particles = ParticlesExt(dim=data['x'].shape[1])
         system.particles.pos = data['x']
         if 'v' in data:
-            system.particles.vel = data['v']
             if reverse:
-                system.particles.vel *= -1
+                system.particles.vel = -1.0 * data['v']
+            else:
+                system.particles.vel = data['v']
         else:
             logger.warning('No velocities found in .trr file! Set to zero.')
             system.particles.vel = np.zeros_like(data['x'])
         length = box_matrix_to_list(data['box'])
-        if system.box is None:
-            system.box = create_box(length=length)
-        else:
-            system.box.update_size(length)
-        all_order.append(order_parameter.calculate_all(system))
-    return all_order
+        system.update_box(length)
+        order = order_parameter.calculate_all(system)
+        yield order
 
 
 def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
@@ -116,13 +113,12 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
         This is the first frame we will read. Can be used in case we
         want to skip some frames from the file.
 
-    Returns
-    -------
+    Yields
+    ------
     out : list of lists of floats
-        The order parameters as a list for each frame in the file.
+        The order parameters as a list.
     """
     system = System(box=None)
-    all_order = []
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
            ' Step {}')
     for i, snapshot in enumerate(read_xyz_file(traj_file)):
@@ -132,19 +128,16 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
             continue
         print_to_screen(msg.format(i))
         box, xyz, vel, _ = convert_snapshot(snapshot)
-        system.particles.config = (traj_file, i)
+        if reverse:
+            vel *= -1
         if system.particles is None:
             system.particles = ParticlesExt(dim=xyz.shape[1])
+        system.particles.config = (traj_file, i)
         system.particles.pos = xyz
         system.particles.vel = vel
-        if reverse:
-            system.particles.vel *= -1
-        if system.box is None:
-            system.box = create_box(length=box)
-        else:
-            system.box.update_size(box)
-        all_order.append(order_parameter.calculate_all(system))
-    return all_order
+        system.update_box(box)
+        order = order_parameter.calculate_all(system)
+        yield order
 
 
 def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
@@ -166,7 +159,7 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     Returns
     -------
     out : list of lists of floats
-        The order parameters as a list for each frame.
+        The order parameters for the current frame.
     """
     system = System(box=None)
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
@@ -175,17 +168,16 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
         _, xyz, vel, box = read_gromos96_file(traj_file)
     elif ext == '.gro':
         _, xyz, vel, box = read_gromacs_gro_file(traj_file)
+    else:
+        raise ValueError('Unknown format {}'.format(ext))
+    if reverse:
+        vel *= -1
     if system.particles is None:
         system.particles = ParticlesExt(dim=xyz.shape[1])
     system.particles.config = (traj_file, 0)
     system.particles.pos = xyz
     system.particles.vel = vel
-    if reverse:
-        system.particles.vel *= -1
-    if system.box is None:
-        system.box = create_box(length=box)
-    else:
-        system.box.update_size(box)
+    system.update_box(box)
     return [order_parameter.calculate_all(system)]
 
 
@@ -220,7 +212,7 @@ def recalculate_order(order_parameter, traj_file, reverse=False,
         all_order = helpers[ext](order_parameter, traj_file, reverse=reverse,
                                  maxidx=maxidx, minidx=minidx)
     if reverse:
-        all_order.reverse()
+        return reversed(list(all_order))
     return all_order
 
 

@@ -127,7 +127,7 @@ def _effective_crossings(fluxdata, nint, end_step):
     Note
     ----
     We do here `intf - 1`. This is just to be compatible with the old
-    Fortran code where the interfaces are numbered 1, 2, 3 rather than
+    FORTRAN code where the interfaces are numbered 1, 2, 3 rather than
     0, 1, 2. If this is to be changed in the future the `-1` can just
     be removed. Such a change will also require changes to the writer
     for flux data!

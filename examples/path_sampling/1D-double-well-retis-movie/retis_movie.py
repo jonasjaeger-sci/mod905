@@ -24,8 +24,8 @@ from matplotlib import gridspec as gridspec
 
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
-PCROSS_LOG = True
 PCROSS_LOG = False
+# or: PCROSS_LOG = True
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
@@ -207,9 +207,6 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
         for this ensemble.
     orderp : numpy.array
         The maximum order parameters for all accepted paths.
-    variables : dict of objects
-        This dict contains variables we can use for updating derived data
-        for the different path ensembles.
 
     Returns
     -------
@@ -603,6 +600,7 @@ def main():
                                 interval=10,
                                 blit=False)
     plt.show()
+
 
 if __name__ == '__main__':
     main()

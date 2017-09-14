@@ -28,7 +28,7 @@ write_xyz_trajectory (:py:func:`.write_xyz_trajectory`)
 xyz_merge (:py:func:`.xyz_merge`)
     A method to merge a forward and a backward xyz trajectory. This
     method is mainly used when creating a whole trajectory for
-    visualization.
+    visualisation.
 
 reverse_xyz_file (:py:func:`.reverse_xyz_file`)
     Method to read an xyz-file in reverse, helps :py:func:`.xyz_merge`
@@ -282,7 +282,7 @@ def xyz_merge(backward, forward, merged):
     ----
     The velocities in the backward trajectory will not be reversed,
     the purpose of this method is mainly to make whole trajectories
-    for visualization purposes.
+    for visualisation purposes.
     """
     reverse_xyz_file(backward, merged)
     with open(forward, 'r') as infile, open(merged, 'a+') as output:

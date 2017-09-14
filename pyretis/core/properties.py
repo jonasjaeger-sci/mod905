@@ -7,7 +7,7 @@ import numpy as np
 __all__ = ['Property']
 
 
-class Property():
+class Property:
     """A generic numerical value with standard deviation and average.
 
     A generic object to store values obtained during a simulation.
@@ -45,7 +45,7 @@ class Property():
     """
 
     def __init__(self, desc=''):
-        """Initialize the property.
+        """Initialise the property.
 
         Parameters
         ----------

@@ -92,8 +92,13 @@ def make_internal_path(start, end, maxorder, interface, points=100):
         The starting point for the path.
     end : tuple of floats
         The ending point for the path.
+    interface : integer or None
+        Can be used to delete points from the path so that the path
+        will be valid.
     maxorder : tuple of floats
         The maximum order parameter the path should attain.
+    points : integer
+        The number of points to add on the path.
     """
     x = [start[0], maxorder[0], end[0]]  # pylint: disable=invalid-name
     y = [start[1], maxorder[1], end[1]]  # pylint: disable=invalid-name

@@ -30,7 +30,9 @@ def set_up_initial_state():
     lattice, size = generate_lattice('fcc', [5, 5, 5], density=0.9)
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = create_box(size, periodic=[True, True, True])
+    size = np.array(size)
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(dim=3)
     for pos in lattice:
@@ -45,11 +47,11 @@ def run_calculations(system, parameters):
     # Calculate with FORTRAN:
     potential_ext = PairLennardJonesCutFp(dim=3, shift=True,
                                           mixing='geometric')
-    forceField_ext = ForceField('Python with external FORTRAN force field',
+    forcefield_ext = ForceField('Python with external FORTRAN force field',
                                 potential=[potential_ext],
                                 params=[parameters])
-    system.forcefield = forceField_ext
-    print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
+    system.forcefield = forcefield_ext
+    print('Evaluating with: {}'.format(forcefield_ext.print_potentials()))
     vpot_ext, forces_ext, virial_ext = system.potential_and_force()
     vpot_ext /= float(system.particles.npart)
     # Calculate with pure python implementation:

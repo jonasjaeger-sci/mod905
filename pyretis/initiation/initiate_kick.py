@@ -156,7 +156,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     out[1] : object like py:class:`.PathBase`
         The initial path.
     out[2] : string
-        Sthe status of the path.
+        The status of the path.
     """
     initial_path = None
     status = ''
@@ -170,7 +170,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
     accept = True
     status = 'ACC'
     path_ensemble.add_path_data(initial_path, status, cycle)
-    # Ask the engine to do clean up after the intialization.
+    # Ask the engine to do clean up after the intialisation.
     engine.clean_up()
     return accept, initial_path, status
 
@@ -368,7 +368,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
     """Fix a path that starts and ends at the wrong interfaces.
 
     The fix is performed by making TIS moves and this function is
-    intended to be used in a initialization.
+    intended to be used in a initialisation.
 
     Parameters
     ----------

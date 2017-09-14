@@ -31,7 +31,7 @@ __all__ = ['parse_settings_file', 'write_settings_file']
 SECTIONS = OrderedDict()
 TITLE = '{} input settings'.format(PROGRAM_NAME)
 HEADING = '{}\n{}\nFor more info, please see: {}\nHave Fun!'
-SECTIONS['heading'] = {'text': HEADING.format(TITLE, ('=')*len(TITLE), URL)}
+SECTIONS['heading'] = {'text': HEADING.format(TITLE, '=' * len(TITLE), URL)}
 
 SECTIONS['simulation'] = {
     'task': None,
@@ -145,12 +145,23 @@ SECTIONS['analysis'] = {
 }
 
 
-SPECIAL_KEY = set(('parameter', ))
-ALLOW_MULTIPLE = set(('potential', 'orderparameter', 'engine',
-                      'collective-variable', 'initial-path'))
-SPECIAL_MULTIPLE = set(('potential', 'collective-variable'))
-MAX_SEC = {'potential': 99,
-           'collective-variable': 99}  # Just a practical limit.
+SPECIAL_KEY = {'parameter'}
+ALLOW_MULTIPLE = {
+    'potential',
+    'orderparameter',
+    'engine',
+    'collective-variable',
+    'initial-path'
+}
+SPECIAL_MULTIPLE = {
+    'potential',
+    'collective-variable'
+}
+# 99 is just a practical limit.
+MAX_SEC = {
+    'potential': 99,
+    'collective-variable': 99,
+}
 
 
 def parse_primitive(text):
@@ -232,7 +243,6 @@ def _parse_sections(inputtxt):
     """
     multiple = {key: 0 for key in SPECIAL_MULTIPLE}
     raw_data = {'heading': []}
-    current_line = None
     previous_line = None
     add_section = 'heading'
     data = []
@@ -333,7 +343,7 @@ def _parse_raw_section(raw_section, section):
 def _parse_all_raw_sections(raw_sections):
     """Helper method to parse all raw sections.
 
-    This method is helpfull for running tests etc.
+    This method is helpful for running tests etc.
 
     Parameters
     ----------
@@ -369,8 +379,8 @@ def _parse_all_raw_sections(raw_sections):
 def _add_default_settings(settings):
     """Add default settings.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     settings : dict
         The current input settings.
 
@@ -471,7 +481,7 @@ def settings_to_text(settings):
     Returns
     ------
     out : string
-        Text represeting the settings.
+        Text representing the settings.
     """
     txt = []
     for section in SECTIONS:
@@ -480,7 +490,7 @@ def settings_to_text(settings):
         if section in SPECIAL_MULTIPLE:
             for sec in settings[section]:
                 title = section.capitalize()
-                line = ('-') * len(title)
+                line = '-' * len(title)
                 raw_data = section_to_text(sec)
                 txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
         elif section == 'heading':
@@ -490,7 +500,7 @@ def settings_to_text(settings):
                 title = '{} settings'.format(section.upper())
             else:
                 title = '{} settings'.format(section.capitalize())
-            line = ('-') * len(title)
+            line = '-' * len(title)
             raw_data = section_to_text(settings[section])
             txt.append('{}\n{}\n{}\n\n'.format(title, line, raw_data))
     return ''.join(txt)
@@ -503,6 +513,9 @@ def section_to_text(settings, prefix=None):
     ----------
     settings : dict
         A dictionary with settings to transform.
+    prefix : string, optional
+        If this string is given, it will be prepended to
+        the setting we are writing.
 
     Returns
     -------

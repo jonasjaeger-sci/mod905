@@ -13,7 +13,7 @@ from pyretis.inout.settings import parse_settings_file
 from pyretis.core.pathensemble import PATH_DIR_FMT
 
 
-SOURCE = 'run-initialize'
+SOURCE = 'run-initialise'
 TARGET = 'run-restart'
 
 

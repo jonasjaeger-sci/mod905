@@ -57,6 +57,12 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
         A trajectory file to open.
     traj2 : string
         A trajectory file to open.
+    unit1 : string
+        The system of units for the first trajectory.
+    unit2 : string
+        The system of units for the second trajectory.
+    tol : float
+        A tolerance for comparing numbers.
 
     Returns
     -------

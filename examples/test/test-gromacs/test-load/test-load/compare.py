@@ -37,6 +37,7 @@ def compare_files(file1, file2, file3):
             return
     # ok made it this far. Next we skip the first trajectory in file2.
     # this one is already read from file1.
+    last_line = None
     with open(file2, 'r') as file2h:
         for i, lines2 in enumerate(file2h):
             if lines2.find('# Cycle') != -1 and i > 0:

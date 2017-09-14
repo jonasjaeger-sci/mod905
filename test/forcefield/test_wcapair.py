@@ -40,7 +40,7 @@ def create_system_box(in_max=True):
                         mass=1.0, ptype=1)
     pot = DoubleWellWCA()
     parameters = {
-        'types': set([(0, 0)]),
+        'types': {(0, 0)},
         'rzero': 1.0,
         'width': 0.25,
         'height': 6.0,
@@ -56,7 +56,7 @@ class TestWCAPairPotential(unittest.TestCase):
         """Test setup with parameters."""
         pot = DoubleWellWCA()
         parameters = {
-            'types': set([(0, 0)]),
+            'types': {(0, 0)},
             'rzero': 1.0,
             'width': 0.25,
             'height': 6.0,
@@ -83,7 +83,7 @@ class TestWCAPairPotential(unittest.TestCase):
         """Test that the WCA potential is activated for correct pairs."""
         pot = DoubleWellWCA()
         parameters = {
-            'types': set([(0, 0)]),
+            'types': {(0, 0)},
             'rzero': 1.0,
             'width': 0.25,
             'height': 6.0,
@@ -92,7 +92,7 @@ class TestWCAPairPotential(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertTrue(pot._activate(0, 0))
         self.assertFalse(pot._activate(0, 1))
-        parameters['types'] = set([(0, 0), (0, 1)])
+        parameters['types'] = {(0, 0), (0, 1)}
         pot.set_parameters(parameters)
         self.assertTrue(pot._activate(0, 0))
         self.assertTrue(pot._activate(1, 0))
@@ -109,7 +109,7 @@ class TestWCAPairPotential(unittest.TestCase):
         """Test that the min/max is correctly set for the WCA potential."""
         pot = DoubleWellWCA()
         parameters = {
-            'types': set([(0, 0)]),
+            'types': {(0, 0)},
             'rzero': 1.0,
             'width': 0.25,
             'height': 6.0,
@@ -146,6 +146,7 @@ class TestWCAPairPotential(unittest.TestCase):
         self.assertTrue(np.allclose(force[3], np.zeros(3)))
         self.assertTrue(np.allclose(virial, CORRECT_VIRIAL))
         self.assertAlmostEqual(vpot, CORRECT_VPOT)
+
 
 if __name__ == '__main__':
     unittest.main()

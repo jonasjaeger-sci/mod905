@@ -180,13 +180,13 @@ def get_velocity_force_arrows(forces, vels):
     Returns
     -------
     out[0] : numpy.array
-        The x-component of the forces, normalized.
+        The x-component of the forces, normalised.
     out[1] : numpy.array
-        The y-component of the forces, normalized.
+        The y-component of the forces, normalised.
     out[2] : numpy.array
-        The x-component of the velocities, normalized.
+        The x-component of the velocities, normalised.
     out[3] : numpy.array
-        The y-component of the velocities, normalized.
+        The y-component of the velocities, normalised.
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     forceu, forcev, velu, velv = [], [], [], []

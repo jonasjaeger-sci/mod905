@@ -365,7 +365,7 @@ def create_simulation(settings, kwargs):
     settings : dict
         This dictionary contains the settings for the simulation.
     kwargs : dict
-        This dict contains objects that might be needed to initialize
+        This dict contains objects that might be needed to initialise
         the simulation for instance:
 
         * system : object like :py:class:`.System`

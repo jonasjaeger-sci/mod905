@@ -435,10 +435,10 @@ periodic = False"""
 
 
 class KeywordParticles(unittest.TestCase):
-    """Test initialization of particles."""
+    """Test initialisation of particles."""
 
     def test_lattice(self):
-        """Test initialization on a lattice."""
+        """Test initialisation on a lattice."""
         data = """
 Particles
 ---------
@@ -467,7 +467,7 @@ units = lj"""
             self.assertEqual(particles.name[i], 'Ar')
 
     def test_lattice_type(self):
-        """Test initialization on a lattice with types."""
+        """Test initialisation on a lattice with types."""
         data = """
 Particles
 ---------
@@ -495,7 +495,7 @@ units = lj"""
                 self.assertEqual(particles.ptype[i], 1)
 
     def test_lattice_dens(self):
-        """Test initialization on a lattice with density set."""
+        """Test initialisation on a lattice with density set."""
         data = """
 Particles
 ---------
@@ -523,7 +523,7 @@ units = lj"""
             self.assertEqual(particles.ptype[i], 0)
 
     def test_lattice_dens_lcon(self):
-        """Test initialization on a lattice with density and lcon set."""
+        """Test initialisation on a lattice with density and lcon set."""
         data = """
 Particles
 ---------
@@ -553,7 +553,7 @@ units = lj"""
         self.assertTrue(np.allclose(size['high'], correct_size[:, 1]))
 
     def test_lattice_and_mass(self):
-        """Test initialization on a lattice and setting of masses/types."""
+        """Test initialisation on a lattice and setting of masses/types."""
         data = """
 Particles
 ---------
@@ -587,7 +587,7 @@ units = lj"""
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
 
     def test_inconsistent_dimlattice(self):
-        """Test initialization on a lattice with inconsistent dims."""
+        """Test initialisation on a lattice with inconsistent dims."""
         data = """
 Particles
 ---------
@@ -612,7 +612,7 @@ units = lj"""
         self.assertRaises(ValueError, create_initial_positions, *args)
 
     def test_file_xyz(self):
-        """Test initialization from a XYZ file."""
+        """Test initialisation from a XYZ file."""
         data = """
 Particles
 ---------
@@ -647,7 +647,7 @@ units = lj"""
                                              15.9994, 15.9994]))
 
     def test_file_gro(self):
-        """Test initialization from a GRO file."""
+        """Test initialisation from a GRO file."""
         data = """
 Particles
 ---------
@@ -682,7 +682,7 @@ units = gromacs"""
         self.assertTrue(np.allclose(particles.vel, correct_vel))
 
     def test_file_xyztab(self):
-        """Test initialization from a XYZ file with mass dict."""
+        """Test initialisation from a XYZ file with mass dict."""
         data = """
 Particles
 ---------
@@ -722,10 +722,10 @@ units = lj
 
 
 class KeywordForcefield(unittest.TestCase):
-    """Test initialization of force fields."""
+    """Test initialisation of force fields."""
 
     def test_forcefield(self):
-        """Test initialization of a simple force field."""
+        """Test initialisation of a simple force field."""
         data = """
 Forcefield
 ----------

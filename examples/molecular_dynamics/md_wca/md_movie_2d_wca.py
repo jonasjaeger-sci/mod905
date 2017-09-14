@@ -18,7 +18,7 @@ from matplotlib import animation
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 
-PCOLOR = {'A': 'blue', 'B': 'magenta'}  # colors for visualization
+PCOLOR = {'A': 'blue', 'B': 'magenta'}  # Colors for drawing
 # Define potential parameters:
 WCA_PARAMETERS = {
     0: {'sigma': 1.0, 'epsilon': 1.0, 'factor': 2.**(1./6.)},
@@ -87,7 +87,7 @@ outputs = [task for task in create_output_tasks(settings)]
 size = system.box.bounds()
 BIDX = [i for i, ptype in enumerate(system.particles.ptype) if ptype == 1]
 dwca = system.forcefield.potential[1]
-# some additional set-up for the animation
+# Some additional set-up for the animation
 timeunit = (settings['engine']['timestep'] *
             CONVERT['time'][UNIT, 'fs'])
 timeendfs = settings['simulation']['steps'] * timeunit
@@ -115,26 +115,26 @@ ax1.xaxis.labelpad = -10
 ax1.yaxis.labelpad = -10
 
 pos0 = system.box.pbc_wrap(system.particles.pos)
-# set up circles to represent the particles:
+# Set up circles to represent the particles:
 circles = []
 for _ in range(system.particles.npart):
     circles.append(plt.Circle((0, 0), radius=SIGMA * 0.5, alpha=0.5))
     circles[-1].set_visible(False)
     ax1.add_patch(circles[-1])
-# add arrows for the forces and velocities:
+# Add arrows for the forces and velocities:
 force_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
                          color=COLORS['almost_black'], zorder=4)
 vel_arrow = plt.quiver(pos0[:, 0], pos0[:, 1],
                        color=COLOR_SCHEME['colorblind_10'][1], zorder=4)
-# also add arrows for a "legend":
+# Also add arrows for a "legend":
 plt.quiverkey(force_arrow, 3, -4.7, 9, 'Forces', coordinates='data',
               color=COLORS['almost_black'], fontproperties={'size': 'large'})
 plt.quiverkey(vel_arrow, 9, -4.7, 9, 'Velocities', coordinates='data',
               color=COLOR_SCHEME['colorblind_10'][1],
               fontproperties={'size': 'large'})
-# also add a line representing the bond
+# Also add a line representing the bond
 linebond, = ax1.plot([], [], lw=3, ls='-', color=PCOLOR['B'], alpha=0.8)
-# draw lines representing the box boundaries:
+# Draw lines representing the box boundaries:
 ax1.axhline(y=size[1][0] * SIGMA, lw=4, ls=':', alpha=0.5,
             color=COLORS['almost_black'])
 ax1.axhline(y=size[1][1] * SIGMA, lw=4, ls=':', alpha=0.5,
@@ -143,7 +143,7 @@ ax1.axvline(x=size[0][0] * SIGMA, lw=4, ls=':', alpha=0.5,
             color=COLORS['almost_black'])
 ax1.axvline(x=size[0][1] * SIGMA, lw=4, ls=':', alpha=0.5,
             color=COLORS['almost_black'])
-# add second axis for displaying energies:
+# Add second axis for displaying energies:
 ax2 = fig.add_subplot(grid[0, 1])
 ax2.set_xlim(0, timeendfs)
 ax2.set_ylim(-0.6, 1.1)
@@ -262,13 +262,13 @@ def get_velocity_force_arrows(forces, vels):
     Returns
     -------
     out[0] : numpy.array
-        The x-component of the forces, normalized.
+        The x-component of the forces, normalised.
     out[1] : numpy.array
-        The y-component of the forces, normalized.
+        The y-component of the forces, normalised.
     out[2] : numpy.array
-        The x-component of the velocities, normalized.
+        The x-component of the velocities, normalised.
     out[3] : numpy.array
-        The y-component of the velocities, normalized.
+        The y-component of the velocities, normalised.
     """
     fmax, vmax = get_max_vector(forces), get_max_vector(vels)
     FU, FV, VU, VV = [], [], [], []

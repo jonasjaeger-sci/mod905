@@ -28,9 +28,11 @@ def set_up_initial_state():
     """Create particles for the test."""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [5, 5, 5], density=0.9)
+    size = np.array(size)
     npart = len(lattice)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = create_box(size, periodic=[True, True, True])
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(dim=3)
     for pos in lattice:
@@ -44,11 +46,11 @@ def run_calculations(system, parameters):
     """Evaluate the LJ potential."""
     # Calculate with C:
     potential_ext = PairLennardJonesCutC(dim=3, shift=True)
-    forceField_ext = ForceField('Python + external c force field',
+    forcefield_ext = ForceField('Python + external c force field',
                                 potential=[potential_ext],
                                 params=[parameters])
-    system.forcefield = forceField_ext
-    print('Evaluating with: {}'.format(forceField_ext.print_potentials()))
+    system.forcefield = forcefield_ext
+    print('Evaluating with: {}'.format(forcefield_ext.print_potentials()))
     vpot_ext, forces_ext, virial_ext = system.potential_and_force()
     vpot_ext /= float(system.particles.npart)
     # Calculate with pure python implementation:

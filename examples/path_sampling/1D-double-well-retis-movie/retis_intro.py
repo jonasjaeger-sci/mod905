@@ -164,8 +164,8 @@ def main():
         print('\tType: {}'.format(name_of_move))
         if name_of_move == 'swap':
             # If this is the case, the result is on the form
-            # [move, accpeted, swap-with] where swap-with is the ensemble
-            # we are trying to swap with.
+            # [move, accepted?, swap-with] where swap-with is the
+            # ensemble we are trying to swap with.
             name2 = ensembles[retis_result[-1]].ensemble_name
             print('\tSwapping: {} -> {}'.format(name2, name))
         elif name_of_move == 'tis':
@@ -185,6 +185,7 @@ def main():
         print('Simulation step: {}'.format(result['cycle']['step']))
         print_step_results(ensembles, result['retis'])
         print('')
+
 
 if __name__ == '__main__':
     main()

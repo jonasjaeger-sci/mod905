@@ -38,7 +38,7 @@ class OrderX(OrderParameter):
 
     def __init__(self, index, inter_a, inter_b, energy_a, energy_b,
                  dim='x', periodic=False):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------

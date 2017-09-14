@@ -60,6 +60,11 @@ bin/pyretisanalyse
 *.egg-info
 # for sphinx
 docs/_build
+# coverage
+.coverage
+codacycov.sh
+coverage.xml
+htmlcov/
 
 # for examples:
 # backup files

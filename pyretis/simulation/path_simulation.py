@@ -78,13 +78,13 @@ class PathSimulation(Simulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the path simulation class.
+        """Initialisation of the path simulation class.
 
         Parameters
         ----------
         system : object like :py:class:`.System`
             This is the system we are investigating.
-        order_fucntion : object like :py:class:`.OrderParameter`
+        order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         engine : object like :py:class:`.EngineBase`
             This is the integrator that is used to propagate the system
@@ -170,7 +170,7 @@ class SimulationSingleTIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensemble, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the TIS simulation.
+        """Initialisation of the TIS simulation.
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class SimulationRETIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialization of the RETIS simulation.
+        """Initialisation of the RETIS simulation.
 
         Parameters
         ----------

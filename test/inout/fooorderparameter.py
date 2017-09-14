@@ -12,14 +12,14 @@ class FooOrderParameter(OrderParameter):
         self.name = name
 
 
-class BarOrderParameter(object):
-    """BarOrderParameter(object) - Dummy order parameter for tests."""
+class BarOrderParameter:
+    """BarOrderParameter - Dummy order parameter for tests."""
     def __init__(self, description='Dummy test order parameter'):
         self.description = description
 
 
-class BazOrderParameter(object):
-    """BazOrderParameter(object) - Dummy order parameter for tests."""
+class BazOrderParameter:
+    """BazOrderParameter - Dummy order parameter for tests."""
     def __init__(self, description='Dummy test order parameter'):
         self.description = description
 

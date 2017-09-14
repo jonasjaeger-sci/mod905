@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 __all__ = ['ForceField']
 
 
-class ForceField(object):
+class ForceField:
     """Represents a generic force field.
 
     This class described a generic Force Field.
@@ -73,7 +73,7 @@ class ForceField(object):
 
         Parameters
         ----------
-        potential : object
+        potential : object like :py:class:`.PotentialFunction`
             Potential function to add.
         parameters : dict, optional
             Parameters for the potential.
@@ -115,16 +115,15 @@ class ForceField(object):
             potrm = self.potential.pop(idx)
             paramrm = self.params.pop(idx)
             return potrm, paramrm
-        else:
-            logger.warning('Potential not found in the force field functions')
-            return None, None
+        logger.warning('Potential not found in the force field functions')
+        return None, None
 
     def update_potential_parameters(self, potential, params):
         """Update the potential parameters of the given potential function.
 
         Parameters
         ----------
-        potential : object
+        potential : object like :py:class:`.PotentialFunction`
             Potential to update. Should be in `self.potential`.
         params : dict
             The new parameters to set.

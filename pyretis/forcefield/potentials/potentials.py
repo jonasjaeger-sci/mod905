@@ -175,8 +175,6 @@ class RectangularWell(PotentialFunction):
             The value of the potential outside (left, right).
         desc : string, optional
             Description of the force field.
-        params : dict
-            The parameters for this potential.
         """
         super().__init__(dim=1, desc=desc)
         self.params = {'left': left, 'right': right,
