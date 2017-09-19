@@ -12,7 +12,6 @@ from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis.histogram import histogram, match_all_histograms
 import matplotlib
-matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 
