@@ -12,19 +12,16 @@ before_script:
 
 test:
   script:
-  - python -m unittest discover -v -s test
-
-coverage:
-  script:
   - coverage run -m unittest discover -s test
   - coverage report -m
+  coverage: coverage: '/^TOTAL.*\s+(\d+\%)/'
 
-job-pep8:
+pep8:
   script:
-  - pep8 --filename=*.py --count --exclude=./docs
+  - pep8 --filename=*.py --count --statistics --exclude=./docs
   allow_failure: true
 
-job-pylint:
+pylint:
   script:
-  - pylint pyretis
+  - pylint pyretis -f parseable -r yes
   allow_failure: true
