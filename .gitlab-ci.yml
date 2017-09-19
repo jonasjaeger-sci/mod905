@@ -23,7 +23,6 @@ job-pep8:
   script:
   - pep8 --filename=*.py --count --exclude=./docs
 
-
 job-pylint:
   script:
   - pylint pyretis

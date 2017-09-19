@@ -46,7 +46,7 @@ def get_version():
             if lines.startswith('FULL_VERSION ='):
                 version = ast.literal_eval(lines.split('=')[1].strip())
                 return version
-    return '1.0.0.dev1'
+    return '1.0.0.dev2'
 
 
 def get_requirements(docs=False):
