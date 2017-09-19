@@ -14,7 +14,7 @@ test:
   script:
   - coverage run -m unittest discover -s test
   - coverage report -m
-  coverage: coverage: '/^TOTAL.*\s+(\d+\%)/'
+  coverage: '/^TOTAL.*\s+(\d+\%)/'
 
 pep8:
   script:
