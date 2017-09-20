@@ -601,7 +601,7 @@ class CP2KEngine(ExternalMDEngine):
             reversed velocities.
         """
         box, xyz, vel, names = self._read_configuration(filename)
-        write_xyz_trajectory(outfile, xyz, -vel, names, box, append=False)
+        write_xyz_trajectory(outfile, xyz, -1.0*vel, names, box, append=False)
         return None
 
     def _prepare_shooting_point(self, input_file):

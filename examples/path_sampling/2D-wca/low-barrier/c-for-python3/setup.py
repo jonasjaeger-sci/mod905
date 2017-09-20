@@ -1,11 +1,20 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A script for building the c Lennard-Jones extension."""
-from distutils.core import setup, Extension
+"""A script for building the WCA C extension."""
+from distutils.core import (  # pylint: disable=no-name-in-module,import-error
+    setup,
+    Extension,
+)
 
-WCAFORCE = Extension('wcaforces', sources=['wcaforces.c'],
-                     extra_compile_args=['-Ofast', '-march=native'])
-setup(name='pyretis WCA c extension',
-      description='A c extension for WCA potential.',
-      ext_modules=[WCAFORCE])
+
+WCAFORCE = Extension(
+    'wcaforces',
+    sources=['wcaforces.c'],
+    extra_compile_args=['-Ofast', '-march=native']
+)
+setup(
+    name='PyRETIS WCA C extension',
+    description='C extension for WCA potential.',
+    ext_modules=[WCAFORCE]
+)

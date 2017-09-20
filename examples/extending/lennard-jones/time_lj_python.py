@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Time the python implementation of the Lennard-Jones potential.
+"""Time the Python implementation of the Lennard-Jones potential.
 
 This timing is simply done by evaluating the Leannrd-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=C0103
+import timeit
 import numpy as np
 from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from pyretis.forcefield.potentials import PairLennardJonesCut
-import timeit
 
 
 def set_up_initial_state(nlattice=5):
@@ -38,7 +38,7 @@ def set_up_initial_state(nlattice=5):
 
 def test_wrapper(func, *args, **kwargs):
     """A simple wrapper for calling functions."""
-    def wrapped():
+    def wrapped():  # pylint: disable=missing-docstring
         return func(*args, **kwargs)
     return wrapped
 
@@ -65,12 +65,11 @@ if __name__ == '__main__':
     results = []
 
     for i in range(3, 11):
-        system = set_up_initial_state(nlattice=i)
-        print('Testing pure python implementation')
+        syst = set_up_initial_state(nlattice=i)
+        print('Testing pure Python implementation')
         time1 = test_function(potential.potential_and_force,
-                              system,
-                              number=10, repeat=3)
-        results.append((system.particles.npart, time1[0], time1[1], time1[2]))
+                              syst, number=10, repeat=3)
+        results.append((syst.particles.npart, time1[0], time1[1], time1[2]))
     results = np.array(results)
     np.savetxt('timings-python.txt', results, fmt='%i %.9e %.9e %.9e',
                header='N best avg std')

@@ -3,19 +3,19 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A GROMACS external MD integrator interface. Used for testing"""
 import logging
+import pickle
 import os
 from numpy.random import RandomState
 from pyretis.engines.gromacs2 import GromacsEngine2
-import pickle
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 
 
 RND = RandomState(42)
-inputfile = os.path.join('..', 'run-initialise', 'rnd.state')
-with open(inputfile, 'rb') as inputf:
-    state = pickle.load(inputf)
-RND.set_state(state)
+INPUTFILE = os.path.join('..', 'run-initialise', 'rnd.state')
+with open(INPUTFILE, 'rb') as inputf:
+    STATE = pickle.load(inputf)
+    RND.set_state(STATE)
 
 
 def prepare_shooting_point(gro, input_file):

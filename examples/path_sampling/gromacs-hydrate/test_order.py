@@ -27,10 +27,13 @@ class TestOrder(unittest.TestCase):
         self.assertAlmostEqual(lambpy, lambf)
 
 
-if __name__ == '__main__':
+def print_idx():
+    """Just print out the indices."""
     ordr = RingDiffusion()
     print('Indexes for the two groups:')
     print('Idx1', ordr.idx1)
     print('Idx2', ordr.idx2)
-    print('Testing')
+
+
+if __name__ == '__main__':
     unittest.main()

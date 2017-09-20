@@ -7,12 +7,12 @@ This timing is simply done by evaluating the Leannrd-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=C0103
+import timeit
 import numpy as np
 from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialc import PairLennardJonesCutC
-import timeit
 
 
 def set_up_initial_state(nlattice=5):
@@ -38,7 +38,7 @@ def set_up_initial_state(nlattice=5):
 
 def test_wrapper(func, *args, **kwargs):
     """A simple wrapper for calling functions."""
-    def wrapped():
+    def wrapped():  # pylint: disable=missing-docstring
         return func(*args, **kwargs)
     return wrapped
 
@@ -65,12 +65,12 @@ if __name__ == '__main__':
     results = []
 
     for i in range(3, 16):
-        system = set_up_initial_state(nlattice=i)
-        print('Testing c implementation')
+        syst = set_up_initial_state(nlattice=i)
+        print('Testing C implementation')
         time1 = test_function(potential.potential_and_force,
-                              system,
+                              syst,
                               number=10, repeat=3)
-        results.append((system.particles.npart, time1[0], time1[1], time1[2]))
+        results.append((syst.particles.npart, time1[0], time1[1], time1[2]))
     results = np.array(results)
     np.savetxt('timings.txt', results, fmt='%i %.9e %.9e %.9e',
                header='N best avg std')

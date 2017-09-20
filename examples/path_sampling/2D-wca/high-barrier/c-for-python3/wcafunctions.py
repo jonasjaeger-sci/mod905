@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Example of using a Lennard-Jones potential implemented in C."""
+"""Wrapper for the C extensions for the WCA potential example."""
 import sys
 import os
 import logging

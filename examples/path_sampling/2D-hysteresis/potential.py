@@ -76,8 +76,8 @@ class Hyst2D(PotentialFunction):
         out : float
             The potential energy.
         """
-        x = system.particles.pos[:, 0]
-        y = system.particles.pos[:, 1]
+        x = system.particles.pos[:, 0]  # pylint: disable=invalid-name
+        y = system.particles.pos[:, 1]  # pylint: disable=invalid-name
         gam1 = self.params['gamma1']
         gam2 = self.params['gamma2']
         gam3 = self.params['gamma3']
@@ -85,11 +85,11 @@ class Hyst2D(PotentialFunction):
         alf2 = self.params['alpha2']
         bet1 = self.params['beta1']
         bet2 = self.params['beta2']
-        x0 = self.params['x0']
-        y0 = self.params['y0']
+        x_0 = self.params['x0']
+        y_0 = self.params['y0']
         v_pot = (gam1 * (x**2 + y**2)**2 +
-                 gam2 * np.exp(alf1 * (x - x0)**2 + alf2 * (y - y0)**2) +
-                 gam3 * np.exp(bet1 * (x + x0)**2 + bet2 * (y + y0)**2))
+                 gam2 * np.exp(alf1 * (x - x_0)**2 + alf2 * (y - y_0)**2) +
+                 gam3 * np.exp(bet1 * (x + x_0)**2 + bet2 * (y + y_0)**2))
         return v_pot.sum()
 
     def force(self, system):
@@ -108,8 +108,8 @@ class Hyst2D(PotentialFunction):
         out[1] : numpy.array
             The virial, currently not implemented for this potential
         """
-        x = system.particles.pos[:, 0]
-        y = system.particles.pos[:, 1]
+        x = system.particles.pos[:, 0]  # pylint: disable=invalid-name
+        y = system.particles.pos[:, 1]  # pylint: disable=invalid-name
         gam1 = self.params['gamma1']
         gam2 = self.params['gamma2']
         gam3 = self.params['gamma3']
@@ -117,18 +117,18 @@ class Hyst2D(PotentialFunction):
         alf2 = self.params['alpha2']
         bet1 = self.params['beta1']
         bet2 = self.params['beta2']
-        x0 = self.params['x0']
-        y0 = self.params['y0']
+        x_0 = self.params['x0']
+        y_0 = self.params['y0']
         term = 4.0 * gam1 * (x**2 + y**2)
-        exp1 = gam2 * np.exp(alf1 * (x - x0)**2 + alf2 * (y - y0)**2)
-        exp2 = gam3 * np.exp(bet1 * (x + x0)**2 + bet2 * (y + y0)**2)
+        exp1 = gam2 * np.exp(alf1 * (x - x_0)**2 + alf2 * (y - y_0)**2)
+        exp2 = gam3 * np.exp(bet1 * (x + x_0)**2 + bet2 * (y + y_0)**2)
         forces = np.zeros_like(system.particles.pos)
         forces[:, 0] = -(x * term +
-                         2.0 * alf1 * (x - x0) * exp1 +
-                         2.0 * bet1 * (x + x0) * exp2)
+                         2.0 * alf1 * (x - x_0) * exp1 +
+                         2.0 * bet1 * (x + x_0) * exp2)
         forces[:, 1] = -(y * term +
-                         2.0 * alf2 * (y - y0) * exp1 +
-                         2.0 * bet2 * (y + y0) * exp2)
+                         2.0 * alf2 * (y - y_0) * exp1 +
+                         2.0 * bet2 * (y + y_0) * exp2)
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
         return forces, virial
 
@@ -152,8 +152,8 @@ class Hyst2D(PotentialFunction):
             The virial, currently not implemented for this potential.
         """
         virial = np.zeros((self.dim, self.dim))  # just return zeros here
-        x = system.particles.pos[:, 0]
-        y = system.particles.pos[:, 1]
+        x = system.particles.pos[:, 0]  # pylint: disable=invalid-name
+        y = system.particles.pos[:, 1]  # pylint: disable=invalid-name
         gam1 = self.params['gamma1']
         gam2 = self.params['gamma2']
         gam3 = self.params['gamma3']
@@ -161,18 +161,18 @@ class Hyst2D(PotentialFunction):
         alf2 = self.params['alpha2']
         bet1 = self.params['beta1']
         bet2 = self.params['beta2']
-        x0 = self.params['x0']
-        y0 = self.params['y0']
+        x_0 = self.params['x0']
+        y_0 = self.params['y0']
         term0 = (x**2 + y**2)
-        exp1 = gam2 * np.exp(alf1 * (x - x0)**2 + alf2 * (y - y0)**2)
-        exp2 = gam3 * np.exp(bet1 * (x + x0)**2 + bet2 * (y + y0)**2)
+        exp1 = gam2 * np.exp(alf1 * (x - x_0)**2 + alf2 * (y - y_0)**2)
+        exp2 = gam3 * np.exp(bet1 * (x + x_0)**2 + bet2 * (y + y_0)**2)
         v_pot = gam1 * term0**2 + exp1 + exp2
         term = 4.0 * gam1 * term0
         forces = np.zeros_like(system.particles.pos)
         forces[:, 0] = -(x * term +
-                         2.0 * alf1 * (x - x0) * exp1 +
-                         2.0 * bet1 * (x + x0) * exp2)
+                         2.0 * alf1 * (x - x_0) * exp1 +
+                         2.0 * bet1 * (x + x_0) * exp2)
         forces[:, 1] = -(y * term +
-                         2.0 * alf2 * (y - y0) * exp1 +
-                         2.0 * bet2 * (y + y0) * exp2)
+                         2.0 * alf2 * (y - y_0) * exp1 +
+                         2.0 * bet2 * (y + y_0) * exp2)
         return v_pot.sum(), forces, virial

@@ -85,8 +85,8 @@ class RecalculateOrder(unittest.TestCase):
                 with open(path, 'wb') as output:
                     output.write(gro.read())
                 box = recalculate_order(orderf, path)
-                for a, b in zip(box[0], CORRECT_TRI[i]):
-                    self.assertAlmostEqual(a, b, places=5)
+                for j, k in zip(box[0], CORRECT_TRI[i]):
+                    self.assertAlmostEqual(j, k, places=5)
                 i += 1
 
     def test_recalculate_g96(self):
@@ -105,8 +105,8 @@ class RecalculateOrder(unittest.TestCase):
                 with open(path, 'wb') as output:
                     output.write(g96.read())
                 box = recalculate_order(orderf, path)
-                for a, b in zip(box[0], CORRECT_TRI[i]):
-                    self.assertAlmostEqual(a, b, places=5)
+                for j, k in zip(box[0], CORRECT_TRI[i]):
+                    self.assertAlmostEqual(j, k, places=5)
                 i += 1
 
 

@@ -332,7 +332,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             k = np.where(_check_cutoff(self._rcut2, rsq,
                                        particles.ptype[i+1:],
                                        itype))[0]
-            if len(k) > 0:
+            if len(k) > 0:  # pylint: disable=len-as-condition
                 r6inv = 1.0 / rsq[k]**3
                 pot += np.sum(_pot_term(self._lj3, self._lj4, self._offset,
                                         r6inv, particles.ptype[k+i+1], itype))
@@ -375,7 +375,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             k = np.where(_check_cutoff(self._rcut2, rsq,
                                        particles.ptype[i+1:],
                                        itype))[0]
-            if len(k) > 0:
+            if len(k) > 0:  # pylint: disable=len-as-condition
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3
                 forcelj = _force_term(self._lj1, self._lj2, r2inv, r6inv,
@@ -428,7 +428,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             k = np.where(_check_cutoff(self._rcut2, rsq,
                                        particles.ptype[i+1:],
                                        itype))[0]
-            if len(k) > 0:
+            if len(k) > 0:  # pylint: disable=len-as-condition
                 jtype = particles.ptype[k+i+1]
                 r2inv = 1.0 / rsq[k]
                 r6inv = r2inv**3

@@ -38,7 +38,7 @@ def compare_traj(traj1, traj2, tol=1e-12):
     traj2 : string
         A trajectory file to open.
     tol : float
-        The system we are propagation.
+        A tolerance for comparing numbers.
 
     Returns
     -------
@@ -53,8 +53,8 @@ def compare_traj(traj1, traj2, tol=1e-12):
     file2 = get_writer('pathtrajint').load(traj2)
     error, error_v = 0.0, 0.0
     nsnap = 0
-    for traj1, traj2 in zip(file1, file2):
-        for snap1, snap2 in zip(traj1['data'], traj2['data']):
+    for trj1, trj2 in zip(file1, file2):
+        for snap1, snap2 in zip(trj1['data'], trj2['data']):
             pose, vele = snapshot_difference(snap1, snap2)
             error += pose
             error_v += vele
@@ -99,13 +99,13 @@ def compare_energy(traj1, traj2, tol=1e-12):
     file2 = get_writer('pathenergy').load(traj2)
     errors = {}
     nsnap = 0
-    for traj1, traj2 in zip(file1, file2):
-        for key, values in traj1['data'].items():
+    for trj1, trj2 in zip(file1, file2):
+        for key, values in trj1['data'].items():
             if key == 'time':
                 continue
             if key not in errors:
                 errors[key] = 0.0
-            diff = (values - traj2['data'][key])**2
+            diff = (values - trj2['data'][key])**2
             errors[key] += sum(diff)
             nsnap += 1
     for key, err in errors.items():
@@ -138,14 +138,14 @@ def compare_order(traj1, traj2, tol=1e-12):
     file2 = get_writer('pathorder').load(traj2)
     errors = {}
     nsnap = 0
-    for traj1, traj2 in zip(file1, file2):
-        _, col = traj1['data'].shape
+    for trj1, trj2 in zip(file1, file2):
+        _, col = trj1['data'].shape
         for key in range(col):
             if key == 0:
                 continue
             if key not in errors:
                 errors[key] = 0.0
-            diff = (traj1['data'][:, key] - traj2['data'][:, key])**2
+            diff = (trj1['data'][:, key] - trj2['data'][:, key])**2
             errors[key] += sum(diff)
             nsnap += 1
     for key, err in errors.items():
@@ -174,6 +174,6 @@ if __name__ == '__main__':
     colorama.init(autoreset=True)
     settings = parse_settings_file('retis-full/retis.rst')
     inter = settings['simulation']['interfaces']
-    for i in range(len(inter)):
-        ens = PATH_DIR_FMT.format(i)
+    for intr in range(len(inter)):
+        ens = PATH_DIR_FMT.format(intr)
         compare_ensemble(ens)

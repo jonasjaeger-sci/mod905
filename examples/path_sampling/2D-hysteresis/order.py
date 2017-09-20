@@ -104,5 +104,4 @@ class OrderX(OrderParameter):
                 lmb = self.inter_b
         if self.periodic:
             return [system.box.pbc_coordinate_dim(lmb, self.dim)]
-        else:
-            return [lmb]
+        return [lmb]

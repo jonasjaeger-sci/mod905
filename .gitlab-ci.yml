@@ -19,9 +19,8 @@ test:
 pep8:
   script:
   - pep8 --filename=*.py --count --statistics --exclude=./docs
-  allow_failure: true
 
 pylint:
   script:
-  - pylint pyretis -f parseable -r yes
+  - python devtools/run_linting.py pyretis
   allow_failure: true
