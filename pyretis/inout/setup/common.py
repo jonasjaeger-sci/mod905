@@ -87,6 +87,7 @@ def import_from(module_path, function_name):
             )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+            sys.modules[module_name] = module
         logger.debug('Imported module: %s', module)
         return getattr(module, function_name)
     except (ImportError, IOError):
