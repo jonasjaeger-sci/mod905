@@ -1,6 +1,6 @@
 Molecular dynamics example settings
 ===================================
-Here i can write some text to remind me 
+Here I can write some text to remind me 
 what this simulation is doing.
 
 Simulation settings

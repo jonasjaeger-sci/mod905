@@ -146,26 +146,31 @@ SECTIONS['analysis'] = {
 
 
 SPECIAL_KEY = {'parameter'}
+
+# This dictionary contains sections where the keywords
+# can not be defined before we parse the input. The reason
+# for this is that we support user defined external modules
+# and that the user should have the freedom to define keywords
+# for these modules:
 ALLOW_MULTIPLE = {
     'potential',
     'orderparameter',
     'engine',
     'collective-variable',
-    'initial-path'
+    'initial-path',
 }
+
+# This dictionary contains sections that can be defined
+# multiple times. When parsing, these sections will be
+# prefixed with a number to distinguish them.
 SPECIAL_MULTIPLE = {
     'potential',
-    'collective-variable'
-}
-# 99 is just a practical limit.
-MAX_SEC = {
-    'potential': 99,
-    'collective-variable': 99,
+    'collective-variable',
 }
 
 
 def parse_primitive(text):
-    """Parse text to python using the ast module
+    """Parse text to Python using the ast module
 
     Parameters
     ----------
@@ -227,7 +232,10 @@ def look_for_keyword(line):
 
 
 def _parse_sections(inputtxt):
-    """Parse raw data in sections from the input file.
+    """Find sections in the input file with raw data.
+
+    This method will find sections in the input file and
+    collect the corresponding raw data.
 
     Parameters
     ----------
@@ -242,7 +250,8 @@ def _parse_sections(inputtxt):
         for the section corresponding to `key`.
     """
     multiple = {key: 0 for key in SPECIAL_MULTIPLE}
-    raw_data = {'heading': []}
+    raw_data = OrderedDict()
+    raw_data['heading'] = []
     previous_line = None
     add_section = 'heading'
     data = []
@@ -255,16 +264,12 @@ def _parse_sections(inputtxt):
                 continue
             section_title = previous_line.split()[0].lower()
             if section_title in SPECIAL_MULTIPLE:
-                if multiple[section_title] < MAX_SEC[section_title]:
-                    new_section_title = '{}{:02d}'.format(
-                        section_title,
-                        multiple[section_title]
-                    )
-                    multiple[section_title] += 1
-                    section_title = new_section_title
-                else:
-                    logger.critical('Too many %s sections defined.'
-                                    ' Ignoring the rest', section_title)
+                new_section_title = '{}{}'.format(
+                    section_title,
+                    multiple[section_title]
+                )
+                multiple[section_title] += 1
+                section_title = new_section_title
             if section_title not in raw_data:
                 raw_data[section_title] = []
             raw_data[add_section].extend(data[:-1])
@@ -278,13 +283,49 @@ def _parse_sections(inputtxt):
     return raw_data
 
 
-def _parse_raw_section(raw_section, section):
-    """Parse the raw data from a section.
+def _parse_section_heading(raw_section):
+    """Helper method to parse the heading section.
 
     Parameters
     ----------
     raw_section : list of strings
         The text data for a given section which will be parsed.
+
+    Returns
+    -------
+    setting : dict
+        A dict with keys corresponding to the settings.
+    """
+    if not raw_section:
+        return None
+    return {'text': '\n'.join(raw_section)}
+
+
+def _merge_section_text(raw_section):
+    """Method to merge text for settings that are split across lines.
+
+    This method supports keyword settings that are split across several
+    lines. Here we merge these lines by assuming that keywords separate
+    different settings.
+    """
+    merged = []
+    for line in raw_section:
+        _, _, found_keyword = look_for_keyword(line)
+        if found_keyword or not merged:
+            merged.append(line)
+        else:
+            merged[-1] = ''.join((merged[-1], line))
+    return merged
+
+
+def _parse_section_default(raw_section):
+    """Default parser for sections.
+
+    Parameters
+    ----------
+    raw_section : list of strings
+        The text data for a given section which will be parsed.
+
     section : string
         A text identifying the section we are parsing for. This is
         used to get a list over valid keywords for the section.
@@ -294,25 +335,8 @@ def _parse_raw_section(raw_section, section):
     setting : dict
         A dict with keys corresponding to the settings.
     """
+    merged = _merge_section_text(raw_section)
     setting = {}
-    if section not in SECTIONS:
-        msgtxt = 'Ignoring unknown input section "{}"'.format(section)
-        logger.warning(msgtxt)
-        # unknown section, just ignore silently
-        return None
-    if section == 'heading':
-        if not raw_section:
-            return None
-        return {'text': '\n'.join(raw_section)}
-    merged = []
-    # first we merge text that is split across line.
-    # this is done by assuming that keyword separate settings
-    for line in raw_section:
-        _, _, found_keyword = look_for_keyword(line)
-        if found_keyword or not merged:
-            merged.append(line)
-        else:
-            merged[-1] = ''.join((merged[-1], line))
     for line in merged:
         match, keyword, found_keyword = look_for_keyword(line)
         if found_keyword:
@@ -340,6 +364,32 @@ def _parse_raw_section(raw_section, section):
     return setting
 
 
+def _parse_raw_section(raw_section, section):
+    """Parse the raw data from a section.
+
+    Parameters
+    ----------
+    raw_section : list of strings
+        The text data for a given section which will be parsed.
+    section : string
+        A text identifying the section we are parsing for. This is
+        used to get a list over valid keywords for the section.
+
+    Returns
+    -------
+    out : dict
+        A dict with keys corresponding to the settings.
+    """
+    if section not in SECTIONS:
+        # Unknown section, just ignore it and give a warning.
+        msgtxt = 'Ignoring unknown input section "{}"'.format(section)
+        logger.warning(msgtxt)
+        return None
+    if section == 'heading':
+        return _parse_section_heading(raw_section)
+    return _parse_section_default(raw_section)
+
+
 def _parse_all_raw_sections(raw_sections):
     """Helper method to parse all raw sections.
 
@@ -355,19 +405,19 @@ def _parse_all_raw_sections(raw_sections):
     settings : dict
         The parsed settings, with one key for each section parsed.
     """
-    settings = {}
-    for key in sorted(raw_sections.keys()):
+    settings = OrderedDict()
+    for key, val in raw_sections.items():
         special = None
         for i in SPECIAL_MULTIPLE:
             if key.startswith(i):
                 special = i
         if special is not None:
-            new_setting = _parse_raw_section(raw_sections[key], special)
+            new_setting = _parse_raw_section(val, special)
             if special not in settings:
                 settings[special] = []
             settings[special].append(new_setting)
         else:
-            new_setting = _parse_raw_section(raw_sections[key], key)
+            new_setting = _parse_raw_section(val, key)
             if new_setting is None:
                 continue
             settings[key] = {}
