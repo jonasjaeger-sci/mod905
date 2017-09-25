@@ -3,14 +3,14 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Simple script to compare outcome of two simulations.
 
-Here we compare a full simulation with one where we have stopped
-and restarted after 100 steps.
+Here we compare a RETIS simulation of 250 steps to known results.
 """
 # pylint: disable=C0103
 import filecmp
 from collections import OrderedDict
 from math import isclose
 import os
+import sys
 import colorama
 import numpy as np
 from pyretis.inout.common import print_to_screen
@@ -31,6 +31,7 @@ def compare_files(file1, file2):
         print_to_screen('\t-> Files are equal!', level='success')
     else:
         print_to_screen('\t-> Files are NOT equal!', level='error')
+        sys.exit(1)
 
 
 def check_path_file(ens):
@@ -108,6 +109,8 @@ def check_path_file(ens):
                 )
     if not something_weird:
         print_to_screen('Accepted paths are OK!', level='success')
+    else:
+        sys.exit(1)
 
 
 def run_check_path_file(settings):
@@ -271,6 +274,7 @@ def check_swaps(paths, accepted, ens, kind):
         print_to_screen('All swaps are ok!', level='success')
     else:
         print_to_screen('Error for some swaps:', level='error')
+        sys.exit(1)
     return everything_is_ok
 
 
