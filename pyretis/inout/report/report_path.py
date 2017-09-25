@@ -217,21 +217,18 @@ def generate_report_retis0(analysis, output='txt'):
         The file extension (i.e. file type) for the generated report.
     """
     if output != 'txt':
-        msg = ('Report for [0^-] is only indended as "txt"'
-               '\nOutput format "{}" ignored'.format(output))
-        logger.warning(msg)
         output = 'txt'
+        logger.warning('Report for [0^-] is only indended as "txt"'
+                       '\nOutput format "%s" ignored', output)
     result = analysis['pathensemble']
-    report = {'ensemble': result['out']['ensemble'], 'numbers': {},
-              'tables': {}}
-    # Create tables
-    report['tables'] = {'interfaces0': _table_interface0([result],
-                                                         fmt=output)[1],
-                        'path0': _table_path([result], fmt=output)[1]}
-    numbers = report['numbers']
     flux = result['out']['fluxlength']
-    numbers['fluxlength'] = format_number(flux[0], 0, 10000)
-    numbers['fluxlengtherror'] = format_number(flux[1] * 100, 0, 100)
+    report = {
+        'ensemble': result['out']['ensemble'],
+        'numbers': {'fluxlength': format_number(flux[0], 0, 10000),
+                    'fluxlengtherror': format_number(flux[1] * 100, 0, 100)},
+        'tables': {'interfaces0': _table_interface0([result], fmt=output)[1],
+                   'path0': _table_path([result], fmt=output)[1]},
+    }
     return report
 
 

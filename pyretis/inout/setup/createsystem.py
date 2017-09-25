@@ -408,7 +408,7 @@ def set_up_box(settings, boxs, dim=3):
     ----------
     settings : dict
         The dict with the simulation settings
-    boxs : dict
+    boxs : dict or None
         If no box settings are given, we can still create a box,
         inferred from the positions of the particles. This dict
         contains the settings to do so.
