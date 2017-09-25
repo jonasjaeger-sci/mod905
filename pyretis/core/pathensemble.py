@@ -181,8 +181,12 @@ class PathEnsemble:
                 self.directory[key] = path
             else:
                 self.directory[key] = os.path.join(path, key)
-            logger.debug('Updating directory: %s -> %s',
-                         val, self.directory[key])
+            if val is None:
+                logger.debug('Setting directory "%s" to %s', key,
+                             self.directory[key])
+            else:
+                logger.debug('Updating directory "%s": %s -> %s',
+                             key, val, self.directory[key])
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
