@@ -185,6 +185,18 @@ class PathEnsembleTest(unittest.TestCase):
             j += 1
         self.assertEqual(j, 1)
 
+    def test_update_dir(self):
+        """Test that we can update directories."""
+        ensemble = PathEnsemble(1, [-1, 0, 1], exe_dir='test1')
+        old = [i for i in ensemble.directories()]
+        ensemble.update_directories(os.path.join('test1', '002'))
+        new = [i for i in ensemble.directories()]
+        for diri, dirj in zip(old, new):
+            for i, j in zip(diri, dirj):
+                if i != j:
+                    self.assertEqual(i, '1')
+                    self.assertEqual(j, '2')
+
     def test_add_path(self):
         """Test adding of paths and reset."""
         ensemble = PathEnsemble(1, [-1, 0, 1], detect=0, maxpath=10)
@@ -282,6 +294,18 @@ class PathEnsembleExtTest(unittest.TestCase):
         ]
         for dirname, correct in zip(ens.directories(), correct_dir):
             self.assertEqual(dirname, correct)
+
+    def test_update_dir(self):
+        """Test that we can update directories."""
+        ensemble = PathEnsembleExt(1, [-1, 0, 1], exe_dir='test1')
+        old = [i for i in ensemble.directories()]
+        ensemble.update_directories(os.path.join('test1', '002'))
+        new = [i for i in ensemble.directories()]
+        for diri, dirj in zip(old, new):
+            for i, j in zip(diri, dirj):
+                if i != j:
+                    self.assertEqual(i, '1')
+                    self.assertEqual(j, '2')
 
     def test_move_path(self):
         """Test that we can move paths."""
