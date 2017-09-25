@@ -118,11 +118,11 @@ class MplPlotter(Plotter):
             The files written.
         """
         outputfiles = {}
-        for key in canvas:
+        for key, val in canvas.items():
             local_file = name_file(key, self.out_fmt, path=None)
             full_path = name_file(key, self.out_fmt, self.out_dir)
             outputfiles[key] = local_file
-            mpl_savefig(canvas[key], full_path, self.backup)
+            mpl_savefig(val, full_path, self.backup)
         return outputfiles
 
     def output_flux(self, results):
@@ -627,7 +627,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
 
     Parameters
     ----------
-    histograms : list
+    histograms : dict
         These are the histograms obtained in the shoots analysis.
     scale : dict
         These are the scale factors for normalising the histograms

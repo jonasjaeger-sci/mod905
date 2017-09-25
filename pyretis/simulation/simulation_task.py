@@ -24,7 +24,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
 
     Parameters
     ----------
-    function : function
+    function : callable
         The function we will inspect.
     given_args : list
         A list of the arguments to pass to the function. 'self' will not
@@ -130,7 +130,7 @@ class SimulationTask:
 
         Parameters
         ----------
-        function : function
+        function : callable
             The function to execute.
         args : list, optional
             List of arguments to the function.

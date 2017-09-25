@@ -356,7 +356,7 @@ def _txt_histogram(outputfile, title, histograms, backup=False):
         This is the name of the output file to create.
     title : string
         A descriptive title to add to the header.
-    histograms : tuple
+    histograms : tuple or list
         The histograms to store.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
@@ -378,7 +378,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
 
     Parameters
     ----------
-    histograms : list
+    histograms : dict
         These are the histograms obtained in the shoots analysis.
     scale : dict
         These are the scale factors for normalising the histograms

@@ -181,7 +181,7 @@ class SimulationMDFlux(SimulationMD):
     interfaces : list of floats
         These floats defines the interfaces used in the crossing
         calculation.
-    leftside_prev : list of booleans
+    leftside_prev : list of booleans or None
         These are used to store the previous positions with respect
         to the interfaces.
     """

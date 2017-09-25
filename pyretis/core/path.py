@@ -146,7 +146,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
         The current order parameter.
     interfaces : list of floats
         These are the interfaces to check.
-    leftside_prev : list of booleans
+    leftside_prev : list of booleans or None
         These are used to store the previous positions with respect
         to the interfaces.
 
@@ -500,15 +500,15 @@ class PathBase:
         interfaces : list
             These are just the interfaces we are currently considering.
         """
-        path_info = {'generated': self.generated,
-                     'status': status,
-                     'length': self.length}
-
-        path_info['ordermax'] = tuple(self.ordermax)
-        path_info['ordermin'] = tuple(self.ordermin)
-
         start, end, middle, _ = self.check_interfaces(interfaces)
-        path_info['interface'] = (start, middle, end)
+        path_info = {
+            'generated': self.generated,
+            'status': status,
+            'length': self.length,
+            'ordermax': tuple(self.ordermax),
+            'ordermin': tuple(self.ordermin),
+            'interface': (start, middle, end),
+        }
         return path_info
 
     def set_move(self, move):
