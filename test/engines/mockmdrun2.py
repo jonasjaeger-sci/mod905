@@ -176,6 +176,7 @@ def write_mock_edr(filename, steps, nstxout, gen=False, start=0):
 
 if __name__ == '__main__':
     # pylint: disable=invalid-name
+    print('This is the mock mdrun command.')
     if '-crash' in sys.argv:
         mock_mdrun(sys.argv[1:], crash=True)
     else:
