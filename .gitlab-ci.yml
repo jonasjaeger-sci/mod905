@@ -24,3 +24,10 @@ pylint:
   script:
   - python devtools/run_linting.py pyretis
   allow_failure: true
+
+test_retis:
+  script:
+  - cd examples/test/test-internal/retis
+  - make clean
+  - pyretisrun -i retis.rst -p
+  - python compare.py
