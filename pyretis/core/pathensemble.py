@@ -159,13 +159,30 @@ class PathEnsemble:
         self.directory['traj'] = None
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
-            self.directory['path-ensemble'] = path_dir
-            for key in ('accepted', 'generate', 'traj'):
-                self.directory[key] = os.path.join(path_dir, key)
+            self.update_directories(path_dir)
 
     def directories(self):
         """Yield the directories PyRETIS should make."""
         yield self.directory['path-ensemble']
+
+    def update_directories(self, path):
+        """Update directory names.
+
+        This method will not create new directories, but it will
+        update the directory names.
+
+        Parameters
+        ----------
+        path : string
+            The base path to set.
+        """
+        for key, val in self.directory.items():
+            if key == 'path-ensemble':
+                self.directory[key] = path
+            else:
+                self.directory[key] = os.path.join(path, key)
+            logger.debug('Updating directory: %s -> %s',
+                         val, self.directory[key])
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
