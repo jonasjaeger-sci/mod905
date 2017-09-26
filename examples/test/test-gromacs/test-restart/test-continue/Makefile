@@ -1,5 +1,5 @@
 .PHONY:	
-	    clean
+	clean
  
 clean:
 	find -name \*.pyc -delete
