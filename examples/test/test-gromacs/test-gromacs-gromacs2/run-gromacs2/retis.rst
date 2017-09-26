@@ -1,5 +1,5 @@
-Retis 1D example
-================
+RETIS test for GROMACS
+======================
 
 Simulation
 ----------
@@ -7,30 +7,29 @@ task = retis
 steps = 10
 interfaces = [-0.26, -0.24, -0.22, -0.20, -0.19, -0.18]
 
-
 System
 ------
 units = gromacs
 
-Engine settings
----------------
+Engine
+------
 class = GromacsEngine2R
 module = ../gromacs.py
-gmx = gmx_5.1.4_d
-mdrun = gmx_5.1.4_d mdrun
+gmx = GMXCOMMAND
+mdrun = GMXCOMMAND mdrun
 input_path = ../gromacs_input
 timestep = 0.002
 subcycles = 5
 
-TIS settings
-------------
+TIS
+---
 freq =  0.5
 maxlength = 20000
 aimless = True
 allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
-sigma_v =  -1
+sigma_v = -1
 seed = 0
 
 Initial-path
