@@ -476,7 +476,7 @@ def retis_swap_zero(ensembles, system, order_function, engine,
                      ensemble0.interfaces, reverse=True)
     path0 = path_tmp.empty_path(maxlen=maxlen)
     for phasepoint in path_tmp.trajectory(reverse=True):
-        _ = path0.append(phasepoint)
+        path0.append(phasepoint)
     # Add second point from [0^+] at the end:
     logger.debug('Adding second point from [0^+]:')
     phase_point = ensemble1.last_path.phasepoint(1)
