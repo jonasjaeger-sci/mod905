@@ -117,6 +117,7 @@ def create_backup(outputfile):
     ----
     No warning is issued here. This is just in case the `msg` returned
     here will be part of some more elaborate message.
+
     """
     filename = '{}'.format(outputfile)
     fileid = 0
@@ -154,6 +155,7 @@ def apply_format(value, fmt):
     cases this may reduce the number of significant digits. Remember
     to also output your numbers without this format in case a specific
     number of significant digits is important!
+
     """
     maxlen = fmt.split(':')[1].split('.')[0]
     align = ''
@@ -185,6 +187,7 @@ def _remove_extension(filename):
     -------
     out : string
         The filename with the extension removed.
+
     """
     try:
         return os.path.splitext(filename)[0]
@@ -210,6 +213,7 @@ def make_dirs(dirname):
     out : string
         A string with some info on what this function did. Intended for
         output.
+
     """
     try:
         os.makedirs(dirname)
@@ -227,7 +231,7 @@ def make_dirs(dirname):
 
 
 def print_to_screen(txt=None, level=None):  # pragma: no cover
-    """Method to print output to standard out.
+    """Print output to standard out.
 
     This method is included to ensure that output from PyRETIS to the
     screen is written out in a uniform way across the library and
@@ -239,6 +243,7 @@ def print_to_screen(txt=None, level=None):  # pragma: no cover
         The text to write to the screen.
     level : string
         The level can be used to color the output.
+
     """
     if txt is None:
         print()
@@ -252,7 +257,7 @@ def print_to_screen(txt=None, level=None):  # pragma: no cover
 
 
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
-    """A function to simplify path names for file/directory names.
+    """Simplify path names for file/directory names.
 
     Here, we are basically translating ensemble names to more friendly
     names for directories and files that is:
@@ -267,6 +272,7 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
         This is the string to translate
     fmt : string. optional
         This is a format to use for the directories.
+
     """
     match_ensemble = re.search(r'(?<=\[)(\d+)(?=\^)', ensemble)
     if match_ensemble:
@@ -307,6 +313,7 @@ def add_dirname(filename, dirname):
     -------
     out : string
         The path to the resulting file.
+
     """
     if dirname is not None:
         return os.path.join(dirname, filename)
@@ -333,13 +340,14 @@ def name_file(name, extension, path=None):
     Returns
     -------
     out : string
-        The resulting file name
+        The resulting file name.
+
     """
     return add_dirname(os.extsep.join([name, extension]), path)
 
 
 def check_python_version():  # pragma: no cover
-    """Method that will give a warning about old python version(s)."""
+    """Give a warning about old python version(s)."""
     pyversion = sys.version.split()[0]
     if sys.version_info < (3, 0):
         msgtxt = ('Please upgrade to Python 3.'
@@ -355,7 +363,9 @@ class PyretisLogFormatter(logging.Formatter):  # pragma: no cover
     This formatter will just adjust multi-line messages to have some
     indentation.
     """
+
     def format(self, record):
+        """Apply the PyRETIS log format."""
         out = logging.Formatter.format(self, record)
         header, _ = out.split(record.message)
         out = out.replace('\n', '\n' + ' ' * len(header))
@@ -363,7 +373,7 @@ class PyretisLogFormatter(logging.Formatter):  # pragma: no cover
 
 
 def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
-    """Method to format a number based on it's size.
+    """Format a number based on it's size.
 
     Parameters
     ----------
@@ -383,14 +393,16 @@ def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
     Returns
     -------
     out : string
-        The formatted number."""
+        The formatted number.
+
+    """
     if minf <= number <= maxf:
         return fmtf.format(number)
     return fmte.format(number)
 
 
 def get_log_formatter(level):
-    """Helper function to select a log format.
+    """Select a log format based on a given level.
 
     Here, it is just used to get a slightly more verbose format for
     the debug level.
@@ -404,6 +416,7 @@ def get_log_formatter(level):
     -------
     out : object like :py:class:`logging.Formatter`
         An object that can be used as a formatter for a logger.
+
     """
     if level <= logging.DEBUG:
         return PyretisLogFormatter(LOG_DEBUG_FMT)

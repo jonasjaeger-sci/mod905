@@ -13,6 +13,7 @@ Examples
 --------
 >>> from pyretis.tools.lattice import generate_lattice
 >>> xyz, size = generate_lattice('diamond', [1, 1, 1], lcon=1)
+
 """
 import itertools
 import numpy as np
@@ -72,6 +73,7 @@ def generate_lattice(lattice, repeat, lcon=None, density=None):
     size : list of floats
         The corresponding size(s), can be used to define a simulation
         box.
+
     """
     try:
         unit_cell = UNIT_CELL[lattice.lower()]

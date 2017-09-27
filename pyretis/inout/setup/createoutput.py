@@ -252,11 +252,13 @@ class OutputTask:
         This object will handle the actual formatting of the result.
     when : dict
         Determines if the task should be executed.
+
     """
+
     target = 'undefined'
 
     def __init__(self, name, result, writer, when):
-        """Initiate a OutputTask object.
+        """Initialise the OutputTask object.
 
         Parameters
         ----------
@@ -271,6 +273,7 @@ class OutputTask:
         when : dict
             Determines when the output should be written. Example:
             `{'every': 10}` will be executed at every 10th step.
+
         """
         self.name = name
         self.result = result
@@ -296,6 +299,7 @@ class OutputTask:
         -------
         out : boolean
             True if the writer wrote something, False otherwise.
+
         """
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
@@ -323,6 +327,7 @@ class OutputTask:
         -------
         out : boolean
             True if we managed to do the writing, False otherwise.
+
         """
         raise NotImplementedError
 
@@ -351,11 +356,13 @@ class OutputTaskScreen(OutputTask):
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
+
     """
+
     target = 'screen'
 
     def __init__(self, name, result, writer, when):
-        """Initiate the OutputTask object.
+        """Initialise the OutputTask object.
 
         Parameters
         ----------
@@ -368,12 +375,13 @@ class OutputTaskScreen(OutputTask):
             This object will handle the actual writing of the result.
         when : dict
             Determines when the task should be executed.
+
         """
         super().__init__(name, result, writer, when)
         self.print_header = writer.print_header
 
     def write(self, step, *result):
-        """Ouput the result to screen
+        """Ouput the result to screen.
 
         Parameters
         ----------
@@ -386,6 +394,7 @@ class OutputTaskScreen(OutputTask):
         -------
         out : boolean
             True if we are printing something, False otherwise.
+
         """
         if self.print_header:
             print(self.writer.header)
@@ -411,11 +420,13 @@ class OutputTaskFile(OutputTask):
         This object will handle the actual writing of the result.
     when : dict
         Determines if the task should be executed.
+
     """
+
     target = 'file'
 
     def __init__(self, name, result, writer, when, filename, backup):
-        """Initiate the OutputTaskFile object.
+        """Initialise the OutputTaskFile object.
 
         Parameters
         ----------
@@ -434,6 +445,7 @@ class OutputTaskFile(OutputTask):
             The name of the file to write to.
         backup : string
             Determines how we should treat old files.
+
         """
         super().__init__(name, result, writer, when)
         self.print_header = writer.print_header
@@ -456,6 +468,7 @@ class OutputTaskFile(OutputTask):
         -------
         out : boolean
             True if we are printing something, False otherwise.
+
         """
         for lines in self.writer.generate_output(step['step'], *result):
             self.fileh.write(lines)
@@ -476,7 +489,9 @@ class OutputTaskFileCombine(OutputTaskFile):
     ----------
     dependency : string
         The result we need to combine with `self.result` in some way.
+
     """
+
     dependency = 'pathensemble'
 
     def output(self, simulation_result):
@@ -498,6 +513,7 @@ class OutputTaskFileCombine(OutputTaskFile):
         -------
         out : boolean
             True if the writer wrote something, False otherwise.
+
         """
         step = simulation_result['cycle']
         if not execute_now(step, self.when):
@@ -516,7 +532,7 @@ class OutputTaskFileCombine(OutputTaskFile):
 
 
 def create_writer(task_settings, writer_name, settings):
-    """Create a writer for an output task
+    """Create a writer for an output task.
 
     Parameters
     ----------
@@ -532,6 +548,7 @@ def create_writer(task_settings, writer_name, settings):
     -------
     out : object like :py:class:`.Writer`
         The writer to use for formatting output.
+
     """
     writer_settings = {}
     req_settings = task_settings.get('settings', {})  # required settings
@@ -559,6 +576,7 @@ def generate_file_name(basename, directory, settings):
     -------
     filename : string
         The file name to use.
+
     """
     prefix = settings['output'].get('prefix', None)
     if prefix is not None:
@@ -581,6 +599,7 @@ def get_backup_settings(settings):
     -------
     out : string
         A string representing the backup settings to use.
+
     """
     try:
         old = settings['output']['backup'].lower()
@@ -594,7 +613,7 @@ def get_backup_settings(settings):
 
 
 def get_task_type(task, engine):
-    """Method to do some additional handling for a path task.
+    """Do additional handling for a path task.
 
     The path task is special since we do very different things for
     external paths. The set-up required to do this is handled here.
@@ -612,6 +631,7 @@ def get_task_type(task, engine):
     -------
     out : string
         The task type we are going to be creating for.
+
     """
     if task['type'] == 'path-traj-{}':
         if engine is None or engine.engine_type == 'internal':
@@ -628,7 +648,7 @@ def get_task_type(task, engine):
 
 
 def task_from_settings(task, settings, directory, engine):
-    """Method to create output task from simulation settings.
+    """Create output task from simulation settings.
 
     Parameters
     ----------
@@ -646,7 +666,8 @@ def task_from_settings(task, settings, directory, engine):
     Returns
     -------
     out : object like :py:class:`.OutputTask`
-        An output task we can use in the simulation
+        An output task we can use in the simulation.
+
     """
     task_type = get_task_type(task, engine)
     task_settings = TASK_MAP[task_type]
@@ -714,7 +735,8 @@ def create_output_tasks(settings, directory=None, engine=None):
 
     Yields
     ------
-    out : object like :py:class:`.OutputTask`
+    out : object like :py:class:`.OutputTask`.
+
     """
     sim_task = settings['simulation']['task'].lower()
     for task in _SIM_OUTPUT.get(sim_task, []):

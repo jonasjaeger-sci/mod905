@@ -45,6 +45,7 @@ def generate_rst_table(table, title, headings):
         The header/title for the table.
     headings : list of strings
         These are the headings for each table column.
+
     """
     # for each column, we need to figure out how wide it should be
     # 1) Check headings
@@ -101,6 +102,7 @@ def generate_latex_table(table, title, headings, fixnum=None):
     fixnum : list/set of integers
         These integers identifies the columns where `latexify_number` is
         to be applied.
+
     """
     str_table = [
         r'\renewcommand{\arraystretch}{1.25}',
@@ -143,6 +145,7 @@ def latexify_number(str_float):
     -------
     out : string
         A formatted string for latex.
+
     """
     if 'e' in str_float:
         base, exp = str_float.split('e')
@@ -153,8 +156,8 @@ def latexify_number(str_float):
 def mathexify_number(str_float):
     r"""Change exponential notation into something nicer for reStructuredText.
 
-    This will just call `latexify_number` and put it into a math
-    directive for reStructuredText.
+    This will just call :py:func:`.latexify_number` and put it into a
+    math directive for reStructuredText.
 
     Parameters
     ----------
@@ -165,5 +168,6 @@ def mathexify_number(str_float):
     -------
     out : string
         A math directive for reStructuredText.
+
     """
     return ':math:`{}`'.format(latexify_number(str_float))

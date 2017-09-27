@@ -27,7 +27,7 @@ __all__ = ['initiate_load']
 
 
 def initiate_load(simulation, cycle, settings):
-    """Initiate paths by loading already generated ones.
+    """Initialise paths by loading already generated ones.
 
     Parameters
     ----------
@@ -37,6 +37,7 @@ def initiate_load(simulation, cycle, settings):
         The simulation cycles we are starting at.
     settings : dictionary
         A dictionary with settings for the initiation.
+
     """
     maxlen = settings['tis']['maxlength']
     klass = get_path_class(simulation.engine.engine_type)
@@ -92,6 +93,7 @@ def _load_order_parameters(traj, dirname, system, order_function):
     out : list
         The order parameters, each item in the list corresponds to a time
         frame.
+
     """
     order_file_name = os.path.join(dirname, 'order.txt')
     orderfile = prepare_load('pathorder', order_file_name, required=False)
@@ -132,6 +134,7 @@ def _load_order_parameters_ext(traj, dirname, order_function):
     out : list
         The order parameters, each item in the list corresponds to a time
         frame.
+
     """
     order_file_name = os.path.join(dirname, 'order.txt')
     orderfile = prepare_load('pathorder', order_file_name, required=False)
@@ -196,6 +199,7 @@ def _load_energies_for_path(path, dirname):
     Returns
     -------
     None, but may add energies to the path.
+
     """
     # Get energies if any:
     energy_file_name = os.path.join(dirname, 'energy.txt')
@@ -217,6 +221,7 @@ def _check_path(path, ensemble):
         The path we are to set up/fill.
     ensemble : object like :py:class:`.PathEnsemble`
         The ensemble the path could be added to.
+
     """
     start, end, _, cross = path.check_interfaces(ensemble.interfaces)
     start_condition = ensemble.start_condition
@@ -247,7 +252,7 @@ def _check_path(path, ensemble):
 
 
 def _load_trajectory(dirname):
-    """Method to set-up and load a trajectory from a file.
+    """Set-up and load a trajectory from a file.
 
     Parameters
     ----------
@@ -260,6 +265,7 @@ def _load_trajectory(dirname):
         A dictionary containing the trajectory information. Here,
         the trajectory information is name of files with indices and
         information about velocity direction.
+
     """
     trajfile = prepare_load(
         'pathtrajint',
@@ -289,6 +295,7 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
         they are not given.
     engine : object like :py:class:`.EngineBase`
         The engine we use for the dynamics.
+
     """
     left, _, right = ensemble.interfaces
     traj = _load_trajectory(dirname)
@@ -315,7 +322,7 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
 
 
 def _load_external_trajectory(dirname, engine):
-    """Method to set-up and load an external trajectory.
+    """Set-up and load an external trajectory.
 
     Here, we also do some moving of files to set up for a path
     simulation.
@@ -334,6 +341,7 @@ def _load_external_trajectory(dirname, engine):
         A dictionary containing the trajectory information. Here,
         the trajectory information is name of files with indices and
         information about velocity direction.
+
     """
     traj_file_name = os.path.join(dirname, 'traj.txt')
     trajfile = prepare_load('pathtrajext', traj_file_name, required=True)
@@ -380,6 +388,7 @@ def read_path_files_ext(path, ensemble, dirname, order_function, engine):
         they are not given.
     engine : object like :py:class:`.ExternalMDEngine`
         The engine we use for the dynamics.
+
     """
     left, _, right = ensemble.interfaces
     traj = _load_external_trajectory(dirname, engine)

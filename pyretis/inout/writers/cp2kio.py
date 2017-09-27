@@ -43,10 +43,11 @@ class SectionNode:
     parents : list of strings or None
         A list representing the path from the node to the top
         section.
+
     """
 
     def __init__(self, title, parent, settings, data=None):
-        """Initiate the node.
+        """Initialise a node.
 
         Parameters
         ----------
@@ -56,6 +57,7 @@ class SectionNode:
             The parent if this section is a sub-section.
         settings : list of strings
             The settings defined in this section.
+
         """
         self.title = title
         self.parent = parent
@@ -73,7 +75,7 @@ class SectionNode:
         self.children.add(child)
 
     def get_all_parents(self):
-        """Method to find the path to the top of the tree."""
+        """Find the path to the top of the tree."""
         parents = [self.title]
         prev = self.parent
         while prev is not None:
@@ -96,6 +98,7 @@ def dfs_print(node, visited):
     -------
     out : list of strings
         These strings represent the CP2K input file.
+
     """
     out = []
     pre = ' ' * (2 * node.level)
@@ -157,6 +160,7 @@ def read_cp2k_input(filename):
     -------
     nodes : list of objects like :py:class:`.SectionNode`
         The root section nodes found in the file.
+
     """
     nodes = []
     current_node = None
@@ -190,7 +194,7 @@ def read_cp2k_input(filename):
 
 
 def _add_node(target, settings, data, nodes, node_ref):
-    """Just add a new node"""
+    """Just add a new node."""
     # check if this is a root node:
     root = target.find('->') == -1
     if root:
@@ -231,6 +235,7 @@ def update_node(target, settings, data, node_ref, nodes,
         If True and if the nodes has some data, the already existing
         data will be ignored. We also assume that the data is already
         formatted.
+
     """
     if target not in node_ref:  # add node
         try:
@@ -279,6 +284,7 @@ def remove_node(target, node_ref, root_nodes):
         A dict with all the nodes.
     root_nodes : list of objects like :py:class:`.SectionNode`
         The root nodes.
+
     """
     to_del = node_ref.pop(target, None)
     if to_del is None:
@@ -319,6 +325,7 @@ def update_cp2k_input(template, output, update=None, remove=None):
         The settings we will update.
     remove : list of strings.
         The nodes we will remove.
+
     """
     nodes = read_cp2k_input(template)
     node_ref = set_parents(nodes)
@@ -382,7 +389,7 @@ def read_box_data(box_data):
 
 
 def read_cp2k_energy(energy_file):
-    """Read and return CP2K energies
+    """Read and return CP2K energies.
 
     Parameters
     ----------
@@ -395,6 +402,7 @@ def read_cp2k_energy(energy_file):
         The kinetic energy.
     out[1] : numpy.array
         The potential energy.
+
     """
     data = np.loadtxt(energy_file)
     return data[:, 2], data[:, 4]
@@ -419,6 +427,7 @@ def read_cp2k_restart(restart_file):
     periodic : list of booleans
         For each dimension, the list entry is True if periodic
         boundaries should be applied.
+
     """
     nodes = read_cp2k_input(restart_file)
     node_ref = set_parents(nodes)

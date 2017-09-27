@@ -53,6 +53,7 @@ class OrderParameter:
         We will assume that this list contains functions that all
         accept an object like :py:class:`.System` as input and return
         a single float.
+
     """
 
     def __init__(self, description='Generic order parameter'):
@@ -62,6 +63,7 @@ class OrderParameter:
         ----------
         description : string
             Short description of the order parameter.
+
         """
         self.description = description
         self.extra = []
@@ -87,6 +89,7 @@ class OrderParameter:
             The order parameter(s). The first order parameter returned
             is used as the progress coordinate in path sampling
             simulations!
+
         """
         pass
 
@@ -104,7 +107,8 @@ class OrderParameter:
         Returns
         -------
         out : list of floats
-            The order parameters(s),
+            The order parameters(s).
+
         """
         ret_val = self.calculate(system)
         if not self.extra:
@@ -131,6 +135,7 @@ class OrderParameter:
         -------
         out : boolean
             Return True if we added the function, False otherwise.
+
         """
         if not callable(orderp):
             msg = 'The given method is not callable, it will not be added!'
@@ -162,6 +167,7 @@ class OrderParameterPosition(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self, index, dim='x', periodic=False):
@@ -177,6 +183,7 @@ class OrderParameterPosition(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
+
         """
         txt = 'Position of particle {} (dim: {})'.format(index, dim)
         super().__init__(description=txt)
@@ -209,6 +216,7 @@ class OrderParameterPosition(OrderParameter):
         out : list of float
             The order parameters, here the position and in addition
             (as a extra collective variable) the velocity.
+
         """
         particles = system.particles
         pos = particles.pos[self.index]
@@ -237,6 +245,7 @@ class OrderParameterDistance(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self, index, periodic=True):
@@ -249,6 +258,7 @@ class OrderParameterDistance(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
+
         """
         try:
             if len(index) != 2:
@@ -287,6 +297,7 @@ class OrderParameterDistance(OrderParameter):
         out : list of floats
             The order parameter and the velocity as an additional
             collective variable.
+
         """
         particles = system.particles
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
@@ -300,7 +311,7 @@ class OrderParameterDistance(OrderParameter):
 
 
 class CompositeOrderParameter(OrderParameter):
-    """A composite order parameter
+    """A composite order parameter.
 
     This class represents a composite order parameter. It does not
     actually calculate order parameters itself, but it has references
@@ -311,15 +322,17 @@ class CompositeOrderParameter(OrderParameter):
     ----------
     extra : list of objects like :py:class:`OrderParameter`
         This is a list of order parameters to calculate.
+
     """
 
     def __init__(self, order_parameters=None):
-        """Just initialise.
+        """Set up the composite order parameter.
 
         Parameters
         ----------
         order_parameters : list of objects like :py:class:`.OrderParameter`.
             A list of order parameters we can add.
+
         """
         super().__init__(description='Combined order parameter')
         self.extra = []
@@ -347,6 +360,7 @@ class CompositeOrderParameter(OrderParameter):
             The order parameter(s). The first order parameter returned
             is used as the progress coordinate in path sampling
             simulations!
+
         """
         all_order = []
         for orderp in self.extra:
@@ -369,6 +383,7 @@ class CompositeOrderParameter(OrderParameter):
         -------
         out : boolean
             Return True if we added the function, False otherwise.
+
         """
         # We check that we can call .calculate() and .calculate_all():
         for func in ('calculate', 'calculate_all'):

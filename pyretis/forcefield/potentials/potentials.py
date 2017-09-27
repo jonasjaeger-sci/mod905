@@ -52,10 +52,11 @@ class DoubleWell(PotentialFunction):
 
         These keys corresponds to the parameters in the potential,
         :math:`V_\text{pot} = a x^4 - b (x - c)^2`.
+
     """
 
     def __init__(self, a=1.0, b=1.0, c=0.0, desc='1D double well potential'):
-        """Initiate the one dimensional double well potential.
+        """Initialise the one dimensional double well potential.
 
         Parameters
         ----------
@@ -67,6 +68,7 @@ class DoubleWell(PotentialFunction):
             Parameter for the potential.
         desc : string, optional
             Description of the force field.
+
         """
         super().__init__(dim=1, desc=desc)
         self.params = {'a': a, 'b': b, 'c': c}
@@ -84,6 +86,7 @@ class DoubleWell(PotentialFunction):
         -------
         out : float
             The potential energy.
+
         """
         pos = system.particles.pos
         v_pot = (self.params['a'] * pos**4 -
@@ -104,7 +107,8 @@ class DoubleWell(PotentialFunction):
         out[0] : numpy.array
             The calculated force.
         out[1] : numpy.array
-            The virial, currently not implemented for this potential
+            The virial, currently not implemented for this potential!
+
         """
         pos = system.particles.pos
         forces = (-4.0*(self.params['a'] * pos**3) +
@@ -129,7 +133,8 @@ class DoubleWell(PotentialFunction):
             The force as a numpy.array of the same shape as the
             positions in `particles.pos`.
         out[2] : numpy.array
-            The virial, currently not implemented for this potential.
+            The virial, currently not implemented for this potential!
+
         """
         pos = system.particles.pos
         dist = pos - self.params['c']
@@ -159,11 +164,12 @@ class RectangularWell(PotentialFunction):
 
         It is possible to define left > right, however a warning will
         be issued then.
+
     """
 
     def __init__(self, left=0.0, right=1.0, largenumber=float('inf'),
                  desc='1D Rectangular well potential'):
-        """Initiate the one-dimensional rectangular well.
+        """Initialise the one-dimensional rectangular well.
 
         Parameters
         ----------
@@ -175,6 +181,7 @@ class RectangularWell(PotentialFunction):
             The value of the potential outside (left, right).
         desc : string, optional
             Description of the force field.
+
         """
         super().__init__(dim=1, desc=desc)
         self.params = {'left': left, 'right': right,
@@ -188,6 +195,7 @@ class RectangularWell(PotentialFunction):
         -------
         out : None
             Returns `None` but might give a warning.
+
         """
         if self.params['left'] >= self.params['right']:
             msg = 'Setting left >= right in RectangularWell potential!'
@@ -206,6 +214,7 @@ class RectangularWell(PotentialFunction):
         -------
         out : float
             The potential energy.
+
         """
         pos = system.particles.pos
         left = self.params['left']

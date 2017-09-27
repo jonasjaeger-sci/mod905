@@ -45,7 +45,7 @@ __all__ = [
 
 
 def initiate_kick(simulation, cycle, settings):
-    """This is a helper method to initiate for several ensembles.
+    """Run the initiation method for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
@@ -64,7 +64,7 @@ def initiate_kick(simulation, cycle, settings):
 
 
 def initiate_kicki(simulation, cycle):
-    """This is a helper method to initiate for several ensembles.
+    """Run the initiation for several ensembles.
 
     Please see documentation for :py:func:`.initiate_path_ensemble_kick`.
     """
@@ -82,7 +82,7 @@ def initiate_kicki(simulation, cycle):
 
 
 def initiate_kick_max(simulation, cycle):
-    """This is a helper method to initiate for several ensembles.
+    """Run the initiation for several ensembles.
 
     This method is similar to :py:func:`.initiate_kick`, but here we
     update the initial point for an ensemble to use that of the previous
@@ -128,7 +128,7 @@ def initiate_kick_max(simulation, cycle):
 
 def initiate_path_ensemble_kick(path_ensemble, system, order_function,
                                 engine, rgen, tis_settings, cycle):
-    """This function will run the "kick" initiate for a given ensemble.
+    """Run the "kick" initiate for a given ensemble.
 
     Parameters
     ----------
@@ -157,6 +157,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
         The initial path.
     out[2] : string
         The status of the path.
+
     """
     initial_path = None
     status = ''
@@ -177,7 +178,7 @@ def initiate_path_ensemble_kick(path_ensemble, system, order_function,
 
 def generate_initial_path_kick(system, order_function, path_ensemble, engine,
                                rgen, tis_settings):
-    """Simple function to generate an initial path.
+    """Generate an initial path with the kicking method.
 
     This function will generate an initial path by repeatedly kicking a
     phase-space point until the middle interface is crossed.
@@ -210,7 +211,8 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
     Returns
     -------
     out : object like :py:class:`.PathBase`
-        This is the generated initial path
+        This is the generated initial path.
+
     """
     initial_state = system.particles.get_particle_state()
     interfaces = path_ensemble.interfaces
@@ -290,7 +292,7 @@ def generate_initial_path_kick(system, order_function, path_ensemble, engine,
 
 
 def _get_help(start_cond, interfaces):
-    """Defines some methods for :py:func:`._fix_path_by_tis`
+    """Define some helper methods for :py:func:`._fix_path_by_tis`.
 
     This method returns two methods that :py:func:`._fix_path_by_tis`
     can use to determine if a new path is an improvement compared to
@@ -311,29 +313,30 @@ def _get_help(start_cond, interfaces):
     out[1] : method
         The method which determines if we are done, that is if we
         can accept the current path.
+
     """
     left, middle, right = interfaces
     improved, done = None, None
     if start_cond == 'R':
         def improved_r(newp, current):
-            """True if new path is an improvement."""
+            """Return True if new path is an improvement."""
             return (newp.ordermax[0] > current.ordermax[0] and
                     newp.ordermin[0] < middle)
 
         def done_r(path):
-            """True if the path can be accepted."""
+            """Return True if the path can be accepted."""
             return path.ordermax[0] > right
 
         improved = improved_r
         done = done_r
     elif start_cond == 'L':
         def improved_l(newp, current):
-            """True if new path is an improvement."""
+            """Return True if new path is an improvement."""
             return (newp.ordermin[0] < current.ordermin[0] and
                     newp.ordermax[0] > middle)
 
         def done_l(path):
-            """True if the path can be accepted."""
+            """Return True if the path can be accepted."""
             return path.ordermin[0] < left
 
         improved = improved_l
@@ -356,6 +359,7 @@ def _copy_tis_settings(tis_settings):
     -------
     out : dict
         A copy of the input TIS settings.
+
     """
     copy = {}
     for key, val in tis_settings.items():
@@ -400,6 +404,7 @@ def _fix_path_by_tis(initial_path, system, order_function, path_ensemble,
     -------
     out : object like :py:class:`.PathBase`
         The amended path.
+
     """
     logger.debug('Attempting to fix path by running TIS moves.')
 

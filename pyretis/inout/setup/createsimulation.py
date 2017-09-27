@@ -55,6 +55,7 @@ def create_path_ensemble(settings, ensemble_type):
     -------
     out : object like :py:class:`.PathEnsemble`
         An object that can be used as a path ensemble in simulations.
+
     """
     interfaces = settings['simulation']['interfaces']
     exe_dir = settings['simulation'].get('exe-path', '')
@@ -117,6 +118,7 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
     detect : list of floats
         These are interfaces that can be used for an analysis, i.e. for
         detection and matching of probabilities.
+
     """
     detect = []
     ensembles = []
@@ -140,7 +142,7 @@ def create_path_ensembles(interfaces, ensemble_type, include_zero=False,
 
 
 def create_nve_simulation(settings, system, engine):
-    """This will set up and create a NVE simulation.
+    """Set up and create a NVE simulation.
 
     Parameters
     ----------
@@ -155,6 +157,7 @@ def create_nve_simulation(settings, system, engine):
     -------
     out : object like :py:class:`.SimulationNVE`
         The object representing the simulation to run.
+
     """
     sim = settings['simulation']
     for key in ('steps',):
@@ -167,7 +170,7 @@ def create_nve_simulation(settings, system, engine):
 
 
 def create_mdflux_simulation(settings, system, engine):
-    """This will set up and create a MD FLUX simulation.
+    """Set up and create a MD FLUX simulation.
 
     Parameters
     ----------
@@ -182,6 +185,7 @@ def create_mdflux_simulation(settings, system, engine):
     -------
     out : object like :py:class:`.SimulationMDFlux`
         The object representing the simulation to run.
+
     """
     order_function = create_orderparameter(settings)
     if order_function is None:
@@ -201,7 +205,7 @@ def create_mdflux_simulation(settings, system, engine):
 
 
 def create_umbrellaw_simulation(settings, system):
-    """This will set up and create a Umbrella Window simulation.
+    """Set up and create a Umbrella Window simulation.
 
     Parameters
     ----------
@@ -214,6 +218,7 @@ def create_umbrellaw_simulation(settings, system):
     -------
     out : object like :py:class:`.UmbrellaWindowSimulation`
         The object representing the simulation to run.
+
     """
     sim = settings['simulation']
     rgen = create_random_generator(sim)
@@ -230,7 +235,7 @@ def create_umbrellaw_simulation(settings, system):
 
 
 def create_tis_simulations(settings, system, engine):
-    """This will set up and create a series of TIS simulations.
+    """Set up and create a series of TIS simulations.
 
     This method will for each interface set up a single TIS simulation.
     These simulations can then be run in series, parallel or written
@@ -251,6 +256,7 @@ def create_tis_simulations(settings, system, engine):
         `sim_settings[i]` is a dictionary with settings for running
         simulation i. Note that the actual simulation object is not
         created here.
+
     """
     sim_settings = []
     interfaces = settings['simulation']['interfaces']
@@ -272,7 +278,7 @@ def create_tis_simulations(settings, system, engine):
 
 
 def _create_tis_single_simulation(settings, system, engine):
-    """This will set up and create a single TIS simulation.
+    """Set up and create a single TIS simulation.
 
     Parameters
     ----------
@@ -287,6 +293,7 @@ def _create_tis_single_simulation(settings, system, engine):
     -------
     out : object like :py:class:`.SimulationSingleTIS`
         The object representing the simulation to run.
+
     """
     order_function = create_orderparameter(settings)
     if order_function is None:
@@ -310,7 +317,7 @@ def _create_tis_single_simulation(settings, system, engine):
 
 
 def create_retis_simulation(settings, system, engine):
-    """This will set up and create a RETIS simulation.
+    """Set up and create a RETIS simulation.
 
     Parameters
     ----------
@@ -325,6 +332,7 @@ def create_retis_simulation(settings, system, engine):
     -------
     out : object like :py:class:`.SimulationRETIS`
         The object representing the simulation to run.
+
     """
     order_function = create_orderparameter(settings)
     if order_function is None:
@@ -352,7 +360,7 @@ def create_retis_simulation(settings, system, engine):
 
 
 def create_simulation(settings, kwargs):
-    """Function to create simulations from settings and system.
+    """Create simulation(s) from given settings.
 
     This function will set up some common simulation types.
     It is meant as a helper function to automate some very common set-up
@@ -378,6 +386,7 @@ def create_simulation(settings, kwargs):
     -------
     out : object like :py:class:`.Simulation`
         This object will correspond to the selected simulation type.
+
     """
     sim_type = settings['simulation']['task'].lower()
 

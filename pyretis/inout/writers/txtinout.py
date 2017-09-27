@@ -42,6 +42,7 @@ def txt_save_columns(outputfile, header, variables, backup=False):
         These are the variables that will be save to the text file.
     backup : boolean
         Determines if we should backup old files or not.
+
     """
     if backup:
         msg = create_backup(outputfile)

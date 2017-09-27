@@ -79,11 +79,12 @@ class PairLennardJonesCut(PotentialFunction):
     _rcut2 : dict
         Squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
+
     """
 
     def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential'):
-        """Initiate the Lennard-Jones potential.
+        """Initialise the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -93,6 +94,7 @@ class PairLennardJonesCut(PotentialFunction):
             Determines if the potential should be shifted or not.
         mixing : string
             Determines how we should mix potential parameters.
+
         """
         super().__init__(dim=dim, desc=desc)
         self.shift = shift
@@ -114,7 +116,8 @@ class PairLennardJonesCut(PotentialFunction):
         Parameters
         ----------
         parameters : dict
-            The input base parameters
+            The input pair parameters.
+
         """
         self.params = {}
         pair_param = generate_pair_interactions(parameters, self.mixing)
@@ -146,6 +149,7 @@ class PairLennardJonesCut(PotentialFunction):
         -------
         out : string
             Table with the parameters of all interactions.
+
         """
         strparam = [self.desc]
         strparam += ['Potential parameters, Lennard-Jones:']
@@ -175,6 +179,7 @@ class PairLennardJonesCut(PotentialFunction):
         Returns
         -------
         The potential energy as a float.
+
         """
         particles = system.particles
         box = system.box
@@ -205,8 +210,11 @@ class PairLennardJonesCut(PotentialFunction):
 
         Returns
         -------
-        The force as a numpy.array of the same shape as the positions
-        in `particles.pos`.
+        out[0] : numpy.array
+            The force as a numpy.array.
+        out[1] : numpy.array
+            The virial as a numpy.array.
+
         """
         particles = system.particles
         box = system.box
@@ -256,6 +264,7 @@ class PairLennardJonesCut(PotentialFunction):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
+
         """
         particles = system.particles
         box = system.box
@@ -293,7 +302,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
 
     def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential (numpy)'):
-        """Initiate the Lennard-Jones potential.
+        """Initialise the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -301,6 +310,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
             The dimensionality to use.
         shift : boolean
             Determines if the potential should be shifted or not.
+
         """
         super().__init__(dim=dim, desc=desc,
                          shift=shift, mixing=mixing)
@@ -317,6 +327,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         -------
         out : float
             The potential energy as a float.
+
         """
         particles = system.particles
         box = system.box
@@ -362,6 +373,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         out[1] : numpy.array
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
+
         """
         particles = system.particles
         box = system.box
@@ -414,6 +426,7 @@ class PairLennardJonesCutnp(PairLennardJonesCut):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
+
         """
         particles = system.particles
         box = system.box

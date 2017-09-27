@@ -40,7 +40,9 @@ class FileIO:
         exist with the given `filename`.
     fileh : object like :py:class:`io.IOBase`
         The file handle we are using.
+
     """
+
     OLDFILE = ('append', 'overwrite', 'backup')
 
     def __init__(self, filename, oldfile='backup', header=None):
@@ -56,6 +58,7 @@ class FileIO:
             This is a header we write to the file as the first line.
             Typically this gives some meta information about the
             contents in the file.
+
         """
         self.filename = filename
         self.fileh = None
@@ -71,6 +74,7 @@ class FileIO:
         oldfile : string
             This determines how we deal with already existing files.
             If they should be backed up, overwritten or appended to.
+
         """
         status = False
         if oldfile not in self.OLDFILE:
@@ -129,6 +133,7 @@ class FileIO:
         -------
         status : boolean
             True if we managed to write, False otherwise.
+
         """
         status = False
         if towrite is None:

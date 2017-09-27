@@ -37,6 +37,7 @@ def _check_args(function, given_args=None, given_kwargs=None):
     out : boolean
         False if there is some inconsistencies, i.e. when the calling
         of the given `function` will probably fail. True otherwise.
+
     """
     arguments = inspect_function(function)
     args = [arg for arg in arguments['args'] if arg != 'self']
@@ -84,6 +85,7 @@ def execute_now(step, when):
     -------
     out : boolean
         True of the task should be executed.
+
     """
     if when is None:
         return True
@@ -122,6 +124,7 @@ class SimulationTask:
         step of the simulation.
     result : string
         This is a label for the result created by the task.
+
     """
 
     def __init__(self, function, args=None, kwargs=None, when=None,
@@ -143,6 +146,7 @@ class SimulationTask:
             step of the simulation.
         result : string
             This is a label for the result created by the task.
+
         """
         if not callable(function):
             msg = 'The given function for the task is not callable!'
@@ -174,6 +178,7 @@ class SimulationTask:
         -------
         out : unknown type
             The result of running `self.function`.
+
         """
         args = self.args
         kwargs = self.kwargs
@@ -188,7 +193,7 @@ class SimulationTask:
         return None
 
     def update_when(self, when):
-        """Update when to new value(s).
+        """Update self.when to new value(s).
 
         It will only update `self.when` for the keys given in the
         input `when`.
@@ -202,6 +207,7 @@ class SimulationTask:
         -------
         out : None
             Returns `None` but modifies `self.when`.
+
         """
         if self.when is None:
             self.when = when
@@ -234,6 +240,7 @@ class SimulationTask:
         -------
         out : unknown type
             The result of `self.execute(step)`.
+
         """
         return self.execute(step)
 

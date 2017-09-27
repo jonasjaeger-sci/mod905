@@ -44,7 +44,7 @@ __all__ = ['create_external', 'check_settings', 'import_from',
 
 
 def import_from(module_path, function_name):
-    """Method to import a method/class from a module.
+    """Import a method/class from a module.
 
     This method will dynamically import a specified method/object
     from a module and return it. If the module can not be imported or
@@ -72,6 +72,7 @@ def import_from(module_path, function_name):
     References
     ----------
     .. [#] http://bugs.python.org/issue21436
+
     """
     try:
         module_name = os.path.basename(module_path)
@@ -125,6 +126,7 @@ def check_settings(settings, required):
         True if all required settings are present, False otherwise.
     not_found : list of strings
         There are the required settings we did not find.
+
     """
     result = True
     not_found = []
@@ -137,7 +139,7 @@ def check_settings(settings, required):
 
 def create_external(settings, key, factory, required_methods,
                     key_settings=None):
-    """Method to create objects from settings.
+    """Create external objects from settings.
 
     This method will handle creation of objects from settings. The
     requested objects can be PyRETIS internals or defined in external
@@ -169,6 +171,7 @@ def create_external(settings, key, factory, required_methods,
     -------
     out : object
         This object represents the class we are requesting here.
+
     """
     if key_settings is None:
         try:
@@ -219,7 +222,7 @@ def create_external(settings, key, factory, required_methods,
 
 
 def create_orderparameter(settings):
-    """Method to create order parameters from settings.
+    """Create order parameters from settings.
 
     Parameters
     ----------
@@ -230,6 +233,7 @@ def create_orderparameter(settings):
     -------
     out : object like :py:class:`.OrderParameter`
         This object represents the order parameter.
+
     """
     main_order = create_external(
         settings,
@@ -260,7 +264,7 @@ def create_orderparameter(settings):
 
 
 def create_engine(settings):
-    """Method to create an engine from settings.
+    """Create an engine from settings.
 
     Parameters
     ----------
@@ -271,13 +275,14 @@ def create_engine(settings):
     -------
     out : object like :py:class:`.EngineBase`
         This object represents the engine.
+
     """
     return create_external(settings, 'engine', engine_factory,
                            ['integration_step'])
 
 
 def create_potential(settings, key_settings):
-    """Method to create a potential from settings.
+    """Create a potential from settings.
 
     Parameters
     ----------
@@ -290,6 +295,7 @@ def create_potential(settings, key_settings):
     -------
     out : object like :py:class:`.PotentialFunction`
         The object representing the potential function.
+
     """
     return create_external(settings, 'potential', potential_factory,
                            ['force', 'potential', 'potential_and_force'],

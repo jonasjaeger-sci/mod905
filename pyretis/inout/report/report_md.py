@@ -35,7 +35,8 @@ def generate_report_mdflux(analysis, output='rst'):
     Returns
     -------
     out : dictionary
-        The generated report as a string
+        The generated report as a string.
+
     """
     report = {'figures': {}, 'tables': {}}
     # generate some tables:
@@ -69,6 +70,7 @@ def _table_md_efficiency(results, fmt='rst'):
     out[1] : string
         This is a string in the desired format which represents
         the table.
+
     """
     # table for interfaces:
     table = []
@@ -130,6 +132,7 @@ def _table_md_flux_cycles(results, fmt='rst'):
     out[1] : string
         This is a string in the desired format which represents
         the table.
+
     """
     # table for interfaces:
     table = [
@@ -168,6 +171,7 @@ def _table_md_flux(results, fmt='rst'):
     out[1] : string
         This is a string in the desired format which represents
         the table.
+
     """
     # table for interfaces:
     table = []

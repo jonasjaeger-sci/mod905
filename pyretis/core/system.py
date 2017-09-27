@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Module defining the system class
+"""Module defining the system class.
+
+The system class is used to group together many important objects
+in PyRETIS, for instance the particles, force field etc.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,10 +58,11 @@ class System:
     units : string
         Units to use for the system/simulation. Should match the defined
         units in :py:mod:`pyretis.core.units`.
+
     """
 
     def __init__(self, units='lj', box=None, temperature=None):
-        """Initialisation of the system.
+        """Initialise the system.
 
         Parameters
         ----------
@@ -76,6 +80,7 @@ class System:
         because it's convenient to include information about the
         degrees of freedom of the system here. In the future one could
         possibly have a more general temperature object.
+
         """
         self.units = units
         self.temperature = {'set': temperature, 'dof': None, 'beta': None}
@@ -94,6 +99,7 @@ class System:
         dof : numpy.array
             The degrees of freedom to neglect, in addition to the ones
             we already have neglected.
+
         """
         if self.temperature['dof'] is None:
             self.temperature['dof'] = np.array(dof)
@@ -105,6 +111,7 @@ class System:
 
         For each 'True' in the periodic settings of the box, we subtract
         one degree of freedom for that dimension.
+
         """
         try:
             dof = []
@@ -127,6 +134,7 @@ class System:
         -------
         out : float
             The Boltzmann constant.
+
         """
         return CONSTANTS['kB'][self.units]
 
@@ -141,6 +149,7 @@ class System:
         -------
         out : integer
             The number of dimensions of the system.
+
         """
         try:
             return self.box.dim
@@ -168,6 +177,7 @@ class System:
         out : float
             The calculated beta factor, or None if no temperature data
             is available.
+
         """
         if temperature is None:
             if self.temperature['set'] is None:
@@ -200,6 +210,7 @@ class System:
         -------
         out : None
             Does not return anything, but updates `system.particles`.
+
         """
         dim = self.get_dim()
         if vel is None:
@@ -210,7 +221,7 @@ class System:
                                     name=name, ptype=ptype)
 
     def force(self):
-        """Update the forces and virial
+        """Update the forces and the virial.
 
         The update is done by calling `self._evaluate_potential_force`.
 
@@ -219,9 +230,10 @@ class System:
         out[1] : numpy.array
             Forces on the particles. Note that `self.particles.force`
             will also be updated.
-        out[2] : float
+        out[2] : numpy.array
             The virial. Note that `self.particles.virial` will be
             updated.
+
         """
         force, virial = self.forcefield.evaluate_force(self)
         self.particles.force = force
@@ -235,6 +247,7 @@ class System:
         -------
         out : float
             The potential energy.
+
         """
         self.particles.vpot = self.forcefield.evaluate_potential(self)
         return self.particles.vpot
@@ -254,9 +267,10 @@ class System:
         out[2] : numpy.array
             Forces on the particles. Note that `self.particles.force`
             will also be updated.
-        out[3] : float
+        out[3] : numpy.array
             The virial. Note that `self.particles.virial` will also be
             updated.
+
         """
         pot, force, viri = self.forcefield.evaluate_potential_and_force(self)
         self.particles.vpot = pot
@@ -271,13 +285,14 @@ class System:
         -------
         out[1] : numpy.array
             Forces on the particles.
-        out[2] : float
+        out[2] : numpy.array
             The virial.
 
         Note
         ----
         This function will not update the forces, just calculate them.
         Use `self.force` to update the forces.
+
         """
         return self.forcefield.evaluate_force(self)
 
@@ -295,6 +310,7 @@ class System:
         return it's value for the (possibly given) configuration.
         The function `self.potential` can be used to update the
         potential for the particles in the system.
+
         """
         return self.forcefield.evaluate_potential(self)
 
@@ -307,13 +323,14 @@ class System:
             The potential energy.
         out[2] : numpy.array
             Forces on the particles.
-        out[3] : float
+        out[3] : numpy.array
             The virial.
 
         Note
         ----
         This function will not update the forces/potential energy for the
         particles. To update these, call `self.potential_and_force`.
+
         """
         return self.forcefield.evaluate_potential_and_force(self)
 
@@ -343,6 +360,7 @@ class System:
         out : None
             Does not return anything, but updates
             `system.particles.vel`.
+
         """
         rgen_settings = {'seed': seed, 'rgen': rgen}
         rgen = create_random_generator(rgen_settings)
@@ -370,7 +388,8 @@ class System:
         Returns
         -------
         out : float
-            The temperature of the system
+            The temperature of the system.
+
         """
         dof = self.temperature['dof']
         _, temp, _ = calculate_kinetic_temperature(self.particles,
@@ -401,6 +420,7 @@ class System:
         Returns
         -------
         None, but updates the velocities of the particles.
+
         """
         vpot = self.potential()
         ekin, _ = calculate_kinetic_energy(self.particles)
@@ -434,6 +454,7 @@ class System:
         ----------
         length : numpy.array, list or iterable.
             The box vectors, represented as a list.
+
         """
         if self.box is None:
             self.box = create_box(length=length)

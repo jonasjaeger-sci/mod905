@@ -90,7 +90,7 @@ READFILE = {'xyz': {'reader': read_xyz_file,
 
 
 def list_get(input_list, index):
-    """Method to get an item from a list that handles out-of bounds errors.
+    """Get an item from a list and handle out-of bounds errors.
 
     This method is intended to be used when we are picking items from
     a list and possibly we want a number of items which is larger than
@@ -103,6 +103,7 @@ def list_get(input_list, index):
         The list to pick from
     index : integer
         The index to pick
+
     """
     try:
         return input_list[index]
@@ -111,7 +112,7 @@ def list_get(input_list, index):
 
 
 def guess_particle_mass(particle_no, particle_type, unit):
-    """Method that will try to guess a particle mass from it's type.
+    """Guess a particle mass from it's type.
 
     Parameters
     ----------
@@ -122,6 +123,7 @@ def guess_particle_mass(particle_no, particle_type, unit):
     unit : string
         The system of units. This is used in case we try to get the
         mass from the periodic table where the units are in `g/mol`.
+
     """
     logger.info(('Mass not specified for particle no. %i\n'
                  'Will guess from particle type "%s"'), particle_no,
@@ -139,7 +141,7 @@ def guess_particle_mass(particle_no, particle_type, unit):
 
 
 def initial_positions_lattice(settings):
-    """Method to generate initial positions based on given settings.
+    """Generate initial positions based on given settings.
 
     We assume here the input values are given with the correct units
     as dictated by ``settings['system']['units']``.
@@ -156,6 +158,7 @@ def initial_positions_lattice(settings):
     size : list of floats
         A size for the region we created. This can be used to create
         a box.
+
     """
     pos_settings = settings['particles']['position']
     ptype = settings['particles'].get('type', [0])
@@ -231,6 +234,7 @@ def _get_snapshot_from_file(pos_settings, units):
         ('vx', 'vy', 'vz') and the box ('box').
     convert : dict
         Dictionary with conversion factors to internal units.
+
     """
     filename = pos_settings.get('file', None)
     if filename is None:
@@ -278,7 +282,7 @@ def _get_snapshot_from_file(pos_settings, units):
 
 
 def initial_positions_file(settings):
-    """Method to get initial positions from an input file.
+    """Get initial positions from an input file.
 
     Parameters
     ----------
@@ -294,6 +298,7 @@ def initial_positions_file(settings):
         a box.
     vel_read : boolean
         True if we read velocities from the input file.
+
     """
     ndim = settings['system'].get('dimensions', 3)
     pos_settings = settings['particles']['position']
@@ -376,6 +381,7 @@ def create_initial_positions(settings):
         True if we have read/created velocities different from just
         zeros. This is only True if we have read from a file with
         velocities.
+
     """
     msg = 'Settings used for initial positions: {}'
     debugtxt = msg.format(settings['particles']['position'])
@@ -402,7 +408,7 @@ def create_initial_positions(settings):
 
 
 def set_up_box(settings, boxs, dim=3):
-    """Method that will try to set up a box from settings.
+    """Set up a box from given settings.
 
     Parameters
     ----------
@@ -420,6 +426,7 @@ def set_up_box(settings, boxs, dim=3):
     -------
     box : object like :py:class:`.BoxBase` or None
         The box if we managed to create it, otherwise None.
+
     """
     msg = 'Box created {}:\n{}'
     box = None
@@ -464,6 +471,7 @@ def create_velocities(system, settings, vel):
     -------
     out : boolean
         True if we actually generated velocities.
+
     """
     vel_settings = settings['particles'].get('velocity', {})
     if vel:
@@ -518,6 +526,7 @@ def create_system_from_restart(restart):
     -------
     system : object like :py:class:`.System`
         The system object we create here.
+
     """
     settings = restart['system']
 
@@ -557,6 +566,7 @@ def create_system_from_settings(settings, engine):
     -------
     system : object like :py:class:`.System`
         The system object we create here.
+
     """
     internal = engine is None or engine.engine_type == 'internal'
     if internal:
@@ -591,7 +601,7 @@ def create_system_from_settings(settings, engine):
 
 
 def create_system(settings, engine=None, restart=None):
-    """Method that will set up a system from settings.
+    """Set up a system from the given settings.
 
     In order to set up the system, there are several things we might
     need to do:
@@ -616,6 +626,7 @@ def create_system(settings, engine=None, restart=None):
     -------
     system : object like :py:class:`.System`
         The system object we create here.
+
     """
     if restart is not None:
         system = create_system_from_restart(restart)

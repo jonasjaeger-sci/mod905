@@ -59,7 +59,7 @@ class DoubleWellWCA(PotentialFunction):
     """
 
     def __init__(self, dim=3, desc='A WCA double well potential'):
-        """Initiate the Double Well potential.
+        """Initialise the Double Well WCA potential.
 
         Parameters
         ----------
@@ -67,6 +67,7 @@ class DoubleWellWCA(PotentialFunction):
             Setting for the dimensionality of the potential
         desc : string, optional
             Description of the force field.
+
         """
         super().__init__(dim=dim, desc=desc)
         self.params = {'height': 0.0,
@@ -86,6 +87,7 @@ class DoubleWellWCA(PotentialFunction):
             The new parameters, they are assume to be dicts on the form
             ``{'types': set([(0,0)]), 'rzero': 1.0, 'width': 0.25,
             'height': 6.0}``
+
         """
         for key in parameters:
             if key in self.params:
@@ -105,9 +107,10 @@ class DoubleWellWCA(PotentialFunction):
         Parameters
         ----------
         itype : string
-            Particle type for particle i
+            Particle type for particle i.
         jtype : string
-            Particle type for particle j
+            Particle type for particle j.
+
         """
         if self.params['types'] is None:
             return True
@@ -129,6 +132,7 @@ class DoubleWellWCA(PotentialFunction):
             Minimum number two, located at: ``rzero + 2*width``.
         out[2] : float
             Maximum, located at: ``rzero + width``.
+
         """
         rzero = self.params['rzero']
         width = self.params['width']
@@ -146,6 +150,7 @@ class DoubleWellWCA(PotentialFunction):
         -------
         v_pot : float
             The potential energy.
+
         """
         particles = system.particles
         box = system.box
@@ -180,6 +185,7 @@ class DoubleWellWCA(PotentialFunction):
         virial : numpy.array
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
+
         """
         particles = system.particles
         box = system.box
@@ -222,6 +228,7 @@ class DoubleWellWCA(PotentialFunction):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions (dim, dim)
             where dim is given by the box.
+
         """
         particles = system.particles
         box = system.box

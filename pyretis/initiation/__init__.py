@@ -44,12 +44,13 @@ __all__ = ['initiate_path_simulation', 'get_initiation_method']
 
 
 def get_initiation_method(settings):
-    """Return the initiation method.
+    """Return the initiation method from given settings.
 
     Parameters
     ----------
     settings : dict
         This dictionary contains the settings for the initiation.
+
     """
     _methods = {
         'kick': initiate_kick,
@@ -68,7 +69,7 @@ def get_initiation_method(settings):
 
 
 def initiate_path_simulation(simulation, settings):
-    """Helper method to initiate a path simulation.
+    """Initialise a path simulation.
 
     Parameters
     ----------
@@ -76,6 +77,7 @@ def initiate_path_simulation(simulation, settings):
         The simulation we are doing the initiation for.
     settings : dict
         A dictionary with settings for the initiation.
+
     """
     cycle = simulation.cycle['step']
     method = get_initiation_method(settings)

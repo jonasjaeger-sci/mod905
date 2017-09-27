@@ -34,10 +34,11 @@ class PotentialFunction:
     params : dict
         Contains the parameters. This dict defines on initiation what
         parameters the potential will handle and store.
+
     """
 
     def __init__(self, dim=1, desc=''):
-        """Initiate the potential.
+        """Initialise the potential.
 
         Parameters
         ----------
@@ -46,6 +47,7 @@ class PotentialFunction:
         desc : string, optional
             Description of the potential function. Used to print out
             information about the potential.
+
         """
         self.dim = dim
         self.desc = desc
@@ -71,6 +73,7 @@ class PotentialFunction:
         -------
         out : boolean
             True if the check(s) pass.
+
         """
         if not self.params:
             logger.warning('No parameters are set for the potential')

@@ -38,6 +38,7 @@ def write_restart_file(filename, simulation):
         The file we are going to write to.
     simulation : object like :py:class:`.Simulation`
         A simulation object we will get information from.
+
     """
     info = {
         'simulation': simulation.restart_info(),
@@ -54,6 +55,7 @@ def write_path_ensemble_restart(path_ensemble):
     ----------
     path_ensemble : object like :py:class:`.PathEnsemble`
         The path ensemble we are writing restart info for.
+
     """
     filename = os.path.join(
         path_ensemble.ensemble_name_simple,
@@ -70,6 +72,7 @@ def read_restart_file(filename):
     ----------
     filename : string
         The file we are going to read from.
+
     """
     with open(filename, 'rb') as infile:
         info = pickle.load(infile)

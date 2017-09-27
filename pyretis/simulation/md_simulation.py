@@ -45,11 +45,13 @@ class SimulationMD(Simulation):
         The engine to use for integrating the equations of motion.
         The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
+
     """
+
     simulation_type = 'md'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
-        """Initialise the simulation.
+        """Initialise the MD simulation.
 
         Here we just add variables and do not do any other setup.
 
@@ -65,6 +67,7 @@ class SimulationMD(Simulation):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         super().__init__(steps=steps, startcycle=startcycle)
         self.system = system
@@ -110,11 +113,13 @@ class SimulationNVE(SimulationMD):
         The engine to use for integrating the equations of motion.
         The engine must have engine.dynamics == 'NVE' in order
         for it to be usable in this simulation.
+
     """
+
     simulation_type = 'md-nve'
 
     def __init__(self, system, engine, steps=0, startcycle=0):
-        """Initialisation of a NVE simulation.
+        """Initialise the NVE simulation object.
 
         Here we will set up the tasks that are to be performed in the
         simulation, such as the integration and thermodynamics
@@ -132,6 +137,7 @@ class SimulationNVE(SimulationMD):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         super().__init__(system, engine, steps=steps, startcycle=startcycle)
         if self.engine.dynamics.lower() != 'nve':
@@ -184,12 +190,14 @@ class SimulationMDFlux(SimulationMD):
     leftside_prev : list of booleans or None
         These are used to store the previous positions with respect
         to the interfaces.
+
     """
+
     simulation_type = 'md-flux'
 
     def __init__(self, system, orderp, engine, interfaces,
                  steps=0, startcycle=0):
-        """Initialisation of the MD-Flux simulation.
+        """Initialise the MD-Flux simulation object.
 
         Parameters
         ----------
@@ -208,6 +216,7 @@ class SimulationMDFlux(SimulationMD):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         super().__init__(system, engine, steps=steps, startcycle=startcycle)
         self.orderp = orderp
@@ -231,6 +240,7 @@ class SimulationMDFlux(SimulationMD):
         -------
         out : dict
             This list contains the results of the defined tasks.
+
         """
         if not self.first_step:
             self.cycle['step'] += 1

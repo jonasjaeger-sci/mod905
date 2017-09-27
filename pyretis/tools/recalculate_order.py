@@ -67,6 +67,7 @@ def recalculate_from_trr(order_parameter, trr_file, reverse=False,
     ------
     out : list of lists of floats
         The order parameters, calculated per frame.
+
     """
     system = System(box=None)  # add dummy system
     msg = ('Re-calculate from {}:'.format(os.path.basename(trr_file)) +
@@ -117,6 +118,7 @@ def recalculate_from_xyz(order_parameter, traj_file, reverse=False,
     ------
     out : list of lists of floats
         The order parameters as a list.
+
     """
     system = System(box=None)
     msg = ('Re-calculate from {}:'.format(os.path.basename(traj_file)) +
@@ -160,6 +162,7 @@ def recalculate_from_gro(order_parameter, traj_file, ext, reverse=False):
     -------
     out : list of lists of floats
         The order parameters for the current frame.
+
     """
     system = System(box=None)
     msg = 'Re-calculate from {}:'.format(os.path.basename(traj_file))
@@ -197,9 +200,9 @@ def recalculate_order(order_parameter, traj_file, reverse=False,
     maxidx : integer, optional
         The maximum frame number we will read from ``traj_file``.
     minidx : integer, optional
-        The minimum frame number we will read from ``traj_file``
-    """
+        The minimum frame number we will read from ``traj_file``.
 
+    """
     _, ext = os.path.splitext(traj_file)
 
     helpers = {'.trr': recalculate_from_trr, '.xyz': recalculate_from_xyz,

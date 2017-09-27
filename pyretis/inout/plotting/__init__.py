@@ -52,6 +52,7 @@ References
 .. [deep] The deep color scheme, from the seaborn project
           http://stanford.edu/~mwaskom/software/seaborn/index.html
 .. [husl] The husl color scheme, http://www.husl-colors.org/
+
 """
 from pyretis.inout.settings import SECTIONS
 from .mpl_plotting import MplPlotter, mpl_set_style
@@ -86,7 +87,7 @@ COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
 
 
 def create_plotter(plot_settings, out_dir=None):
-    """Function to create a plotter.
+    """Create a plotter from given settings.
 
     The input plot settings is assumed to be a dictionary which we use
     for creating the plotter. In case the plot settings is not given, we
@@ -108,6 +109,7 @@ def create_plotter(plot_settings, out_dir=None):
     -------
     out : object like :py:class:`.MplPlotter`
         This is a object which can be used for plotting.
+
     """
     if plot_settings is None:
         return None

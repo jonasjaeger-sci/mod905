@@ -170,7 +170,7 @@ SPECIAL_MULTIPLE = {
 
 
 def parse_primitive(text):
-    """Parse text to Python using the ast module
+    """Parse text to Python using the ast module.
 
     Parameters
     ----------
@@ -183,6 +183,7 @@ def parse_primitive(text):
         The parsed text.
     out[1] : boolean
         True if we managed to parse the text, False otherwise.
+
     """
     parsed = None
     success = False
@@ -199,7 +200,7 @@ def parse_primitive(text):
 
 
 def look_for_keyword(line):
-    """Function to look for a keyword in a string.
+    """Search for a keyword in the given string.
 
     A string is assumed to define a keyword if the keyword appears as
     the first word in the string, ending with a `=`.
@@ -218,6 +219,7 @@ def look_for_keyword(line):
         A lower-case, stripped version of `out[0]`.
     out[2] : boolean
         `True` if we found a possible keyword.
+
     """
     # match a word followed by a '='
     key = re.match(r'(.*?)=', line)
@@ -248,6 +250,7 @@ def _parse_sections(inputtxt):
         A dictionary with keys corresponding to the sections found
         in the input file. `raw_data[key]` contains the raw data
         for the section corresponding to `key`.
+
     """
     multiple = {key: 0 for key in SPECIAL_MULTIPLE}
     raw_data = OrderedDict()
@@ -284,7 +287,7 @@ def _parse_sections(inputtxt):
 
 
 def _parse_section_heading(raw_section):
-    """Helper method to parse the heading section.
+    """Parse the heading section.
 
     Parameters
     ----------
@@ -295,6 +298,7 @@ def _parse_section_heading(raw_section):
     -------
     setting : dict
         A dict with keys corresponding to the settings.
+
     """
     if not raw_section:
         return None
@@ -302,7 +306,7 @@ def _parse_section_heading(raw_section):
 
 
 def _merge_section_text(raw_section):
-    """Method to merge text for settings that are split across lines.
+    """Merge text for settings that are split across lines.
 
     This method supports keyword settings that are split across several
     lines. Here we merge these lines by assuming that keywords separate
@@ -319,7 +323,9 @@ def _merge_section_text(raw_section):
 
 
 def _parse_section_default(raw_section):
-    """Default parser for sections.
+    """Parse a raw section.
+
+    This is the default parser for sections.
 
     Parameters
     ----------
@@ -334,6 +340,7 @@ def _parse_section_default(raw_section):
     -------
     setting : dict
         A dict with keys corresponding to the settings.
+
     """
     merged = _merge_section_text(raw_section)
     setting = {}
@@ -379,6 +386,7 @@ def _parse_raw_section(raw_section, section):
     -------
     out : dict
         A dict with keys corresponding to the settings.
+
     """
     if section not in SECTIONS:
         # Unknown section, just ignore it and give a warning.
@@ -391,7 +399,7 @@ def _parse_raw_section(raw_section, section):
 
 
 def _parse_all_raw_sections(raw_sections):
-    """Helper method to parse all raw sections.
+    """Parse all raw sections.
 
     This method is helpful for running tests etc.
 
@@ -404,6 +412,7 @@ def _parse_all_raw_sections(raw_sections):
     -------
     settings : dict
         The parsed settings, with one key for each section parsed.
+
     """
     settings = OrderedDict()
     for key, val in raw_sections.items():
@@ -437,6 +446,7 @@ def _add_default_settings(settings):
     Returns
     -------
     None, but this method might add data to the input settings.
+
     """
     for sec in SECTIONS:
         if sec not in settings:
@@ -463,6 +473,7 @@ def _clean_settings(settings):
     -------
     settingsc : dict
         The cleaned input settings.
+
     """
     settingc = {}
     # Add other sections
@@ -510,6 +521,7 @@ def parse_settings_file(filename, add_default=True):
     -------
     settings : dict
         A dictionary with settings for PyRETIS.
+
     """
     with open(filename, 'r') as fileh:
         raw_sections = _parse_sections(fileh)
@@ -532,6 +544,7 @@ def settings_to_text(settings):
     ------
     out : string
         Text representing the settings.
+
     """
     txt = []
     for section in SECTIONS:
@@ -571,6 +584,7 @@ def section_to_text(settings, prefix=None):
     -------
     out : string
         Formatted text representing the settings.
+
     """
     data = []
     for key in settings:
@@ -612,6 +626,7 @@ def write_settings_file(settings, outfile, backup=True):
     ----
     This will currently fail if objects have made it into the supplied
     ``settings``.
+
     """
     if backup:
         msg = create_backup(outfile)
@@ -634,6 +649,7 @@ def copy_settings(settings):
     -------
     lsetting : dict of dicts
         A copy of the settings.
+
     """
     lsetting = {}
     for sec in settings:  # this is common for all simulations:
@@ -659,6 +675,7 @@ def is_single_tis(settings):
     out : boolean
         True if the settings define a single TIS simulation, False
         otherwise.
+
     """
     return (settings['simulation']['task'] == 'tis' and
             len(settings['simulation']['interfaces']) <= 3)
