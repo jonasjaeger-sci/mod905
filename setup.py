@@ -28,7 +28,7 @@ from setuptools import setup, find_packages
 
 
 def get_long_description():
-    """Return the contents of README.rst"""
+    """Return the contents of README.rst as a string."""
     here = os.path.abspath(os.path.dirname(__file__))
     # Get the long description from the README file
     long_description = ''
@@ -38,7 +38,7 @@ def get_long_description():
 
 
 def get_version():
-    """Read the version from version.py"""
+    """Return the version from version.py as a string."""
     here = os.path.abspath(os.path.dirname(__file__))
     filename = os.path.join(here, 'pyretis', 'version.py')
     with openc(filename, encoding='utf-8') as fileh:
@@ -50,7 +50,7 @@ def get_version():
 
 
 def get_requirements(docs=False):
-    """Read requirements.txt"""
+    """Read requirements.txt and return a list of requirements."""
     here = os.path.abspath(os.path.dirname(__file__))
     requirements = []
     doc_package = ('sphinx', 'sphinx_bootstrap_theme')
@@ -90,11 +90,10 @@ setup(
         'Natural Language :: English',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Topic :: Scientific/Engineering :: Physics'
+        'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords='rare-events md mc tps simulation tis retis',
     packages=find_packages(exclude=['docs']),
