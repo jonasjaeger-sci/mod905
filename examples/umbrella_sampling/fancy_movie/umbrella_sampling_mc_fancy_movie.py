@@ -426,6 +426,7 @@ def main():
     trajectory, energy = run_simulation(system)
     make_plots(system, forcefield, trajectory, energy)
 
+
 if __name__ == '__main__':
     colorama.init(autoreset=True)
     main()
