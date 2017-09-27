@@ -95,6 +95,7 @@ def paste_paths(path_back, path_forw, overlap=True, maxlen=None):
     Some information about the path will not be set here. This must be
     set elsewhere. This includes how the path was generated
     (`path.generated`) and the status of the path (`path.status`).
+
     """
     if maxlen is None:
         if path_back.maxlen == path_forw.maxlen:
@@ -160,6 +161,7 @@ def check_crossing(cycle, orderp, interfaces, leftside_prev):
         (cycle number, interface number, direction)
         where direction is '-' for a crossing in the negative direction
         and '+' for a crossing in the positive direction.
+
     """
     cross = []
     if leftside_prev is None:
@@ -221,6 +223,7 @@ class PathBase:
         The potential energy as function of time.
     ekin : list of floats
         The kinetic energy as function of time.
+
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
@@ -236,6 +239,7 @@ class PathBase:
         time_origin : int, optional
             This can be used to store the shooting point of a parent
             trajectory.
+
         """
         self.order = []
         self.vpot = []
@@ -262,6 +266,7 @@ class PathBase:
             This is the new order parameter.
         idx : int
             This is the index of the new order parameter in `self.path`.
+
         """
         if self.ordermax is None or orderp > self.ordermax[0]:
             self.ordermax = (orderp, idx)
@@ -285,6 +290,7 @@ class PathBase:
         out[1] : list
             This is the maximum order parameter, tuple with
             (value, index)
+
         """
         ordermin = None
         ordermax = None
@@ -327,6 +333,7 @@ class PathBase:
             'M' if middle interface is crossed, '*' otherwise.
         out[3] : list of boolean
             out[2][i] = True if ordermin < interfaces[i] <= ordermax
+
         """
         if self.length < 1:
             logger.warning('Path is empty!')
@@ -358,6 +365,7 @@ class PathBase:
         out : string
             String representing where the end point is ('L' - left,
             'R' - right or None).
+
         """
         if self.order[-1][0] <= left:
             end = 'L'
@@ -386,6 +394,7 @@ class PathBase:
         out : string
             String representing where the start point is ('L' - left,
             'R' - right or None).
+
         """
         if self.order[0][0] <= left:
             start = 'L'
@@ -407,6 +416,7 @@ class PathBase:
             two next items are the positions and velocities.
         idx : int
             The shooting point index.
+
         """
         pass
 
@@ -422,6 +432,7 @@ class PathBase:
         ------
         out : dict
             The phase-space points in the path.
+
         """
         if reverse:
             for i in range(self.length - 1, -1, -1):
@@ -443,12 +454,13 @@ class PathBase:
         -------
         out : tuple
             A phase-space point in the path.
+
         """
         pass
 
     @abstractmethod
     def _append_posvel(self, pos, vel):
-        """Method to append positions and velocities."""
+        """Append positions and velocities to the path."""
         pass
 
     def append(self, phasepoint):
@@ -473,6 +485,7 @@ class PathBase:
             * vpot: the potential energy.
 
             * ekin: the kinetic energy.
+
         """
         if self.maxlen is None or self.length < self.maxlen:
             orderp = phasepoint['order']
@@ -499,6 +512,7 @@ class PathBase:
             This represents the current status of the path.
         interfaces : list
             These are just the interfaces we are currently considering.
+
         """
         start, end, middle, _ = self.check_interfaces(interfaces)
         path_info = {
@@ -521,7 +535,8 @@ class PathBase:
         Parameters
         ----------
         move : string
-            A short description of the move
+            A short description of the move.
+
         """
         if self.generated is None:
             self.generated = (move, 0, 0, 0)
@@ -541,6 +556,7 @@ class PathBase:
         detect : float
             The value for which the path is successful, i.e. the
             "detect" interface.
+
         """
         return self.ordermax[0] > detect
 
@@ -558,6 +574,7 @@ class PathBase:
         -------
         self : object of type `Path`
             The updated path object.
+
         """
         for phasepoint in other.trajectory():
             app = self.append(phasepoint)
@@ -580,11 +597,11 @@ class PathBase:
     @staticmethod
     @abstractmethod
     def reverse_velocities(vel):
-        """Method that handles reversing of velocities."""
+        """Reverse the velocities in the phase points."""
         pass
 
     def reverse(self):
-        """Helper method for reversing the path, indented to be extended."""
+        """Reverse the path. Indented to be extended in sub-classes."""
         return self.reverse_trajectory()
 
     def reverse_trajectory(self):
@@ -600,6 +617,7 @@ class PathBase:
         -------
         new_path : object like :py:class:`.PathBase`
             This is basically a copy of `self`, just reversed.
+
         """
         new_path = self.empty_path()
         for phasepoint in self.trajectory(reverse=True):
@@ -647,6 +665,7 @@ class PathBase:
         -------
         out : object like :py:class:`.PathBase`
             A new empty path.
+
         """
         return
 
@@ -665,6 +684,7 @@ class Path(PathBase):
         Positions as function of time
     vel : list of numpy.arrays
         Velocities as function of time.
+
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
@@ -680,6 +700,7 @@ class Path(PathBase):
         time_origin : int, optional
             This can be used to store the shooting point of a parent
             trajectory.
+
         """
         super().__init__(rgen, maxlen=maxlen,
                          time_origin=time_origin)
@@ -698,6 +719,7 @@ class Path(PathBase):
         -------
         out : tuple
             A phase-space point in the path.
+
         """
         phasepoint = {'order': self.order[idx], 'pos': self.pos[idx],
                       'vel': self.vel[idx], 'vpot': self.vpot[idx],
@@ -723,6 +745,7 @@ class Path(PathBase):
             order parameter(s).
         out[1] : int
             The shooting point index.
+
         """
         idx = self.rgen.random_integers(1, self.length - 2)
         return self.phasepoint(idx), idx
@@ -734,6 +757,7 @@ class Path(PathBase):
         -------
         out : object like :py:class:`.PathBase`
             A new empty path.
+
         """
         maxlen = kwargs.get('maxlen', None)
         time_origin = kwargs.get('time_origin', 0)
@@ -752,7 +776,9 @@ class Path(PathBase):
         Returns
         -------
         out : np.array or None
-            The reversed velocities."""
+            The reversed velocities.
+
+        """
         if vel is not None:
             return vel * -1
         return None
@@ -799,6 +825,7 @@ class PathExt(Path):
         If an item in this list is True, the the corresponding
         velocities in the snapshot file in ``pos`` should be
         reversed.
+
     """
 
     def __init__(self, rgen, maxlen=None, time_origin=0):
@@ -814,6 +841,7 @@ class PathExt(Path):
         time_origin : int, optional
             This can be used to store the shooting point of a parent
             trajectory.
+
         """
         super().__init__(rgen, maxlen=maxlen,
                          time_origin=time_origin)
@@ -836,5 +864,6 @@ class PathExt(Path):
         -------
         out : boolean
             The reversed velocities.
+
         """
         return not vel

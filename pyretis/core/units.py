@@ -264,6 +264,7 @@ Examples
 1.0
 >>> print(round(CONVERT['time']['cgs', 's'], 2))
 1.0
+
 """
 import logging
 from collections import deque
@@ -429,7 +430,7 @@ UNIT_SYSTEMS['cp2k'] = {'length': (1.0, 'A'),
 
 
 def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
-    """Helper function that will add a specific conversion and it's inverse.
+    """Add a specific conversion and it's inverse.
 
     This function is mainly here to ensure that we don't forget to add
     the inverse conversions.
@@ -448,6 +449,7 @@ def _add_conversion_and_inverse(conv_dict, value, unit1, unit2):
     Returns
     -------
     None, but updates the given `conv_dict`.
+
     """
     conv_dict[unit1, unit2] = value
     conv_dict[unit2, unit1] = 1.0 / conv_dict[unit1, unit2]
@@ -469,6 +471,7 @@ def _generate_conversion_for_dim(conv_dict, dim, unit):
     Returns
     -------
     None, but updates the given `conv_dict`
+
     """
     convertdim = conv_dict[dim]
     for unit_to in UNITS[dim]:
@@ -507,6 +510,7 @@ def generate_conversion_factors(unit, distance, energy, mass, charge='e'):
         This selects the base charge. It can be 'C' or 'e' for Coulomb
         or the electron charge. This will determine how we treat
         Coulomb's constant.
+
     """
     CONVERT['length'][unit, distance[1]] = distance[0]
     CONVERT['mass'][unit, mass[1]] = mass[0]
@@ -579,6 +583,7 @@ def generate_inverse(conversions):
     out : None
         Will not return anything, but will update the given parameter
         `conversions`.
+
     """
     newconvert = {}
     for unit in conversions:
@@ -615,6 +620,7 @@ def bfs_convert(conversions, unit_from, unit_to):
         The 'path' between the units, i.e. the traversal from
         `unit_from` to `unit_to`. `out[2][i]` gives the
         `(unit_from, unit_to)` tuple for step `i` in the conversion.
+
     """
     if unit_from == unit_to:
         return (unit_from, unit_to), 1.0, None
@@ -663,6 +669,7 @@ def convert_bases(dimension):
     ----------
     dimension : string
         The dimension to convert for.
+
     """
     convert = CONVERT[dimension]
     # start by generating inverses
@@ -688,7 +695,7 @@ def convert_bases(dimension):
 
 
 def generate_system_conversions(system1, system2):
-    """This will generate conversions between two different systems.
+    """Generate conversions between two different systems.
 
     Parameters
     ----------
@@ -701,6 +708,7 @@ def generate_system_conversions(system1, system2):
     -------
     out : None
         Returns nothing, but updates `CONVERT`.
+
     """
     for dim in CONVERT:
         convert = CONVERT[dim]
@@ -731,6 +739,7 @@ def print_table(unit, system=False):  # pragma: no cover
     -------
     out: None
         Does not return anything, but will print to the screen.
+
     """
     row_fmt = '  | {:10s} | {:16.8e} | {:16.8e} |'
     row_head = '  | {:10s} | {:16s} | {:16s} |'
@@ -773,7 +782,7 @@ def print_table(unit, system=False):  # pragma: no cover
 
 
 def write_conversions(filename='units.txt'):
-    """This function will print out the information in CONVERT.
+    """Print out the information currently stored in CONVERT.
 
     This function is intended for creating a big list of conversion
     factors that can be included in this script for defining unit
@@ -788,6 +797,7 @@ def write_conversions(filename='units.txt'):
     -------
     out : None
         Will not return anything, but writes the given file.
+
     """
     with open(filename, 'w') as fileh:
         for dim in sorted(CONVERT):
@@ -816,6 +826,7 @@ def read_conversions(filename='units.txt', select_units=None):
     -------
     out : dict
         A dictionary with the conversions.
+
     """
     convert = {}
     with open(filename, 'r') as fileh:
@@ -840,7 +851,7 @@ def read_conversions(filename='units.txt', select_units=None):
 
 
 def _check_input_unit(unit, dim, input_unit):
-    """Helper function to check input units for `create_conversion_factors`
+    """Check input units for :py:func:`.create_conversion_factors`.
 
     Parameters
     ----------
@@ -865,6 +876,7 @@ def _check_input_unit(unit, dim, input_unit):
     ------
     ValueError
         If the unit in `input_unit` is unknown or malformed.
+
     """
     if input_unit is not None:
         try:
@@ -888,7 +900,7 @@ def _check_input_unit(unit, dim, input_unit):
 
 def create_conversion_factors(unit, length=None, energy=None, mass=None,
                               charge=None):
-    """Helper function to set up conversion factors for a system of units.
+    """Set up conversion factors for a system of units.
 
     Parameters
     ----------
@@ -913,6 +925,7 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
     -------
     None but will update `CONVERT` so that the conversion factors are
     available.
+
     """
     # First just set up conversions for the base units:
     for key in DIMENSIONS:
@@ -935,7 +948,7 @@ def create_conversion_factors(unit, length=None, energy=None, mass=None,
 
 
 def units_from_settings(settings):
-    """Helper method to set up units from given input settings.
+    """Set up units from given input settings.
 
     Parameters
     ----------
@@ -948,6 +961,7 @@ def units_from_settings(settings):
         Just a string with some information about the units
         created. This can be used for printing out some info to
         the user.
+
     """
     unit = settings['system']['units'].lower().strip()
     if 'unit-system' in settings:

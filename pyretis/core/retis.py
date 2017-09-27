@@ -32,10 +32,10 @@ retis_swap_zero (:py:func:`.retis_swap_zero`)
 
 References
 ~~~~~~~~~~
-
 .. [RETIS] Titus S. van Erp,
    Phys. Rev. Lett. 98, 26830 (2007),
    http://dx.doi.org/10.1103/PhysRevLett.98.268301
+
 """
 import copy
 import logging
@@ -88,6 +88,7 @@ def make_retis_step(ensembles, system, order_function, engine, rgen,
     out : list of lists
         `out[i]` contains the result after performing the move for path
         ensemble no. `i`.
+
     """
     if rgen.rand() < settings['retis']['swapfreq']:
         # Do RETIS moves
@@ -125,6 +126,7 @@ def _relative_shoots_select(ensembles, rgen, relative):
         The index of the path ensemble to shoot in.
     out[1] : object like :py:class:`.PathEnsemble`
         The selected path ensemble for shooting.
+
     """
     freq = rgen.rand()
     cumulative = 0.0
@@ -183,13 +185,14 @@ def retis_tis_moves(ensembles, system, order_function, engine, rgen,
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
-        The current cycle number
+        The current cycle number.
 
     Returns
     -------
     output : list of lists
         `output[i]` contains the result for ensemble `i`. output[i][0]
         gives information on what kind of move was tried.
+
     """
     relative = settings['retis'].get('relative_shoots', None)
     if relative is not None:
@@ -258,13 +261,14 @@ def retis_moves(ensembles, system, order_function, engine, rgen,
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
-        The current cycle number
+        The current cycle number.
 
     Returns
     -------
     out : list of lists
         `out[i]` contains the results of the swapping/nullmove for path
         ensemble no. `i`.
+
     """
     output = [[None, None, None, None] for _ in ensembles]
     if settings['retis']['swapsimul']:
@@ -357,6 +361,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
     we are just swapping references and not the paths. In case the
     swap is rejected updating this would invalidate the last accepted
     path.
+
     """
     logger.info('Swapping: %s <-> %s', ensembles[idx].ensemble_name,
                 ensembles[idx+1].ensemble_name)
@@ -401,7 +406,7 @@ def retis_swap(ensembles, idx, system, order_function, engine,
 
 def retis_swap_zero(ensembles, system, order_function, engine,
                     settings, cycle):
-    """The retis swapping move for ``[0^-] <-> [0^+]`` swaps.
+    """Perform the RETIS swapping for ``[0^-] <-> [0^+]`` swaps.
 
     The retis swapping move for ensembles [0^-] and [0^+] requires some
     extra integration. Here we are generating new paths for [0^-] and
@@ -446,12 +451,13 @@ def retis_swap_zero(ensembles, system, order_function, engine,
     settings : dict
         This dict contains the settings for the RETIS method.
     cycle : integer
-        The current cycle number
+        The current cycle number.
 
     Returns
     -------
     out : string
         The result of the swapping move.
+
     """
     ensemble0 = ensembles[0]
     ensemble1 = ensembles[1]
@@ -557,6 +563,7 @@ def null_move(path_ensemble, cycle):
     out[2] : string
         The status, which here will be 'ACC', since we just accept
         the last accepted path again in this move.
+
     """
     logger.info('Null move for: %s', path_ensemble.ensemble_name)
     status = 'ACC'

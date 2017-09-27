@@ -50,15 +50,17 @@ class RandomGeneratorBase(metaclass=ABCMeta):
     ----------
     seed : int
         A seed for the generator
+
     """
 
     def __init__(self, seed=0):
-        """Initiate the random number generator.
+        """Initialise the random number generator.
 
         Parameters
         ----------
         seed : int, optional
             An integer used for seeding the generator if needed.
+
         """
         self.seed = seed
 
@@ -75,6 +77,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         -------
         out : float
             Pseudo random number in [0, 1)
+
         """
         pass
 
@@ -103,6 +106,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         -------
         out : int
             The pseudo random integers in [low, high].
+
         """
         pass
 
@@ -123,7 +127,8 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         Returns
         -------
         out : float, numpy.array of floats
-            The random numbers generated
+            The random numbers generated.
+
         """
         pass
 
@@ -147,6 +152,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         -------
         out : float or numpy.array of floats size
             The random numbers drawn.
+
         """
         pass
 
@@ -189,6 +195,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         out : None
             Returns `None` but modifies velocities of the selected
             particles.
+
         """
         if selection is None:
             vel, imass = particles.vel, particles.imass
@@ -208,7 +215,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         particles.vel[selection] *= scale_factor
 
     def draw_maxwellian_velocities(self, system, sigma_v=None):
-        """Simple function to draw numbers from a Gaussian distribution.
+        """Draw numbers from a Gaussian distribution.
 
         Parameters
         ----------
@@ -218,6 +225,7 @@ class RandomGeneratorBase(metaclass=ABCMeta):
         sigma_v : numpy.array, optional
             Standard deviation in velocity, one for each particle.
             If it's not given it will be estimated.
+
         """
         if not sigma_v or sigma_v < 0.0:
             kbt = (1.0/system.temperature['beta'])
@@ -245,13 +253,13 @@ class RandomGenerator(RandomGeneratorBase):
 
     References
     ----------
-
     .. [#] The NumPy documentation on RandomState,
        http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html
+
     """
 
     def __init__(self, seed=0):
-        """Initiate the random number generator.
+        """Initialise the random number generator.
 
         If a seed is given, the random number generator will be seeded.
 
@@ -259,6 +267,7 @@ class RandomGenerator(RandomGeneratorBase):
         ----------
         seed : int, optional
             An integer used for seeding the generator if needed.
+
         """
         super().__init__(seed=seed)
         self.rgen = RandomState(seed=seed)
@@ -280,6 +289,7 @@ class RandomGenerator(RandomGeneratorBase):
         ----
         Here, we will just draw a list of numbers and not for
         an arbitrary shape.
+
         """
         return self.rgen.rand(shape)
 
@@ -310,6 +320,7 @@ class RandomGenerator(RandomGeneratorBase):
         ----
         np.random.randint(low, high) is defined as drawing
         from `low` (inclusive) to `high` (exclusive).
+
         """
         return self.rgen.randint(low, high + 1)
 
@@ -329,7 +340,8 @@ class RandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : float, numpy.array of floats
-            The random numbers generated
+            The random numbers generated.
+
         """
         return self.rgen.normal(loc=loc, scale=scale, size=size)
 
@@ -362,6 +374,7 @@ class RandomGenerator(RandomGeneratorBase):
         See also
         --------
         numpy.random.multivariate_normal
+
         """
         if cho is None:
             cho = np.linalg.cholesky(cov)
@@ -401,11 +414,12 @@ class ReservoirSampler:
 
     References
     ----------
-
     .. [#] The Art of Computer Programming.
+
     """
+
     def __init__(self, seed=0, length=10, rgen=None):
-        """Initiate the reservoir.
+        """Initialise the reservoir.
 
         Parameters
         ----------
@@ -416,6 +430,7 @@ class ReservoirSampler:
         rgen : object like :py:class:`.RandomGenerator`
             In case we want to re-use a random generator object.
             If this is specified, the parameter `seed` is ignored.
+
         """
         if rgen is not None:
             self.rgen = rgen
@@ -433,6 +448,7 @@ class ReservoirSampler:
         ----------
         new_item : any type
             This is the item we try to add to the reservoir.
+
         """
         self.items += 1
         if self.items == 1:
@@ -444,12 +460,13 @@ class ReservoirSampler:
                     self.reservoir[i] = new_item
 
     def get_item(self):
-        """This method will return one of the items from the reservoir.
+        """Return the next item from the reservoir.
 
         Returns
         -------
         out : any type
             Returns an item from the reservoir.
+
         """
         if self.ret_idx >= self.length:
             self.ret_idx = 0
@@ -471,13 +488,18 @@ class MockRandomGenerator(RandomGeneratorBase):
     for testing algorithms on different systems. It should *NEVER*
     be used for actual production runs!
     """
+
     def __init__(self, seed=0):
-        """Initiate the random number generator.
+        """Initialise the mock random number generator.
+
+        Here, we set up predefined random number which we will
+        use as a pool for the generation.
 
         Parameters
         ----------
         seed : int, optional
             An integer used for seeding the generator if needed.
+
         """
         super().__init__(seed=seed)
         self.rgen = [0.78008018, 0.04459916, 0.76596775, 0.97676713,
@@ -500,7 +522,8 @@ class MockRandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : float
-            Pseudo random number in [0, 1)
+            Pseudo random number in [0, 1).
+
         """
         numbers = []
         for _ in range(shape):
@@ -531,7 +554,8 @@ class MockRandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : int
-            This is a pseudo random integer in [low, high]
+            This is a pseudo random integer in [low, high].
+
         """
         idx = self.rand()*(high-low+1)
         return int(idx) + low
@@ -552,7 +576,8 @@ class MockRandomGenerator(RandomGeneratorBase):
         Returns
         -------
         out : float, numpy.array of floats
-            The random numbers generated
+            The random numbers generated.
+
         """
         if size is None:
             return self.rand(shape=1)
@@ -590,6 +615,7 @@ class MockRandomGenerator(RandomGeneratorBase):
         See also
         --------
         numpy.random.multivariate_normal
+
         """
         norm = self.normal(loc=0.0, scale=1.0, size=2*size)
         norm = norm.reshape(size, 2)
@@ -598,7 +624,7 @@ class MockRandomGenerator(RandomGeneratorBase):
 
 
 def create_random_generator(settings):
-    """This will initiate a random generator.
+    """Create a random generator from given settings.
 
     Parameters
     ----------
@@ -610,6 +636,7 @@ def create_random_generator(settings):
     -------
     out : object like :py:class:`.RandomGenerator`
         The random generator created.
+
     """
     if 'seed' not in settings:
         seed = 0

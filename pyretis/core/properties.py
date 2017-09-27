@@ -42,6 +42,7 @@ class Property:
     >>> ener.add(12.220)
     >>> ener.add(99.22)
     >>> ener.mean
+
     """
 
     def __init__(self, desc=''):
@@ -50,7 +51,8 @@ class Property:
         Parameters
         ----------
         desc : string, optional
-            Text description of the object
+            Description of the object.
+
         """
         self.desc = desc
         self.nval = 0
@@ -71,6 +73,7 @@ class Property:
         -------
         out : None
             Returns `None` but updates the mean and variance.
+
         """
         self.nval += 1
         self.val.append(val)
@@ -91,6 +94,7 @@ class Property:
         ----
         Consider if this should be moved/deleted and just
         replaced with a function from the analysis package.
+
         """
         val = self.val[-1]  # most recent value
         delta = val - self.mean
@@ -114,6 +118,7 @@ class Property:
         Consider if this should be moved/deleted and just
         replaced with a function from a more general input-output
         module
+
         """
         np.savetxt(filename, self.val)
 

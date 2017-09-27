@@ -64,12 +64,20 @@ class Particles:
         The potential energy of the particles.
     ekin : float
         The kinetic energy of the particles.
+
     """
 
     def __init__(self, dim=1):
         """Initialise the Particle list.
 
         Here we just create an empty particle list.
+
+        Parameters
+        ----------
+        dim : integer
+            The number of dimensions we are considering for positions,
+            velocities and forces.
+
         """
         self.npart = 0
         self.pos = None
@@ -97,6 +105,7 @@ class Particles:
         and not get any 'surprise attributes' defined elsewhere.
         Also note that the dimensionality (`self.dim`) is not changed
         in this method.
+
         """
         self.npart = 0
         self.pos = None
@@ -120,6 +129,7 @@ class Particles:
         -------
         out : dict
             Dictionary with the positions, velocity and forces.
+
         """
         return {'pos': np.copy(self.pos), 'vel': np.copy(self.vel),
                 'vpot': self.vpot, 'ekin': self.ekin,
@@ -134,6 +144,7 @@ class Particles:
         ----------
         pos : numpy.array
             The positions to set.
+
         """
         self.pos = np.copy(pos)
 
@@ -150,6 +161,7 @@ class Particles:
         ----------
         vel : numpy.array
             The velocities to set.
+
         """
         self.vel = np.copy(vel)
 
@@ -166,6 +178,7 @@ class Particles:
         ----------
         force : numpy.array
             The forces to set.
+
         """
         self.force = np.copy(force)
 
@@ -193,6 +206,7 @@ class Particles:
         out : None
             Returns `None` and updates `self.pos`, `self.vel`
             and `self.force` (if given).
+
         """
         self.set_pos(phasepoint['pos'])
         self.set_vel(phasepoint['vel'])
@@ -224,6 +238,7 @@ class Particles:
         out : None
             This method does not return anything, but increments
             `self.npart` and updates `self.particles`.
+
         """
         if self.npart == 0:
             self.name = [name]
@@ -262,6 +277,7 @@ class Particles:
         -------
         A list with the properties in the order they were asked for
         in the properties argument.
+
         """
         # if selection is None:
         #    selection = range(self.npart)
@@ -287,9 +303,11 @@ class Particles:
         This function will yield the properties of the different
         particles.
 
-        Returns
-        -------
-        yields the information in `self.pos`, `self.vel`, ... etc.
+        Yields
+        ------
+        out : dict
+            The information in `self.pos`, `self.vel`, ... etc.
+
         """
         for i, pos in enumerate(self.pos):
             part = {'pos': pos, 'vel': self.vel[i], 'force': self.force[i],
@@ -303,9 +321,17 @@ class Particles:
         For more sophisticated particle lists this can/should be an
         implementation of a 'smart' neighbour list.
 
-        Returns
-        -------
-        yields the positions and types of the difference pairs.
+        Yields
+        ------
+        out[0] : integer
+            The index for the first particle in the pair.
+        out[1] : integer
+            The index for the second particle in the pair.
+        out[2] : integer
+            The particle type of the first particle.
+        out[3] : integer
+            The particle type of the second particle.
+
         """
         for i, itype in enumerate(self.ptype[:-1]):
             for j, jtype in enumerate(self.ptype[i+1:]):
@@ -356,6 +382,7 @@ class ParticlesExt(Particles):
     vel_rev : boolean
         True if velocities should be reversed before using
         the phase point.
+
     """
 
     def __init__(self, dim=1):
@@ -376,6 +403,7 @@ class ParticlesExt(Particles):
         ----------
         pos : tuple of (string, int)
             The positions to set.
+
         """
         self.config = (pos[0], pos[1])
 
@@ -393,6 +421,7 @@ class ParticlesExt(Particles):
         ----------
         vel : boolean
             The velocities to set.
+
         """
         self.vel_rev = vel
 
@@ -406,6 +435,7 @@ class ParticlesExt(Particles):
         -------
         out : dict
             Dictionary with the positions, velocity and forces.
+
         """
         return {'pos': self.config, 'vel': self.vel_rev, 'vpot': self.vpot,
                 'ekin': self.ekin}
@@ -428,6 +458,7 @@ class ParticlesExt(Particles):
         -------
         out : None
             Returns `None` and updates `self.pos`, `self.vel`
+
         """
         self.set_pos(phasepoint['pos'])
         self.set_vel(phasepoint['vel'])
@@ -455,12 +486,13 @@ class ParticlesExt(Particles):
 
 
 def get_particle_type(engine_type):
-    """Method to return the path ensemble class to work with an engine.
+    """Return the path ensemble class consistent with a given engine.
 
     Parameters
     ----------
     engine_type : string
         The type of particles we are requesting.
+
     """
     particle_map = {'internal': Particles,
                     'external': ParticlesExt}

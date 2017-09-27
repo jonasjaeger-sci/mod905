@@ -46,6 +46,7 @@ class ReservoirPath(Path):
             trajectory.
         res_length : int, optional
             This is the number of shooting-point candidates to store.
+
         """
         super().__init__(rgen, maxlen=maxlen, time_origin=time_origin)
         self.res_length = res_length
@@ -66,6 +67,7 @@ class ReservoirPath(Path):
         -------
         out : tuple
             A phase-space point in the path.
+
         """
         phasepoint = {'order': self.order[idx], 'pos': None, 'vel': None,
                       'vpot': self.vpot[idx], 'ekin': self.ekin[idx]}
@@ -83,9 +85,6 @@ class ReservoirPath(Path):
         random. All points can be selected with equal probability with
         the exception of the end points which are not considered.
 
-        Parameters
-        ----------
-
         Returns
         -------
         out[0] : tuple
@@ -94,6 +93,7 @@ class ReservoirPath(Path):
             The phase point.
         out[2] : int
             The shooting point index.
+
         """
         if len(self.reservoir) < 1:
             logger.critical('Reservoir empty, need to regenerate path!')
@@ -118,6 +118,7 @@ class ReservoirPath(Path):
             The positions to store.
         vel : numpy.array
             The velocities to store.
+
         """
         if items == 1:
             for i in range(self.res_length):
@@ -137,6 +138,7 @@ class ReservoirPath(Path):
         -------
         out : object like :py:class:`.PathBase`
             A new empty path.
+
         """
         maxlen = kwargs.get('maxlen', None)
         time_origin = kwargs.get('time_origin', 0)
@@ -156,6 +158,7 @@ class ReservoirPath(Path):
         -------
         path : object like :py:class:`.PathBase`
             This is basically a copy of `self`, just reversed.
+
         """
         path = self.reverse_trajectory()
         path.reservoir = []

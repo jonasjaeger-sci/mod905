@@ -95,6 +95,7 @@ def _get_vel_mass(particles, selection=None):
         The velocities corresponding to the selection.
     out[1] : numpy.array
         The masses corresponding to the selection.
+
     """
     if selection is None:
         vel = particles.vel
@@ -124,6 +125,7 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
         energy tensor formed by the outer product of `mol[selection][i]`
         and `vel[selection][i]`. The sum of the tensor should equal the
         output from `calculate_kinetic_energy_tensor`.
+
     """
     vel, mass = _get_vel_mass(particles, selection=selection)
     mom = vel * mass
@@ -153,6 +155,7 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
         The scalar kinetic energy.
     out[1] : numpy.array
         The kinetic energy tensor.
+
     """
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(particles,
@@ -178,6 +181,7 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
         The kinetic energy tensor. Dimensionality equal to (dim, dim)
         where dim is the number of dimensions used in the velocities.
         The trace gives the kinetic energy.
+
     """
     vel, mass = _get_vel_mass(particles, selection=selection)
     _, kin = kinetic_energy(vel, mass)
@@ -200,6 +204,7 @@ def kinetic_energy(vel, mass):
         The kinetic energy
     out[1] : numpy.array
         The kinetic energy tensor.
+
     """
     mom = vel * mass
     if len(mass) == 1:
@@ -238,6 +243,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
         The temperature averaged over all dimensions.
     out[2] : numpy.array
         The kinetic energy tensor.
+
     """
     vel, mass = _get_vel_mass(particles, selection=selection)
     npart = len(mass)  # using mass, since selection may be != particles.npart
@@ -283,6 +289,7 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None, kin_tensor=None):
         The temperature averaged over all dimensions.
     out[2] : numpy.array
         The kinetic energy tensor.
+
     """
     npart = len(mass)  # using mass, since selection may be != particles.npart
     ndof = npart * np.ones(vel[0].shape)
@@ -310,6 +317,7 @@ def calculate_linear_momentum(particles, selection=None):
     -------
     out : numpy.array
         The array contains the linear momentum for each dimension.
+
     """
     vel, mass = _get_vel_mass(particles, selection=selection)
     return np.sum(vel * mass, axis=0)
@@ -350,6 +358,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
     ----
     This function may possibly be removed - it does not appear to be
     very useful right now.
+
     """
     if dof is None:
         ndof = particles.npart
@@ -385,6 +394,7 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
     out : numpy.array
         The symmetric pressure tensor, dimensions (`dim`, `dim`), where
         `dim` = the number of dimensions considered in the simulation.
+
     """
     if kin_tensor is None:
         kin_tensor = calculate_kinetic_energy_tensor(particles, selection=None)
@@ -418,6 +428,7 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
     out : float
         The scalar pressure, averaged over the diagonal components of
         the pressure tensor.
+
     """
     if press_tensor is None:
         press_tensor = calculate_pressure_tensor(particles, volume,
@@ -452,6 +463,7 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     -------
     out : dict
         This dict contains the float that is calculated in this routine.
+
     """
     if volume is None:
         volume = system.box.calculate_volume()
@@ -495,6 +507,7 @@ def calculate_thermo_path(system):
     -------
     out : dict
         This dict contains the float that is calculated in this routine.
+
     """
     particles = system.particles
     kin_tens = calculate_kinetic_energy_tensor(particles)
