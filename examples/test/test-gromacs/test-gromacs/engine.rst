@@ -7,8 +7,8 @@ steps = 100
 
 Engine settings
 ---------------
-gmx = gmx_5.1.4_d
-mdrun = gmx_5.1.4_d mdrun
+gmx = GMXCOMMAND
+mdrun = GMXCOMMAND mdrun
 input_path = gromacs_input
 timestep = 0.002
 subcycles = 5

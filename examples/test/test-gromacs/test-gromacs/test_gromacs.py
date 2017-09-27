@@ -139,9 +139,9 @@ def run_plain_gromacs(engine, system, order_parameter, input_conf,
     return energym, order, trr_file, os.path.join(folder, conf_out)
 
 
-def main(select=1):
+def main(select=1, plot=False):
     """Perform the test."""
-    settings = parse_settings_file('engine.rst')
+    settings = parse_settings_file('engine-run.rst')
     steps = settings['simulation']['steps']
     engine = settings['engine']
     if select == 2:
@@ -214,20 +214,38 @@ def main(select=1):
     end = time.perf_counter()
     print_to_screen('Time spent: {}'.format(end - start), level='info')
 
-    print_to_screen('\nPlotting for comparison', level='message')
-    obtain_mses(pathf, pathb, plainf, plainb)
-    plot_path_comparison(pathf, pathb, plainf, plainb)
+    mse_ok = obtain_mses(pathf, pathb, plainf, plainb)
+
+    if plot:
+        print_to_screen('\nPlotting for comparison', level='message')
+        plot_path_comparison(pathf, pathb, plainf, plainb)
+
+    if not mse_ok:
+        print_to_screen('\nComparison failed!', level='error')
+        sys.exit(1)
 
 
-def mse_combinations(text, var):
+def mse_combinations(text, var, tol=None):
     """Calculate mse for several combinations."""
     for comb in itertools.combinations(var, 2):
         mse = ((comb[0][0] - comb[1][0])**2).mean(axis=0)
+        level = 'info'
+        tol_ok = True
+        if tol:
+            try:
+                tol_ok = all([abs(i) < tol for i in mse])
+            except TypeError:
+                tol_ok = abs(mse) < tol
+            if not tol_ok:
+                level = 'error'
         print_to_screen(
-            'MSE {}: {:<14s} {:<14s} = {}'.format(text, comb[0][1],
-                                                  comb[1][1], mse),
-            level='warning'
+            'MSE {}: {} vs {} = {}'.format(text, comb[0][1],
+                                           comb[1][1], mse),
+            level=level
         )
+        if not tol_ok:
+            return False
+    return True
 
 
 def obtain_mses(pathf, pathb, plainf, plainb):
@@ -236,19 +254,24 @@ def obtain_mses(pathf, pathb, plainf, plainb):
             (np.array([i for i in pathb.order[::-1]]), 'step-back'),
             (plainf[1], 'plain-forward'),
             (plainb[1][::-1, :], 'plain-back')]
-    mse_combinations('order parameters', mses)
+    mse_ok = mse_combinations('order parameters', mses, tol=1.0e-9)
+    if not mse_ok:
+        return mse_ok
 
     mses = [(np.array(pathf.ekin), 'step-forward'),
             (np.array(pathb.ekin[::-1]), 'step-back'),
             (plainf[0][:, 0], 'plain-forward'),
             (plainb[0][:, 0][::-1], 'plain-back')]
-    mse_combinations('kinetic energy', mses)
+    mse_ok = mse_combinations('kinetic energy', mses, tol=1.0e-4)
+    if not mse_ok:
+        return mse_ok
 
     mses = [(np.array(pathf.vpot), 'step-forward'),
             (np.array(pathb.vpot[::-1]), 'step-back'),
             (plainf[0][:, 1], 'plain-forward'),
             (plainb[0][:, 1][::-1], 'plain-back')]
-    mse_combinations('potential energy', mses)
+    mse_ok = mse_combinations('potential energy', mses, tol=1.0e-4)
+    return mse_ok
 
 
 def plot_path_comparison(pathf, pathb, plainf, plainb):
@@ -366,4 +389,5 @@ def plot_path_comparison(pathf, pathb, plainf, plainb):
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    main(select=int(sys.argv[1]))
+    PLOT = len(sys.argv) > 2
+    main(select=int(sys.argv[1]), plot=PLOT)
