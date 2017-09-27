@@ -31,6 +31,12 @@ pycodestyle:
   - pycodestyle --filename=*.py --count --statistics --exclude=./docs
   allow_failure: true
 
+pydocstyle:
+  script:
+  - pip install pydocstyle
+  - pydocstyle --count pyretis
+  allow_failure: true
+
 test_retis:
   script:
   - cd examples/test/test-internal/retis
@@ -47,3 +53,10 @@ test_gromacs:
   - cd examples/test/test-gromacs/test-gromacs
   - ./run-test1.sh gmx_d
   - ./run-test2.sh gmx_d
+
+build_docs:
+  script:
+  - pip install sphinx
+  - pip install sphinx_bootstrap_theme
+  - cd docs
+  - make html
