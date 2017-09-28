@@ -54,6 +54,14 @@ test_gromacs:
   - ./run-test1.sh gmx_d
   - ./run-test2.sh gmx_d
 
+test_cp2k:
+  script:
+  - apt-cache policy cp2k
+  - apt-get install -y cp2k
+  - cp2k -v
+  - cd examples/test/test-cp2k/test-cp2k/
+  - python test_cp2k.py
+
 build_docs:
   script:
   - pip install sphinx
