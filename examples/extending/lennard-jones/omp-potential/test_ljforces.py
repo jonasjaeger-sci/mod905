@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Test the Fortran implementation of the Lennard Jones potential.
+"""Test the FORTRAN implementation of the Lennard Jones potential.
 
 This test is comparing the three versions of the Lennard Jones
 potential:
 
-1) The pure python implementation
+1) The pure Python implementation
 
-2) The numpy python implementation
+2) The numpy Python implementation
 
-3) The Fortran implementation.
+3) The FORTRAN implementation.
 """
 # pylint: disable=C0103
 import unittest
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import PairLennardJonesCut
@@ -27,8 +27,10 @@ def set_up_initial_state():
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [5, 5, 5], density=0.9)
     npart = len(lattice)
+    size = np.array(size)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = Box(size, periodic=[True, True, True])
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     system = System(temperature=1.0, units='lj', box=box)
     system.particles = Particles(dim=3)
     for pos in lattice:
@@ -110,8 +112,8 @@ class LennardJonesTest(unittest.TestCase):
             system.particles.ptype[i] = 1
         result = run_calculations(system, param)
         keys = ['python', 'python-numpy', 'fortran']
-        for i, keyi in enumerate(keys[:-1]):
-            for j, key2 in enumerate(keys[i+1:]):
+        for i, _ in enumerate(keys[:-1]):
+            for j, _ in enumerate(keys[i+1:]):
                 self.assertAlmostEqual(result[i], result[i+j+1], 7)
                 vdiff = np.abs(result[i] - result[i+j+1])
                 print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))
@@ -140,12 +142,12 @@ class LennardJonesTest(unittest.TestCase):
             if ptype not in natoms:
                 natoms[ptype] = 0
             natoms[ptype] += 1
-        for atom in natoms:
-            print('{} atoms of type {}'.format(natoms[atom], atom))
+        for i in natoms:
+            print('{} atoms of type {}'.format(natoms[i], i))
         result = run_calculations(system, param)
         keys = ['python', 'python-numpy', 'fortran']
-        for i, keyi in enumerate(keys[:-1]):
-            for j, key2 in enumerate(keys[i+1:]):
+        for i, _ in enumerate(keys[:-1]):
+            for j, _ in enumerate(keys[i+1:]):
                 self.assertAlmostEqual(result[i], result[i+j+1], 7)
                 vdiff = np.abs(result[i] - result[i+j+1])
                 print(' -> Difference in pot. energy: {:.15e}'.format(vdiff))

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Time the Fortran implementation of the Lennard-Jones potential.
+"""Time the FORTRAN implementation of the Lennard-Jones potential.
 
 This timing is simply done by evaluating the Leannrd-Jones forces
 (and potential) for different system sizes.
 """
 # pylint: disable=C0103
+import timeit
 import numpy as np
-from pyretis.core import System, Box, Particles
+from pyretis.core import System, create_box, Particles
 from pyretis.core.units import create_conversion_factors
 from pyretis.tools import generate_lattice
 from ljpotentialfp import PairLennardJonesCutFp
-import timeit
 
 
 def set_up_initial_state(nlattice=5):
@@ -21,8 +21,10 @@ def set_up_initial_state(nlattice=5):
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [nlattice] * 3, density=0.9)
     npart = len(lattice)
+    size = np.array(size)
     lattice += np.random.randn(npart, 3) * 0.05
-    box = Box(size, periodic=[True, True, True])
+    box = create_box(low=size[:, 0], high=size[:, 1],
+                     periodic=[True, True, True])
     sys = System(temperature=1.0, units='lj', box=box)
     sys.particles = Particles(dim=3)
     for pos in lattice:
@@ -52,7 +54,8 @@ def test_function(function, system, repeat=3, number=5):
     return best, avg, std
 
 
-if __name__ == '__main__':
+def main():
+    """Run the timings."""
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
     # set up potentials:
     potential = PairLennardJonesCutFp(dim=3, shift=True, mixing='geometric')
@@ -62,7 +65,7 @@ if __name__ == '__main__':
 
     for i in range(3, 16):
         system = set_up_initial_state(nlattice=i)
-        print('Testing fortran implementation')
+        print('Testing FORTRAN implementation')
         time1 = test_function(potential.potential,
                               system,
                               number=10, repeat=3)
@@ -70,3 +73,7 @@ if __name__ == '__main__':
     results = np.array(results)
     np.savetxt('timings.txt', results, fmt='%i %.9e %.9e %.9e',
                header='N best avg std')
+
+
+if __name__ == '__main__':
+    main()
