@@ -4,7 +4,7 @@
 """Example of performing particle swarm optimization."""
 # pylint: disable=C0103
 import numpy as np
-from pyretis.core import Box, Particles, System
+from pyretis.core import create_box, Particles, System
 from pyretis.simulation import Simulation
 from pyretis.forcefield import ForceField
 from psoengine import PSOEngine
@@ -21,8 +21,8 @@ TXT = 'Step: {:5d}: Best: (x, y) = ({:10.3e}, {:10.3e}), pot = {:10.3e}'
 
 def set_up():
     """Just create system and simulation."""
-    box = Box(size=[[MINX, MAXX], [MINX, MAXX]],
-              periodic=[True, True])
+    box = create_box(low=[MINX, MINX], high=[MAXX, MAXX],
+                     periodic=[True, True])
     print('Created a box:')
     print(box)
 
@@ -104,6 +104,7 @@ def main_animation():
                                    repeat=False, interval=30, blit=True,
                                    init_func=init)
     plt.show()
+    return anim
 
 
 if __name__ == '__main__':
