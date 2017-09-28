@@ -1,0 +1,17 @@
+Forcefield settings
+-------------------
+description = 2D hysteresis
+
+Potential
+---------
+class = Hyst2D
+module = potential.py
+parameter gamma1 = 1
+parameter gamma2 = -10
+parameter gamma3 = -10
+parameter alpha1 = -30
+parameter alpha2 = -3
+parameter beta1 = -30
+parameter beta2 = -3
+parameter x0 = 0.2
+parameter y0 = 0.4

@@ -9,21 +9,12 @@ pyretis.core
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-    :maxdepth: 2
-
-    pyretis.core.simulation
-
 List of submodules
 ------------------
 
 * :ref:`pyretis.core.box <api-core-box>`
-* :ref:`pyretis.core.integrators <api-core-integrators>`
+* :ref:`pyretis.core.common <api-core-common>`
 * :ref:`pyretis.core.montecarlo <api-core-montecarlo>`
-* :ref:`pyretis.core.orderparameter <api-core-orderparameter>`
 * :ref:`pyretis.core.particlefunctions <api-core-particlefunctions>`
 * :ref:`pyretis.core.particles <api-core-particles>`
 * :ref:`pyretis.core.path <api-core-path>`
@@ -46,13 +37,12 @@ pyretis.core.box module
     :undoc-members:
     :show-inheritance:
 
+.. _api-core-common:
 
-.. _api-core-integrators:
+pyretis.core.common module
+--------------------------
 
-pyretis.core.integrators module
--------------------------------
-
-.. automodule:: pyretis.core.integrators
+.. automodule:: pyretis.core.common
     :members:
     :undoc-members:
     :show-inheritance:
@@ -67,16 +57,6 @@ pyretis.core.montecarlo module
     :undoc-members:
     :show-inheritance:
 
-.. _api-core-orderparameter:
-
-pyretis.core.orderparameter module
-----------------------------------
-
-.. automodule:: pyretis.core.orderparameter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. _api-core-particlefunctions:
 
 pyretis.core.particlefunctions module
@@ -86,7 +66,6 @@ pyretis.core.particlefunctions module
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 .. _api-core-particles:
 

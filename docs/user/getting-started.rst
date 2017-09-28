@@ -4,134 +4,169 @@
    :class: h4
 
 
-Getting started with pyretis
-============================
+Getting started with |pyretis|
+==============================
 
-After :ref:`installing pyretis <user-guide-install>`, you
-can run simulations by:
+After :ref:`installing PyRETIS <user-guide-install>`, you
+can run simulations by using a **text based input file**
+or by using **the PyRETIS library explicitly**.
 
-1. Using a **text based input file**.
-   This is the simplest approach. You will first have
-   to learn how to create this file and this is explained in detail
-   the :ref:`input description <user-guide-input>`.
+The former approach is perhaps the simplest, but you will
+first have to learn how to create input files and this is
+explained in the :ref:`input description <user-guide-input>`.
 
-2. Using **the pyretis library explicitly**. This is a more
-   involved approach, but it offers more freedom in defining, running
-   and interacting with the simulation. In order to make use of the
-   library, you will have to read about the structure of the
-   pyretis library in the 
-   :ref:`introduction to the library <user-guide-intro-api>`
-   and in the
-   :ref:`detailed reference section <api-doc>`.
+The latter option is more involved, but you are then
+given more freedom in defining, running and interacting with
+a simulation. In order to make use of the
+library, you will have to read about the structure of the
+|pyretis| library in the
+:ref:`introduction to the library <user-guide-intro-api>`
+and in the :ref:`detailed reference section <api-doc>`.
 
 A more extensive overview can be found in
 the :ref:`full user guide <user-guide-index>`.
-Here, we will now rather jump into some examples showing the use of pyretis!
+Here, we will now rather jump into some examples
+showing the use of |pyretis|.
 
 
-pyretis examples
-----------------
+|pyretis| examples
+------------------
 
 In addition to reading the documentation we have prepared
-several examples to highlight the usage and capabilities of pyretis.
-The full list of examples can be found in 
+several examples to highlight the usage and capabilities of |pyretis|.
+The full list of examples can be found in
 the :ref:`example section <examples-index>`.
 
 .. container:: row
 
-    .. container:: col-sm-3
-     
-      .. container:: thumbnail
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-         .. image:: ../img/examples/thumbnails/md-nve.png
-            :width: 100%
-            :class: img-responsive
+      .. image:: /_static/img/examples/thumbnails/md-nve.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-md.html
 
-         .. container:: caption
-         
-            :header:`Molecular dynamics`
+      .. container:: caption
 
-            Simple molecular dynamics
+         :header:`Molecular dynamics`
 
-
-    .. container:: col-sm-3
-
-      .. container:: thumbnail
-
-         .. image:: ../img/examples/thumbnails/tis-1d-pot.png
-            :width: 100%
-            :class: img-responsive
-
-         .. container:: caption
-           
-            :header:`TIS`
-
-            This example is showing how to run a Transition Interface Sampling
-            simulation.
+         In this example, we simply run a MD
+         simulation. This is just intended as an
+         example of how one can make use of |pyretis|
+         as a library.
 
 
-    .. container:: col-sm-3
-     
-      .. container:: thumbnail
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-         .. image:: ../img/examples/thumbnails/placeholder.png
-            :width: 100%
-            :class: img-responsive
+      .. image:: /_static/img/examples/thumbnails/tis-1d-pot.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-tis-1d.html
 
-         .. container:: caption
-         
-            :header:`RETIS`
+      .. container:: caption
 
-            This example is using Replica Exchange Transition Interface Sampling
-            for calculating the rate of a simple reaction.
+         :header:`TIS`
 
-   
-.. container:: row
-
-    .. container:: col-sm-3
-
-      .. container:: thumbnail
-
-         .. image:: ../img/examples/thumbnails/placeholder.png
-            :width: 100%
-            :class: img-responsive
-
-         .. container:: caption
-
-            :header:`Custom order`
-
-            This example demonstrates how custom order parameters
-            can be added to pyretis.
+         This example show how we can run a Transition Interface
+         Sampling calculation and obtain a crossing probability.
+         Here, we consider a 1D potential in which a single particle
+         is moving.
 
 
-    .. container:: col-sm-3
-     
-      .. container:: thumbnail
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
 
-         .. image:: ../img/examples/thumbnails/pyretisrev.png
-            :width: 100%
-            :class: img-responsive
+      .. image:: /_static/img/examples/thumbnails/retis-1d-pot.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-retis-1d.html
 
-         .. container:: caption
-          
-            :header:`pyretis + C`
+      .. container:: caption
 
-            Molecular dynamics powered by Fortran or C.
+         :header:`RETIS`
 
- 
-    .. container:: col-sm-3
-     
-      .. container:: thumbnail
-
-         .. image:: ../img/examples/thumbnails/placeholder.png
-            :width: 100%
-            :class: img-responsive
-
-         .. container:: caption
-          
-            :header:`pyretis & CP2K`
-
-            RETIS simulations using CP2K.
+         This example show how we can run a Replica Exchange
+         Transition Interface Sampling calculation and obtain
+         a crossing probability and a rate constant.
+         Here, we consider a 1D potential in which a single particle
+         is moving.
 
 
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/2dpot.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-2d-hysteresis.html
+
+      .. container:: caption
+
+         :header:`RETIS 2D`
+
+         In this example we perform a simulation of a 2D potential
+         which is constructed such that the selection of the order
+         parameter is not so obvious.
+
+
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/pyretisrev.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-md-fb.html
+
+      .. container:: caption
+
+         :header:`Extending with C/FORTRAN`
+
+         This example show how we can use FORTRAN or C to speed
+         up |pyretis| calculations.
+
+
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/retis-2d-wca.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-retis-wca.html
+
+      .. container:: caption
+
+         :header:`RETIS 2D WCA`
+
+         Here we calculate the rate for the breaking of a bond between
+         two particles in a fluid. We consider two cases:
+         a low barrier and a high barrier case and we implement the force
+         field in C.
+
+
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/hydrogen.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-cp2k-hydrogen.html
+
+      .. container:: caption
+
+         :header:`Using CP2K`
+
+         This example demonstrates how we can make use of CP2K for
+         running the dynamics for |pyretis|. Here, we are just studying
+         a toy example - breakage of the bond in hydrogen.
+
+
+   .. container:: col-lg-3 col-md-3 col-sm-3 col-xs-6 thumbnail thumbnail2
+
+      .. image:: /_static/img/examples/thumbnails/hydrate.png
+         :width: 100%
+         :class: img-responsive
+         :target: ../examples/examples-gromacs-hydrate.html
+
+      .. container:: caption
+
+         :header:`Using GROMACS`
+
+         This example demonstrates how we can make use of GROMACS for
+         running the dynamics for |pyretis|. In this particular example
+         we study the diffusion of methane in a sI hydrate structure.
 

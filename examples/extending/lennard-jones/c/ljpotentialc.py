@@ -6,10 +6,12 @@ import logging
 import numpy as np
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import (
-    generate_pair_interactions
+    generate_pair_interactions,
 )
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+
 try:
     import ljc
 except ImportError:
@@ -67,11 +69,12 @@ class PairLennardJonesCutC(PairLennardJonesCut):
     _rcut2 : numpy.array
         Squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
+
     """
 
     def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential (C)'):
-        """Initiate the Lennard-Jones potential.
+        """Initialise the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -81,6 +84,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
             Determines if the potential should be shifted or not.
         mixing : string
             Determines how we should mix potential parameters.
+
         """
         super().__init__(dim=dim, desc=desc, mixing=mixing)
         self.ntype = 0
@@ -94,7 +98,8 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         Parameters
         ----------
         parameters : dict
-            The input base parameters
+            The input base parameters.
+
         """
         self.params = {}
         pair_param = generate_pair_interactions(parameters, self.mixing)
@@ -136,15 +141,23 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         -------
         v_pot : float
             The potential energy.
+
         """
         particles = system.particles
         box = system.box
-        v_pot = ljc.potential(particles.pos,
-                              box.length, box.ilength,
-                              self._lj3, self._lj4, self._offset,
-                              self._rcut2, particles.ptype,
-                              particles.npart,
-                              box.dim, self.ntype)
+        v_pot = ljc.potential(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj3,
+            self._lj4,
+            self._offset,
+            self._rcut2,
+            particles.ptype,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return v_pot
 
     def force(self, system):
@@ -164,18 +177,26 @@ class PairLennardJonesCutC(PairLennardJonesCut):
             The forces on the particles.
         virial : numpy.array
             The virial obtained from the forces.
+
         """
         particles = system.particles
         box = system.box
         forces = np.zeros((particles.npart, box.dim))
         virial = np.zeros((box.dim, box.dim))
-        ljc.force(particles.pos,
-                  box.length, box.ilength,
-                  self._lj1, self._lj2, self._rcut2,
-                  particles.ptype,
-                  forces, virial,
-                  particles.npart,
-                  box.dim, self.ntype)
+        ljc.force(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj1,
+            self._lj2,
+            self._rcut2,
+            particles.ptype,
+            forces,
+            virial,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return forces, virial
 
     def potential_and_force(self, system):
@@ -206,24 +227,27 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
+
         """
         particles = system.particles
         box = system.box
         forces = np.zeros((particles.npart, box.dim))
         virial = np.zeros((box.dim, box.dim))
-        vpot = ljc.force_and_pot(particles.pos,
-                                 box.length,
-                                 box.ilength,
-                                 self._lj1,
-                                 self._lj2,
-                                 self._lj3,
-                                 self._lj4,
-                                 self._offset,
-                                 self._rcut2,
-                                 particles.ptype,
-                                 forces,
-                                 virial,
-                                 particles.npart,
-                                 box.dim,
-                                 self.ntype)
+        vpot = ljc.force_and_pot(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj1,
+            self._lj2,
+            self._lj3,
+            self._lj4,
+            self._offset,
+            self._rcut2,
+            particles.ptype,
+            forces,
+            virial,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return vpot, forces, virial
