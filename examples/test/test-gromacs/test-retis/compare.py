@@ -16,8 +16,11 @@ from pyretis.core.pathensemble import PATH_DIR_FMT
 
 RESULTS = 'results'
 RESULTS_TGZ = {
-    '2016': 'results-2016.tgz',
-    '5': 'results-5.x.x.tgz',
+    '2016.4': 'results-2016.4.tgz',
+    '2016.3': 'results-2016.3.tgz',
+    '2016.2': 'results-2016.2.tgz',
+    '2016.1': 'results-2016.1.tgz',
+    '5.1.4': 'results-5.1.4.tgz',
 }
 
 
@@ -53,8 +56,7 @@ def compare_files(settings, root, results_tgz):
     """Compare ouput files."""
     inter = settings['simulation']['interfaces']
     for i in range(len(inter)):
-        for files in ('pathensemble.txt', 'energy.txt',
-                      'order.txt', 'traj.txt'):
+        for files in ('pathensemble.txt', 'order.txt', 'traj.txt'):
             result = compare_file_contents(root, i, files, results_tgz)
             if not result:
                 print_to_screen('\t-> *Files differ!*', level='error')
@@ -100,7 +102,7 @@ def main(args):
         gmx_version = '5.1.4'
     print_to_screen('GROMACS version family: {}'.format(gmx_version),
                     level='info')
-    correct = RESULTS_TGZ[gmx_version.split('.')[0]]
+    correct = RESULTS_TGZ[gmx_version]
     print_to_screen('Using results from: {}'.format(correct), level='info')
 
     for dirname in ('gromacs1', 'gromacs2'):
