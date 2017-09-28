@@ -1,6 +1,6 @@
 #!/bin/bash
 make clean
-gmx=${1:-gmx_5.1.4_d}
+gmx=${1:-gmx_d}
 echo Using gmx=$gmx
 replace='s/GMXCOMMAND/'$gmx'/g'
 

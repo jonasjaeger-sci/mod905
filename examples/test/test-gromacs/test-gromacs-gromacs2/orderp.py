@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This file defines the order parameter used for the WCA example.
-"""
+"""This file defines the order parameter used for the GROMACS example."""
 import logging
 import numpy as np
+from numpy import average, rint, dot, sqrt
 from pyretis.orderparameter import OrderParameter
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
@@ -76,16 +76,10 @@ class RingDiffusion(OrderParameter):
         """
         pos = system.particles.pos
         resl = 1.0e3
-        cm1 = np.average(np.rint(pos[self.idx1] * resl) / resl, axis=0)
-        cm2 = np.average(np.rint(pos[self.idx2] * resl) / resl, axis=0)
+        cm1 = average(rint(pos[self.idx1] * resl) / resl, axis=0)
+        cm2 = average(rint(pos[self.idx2] * resl) / resl, axis=0)
         cmvec = cm2 - cm1
-        molvec = np.rint(pos[self.idxd] * resl) / resl
+        molvec = rint(pos[self.idxd] * resl) / resl
         molvec -= cm1
-        orderp = -np.dot(cmvec, molvec) / np.sqrt(np.dot(cmvec, cmvec))
-        return [orderp]
-
-
-if __name__ == '__main__':
-    testo = RingDiffusion()
-    print('Idx1', testo.idx1)
-    print('Idx2', testo.idx2)
+        orderp = dot(cmvec, molvec) / sqrt(dot(cmvec, cmvec))
+        return [-1.0 * orderp]
