@@ -1,144 +1,154 @@
 .. _user-guide-intro-api:
 
-Introduction to the pyretis library
-===================================
+Introduction to the |pyretis| library
+=====================================
 
-In this introduction to the pyretis library
-(which we sometimes will refer to as the *API* --
-application programming interface),
-the main classes and functions from the pyretis library
-will be discussed. A complete
-description to the library is not given here, but can be
-found in the :ref:`pyretis API documentation <api-doc>`.
+In this introduction to the |pyretis| library
+the main classes and functions
+from the |pyretis| library
+will be discussed.
+For the full description, we refer to the :ref:`API documentation <api-doc>`.
 
-The pyretis library contains methods and classes that handle
+The |pyretis| library contains methods and classes that handle
 the different aspects of a simulation. These are grouped
-into sub-modules:
+into sub-packages and the different
+sub-packages and the classes and methods defined within them will interact.
+As an example, assume that we are performing a RETIS simulation.
+In terms of objects from the |pyretis| library,
+this simulation can be described as follows:
 
-* :py:mod:`pyretis.core` for setting up and running
-  simulations
+1. We first define the :py:class:`.System` we are studying. This contains
+   information about the :py:class:`.Particles`, :py:class:`.Box` and
+   the :py:class:`.ForceField`.
+2. Next, an :py:class:`.OrderParameter` is defined
+   and the order parameter it is representing can be calculated using a
+   :py:class:`.System` object as the argument.
+3. The RETIS simulation is handled by the :py:class:`.SimulationRETIS` class
+   which will use a specific :py:class:`.EngineBase` like object in order to
+   generate several :py:class:`.Path` objects for a collection of
+   :py:class:`.PathEnsemble` objects.
+   This generation is done by a set of methods defined in the
+   modules :py:mod:`pyretis.core.tis` and :py:mod:`pyretis.core.retis`.
+4. An analysis is carried out by making use of methods from the
+   :py:mod:`analysis <pyretis.analysis>` sub-package.
 
-* :py:mod:`pyretis.forcefield` for defining
-  force fields to use in simulations
-
-* :py:mod:`pyretis.analysis` for analysing the
-  output from simulations
-
-* :py:mod:`pyretis.inout` for handling the input
-  and output to pyretis
-
-* :py:mod:`pyretis.tools` for performing some simple
-  tasks useful for setting up simulations.
-
-
-In the following sections, we will discuss these modules.
-Since the :py:mod:`pyretis.core` and :py:mod:`pyretis.forcefield` modules
-naturally interact, they are described together.
-
+.. contents:: Table of Contents
+   :local:
 
 .. _user-guide-intro-api-core:
 
-The core and force field libraries
-----------------------------------
+The core and forcefield sub-packages
+------------------------------------
 
-The two main pyretis classes we will discuss here are the
+The :py:mod:`pyretis.core` library defines the core method and
+classes and here we will introduce the
 
-* `System` which defines the system  we are investigating. It will
-  typically contain particles, a simulation box and a
-  force field. The base class for the `System` is defined in
-  :py:mod:`pyretis.core.system`.
+* :py:class:`.System` class which defines the system we are investigating.
+  This class is actually composed of several other objects, which
+  we will also discuss here:
 
-* `Simulation` which defines a simulation we can run. A simulation
-  will typically act on a `System` and alter its state.
-  The base class for the `Simulation` is defined in
-  :py:mod:`pyretis.core.simulation.simulation`.
+  * :py:class:`.Particles`: A class which represents the particles.
 
-In addition, we will consider the classes for
-:ref:`boxes <user-guide-intro-api-box>`,
-:ref:`particles <user-guide-intro-api-particles>`,
-and
-:ref:`force fields <user-guide-intro-api-forcefield>`.
-An illustration of the relation between
-these base classes are given
-in :numref:`figure %s <figure-relation-base-objects>`.
+  * :py:class:`.Box`: A class which represents the simulation box.
+
+  * :py:class:`.ForceField`: A class representing the force field.
+    (Note: This is defined within :py:mod:`pyretis.forcefield`).
+
+* :py:class:`.Path` class which defines paths/trajectories.
+
+* :py:class:`.PathEnsemble` class which defines path ensembles.
+
+Below is an illustration on how some of these classes are interacting.
+The classes (shown as boxes in this figure) will be discusses
+more in the following.
 
 .. _figure-relation-base-objects:
 
-.. figure:: ../img/api-core-and-forcefield.png
-    :scale: 75 %
+.. figure:: /_static/img/api-core-and-forcefield.png
+    :width: 50%
     :alt: Illustration of core and force field classes
     :align: center
 
-    Illustration of the relations between base objects.
-    Examples of class methods are written in *italic* (arguments not shown).
-    The different classes may also contain
-    references to other classes (illustrated here by the smaller boxes
-    contained within the larger ones). Here, the system class contains
-    references to instances of the `Box`, `Particles` and `ForceField`
-    classes while the `Simulation` class contains a reference to an
-    instance of the `Integrator` class.
-    The typical interaction between the `Simulation` and the `System`
-    is also shown. One example of this is using the
-    `Integrator` in the `Simulation` in order to update the positions
-    and velocities of the `Particles` in the `System`.
-
-In the following we will show some simple examples on how these different
-classes can be used.
-We will not discuss the
-`Integrator` class shown
-in :numref:`figure %s <figure-relation-base-objects>` and we
-refer the interested user to the documentation
-for the :py:mod:`pyretis.core.integrators` module.
+    Illustration of the relations between classes from the
+    core and force field sub-packages. The classes as shown as green
+    boxes where the class names are shown with white text.
+    Examples of class methods are written as "method()" while
+    and class attributes are indicated as just *"attribute"*. Some
+    of the attributes are in fact references to other classes and these are
+    highlighted with grey boxes and the reference is shown by arrows.
+    As can be seen in this figure, the :py:class:`.System` is in practice
+    composed of several other classes.
 
 
-.. _user-guide-intro-api-box:
+.. _user-guide-intro-api-system:
 
-Box
-~~~
+The System class
+^^^^^^^^^^^^^^^^
 
-The ``Box`` class (:py:class:`pyretis.core.box.Box`)
-defines a simulation box. It is useful in
-simulations where we wish to have periodic boundaries. Typically,
-we do not interact much with the box beyond creating it.
-Boxes are created by passing a (optional) `size` which is a list
-of integers either of type `[[low, high], [low, high], [low, high]]`
-or type `[length, length, length]`. At the same time periodicity can
-be specified with the keyword `periodic` which is a list of booleans
-that determine if a dimension is periodic or not.  Default is periodic
-in all directions.
+The :py:class:`.System` class
+defines the system we are investigating. It will
+typically contain particles, a simulation box and a
+force field. For |pyretis|, this is a very convenient
+class since it exposes important parts we
+can interact with, in particular the particles.
 
-Some examples:
+Example of creation:
 
 .. code-block:: python
 
-    from pyretis.core import Box
-    box1 = Box()
-    print(box1)
-    size = [10, 10, 10]
-    box2 = Box(size)
-    print(box2)
-    size = [[-10, 10], [5, 10], 10]
-    box3 = Box(size, periodic=[True, True, False])
-    print(box3)
+    from pyretis.core import System
+    new_system = System(temperature=0.8, units='lj')
 
+This will create an empty system with a set temperature equal to ``0.8`` in
+``lj`` units (``lj`` refers to Lennard-Jones :ref:`units <user-guide-units>`.
+It is also possible
+to specify a box here in case that it needed:
+
+.. code-block:: python
+
+    new_system = System(temperature=0.8, units='lj', box=mybox)
+
+where ``mybox`` can be created as
+described :ref:`below <user-guide-intro-api-box>`.
+
+Particles can be added by first creating an object as
+described :ref:`below <user-guide-intro-api-particles>`. A short example:
+
+.. code-block:: python
+
+    from pyretis.core import System, Particles
+    new_system = System(temperature=0.8, units='lj')
+    new_system.particles = Particles()
+    new_system.add_particle([0.0, 0.0, 0.0], mass=1.0, name='Ar', ptype=0)
+
+Here, we are setting the :py:attr:`.System.particles` attribute and
+using the :py:meth:`.System.add_particle` to add a particle with a given
+position, mass, name and type.
 
 .. _user-guide-intro-api-particles:
 
-Particles
-~~~~~~~~~
+The Particles class
+^^^^^^^^^^^^^^^^^^^
 
-The ``Particles`` class (:py:class:`pyretis.core.particles.Particles`) 
+The :py:class:`.Particles` class
 represents a collection of particles and in many
-ways it can be viewed as a particle list. Again, this is a class we
-don't have to interact much with, typically we just have to populate the
-particle list with particles. Internally in pyretis, the particle
+ways it can be viewed as a particle list.
+Internally in |pyretis|, the particle
 list is one of the most important classes. The positions, velocities and
-forces are accessed through an instance of the ``Particles`` class using
-the class attributes ``pos``, ``vel`` and ``force``. One of the more useful
-methods of the ``Particles`` class for us now is the ``add_particle`` which
-we use add particles to the list.
-When we initiate an instance of ``Particles``, we define the dimensionality
-using the ``dim`` keyword parameter.
+forces are accessed through an instance of this class using
+the class attributes :py:attr:`.Particles.pos`, :py:attr:`.Particles.vel` and
+:py:attr:`.Particles.force`. Actually, there is an additional particle class
+within |pyretis| which is called :py:class:`.ParticlesExt`. This class is
+used when |pyretis| is using external engines. It is very similar to the
+:py:class:`.Particles` class but it has in addition a
+:py:attr:`.ParticlesExt.config` which can be used to reference files
+which holds the current configuration of the particles.
+
+Here are some examples of interacting with
+the :py:class:`.Particles` class,
+using :py:meth:`.Particles.add_particle` to add
+some particles. Actually, the system will make use of this
+method if you are calling :py:meth:`.System.add_particle`.
 
 .. code-block:: python
 
@@ -157,125 +167,192 @@ using the ``dim`` keyword parameter.
 
 Here, we can add names to particles using the keyword ``name`` and we
 can also specify a particle type using ``ptype``.
-The ``name`` can be used to identify ('tag')
-specific particles.
+The ``name`` can be used to identify/tag
+specific particles and is used for output purposes.
+Internally, the particle type is more important:
 The particle type can
 be used to specify parameters for pair interactions which is computed
 by the force field.
 
+When we initiate an instance of :py:class:`.Particles`, we define the dimensionality
+using the ``dim`` keyword parameter.
+
+.. _user-guide-intro-api-box:
+
+The Box class
+^^^^^^^^^^^^^
+
+The :py:class:`.Box` class
+defines a simulation box. It is useful in
+simulations where we wish to have periodic boundaries. Typically,
+we do not interact much with the box beyond creating it.
+Boxes are created by passing a (optional) ``length`` which is a list
+of integers either of type ``[lengthx, lengthy, lengthz]``.
+At the same time periodicity can
+be specified with the keyword ``periodic`` which is a list of boolean values
+that determine if a dimension is periodic or not.  The default is periodic
+in all directions.
+
+Some examples:
+
+.. literalinclude:: /_static/api/box_example_create.py
+   :language: python
+   :lines: 5-12
 
 .. _user-guide-intro-api-forcefield:
 
-ForceField
-~~~~~~~~~~
+The ForceField class
+^^^^^^^^^^^^^^^^^^^^
 
-The ``ForceField`` class (:py:class:`pyretis.forcefield.forcefield.ForceField`)
+The :py:class:`.ForceField` class
 is used to define force fields.
-A force field is just a list of functions (as possibly parameters)
+A force field is just a list of functions (and parameters)
 which can be used to obtain the force and potential energy.
 In general, the force field expect that its constituent potential functions
 actually supports calling **three** functions which means that the
 potential functions must be slightly more complex than just simple
-functions — they need to be classes. If we, for the sake of an example,
-let an instance of the ``ForceField`` class have a constituent potential
-function named ``func``, then the ``ForceField`` assumes that it can invoke:
+functions — they need to be classes which
+subclass the
+:py:class:`.PotentialFunction` class.
 
-1. ``func.potential()`` to obtain the potential energy.
+If we, for the sake of an example,
+let an instance of the :py:class:`.ForceField` class have a constituent potential
+function named ``func``, then |pyretis| will assume that it can call:
 
-2. ``func.force()`` to obtain the forces and the virial.
+1. ``func.potential(system)`` to obtain the potential energy.
 
-3. ``func.potential_and_force()`` to obtain the potential energy,
-   forces and the virial. Typically this can be done by just calling
-   ``func.potential()`` and ``func.force()``.
+2. ``func.force(system)`` to obtain the forces and the virial.
+
+3. ``func.potential_and_force(system)`` to obtain the potential energy,
+   forces and the virial. Typically, this can be done by just calling
+   ``func.potential(system)`` and ``func.force(system)``.
+
+Notice that all this functions should only take in a :py:class:`.System` as
+the only parameter.
 
 Let's see an example of how we can set-up a potential function (or class)
-and add it to a force field. To make things simple here, we just implement
-the functions in the potential class as static methods.
+and add it to a force field.
 
-.. code-block:: python
+First, define the potential function using:
 
-    from pyretis.forcefield import ForceField
+.. literalinclude:: /_static/examples/harmonic1d.py
+   :language: python
+   :lines: 5-38
 
-    eq_pos = 0.0
-    k_force = 1.0
-    class harmonic1D(object):
-        params = None
-        @staticmethod
-        def potential(pos):
-            return 0.5 * k_force * (pos - eq_pos)**2
-        @staticmethod
-        def force(pos):
-            return -k_force * (pos - eq_pos), None
-        @staticmethod
-        def potential_and_force(pos):
-            pot = 0.5 * k_force * (pos - eq_pos)**2
-            force = k_force * (pos - eq_pos)
-            return pot, force, None
+Using what we have already discussed above about the :ref:`System <user-guide-intro-api-system>`
+and :ref:`Particles <user-guide-intro-api-particles>`
+we can make a plot of the potential by adding:
 
-    forcefield = ForceField(desc='1D Harmonic potential',
-                            potential=[harmonic1D])
-    forcefield.evaluate_potential(pos=0)  # this should return 0.0
+.. literalinclude:: /_static/examples/harmonic1d.py
+   :language: python
+   :lines: 41-60
 
-In practice, it will be simpler to create the potential functions
-as new classes inheriting from the potential class which you can
-read about in the documentation of the
-:py:mod:`pyretis.forcefield.potential` module and
-some examples can be found in the
-:py:mod:`pyretis.forcefield.potentials` module where
-such derived classes are defined.
-The ``params = None`` is just needed since the ``ForceField`` class makes
-certain assumptions on what attributes the potential should have (it
-assumes that the potentials we wish to use behaves like an
-instance of the ``Potential`` class).
 
-Enough details, let us make a quick plot
-with `matplotlib <http://matplotlib.org/>`_ to see if things work as expected:
+.. _user-guide-intro-api-pathe:
 
-.. code-block:: python
+The Path and PathEnsemble classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    from matplotlib import pyplot as plt
-    import numpy as np
-    pos = np.linspace(-2, 2, 100)
-    pot = forcefield.evaluate_potential(pos=pos)
-    plt.plot(pos, pot, lw=2.5, color='0.2')
-    plt.show()
+These two classes are representation of paths and path ensembles.
+Path are essentially trajectories and path ensembles are collections of such
+paths. The :py:class:`.PathEnsemble` stores some information about
+all paths in the attribute :py:attr:`.PathEnsemble.paths`, but
+it will not store the full trajectory (positions, velocities, etc.).
+It will, however, keep a reference to the last accepted path in
+:py:attr:`.PathEnsemble.last_path`. This :py:class:`.Path` object can
+for instance be inspected by using the :py:meth:`.Path.trajectory`
+method.
 
-.. _user-guide-intro-api-system:
+.. _figure-relation-pathensemble:
 
-System
-~~~~~~
+.. figure:: /_static/img/api-parhensemble.png
+    :width: 35%
+    :alt: Illustration of the relation PathEnsemble->Path
+    :align: center
 
-A ``System`` class (:py:class:`pyretis.core.system.System`) 
-defines the system we are investigating. It will
-typically contain particles, a simulation box and a
-force field.
+    Illustration of the relation between the
+    :py:class:`.PathEnsemble` and the :py:class:`.Path`.
 
-Example of creation:
+We give here a short example on how you can interact with a path.
+A complicating factor here is that we need to create a random
+generator to use with the :py:class:`.Path`. This is done by using
+the :py:class:`.RandomGenerator` class and the reader is referred to
+the API documentation for information about this.
 
-.. code-block:: python
+.. literalinclude:: /_static/examples/pathintro.py
+   :language: python
+   :lines: 5-38
 
-    from pyretis.core import System
-    new_system = System(temperature=0.8, units='lj')
+.. _user-guide-intro-api-simeng:
 
-This will create an empty system with a set temperature equal to ``0.8`` in
-``lj`` units, where ``lj`` refers to Lennard-Jones units. It is also possible
-to specify a box here in case that it needed.
+The simulation and engines sub-packages
+---------------------------------------
+
+The :py:mod:`pyretis.simulation` sub-package
+defines classes which are used to set-up and define different types
+of simulations. Typically, such simulations will need to interact
+with and change the state of a given :py:class:`.System`. This
+interaction is carried out by a particular :py:class:`.EngineBase`
+from the :py:mod:`pyretis.engines` sub-package.
+The interaction between these classes are illustrated in the
+figure below:
+
+.. _figure-relation-simulation-objects:
+
+.. figure:: /_static/img/api-simulation.png
+    :width: 35%
+    :alt: Illustration the simulation class.
+    :align: center
+
+    Illustration of the relations between the :py:class:`.Simulation`,
+    :py:class:`.EngineBase` and :py:class:`.System`. A simulation object will
+    typically contain references to a system object and to an engine object. The
+    simulation can then use the engine in order to interact with the system. For
+    instance can the :py:meth:`.Simulation.step` methods use the
+    :py:meth:`.EngineBase.integration_step` in order to update positions, velocities
+    and forces in the system.
+
+In this section, we will not give a complete example on how to
+create new simulation class or a new engine class. We refer the
+reader to the examples, in particular:
+
+* The section of the user guide which describes
+  :ref:`how new external engines <user-guide-engine>` can be interfaced.
+* :ref:`The particle swarm optimization example <examples-pso>` in
+  which a custom potential and engine is created. Further, in this example
+  a customized simulation is set up by making use of :py:meth:`.Simulation.add_task`
+* The :ref:`example <examples-external-vvE>` showing how C for FORTRAN can be
+  used to create a custom Velocity Verlet engine.
 
 
 .. _user-guide-intro-api-simulation:
 
-Simulation
-~~~~~~~~~~
-A ``Simulation`` class defines a simulation we can run. A simulation
-will typically act on a ``System`` and alter its state.
-The base class for the ``Simulation`` is defined in
-:py:mod:`pyretis.core.simulation.simulation`.
+The Simulation class
+^^^^^^^^^^^^^^^^^^^^
+
+The :py:class:`.Simulation` class defines a simulation we can run.
+A simulation will typically act on a :py:class:`.System`
+and alter its state. We will here just describe the generic
+base class :py:class:`.Simulation` and we refer the reader to
+the extended :ref:`pyretis API documentation <api-doc>` for
+information about specific simulation classes, for instance
+the :py:class:`.SimulationRETIS` class. The most commonly
+used methods from the :py:class:`.Simulation` are:
+
+* :py:meth:`run() <.Simulation.run>` which will run a simulation and
+  for each step it will yield a dictionary with results.
+* :py:meth:`step() <.Simulation.step>` which will run a single step from
+  the simulation and return a dictionary with results.
+* :py:meth:`is_finished() <.Simulation.is_finished>` which will return ``True``
+  if the simulation has ended.
+* :py:meth:`add_task() <.Simulation.add_task>` which can be used to add simulation
+  tasks to a generic simulation.
 
 Example of creation:
 
 .. code-block:: python
 
-    from pyretis.core.simulation import Simulation
+    from pyretis.simulation import Simulation
     new_simulation = Simulation(startcycle=0, endcycle=100)
 
     for step in new_simulation.run():
@@ -283,31 +360,190 @@ Example of creation:
 
 
 The code block above will create a generic simulation object and run it.
-This simulation is not doing anything useful, it is only incrementing the
-current simulation step number from the given `startcycle` to the
-given `endcycle`. In order to something more productive, we can attach
-tasks to the simulation. To be concrete let us create a simulation where
-we perform some annealing to find the minimum of a simple function.
+This simulation is not doing anything useful, it will only increment the
+current simulation step number from the given ``startcycle`` to the
+given ``endcycle``. In order to something more productive, we can attach
+tasks to the simulation. This can be done as follows:
+
+.. literalinclude:: /_static/examples/simulationintro.py
+   :language: python
+   :lines: 5-27
+
+As you can see, a new task is added by defining it as a dictionary:
+
+.. literalinclude:: /_static/examples/simulationintro.py
+   :language: python
+   :lines: 17-20
+
+The following keywords are used:
+
+* ``func`` which is a reference to a function to use.
+* ``args`` which is a list of arguments that should be given
+  to the function.
+* ``first`` whether the task should be executed on
+  the first simulation step (i.e. step 0).
+* ``result`` a string which labels the result in the dictionary returned by the
+  methods :py:meth:`.Simulation.run()` or :py:meth:`.Simulation.step()`.
+
+Typically, when creating custom simulation, you will rewrite the
+methods :py:meth:`.Simulation.run` and :py:meth:`.Simulation.step` to
+fit the custom simulation you are going to perform, rather than adding
+tasks. However, for interactive work, short examples etc.,
+the :py:meth:`.Simulation.add_task` can be useful.
+
+.. _user-guide-intro-api-engine:
+
+The EngineBase class
+^^^^^^^^^^^^^^^^^^^^
+
+The :py:class:`.EngineBase` is a base class defining a generic
+engine. In |pyretis| engines are either internal or external. External
+engines, e.g. :py:class:`.ExternalMDEngine`,
+interfaces external programs while
+internal engines, e.g. :py:class:`.MDEngine` interact
+directly with a :py:class:`.System` object. Creating an external engine
+may be somewhat involved depending on the program you wish to interface.
+A description on how to create new external engines can be
+found in the :ref:`user guide <user-guide-engine>`.
+
+
+.. _user-guide-intro-api-orderparameter:
+
+The orderparameter sub-package
+------------------------------
+
+The :py:mod:`pyretis.orderparameter` package defines order parameters
+to use for path sampling simulation. In |pyretis|, such order parameters
+are assumed to be functions of a :py:class:`.System` only. Here,
+we give some examples of how a generic order parameter can be
+used. For information on how custom order parameters can be
+created, we refer to the detailed description in
+the :ref:`user guide <user-guide-custom-order>`.
+
+.. _user-guide-intro-api-orderparameterc:
+
+The OrderParameter class
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The most important piece of the :py:class:`.OrderParameter` class
+is the actual calculation of the order parameter. This should be
+defined in a method like :py:meth:`.OrderParameter.calculate`.
+Here, it is assumed that the order parameter takes in an object
+like :py:class:`.System`. Since this is described
+:ref:`elsewhere <user-guide-custom-order>` we will here just describe
+the usage of:
+
+* :py:meth:`.OrderParameter.add_orderparameter`
+  which can be used to add additional collective variables on the fly.
+* :py:meth:`.OrderParameter.calculate_all` which is used to
+  calculate the order parameters.
+
+Here is an example on how these can be used. First we
+just set-up and define a test-system and we create an
+order parameter, for simplicity we use the pre-defined
+:py:class:`.OrderParameterPosition` class:
+
+.. literalinclude:: /_static/examples/orderintro.py
+   :language: python
+   :lines: 5-13
+
+Next, we can calculate the order parameter as follows:
+
+.. literalinclude:: /_static/examples/orderintro.py
+   :language: python
+   :lines: 14-15
+
+Note that both these lines return two values. This is
+because the :py:class:`.OrderParameterPosition` class also
+calculates the time derivative of the order parameter when
+:py:meth:`calculate() <.OrderParameterPosition.calculate>` or
+:py:meth:`calculate_all() <.OrderParameterPosition.calculate_all>`
+is called.
+
+To show how we can add additional variables, try the following:
+
+.. literalinclude:: /_static/examples/orderintro.py
+   :language: python
+   :lines: 18-32
+
+
+As demonstrated by this example, one can add additional order parameters
+on the fly if such are needed. Note also the difference between
+:py:meth:`calculate() <.OrderParameter.calculate>` and
+:py:meth:`calculate_all() <.OrderParameter.calculate_all>`: The latter
+will also calculate order parameters added using
+:py:meth:`add_orderparameter() <.OrderParameter.add_orderparameter>` while the former
+only calculate the order parameters defined within the
+:py:meth:`calculate() <.OrderParameter.calculate>` method.
+
+.. important:: The first order parameter returned from
+   :py:meth:`calculate() <.OrderParameter.calculate>` is taken as the
+   progress coordinate used in path sampling simulations.
 
 
 .. _user-guide-intro-api-analysis:
 
-The analysis library
---------------------
+The analysis sub-package
+------------------------
+
+The :py:mod:`pyretis.analysis` sub-package defines tools which
+are used in the analysis of simulation output. It defines methods
+for running predefined analysis tasks, e.g. :py:func:`.retis_flux`, but
+also generic analysis methods, e.g. :py:func:`.running_average`.
+Here, we refer the reader to the
+:ref:`pyretis API documentation <api-analysis>` for more
+information about these methods.
 
 .. _user-guide-intro-api-inout:
 
-The input & output library
+The inout sub-package
+---------------------
+
+The :py:mod:`pyretis.inout` sub-package contains methods which
+|pyretis| make use of in order to interact with you.
+These are ways to read input from you and to present output to you.
+This sub-package is relatively large and it is in fact made up by
+the following sub-packages:
+
+* :py:mod:`pyretis.inout.analysisio` which
+  handles the input and output needed for analysis.
+
+* :py:mod:`pyretis.inout.plotting` which handles plotting of figures.
+  It defines simple things like colors etc.
+  for plotting. It also defines functions which can be used for
+  specific plotting by the analysis and report tools.
+
+* :py:mod:`pyretis.inout.report` which is used to
+  generate reports with resuts from different simulations.
+
+* :py:mod:`pyretis.inout.setup` which handles creation of objects
+  from simulation settings.
+
+* :py:mod:`pyretis.inout.writers` for formatting and
+  presenting text based output.
+
+Again, we refer the reader to the
+:ref:`pyretis API documentation <api-inout>` for more
+information about these sub-packages.
+
+.. _user-guide-intro-api-initiation:
+
+The initiation sub-package
 --------------------------
 
+The :py:mod:`pyretis.initiation` sub-package contains methods to
+initialize path ensembles. We refer the reader to the
+:ref:`pyretis API documentation <api-initiation>` for more
+information about this sub-package.
 
 .. _user-guide-intro-api-tools:
 
-The tools library
------------------
+The tools sub-package
+---------------------
+
 The tools library can be used to generate initial structures for a
-simulation. In the tools library the function ``generate_lattice`` is
-defined and it supports the creation of the following lattices where
+simulation. In the tools library the function :py:func:`.generate_lattice`
+is defined and it supports the creation of the following lattices where
 the short hand keywords (``sc``, ``sq`` etc.) are used to select a
 specific lattice:
 
@@ -335,7 +571,7 @@ A lattice is generated in the following way:
 Where the first parameter selects the lattice type, the second parameter
 selects give the number of repetitions in each direction and the optional
 parameter ``lcon`` is the lattice constant. The returned values are
-``xyz`` -- the coordinates -- and ``size`` which is the box-size of the
+``xyz`` -- the coordinates -- and ``size`` which is the bounding box of the
 generated structure. This variable can be used to define a simulation box.
 It is also possible to specify a number density:
 
@@ -352,19 +588,75 @@ If the density is specified, the lattice constant ``lcon`` is deduced:
 
 where :math:`n` is the number of particles in the unit cell,
 :math:`\rho` the specified number density and :math:`d` the dimensionality.
-If we wish to save a genrated lattice, this can be done as follows
+If we wish to save a generated lattice, this can be done as follows
+
+.. literalinclude:: /_static/api/lattice_example.py
+   :language: python
+   :lines: 5-15
+
+Some examples of using the |pyretis| library
+--------------------------------------------
+
+Here, we show some examples on how we can perform some common tasks
+using the |pyretis| library.
+
+Reversing a trajectory
+^^^^^^^^^^^^^^^^^^^^^^
+
+|pyretis| will not reverse backward trajectories during a simulation if
+you are using an external engine. For visualization purposes, it is very
+helpfull to reverse these trajectories before viewing them. This can be
+accomplished with the |pyretis| library as follows:
+
+* For GROMACS .trr trajectories:
+
+  .. code-block:: python
+
+     from pyretis.inout.writers.gromacsio import reverse_trr
+     reverse_trr('trajB.trr', 'rev-trajB.trr')
+
+  which will read the trajectory ``trajB.trr`` and store it as ``rev-trajB.trr``.
+
+* For .xyz trajectories:
+
+  .. code-block:: python
+
+     from pyretis.inout.writers.xyzio import reverse_xyz_file
+     reverse_xyz_file('trajB.xyz', 'rev-trajB.xyz')
+
+  which will read the trajectory ``trajB.xyz`` and store it as ``rev-trajB.xyz``.
+
+Recalculating order parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have an existing trajectory and with to calculate order parameters
+for each step in the trajectory, this can be accomplished by making use of
+the :ref:`pyretis.tools.recalculate_order <api-tools-recalculate_order>`
+module. For example, if you have a trajectory named ``traj.trr`` and
+an order parameter defined in an input file ``retis.rst`` this can be
+done as follows:
 
 .. code-block:: python
 
-    from pyretis.tools import generate_lattice
-    from pyretis.inout.fileinout.traj import write_xyz_file
+   from pyretis.inout.writers import get_writer
+   from pyretis.inout.settings import parse_settings_file
+   from pyretis.inout.setup import create_orderparameter
+   from pyretis.tools.recalculate_order import recalculate_order
 
-    xyz, size = generate_lattice('diamond', [3, 3, 3], lcon=3.57)
-    write_xyz_file('diamond.xyz', xyz, names=['C']*len(xyz), header='Diamond')
+   settings = parse_settings_file('retis.rst')
+   order_parameter = create_orderparameter(settings)
+   order = recalculate_order(order_parameter, 'traj.trr', reverse=False,
+                             maxidx=None, minidx=None)
+   writer = get_writer('order')
+   with open('order.txt', 'w') as outfile:
+       outfile.write('{}\n'.format(writer.header))
+       for step, data in enumerate(order):
+           txt = writer.format_data(step, data)
+           outfile.write('{}\n'.format(txt))
 
-    xyz, size = generate_lattice('hcp', [3, 3, 3], lcon=2.5)
-    name = ['A', 'B'] * (len(xyz) // 2)
-    write_xyz_file('hcp.xyz', xyz, names=name, header='HCP test')
-
-    xyz, size = generate_lattice('sq2', [3, 3], lcon=1.0)
-    write_xyz_file('sq2.xyz', xyz, header='sq2 test')
+This will create a new file ``order.txt`` with the re-calculated order parameters.
+The keyword ``reverse`` can be used to tell |pyretis| that you are looking at a
+time-reversed trajectory. The keyword ``minidx`` gives the frame number from
+which we start calculating (``None`` is equal to reading from the first frame)
+and the keyword ``maxidx`` gives the last frame number we will read (setting
+it to ``None`` will read until the end of the trajectory file).

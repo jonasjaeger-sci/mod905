@@ -1,0 +1,9 @@
+Orderparameter
+--------------
+class = OrderXY
+module = orderp.py
+index = 0
+inter_a = 0.15
+inter_b = 0.75
+energy_a = -9.0
+energy_b = -9.0
