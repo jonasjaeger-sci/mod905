@@ -14,8 +14,11 @@ KEYWORDS = (
     'git',
     'f2py',
     'pyretisrun',
-    'pyretisanalyse'
+    'pyretisanalyse',
     'virtualenv',
+    'conda',
+    'sudo',
+    'mkdir',
 )
 
 

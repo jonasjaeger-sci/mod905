@@ -70,7 +70,7 @@ in order to define your simulation:
 .. _table-sections:
 
 .. table:: Input sections for defining simulations.
-   :class: table-striped
+   :class: table-hover table-striped
 
    +----------------------+---------------------------------------------------+
    | Section              | Usage                                             |
@@ -110,7 +110,7 @@ In addition, an analysis can be defined using:
 .. _table-sections-analysis:
 
 .. table:: Input sections for defining an analysis.
-   :class: table-striped
+   :class: table-hover table-striped
 
    +----------------------+---------------------------------------------------+
    | Section              | Useage                                            |
