@@ -1,61 +1,90 @@
 .. _user-guide-application:
 
-The pyretis application
-=======================
+The |pyretis| application
+=========================
 
-The pyretis application, ``pyretisrun``, is used to
-execute simulations defined in input files:
+The |pyretis| application, ``pyretisrun``, is used to
+execute simulations defined in input files. The general syntax for
+executing is:
 
-.. code-block:: bash
+.. code-block:: pyretis
 
-    $ pyretisrun.py [-h] -i INPUT [-V] [-f LOG_FILE] [-l LOG_LEVEL] [-p] 
+   pyretisrun [-h] -i INPUT [-V] [-f LOG_FILE] [-l LOG_LEVEL] [-p]
 
-The arguments are:
+where the different arguments are described in :numref:`tableappargument`
+and :numref:`tableloglevel`.
 
-+-------------------------------------+--------------------------------------------------+
-| Argument                            | Description                                      |
-+=====================================+==================================================+
-| -h, --help                          | Show the help message and exit                   |
-+-------------------------------------+--------------------------------------------------+
-| -i INPUT, --input INPUT             | Location of the input file.                      |
-+-------------------------------------+--------------------------------------------------+
-| -V, --version                       | Show the version number and exit.                |
-+-------------------------------------+--------------------------------------------------+
-| -log_file LOG_FILE                  | Specify location of log file to write.           |
-+-------------------------------------+--------------------------------------------------+
-| -l LOG_LEVEL, --log_level LOG_LEVEL | Specify log level for the log file.              |
-+-------------------------------------+--------------------------------------------------+
-| -p, --progress                      | Display a progress meter instead of text output. |
-+-------------------------------------+--------------------------------------------------+
-
-The ``LOG_LEVEL`` can be set as:
-
-+-----------+---------------------------------------------------------+
-| LOG_LEVEL | Description                                             |
-+===========+=========================================================+
-| CRITICAL  | Only display critical messages.                         |
-+-----------+---------------------------------------------------------+
-| ERROR     | Display critical and error messages.                    |
-+-----------+---------------------------------------------------------+
-| WARNING   | Display critical and error messages and warnings        |
-+-----------+---------------------------------------------------------+
-| INFO      | Display all of the above and some info messages.        |
-+-----------+---------------------------------------------------------+
-| DEBUG     | Display all of the above and additional debug messages. |
-+-----------+---------------------------------------------------------+
-
-Some examples: 
+Example use
+-----------
 
 To run the simulation defined in a file named ``retis.rst``, make a log file
 for output named ``retis.log`` and display a progress bar:
 
-.. code-block:: bash
+.. code-block:: pyretis
 
-    $ pyretisrun.py -i retis.rst -f retis.log -p
+   pyretisrun -i retis.rst -f retis.log -p
 
 To run the simulation defined in a file named ``test.rst`` and display debug messages:
 
-.. code-block:: bash
+.. code-block:: pyretis
 
-    $ pyretisrun.py -i test.rst -l DEBUG
- 
+   pyretisrun -i test.rst -l DEBUG
+
+To run the simulation defined in a file named ``input.rst``, display only critical
+messages, write to a log file named ``mylog.log`` and display a progress bar:
+
+.. code-block:: pyretis
+
+   pyretisrun -i input.rst -l CRITICAL -p -f mylog.log
+
+The long version of the arguments may also be used, for instance the previous example
+can also be written more verbose as
+
+.. code-block:: pyretis
+
+   pyretisrun --input input.rst --log_level CRITICAL --progress --log_file mylog.log
+
+
+
+Input arguments
+---------------
+
+.. _tableappargument:
+
+.. table:: Description of input arguments for |pyretis|
+
+   +-------------------------------------+--------------------------------------------------+
+   | Argument                            | Description                                      |
+   +=====================================+==================================================+
+   | -h, --help                          | Show the help message and exit                   |
+   +-------------------------------------+--------------------------------------------------+
+   | -i INPUT, --input INPUT             | Location of the input file.                      |
+   +-------------------------------------+--------------------------------------------------+
+   | -V, --version                       | Show the version number and exit.                |
+   +-------------------------------------+--------------------------------------------------+
+   | -f LOG_FILE, --log_file LOG_FILE    | Specify location of log file to write.           |
+   +-------------------------------------+--------------------------------------------------+
+   | -l LOG_LEVEL, --log_level LOG_LEVEL | Specify log level for the log file               |
+   |                                     | (see :numref:`tableloglevel`).                   |
+   +-------------------------------------+--------------------------------------------------+
+   | -p, --progress                      | Display a progress meter instead of text output. |
+   +-------------------------------------+--------------------------------------------------+
+
+.. _tableloglevel:
+
+.. table:: Possible settings for the ``LOG_LEVEL``
+
+   +-----------+---------------------------------------------------------+
+   | LOG_LEVEL | Description                                             |
+   +===========+=========================================================+
+   | CRITICAL  | Only display critical messages.                         |
+   +-----------+---------------------------------------------------------+
+   | ERROR     | Display critical and error messages.                    |
+   +-----------+---------------------------------------------------------+
+   | WARNING   | Display critical and error messages and warnings        |
+   +-----------+---------------------------------------------------------+
+   | INFO      | Display all of the above and some info messages.        |
+   +-----------+---------------------------------------------------------+
+   | DEBUG     | Display all of the above and additional debug messages. |
+   +-----------+---------------------------------------------------------+
+

@@ -19,6 +19,7 @@ MARKERS = ('o', 'v', '^', 's', '*', 'p', 'h', 'x', '+')
 
 
 if __name__ == '__main__':
+    # pylint: disable=invalid-name
     data = {}
     for key in RESULTS:
         data[key] = np.loadtxt(RESULTS[key])

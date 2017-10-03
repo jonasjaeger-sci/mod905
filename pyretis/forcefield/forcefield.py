@@ -35,10 +35,11 @@ class ForceField:
         The potential functions that the force field is built up from.
     params : list
         The parameters for the corresponding potential functions.
+
     """
 
     def __init__(self, desc, potential=None, params=None):
-        """Initiate the force field object.
+        """Initialise the force field object.
 
         Parameters
         ----------
@@ -49,6 +50,7 @@ class ForceField:
         params : list, optional
             Parameters for the potential(s). If too few parameters are
             given, we will just assume a `None`.
+
         """
         self.desc = desc
         self.potential = []
@@ -84,6 +86,7 @@ class ForceField:
             Returns `True` and updates `self.potential` and
             `self.params` if the potential was added. Returns
             `False` otherwise.
+
         """
         if potential is None:
             msg = ('Trying to add empty potential to force field.\n'
@@ -101,7 +104,7 @@ class ForceField:
 
         Parameters
         ----------
-        potential : object
+        potential : object like :py:class:`.PotentialFunction`
             The potential function to remove.
 
         Returns
@@ -109,6 +112,7 @@ class ForceField:
         out : None or tuple
             Returns `None` if not potential was removed, otherwise it
             will return the removed potential and it's parameters.
+
         """
         if potential in self.potential:
             idx = self.potential.index(potential)
@@ -133,6 +137,7 @@ class ForceField:
         out : None
             Returns `None` but will update parameters of the selected
             potential and modify the corresponding `self.params`.
+
         """
         if potential in self.potential:
             potential.set_parameters(params)
@@ -152,8 +157,9 @@ class ForceField:
         -------
         out[0] : numpy.array
             The forces on the particles.
-        out[1] : float
+        out[1] : numpy.array
             The virial.
+
         """
         force = None
         virial = None
@@ -178,6 +184,7 @@ class ForceField:
         -------
         out : float
             The potential energy.
+
         """
         v_pot = None
         for pot in self.potential:
@@ -201,8 +208,9 @@ class ForceField:
             The potential energy.
         out[1] : numpy.array
             The calculated forces.
-        out[2] : float
+        out[2] : numpy.array
             The calculated virial.
+
         """
         v_pot = None
         force = None
@@ -218,7 +226,7 @@ class ForceField:
         return v_pot, force, virial
 
     def __str__(self):
-        """A string representation of the force field.
+        """Return a string representation of the force field.
 
         The string representation is built using the string
         descriptions of the potential functions.
@@ -228,6 +236,7 @@ class ForceField:
         out : string
             Description of force field and the potential functions
             included in the force field.
+
         """
         msg = ['Force field: {}'.format(self.desc)]
         if len(self.potential) < 1:
@@ -249,6 +258,7 @@ class ForceField:
         -------
         out : string
             Description of the potential functions in this force field.
+
         """
         msg = ['Force field: {}'.format(self.desc)]
         for i, pot in enumerate(self.potential):

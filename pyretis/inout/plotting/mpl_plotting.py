@@ -62,6 +62,7 @@ class MplPlotter(Plotter):
         Defines what style to use for the plotting.
     out_fmt : string
         Selects format for output plots.
+
     """
 
     def __init__(self, out_fmt, backup=False, style=None, out_dir=None):
@@ -79,6 +80,7 @@ class MplPlotter(Plotter):
         out_dir : string, optional
             Determines if we should write the files to a particular
             directory.
+
         """
         super().__init__(backup=backup, plotter_type='matplotlib',
                          out_dir=out_dir)
@@ -116,13 +118,14 @@ class MplPlotter(Plotter):
         -------
         out : dict
             The files written.
+
         """
         outputfiles = {}
-        for key in canvas:
+        for key, val in canvas.items():
             local_file = name_file(key, self.out_fmt, path=None)
             full_path = name_file(key, self.out_fmt, self.out_dir)
             outputfiles[key] = local_file
-            mpl_savefig(canvas[key], full_path, self.backup)
+            mpl_savefig(val, full_path, self.backup)
         return outputfiles
 
     def output_flux(self, results):
@@ -140,6 +143,7 @@ class MplPlotter(Plotter):
         Note
         ----
         The returned list is used to plot the figures in *pairs*.
+
         """
         canvas_run, canvas_err = mpl_plot_flux(results)
         # Restructure output files for reporting
@@ -165,6 +169,7 @@ class MplPlotter(Plotter):
         -------
         out : dict
             This dict contains the files created by the plotting.
+
         """
         canvas = mpl_plot_energy(results, energies)
         return self._print_figures_to_file(canvas)
@@ -179,6 +184,7 @@ class MplPlotter(Plotter):
         -------
         out : dict
             This dict contains the files created by the plotting.
+
         """
         canvas = mpl_plot_orderp(results, orderdata)
         return self._print_figures_to_file(canvas)
@@ -193,12 +199,13 @@ class MplPlotter(Plotter):
         -------
         out : dict
             This dict contains the files created by the plotting.
+
         """
         canvas = mpl_plot_path(results, path_ensemble)
         return self._print_figures_to_file(canvas)
 
     def output_matched_probability(self, path_ensembles, detect, matched):
-        """Plot matched probabilities using :py:func:`.mpl_plot_matched`
+        """Plot matched probabilities using :py:func:`.mpl_plot_matched`.
 
         The parameters for this method is described in
         :py:func:`.mpl_plot_matched`.
@@ -207,6 +214,7 @@ class MplPlotter(Plotter):
         -------
         out : dict
             This dict contains the files created by the plotting.
+
         """
         canvas = mpl_plot_matched(path_ensembles, detect, matched)
         return self._print_figures_to_file(canvas)
@@ -227,6 +235,7 @@ def _mpl_read_style_file(filename):
     -------
     out : None
         Returns None, but modifies `matplotlib.rcParams`.
+
     """
     with open(filename, 'r') as fileh:
         for lines in fileh:
@@ -259,6 +268,7 @@ def mpl_set_style(style='pyretis'):
     style : string, optional
         This selects the style to use, it can be a file path or the
         string with the style name.
+
     """
     if style is None:
         return
@@ -289,6 +299,7 @@ def mpl_savefig(canvas, outputfile, backup=False):
     backup : boolean
         This determines if we should try to back-up old versions of the
         figures.
+
     """
     if backup:
         msg = create_backup(outputfile)
@@ -314,6 +325,7 @@ def mpl_plot_in_chunks(axs, series, chunksize=20000):
         Represents the data to be plotted.
     chunksize : int
         This is the maximum size we will try to plot in one go.
+
     """
     color = None
     line = None
@@ -355,6 +367,7 @@ def _mpl_plot_xy_chunk(axs, series, low=0, high=None, color=None):
     -------
     handle : object like :py:class:`matplotlib.lines.Line2D`
         A handle for the plotted line.
+
     """
     # pick out just a few keys - we want to limit what we change here:
     kwargs = {'linestyle': series.get('ls', '-'),
@@ -392,6 +405,7 @@ def mpl_simple_plot(series, fig_settings=None):
     -------
     out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure we create here.
+
     """
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -448,6 +462,7 @@ def mpl_linecollection_gradient(axs, series):
     -------
     handle : object like :class:`matplotlib.collections.LineCollection`
         A handle for the plotted line.
+
     """
     # pick out just a few keys - we want to limit what we change here:
     kwargs = {'linestyle': series.get('ls', '-'),
@@ -493,6 +508,7 @@ def mpl_chunks_gradient(axs, series, chunksize=20000):
     ----
     Color maps in matplotlib will typically have 256 colors. The number
     of different colors we can get is currently limited to 256.
+
     """
     kwargs = {'linestyle': series.get('ls', '-'),
               'alpha': series.get('alpha', 1.0),
@@ -543,6 +559,7 @@ def mpl_line_gradient(series, fig_settings):
     -----
     This function is based on the matplotlib example from:
     http://matplotlib.org/examples/pylab_examples/multicolored_line.html
+
     """
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -593,6 +610,7 @@ def mpl_error_plot(series, fig_settings):
     -------
     out : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the figure we create here.
+
     """
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -627,7 +645,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
 
     Parameters
     ----------
-    histograms : list
+    histograms : dict
         These are the histograms obtained in the shoots analysis.
     scale : dict
         These are the scale factors for normalising the histograms
@@ -641,6 +659,7 @@ def _mpl_shoots_histogram(histograms, scale, ensemble):
         This is the unscaled histogram.
     out[1] : object like :class:`matplotlib.backend_bases.FigureCanvasBase`
         This is the scaled histogram.
+
     """
     series = []
     series_scale = []
@@ -675,7 +694,8 @@ def mpl_plot_path(results, path_ensemble):
     -------
     canvas : dict
         This dictionary contains the different canvases we have
-        created
+        created.
+
     """
     ens = path_ensemble.ensemble_name
     ens_simplified = path_ensemble.ensemble_name_simple
@@ -797,6 +817,7 @@ def mpl_plot_orderp(results, orderdata):
     file has been fixed. Also note that, if present, the first order
     parameter will be plotted against the second one - i.e. the second
     one will be assumed to represent the velocity here.
+
     """
     canvas = {}
     time = orderdata[:, 0]
@@ -862,6 +883,7 @@ def mpl_plot_energy(results, energies):
     -------
     canvas : dict
         The output figures created by this function.
+
     """
     canvas = {}
     time = energies['time']
@@ -949,6 +971,7 @@ def mpl_plot_flux(results):
         The output figures created by this function for block errors.
         `out[0][i]['name']` is the name of the figure and
         `out[0][i]['canvas']` is the corresponding canvas object.
+
     """
     canvas_run = []
     canvas_err = []
@@ -1019,6 +1042,7 @@ def mpl_plot_matched(path_ensembles, detect, matched):
     -------
     canvas : dict
         The output figures created by this function.
+
     """
     canvas = {}
     # First plot the matched probabilities for each ensemble:

@@ -18,7 +18,8 @@ __all__ = ['EngineBase']
 
 
 class EngineBase(metaclass=ABCMeta):
-    """Abstract base class for engines.
+    """
+    Abstract base class for engines.
 
     The engines perform molecular dynamics (or Monte Carlo) and they
     are assumed to act on a system. Typically they will integrate
@@ -29,7 +30,9 @@ class EngineBase(metaclass=ABCMeta):
     description : string
         Short string description of the engine. Used for printing
         information about the integrator.
+
     """
+
     engine_type = None
 
     def __init__(self, description):
@@ -43,7 +46,8 @@ class EngineBase(metaclass=ABCMeta):
 
     @staticmethod
     def add_to_path(path, phase_point, left, right):
-        """Adds phase point and perform some checks.
+        """
+        Add a phase point and perform some checks.
 
         This method is intended to be used by the propagate methods.
 
@@ -57,6 +61,7 @@ class EngineBase(metaclass=ABCMeta):
             The left interface.
         right : float
             The right interface.
+
         """
         status = 'Running propagate...'
         success = False
@@ -93,8 +98,6 @@ class EngineBase(metaclass=ABCMeta):
                           momentum=False, rescale=None):
         """Modify the velocities of the current state.
 
-        This method will modify the velocities of a time slice.
-
         Parameters
         ----------
         system : object like :class:`.System`
@@ -121,6 +124,7 @@ class EngineBase(metaclass=ABCMeta):
             The change in the kinetic energy.
         kin_new : float
             The new kinetic energy.
+
         """
         pass
 
@@ -132,7 +136,7 @@ class EngineBase(metaclass=ABCMeta):
 
     @abstractmethod
     def dump_phasepoint(self, phasepoint, deffnm=None):
-        """Dump phase point to a file"""
+        """Dump phase point to a file."""
         pass
 
     @abstractmethod

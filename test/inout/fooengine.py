@@ -22,13 +22,13 @@ class FooEngine(MDEngine):
         raise NotImplementedError
 
 
-class BarEngine:
+class BarEngine:  # pylint: disable=too-few-public-methods
     """BarEngine - Dummy engine for tests."""
     def __init__(self, description='Dummy test engine'):
         self.description = description
 
 
-class BazEngine:
+class BazEngine:  # pylint: disable=too-few-public-methods
     """BazEngine - Dummy engine for tests."""
     def __init__(self, description='Dummy test enginer'):
         self.description = description

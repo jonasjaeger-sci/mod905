@@ -63,6 +63,7 @@ class OrderParameterWCAJCP1(OrderParameter):
         out : float
             The order parameter.
         """
+        # pylint: disable=invalid-name
         particles = system.particles
         delta = particles.pos[self.index[1]] - particles.pos[self.index[0]]
         if self.periodic:

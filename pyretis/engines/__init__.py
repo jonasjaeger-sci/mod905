@@ -57,6 +57,7 @@ def engine_factory(settings):
     -------
     out : object like :py:class:`.EngineBase`
         The object representing the engine to use in a simulation.
+
     """
     engine_map = {
         'velocityverlet': {'cls': VelocityVerlet},

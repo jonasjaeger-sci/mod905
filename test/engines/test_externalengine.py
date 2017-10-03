@@ -224,6 +224,24 @@ class TestExternalEngine(unittest.TestCase):
         cmd.append('arg')
         with self.assertRaises(RuntimeError):
             engine.execute_command(cmd, cwd=HERE, inputs=b'')
+        # The outputs should be reatined after the previous error:
+        with open(os.path.join(HERE, 'stdout.txt'), 'r') as stdout:
+            lines = stdout.readlines()
+            self.assertEqual(len(lines), 1)
+            self.assertEqual(
+                lines[0].strip(),
+                'This is a program for testing external commands'
+            )
+        with open(os.path.join(HERE, 'stderr.txt'), 'r') as stdout:
+            lines = stdout.readlines()
+            self.assertEqual(len(lines), 1)
+            self.assertEqual(
+                lines[0].strip(),
+                'ERROR: Program were given arguments!'
+            )
+        for fname in ('stdout.txt', 'stderr.txt'):
+            # pylint: disable=protected-access
+            engine._removefile(os.path.join(HERE, fname))
 
 
 if __name__ == '__main__':

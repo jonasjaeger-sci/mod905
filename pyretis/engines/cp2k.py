@@ -72,6 +72,7 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
         A name given to the CP2K project.
     print_freq : integer, optional
         How often we should print to the trajectory file.
+
     """
     if print_freq is None:
         print_freq = subcycles
@@ -125,7 +126,8 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
 
 def write_for_continue(infile, outfile, timestep, subcycles,
                        name='md_continue'):
-    """Create input file for a single step.
+    """
+    Create input file for a single step.
 
     Note, the single step actually consist of a number of sub-cycles.
     But from PyRETIS' point of view, this is a single step.
@@ -144,6 +146,7 @@ def write_for_continue(infile, outfile, timestep, subcycles,
         The number of sub-cycles to perform.
     name : string
         A name given to the CP2K project.
+
     """
     to_update = {
         'GLOBAL': {
@@ -207,6 +210,7 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
         A seed for generating velocities.
     name : string
         A name given to the CP2K project.
+
     """
     to_update = {
         'GLOBAL': {
@@ -254,7 +258,8 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
 
 
 class CP2KEngine(ExternalMDEngine):
-    """A class for interfacing CP2K.
+    """
+    A class for interfacing CP2K.
 
     This class defines the interface to CP2K.
 
@@ -270,11 +275,12 @@ class CP2KEngine(ExternalMDEngine):
         The number of steps each CP2K run is composed of.
     rgen : object like :py:class:`.RandomGenerator`
         An object we use to set seeds for velocity generation.
+
     """
 
     def __init__(self, cp2k, input_path, timestep, subcycles, extra_files,
                  seed=0):
-        """Initiate the CP2K engine.
+        """Set up the CP2K engine.
 
         Parameters
         ----------
@@ -290,6 +296,7 @@ class CP2KEngine(ExternalMDEngine):
             List of extra files which may be required to run CP2K.
         seed : integer
             A seed for the random number generator.
+
         """
         super().__init__('CP2K external engine', timestep,
                          subcycles)
@@ -319,12 +326,14 @@ class CP2KEngine(ExternalMDEngine):
                     self.extra_files.append(fname)
 
     def run_cp2k(self, input_file, proj_name):
-        """Method to execute CP2K.
+        """
+        Run the CP2K executable.
 
         Returns
         -------
         out : dict
             The files created by the run.
+
         """
         cmd = self.cp2k + ['-i', input_file]
         logger.debug('Executing CP2K %s: %s', proj_name, input_file)
@@ -335,7 +344,8 @@ class CP2KEngine(ExternalMDEngine):
         return out
 
     def _extract_frame(self, traj_file, idx, out_file):
-        """Extract a frame from a trajectory file.
+        """
+        Extract a frame from a trajectory file.
 
         This method is used by `self.dump_config` when we are
         dumping from a trajectory file. It is not used if we are
@@ -349,6 +359,7 @@ class CP2KEngine(ExternalMDEngine):
             The frame number we look for.
         out_file : string
             The file to dump to.
+
         """
         for i, snapshot in enumerate(read_xyz_file(traj_file)):
             if i == idx:
@@ -368,7 +379,8 @@ class CP2KEngine(ExternalMDEngine):
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
-        """Propagate with CP2K from the current system configuration.
+        """
+        Propagate with CP2K from the current system configuration.
 
         Here, we assume that this method is called after the propagate()
         has been called in the parent. The parent is then responsible
@@ -395,7 +407,9 @@ class CP2KEngine(ExternalMDEngine):
         success : boolean
             This is True if we generated an acceptable path.
         status : string
-            A text description of the current status of the propagation.
+            A text description of the current status of the
+            propagation.
+
         """
         status = 'propagating with CP2K (reverse = {})'.format(reverse)
         logger.debug(status)
@@ -493,6 +507,7 @@ class CP2KEngine(ExternalMDEngine):
         out : string
             The name of the output configuration, obtained after
             completing the step.
+
         """
         initial_conf = self.dump_frame(system)
         # Save as a single snapshot file
@@ -541,6 +556,7 @@ class CP2KEngine(ExternalMDEngine):
         ----------
         dirname : string
             The full path to where we want to add the files.
+
         """
         for files in self.extra_files:
             basename = os.path.basename(files)
@@ -563,7 +579,8 @@ class CP2KEngine(ExternalMDEngine):
 
     @staticmethod
     def _read_configuration(filename):
-        """Method to read CP2K output configuration.
+        """
+        Read CP2K output configuration.
 
         This method is used when we calculate the order parameter.
 
@@ -582,6 +599,7 @@ class CP2KEngine(ExternalMDEngine):
             The velocities.
         names : list of strings
             The atom names found in the file.
+
         """
         xyz, vel, box, names = None, None, None, None
         for snapshot in read_xyz_file(filename):
@@ -590,7 +608,7 @@ class CP2KEngine(ExternalMDEngine):
         return box, xyz, vel, names
 
     def _reverse_velocities(self, filename, outfile):
-        """Method to reverse velocity in a given snapshot.
+        """Reverse velocity in a given snapshot.
 
         Parameters
         ----------
@@ -599,13 +617,15 @@ class CP2KEngine(ExternalMDEngine):
         outfile : string
             The output file for storing the configuration with
             reversed velocities.
+
         """
         box, xyz, vel, names = self._read_configuration(filename)
-        write_xyz_trajectory(outfile, xyz, -vel, names, box, append=False)
+        write_xyz_trajectory(outfile, xyz, -1.0*vel, names, box, append=False)
         return None
 
     def _prepare_shooting_point(self, input_file):
-        """Create initial configuration for a shooting move.
+        """
+        Create initial configuration for a shooting move.
 
         This creates a new initial configuration with random velocities.
 
@@ -620,6 +640,7 @@ class CP2KEngine(ExternalMDEngine):
             The name of the file created.
         energy : dict
             The energy terms read from the GROMACS .edr file.
+
         """
         box, xyz, vel, atoms = self._read_configuration(input_file)
         if box is None:
@@ -653,7 +674,8 @@ class CP2KEngine(ExternalMDEngine):
 
     def modify_velocities(self, system, rgen, sigma_v=None, aimless=True,
                           momentum=False, rescale=None):
-        """Modify the velocities of the current state.
+        """
+        Modify the velocities of the current state.
 
         This method will modify the velocities of a time slice.
 
@@ -683,6 +705,7 @@ class CP2KEngine(ExternalMDEngine):
             The change in the kinetic energy.
         kin_new : float
             The new kinetic energy.
+
         """
         dek, kin_old, kin_new = None, None, None
         if rescale is not None and rescale is not False and rescale > 0:

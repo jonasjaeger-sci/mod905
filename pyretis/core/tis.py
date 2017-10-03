@@ -24,10 +24,10 @@ time_reversal (:py:func:`.time_reversal`)
 
 References
 ~~~~~~~~~~
-
 .. [TIS] Titus S. van Erp, Daniele Moroni and Peter G. Bolhuis,
    J. Chem. Phys. 118, 7762 (2003),
    https://dx.doi.org/10.1063%2F1.1562614
+
 """
 import logging
 from pyretis.core.path import paste_paths
@@ -44,7 +44,7 @@ __all__ = ['make_tis_step_ensemble',
 
 def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
                            rgen, tis_settings, cycle):
-    """Function to preform TIS step for a path ensemble.
+    """Perform a TIS step for a given path ensemble.
 
     This function will run `make_tis_step` for the given path_ensemble.
     It will handle adding of the path. This function is intended for
@@ -78,6 +78,7 @@ def make_tis_step_ensemble(path_ensemble, system, order_function, engine,
         The generated path.
     out[2] : string
         The status of the path
+
     """
     start_cond = path_ensemble.start_condition
     logger.info('TIS move in: %s', path_ensemble.ensemble_name)
@@ -140,7 +141,8 @@ def make_tis_step(path, system, order_function, interfaces, engine, rgen,
     out[1] : object like :py:class:`.PathBase`
         The generated path.
     out[2] : string
-        The status of the path
+        The status of the path.
+
     """
     if rgen.rand() < tis_settings['freq']:
         logger.info('Performing a time reversal move')
@@ -176,6 +178,7 @@ def time_reversal(path, interfaces, start_condition):
     out[2] : string
         Status of the path, this is one of the strings defined in
         `.path._STATUS`.
+
     """
     logger.info('Order parameters are not re-calculated!')
     new_path = path.reverse()
@@ -236,6 +239,7 @@ def shoot(path, system, order_function, interfaces, engine, rgen,
     out[2] : string
         Status of the path, this is one of the strings defined in
         :py:const:`.path._STATUS`.
+
     """
     accept, trial_path = False, path.empty_path()  # return values
     shooting_point, idx = path.get_shooting_point()

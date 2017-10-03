@@ -1,9 +1,9 @@
 .. _user-guide-units:
 
-pyretis units
-=============
+|pyretis| units
+===============
 
-pyretis simulations are always carried out with a consistent
+|pyretis| simulations are always carried out with a consistent
 set of units. A system of units is defined by specifying
 the energy scale, :math:`E`, the length scale, :math:`L`, and the
 mass scale, :math:`M`.
@@ -14,7 +14,7 @@ This implicitly defines the time scale, :math:`T`, as
    T = \sqrt{\frac{M L^2}{E}}.
 
 The charges are typically specified in units of electron charges or in
-Coulombs. In pyretis the charges are internally scaled with the factor
+Coulombs. In |pyretis| the charges are internally scaled with the factor
 :math:`\frac{1}{\sqrt{4 \pi \varepsilon_0}}` (where the units
 of :math:`\varepsilon_0` is consistent with the defined
 :math:`E`, :math:`L` and :math:`M`).
@@ -22,14 +22,14 @@ This means
 that the Coulomb constant is implicitly contained within the charges in
 the internal computations.
 
-In pyretis, several different systems of units are defined and you may also
+In |pyretis|, several systems of units are defined and you may also
 define your own units. The choice of a system of units will define the units
 used for input parameters.
-The different systems of units defined in pyretis are described in the
+The different systems of units defined in |pyretis| are described in the
 following :ref:`section <user-units-system>` and the creation of custom
 systems are :ref:`also described <user-units-custom>`.
-In the pyretis library, the units are defined in
-the :py:mod:`pyretis.core.units` module. 
+In the |pyretis| library, the units are defined in
+the :py:mod:`pyretis.core.units` module.
 The defined constants can be displayed by,
 
 .. code-block:: python
@@ -43,10 +43,10 @@ The defined constants can be displayed by,
 
 .. _user-units-system:
 
-System of units in pyretis
---------------------------
+System of units in |pyretis|
+----------------------------
 
-The systems of units that are defined in pyretis are:
+The systems of units that are defined in |pyretis| are:
 
 - ``lj``: A Lennard-Jones type of units.
 
@@ -73,12 +73,12 @@ any of these units, e.g.
     units = real
     # or perhaps:
     units = metal
-    # or even Lennard Jones units:
-    units lj
+    # or even Lennard-Jones units:
+    units = lj
 
 
 Setting the unit system will define the units used for input to
-pyretis. The units for the different systems are given in
+|pyretis|. The units for the different systems are given in
 the :ref:`table of input units <table_unit_input>` below. Note
 that the time unit is determined by the energy, length and
 mass scale and that **the input time step will be assumed
@@ -88,7 +88,7 @@ familiar units are given in the
 
 If the initial configuration is given as a file (for instance
 in xyz format), then the system of units will be used to
-convert the configuration. That is, pyretis will assume that
+convert the configuration. That is, |pyretis| will assume that
 the configuration is given in the units specified by
 the file format
 (e.g. Ångström for positions in a xyz file).
@@ -122,7 +122,7 @@ converted internally to the selected system of units.
 For the ``lj`` system, the energy, length, mass, etc. are all
 given in reduced units. However, it still might be useful (for instance
 for trajectory output) to convert to other units.
-By default the scales
+By default, the scales
 for the Lennard-Jones system of units corresponds to values for Argon. [4]_
 These default units can be overridden explicitly by defining the length scale,
 mass scale and energy scale:
@@ -165,9 +165,9 @@ further described in the :ref:`next section <user-units-custom>`.
 These units are also used for the input and defines the time unit.
 The time units are shown in :ref:`the table below <table_unit_systems_time>`.
 Further, all system of units expect an input temperature in Kelvin
-(``K``) and all systems, with the exception of ``si``, expects a
+(``K``) and all systems, except for ``si``, expects a
 charge in units of electron charges. The ``si`` system uses here
-Coulomb as it's unit for charge. The time units for the different
+Coulomb as the unit for charge. The time units for the different
 energy systems are given in the table below.
 
 .. _table_unit_systems_time:
@@ -207,8 +207,8 @@ approximately ``1.018 fs``.
 Defining your own system of units
 ---------------------------------
 Defining your own system of units is basically just a matter of choosing
-the energy, length and mass scales. Typically this is done by setting the
-units keyword and defining the base units in the 
+the energy, length and mass scales. Typically, this is done by setting the
+units keyword and defining the base units in the
 section :ref:`Unit-system <user-section-unit-system>`:
 
 .. code-block:: rst
@@ -237,8 +237,8 @@ The syntax for specifying a new scale for a dimension is of form
     'dimension' = (value, unit)
 
 Where the ``value`` is a number defining the scale and ``unit`` a text string
-which defines the unit to use. This text string is case sensitive.
-For each dimension, pyretis defines a set of
+which defines the unit to use. This text string is case-sensitive.
+For each dimension, |pyretis| defines a set of
 "known" units to choose from:
 
 Length:

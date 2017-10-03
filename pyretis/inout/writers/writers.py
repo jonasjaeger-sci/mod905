@@ -70,7 +70,7 @@ __all__ = [
 
 
 def _make_header(labels, width, spacing=1):
-    """This method will format a table header with the given labels.
+    """Format a table header with the given labels.
 
     Parameters
     ----------
@@ -85,6 +85,7 @@ def _make_header(labels, width, spacing=1):
     -------
     out : string
         A header for the table.
+
     """
     heading = []
     for i, col in enumerate(labels):
@@ -102,7 +103,7 @@ def _make_header(labels, width, spacing=1):
 
 
 def _simple_line_parser(line):
-    """A simple line parser. Returns floats from columns in a file.
+    """Return floats from columns in a file.
 
     Parameters
     ----------
@@ -113,12 +114,13 @@ def _simple_line_parser(line):
     -------
     out : list
         This list contains a float for each item in `line.split()`.
+
     """
     return [float(col) for col in line.split()]
 
 
 def _read_line_data(ncol, stripline, line_parser):
-    """Helper method to read data for :py:func:`.read_some_lines.`
+    """Read data for :py:func:`.read_some_lines.`.
 
     Parameters
     ----------
@@ -131,6 +133,7 @@ def _read_line_data(ncol, stripline, line_parser):
         trailing spaces have been removed.
     line_parser : callable
         A method we use to parse a single line.
+
     """
     if line_parser is None:
         # Just return data without any parsing:
@@ -173,7 +176,8 @@ def read_some_lines(filename, line_parser=_simple_line_parser,
     Yields
     ------
     data : list
-        The data read from the file, arranged in dicts
+        The data read from the file, arranged in dicts.
+
     """
     ncol = -1  # The number of columns
     new_block = {'comment': [], 'data': []}
@@ -231,10 +235,11 @@ class Writer:
         use of `generate_output`. Note that the behaviour can be
         overridden in child classes so that the print_header is
         ignored.
+
     """
 
     def __init__(self, file_type, header=None):
-        """Initiate the Writer.
+        """Initialise the Writer.
 
         Parameters
         ----------
@@ -242,6 +247,7 @@ class Writer:
             A string which identifies the output type of this writer.
         header : dict, optional
             The header for the output data
+
         """
         self.file_type = file_type
         self._header = None
@@ -263,12 +269,12 @@ class Writer:
 
     @header.setter
     def header(self, value):
-        """Set the header"""
+        """Set the header."""
         self._header = value
 
     @staticmethod
     def line_parser(line):
-        """A simple line parser. Returns floats from columns in a file.
+        """Return floats from columns in a file.
 
         Parameters
         ----------
@@ -279,6 +285,7 @@ class Writer:
         -------
         out : list
             This list contains a float for each item in `line.split()`.
+
         """
         return [float(col) for col in line.split()]
 
@@ -307,6 +314,7 @@ class Writer:
         the output to internal units from some specified units.
         The specified units may also change between instances of
         these classes.
+
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
             data_dict = {'comment': blocks['comment'],
@@ -336,7 +344,9 @@ class CrossWriter(Writer):
     3) The direction we are moving in - `+` for the positive direction
        or `-` for the negative direction. Internally this is converted
        to an integer (`+1` or `-1`).
+
     """
+
     # Format for crossing files:
     CROSS_FMT = '{:>10d} {:>4d} {:>3s}'
 
@@ -366,6 +376,7 @@ class CrossWriter(Writer):
         The interface will be subtracted '1' in the analysis.
         This is just for backwards compatibility with the old FORTRAN
         code.
+
         """
         linessplit = line.strip().split()
         step, inter = int(linessplit[0]), int(linessplit[1])
@@ -405,6 +416,7 @@ class CrossWriter(Writer):
         We add 1 to the interface number here. This is for
         compatibility with the old FORTRAN code where the interfaces
         are numbered 1, 2, ... rather than 0, 1, ... .
+
         """
         msgtxt = 'Generating crossing data at step: {}'.format(step)
         logger.debug(msgtxt)
@@ -428,7 +440,9 @@ class EnergyWriter(Writer):
     4) Total energy, should equal the sum of the two previous columns.
 
     5) Temperature.
+
     """
+
     # Format for the energy files:
     ENERGY_FMT = ['{:>10d}'] + 5*['{:>14.6f}']
     ENERGY_TERMS = ('vpot', 'ekin', 'etot', 'temp')
@@ -461,7 +475,8 @@ class EnergyWriter(Writer):
 
         See Also
         --------
-        `read_some_lines`.
+        :py:func:`.read_some_lines`.
+
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
             data = np.array(blocks['data'])
@@ -487,6 +502,7 @@ class EnergyWriter(Writer):
         -------
         out : string
             A formatted line of data.
+
         """
         towrite = [self.ENERGY_FMT[0].format(step)]
         for i, key in enumerate(self.ENERGY_TERMS):
@@ -505,6 +521,7 @@ class EnergyWriter(Writer):
 
 class EnergyPathWriter(EnergyWriter):
     """A class for writing out energy data for paths."""
+
     ENERGY_TERMS = ('vpot', 'ekin')
     HEADER = {'labels': ['Time', 'Potential', 'Kinetic'],
               'width': [10, 14]}
@@ -530,6 +547,7 @@ class EnergyPathWriter(EnergyWriter):
         ------
         out : string
             The strings to be written.
+
         """
         path, status = data[0], data[1]
         if not path:  # when nullmoves = False
@@ -555,7 +573,9 @@ class OrderWriter(Writer):
     4) Collective variable 2
 
     5) ...
+
     """
+
     # Format for order files, note that we don't know how many parameters
     # we need to write yet.
     ORDER_FMT = ['{:>10d}', '{:>12.6f}']
@@ -590,7 +610,8 @@ class OrderWriter(Writer):
 
         See Also
         --------
-        `read_some_lines`.
+        :py:func:`.read_some_lines`.
+
         """
         for blocks in read_some_lines(filename, line_parser=self.line_parser):
             data_dict = {'comment': blocks['comment'],
@@ -611,6 +632,7 @@ class OrderWriter(Writer):
         ------
         out : string
             The strings to be written.
+
         """
         towrite = [self.ORDER_FMT[0].format(step)]
         for orderp in orderdata:
@@ -649,6 +671,7 @@ class OrderPathWriter(OrderWriter):
         ------
         out : string
             The strings to be written.
+
         """
         path, status = data[0], data[1]
         if not path:  # when nullmoves = False
@@ -660,7 +683,7 @@ class OrderPathWriter(OrderWriter):
 
 
 def adjust_coordinate(coord):
-    """Method to adjust the dimensionality of coordinates.
+    """Adjust the dimensionality of coordinates.
 
     This is a helper method for trajectory writers.
 
@@ -676,6 +699,7 @@ def adjust_coordinate(coord):
     -------
     out : numpy.array
         The "zero-padded" coordinates.
+
     """
     if len(coord.shape) == 1:
         npart, dim = len(coord), 1
@@ -706,6 +730,7 @@ def get_box_from_header(header):
     -------
     out : numpy.array or None
         The box lengths.
+
     """
     low = header.lower()
     if low.find('box:') != -1:
@@ -715,7 +740,7 @@ def get_box_from_header(header):
 
 
 def read_txt_snapshots(filename, data_keys=None):
-    """A method for reading snapshots from a text file.
+    """Read snapshots from a text file.
 
     Parameters
     ----------
@@ -729,6 +754,7 @@ def read_txt_snapshots(filename, data_keys=None):
     ------
     out : dict
         A dictionary with the snapshot.
+
     """
     lines_to_read = 0
     snapshot = None
@@ -775,7 +801,9 @@ class TrajWriter(Writer):
         Format to use for position output.
     fmt_vel : string
         Format to use for position and velocity output.
+
     """
+
     data_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
     _FMT_FULL = '{} {} {} {}'
     _FMT_FULL_VEL = '{} {} {} {} {} {} {}'
@@ -792,6 +820,7 @@ class TrajWriter(Writer):
             or may not be supported by the writer.
         fmt : string, optional
             Selects the format to use.
+
         """
         super().__init__('TrajWriter', header=None)
         self.print_header = False
@@ -821,6 +850,7 @@ class TrajWriter(Writer):
         ------
         out : string
             The formatted output, to be written.
+
         """
         pos = adjust_coordinate(particles.pos)
         for namei, posi in zip(particles.name, pos):
@@ -838,6 +868,7 @@ class TrajWriter(Writer):
         ------
         out : string
             The formatted output, to be written.
+
         """
         pos = adjust_coordinate(particles.pos)
         vel = adjust_coordinate(particles.vel)
@@ -858,7 +889,8 @@ class TrajWriter(Writer):
         Returns
         -------
         out : list of strings
-            The formatted snapshot
+            The formatted snapshot.
+
         """
         npart = system.particles.npart
         buff = [
@@ -888,6 +920,7 @@ class TrajWriter(Writer):
         ------
         out : dict
             This dict contains the snapshot.
+
         """
         for snapshot in read_txt_snapshots(filename,
                                            data_keys=self.data_keys):
@@ -901,11 +934,13 @@ class PathExtWriter(Writer):
     ----------
     print_header : boolean
         Determines if we should print the header on the first step.
+
     """
+
     FMT = '{:>10}  {:>20s}  {:>10}  {:>5}'
 
     def __init__(self):
-        """Initialisation of the PathExtWriter writer."""
+        """Initialise the PathExtWriter writer."""
         header = {'labels': ['Step', 'Filename', 'index', 'vel'],
                   'width': [10, 20, 10, 5], 'spacing': 2}
 
@@ -913,7 +948,7 @@ class PathExtWriter(Writer):
         self.print_header = False
 
     def format_output(self, time, filename, index, vel):
-        """Just format the output."""
+        """Format the output."""
         return self.FMT.format(time, filename, index, vel)
 
     def generate_output(self, step, *data):
@@ -933,7 +968,7 @@ class PathExtWriter(Writer):
 
     @staticmethod
     def line_parser(line):
-        """A simple parser for reading path data.
+        """Parse line data by splitting the text on spaces.
 
         Parameters
         ----------
@@ -944,6 +979,7 @@ class PathExtWriter(Writer):
         -------
         out : list
             The columns of data.
+
         """
         return [col for col in line.split()]
 
@@ -955,10 +991,11 @@ class PathIntWriter(Writer):
     ----------
     print_header : boolean
         Determines if we should print the header on the first step.
+
     """
 
     def __init__(self):
-        """Initialisation of the PathIntWriter writer."""
+        """Initialise the PathIntWriter writer."""
         super().__init__('PathIntWriter', header=None)
         self.print_header = False
         self.fmt = None
@@ -986,7 +1023,8 @@ class PathIntWriter(Writer):
         Parameters
         ----------
         data : strings
-            The data to read
+            The data to read.
+
         """
         snapshots = []
         pos, vel = [], []
@@ -1025,6 +1063,7 @@ class PathIntWriter(Writer):
         data : list of tuples of int
             This is the data contained in the file. The columns are the
             step number, interface number and direction.
+
         """
         for blocks in read_some_lines(filename, line_parser=None):
             data_dict = {'comment': blocks['comment'],

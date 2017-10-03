@@ -1,0 +1,1 @@
+../../../examples/path_sampling/1D-double-well-retis-movie/retis_movie.py

@@ -188,6 +188,7 @@ def write_mock_edr(filename, steps, gen=False, start=0):
 
 if __name__ == '__main__':
     # pylint: disable=invalid-name
+    print('This is the mock mdrun command')
     cont = True if '-append' in sys.argv else False
     if cont:
         mock_mdrun_continue(sys.argv[1:])

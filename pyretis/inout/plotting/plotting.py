@@ -35,10 +35,11 @@ class Plotter(metaclass=ABCMeta):
         Defines a name for the plotter, in case we want to identify it.
     out_dir : string, optional
         Defines an output directory for the plotter.
+
     """
 
     def __init__(self, backup=True, plotter_type=None, out_dir=None):
-        """Initiate the plotting object.
+        """Initialise the plotting object.
 
         Parameters
         ----------
@@ -49,6 +50,7 @@ class Plotter(metaclass=ABCMeta):
         out_dir : string, optional
             A string which can be used to set an output directory
             for the plotter.
+
         """
         self.plotter_type = plotter_type
         self.backup = backup in (True, 'yes', 'True')
@@ -56,29 +58,29 @@ class Plotter(metaclass=ABCMeta):
 
     @abstractmethod
     def output_flux(self, results):
-        """Function that plots flux results."""
+        """Plot flux results."""
         return
 
     @abstractmethod
     def output_energy(self, results, energies):
-        """Function that plots energy results."""
+        """Plot energy results."""
         return
 
     @abstractmethod
     def output_orderp(self, results, orderdata):
-        """Function that plots order parameter results."""
+        """Plot order parameter results."""
         return
 
     @abstractmethod
     def output_path(self, results, path_ensemble):
-        """Function that plots path ensemble results."""
+        """Plot results for each path ensemble."""
         return
 
     @abstractmethod
     def output_matched_probability(self, path_ensembles, detect, matched):
-        """Function that plots the overall probability for path ensembles."""
+        """Plot the overall probability for path ensembles."""
         return
 
     def __str__(self):
-        """Just print out the basic info."""
+        """Print out the basic info."""
         return 'Plotter: {}'.format(self.plotter_type)

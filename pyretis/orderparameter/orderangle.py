@@ -37,6 +37,7 @@ class OrderParameterAngle(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the positions/distances.
+
     """
 
     def __init__(self, index, periodic=False):
@@ -49,6 +50,7 @@ class OrderParameterAngle(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the distance vectors.
+
         """
         try:
             if len(index) != 3:
@@ -80,6 +82,7 @@ class OrderParameterAngle(OrderParameter):
         -------
         out : list of floats
             The order parameters.
+
         """
         pos = system.particles.pos
         vector_ba = pos[self.index[1]] - pos[self.index[0]]

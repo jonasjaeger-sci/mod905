@@ -1,3 +1,11 @@
+
+.. image:: https://gitlab.com/pyretis/pyretis/badges/master/pipeline.svg
+    :target: https://gitlab.com/pyretis/pyretis/commits/master
+
+.. image:: https://gitlab.com/pyretis/pyretis/badges/master/coverage.svg
+    :target: https://gitlab.com/pyretis/pyretis/commits/master
+
+
 PyRETIS
 =======
 

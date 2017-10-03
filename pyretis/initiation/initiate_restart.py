@@ -24,7 +24,7 @@ __all__ = ['initiate_restart']
 
 
 def initiate_restart(simulation, cycle, settings):
-    """Initiate paths by loading already generated ones.
+    """Initialise paths by loading restart data.
 
     Parameters
     ----------
@@ -34,6 +34,7 @@ def initiate_restart(simulation, cycle, settings):
         The simulation cycles we are starting at.
     settings : dictionary
         A dictionary with settings for the initiation.
+
     """
     maxlen = settings['tis']['maxlength']
     klass = get_path_class(simulation.engine.engine_type)

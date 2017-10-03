@@ -2,11 +2,11 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """A GROMACS external MD integrator interface. Used for testing"""
+import pickle
 import logging
 import os
 from numpy.random import RandomState
 from pyretis.engines.gromacs2 import GromacsEngine2
-import pickle
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
 

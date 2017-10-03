@@ -51,6 +51,7 @@ def accept_reject_displace(rgen, system, trial):
         The potential energy of the trial positions.
     out[4] : boolean
         True if move is accepted, False otherwise.
+
     """
     pos = np.copy(system.particles.pos)
     system.particles.pos = trial
@@ -83,6 +84,7 @@ def accept_reject_momenta(rgen, system, dke, aimless=True):
     -------
     out : boolean
         True if the move is accepted, False otherwise.
+
     """
     if aimless:  # for the aimless shooting we accept
         return True
@@ -115,6 +117,7 @@ def metropolis_accept_reject(rgen, system, deltae):
     This can for instance happen in a umbrella simulation
     where the bias potential is infinite or very large.
     Right now, this is just ignored.
+
     """
     if deltae < 0.0:  # short-cut to avoid calculating np.exp()
         return True
@@ -148,6 +151,7 @@ def max_displace_step(rgen, system, maxdx=0.1, idx=None):
     out : boolean
         The outcome of applying the function `accept_reject` to the
         system and trial position.
+
     """
     if idx is None:
         idx = rgen.random_integers(0, system.particles.npart - 1)

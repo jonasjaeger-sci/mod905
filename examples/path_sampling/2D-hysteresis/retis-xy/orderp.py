@@ -48,14 +48,14 @@ class OrderXY(OrderParameter):
         """
         super().__init__(description='2D->1D projection')
         self.index = index
-        x1 = 0.2
-        y1 = 0.4
-        x0 = -0.2
-        y0 = -0.4
-        self.x0 = x0
-        self.y0 = y0
-        self.origin = np.array([x0, y0])
-        self.vec = np.array([x1 - x0, y1 - y0])
+        x_1 = 0.2
+        y_1 = 0.4
+        x_0 = -0.2
+        y_0 = -0.4
+        self.x_0 = x_0
+        self.y_0 = y_0
+        self.origin = np.array([x_0, y_0])
+        self.vec = np.array([x_1 - x_0, y_1 - y_0])
         self.vec /= np.sqrt(np.dot(self.vec, self.vec))
         self.inter_a = inter_a
         self.inter_b = inter_b
@@ -82,9 +82,7 @@ class OrderXY(OrderParameter):
             The order parameter.
         """
         pos = system.particles.pos[self.index]
-        x = pos[0]
-        y = pos[1]
-        vec = np.array([x - self.x0, y - self.y0])
+        vec = np.array([pos[0] - self.x_0, pos[1] - self.y_0])
         proj = np.dot(vec, self.vec)
         if proj < self.inter_a:
             if system.particles.vpot > self.energy_a:

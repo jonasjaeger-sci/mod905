@@ -29,7 +29,8 @@ __all__ = ['ExternalMDEngine']
 
 
 class ExternalMDEngine(EngineBase):
-    """Base class for interfacing external MD engines.
+    """
+    Base class for interfacing external MD engines.
 
     This class defines the interface to external programs. The
     interface will define how we interact with the external programs
@@ -71,11 +72,14 @@ class ExternalMDEngine(EngineBase):
         The number of steps the external step is composed of. That is:
         each external step is really composed of ``subcycles`` number
         of iterations.
+
     """
+
     engine_type = 'external'
 
     def __init__(self, description, timestep, subcycles):
-        """Initialisation of the external engine.
+        """
+        Set up the external engine.
 
         Here we just set up some common properties which are useful
         for the execution.
@@ -91,6 +95,7 @@ class ExternalMDEngine(EngineBase):
         subcycles : integer
             The number of sub-cycles each external integration step is
             composed of.
+
         """
         super().__init__(description)
         self.timestep = timestep
@@ -112,7 +117,8 @@ class ExternalMDEngine(EngineBase):
                             'not exist!'), self.description, exe_dir)
 
     def integration_step(self, system):
-        """Perform one time step of the integration.
+        """
+        Perform one time step of the integration.
 
         For external engines, it does not make much sense to run single
         steps unless we absolutely have to. We therefore just fail here.
@@ -121,6 +127,12 @@ class ExternalMDEngine(EngineBase):
 
         If it's absolutely needed, there is a `self.step()` method
         which can be used, for instance in the initialisation.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            A system to run the integration step on.
+
         """
         msg = 'External engine does not support "integration_step()"!'
         logger.error(msg)
@@ -163,6 +175,7 @@ class ExternalMDEngine(EngineBase):
             The positions found in the given filename.
         out[2] : numpy.array
             The velocities found in the given filename.
+
         """
         pass
 
@@ -176,12 +189,14 @@ class ExternalMDEngine(EngineBase):
             Input file with velocities.
         outfile : string
             File to write with reversed velocities.
+
         """
         pass
 
     @staticmethod
     def _modify_input(sourcefile, outputfile, settings, delim='='):
-        """Modify input file for external software.
+        """
+        Modify input file for external software.
 
         Here we assume that the input file has a syntax consisting of
         ``keyword = setting``. We will only replace settings for
@@ -198,6 +213,7 @@ class ExternalMDEngine(EngineBase):
             A dictionary with settings to write.
         delim : string
             The delimiter used for separation keywords from settings
+
         """
         reg = re.compile(r'(.*?){}'.format(delim))
         written = set()
@@ -220,7 +236,8 @@ class ExternalMDEngine(EngineBase):
 
     @staticmethod
     def _read_input_settings(sourcefile, delim='='):
-        """Read input settings for simulation input files.,
+        """
+        Read input settings for simulation input files.
 
         Here we assume that the input file has a syntax consisting of
         ``keyword = setting``, where ``=`` can be any string given
@@ -242,6 +259,7 @@ class ExternalMDEngine(EngineBase):
         ----
         Important: We are here assuming that there will *ONLY* be one
         keyword per line.
+
         """
         reg = re.compile(r'(.*?){}'.format(delim))
         settings = {}
@@ -254,10 +272,14 @@ class ExternalMDEngine(EngineBase):
         return settings
 
     def execute_command(self, cmd, cwd=None, inputs=None):
-        """Method that will execute a command.
+        """
+        Execute an external command for the engine.
 
         We are here executing a command and then waiting until it
-        finishes.
+        finishes. The standard out and standard error are piped to
+        files during the execution, and can be inspected if the
+        command fails. This method returns the return code of the
+        issued command.
 
         Parameters
         ----------
@@ -274,6 +296,7 @@ class ExternalMDEngine(EngineBase):
         -------
         out : int
             The return code of the command.
+
         """
         cmd2 = ' '.join(cmd)
         logger.debug('Executing: %s', cmd2)
@@ -350,6 +373,7 @@ class ExternalMDEngine(EngineBase):
             Where we are removing.
         files : list of strings
             A list with files to remove.
+
         """
         for thefile in files:
             self._removefile(os.path.join(dirname, thefile))
@@ -363,7 +387,8 @@ class ExternalMDEngine(EngineBase):
 
     def calculate_order(self, order_function, system,
                         xyz=None, vel=None, box=None):
-        """Calculate order parameter from configuration in a file.
+        """
+        Calculate order parameter from configuration in a file.
 
         Note, if ``xyz``, ``vel`` or ``box`` are given, we will
         **NOT** read positions, velocity and box information from the
@@ -387,6 +412,7 @@ class ExternalMDEngine(EngineBase):
         -------
         out : list of floats
             The calculated order parameter(s).
+
         """
         if any((xyz is None, vel is None, box is None)):
             out = self._read_configuration(system.particles.config[0])
@@ -404,7 +430,8 @@ class ExternalMDEngine(EngineBase):
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
-        """Force a phase point across the middle interface.
+        """
+        Force a phase point across the middle interface.
 
         This is accomplished by repeatedly kicking the pahse point so
         that it crosses the middle interface.
@@ -443,6 +470,7 @@ class ExternalMDEngine(EngineBase):
         `system.particles.get_particle_state() == out[1]`.
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
+
         """
         logger.info('Kicking with external integrator: %s', self.description)
         # We search for crossing with the middle interface and do this
@@ -517,12 +545,14 @@ class ExternalMDEngine(EngineBase):
             The frame number we look for.
         out_file : string
             The file to dump to.
+
         """
         pass
 
     def propagate(self, path, system, order_function, interfaces,
                   reverse=False):
-        """Propagate the equations of motion with the external code.
+        """
+        Propagate the equations of motion with the external code.
 
         This method will explicitly do the common set-up, before
         calling more specialised code for doing the actual propagation.
@@ -551,6 +581,7 @@ class ExternalMDEngine(EngineBase):
             This is True if we generated an acceptable path.
         status : string
             A text description of the current status of the propagation.
+
         """
         logger.debug('Running propagate with: "%s"', self.description)
         if reverse:
@@ -596,9 +627,13 @@ class ExternalMDEngine(EngineBase):
     @abstractmethod
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
-        """Method to run the actual propagation using the specific engine.
+        """
+        Run the actual propagation using the specific engine.
 
-        This method is called after :py:meth:`.propagate`.
+        This method is called after :py:meth:`.propagate`. And we
+        assume that the necessary preparations before the actual
+        propagation (e.g. dumping of the configuration etc.) is
+        handled in that method.
 
         Parameters
         ----------
@@ -621,6 +656,7 @@ class ExternalMDEngine(EngineBase):
             This is True if we generated an acceptable path.
         status : string
             A text description of the current status of the propagation.
+
         """
         pass
 
@@ -648,6 +684,7 @@ class ExternalMDEngine(EngineBase):
         Note
         ----
         If the velocities should be reversed, this is handled elsewhere.
+
         """
         pos_file, idx = config
         out_file = os.path.join(self.exe_dir, self._name_output(deffnm))

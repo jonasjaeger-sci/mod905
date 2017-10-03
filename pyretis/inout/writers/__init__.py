@@ -154,6 +154,7 @@ def get_writer(file_type, settings=None):
     >>> print(crossfile)
     >>> for block in crossfile.load('cross.dat'):
     >>>     print(len(block['data']))
+
     """
     try:
         cls = _CLASS_MAP[file_type]
@@ -167,7 +168,7 @@ def get_writer(file_type, settings=None):
 
 
 def prepare_load(file_type, filename, required=True):
-    """Prepare to load a file of a given file type
+    """Prepare to load a file of a given file type.
 
     Parameters
     ----------
@@ -182,6 +183,7 @@ def prepare_load(file_type, filename, required=True):
     -------
     out : generator or None
         A generator which can be used to read the file.
+
     """
     if not os.path.isfile(filename):
         if required:

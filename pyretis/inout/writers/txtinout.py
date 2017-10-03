@@ -38,10 +38,11 @@ def txt_save_columns(outputfile, header, variables, backup=False):
         This is the name of the output file to create.
     header : string
         String that will be written at the beginning of the file.
-    variables : tuple of numpy.arrays
+    variables : tuple or list of numpy.arrays
         These are the variables that will be save to the text file.
     backup : boolean
         Determines if we should backup old files or not.
+
     """
     if backup:
         msg = create_backup(outputfile)

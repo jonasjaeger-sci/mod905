@@ -6,10 +6,12 @@ import logging
 import numpy as np
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import (
-    generate_pair_interactions
+    generate_pair_interactions,
 )
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+
 try:
     from ljfortranp import ljfortranp
 except ImportError:
@@ -139,12 +141,19 @@ class PairLennardJonesCutFp(PairLennardJonesCut):
         """
         particles = system.particles
         box = system.box
-        v_pot = ljfortranp.potential(particles.pos,
-                                     box.length, box.ilength,
-                                     self._lj3, self._lj4, self._offset,
-                                     self._rcut2, particles.ptype,
-                                     particles.npart,
-                                     box.dim, self.ntype)
+        v_pot = ljfortranp.potential(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj3,
+            self._lj4,
+            self._offset,
+            self._rcut2,
+            particles.ptype,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return v_pot
 
     def force(self, system):
@@ -167,12 +176,18 @@ class PairLennardJonesCutFp(PairLennardJonesCut):
         """
         particles = system.particles
         box = system.box
-        forces, virial = ljfortranp.force(particles.pos,
-                                          box.length, box.ilength,
-                                          self._lj1, self._lj2, self._rcut2,
-                                          particles.ptype,
-                                          particles.npart,
-                                          box.dim, self.ntype)
+        forces, virial = ljfortranp.force(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj1,
+            self._lj2,
+            self._rcut2,
+            particles.ptype,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return forces, virial
 
     def potential_and_force(self, system):
@@ -206,17 +221,19 @@ class PairLennardJonesCutFp(PairLennardJonesCut):
         """
         particles = system.particles
         box = system.box
-        forces, virial, vpot = ljfortranp.potential_and_force(particles.pos,
-                                                              box.length,
-                                                              box.ilength,
-                                                              self._lj1,
-                                                              self._lj2,
-                                                              self._lj3,
-                                                              self._lj4,
-                                                              self._offset,
-                                                              self._rcut2,
-                                                              particles.ptype,
-                                                              particles.npart,
-                                                              box.dim,
-                                                              self.ntype)
+        forces, virial, vpot = ljfortranp.potential_and_force(
+            particles.pos,
+            box.length,
+            box.ilength,
+            self._lj1,
+            self._lj2,
+            self._lj3,
+            self._lj4,
+            self._offset,
+            self._rcut2,
+            particles.ptype,
+            particles.npart,
+            box.dim,
+            self.ntype
+        )
         return vpot, forces, virial

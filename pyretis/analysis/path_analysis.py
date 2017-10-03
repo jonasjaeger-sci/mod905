@@ -60,6 +60,7 @@ def _get_successful(path_ensemble, idetect):
     -------
     out : numpy.array
         ``out[i] = 1`` if path no. `i` is successful 0 otherwise.
+
     """
     data = []
     for path in path_ensemble.get_accepted():
@@ -101,6 +102,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
     See Also
     --------
     `_get_successful`
+
     """
     if data is None:
         data = _get_successful(path_ensemble, idetect)
@@ -137,6 +139,7 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
     -----
     This routine could perhaps be made shorter by making use of
     `numpy.digitize` etc.
+
     """
     # first, get the boundaries and order parameters of the
     # accepted paths
@@ -179,6 +182,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         The weight of each order parameter. This is used in order to
         count a specific order parameter more than once. If not given,
         the values in `orderparam` will be weighted equally.
+
     """
     lamb = np.linspace(ordermin, ordermax, ngrid)
     pcross = np.zeros(ngrid)
@@ -234,7 +238,8 @@ def _get_path_distribution(path_ensemble, bins=1000):
 
     See Also
     --------
-    `histogram_and_avg` in .histogram
+    :py:func:`.histogram_and_avg` in :py:mod:`.histogram`.
+
     """
     # first get lengths of accepted paths:
     length_acc = [path['length'] for path in path_ensemble.get_accepted()]
@@ -271,6 +276,7 @@ def _get_path_length(path, ensemble):
     -------
     out : int
         The path length
+
     """
     move = path['generated'][0]
     return_table = {'tr': 0, 's+': 0, 's-': 0, '00': 0}
@@ -317,7 +323,8 @@ def _shoot_analysis(path_ensemble, bins=1000):
 
     See Also
     --------
-    _create_shoot_histograms
+    :py:func:`._create_shoot_histograms`.
+
     """
     shoot_stats = {'REJ': [], 'ALL': []}
     for path in path_ensemble.paths:
@@ -343,6 +350,7 @@ def _update_shoot_stats(shoot_stats, path):
     -------
     out : None
         Returns `None` but will update `shoot_stats` for shooting moves.
+
     """
     move = path['generated'][0]
     if move == 'sh':
@@ -383,7 +391,8 @@ def _create_shoot_histograms(shoot_stats, bins):
 
     See Also
     --------
-    `histogram` in `pyretis.analysis.histogram`.
+    :py:func`.histogram` in :py:mod:`.histogram`.
+
     """
     histograms = {}
     scale = {}
@@ -440,8 +449,9 @@ def analyse_path_ensemble_object(path_ensemble, settings):
 
     See Also
     --------
-    `_pcross_lambda`, `_running_pcross`, `_get_path_distribution` and
-    `_shoot_analysis`.
+    :py:func:`._pcross_lambda`, :py:func:`._running_pcross`,
+    :py:func:`._get_path_distribution` and :py:func:`._shoot_analysis`.
+
     """
     result = {}
     analysis = settings['analysis']
@@ -527,13 +537,14 @@ def analyse_path_ensemble(path_ensemble, settings):
 
     See Also
     --------
-    `_update_shoot_stats`, `pcross_lambda_cumulative` and
-    `_create_shoot_histograms`
+    :py:func:`._update_shoot_stats`, :py:func:`.pcross_lambda_cumulative`
+    and :py:func:`._create_shoot_histograms`.
 
     References
     ----------
     .. [wikimov] Wikipedia, "Moving Average",
        http://en.wikipedia.org/wiki/Moving_average
+
     """
     detect = path_ensemble.detect
     if path_ensemble.ensemble == 0:
@@ -656,6 +667,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
     -------
     result : dict
         The results from the analysis on this ensemble.
+
     """
     detect = path_ensemble.detect
     ensemble = path_ensemble.ensemble
@@ -736,6 +748,7 @@ def match_probabilities(path_results, detect):
     results : dict
         These are results for the over-all probability and error
         and also some over-all TIS efficiencies.
+
     """
     results = {'matched-prob': [],
                'overall-prob': [[], []]}
@@ -769,7 +782,7 @@ def match_probabilities(path_results, detect):
 
 
 def retis_flux(results0, results1, timestep):
-    """Method to calculate the initial flux for RETIS.
+    """Calculate the initial flux for RETIS.
 
     Parameters
     ----------
@@ -786,6 +799,7 @@ def retis_flux(results0, results1, timestep):
         The initial flux.
     flux_error : float
         The relative error in the initial flux.
+
     """
     flux0 = results0['fluxlength']
     flux1 = results1['fluxlength']
@@ -797,7 +811,7 @@ def retis_flux(results0, results1, timestep):
 
 
 def retis_rate(pcross, pcross_relerror, flux, flux_relerror):
-    """Method to calculate the rate constant for RETIS.
+    """Calculate the rate constant for RETIS.
 
     Parameters
     ----------
@@ -816,6 +830,7 @@ def retis_rate(pcross, pcross_relerror, flux, flux_relerror):
         The rate constant
     rate_error : float
         The relative error in the rate constant.
+
     """
     rate = pcross * flux
     rate_error = np.sqrt(pcross_relerror**2 + flux_relerror**2)

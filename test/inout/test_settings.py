@@ -26,7 +26,6 @@ from pyretis.inout.settings import (
     _parse_all_raw_sections,
     _parse_sections,
     settings_to_text,
-    MAX_SEC,
     copy_settings,
     write_settings_file,
     _clean_settings,
@@ -60,6 +59,26 @@ def _remove_file(filename):
         pass
 
 
+def _read_raw_settings(filename):
+    """Read raw settings from a local file.
+
+    Parameters
+    ----------
+    filename : string
+        The file we are going to read.
+
+    Return
+    ------
+    out : string
+        The data read from the file.
+    """
+    inputfile = os.path.join(LOCAL_DIR, filename)
+    data = None
+    with open(inputfile, 'r') as indata:
+        data = indata.read()
+    return data
+
+
 def _test_correct_parsing(test, data, correct):
     """Helper method to test that we correctly parse settings.
 
@@ -91,23 +110,29 @@ class KeywordParsing(unittest.TestCase):
         """Test that we can parse an input file."""
         inputfile = os.path.join(LOCAL_DIR, 'settings.rst')
         settings = parse_settings_file(inputfile)
-        correct = {}
-        correct['system'] = {'units': 'lj',
-                             'dimensions': 3,  # added by default
-                             'temperature': 2.0}
-        correct['simulation'] = {'task': 'md-nve',
-                                 'steps': 100}
-        correct['engine'] = {'class': 'velocityverlet',
-                             'timestep': 0.002}
-        correct['particles'] = {'position': {'file': 'initial.gro'},
-                                'velocity': {'generate': 'maxwell',
-                                             'temperature': 2.0,
-                                             'momentum': True,
-                                             'seed': 0},
-                                'mass': {'Ar': 1.0}}
-        correct['forcefield'] = {'description': 'Lennard Jones test'}
-        correct['potential'] = [{'class': 'PairLennardJonesCutnp',
-                                 'shift': True}]
+        correct = {
+            'heading': {'text': ('Molecular dynamics example settings\n'
+                                 '===================================\n'
+                                 'Here I can write some text to remind me\n'
+                                 'what this simulation is doing.')},
+
+            'system': {'units': 'lj',
+                       'dimensions': 3,  # added by default
+                       'temperature': 2.0},
+            'simulation': {'task': 'md-nve',
+                           'steps': 100},
+            'engine': {'class': 'velocityverlet',
+                       'timestep': 0.002},
+            'particles': {'position': {'file': 'initial.gro'},
+                          'velocity': {'generate': 'maxwell',
+                                       'temperature': 2.0,
+                                       'momentum': True,
+                                       'seed': 0},
+                          'mass': {'Ar': 1.0}},
+            'forcefield': {'description': 'Lennard Jones test'},
+            'potential': [{'class': 'PairLennardJonesCutnp',
+                           'shift': True}],
+        }
         for key in correct:
             self.assertIn(key, settings)
             self.assertEqual(correct[key], settings[key])
@@ -203,7 +228,7 @@ timestep = 0.002"""
         self.assertEqual(settings_read, correct)
 
     def test_ignore_section(self):
-        """Test that we indeed ingnore unknow sections."""
+        """Test that we ignore unknown sections."""
         data = """
 Engine settings
 ---------------
@@ -224,6 +249,7 @@ Is this = True?
 
 class KeywordEngine(unittest.TestCase):
     """Test the parsing of input settings for engines."""
+
     def test_load_external_engine(self):
         """Test that we can load external python modules for engines."""
         data = """
@@ -387,26 +413,7 @@ name = Dummy"""
 
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
-        test_data = """
-Orderparameter
---------------
-class = OrderParameter
-name =  test
-
-Collective-variable
--------------------
-class = OrderParameterPosition
-name = Position
-index = 0
-dim = x
-periodic = False
-
-Collective-variable
--------------------
-class = OrderParameterDistance
-name = My distance
-index = (100, 101)
-periodic = False"""
+        test_data = _read_raw_settings('internal-order.rst')
         klass = [OrderParameter,
                  OrderParameterPosition,
                  OrderParameterDistance]
@@ -613,13 +620,7 @@ units = lj"""
 
     def test_file_xyz(self):
         """Test initialisation from a XYZ file."""
-        data = """
-Particles
----------
-position = {'file': 'config.xyz'}
-System
-------
-units = lj"""
+        data = _read_raw_settings('initial-xyz2.rst')
         correct = {'particles': {'position': {'file': 'config.xyz'}},
                    'system': {'units': 'lj'}}
         settings = _test_correct_parsing(self, data, correct)
@@ -648,13 +649,7 @@ units = lj"""
 
     def test_file_gro(self):
         """Test initialisation from a GRO file."""
-        data = """
-Particles
----------
-position = {'file': 'config.gro'}
-System
-------
-units = gromacs"""
+        data = _read_raw_settings('initial-gro.rst')
         correct = {'particles': {'position': {'file': 'config.gro'}},
                    'system': {'units': 'gromacs'}}
         settings = _test_correct_parsing(self, data, correct)
@@ -683,19 +678,7 @@ units = gromacs"""
 
     def test_file_xyztab(self):
         """Test initialisation from a XYZ file with mass dict."""
-        data = """
-Particles
----------
-position = {'file': 'configtag.xyz'}
-type = [0, 0, 0, 1, 1]
-mass = {'Ar': 1.,
-        'Kr': 2.09767698,
-        'Kr2': 2.09767698}
-
-System
-------
-units = lj
-"""
+        data = _read_raw_settings('initial-xyz.rst')
         correct = {'particles': {'position': {'file': 'configtag.xyz'},
                                  'type': [0, 0, 0, 1, 1],
                                  'mass': {'Ar': 1., 'Kr': 2.09767698,
@@ -726,16 +709,7 @@ class KeywordForcefield(unittest.TestCase):
 
     def test_forcefield(self):
         """Test initialisation of a simple force field."""
-        data = """
-Forcefield
-----------
-description = My first force field
-
-potential
----------
-class = PairLennardJonesCutnp
-shift = True
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}"""
+        data = _read_raw_settings('forcefield-simple.rst')
         correct = {'forcefield': {'description': 'My first force field'},
                    'potential': [{'class': 'PairLennardJonesCutnp',
                                   'shift': True,
@@ -818,27 +792,7 @@ dimensions = 2"""
 
     def test_potential_create(self):
         """Test that we can create all potentials."""
-        data = """
-Potential
----------
-class = PairLennardJonesCut
-
-Potential
----------
-class = PairLennardJonesCutnp
-
-Potential
----------
-class = DoubleWellWCA
-
-Potential
----------
-class = DoubleWell
-
-Potential
----------
-class = RectangularWell
-"""
+        data = _read_raw_settings('allpotentials.rst')
         all_potentials = [PairLennardJonesCut,
                           PairLennardJonesCutnp,
                           DoubleWellWCA,
@@ -891,30 +845,7 @@ parameter a = 2.0"""
 
     def test_complicated_input(self):
         """Test that we can read 'complex' force field input."""
-        data = """
-Forcefield
-----------
-description = My force field mix
-
-Potential
----------
-class = PairLennardJonesCutnp
-shift = True
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
-
-Potential
----------
-class = DoubleWellWCA
-parameter types = [(0, 0)]
-parameter rzero = 1.122462048309373
-parameter height = 6.0
-parameter width = 0.25
-
-Potential
----------
-class = FooPotential
-module = foopotential.py
-parameter a = 10.0"""
+        data = _read_raw_settings('forcefield.rst')
         correct = {'forcefield': {'description': 'My force field mix'},
                    'potential': [{'class': 'PairLennardJonesCutnp',
                                   'shift': True,
@@ -943,20 +874,17 @@ parameter a = 10.0"""
             'forcefield': {'description': 'My force field mix'},
             'potential': [],
         }
-        for _ in range(MAX_SEC['potential'] + 5):
+        for i in range(1001):
             settings['potential'].append(
                 {'class': 'DoubleWellWCA',
-                 'parameter': {'types': [(0, 0)],
+                 'parameter': {'types': [(i, i)],
                                'rzero': 1. * (2.**(1./6.))}}
             )
         txt = settings_to_text(settings)
-        logging.disable(logging.INFO)
-        with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
-            raw = _parse_sections(txt.split('\n'))
-        logging.disable(logging.CRITICAL)
+        raw = _parse_sections(txt.split('\n'))
         settings2 = _parse_all_raw_sections(raw)
-        self.assertEqual(len(settings2['potential']),
-                         MAX_SEC['potential'] + 1)
+        for i, pot in enumerate(settings2['potential']):
+            self.assertEqual(pot['parameter']['types'][0], (i, i))
 
     def test_copy_settings(self):
         """Test that the copy method works as intended."""

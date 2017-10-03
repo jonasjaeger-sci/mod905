@@ -20,7 +20,6 @@ from matplotlib import pyplot as plt
 # the plot nicer by loading a style, e.g.:
 plt.style.use('seaborn')
 
-
 print('Creating box:')
 xyz, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
 size = np.array(size)
@@ -68,5 +67,7 @@ ax1.plot(step, etot, label='Total energy')
 ax1.plot(step, vpot, label='Potential energy')
 ax1.set_xlabel('Step no.')
 ax1.set_ylabel('Energy / reduced units')
-fig1.savefig('out.png')
+ax1.legend()
+fig1.tight_layout()
+fig1.savefig('out.png', dpi=150)
 plt.show()

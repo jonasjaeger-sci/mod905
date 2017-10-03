@@ -1,6 +1,6 @@
 Simulation
 ----------
-steps = 25
+steps = 10
 
 Engine
 ------

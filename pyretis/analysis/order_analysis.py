@@ -44,6 +44,7 @@ def analyse_orderp(orderdata, settings):
     about the structure, i.e. the positions are assumed to have a
     specific meaning: column zero is the time, column one the order
     parameter and so on.
+
     """
     results = []
     _, col = orderdata.shape

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This module handles creation of force fields from simulation settings
+"""This module handles creation of force fields from simulation settings.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,7 +24,7 @@ __all__ = ['create_force_field', 'create_potentials']
 
 
 def create_potentials(settings):
-    """Method to create potential functions from simulations settings.
+    """Create potential functions from given simulations settings.
 
     This method will basically loop over the given potential settings
     and just run :py:func:`.create_potential` for each setting.
@@ -40,6 +40,7 @@ def create_potentials(settings):
         A list of potential functions.
     out[1] : list
         A list of parameters for the potential functions.
+
     """
     potentials = settings.get('potential', [])
     try:
@@ -67,7 +68,7 @@ def create_potentials(settings):
 
 
 def create_force_field(settings):
-    """Method to create a force field from input settings.
+    """Create a force field from input settings.
 
     This method will create the required potential functions with the
     specified parameters from `settings`.
@@ -81,6 +82,7 @@ def create_force_field(settings):
     -------
     out : object like :py:class:`.ForceField`
         This object represents the force field.
+
     """
     try:
         desc = settings['forcefield']['description']

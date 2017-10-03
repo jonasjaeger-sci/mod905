@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Dihedral order parameters for PyRETIS
+"""Definition of a dihedral order parameter.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,6 +36,7 @@ class OrderParameterDihedral(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self, index, periodic=False):
@@ -49,6 +50,7 @@ class OrderParameterDihedral(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the distance vectors.
+
         """
         try:
             if len(index) != 4:
@@ -77,8 +79,9 @@ class OrderParameterDihedral(OrderParameter):
 
         Returns
         -------
-        out : list of floats
+        out : list of float
             The order parameter.
+
         """
         pos = system.particles.pos
         vector1 = pos[self.index[0]] - pos[self.index[1]]

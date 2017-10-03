@@ -11,10 +11,12 @@ User Guide
     install.rst
     getting-started.rst
     input.rst
-    application.rst
-    units.rst
-    intro-api.rst
     Input reference for sections <section/sections.rst>
+    application.rst
+    analyse.rst
+    exercises/index.rst
+    intro-api.rst
+    orderparameters.rst
+    engine.rst
+    units.rst
     errors.rst
-    integrator.rst
-

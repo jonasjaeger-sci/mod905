@@ -23,9 +23,11 @@ __all__ = ['UmbrellaWindowSimulation']
 
 
 def mc_task(rgen, system, maxdx):
-    """Function to perform Monte Carlo moves.
+    """Perform a Monte Carlo displacement move.
 
-    Will update positions and potential energy as needed.
+    Here, a displacement step will be carried out and
+    the trial move will be accepted/rejected and the
+    positions and potential energy will be updated as needed.
 
     Parameters
     ----------
@@ -35,6 +37,7 @@ def mc_task(rgen, system, maxdx):
         The system we act on.
     maxdx : float
         Maximum displacement step for the Monte Carlo move.
+
     """
     accepted_r, _, trial_r, v_trial, status = max_displace_step(rgen, system,
                                                                 maxdx)
@@ -68,12 +71,14 @@ class UmbrellaWindowSimulation(Simulation):
         Object to use for random number generation.
     maxdx : float
         Maximum allowed displacement in the Monte Carlo step.
+
     """
+
     simulation_type = 'umbrella-window'
 
     def __init__(self, system, umbrella, overlap, rgen, maxdx,
                  mincycle=0, startcycle=0):
-        """Initialisation of a umbrella simulation.
+        """Initialise the umbrella simulation simulation.
 
         Parameters
         ----------
@@ -95,6 +100,7 @@ class UmbrellaWindowSimulation(Simulation):
             by overriding `self.simulation_finished`.
         startcycle : int, optional
             The current simulation cycle, i.e. where we start.
+
         """
         super().__init__(steps=mincycle, startcycle=startcycle)
         self.umbrella = umbrella
@@ -119,6 +125,7 @@ class UmbrellaWindowSimulation(Simulation):
         -------
         out : boolean
             True if simulation is finished, False otherwise.
+
         """
         return (self.cycle['step'] > self.cycle['end'] and
                 np.all(self.system.particles.pos > self.overlap))

@@ -84,7 +84,7 @@ from .path_analysis import (analyse_path_ensemble, match_probabilities,
 
 
 def analyse_md_flux(crossdata, energydata, orderdata, settings):
-    """Method to analyse the output from a MD-flux simulation.
+    """Analyse the output from a MD-flux simulation.
 
     The obtained results will be returned as a convenient structure for
     plotting or reporting.
@@ -108,6 +108,7 @@ def analyse_md_flux(crossdata, energydata, orderdata, settings):
         This dict contains the results from the different analysis as a
         dictionary. This dict can be used further for plotting or for
         generating reports.
+
     """
     results = {'flux': analyse_flux(crossdata, settings),
                'energy': analyse_energies(energydata, settings),

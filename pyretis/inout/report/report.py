@@ -87,6 +87,7 @@ def _rst_to_html(rst):
     -------
     out : string
         A HTML document corresponding to the input reStructuredText.
+
     """
     htmlwriter = HTMLWriter()
     htmlwriter.translator_class = HTMLTranslator
@@ -122,6 +123,7 @@ def get_template(output, report_type, template=None):
         File name of template to use.
     out[2] : string
         Path to the template to use.
+
     """
     if template is None or not os.path.isfile(template):
         # Use default template, this is located in the templates dir:
@@ -141,7 +143,7 @@ def get_template(output, report_type, template=None):
 
 
 def render_report(report, output, template, path):
-    """This will render a report using a template and jinja2.
+    """Render a report using a template and jinja2.
 
     The report is given as a dictionary which is used to fill in a
     template with jinja2. The template is given as string
@@ -173,6 +175,7 @@ def render_report(report, output, template, path):
     ----
     The parameters `template` and `path` are typically obtained by a
     call to :py:func:`.get_template`.
+
     """
     env = jinja2.Environment(block_start_string='@{%',
                              block_end_string='%}@',
@@ -210,6 +213,7 @@ def generate_report(report_type, analysis_results, output, template=None):
     out[1] : string
         This is an extension which can be used when writing the report
         to a file.
+
     """
     report = {'version': VERSION,
               'program': PROGRAM_NAME,

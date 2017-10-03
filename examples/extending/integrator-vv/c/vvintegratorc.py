@@ -6,6 +6,8 @@ import logging
 from pyretis.engines import MDEngine
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 logger.addHandler(logging.NullHandler())
+
+
 try:
     import vvintegrator
 except ImportError:
@@ -52,7 +54,7 @@ class VelocityVerletC(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 
@@ -63,19 +65,23 @@ class VelocityVerletC(MDEngine):
             `system`.
         """
         particles = system.particles
-        vvintegrator.step1(particles.pos,
-                           particles.vel,
-                           particles.force,
-                           particles.imass,
-                           self.delta_t,
-                           self.half_delta_t,
-                           particles.npart,
-                           particles.dim)
+        vvintegrator.step1(
+            particles.pos,
+            particles.vel,
+            particles.force,
+            particles.imass,
+            self.delta_t,
+            self.half_delta_t,
+            particles.npart,
+            particles.dim
+        )
         system.potential_and_force()
-        vvintegrator.step2(particles.vel,
-                           particles.force,
-                           particles.imass,
-                           self.half_delta_t,
-                           particles.npart,
-                           particles.dim)
+        vvintegrator.step2(
+            particles.vel,
+            particles.force,
+            particles.imass,
+            self.half_delta_t,
+            particles.npart,
+            particles.dim
+        )
         return None

@@ -105,6 +105,7 @@ def write_cp2k_restart(filename, factorx, factorv, steps=10):
 
 if __name__ == '__main__':
     # pylint: disable=invalid-name
+    print('This is the mock CP2K command')
     args = sys.argv
     name = read_project_name(args[-1])
     if not name:

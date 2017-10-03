@@ -70,6 +70,7 @@ class PathSimulation(Simulation):
         This is just a list of the settings that the simulation
         requires. Here it is used as a check to see that we have
         all we need to set up the simulation.
+
     """
 
     required_settings = ('tis',)
@@ -78,7 +79,7 @@ class PathSimulation(Simulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialisation of the path simulation class.
+        """Initialise the path simulation object.
 
         Parameters
         ----------
@@ -101,6 +102,7 @@ class PathSimulation(Simulation):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         super().__init__(steps=steps, startcycle=startcycle)
         self.system = system
@@ -162,6 +164,7 @@ class SimulationSingleTIS(PathSimulation):
         defined by the parent class. For ideological reasons we
         also like to have a ``path_ensemble`` attribute since this
         class is intended for simulating a single TIS ensemble only.
+
     """
 
     required_settings = ('tis',)
@@ -170,7 +173,7 @@ class SimulationSingleTIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensemble, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialisation of the TIS simulation.
+        """Initialise the TIS simulation object.
 
         Parameters
         ----------
@@ -194,6 +197,7 @@ class SimulationSingleTIS(PathSimulation):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         path_ensembles = (path_ensemble,)  # Just for the base class
         super().__init__(
@@ -214,6 +218,7 @@ class SimulationSingleTIS(PathSimulation):
         -------
         out : dict
             This list contains the results of the TIS step.
+
         """
         results = {}
         self.cycle['step'] += 1
@@ -260,7 +265,7 @@ class SimulationRETIS(PathSimulation):
 
     def __init__(self, system, order_function, engine, path_ensembles, rgen,
                  settings, steps=0, startcycle=0):
-        """Initialisation of the RETIS simulation.
+        """Initialise the RETIS simulation object.
 
         Parameters
         ----------
@@ -288,6 +293,7 @@ class SimulationRETIS(PathSimulation):
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         super().__init__(
             system,
@@ -306,6 +312,7 @@ class SimulationRETIS(PathSimulation):
         -------
         out : dict
             This list contains the results of the defined tasks.
+
         """
         results = {}
         self.cycle['step'] += 1

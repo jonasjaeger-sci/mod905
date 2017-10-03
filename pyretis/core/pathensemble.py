@@ -53,6 +53,7 @@ def _generate_file_names(path, target_dir, prefix=None):
     out[1] : dict
         A dict which defines the unique "source -> destination" for
         copy/move operations.
+
     """
     source = {}
     new_pos = [None for _ in range(len(path.pos))]
@@ -113,6 +114,7 @@ class PathEnsemble:
         The maximum number of paths to store.
     last_path : object like :py:class:`.PathBase`
         This is the last **accepted** path.
+
     """
 
     def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
@@ -137,6 +139,7 @@ class PathEnsemble:
             The base folder where the simulation was executed from.
             This is used to set up output directories for the path
             ensemble.
+
         """
         self.ensemble = ensemble
         self.interfaces = tuple(interfaces)  # Should not change interfaces
@@ -159,13 +162,35 @@ class PathEnsemble:
         self.directory['traj'] = None
         if exe_dir is not None:
             path_dir = os.path.join(exe_dir, self.ensemble_name_simple)
-            self.directory['path-ensemble'] = path_dir
-            for key in ('accepted', 'generate', 'traj'):
-                self.directory[key] = os.path.join(path_dir, key)
+            self.update_directories(path_dir)
 
     def directories(self):
         """Yield the directories PyRETIS should make."""
         yield self.directory['path-ensemble']
+
+    def update_directories(self, path):
+        """Update directory names.
+
+        This method will not create new directories, but it will
+        update the directory names.
+
+        Parameters
+        ----------
+        path : string
+            The base path to set.
+
+        """
+        for key, val in self.directory.items():
+            if key == 'path-ensemble':
+                self.directory[key] = path
+            else:
+                self.directory[key] = os.path.join(path, key)
+            if val is None:
+                logger.debug('Setting directory "%s" to %s', key,
+                             self.directory[key])
+            else:
+                logger.debug('Updating directory "%s": %s -> %s',
+                             key, val, self.directory[key])
 
     def reset_data(self):
         """Erase the stored data in the path ensemble.
@@ -178,13 +203,14 @@ class PathEnsemble:
         -----
         We do not reset `self.last_path` as this might be used in the
         RETIS function.
+
         """
         self.paths = []
         for key in self.nstats:
             self.nstats[key] = 0
 
     def store_path(self, path):
-        """Stores a new accepted path in the path ensemble.
+        """Store a new accepted path in the path ensemble.
 
         Parameters
         ----------
@@ -194,6 +220,7 @@ class PathEnsemble:
         Returns
         -------
         None, but we update self.last_path
+
         """
         self.last_path = path
 
@@ -215,6 +242,7 @@ class PathEnsemble:
             `status` here as a parameter.
         cycle : int, optional
             The current cycle number
+
         """
         if len(self.paths) >= self.maxpath:
             # This is just to limit the data we keep in memory in
@@ -271,6 +299,7 @@ class PathEnsemble:
         -------
         out : float
             The acceptance rate.
+
         """
         acc = 0
         npath = 0
@@ -292,6 +321,7 @@ class PathEnsemble:
         ------
         out : dict
             This is the dictionary representing the path data.
+
         """
         for path in self.paths:
             yield path
@@ -338,6 +368,7 @@ class PathEnsemble:
             A dictionary with the restart information.
         cycle : integer
             The current simulation cycle.
+
         """
         self.nstats = info['nstats']
         for attr in ('interfaces', 'detect', 'ensemble'):
@@ -370,6 +401,7 @@ class PathEnsembleExt(PathEnsemble):
         interfaces : list of floats
             These are the interfaces specified with the values
             for the order parameters: [left, middle, right]
+
         """
         super().__init__(ensemble, interfaces, detect=detect,
                          maxpath=maxpath, exe_dir=exe_dir)
@@ -392,6 +424,7 @@ class PathEnsembleExt(PathEnsemble):
             The location were we are moving the path to.
         prefix : string or None
             To give a prefix to the name of moved files.
+
         """
         logger.debug('Moving path to %s', target_dir)
         new_pos, source = _generate_file_names(path, target_dir,
@@ -423,6 +456,7 @@ class PathEnsembleExt(PathEnsemble):
         -------
         out : object like py:class:`.PathBase`
             A copy of the input path.
+
         """
         new_pos, source = _generate_file_names(path, target_dir,
                                                prefix=prefix)
@@ -439,6 +473,7 @@ class PathEnsembleExt(PathEnsemble):
         ----------
         path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
+
         """
         self._move_path(path, self.directory['accepted'])
         self.last_path = path
@@ -481,6 +516,7 @@ class PathEnsembleExt(PathEnsemble):
         -------
         path_copy : object like :py:class:`.PathBase`
             A path like the input `path`, but with updated file names.
+
         """
         new_pos, source = _generate_file_names(
             path,
@@ -524,12 +560,13 @@ class PathEnsembleExt(PathEnsemble):
 
 
 def get_path_ensemble_class(ensemble_type):
-    """Method to return the path ensemble class to work with an engine.
+    """Return the path ensemble class consistent with the given engine.
 
     Parameters
     ----------
     ensemble_type : string
         The type of ensemble we are requesting.
+
     """
     path_ensemble_map = {'internal': PathEnsemble,
                          'external': PathEnsembleExt}

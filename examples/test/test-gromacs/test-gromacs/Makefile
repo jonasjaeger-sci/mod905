@@ -1,5 +1,5 @@
 .PHONY:	
-	    clean
+	clean
  
 clean:
 	find -name \*.pyc -delete
@@ -25,3 +25,4 @@ clean:
 	-rm -rf 2-backward-step
 	-rm -rf 2-backward-plain
 	-rm -rf 2-forward-plain
+	-rm engine-run.rst

@@ -67,7 +67,7 @@ __all__ = [
 
 
 def read_xyz_file(filename):
-    """A method for reading files in XYZ format.
+    """Read files in XYZ format.
 
     This method will read a XYZ file and yield the different snapshots
     found in the file.
@@ -91,6 +91,7 @@ def read_xyz_file(filename):
     Note
     ----
     The positions will **NOT** be converted to a specified set of units.
+
     """
     xyz_keys = ('atomname', 'x', 'y', 'z', 'vx', 'vy', 'vz')
     for snapshot in read_txt_snapshots(filename, data_keys=xyz_keys):
@@ -115,6 +116,7 @@ def convert_snapshot(snapshot):
         The velocities.
     names : list of strings
         The atom names found in the file.
+
     """
     names = snapshot['atomname']
     box = snapshot.get('box', None)
@@ -149,6 +151,7 @@ def format_xyz_data(pos, vel=None, names=None, header=None, fmt=None):
     ------
     out : string
         The formatted lines.
+
     """
     npart = len(pos)
     pos = adjust_coordinate(pos)
@@ -207,6 +210,7 @@ def write_xyz_file(filename, pos, vel=None, names=None, header=None):
     >>> write_xyz_file('conf.xyz', xyz)
     >>> vel = 10 * np.random.rand(10, 3)
     >>> write_xyz_file('confv.xyz', xyz, vel)
+
     """
     with open(filename, 'w') as output_file:
         for line in format_xyz_data(pos, vel=vel, names=names,
@@ -242,6 +246,7 @@ def write_xyz_trajectory(filename, pos, vel, names, box, step=None,
     Note
     ----
     We will here append to the file.
+
     """
     npart = len(pos)
 
@@ -283,6 +288,7 @@ def xyz_merge(backward, forward, merged):
     The velocities in the backward trajectory will not be reversed,
     the purpose of this method is mainly to make whole trajectories
     for visualisation purposes.
+
     """
     reverse_xyz_file(backward, merged)
     with open(forward, 'r') as infile, open(merged, 'a+') as output:
@@ -304,6 +310,7 @@ def _reverse_xyz_buffer(buff, output):
     -------
     out : string
         The left-over data which did not make a full frame.
+
     """
     frame = []
     finish_next = False
@@ -338,6 +345,7 @@ def reverse_xyz_file(filename, outputfile):
     Note
     ----
     This method will *NOT* reverse velocities.
+
     """
     buff_size = io.DEFAULT_BUFFER_SIZE
     left_over = None
@@ -387,7 +395,8 @@ def txt_to_xyz(inputfile, outputfile, atoms, selection=None, nzero=6):
     Returns
     -------
     out : list of strings
-        The files we created
+        The files we created.
+
     """
     all_output = []
     out = ''.join([outputfile, '-{:0', '{}d'.format(nzero), '}-{}.xyz'])

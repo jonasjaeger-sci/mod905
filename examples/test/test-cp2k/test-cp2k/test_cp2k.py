@@ -13,6 +13,7 @@ Here we test the basic functionality of the CP2K engine.
 4) We integrate backward in time from 3.
 """
 import os
+import sys
 import shutil
 import time
 import itertools
@@ -190,7 +191,7 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     return out_conf
 
 
-def main():
+def main(plot=False):
     """Run the tests."""
     settings = parse_settings_file('engine.rst')
     steps = settings['simulation']['steps']
@@ -243,21 +244,32 @@ def main():
     plainb = run_plain_cp2k(engine, system, order_parameter, plainf[-1],
                             steps=steps, exe_dir='backward-plain',
                             reverse=True)
-    # plot for comparison:
-    steps = np.array([i * engine.subcycles for i in range(steps)])
     obtain_mses(pathf, pathb, plainf, plainb, engine.subcycles)
-    plot_path_comparison(steps, pathf, pathb, plainf, plainb, engine.subcycles)
+    if plot:
+        steps = np.array([i * engine.subcycles for i in range(steps)])
+        plot_path_comparison(steps, pathf, pathb, plainf, plainb,
+                             engine.subcycles)
 
 
-def mse_combinations(text, var):
+def mse_combinations(text, var, tol=None):
     """Calculate mse for several combinations."""
     for comb in itertools.combinations(var, 2):
         mse = ((comb[0][0] - comb[1][0])**2).mean(axis=0)
+        level = 'info'
+        tol_ok = True
+        if tol:
+            try:
+                tol_ok = all([abs(i) < tol for i in mse])
+            except TypeError:
+                tol_ok = abs(mse) < tol
+            if not tol_ok:
+                level = 'error'
         print_to_screen(
-            'MSE {}: {:<14s} {:<14s} = {}'.format(text, comb[0][1],
-                                                  comb[1][1], mse),
-            level='warning'
+            'MSE {}: {} vs {} = {}'.format(text, comb[0][1], comb[1][1], mse),
+            level=level
         )
+        if not tol_ok:
+            sys.exit(1)
 
 
 def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
@@ -266,19 +278,19 @@ def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
             (np.array([i for i in pathb.order[::-1]]), 'step-back'),
             (plainf[1][::subcycles, :], 'plain-forward'),
             (plainb[1][::subcycles, :][::-1], 'plain-back')]
-    mse_combinations('order parameters', mses)
+    mse_combinations('order parameters', mses, tol=1e-7)
 
     mses = [(np.array(pathf.ekin), 'step-forward'),
             (np.array(pathb.ekin[::-1]), 'step-back'),
             (plainf[0][::subcycles, 2], 'plain-forward'),
             (plainb[0][::subcycles, 2][::-1], 'plain-back')]
-    mse_combinations('kinetic energy', mses)
+    mse_combinations('kinetic energy', mses, tol=1e-7)
 
     mses = [(np.array(pathf.vpot), 'step-forward'),
             (np.array(pathb.vpot[::-1]), 'step-back'),
             (plainf[0][::subcycles, 4], 'plain-forward'),
             (plainb[0][::subcycles, 4][::-1], 'plain-back')]
-    mse_combinations('potential energy', mses)
+    mse_combinations('potential energy', mses, tol=1e-4)
 
 
 def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
@@ -405,4 +417,5 @@ def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
 
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    main()
+    PLOT = len(sys.argv) > 1
+    main(plot=PLOT)

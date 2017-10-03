@@ -62,6 +62,7 @@ def histogram(data, bins=10, limits=(-1, 1), density=False,
     >>> from matplotlib import pyplot as plt
     >>> plt.plot(bin_mid, hist, '-o', lw=3, alpha=0.8, ms=9)
     >>> plt.show()
+
     """
     hist, bins = np.histogram(data, bins=bins,
                               range=limits, density=density, weights=weights)
@@ -115,6 +116,7 @@ def histogram_and_avg(data, bins, density=True):
     >>> from matplotlib import pyplot as plt
     >>> plt.plot(hist_data[1], hist_data[0], '-o', lw=3, alpha=0.8, ms=9)
     >>> plt.show()
+
     """
     hist, _, bin_mid = histogram(data, bins=bins,
                                  limits=(data.min(), data.max()),
@@ -123,7 +125,7 @@ def histogram_and_avg(data, bins, density=True):
 
 
 def _match_histograms(histo1, histo2, bin_x, overlap):
-    """Function to match two histograms.
+    """Match two histograms given an overlapping region.
 
     The matching is done so that the integral of the overlapping regions
     of the two histograms are equal.
@@ -147,6 +149,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
         A scaled version of second input histogram `histo2`.
     out[1] : float
         The calculated scale factor.
+
     """
     int1, int2 = 0.0, 0.0
     for histi, histj, bin_xi in zip(histo1, histo2, bin_x):
@@ -161,7 +164,7 @@ def _match_histograms(histo1, histo2, bin_x, overlap):
 
 
 def match_all_histograms(histograms, umbrellas):
-    """Function to match several histograms from an umbrella sampling.
+    """Match several histograms from an umbrella sampling.
 
     Parameters
     ----------
@@ -178,6 +181,7 @@ def match_all_histograms(histograms, umbrellas):
         The scale factors.
     matched_count : numpy.array
         Count for overall matched histogram - a "averaged" histogram.
+
     """
     histograms_s, scale_factor = [histograms[0][0]], [1.0]
     bin_x = histograms[0][2]

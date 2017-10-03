@@ -40,6 +40,7 @@ def analyse_flux(fluxdata, settings):
     results : dict
         This dict contains the results from the flux analysis.
         The keys are defined in the `results` variable.
+
     """
     end_step = settings['simulation']['endcycle']
     time_step = settings['engine']['timestep']
@@ -131,6 +132,7 @@ def _effective_crossings(fluxdata, nint, end_step):
     0, 1, 2. If this is to be changed in the future the `-1` can just
     be removed. Such a change will also require changes to the writer
     for flux data!
+
     """
     # First line is used to determine if we start in B or A
     overallstate_a = not (fluxdata[0][1] == 2 and fluxdata[0][2] < 0)
@@ -206,6 +208,7 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
         The number of crossings within a time window.
     flux : np.array
         The flux within a time window.
+
     """
     max_windows = int(1.0 * time_in_state / time_window)
     ncross = np.zeros(max_windows, dtype=np.int)

@@ -39,7 +39,8 @@ def analyse_energies(energies, settings):
 
     See Also
     --------
-    `analyse_data` in `pyretis.analysis.analysis.py`.
+    :py:func:`.analyse_data` in :py:mod:`pyretis.analysis.analysis.py`.
+
     """
     results = {}
     for key in energies:

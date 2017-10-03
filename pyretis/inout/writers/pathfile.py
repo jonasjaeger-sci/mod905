@@ -34,6 +34,7 @@ class PathEnsembleWriter(Writer):
     it's small enough to fit in the memory. A line-by-line analysis as
     it is right now might not be the most efficient way.
     """
+
     # Define a format used for the path files. Here it's not really needed,
     # we are going to assume that these files will be comma separated anyway.
     # It is included to be compatible with the old FORTRAN program (TISMOL).
@@ -69,6 +70,7 @@ class PathEnsembleWriter(Writer):
         -------
         out : dict
             This dict contains the path information.
+
         """
         if line.find('#') != -1:
             linec = line.split('#')[0].strip()
@@ -105,6 +107,7 @@ class PathEnsembleWriter(Writer):
         ------
         out : object like :py:class:`.Path`
             The current path in the file.
+
         """
         try:
             with open(filename, 'r') as fileh:
@@ -121,7 +124,7 @@ class PathEnsembleWriter(Writer):
             raise
 
     def generate_output(self, cycle, path_ensemble):
-        """Generate the output for the path ensemble writer
+        """Generate the output for the path ensemble writer.
 
         The latest path from the path ensemble will be written.
 
@@ -135,7 +138,8 @@ class PathEnsembleWriter(Writer):
         Yields
         ------
         out : string
-            The line(s) to be written
+            The line(s) to be written.
+
         """
         path_dict = path_ensemble.paths[-1]
 
@@ -182,10 +186,11 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
     ----------
     filename : string
         The file we are going to read.
+
     """
 
     def __init__(self, filename, ensemble, interfaces, detect=None):
-        """Initiate the `PathEnsembleFile`.
+        """Initialise the PathEnsembleFile.
 
         Parameters
         ----------
@@ -197,6 +202,7 @@ class PathEnsembleFile(PathEnsemble, PathEnsembleWriter):
             The interfaces defining the ensemble.
         detect : float
             The detect interface for this ensemble.
+
         """
         PathEnsemble.__init__(self, ensemble, interfaces, detect=detect)
         PathEnsembleWriter.__init__(self)

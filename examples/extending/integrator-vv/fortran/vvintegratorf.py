@@ -52,7 +52,7 @@ class VelocityVerletF(MDEngine):
 
         Parameters
         ----------
-        system : object like `System` from `pyretis.core.system`
+        system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
 
@@ -63,13 +63,19 @@ class VelocityVerletF(MDEngine):
             `system`.
         """
         particles = system.particles
-        particles.pos, particles.vel = vvintegrator.step1(particles.pos,
-                                                          particles.vel,
-                                                          particles.force,
-                                                          particles.imass,
-                                                          self.delta_t,
-                                                          self.half_delta_t)
+        particles.pos, particles.vel = vvintegrator.step1(
+            particles.pos,
+            particles.vel,
+            particles.force,
+            particles.imass,
+            self.delta_t,
+            self.half_delta_t
+        )
         system.potential_and_force()
-        particles.vel = vvintegrator.step2(particles.vel, particles.force,
-                                           particles.imass, self.half_delta_t)
+        particles.vel = vvintegrator.step2(
+            particles.vel,
+            particles.force,
+            particles.imass,
+            self.half_delta_t
+        )
         return None

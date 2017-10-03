@@ -24,6 +24,7 @@ Examples
 >>> from pyretis.core.box import create_box
 
 >>> box = create_box(length=[10, 10, 10], periodic=[True, False, True])
+
 """
 from abc import ABCMeta, abstractmethod
 import logging
@@ -38,7 +39,7 @@ __all__ = ['create_box']
 
 
 def create_box(low=None, high=None, length=None, periodic=None):
-    """Helper method to select a box.
+    """Set up and create a box.
 
     Parameters
     ----------
@@ -56,6 +57,7 @@ def create_box(low=None, high=None, length=None, periodic=None):
     -------
     out : object like :py:class:`.BoxBase`
         The object representing the simulation box.
+
     """
     obj = TriclinicBox
     if length is None or len(length) <= 3:
@@ -64,7 +66,7 @@ def create_box(low=None, high=None, length=None, periodic=None):
 
 
 def array_to_box_matrix(length):
-    """Method to convert an array to a box matrix.
+    """Return a box matrix corresponding to a cell array.
 
     Parameters
     ----------
@@ -79,6 +81,7 @@ def array_to_box_matrix(length):
     -------
     box : numpy.array (2D)
         The box vector on matrix form.
+
     """
     if len(length) == 1:
         return 1.0 * np.array([length[0]])
@@ -117,6 +120,7 @@ def box_matrix_to_list(matrix):
     -------
     out : list
         A list with the box-parametres.
+
     """
     if matrix is None:
         return None
@@ -142,6 +146,7 @@ def _cos(angle):
     -------
     out : float
         The cosine of the angle.
+
     """
     if np.isclose(angle, 90.):
         return 0.
@@ -166,6 +171,7 @@ def box_vector_angles(length, alpha, beta, gamma):
     -------
     out : np.array
         The box matrix (2D).
+
     """
     box_matrix = np.zeros((3, 3))
     cos_alpha = _cos(alpha)
@@ -207,11 +213,11 @@ class BoxBase(metaclass=ABCMeta):
     cell : numpy.array
         1D array representing the simulation cell (flattened
         version of the 2D box matrix).
+
     """
 
     def __init__(self, low=None, high=None, length=None, periodic=None):
         """Initialise the BoxBase class."""
-
         case = (length is not None, low is not None, high is not None)
 
         self.length = None
@@ -315,6 +321,7 @@ class BoxBase(metaclass=ABCMeta):
         ----------
         new_size : list, tuple, numpy.array, or other iterable.
             The new box size.
+
         """
         if new_size is None:
             logger.warning(
@@ -343,7 +350,7 @@ class BoxBase(metaclass=ABCMeta):
                     logger.critical('Box update failed!')
 
     def bounds(self):
-        """Return the bounds (low, high) as an array."""
+        """Return the boundaries of the box (low, high) as an array."""
         bounds = []
         for i, j in zip(self.low, self.high):
             bounds.append([i, j])
@@ -368,6 +375,7 @@ class BoxBase(metaclass=ABCMeta):
             Coordinate to wrap.
         dim : int
             This selects the dimension to consider.
+
         """
         return
 
@@ -384,6 +392,7 @@ class BoxBase(metaclass=ABCMeta):
         -------
         out : numpy.array, same shape as parameter `pos`
             The periodic-boundary wrapped positions.
+
         """
         return
 
@@ -399,7 +408,8 @@ class BoxBase(metaclass=ABCMeta):
         Returns
         -------
         out : numpy.array, same shape as parameter `distance`
-            The pbc-wrapped distances.
+            The periodic-boundary-wrapped distances.
+
         """
         return
 
@@ -420,6 +430,7 @@ class BoxBase(metaclass=ABCMeta):
         -------
         out : numpy.array, same shape as parameter `distance`
             The periodic-boundary wrapped distance vector.
+
         """
         return
 
@@ -447,6 +458,7 @@ class BoxBase(metaclass=ABCMeta):
         out : string
             String with type of box, extent of the box and
             information about the periodicity.
+
         """
         boxstr = []
         if len(self.cell) <= 3:
@@ -476,6 +488,7 @@ class RectangularBox(BoxBase):
         -------
         out : float
             The volume of the box.
+
         """
         return product(self.length)
 
@@ -492,6 +505,7 @@ class RectangularBox(BoxBase):
             Coordinate to wrap around.
         dim : int
             This selects the dimension to consider.
+
         """
         if self.periodic[dim]:
             low, length = self.low[dim], self.length[dim]
@@ -516,6 +530,7 @@ class RectangularBox(BoxBase):
         -------
         out : numpy.array, same shape as parameter `pos`
             The periodic-boundary wrapped positions.
+
         """
         pbcpos = np.zeros(pos.shape)
         for i, periodic in enumerate(self.periodic):
@@ -551,6 +566,7 @@ class RectangularBox(BoxBase):
         ----
         This will modify the given input matrix inplace. This can be
         changed by setting ``pbcdist = np.copy(distance)``.
+
         """
         pbcdist = distance
         for i, (periodic, length, ilength) in enumerate(zip(self.periodic,
@@ -579,6 +595,7 @@ class RectangularBox(BoxBase):
         -------
         out : numpy.array, same shape as parameter `distance`
             The periodic-boundary wrapped distance vector.
+
         """
         pbcdist = np.zeros(distance.shape)
         for i, (periodic, length, ilength) in enumerate(zip(self.periodic,
@@ -593,18 +610,19 @@ class RectangularBox(BoxBase):
 
 
 class TriclinicBox(BoxBase):
-    """An triclinic box."""
+    """This class represents a triclinic box."""
 
     def __init__(self, low=None, high=None, length=None, periodic=None):
         super().__init__(low=low, high=high, length=length, periodic=periodic)
 
     def calculate_volume(self):
-        """Calculate the volume of the box.
+        """Calculate and return the volume of the box.
 
         Returns
         -------
         out : float
             The volume of the box.
+
         """
         return det(self.box_matrix)
 

@@ -24,7 +24,7 @@ __all__ = ['mixing_parameters', 'generate_pair_interactions']
 
 
 def _check_pair_parameters(parameters):
-    """This will just check that the required parameters are given.
+    """Check that the required pair parameters are given.
 
     If the parameters are not given, we will just set them to default
     values.
@@ -38,6 +38,7 @@ def _check_pair_parameters(parameters):
     ----
     This function will not return anything, but it will update the input
     `parameters` with default values.
+
     """
     for pair in parameters:
         for key in ('epsilon', 'sigma'):
@@ -56,7 +57,7 @@ def _check_pair_parameters(parameters):
 
 
 def generate_pair_interactions(parameters, mixing):
-    """Function to generate pair parameters from atom parameters.
+    """Generate pair parameters from atom parameters.
 
     The parameters are given as a dictionary where the keys are
     either just integers -- which defines atom parameters -- or tuples
@@ -68,6 +69,7 @@ def generate_pair_interactions(parameters, mixing):
         This dict contain the atom parameters.
     mixing : string
         Determines how we should mix pair interactions.
+
     """
     _check_pair_parameters(parameters)
     atoms = []
@@ -170,6 +172,7 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
         The mixed ``sigma_ij`` parameter.
     out[2] : float
         The mixed ``rcut_ij`` parameter.
+
     """
     if mixing == 'geometric':
         epsilon_ij = np.sqrt(epsilon_i * epsilon_j)

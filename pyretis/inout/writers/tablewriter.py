@@ -44,7 +44,7 @@ __all__ = ['TxtTable', 'PathTable', 'ThermoTable']
 
 
 def _fill_list(the_list, length, fillvalue=None):
-    """Method to fill a list to a specified length.
+    """Fill a list to a specified length.
 
     Parameters
     ----------
@@ -55,6 +55,7 @@ def _fill_list(the_list, length, fillvalue=None):
     fillvalue : optional
         The value to insert. If None is given the last item in the list
         is repeated.
+
     """
     if fillvalue is None:
         fillvalue = the_list[-1]
@@ -78,7 +79,9 @@ class TxtTable(Writer):
         A list of strings used for formatting, used to construct `fmt`.
     title : string
         A title for the table.
+
     """
+
     def __init__(self, variables, title, **kwargs):
         """Initialise the TxtTable object.
 
@@ -107,6 +110,7 @@ class TxtTable(Writer):
                 items in this list is smaller than the number of
                 variables, we simply repeat the last width for the
                 number of times we need.
+
         """
         spacing = kwargs.get('spacing', 1)
         header = {'spacing': spacing,
@@ -152,6 +156,7 @@ class TxtTable(Writer):
         ------
         out : string
             A line with the formatted output.
+
         """
         var = []
         for i in self.variables:
@@ -177,13 +182,10 @@ class PathTable(TxtTable):
     formatted rows for a path ensemble. The table rows will contain
     data from the `PathEnsemble.nstats` variable. This table is just
     meant as output to the screen during a path ensemble simulation.
-
-    Attributes
-    ----------
-    Identical to the `TxtTable` object.
     """
+
     def __init__(self):
-        """Initiate parent."""
+        """Initialise the PathTable."""
         title = 'Path Ensemble Statistics'
         var = ['step', 'ACC', 'BWI',
                'BTL', 'FTL', 'BTX', 'FTX']
@@ -213,6 +215,7 @@ class PathTable(TxtTable):
         -----
         out : string
             This string is the formatted row.
+
         """
         row = {}
         for key in self.variables:
@@ -232,13 +235,10 @@ class ThermoTable(TxtTable):
     formatted rows for energy output. Typical use is in MD simulation
     where we want to display energies at different steps in the
     simulations.
-
-    Attributes
-    ----------
-    Identical to the `TxtTable` object.
     """
+
     def __init__(self):
-        """Initiate parent."""
+        """Initialise the ThermoTable."""
         title = 'Energy Output'
         var = ['step', 'temp', 'vpot', 'ekin', 'etot', 'press']
         table_format = {'labels': ['Step', 'Temp', 'Pot',

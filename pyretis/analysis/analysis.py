@@ -24,7 +24,7 @@ __all__ = ['running_average', 'block_error',
 
 
 def running_average(data):
-    """Function to create a running average of the given data.
+    """Create a running average of the given data.
 
     The running average will be calculated over the rows.
 
@@ -37,6 +37,7 @@ def running_average(data):
     -------
     out : numpy.array
         The running average.
+
     """
     one = np.ones(np.shape(data))
     return data.cumsum(axis=0) / one.cumsum(axis=0)
@@ -65,6 +66,7 @@ def _chunks(itera, size):
     ----------
     .. [chunks] Stackoverflow, "How do you split ...",
        http://stackoverflow.com/a/312464
+
     """
     for i in range(0, len(itera), size):
         yield itera[i:i+size]
@@ -108,9 +110,9 @@ def block_error(data, maxblock=None, blockskip=1):
 
     References
     ----------
-
     .. [1] Wikipedia, "Algorithms for calculating variance",
        http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+
     """
     if maxblock is None or maxblock < 1:
         maxblock = len(data) // 2
@@ -187,6 +189,7 @@ def block_error_corr(data, maxblock=None, blockskip=1):
     out[6] : float
         The average (for blocks with length > maxblock // 2) estimated
         correlation length (`avg_ncor`).
+
     """
     blen, bavg, berr, berr_avg = block_error(data, maxblock=maxblock,
                                              blockskip=blockskip)
@@ -215,6 +218,7 @@ def mean_square_displacement(data, ndt=None):
     msd : numpy.array, 2D
         First column is the mean squared displacement and the second
         column is the corresponding standard deviation.
+
     """
     length = data.size
     if ndt is None or ndt < 1:
@@ -249,6 +253,7 @@ def analyse_data(data, settings):
     -------
     result : dict
         This dict contains the results.
+
     """
     result = {}
     asett = settings['analysis']

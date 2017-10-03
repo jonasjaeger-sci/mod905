@@ -43,10 +43,11 @@ class TxtPlotter(Plotter):
     ----------
     out_fmt : string
         Selects format for output plots.
+
     """
 
     def __init__(self, out_fmt, backup=False, out_dir=None):
-        """Initiate the text writer.
+        """Initialise the text writer.
 
         Parameters
         ----------
@@ -57,6 +58,7 @@ class TxtPlotter(Plotter):
         out_dir : string, optional
             Determines if we should write the files to a particular
             directory.
+
         """
         super().__init__(backup=backup, plotter_type='text',
                          out_dir=out_dir)
@@ -75,6 +77,7 @@ class TxtPlotter(Plotter):
         outputfile : list of dicts
             A list containing the files created for the flux and for
             the error in the flux.
+
         """
         outfiles = []
         # make running average txt and error txt:
@@ -114,6 +117,7 @@ class TxtPlotter(Plotter):
         -------
         outfiles : list
             The output files created by this function.
+
         """
         outfiles = []
         time = energies['time']
@@ -174,6 +178,7 @@ class TxtPlotter(Plotter):
         file has been fixed. Also note that, if present, the first order
         parameter will be plotted against the second one - i.e. the second
         one will be assumed to represent the velocity here.
+
         """
         outfiles = []
         time = orderdata[:, 0]
@@ -223,6 +228,7 @@ class TxtPlotter(Plotter):
         -------
         outfiles : list
             The output files created by this function.
+
         """
         ens = path_ensemble.ensemble_name  # identify the ensemble
         ens_simplified = path_ensemble.ensemble_name_simple
@@ -289,6 +295,7 @@ class TxtPlotter(Plotter):
         -------
         outfiles : list
             The files created by this function.
+
         """
         outfiles = []
         # start by creating the matched file, here we use a custom
@@ -341,6 +348,7 @@ def _txt_block_error(outputfile, title, error, backup=False):
         This is the result from the error analysis.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
     header = header.format(title, error[4], error[6])
@@ -356,10 +364,11 @@ def _txt_histogram(outputfile, title, histograms, backup=False):
         This is the name of the output file to create.
     title : string
         A descriptive title to add to the header.
-    histograms : tuple
+    histograms : tuple or list
         The histograms to store.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+
     """
     data = []
     header = [r'{}'.format(title)]
@@ -378,7 +387,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
 
     Parameters
     ----------
-    histograms : list
+    histograms : dict
         These are the histograms obtained in the shoots analysis.
     scale : dict
         These are the scale factors for normalising the histograms
@@ -389,6 +398,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
         This is the name of the output file to create.
     backup : boolean, optional
         Determines if we will do backup of old files or not.
+
     """
     data = []
     header = ['Ensemble: {0}'.format(ensemble)]

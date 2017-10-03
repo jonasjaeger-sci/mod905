@@ -82,6 +82,7 @@ def run_analysis(settings):
     out : dict
         A dictionary with the results from the analysis. This dict
         can be used to generate a report.
+
     """
     runners = {'retis': run_retis_analysis,
                'tis': run_tis_analysis,
@@ -106,7 +107,7 @@ def run_analysis(settings):
 
 def get_path_ensemble_files(ensemble, settings, detect,
                             interfaces):
-    """This method will return files for a single path ensemble.
+    """Return files for a single path ensemble.
 
     Here, we will return the files needed to analyse a single path
     ensemble and we will also return settings which can be used for
@@ -131,6 +132,7 @@ def get_path_ensemble_files(ensemble, settings, detect,
     files : list of tuples
         The tuples in this list are the files which can be analysed
         further, using the settings in `out[0]`.
+
     """
     sim_task = settings['simulation']['task']
     lsetting = copy_settings(settings)
@@ -177,6 +179,7 @@ def get_path_simulation_files(sim_settings):
         simulation `i`. For TIS, `all_files[0]` should be the files
         obtained in the initial flux simulation. These files can be
         analysed using the settings in `all_settings[i]`.
+
     """
     # Check if we can do flux analysis:
     all_files, all_settings = [], []
@@ -207,7 +210,7 @@ def get_path_simulation_files(sim_settings):
 
 
 def print_value_error(heading, value, rel_error, level=None):
-    """Just print out matched results"""
+    """Print out the matched probabilities."""
     val = format_number(value, 0.1, 100)
     msgtxt = '{}: {}'.format(heading, val)
     print_to_screen(msgtxt.strip(), level=level)
@@ -232,6 +235,7 @@ def run_single_tis_analysis(settings, plotter, txt_plotter):
     -------
     out : list or dict or similar
         The output from the analysis.
+
     """
     sim = settings['simulation']
     sett, files = get_path_ensemble_files(sim['ensemble'],
@@ -264,6 +268,7 @@ def run_tis_analysis(settings, plotter, txt_plotter):
     -------
     out : list or dict or similar
         The output from the analysis.
+
     """
     if is_single_tis(settings):
         return run_single_tis_analysis(settings, plotter, txt_plotter)
@@ -309,6 +314,7 @@ def run_retis_analysis(settings, plotter, txt_plotter):
         This is the object that handles the plotting.
     txt_plotter : object like :py:class:`.Plotter`
         This is the object that handles the text output.
+
     """
     units = settings['system']['units']
     if 'unit-system' in settings:
@@ -381,6 +387,7 @@ def run_mdflux_analysis(settings, plotter, txt_plotter):
     -------
     out : list or dict or similar
         The output from the analysis.
+
     """
     sim = settings['simulation']
     sim_task = sim['task']
@@ -418,7 +425,9 @@ def run_analysis_files(settings, files, plotter, txt_plotter):
 
     Returns
     -------
-    The results from the analysis.
+    out: dict
+        The results from the analysis.
+
     """
     results = {}
     for (file_type, file_name) in files:
@@ -432,7 +441,10 @@ def run_analysis_files(settings, files, plotter, txt_plotter):
 
 
 def read_first_block(fileobj, file_name):
-    """Helper function to read the first block of data from a file.
+    """Read the first block of data from a file.
+
+    This method will read the first block of data from a file and
+    immediately return.
 
     Parameters
     ----------
@@ -446,6 +458,7 @@ def read_first_block(fileobj, file_name):
     -------
     out : numpy.array
         The raw data read from the file.
+
     """
     first_block = None
     for block in fileobj.load(file_name):
@@ -465,7 +478,9 @@ def read_first_block(fileobj, file_name):
 
 
 def output_results(file_type, plotter, result, rawdata):
-    """Helper function to plot the results.
+    """Plot the results.
+
+    Plotting might here refer to both figures and text.
 
     Parameters
     ----------
@@ -482,6 +497,7 @@ def output_results(file_type, plotter, result, rawdata):
     -------
     out : list of strings
         These are the files that the plotter created.
+
     """
     if file_type == 'cross':
         return plotter.output_flux(result)
@@ -521,6 +537,7 @@ def analyse_file(file_type, file_name, settings):
         The output from the analysis
     raw_data : list, numpy.array or other type of object
         The raw data used in the analysis.
+
     """
     function = _ANALYSIS_FUNCTIONS.get(file_type, None)
     if function is None:
@@ -543,7 +560,7 @@ def analyse_file(file_type, file_name, settings):
 
 
 def analyse_and_output_matched(raw_data, plotter, txt_plotter):
-    """Analyse and output matched probability,
+    """Analyse and output matched probability.
 
     This will calculate the over-all crossing probability by combining
     results from many path simulations.
@@ -565,6 +582,7 @@ def analyse_and_output_matched(raw_data, plotter, txt_plotter):
         A dictionary with the figure files created (if any).
     out[2] : list of strings
         A list with the text files created (if any).
+
     """
     path_results, ensemble_names, detect = [], [], []
     interface_left = None

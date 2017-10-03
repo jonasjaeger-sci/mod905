@@ -54,16 +54,19 @@ class MDEngine(EngineBase):
     dynamics : str
         A short string to represent the type of dynamics produced
         by the integrator (NVE, NVT, stochastic, ...).
+
     """
+
     engine_type = 'internal'
 
     def __init__(self, timestep, description, dynamics=None):
-        """Initialisation of the integrator.
+        """Set up the integrator.
 
         Parameters
         ----------
         timestep : float
             The time step for the integrator in internal units.
+
         """
         super().__init__(description)
         self.delta_t = timestep
@@ -82,6 +85,7 @@ class MDEngine(EngineBase):
         out : None
             Does not return anything, in derived classes it will
             typically update the given `System`.
+
         """
         raise NotImplementedError
 
@@ -92,6 +96,7 @@ class MDEngine(EngineBase):
         -------
         out : boolean
             True if time step is positive, False otherwise.
+
         """
         self.delta_t *= -1.0
         return self.delta_t > 0.0
@@ -131,6 +136,7 @@ class MDEngine(EngineBase):
             This is True if we generated an acceptable path.
         status : string
             A text description of the current status of the propagation.
+
         """
         status = 'Propagate w/internal engine'
         logger.debug(status)
@@ -197,6 +203,7 @@ class MDEngine(EngineBase):
             The change in the kinetic energy.
         kin_new : float
             The new kinetic energy.
+
         """
         particles = system.particles
         if rescale is not None and rescale is not False:
@@ -237,6 +244,7 @@ class MDEngine(EngineBase):
         -------
         out : None
             Does not return anything, but will update the particles.
+
         """
         return self.integration_step(system)
 
@@ -275,6 +283,7 @@ class MDEngine(EngineBase):
         -------
         out : list of floats
             The calculated order parameter(s).
+
         """
         if any((xyz is None, vel is None, box is None)):
             return order_function.calculate_all(system)
@@ -324,6 +333,7 @@ class MDEngine(EngineBase):
         `system.particles.get_particle_state() == out[1]`.
         This is more convenient for the following usage in the
         `generate_initial_path_kick` function.
+
         """
         # We search for crossing with the middle interface and do this
         # by sequentially kicking the initial phase point:
@@ -364,7 +374,7 @@ class MDEngine(EngineBase):
         return previous, particles.get_particle_state()
 
     def dump_phasepoint(self, phasepoint, deffnm=None):
-        """This method is just for compatibility with external integrators."""
+        """For compatibility with external integrators."""
         pass
 
     def clean_up(self):
@@ -372,6 +382,7 @@ class MDEngine(EngineBase):
 
         Currently this is only included for compatibility with external
         integrators.
+
         """
         pass
 
@@ -389,15 +400,17 @@ class Verlet(MDEngine):
         Squared time step: `delta_t**2`
     previous_pos : numpy.array
         Stores the previous positions of the particles.
+
     """
 
     def __init__(self, timestep):
-        """Initiate the Verlet MD integrator.
+        """Set up the Verlet MD integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
+
         """
         super().__init__(timestep, 'Verlet MD integrator', dynamics='NVE')
         self.half_idt = 0.5 / self.delta_t
@@ -405,13 +418,14 @@ class Verlet(MDEngine):
         self.previous_pos = None
 
     def set_initial_positions(self, particles):
-        """Initiate the positions for the Verlet integration.
+        """Get initial positions for the Verlet integration.
 
         Parameters
         ----------
         particles : object like :py:class:`.Particles`
             The initial configuration. Positions and velocities are
             required.
+
         """
         self.previous_pos = particles.pos - particles.vel * self.delta_t
 
@@ -428,7 +442,8 @@ class Verlet(MDEngine):
         -------
         out : None
             Does not return anything, but alters the state of the given
-            `system`.
+            system.
+
         """
         particles = system.particles
         acc = particles.force * particles.imass
@@ -448,15 +463,17 @@ class VelocityVerlet(MDEngine):
     ----------
     half_delta_t : float
         Half of timestep.
+
     """
 
     def __init__(self, timestep):
-        """Initiate the Velocity Verlet integrator.
+        """Set up the Velocity Verlet integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
+
         """
         super().__init__(timestep, 'Velocity Verlet MD integrator',
                          dynamics='NVE')
@@ -476,6 +493,7 @@ class VelocityVerlet(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         imass = particles.imass
@@ -550,11 +568,12 @@ class Langevin(MDEngine):
     ----
     Currently, we are using a multi-normal distribution from numpy.
     Consider replacing this one as it seems somewhat slow.
+
     """
 
     def __init__(self, timestep, gamma, rgen=None, seed=0,
                  high_friction=False):
-        """Initiate the Langevin integrator.
+        """Set up the Langevin integrator.
 
         Actually, it is very convenient to set some variables for the
         different particles. However, to have a uniform initialisation
@@ -577,6 +596,7 @@ class Langevin(MDEngine):
         high_friction : boolean
             Determines if we are in the high_friction limit and should
             do the over-damped version.
+
         """
         super().__init__(timestep, 'Langevin MD integrator',
                          dynamics='stochastic')
@@ -602,6 +622,7 @@ class Langevin(MDEngine):
         -------
         out : None
             Does not return anything, but updates ``self.param``.
+
         """
         beta = system.temperature['beta']
         imasses = system.particles.imass
@@ -655,7 +676,8 @@ class Langevin(MDEngine):
         -------
         out : None
             Does not return anything, but alters the state of the given
-            `system`.
+            system.
+
         """
         if self.init_params:
             self._init_parameters(system)
@@ -678,6 +700,7 @@ class Langevin(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         system.force()  # update forces
         particles = system.particles
@@ -702,6 +725,7 @@ class Langevin(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         ndim = system.get_dim()

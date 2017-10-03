@@ -11,7 +11,7 @@ public :: step1, step2
 contains
 
 subroutine step1(pos, vel, force, imass, delta_t, half_delta_t, n, d, dpos, dvel) 
-! Subroutine to evaluate the potential
+! Part 1 of the velocity verlet update.
 implicit none
 integer, intent(in) :: n, d
 double precision, dimension(n, d), intent(in) :: pos, vel, force
@@ -28,7 +28,7 @@ end do
 end subroutine step1
 
 subroutine step2(vel, force, imass, half_delta_t, n, d, dvel) 
-! Subroutine to evaluate the potential
+! Part 2 of the velocity verlet update.
 implicit none
 integer, intent(in) :: n, d
 double precision, dimension(n, d), intent(in) :: vel, force

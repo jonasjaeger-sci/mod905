@@ -32,16 +32,20 @@ TRR_HEAD_SIZE = 1000
 
 
 class GromacsEngine2(GromacsEngine):
-    """A class for interfacing GROMACS.
+    """
+    A class for interfacing GROMACS.
 
-    This class defines the interface to GROMACS. Attributes are similar
-    to :py:class:`.GromacsEngine`.
+    This class defines an interface to GROMACS. Attributes are similar
+    to :py:class:`.GromacsEngine`. In this particular interface,
+    GROMACS is executed without starting and stopping and we rely on
+    reading the output TRR file from GROMACS while a simulation is
+    running.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
                  maxwarn=0, gmx_format='g96', write_vel=True,
                  write_force=False):
-        """Initiate the GROMACS engine.
+        """Set up the GROMACS engine.
 
         Parameters
         ----------
@@ -63,6 +67,7 @@ class GromacsEngine2(GromacsEngine):
             Determines if GROMACS should write velocities or not.
         write_force : boolean
             Determines if GROMACS should write forces or not.
+
         """
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
                          maxwarn=maxwarn, gmx_format=gmx_format,
@@ -70,7 +75,8 @@ class GromacsEngine2(GromacsEngine):
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
-        """Propagate with GROMACS from the current system configuration.
+        """
+        Propagate with GROMACS from the current system configuration.
 
         Here, we assume that this method is called after the propagate()
         has been called in the parent. The parent is then responsible
@@ -98,6 +104,7 @@ class GromacsEngine2(GromacsEngine):
             This is True if we generated an acceptable path.
         status : string
             A text description of the current status of the propagation.
+
         """
         status = 'propagating with GROMACS (reverse = {})'.format(reverse)
         logger.debug(status)
@@ -193,6 +200,7 @@ def get_data(fileh, header):
         The data read from the file.
     data_size : integer
         The size of the data read.
+
     """
     data_size = sum([header[key] for key in TRR_DATA_ITEMS])
     data = read_trr_data(fileh, header)
@@ -219,6 +227,7 @@ def reopen_file(filename, fileh, inode, bytes_read):
         The new file object.
     out[1] : integer or None
         The new inode.
+
     """
     if os.stat(filename).st_ino != inode:
         new_fileh = open(filename, 'rb')
@@ -230,7 +239,7 @@ def reopen_file(filename, fileh, inode, bytes_read):
 
 
 def read_remaining_trr(filename, fileh, start):
-    """Read remaining frames from the trr.
+    """Read remaining frames from the TRR file.
 
     Parameters
     ----------
@@ -243,6 +252,13 @@ def read_remaining_trr(filename, fileh, start):
 
     Yields
     ------
+    out[0] : string
+        The header read from the file
+    out[1] : dict
+        The data read from the file.
+    out[2] : integer
+        The size of the data read.
+
     """
     stop = False
     bytes_read = start
@@ -277,12 +293,15 @@ def read_remaining_trr(filename, fileh, start):
 class GromacsRunner:
     """A helper class for running GROMACS.
 
+    This class handles the reading of the TRR on the fly and
+    it is used to decide when to end the GROMACS execution.
+
     Attributes
     ----------
     cmd : string
         The command for executing GROMACS
     trr_file : string
-        The .trr file we are going to read.
+        The GROMACS TRR file we are going to read.
     edr_file : string
         A .edr file we are going to read.
     exe_dir : string
@@ -292,7 +311,7 @@ class GromacsRunner:
     running : None or object like :py:class:`subprocess.Popen`
         The process running GROMACS.
     bytes_read : integer
-        The number of bytes we have read so far from the .trr file.
+        The number of bytes read so far from the TRR file.
     ino : integer
         The current inode we are using for the file.
     stop_read : boolean
@@ -301,26 +320,28 @@ class GromacsRunner:
         How long we wait after an unsuccessful read before
         reading again.
     data_size : integer
-        The size of the data (x, v, f, box, etc.) in the .trr file.
+        The size of the data (x, v, f, box, etc.) in the TRR file.
     header_size : integer
-        The size of the header in the .trr file.
+        The size of the header in the TRR file.
+
     """
 
     SLEEP = 0.1
 
     def __init__(self, cmd, trr_file, edr_file, exe_dir):
-        """Just set up command and files.
+        """Set-up the GROMACS command and the files we need.
 
         Parameters
         ----------
         cmd : string
             The command for executing GROMACS
         trr_file : string
-            The .trr file we are going to read.
+            The GROMACS TRR file we are going to read.
         edr_file : string
             A .edr file we are going to read.
         exe_dir : string
             Path to where we are currently running GROMACS.
+
         """
         self.cmd = cmd
         self.trr_file = trr_file
@@ -356,7 +377,7 @@ class GromacsRunner:
             cwd=self.exe_dir
         )
         present = []
-        # Wait for the trr/edr files to appear
+        # Wait for the TRR/EDR files to appear
         for fname in (self.trr_file, self.edr_file):
             while not os.path.isfile(fname):
                 logger.debug('Waiting for GROMACS file "%s"', fname)
@@ -367,7 +388,7 @@ class GromacsRunner:
                     break
             if os.path.isfile(fname):
                 present.append(fname)
-        # Prepare and open the trr file:
+        # Prepare and open the TRR file:
         self.bytes_read = 0
         # Ok, so GROMACS might have crashed in between writing the
         # files. Check that both files are indeed here:
@@ -384,7 +405,7 @@ class GromacsRunner:
         return self
 
     def get_gromacs_frames(self):
-        """Read the GROMACS .trr file on-the-fly."""
+        """Read the GROMACS TRR file on-the-fly."""
         first_header = True
         header = None
         while not self.stop_read:

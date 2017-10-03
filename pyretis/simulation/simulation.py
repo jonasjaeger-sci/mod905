@@ -45,11 +45,13 @@ class Simulation:
         True if the first step has not been executed yet.
     system : object like :py:class:`.System`
         This is the system the simulation will act on.
+
     """
+
     simulation_type = 'generic'
 
     def __init__(self, steps=0, startcycle=0):
-        """Initialisation of the simulation.
+        """Initialise the simulation object.
 
         Parameters
         ----------
@@ -58,6 +60,7 @@ class Simulation:
         startcycle : int, optional
             The cycle we start the simulation on, can be useful if
             restarting.
+
         """
         self.cycle = {'step': startcycle, 'end': startcycle + steps,
                       'start': startcycle, 'stepno': 0}
@@ -77,6 +80,7 @@ class Simulation:
         -------
         out : None
             Returns `None` but modifies `self.cycle`.
+
         """
         self.cycle['start'] = self.cycle['end']
         self.cycle['end'] += steps
@@ -93,6 +97,7 @@ class Simulation:
         -------
         out : boolean
             True if simulation is finished, False otherwise.
+
         """
         return self.cycle['step'] >= self.cycle['end']
 
@@ -115,6 +120,7 @@ class Simulation:
         other variables that are not explicitly shown. This is intended.
         In order to see what actually is happening when running
         `step()`, investigate the tasks defined in `self.task`.
+
         """
         if not self.first_step:
             self.cycle['step'] += 1
@@ -134,6 +140,7 @@ class Simulation:
         first : boolean
             This is just to do the initial tasks, i.e. tasks that should
             be done before the simulation starts.
+
         """
         results = {'cycle': self.cycle}
         for task in self.task:
@@ -182,7 +189,9 @@ class Simulation:
 
         See Also
         --------
-        `SimulationTask` object in `.simulation_task`.
+        :py:func:`.SimulationTask` object
+        in :py:mod:`.simulation_task`.
+
         """
         try:
             # create task in an explicit way - use 'get'.
@@ -224,6 +233,7 @@ class Simulation:
         ------
         out : dict
             This dictionary contains the results from the simulation.
+
         """
         if output is None:
             output = []
@@ -257,6 +267,7 @@ class Simulation:
         info : dict
             The dictionary with the restart information, should be
             similar to the dict produced by :py:func:`.restart_info`.
+
         """
         for key, val in info['cycle'].items():
             if key != 'end':

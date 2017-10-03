@@ -26,7 +26,8 @@ logger.addHandler(logging.NullHandler())
 
 
 class GromacsEngine(ExternalMDEngine):
-    """A class for interfacing GROMACS.
+    """
+    A class for interfacing GROMACS.
 
     This class defines the interface to GROMACS.
 
@@ -53,12 +54,13 @@ class GromacsEngine(ExternalMDEngine):
         Setting for the GROMACS grompp ``maxwarn`` option.
     ext : string
         This string selects the output format for GROMACS.
+
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
                  maxwarn=0, gmx_format='g96', write_vel=True,
                  write_force=False):
-        """Initiate the GROMACS engine.
+        """Set up the GROMACS engine.
 
         Parameters
         ----------
@@ -76,6 +78,7 @@ class GromacsEngine(ExternalMDEngine):
             Setting for the GROMACS grompp ``maxwarn`` option.
         gmx_format : string
             The format used for GROMACS configurations.
+
         """
         super().__init__('GROMACS engine', timestep, subcycles)
         self.ext = gmx_format
@@ -136,15 +139,29 @@ class GromacsEngine(ExternalMDEngine):
         logger.info('GROMACS ".tpr" created: %s', self.input_files['tpr'])
 
     def _name_output(self, basename):
-        """Return the name of output file for dumping.
+        """
+        Create a file name for output.
 
-        Here, we just add the correct extension for GROMACS-
+        This method is used when we want to dump a configuration.
+        Here, we add the correct extension for GROMACS, since this
+        engine in principle supports two file types (gro and g96).
+
+        Parameters
+        ----------
+        basename : string
+            The base name to give to the file.
+
+        Returns
+        -------
+        out : string
+            A file name with an extension.
+
         """
         out_file = '{}.{}'.format(basename, self.ext)
         return os.path.join(self.exe_dir, out_file)
 
     def _execute_grompp(self, mdp_file, config, deffnm):
-        """Method to execute the GROMACS preprocessor.
+        """Execute the GROMACS preprocessor.
 
         Parameters
         ----------
@@ -160,6 +177,7 @@ class GromacsEngine(ExternalMDEngine):
         out_files : dict
             This dict contains files that were created by the GROMACS
             preprocessor.
+
         """
         topol = self.input_files['topology']
         tpr = '{}.tpr'.format(deffnm)
@@ -172,7 +190,8 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _execute_mdrun(self, tprfile, deffnm):
-        """Method to execute GROMACS mdrun.
+        """
+        Execute GROMACS mdrun.
 
         This method is intended as the initial ``gmx mdrun`` executed.
         That is, we here assume that we do not continue a simulation.
@@ -189,6 +208,7 @@ class GromacsEngine(ExternalMDEngine):
         out_files : dict
             This dict contains the output files created by mdrun.
             Note that we here hard code the file names.
+
         """
         confout = '{}.{}'.format(deffnm, self.ext)
         cmd = shlex.split(self.mdrun.format(tprfile, deffnm, confout))
@@ -201,7 +221,8 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _execute_grompp_and_mdrun(self, config, deffnm):
-        """Run grompp and mdrun.
+        """
+        Execute GROMACS grompp and mdrun.
 
         Here we use the input file given in the input directory.
 
@@ -216,6 +237,7 @@ class GromacsEngine(ExternalMDEngine):
         -------
         out_files : dict of strings
             The files created by this command.
+
         """
         out_files = {}
         out_grompp = self._execute_grompp(self.input_files['input'],
@@ -230,7 +252,8 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _execute_mdrun_continue(self, tprfile, cptfile, deffnm):
-        """Method to continue the execution of GROMACS.
+        """
+        Continue the execution of GROMACS.
 
         Here, we assume that we have already executed ``gmx mdrun`` and
         that we are to append and continue a simulation.
@@ -250,6 +273,7 @@ class GromacsEngine(ExternalMDEngine):
         out_files : dict
             The output files created/appended by GROMACS when we
             continue the simulation.
+
         """
         confout = '{}.{}'.format(deffnm, self.ext)
         self._removefile(confout)
@@ -263,7 +287,7 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _extend_gromacs(self, tprfile, time):
-        """Method to extend a GROMACS simulation.
+        """Extend a GROMACS simulation.
 
         Parameters
         ----------
@@ -276,6 +300,7 @@ class GromacsEngine(ExternalMDEngine):
         -------
         out_files : dict
             The files created by GROMACS when we extend.
+
         """
         tpxout = 'ext_{}'.format(tprfile)
         self._removefile(tpxout)
@@ -302,6 +327,7 @@ class GromacsEngine(ExternalMDEngine):
         -------
         out_files : dict
             The files created by GROMACS when we extend.
+
         """
         out_files = {}
         out_grompp = self._extend_gromacs(tpr_file, self.ext_time)
@@ -320,7 +346,8 @@ class GromacsEngine(ExternalMDEngine):
         return out_files
 
     def _remove_gromacs_backup_files(self, dirname):
-        """Remove files GROMACS has backed up.
+        """
+        Remove files GROMACS has backed up.
 
         These are files starting with a '#'
 
@@ -328,6 +355,7 @@ class GromacsEngine(ExternalMDEngine):
         ----------
         dirname : string
             The directory where we are to remove files.
+
         """
         for entry in os.scandir(dirname):
             if entry.name.startswith('#') and entry.is_file():
@@ -350,6 +378,7 @@ class GromacsEngine(ExternalMDEngine):
         ----
         This will only properly work in the frames in the .trr are
         separated uniformly.
+
         """
         logger.debug('Extracting .trr frame, idx = %i', idx)
         logger.debug('Trr file: %s, out file: %s', trr_file, out_file)
@@ -371,6 +400,7 @@ class GromacsEngine(ExternalMDEngine):
         ----------
         energy_file : string
             The file to read energies from.
+
         """
         cmd = [self.gmx, 'energy', '-f', energy_file]
         self.execute_command(cmd, inputs=b'Potential\nKinetic-En.',
@@ -382,7 +412,8 @@ class GromacsEngine(ExternalMDEngine):
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
                         reverse=False):
-        """Propagate with GROMACS from the current system configuration.
+        """
+        Propagate with GROMACS from the current system configuration.
 
         Here, we assume that this method is called after the propagate()
         has been called in the parent. The parent is then responsible
@@ -410,6 +441,7 @@ class GromacsEngine(ExternalMDEngine):
             This is True if we generated an acceptable path.
         status : string
             A text description of the current status of the propagation.
+
         """
         status = 'propagating with GROMACS (reverse = {})'.format(reverse)
         logger.debug(status)
@@ -487,6 +519,7 @@ class GromacsEngine(ExternalMDEngine):
         out : string
             The name of the output configuration, obtained after
             completing the step.
+
         """
         initial_conf = self.dump_frame(system)
         # Save as a single snapshot file
@@ -513,9 +546,12 @@ class GromacsEngine(ExternalMDEngine):
         return out_mdrun['conf']
 
     def _prepare_shooting_point(self, input_file):
-        """Create initial configuration for a shooting move.
+        """
+        Create the initial configuration for a shooting move.
 
         This creates a new initial configuration with random velocities.
+        Here, the random velocities are obtained by running a zero-step
+        GROMACS simulation.
 
         Parameters
         ----------
@@ -528,6 +564,7 @@ class GromacsEngine(ExternalMDEngine):
             The name of the file created.
         energy : dict
             The energy terms read from the GROMACS .edr file.
+
         """
         gen_mdp = os.path.join(self.exe_dir, 'genvel.mdp')
         if os.path.isfile(gen_mdp):
@@ -552,7 +589,7 @@ class GromacsEngine(ExternalMDEngine):
         return confout, energy
 
     def _read_configuration(self, filename):
-        """Method to read output from GROMACS .g96/gro files.
+        """Read output from GROMACS .g96/gro files.
 
         Parameters
         ----------
@@ -567,6 +604,7 @@ class GromacsEngine(ExternalMDEngine):
             The positions.
         vel : numpy.array
             The velocities.
+
         """
         box = None
         if self.ext == 'g96':
@@ -580,7 +618,7 @@ class GromacsEngine(ExternalMDEngine):
         return box, xyz, vel
 
     def _reverse_velocities(self, filename, outfile):
-        """Method to reverse velocity in a given snapshot.
+        """Reverse velocity in a given snapshot.
 
         Parameters
         ----------
@@ -589,6 +627,7 @@ class GromacsEngine(ExternalMDEngine):
         outfile : string
             The output file for storing the configuration with
             reversed velocities.
+
         """
         if self.ext == 'g96':
             txt, xyz, vel, _ = read_gromos96_file(filename)
@@ -634,6 +673,7 @@ class GromacsEngine(ExternalMDEngine):
             The change in the kinetic energy.
         kin_new : float
             The new kinetic energy.
+
         """
         dek = None
         kin_old = None

@@ -30,10 +30,10 @@ __all__ = ['inspect_function', 'initiate_instance', 'generic_factory']
 
 
 def _arg_kind(arg):
-    """Helper function to determine kind for a given argument.
+    """Determine kind for a given argument.
 
     This method will help :py:func:`.inspect_function` to determine
-    the correct kind for arguments when using python3.
+    the correct kind for arguments.
 
     Parameters
     ----------
@@ -44,6 +44,7 @@ def _arg_kind(arg):
     -------
     out : string
         A string we use for determine the kind.
+
     """
     kind = None
     if arg.kind == arg.POSITIONAL_OR_KEYWORD:
@@ -64,7 +65,7 @@ def _arg_kind(arg):
 
 
 def inspect_function(function):
-    """Method returning arguments/kwargs of a given function.
+    """Return arguments/kwargs of a given function.
 
     This method is intended for usage where we are checking that we can
     call certain function. This method will return arguments and
@@ -86,6 +87,7 @@ def inspect_function(function):
         * `kwargs` : list of keyword arguments
         * `varargs` : list of arguments
         * `keywords` : list of keyword arguments
+
     """
     out = {'args': [], 'kwargs': [],
            'varargs': [], 'keywords': []}
@@ -101,7 +103,7 @@ def inspect_function(function):
 
 
 def _pick_out_arg_kwargs(klass, settings):
-    """Method to pick out arguments for a class from settings.
+    """Pick out arguments for a class from settings.
 
     Parameters
     ----------
@@ -116,6 +118,7 @@ def _pick_out_arg_kwargs(klass, settings):
         A list of the positional arguments.
     out[1] : dict
         The keyword arguments.
+
     """
     info = inspect_function(klass.__init__)
     used, args, kwargs = set(), [], {}
@@ -138,7 +141,7 @@ def _pick_out_arg_kwargs(klass, settings):
 
 
 def initiate_instance(klass, settings):
-    """Method to initiate a class with optional arguments.
+    """Initialise a class with optional arguments.
 
     Parameters
     ----------
@@ -151,6 +154,7 @@ def initiate_instance(klass, settings):
     -------
     out : instance of `klass`
         Here, we just return the initiated instance of the given class.
+
     """
     args, kwargs = _pick_out_arg_kwargs(klass, settings)
     # Ready to initiate!
@@ -194,6 +198,7 @@ def generic_factory(settings, object_map, name='generic'):
     out : instance of a class
         The created object, in case we were successful. Otherwise we
         return none.
+
     """
     try:
         klass = settings['class'].lower()
@@ -210,7 +215,7 @@ def generic_factory(settings, object_map, name='generic'):
 
 
 def get_path_class(ensemble_type):
-    """Method to return the path class to work with an integrator.
+    """Return the path class to work with an integrator.
 
     Parameters
     ----------
@@ -221,6 +226,7 @@ def get_path_class(ensemble_type):
     -------
     out : object like :py:class:`.PathBase`
         A path we can fill :-)
+
     """
     path_map = {'internal': Path,
                 'external': PathExt,

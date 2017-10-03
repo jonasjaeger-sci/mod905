@@ -48,6 +48,7 @@ def generate_report_tis_path(analysis, output='rst'):
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
+
     """
     result = analysis['pathensemble']
     report = {'ensemble': result['out']['ensemble'],
@@ -85,6 +86,7 @@ def generate_report_tis(analysis, output='rst'):
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
+
     """
     report = {'figures': {'tis': [],
                           'matched': None},
@@ -141,6 +143,7 @@ def generate_report_retis(analysis, output='rst'):
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
+
     """
     report = {'figures': {'tis': [],
                           'matched': None},
@@ -215,23 +218,21 @@ def generate_report_retis0(analysis, output='txt'):
         The generated report in the desired format.
     out[1] : string
         The file extension (i.e. file type) for the generated report.
+
     """
     if output != 'txt':
-        msg = ('Report for [0^-] is only indended as "txt"'
-               '\nOutput format "{}" ignored'.format(output))
-        logger.warning(msg)
         output = 'txt'
+        logger.warning('Report for [0^-] is only indended as "txt"'
+                       '\nOutput format "%s" ignored', output)
     result = analysis['pathensemble']
-    report = {'ensemble': result['out']['ensemble'], 'numbers': {},
-              'tables': {}}
-    # Create tables
-    report['tables'] = {'interfaces0': _table_interface0([result],
-                                                         fmt=output)[1],
-                        'path0': _table_path([result], fmt=output)[1]}
-    numbers = report['numbers']
     flux = result['out']['fluxlength']
-    numbers['fluxlength'] = format_number(flux[0], 0, 10000)
-    numbers['fluxlengtherror'] = format_number(flux[1] * 100, 0, 100)
+    report = {
+        'ensemble': result['out']['ensemble'],
+        'numbers': {'fluxlength': format_number(flux[0], 0, 10000),
+                    'fluxlengtherror': format_number(flux[1] * 100, 0, 100)},
+        'tables': {'interfaces0': _table_interface0([result], fmt=output)[1],
+                   'path0': _table_path([result], fmt=output)[1]},
+    }
     return report
 
 
@@ -255,6 +256,7 @@ def _table_interface(results, fmt='rst'):
     out[1] : string
         This is a string in the desired format which represents
         the table.
+
     """
     table = []
     for result in results:
@@ -304,6 +306,7 @@ def _table_interface0(results, fmt='rst'):
     out[1] : string
         This is a string in the desired format which represents
         the table.
+
     """
     table = []
     for result in results:
@@ -347,6 +350,7 @@ def _table_probability(results, fmt='rst'):
     out[1] : string
         This is a string in reStructuredText format which represents
         the table.
+
     """
     table = []
     for result in results:
@@ -391,6 +395,7 @@ def _table_path(results, fmt='rst'):
     out[1] : string
         This is a string in reStructuredText format which represents
         the table.
+
     """
     table = []
     for result in results:
@@ -435,6 +440,7 @@ def _table_efficiencies(results, fmt='rst'):
     out[1] : string
         This is a string in reStructuredText format which represents
         the table.
+
     """
     table = []
     for result in results:
@@ -463,7 +469,7 @@ def _table_efficiencies(results, fmt='rst'):
 
 
 def _table_summary(report, fmt='rst'):
-    """Generate table with summary of main results
+    """Generate table with summary of main results.
 
     This table will display results for the crossing probability,
     the initial flux and rate constant.
@@ -484,6 +490,7 @@ def _table_summary(report, fmt='rst'):
     out[1] : string
         This is a string in reStructuredText format which represents
         the table.
+
     """
     numbers = report['numbers']
     text = report['text']
@@ -520,6 +527,7 @@ def _get_path_figures(figures):
     -------
     path_figures : dict
         A dict which can be used in the report.
+
     """
     path_figures = {}
     for fig in {'pcross', 'prun', 'perror', 'lpath',

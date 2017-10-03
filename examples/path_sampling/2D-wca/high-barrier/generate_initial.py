@@ -5,6 +5,7 @@
 from pyretis.tools.lattice import generate_lattice
 from pyretis.inout.writers.xyzio import write_xyz_file
 
+# pylint: disable=invalid-name
 filename = 'initial.xyz'
 density = 0.7
 xyz, size = generate_lattice('sq', [5, 5], density=density)

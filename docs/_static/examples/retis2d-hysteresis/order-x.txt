@@ -1,0 +1,11 @@
+Orderparameter
+--------------
+class = OrderX
+module = order.py
+dim = x
+index = 0
+periodic = False
+inter_a = -0.15
+inter_b = 0.18
+energy_a = -9.0
+energy_b = -9.0
