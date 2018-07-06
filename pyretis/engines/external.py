@@ -510,11 +510,7 @@ class ExternalMDEngine(EngineBase):
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
             txt = '{} -> {} | {}'.format(prev, curr, middle)
-<<<<<<< HEAD
             if (prev < middle < curr) or (curr < middle < prev):
-=======
-            if (prev <= middle < curr) or (curr <= middle <= prev):
->>>>>>> 07ef909e5fbeed86350f3302ff7258e9b6fec150
                 logger.info('Crossed middle interface: %s', txt)
                 print_to_screen('Crossed middle interface: {}'.format(txt),
                                 level='info')
