@@ -365,7 +365,7 @@ class MDEngine(EngineBase):
                 # have crossed middle interface, just stop the loop
                 logger.info('Crossing found: %9.6f %9.6f ', prev, curr)
                 break
-            elif (prev <= curr < middle) or (middle < curr <= prev):
+            elif (prev <= curr <= middle) or (middle <= curr <= prev):
                 # We are getting closer, keep the new point
                 pass
             else:  # we did not get closer, fall back to previous point
