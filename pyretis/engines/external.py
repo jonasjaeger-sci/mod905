@@ -510,13 +510,13 @@ class ExternalMDEngine(EngineBase):
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
             txt = '{} -> {} | {}'.format(prev, curr, middle)
-            if (prev <= middle < curr) or (curr < middle <= prev):
+            if (prev < middle < curr) or (curr < middle < prev):
                 logger.info('Crossed middle interface: %s', txt)
                 print_to_screen('Crossed middle interface: {}'.format(txt),
                                 level='info')
                 # have crossed middle interface, just stop the loop
                 break
-            elif (prev <= curr < middle) or (middle < curr <= prev):
+            elif (prev <= curr <= middle) or (middle <= curr <= prev):
                 # Getting closer, keep the new point
                 logger.debug('Getting closer to middle: %s', txt)
                 print_to_screen('-> Getting closer to middle: {}'.format(txt))
