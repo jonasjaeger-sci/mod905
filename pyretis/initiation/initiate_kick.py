@@ -104,7 +104,7 @@ def initiate_kick_max(simulation, cycle):
             for last_path in last_paths:
                 for phase_point in last_path.trajectory():
                     dist = middle - phase_point['order'][0]
-                    if 0 < dist < min_dist:
+                    if 0 <= dist <= min_dist:
                         min_dist = dist
                         current = phase_point
             if current is not None:
