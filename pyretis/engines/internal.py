@@ -368,6 +368,9 @@ class MDEngine(EngineBase):
             elif (prev <= curr <= middle) or (middle <= curr <= prev):
                 # We are getting closer, keep the new point
                 pass
+            elif (prev == middle):
+                # Unlucky case, we want more than 1 point, so search more
+                pass
             else:  # we did not get closer, fall back to previous point
                 particles.set_particle_state(previous)
                 curr = previous['order']

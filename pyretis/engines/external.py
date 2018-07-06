@@ -523,6 +523,13 @@ class ExternalMDEngine(EngineBase):
                 self._movefile(curr_file, prev_file)
                 # Update file name after moving:
                 system.particles.set_pos((prev_file, None))
+            elif (prev == middle):
+                #Unlucky case, but we want at least 2 points so, search more
+                logger.debug('Getting closer to middle: %s', txt)
+                print_to_screen('-> Getting closer to middle: {}'.format(txt))
+                self._movefile(curr_file, prev_file)
+                # Update file name after moving:
+                system.particles.set_pos((prev_file, None))
             else:  # we did not get closer, fall back to previous point
                 logger.debug('Did not get closer to middle: %s', txt)
                 print_to_screen(
