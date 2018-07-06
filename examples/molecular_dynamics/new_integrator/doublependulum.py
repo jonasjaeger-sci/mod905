@@ -96,16 +96,16 @@ class DoublePendulumn(PotentialFunction):
         dtheta2 = vel[1][0]
         dth = theta1 - theta2
         M = m2 / (m1 + m2)
-        l = l2 / l1
+        ll = l2 / l1
         wsq = g / l1
-        denom = l*(1.0 - M*np.cos(dth)**2)
-        atheta1 = wsq*l*(-np.sin(theta1) + M*np.cos(dth)*np.sin(theta2))
-        atheta1 -= M*l*np.sin(dth)*(dtheta1**2*np.cos(dth) +
-                                    l*dtheta2**2)
+        denom = ll*(1.0 - M*np.cos(dth)**2)
+        atheta1 = wsq*ll*(-np.sin(theta1) + M*np.cos(dth)*np.sin(theta2))
+        atheta1 -= M*ll*np.sin(dth)*(dtheta1**2*np.cos(dth) +
+                                     ll*dtheta2**2)
         atheta1 /= denom
 
         atheta2 = wsq*np.cos(dth)*np.sin(theta1) - wsq*np.sin(theta2)
-        atheta2 += (dtheta1**2 + M*l*dtheta2**2*np.cos(dth))*np.sin(dth)
+        atheta2 += (dtheta1**2 + M*ll*dtheta2**2*np.cos(dth))*np.sin(dth)
         atheta2 /= denom
 
         forces = np.zeros((2, self.dim))

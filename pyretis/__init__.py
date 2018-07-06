@@ -2,9 +2,11 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
-#######
-PyRETIS
-#######
+. #. ####### .# . 
+
+.    PyRETIS    .
+
+. #. ####### .# .
 
 This file is part of PyRETIS - a simulation package for rare events.
 
@@ -66,6 +68,7 @@ tools (:py:mod:`pyretis.tools`)
     This package defines some functions which can be useful for
     setting up simple systems, for example functions for generating
     lattices.
+
 """
 # PyRETIS imports:
 from .version import VERSION as __version__
