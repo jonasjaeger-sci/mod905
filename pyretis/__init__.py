@@ -2,11 +2,9 @@
 # Copyright (c) 2015, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
-. #. ####### .# . 
-
-.    PyRETIS    .
-
-. #. ####### .# .
+#######
+PyRETIS
+#######
 
 This file is part of PyRETIS - a simulation package for rare events.
 
