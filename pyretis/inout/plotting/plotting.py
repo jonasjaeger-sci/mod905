@@ -59,27 +59,27 @@ class Plotter(metaclass=ABCMeta):
     @abstractmethod
     def output_flux(self, results):
         """Plot flux results."""
-        return
+        pass
 
     @abstractmethod
     def output_energy(self, results, energies):
         """Plot energy results."""
-        return
+        pass
 
     @abstractmethod
     def output_orderp(self, results, orderdata):
         """Plot order parameter results."""
-        return
+        pass
 
     @abstractmethod
     def output_path(self, results, path_ensemble):
         """Plot results for each path ensemble."""
-        return
+        pass
 
     @abstractmethod
     def output_matched_probability(self, path_ensembles, detect, matched):
         """Plot the overall probability for path ensembles."""
-        return
+        pass
 
     def __str__(self):
         """Print out the basic info."""
