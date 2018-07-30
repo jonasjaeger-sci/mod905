@@ -50,7 +50,7 @@ def run_linting(files):
                 if not printed:
                     print(Fore.RED + '{} {} {}'.format(filei, score, delta))
                     printed = True
-        if score < 9.2:
+        if score < 9.0:
             results['below'].append((filei, score, delta))
             if not printed:
                 print(Fore.RED + '{} {} {}'.format(filei, score, delta))
