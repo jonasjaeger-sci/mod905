@@ -5,7 +5,7 @@
 import logging
 import unittest
 import numpy as np
-from scipy.misc import comb
+from scipy.special import comb
 from pyretis.core.particles import Particles, ParticlesExt, get_particle_type
 logging.disable(logging.CRITICAL)
 
