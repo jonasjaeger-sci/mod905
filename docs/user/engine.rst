@@ -89,7 +89,7 @@ where :math:`\mathbf{r}` are the positions, :math:`\mathbf{v}` the velocities,
 current time.
 
 Step 1 and 2: Sub-classing MDEngine
-..................................
+...................................
 
 In order to define a new class to use with |pyretis| we
 sub-class the :py:class:`.MDEngine` and define the
