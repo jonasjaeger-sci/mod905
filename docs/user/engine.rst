@@ -88,8 +88,8 @@ where :math:`\mathbf{r}` are the positions, :math:`\mathbf{v}` the velocities,
 :math:`\mathbf{a}` the accelerations, :math:`\Delta t` the time step and :math:`t` is the
 current time.
 
-Step 1 and 2: Sub-classing MEngine
-..................................
+Step 1 and 2: Sub-classing MDEngine
+...................................
 
 In order to define a new class to use with |pyretis| we
 sub-class the :py:class:`.MDEngine` and define the
