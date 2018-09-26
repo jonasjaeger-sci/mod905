@@ -5,7 +5,8 @@
 .. image:: https://gitlab.com/pyretis/pyretis/badges/master/coverage.svg
     :target: https://gitlab.com/pyretis/pyretis/commits/master
 
-
+.. image:: https://api.codacy.com/project/badge/Grade/5c452c3240574d9b90840e681a4ad3d7    
+    :target: https://www.codacy.com/app/pyretis/pyretis?utm_source=gitlab.com&amp;utm_medium=referral&amp;utm_content=pyretis/pyretis&amp;utm_campaign=Badge_Grade
 PyRETIS
 =======
 
