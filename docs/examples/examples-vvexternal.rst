@@ -78,9 +78,9 @@ In order to compile the FORTRAN code created in the previous step, we
 make use of `f2py <https://docs.scipy.org/doc/numpy/f2py/>`_.
 
 Note that
-in some systems you might actually need to use ``f2py3`` (or, for a specific version: ``f2py3.5`` etc.)
-to compile the FORTRAN code so that it can be used with Python3.
-You will than have to modify the ``F2PY = f2py`` setting in the Makefile
+in some cases you might actually need to use ``f2py3`` (or, for a specific version: ``f2py3.7`` etc.)
+to compile the FORTRAN code so that it can be used with the version of Python you are using to run
+this example. You will than have to modify the ``F2PY = f2py`` setting in the Makefile
 
 .. pyretis-collapse-block::
    :heading: Show/hide the contents of the Makefile
