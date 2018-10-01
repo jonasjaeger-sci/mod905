@@ -1,23 +1,103 @@
+Installing PyRETIS
+==================
 
-Installing the PyRETIS library
-==============================
+PyRETIS and its requirements can be installed using pip or conda
+as described below. 
 
-0. Install the required packages listed in the file requirements.txt
+Please note that PyRETIS only supports **Python 3.6** or **Python 3.7**.
 
-1. Place the PyRETIS library somewhere you can access it, to 
-   `/some/dir/pyretis`
+Installing PyRETIS using pip or conda
+-------------------------------------
 
-2. Export the PyRETIS path:
+The latest release of the PyRETIS library can be installed using conda:
 
-   export PYTHONPATH=$PYTHONPATH:/some/dir/pyretis
+```
+conda install pyretis -c conda-forge
+```
 
-Alternatively:
+or using pip:
 
+```
 pip install pyretis
+```
 
+Installing PyRETIS from the source code
+---------------------------------------
+
+Previous versions of PyRETIS and the latest sources can be obtained
+using git:
+
+```
+git clone git@gitlab.com:pyretis/pyretis.git
+```
+
+or alternatively:
+
+```
+git clone https://gitlab.com/pyretis/pyretis.git
+```
+
+After cloning the repository, PyRETIS can be installed
+as follows:
+
+```
+pip install . 
+```
+
+or alternatively using,
+
+```
+python setup.py install
+```
+
+Installing the development version of PyRETIS
+---------------------------------------------
+
+After cloning the repository as described above,
+check out the development branch you are interested in, e.g.:
+
+```
+git checkout develop
+```
+
+Then, install the PyRETIS development requirements (these
+are defined in the file ``requirements-dev.txt``):
+
+```
+pip install -r requirements-dev.txt
+```
+
+Finally install PyRETIS using,
+
+```
+pip install -e .
+```
+
+Testing your installation
+-------------------------
+
+Your installation can be tested by running the tests from the
+main directory:
+
+```
+python -m unittest discover -v -s test
+```
 
 Building the documentation
-==========================
+--------------------------
+Building the documentation depend upon first installed the
+requirements for the PyRETIS development version.
+As described above, this can be done using
+(from the main source directory):
 
-The documentation can be created by running `make html` in the
-`docs` directory.
+```
+pip install -r requirements-dev.txt
+```
+
+The documentation for PyRETIS can then be created (from
+the ``docs`` folder) by:
+
+```
+make html
+```
+
