@@ -1,7 +1,7 @@
-Extending pyretis with a new force field
+Extending PyRETIS with a new force field
 ========================================
 
-This folder contains an example on how pyretis can be extended with a new
+This folder contains an example of how PyRETIS can be extended with a new
 force field implemented in C or FORTRAN.
 
 The sub-folders are:
@@ -21,10 +21,10 @@ while the FORTRAN examples can be compiled with the Makefiles in the folders.
 Note that you may have to edit the Makefile depending on your version
 of Python. In case you have several Python versions installed, you
 may have to specify the precise version of ``f2py`` to use as this should
-correspond the Python version you are currently using. This can for instance
+correspond to the Python version you are currently using. This can for instance
 be: ``f2py``, ``f2py3`` or ``f2py3.X`` (where ``X`` denotes the minor version number).
 
-In each folder there is a script to run a simple MD simulation
+In each folder, there is a script to run a simple MD simulation
 ``md_nve.py`` and a script for timing the Lennard-Jones implementations
 (``time_ljforces.py``). There is also a script for testing the
 implementation (``test_ljforces.py``).

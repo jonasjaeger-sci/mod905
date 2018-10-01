@@ -67,7 +67,7 @@ are defined in the file ``requirements-dev.txt``):
 pip install -r requirements-dev.txt
 ```
 
-Finally install PyRETIS using,
+Finally, install PyRETIS using,
 
 ```
 pip install -e .
@@ -85,7 +85,7 @@ python -m unittest discover -v -s test
 
 Building the documentation
 --------------------------
-Building the documentation depend upon first installed the
+Building the documentation depends upon first installing the
 requirements for the PyRETIS development version.
 As described above, this can be done using
 (from the main source directory):

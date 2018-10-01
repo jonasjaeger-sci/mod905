@@ -4,8 +4,7 @@ Using C or FORTRAN
 ==================
 
 In this section, we will show some examples on how C or FORTRAN
-can be used together with Python and pyretis. We show examples
-on:
+can be used together with Python and |pyretis|:
 
 .. contents::
    :local:
@@ -15,11 +14,11 @@ on:
 Creating a new Molecular Dynamics engine with C or FORTRAN
 ----------------------------------------------------------
 
-In this example we will create a new molecular dynamics engine
+In this example, we will create a new molecular dynamics engine
 using C or FORTRAN. As described in
 the :ref:`user guide <user-guide-engine>`
 we have to make a new class and implement a method which performs
-an integration step. When we now make use of C or FORTRAN in a pyretis engine,
+an integration step. When we now make use of C or FORTRAN in a |pyretis| engine,
 we essentially just call a method from an external library which we have
 prepared ourselves (in C or FORTRAN).
 
@@ -45,7 +44,7 @@ Writing a new engine with FORTRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will now create a new engine by writing the external library in FORTRAN.
-This is done by the following steps:
+This is done in the following steps:
 
 .. contents::
    :local:
@@ -54,7 +53,7 @@ Step 1. Creating the FORTRAN code
 .................................
 
 The FORTRAN code for creating the new integrator is relatively simple.
-We can assume that we are handed positions, velocities and forces
+We can assume that we are handed positions, velocities, and forces
 as double precision arrays and that we can directly make use of them.
 Since we need to evaluate the forces during the Velocity Verlet integration,
 the integration routine is split up in two steps (before/after the
@@ -80,7 +79,7 @@ make use of `f2py <https://docs.scipy.org/doc/numpy/f2py/>`_.
 Note that
 in some cases you might actually need to use ``f2py3`` (or, for a specific version: ``f2py3.7`` etc.)
 to compile the FORTRAN code so that it can be used with the version of Python you are using to run
-this example. You will than have to modify the ``F2PY = f2py`` setting in the Makefile
+this example. You will then have to modify the ``F2PY = f2py`` setting in the Makefile
 
 .. pyretis-collapse-block::
    :heading: Show/hide the contents of the Makefile
@@ -105,7 +104,7 @@ Step 3. Creating a new Python class for the engine
 ..................................................
 
 For the Python class representing the engine, we just import the
-module we just compiled, and make use of the two methods defined within
+module we just compiled and make use of the two methods defined within
 that module. Note that we here make an explicit call to ``system.potential_and_force()``
 so that forces are updated between the two "steps" of the Velocity Verlet integration.
 
@@ -131,7 +130,7 @@ Writing a new engine with C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will now create a new engine by writing the external library in C.
-This is done by the following steps:
+This is done in the following steps:
 
 .. contents::
    :local:
@@ -208,8 +207,8 @@ Comparison of the FORTRAN and C code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As you may have noticed, the FORTRAN code we have added
-is somewhat more to the point than the C-code we wrote.
-The C-code could for instance be simplified by making use
+is somewhat more to the point compared to the C-code we wrote.
+The C-code could, for instance, be simplified by making use
 of `Cython <http://cython.org/>`_, and you are encouraged to
 try this out.
 
@@ -229,10 +228,10 @@ libraries from Python's point of view. This is also evident in the
 Creating a force field with C or FORTRAN
 ----------------------------------------
 
-Evaluation of the forces will typically be the most time consuming part
-of your simulation. If you are running pyretis with internal engines, there
+Evaluation of the forces will typically be the most time-consuming part
+of your simulation. If you are running |pyretis| with internal engines, there
 can be a lot to gain by implementing the force evaluation in C or FORTRAN.
-In this section we will give a short example on how this can be done.
+In this section, we will give a short example of how this can be done.
 The approach is similar to the :ref:`approach for the engine <examples-external-vvE>`,
 and we will do the following:
 
@@ -264,7 +263,7 @@ Writing a new potential with FORTRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will now create a new potential function by writing the external library in FORTRAN.
-This is done by the following steps:
+This is done in the following steps:
 
 .. contents::
    :local:
@@ -273,7 +272,7 @@ Step 1. Creating the FORTRAN code
 .................................
 
 For the new potential function, we add methods for calculating the potential,
-the force and the potential and force. In addition we calculate the virial.
+the force, and the potential and force. In addition, we calculate the virial.
 Note: Here we also add a method to apply the periodic boundaries. Ideally, we
 should use the :py:class:`.Box` object, but in order to not complicate the
 FORTRAN code, by calling methods from the Python class, we simply make a new
@@ -337,7 +336,7 @@ Writing a new potential with C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will now create a new potential function by writing the external library in C.
-This is done by the following steps:
+This is done in the following steps:
 
 .. contents::
    :local:
@@ -435,7 +434,7 @@ two Python implementations (one is in pure Python, while the other is using Nump
 OpenMP: Parallel evaluation of the force
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In both the :ref:`C module <examples-ljexternal-c>` and the :ref:`FORTRAN module <examples-ljexternal-fortran>` we created
-for evaluation of the force it is possible to speed up the force evaluation
+for evaluation of the force, it is possible to speed up the force evaluation
 by, for instance, making use of `OpenMP <http://www.openmp.org/>`_ directives. We just
 give a very brief example below, and leave the rest to you.
 
@@ -447,7 +446,7 @@ give a very brief example below, and leave the rest to you.
 
     Sample results using OpenMP while calculating the Lennard-Jones
     potential energy. The left figure shows the actual time used
-    (average over 5 independent runs), while the right figure show
+    (average over 5 independent runs), while the right figure shows
     the time used relative to each other.
 
 
@@ -457,7 +456,7 @@ give a very brief example below, and leave the rest to you.
     .. literalinclude:: /_static/examples/extending-example/potential/ljfortranpomp.f90
        :language: fortran
 
-Note that you will have to modify the flags in your Makefile accordingly, for instance setting:
+Note that you will have to modify the flags in your Makefile accordingly, for instance, setting:
 
 .. code-block:: make
 

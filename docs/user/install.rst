@@ -17,9 +17,9 @@ Prerequisites
 -------------
 
 |pyretis| requires **Python 3.6** or **Python 3.7**. Please make sure that you have
-an updated version on Python installed on your system. |pyretis| depends on several
-other Python packages, however these should be installed automatically as part
-of the installation of |pyretis|. A  list of the dependencies :ref:`are given below <user-guide-install-requirements>`.
+an updated version of Python installed on your system. |pyretis| depends on several
+other Python packages, however, these should be installed automatically as part
+of the installation of |pyretis|. A  list of the dependencies :ref:`can be found below <user-guide-install-requirements>`.
 
 .. _user-guide-install-pip:
 
@@ -33,7 +33,7 @@ with the following command:
     pip install pyretis
 
 **Note:** |pyretis| please make sure that you are using a Python environment
-of version 3.6 or newer. On some systems **Python 2** might still be the default
+of version 3.6 or newer. On some systems, **Python 2** may still be the default
 version and ``pip`` might actually try to install for **Python 2**.
 In this case, use ``pip3`` in the command above.
 
@@ -70,7 +70,7 @@ set up a virtual environment:
 
       [sudo] pip install virtualenv
 
-   or using a package manager for your operative system, for instace ``apt`` if you are
+   or using a package manager for your operative system, for instance ``apt`` if you are
    using a Debian-like Linux:
 
    .. code-block:: pyretis

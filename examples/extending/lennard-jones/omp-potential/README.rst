@@ -1,7 +1,7 @@
-Extending pyretis with FORTRAN and OpenMP directives
+Extending PyRETIS with FORTRAN and OpenMP directives
 ====================================================
 
-This folder contains an example of extending pyretis with a new
+This folder contains an example of extending PyRETIS with a new
 force field which is implemented in FORTRAN. In this particular
 example, OpenMD directives are used.
 
@@ -11,5 +11,5 @@ is done by running ``make``.
 Note that you may have to edit the Makefile depending on your version
 of Python. In case you have several Python versions installed, you
 may have to specify the precise version of ``f2py`` to use as this should
-correspond the Python version you are currently using. This can for instance
+correspond to the Python version you are currently using. This can for instance
 be: ``f2py``, ``f2py3`` or ``f2py3.X`` (where ``X`` denotes the minor version number).
