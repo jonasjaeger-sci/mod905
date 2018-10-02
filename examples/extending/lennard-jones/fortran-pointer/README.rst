@@ -4,13 +4,12 @@ Extending PyRETIS with FORTRAN
 This folder contains an example of extending PyRETIS with a new
 force field which is implemented in FORTRAN.
 
+In this example, we try to align the memory better for usage with FORTRAN.
+
 The FORTRAN code must be compiled before it can be executed and this
-is done by running ``make``.
-
-Note that you may have to edit the makefile depending on your version
-of python. For python3 change ``f2py`` to ``f2py3`` in the makefile. If you
-have several python versions installed (perhaps you are running in a virtual
-environment) you may have to specify which f2py to use more explicitly, e.g.
-``f2py3.5``.
-
-In this example we try to align the memory better for usage with FORTRAN.
+is done by running ``make``. Note that you may have to edit the Makefile
+depending on your version of Python. In case you have several Python versions
+installed, you may have to specify the precise version of ``f2py`` to use as
+this should correspond to the Python version you are currently using. This can
+for instance be: ``f2py``, ``f2py3`` or ``f2py3.X`` (where ``X`` denotes the
+minor version number).

@@ -1,8 +1,9 @@
-Extending PyRETIS with FORTRAN 
-==============================
+Extending PyRETIS with FORTRAN and OpenMP directives
+====================================================
 
 This folder contains an example of extending PyRETIS with a new
-force field which is implemented in FORTRAN.
+force field which is implemented in FORTRAN. In this particular
+example, OpenMP directives are used.
 
 The FORTRAN code must be compiled before it can be executed and this
 is done by running ``make``.

@@ -21,7 +21,7 @@ the simulation.
     final) configuration and to the right, the configuration after
     running 2000 steps, just before reversing the velocities. The
     system consist of two types of particles, labeled Ar (colored silver)
-    and Kr (colored purple) which are initially arranged in a particular
+    and Kr (colored purple), which are initially arranged in a particular
     configuration.
 
 
@@ -32,7 +32,7 @@ the simulation.
 Creating a new potential in C or FORTRAN
 ----------------------------------------
 
-In this example we will create a new potential function to
+In this example, we will create a new potential function to
 use with |pyretis| in C or FORTRAN.
 
 As discussed in the
@@ -63,7 +63,7 @@ Writing a new potential function with FORTRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will now create a potential function writing the external library in FORTRAN.
-This is done by the following steps:
+This is done in the following steps:
 
 .. contents::
    :local:
@@ -72,7 +72,7 @@ Step 1. Creating the FORTRAN code
 .................................
 
 The FORTRAN code for evaluating the potential and forces is
-relative simply and we assume that we are handed positions, velocities and forces
+relative simply and we assume that we are handed positions, velocities, and forces
 as double precision arrays and that we can directly make use of them.
 
 .. pyretis-collapse-block::
@@ -87,10 +87,12 @@ Step 2. Creating the Makefile and compiling
 In order to compile the FORTRAN code created in the previous step, we
 make use of `f2py <https://docs.scipy.org/doc/numpy/f2py/>`_.
 
-Note that
-in some systems you might actually need to use ``f2py3`` (or, for a specific version: ``f2py3.5`` etc.)
-to compile the FORTRAN code so that it can be used with Python3.
-You will then have to modify the ``F2PY = f2py`` setting in the Makefile
+Note that in some systems you might actually need to use ``f2py3``
+(or, for a specific version: ``f2py3.7`` etc.) if you have several
+versions of Python installed on your system. This is to ensure that
+the FORTRAN code is compiled with a version that matches the version of
+Python you are using. You will then have to modify the ``F2PY = f2py``
+setting in the Makefile.
 
 .. pyretis-collapse-block::
    :heading: Show/hide the contents of the Makefile
@@ -112,7 +114,7 @@ Step 3. Creating a new Python class for the potential function
 ..............................................................
 
 For the Python class representing the potential function,
-we import the module we just compiled, and make use of the methods defined
+we import the module we just compiled and make use of the methods defined
 in that module.
 
 .. pyretis-collapse-block::
@@ -187,9 +189,9 @@ Running the MD simulation using the |pyretis| library
 Below we give a Python script which makes use of the |pyretis| library
 to run a MD simulation of 2000 steps in the forward and backward directions.
 It will generate a trajectory (named ``traj.xyz``) and display a plot of
-the energies (an example is show in the figure below).
+the energies (an example is shown in the figure below).
 
-Before running the script you will have to down load the initial configuration
+Before running the script you will have to download the initial configuration
 :download:`initial.gro </_static/examples/extending-example/potentialfb/initial.gro>`
 and place it in the same directory as the script. Further, the script makes the
 following assumptions:
