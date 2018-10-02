@@ -271,8 +271,8 @@ This is done in the following steps:
 Step 1. Creating the FORTRAN code
 .................................
 
-For the new potential function, we add methods for calculating the potential,
-the force, and the potential and force. In addition, we calculate the virial.
+For the new potential function, we add methods for calculating
+the potential and the force. In addition, we calculate the virial.
 Note: Here we also add a method to apply the periodic boundaries. Ideally, we
 should use the :py:class:`.Box` object, but in order to not complicate the
 FORTRAN code, by calling methods from the Python class, we simply make a new
@@ -433,7 +433,8 @@ two Python implementations (one is in pure Python, while the other is using Nump
 
 OpenMP: Parallel evaluation of the force
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In both the :ref:`C module <examples-ljexternal-c>` and the :ref:`FORTRAN module <examples-ljexternal-fortran>` we created
+In both the :ref:`C module <examples-ljexternal-c>` and the
+:ref:`FORTRAN module <examples-ljexternal-fortran>`, we created
 for evaluation of the force, it is possible to speed up the force evaluation
 by, for instance, making use of `OpenMP <http://www.openmp.org/>`_ directives. We just
 give a very brief example below, and leave the rest to you.
