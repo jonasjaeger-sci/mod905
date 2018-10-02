@@ -4,7 +4,7 @@ Molecular dynamics in |pyretis| with C or FORTRAN
 =================================================
 
 In this example, we will implement a Lennard-Jones potential
-in C or FORTRAN and use this to run an MD simulation with
+in C or FORTRAN and use this to run a MD simulation with
 |pyretis| for a simple system. The system we consider is a
 Lennard-Jones mixture starting for a specific configuration as
 shown below. After running for some steps (which melt the
@@ -20,8 +20,8 @@ the simulation.
     Snapshots from the MD simulation. To the left, the initial (and
     final) configuration and to the right, the configuration after
     running 2000 steps, just before reversing the velocities. The
-    system consist of two types of particles labeled Ar (colored silver)
-    and Kr (colored purple) which are initially arranged in a particular
+    system consist of two types of particles, labeled Ar (colored silver)
+    and Kr (colored purple), which are initially arranged in a particular
     configuration.
 
 
@@ -88,7 +88,7 @@ In order to compile the FORTRAN code created in the previous step, we
 make use of `f2py <https://docs.scipy.org/doc/numpy/f2py/>`_.
 
 Note that in some systems you might actually need to use ``f2py3``
-(or, for a specific version: ``f2py3.7`` etc.) in you have several
+(or, for a specific version: ``f2py3.7`` etc.) if you have several
 versions of Python installed on your system. This is to ensure that
 the FORTRAN code is compiled with a version that matches the version of
 Python you are using. You will then have to modify the ``F2PY = f2py``
@@ -187,7 +187,7 @@ Running the MD simulation using the |pyretis| library
 -----------------------------------------------------
 
 Below we give a Python script which makes use of the |pyretis| library
-to run an MD simulation of 2000 steps in the forward and backward directions.
+to run a MD simulation of 2000 steps in the forward and backward directions.
 It will generate a trajectory (named ``traj.xyz``) and display a plot of
 the energies (an example is shown in the figure below).
 
