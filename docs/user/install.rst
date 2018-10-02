@@ -91,7 +91,15 @@ set up a virtual environment:
 
    .. code-block:: pyretis
 
-      virtualenv -p /usr/bin/python3.5 ~/name-of-environment-folder/pyretis-env
+      virtualenv -p /usr/bin/python3 ~/name-of-environment-folder/pyretis-env
+
+   Note, if you want more control over which version of Python to use, you can
+   use the ``-p`` option in the command above to specify this. For instance,
+   for version **3.7**:
+   
+   .. code-block:: pyretis
+
+      virtualenv -p /usr/bin/python3.7 ~/name-of-environment-folder/pyretis-env
 
 
 4. Activate the environment:
