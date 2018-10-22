@@ -70,8 +70,7 @@ def fake_gmx_grompp(args):
 def fake_gmx_trjconv(args):
     """Fake the gmx trjconv command."""
     print('Running gmx trjconv...', file=sys.stdout)
-    need_args = {'-f': None, '-s': None, '-o': None, '-b': None,
-                 '-dump': None}
+    need_args = {'-f': None, '-s': None, '-o': None}
     simple_parser(args, need_args)
     check_that_files_exist(('-f', '-s'), need_args)
     read_write_gromacs(need_args['-f'], need_args['-o'])

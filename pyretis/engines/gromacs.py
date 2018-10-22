@@ -362,13 +362,13 @@ class GromacsEngine(ExternalMDEngine):
                 filename = os.path.join(dirname, entry.name)
                 self._removefile(filename)
 
-    def _extract_frame(self, trr_file, idx, out_file):
-        """Extract a frame from a .trr file.
+    def _extract_frame(self, traj_file, idx, out_file):
+        """Extract a frame from a .trr or .xtc, else try to copy.
 
         Parameters
         ----------
-        trr_file : string
-            The GROMACS .trr file to open.
+        traj_file : string
+            The GROMACS file to open.
         idx : integer
             The frame number we look for.
         out_file : string
@@ -380,16 +380,25 @@ class GromacsEngine(ExternalMDEngine):
         separated uniformly.
 
         """
-        logger.debug('Extracting .trr frame, idx = %i', idx)
-        logger.debug('Trr file: %s, out file: %s', trr_file, out_file)
+        trajexts = ['.trr', '.xtc', '.trj']
+
+        logger.debug('Extracting frame, idx = %i', idx)
+        logger.debug('Source file: %s, out file: %s', traj_file, out_file)
         time1 = (idx - 1) * self.timestep * self.subcycles
         time2 = idx * self.timestep * self.subcycles
-        cmd = [self.gmx, 'trjconv',
-               '-f', trr_file,
-               '-s', self.input_files['tpr'],
-               '-o', out_file,
-               '-b', '{}'.format(time1),
-               '-dump', '{}'.format(time2)]
+        if traj_file[-4:] in trajexts:
+            cmd = [self.gmx, 'trjconv',
+                   '-f', traj_file,
+                   '-s', self.input_files['tpr'],
+                   '-o', out_file,
+                   '-b', '{}'.format(time1),
+                   '-dump', '{}'.format(time2)]
+        else:
+            cmd = [self.gmx, 'trjconv',
+                   '-f', traj_file,
+                   '-s', self.input_files['tpr'],
+                   '-o', out_file]
+
         self.execute_command(cmd, inputs=b'0', cwd=None)
         return None
 
