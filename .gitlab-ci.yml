@@ -91,5 +91,6 @@ upload_docs:
    script:
      - echo "$SSHKEY" > sshkey
      - chmod 600 sshkey
+     - mkdir -p ~/.ssh
      - ssh-keyscan -t rsa $WEBSITE >> ~/.ssh/known_hosts
      - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBUSER@$WEBSITE:~/WWW/
