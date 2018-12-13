@@ -200,7 +200,7 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
          :header:`Autoionization of water.`
 
          In this example, RETIS simulations were used to study the
-         autoionization in pure water. More information can be found
+         autoionization of pure water. More information can be found
          in the paper, please see
          `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
 
