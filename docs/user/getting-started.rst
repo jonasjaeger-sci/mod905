@@ -170,3 +170,58 @@ the :ref:`example section <examples-index>`.
          running the dynamics for |pyretis|. In this particular example
          we study the diffusion of methane in a sI hydrate structure.
 
+
+Examples of |pyretis| use
+-------------------------
+
+Below are some examples which illustrate the use of |pyretis| for realistic systems.
+
+.. container:: row
+
+   .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
+
+      .. image:: /_static/img/examples/thumbnails/dna-400x400.png
+         :width: 100%
+         :class: img-responsive
+
+      .. container:: caption
+
+         :header:`Predicting the mechanism and rate of H-NS binding to AT-rich DNA.`
+
+         The adsorption of H-NS onto AT-rich DNA has been characterized and 
+         its rate quantified. Simulations have been performed with GROMACS at
+         full atomistic resolution. Metadynamics localized the stable states and
+         the RETIS approach was used to compute the transition rate between them.
+
+
+   .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
+
+      .. image:: /_static/img/examples/thumbnails/water-400x400.png
+         :width: 100%
+         :class: img-responsive
+
+      .. container:: caption
+
+         :header:`Autoionization of water.`
+
+         BO-DFT simulations, via the RETIS approach, were used to study water
+         autoionization. The mechanism(s) have been highlighted and their rate(s)
+         quantified. Machine learning was applied to test the quality of 
+         the order parameters. More information can be found in the paper
+         `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
+
+
+
+   .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
+
+      .. image:: /_static/img/examples/thumbnails/cyclophilin-400x400.png
+         :width: 100%
+         :class: img-responsive
+
+      .. container:: caption
+
+         :header:`Conformational study of Cyclophilin - A.`
+
+         Full atomistic simulations with GROMACS have been performed to sample
+         and quantify the rate of the structural rearrangements of CyP-A and
+         its muted confomer.
