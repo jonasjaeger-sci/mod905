@@ -80,7 +80,7 @@ build_docs:
 
 upload_docs:
    only: 
-     - master
+     - master@pyretis/pyretis
    stage: upload_docs
    dependencies: 
      - build_docs
