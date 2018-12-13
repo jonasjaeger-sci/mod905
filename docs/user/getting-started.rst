@@ -188,6 +188,11 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
 
          :header:`Predicting the mechanism and rate of H-NS binding to AT-rich DNA.`
 
+         The adsorption of H-NS onto AT-rich DNA has been characterized and 
+         its rate quantified. Simulations have been performed with GROMACS at
+         full atomistic resolution. Metadynamics localized the stable states 
+         and the RETIS approach computed the rate between them.
+
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
 
@@ -199,9 +204,11 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
 
          :header:`Autoionization of water.`
 
-         In this example, RETIS simulations were used to study the
-         autoionization of pure water. More information can be found
-         in the paper, please see
+         BO-DFT simulations, via the RETIS approach, were used to study water
+         autoionization. The mechanism(s) have been highlighted and their rate
+         quantified. Machine learning has been applied to test the quality of 
+         the order parameters (and thus of the predicted mechanism). 
+         More information can be found in the paper
          `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
 
 
@@ -216,3 +223,6 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
 
          :header:`Conformational study of Cyclophilin - A.`
 
+         Full atomistic simulations with GROMACS have been performed to sample
+         and quantify the rate of the structural rearrangements of CyP-A and
+         its muted confomer.
