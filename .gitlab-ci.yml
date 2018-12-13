@@ -1,5 +1,9 @@
 image: "python:3.7-stretch"
 
+stages:
+  - test
+  - upload_docs
+
 before_script:
   - apt-get update -qy
   - apt-get install -y python3-dev python3-pip
@@ -68,3 +72,23 @@ build_docs:
   - pip install sphinx_bootstrap_theme
   - cd docs
   - make html
+  - cd ../
+  artifacts:
+    paths:
+      - docs/_build/html
+    expire_in: 1 week
+
+upload_docs:
+   only: 
+     - master
+   stage: upload_docs
+   dependencies: 
+     - build_docs
+   before_script:
+     - apt-get update -qy
+     - apt-get -y install rsync
+     - ls docs/_build/html 
+   script:
+     - echo "$SSHKEY" > sshkey
+     - chmod 600 sshkey
+     - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBSITE:~/WWW/
