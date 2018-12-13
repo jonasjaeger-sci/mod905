@@ -190,8 +190,8 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
 
          The adsorption of H-NS onto AT-rich DNA has been characterized and 
          its rate quantified. Simulations have been performed with GROMACS at
-         full atomistic resolution. Metadynamics localized the stable states 
-         and the RETIS approach computed the rate between them.
+         full atomistic resolution. Metadynamics localized the stable states and
+         the RETIS approach was used to compute the transition rate between them.
 
 
    .. container:: col-lg-4 col-md-4 col-sm-4 col-xs-6 thumbnail thumbnail3
@@ -205,10 +205,9 @@ Below are some examples which illustrate the use of |pyretis| for realistic syst
          :header:`Autoionization of water.`
 
          BO-DFT simulations, via the RETIS approach, were used to study water
-         autoionization. The mechanism(s) have been highlighted and their rate
-         quantified. Machine learning has been applied to test the quality of 
-         the order parameters (and thus of the predicted mechanism). 
-         More information can be found in the paper
+         autoionization. The mechanism(s) have been highlighted and their rate(s)
+         quantified. Machine learning was applied to test the quality of 
+         the order parameters. More information can be found in the paper
          `Local initiation conditions for water autoionization <https://www.pnas.org/content/115/20/E4569>`_.
 
 
