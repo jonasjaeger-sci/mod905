@@ -68,6 +68,8 @@ test_cp2k:
 
 build_docs:
   script:
+  - apt-cache policy texlive-full
+  - apt-get install -y texlive-full
   - pip install sphinx
   - pip install sphinx_bootstrap_theme
   - cd docs
