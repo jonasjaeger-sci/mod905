@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, PyRETIS Development Team.
+# Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 PyRETIS - A simulation package for rare event simulations.
-Copyright (C) 2015  The PyRETIS team
+Copyright (C) 2019, PyRETIS Development Team
 
 This file only generates the verison info.
 """
@@ -23,7 +23,7 @@ else:
     VERSION = '{:d}.{:d}.{:d}'.format(MAJOR, MINOR, MICRO)
 VERSION_FILE = os.path.join('pyretis', 'version.py')
 VERSION_TXT = '''# -*- coding: utf-8 -*-
-# Copyright (c) 2015, PyRETIS Development Team.
+# Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Version information for PyRETIS.
 
