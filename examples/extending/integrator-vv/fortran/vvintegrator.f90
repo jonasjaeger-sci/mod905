@@ -1,4 +1,4 @@
-! Copyright (c) 2015, PyRETIS Development Team.
+! Copyright (c) 2019, PyRETIS Development Team.
 ! Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 module vvintegrator
 

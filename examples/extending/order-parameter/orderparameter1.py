@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, pyretis Development Team.
+# Copyright (c) 2019, pyretis Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains examples for order parameters.
 
