@@ -95,4 +95,4 @@ upload_docs:
      - chmod 600 sshkey
      - mkdir -p ~/.ssh
      - ssh-keyscan -t rsa $WEBSITE >> ~/.ssh/known_hosts 2>/dev/null
-     - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBUSER@$WEBSITE:~/WWW/
+     - rsync -ua --progress --delete --stats -e "ssh -i sshkey" ./docs/_build/html/* $WEBUSER@$WEBSITE:~/WWW/current/
