@@ -15,17 +15,31 @@ Subpackages
 .. toctree::
 
     pyretis.inout.analysisio
+    pyretis.inout.formats
     pyretis.inout.plotting
     pyretis.inout.report
     pyretis.inout.setup
-    pyretis.inout.writers
 
 List of submodules
 ------------------
 
+* :ref:`pyretis.inout.archive <api-inout-archive>`
 * :ref:`pyretis.inout.common <api-inout-common>`
+* :ref:`pyretis.inout.fileio <api-inout-fileio>`
 * :ref:`pyretis.inout.restart <api-inout-restart>`
+* :ref:`pyretis.inout.screen <api-inout-screen>`
 * :ref:`pyretis.inout.settings <api-inout-settings>`
+* :ref:`pyretis.inout.simulationio <api-inout-simulationio>`
+
+.. _api-inout-archive:
+
+pyretis.inout.archive module
+----------------------------
+
+.. automodule:: pyretis.inout.archive
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. _api-inout-common:
 
@@ -33,6 +47,16 @@ pyretis.inout.common module
 ---------------------------
 
 .. automodule:: pyretis.inout.common
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-inout-fileio:
+
+pyretis.inout.fileio module
+---------------------------
+
+.. automodule:: pyretis.inout.fileio
     :members:
     :undoc-members:
     :show-inheritance:
@@ -47,12 +71,32 @@ pyretis.inout.restart module
     :undoc-members:
     :show-inheritance:
 
+.. _api-inout-screen:
+
+pyretis.inout.screen module
+---------------------------
+
+.. automodule:: pyretis.inout.screen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. _api-inout-settings:
 
 pyretis.inout.settings module
 -----------------------------
 
 .. automodule:: pyretis.inout.settings
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-inout-simulationio:
+
+pyretis.inout.simulationio module
+---------------------------------
+
+.. automodule:: pyretis.inout.simulationio
     :members:
     :undoc-members:
     :show-inheritance:

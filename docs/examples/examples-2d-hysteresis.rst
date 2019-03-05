@@ -3,11 +3,11 @@
 RETIS in a 2D potential
 =======================
 
-In this example  you will explore a rare event
+In this example, you will explore a rare event
 with the Replica Exchange Transition Interface
 Sampling (RETIS) algorithm.
 
-In this example we will implement a new potential for |pyretis| and we
+In this example, we will implement a new potential for |pyretis| and we
 will create three new order parameters which we will use to investigate
 a transition between two stable states in the potential.
 Using the RETIS algorithm, we will compute the rate constant for
@@ -123,7 +123,7 @@ for an illustration):
     parameter onto.
     The blue paths are valid paths for the final path ensembles and in the
     bottom row, the corresponding order parameters are shown for these
-    paths. The light dotted interface lines represents the location where
+    paths. The light dotted interface lines represent the locations where
     we include the potential energy in the definition of the order parameters.
     The two marked points (cross and triangle) in the paths in the bottom row
     show the second last and last points in the paths, respectively. The two
@@ -194,8 +194,8 @@ order parameter is given below:
    .. literalinclude:: /_static/examples/retis2d-hysteresis/order-xy.py
       :language: python
 
-Note that this order parameter is defined less general than the previous
-ones, for instance we make explicit use of the location of the two minimums.
+Note that this order parameter is less general than the previous
+ones, for instance, we make explicit use of the location of the two minimums.
 If you are feeling adventurous, please try to add these locations
 as parameters for the order parameter.
 
@@ -355,13 +355,13 @@ Some examples from the analysis can be found below:
 Comparing results from the analysis
 -----------------------------------
 
-By using the three different order parameters, we different estimates for rate constant
-as summarized in the table below.
+By using the three different order parameters, we obtain different estimates for
+the rate constant as summarized in the table below.
 
 .. _table_2d_hysteresis:
 
 .. table:: Comparison of the rate constant for the 2D potential
-   :class: table-hover
+   :class: table-striped table-hover
 
    +-------------------+-------------+-------------+
    | Order parameter   | Rate constant / 1e-7      |  

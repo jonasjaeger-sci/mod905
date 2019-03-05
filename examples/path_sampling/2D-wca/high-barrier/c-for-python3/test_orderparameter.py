@@ -6,16 +6,16 @@ correctly.
 
 1) The order parameter from PyRETIS.
 
-2) A python implementation.
+2) A Python implementation.
 
 3) A C implementation.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import unittest
 import numpy as np
 from pyretis.core import Particles, create_box, System
 from pyretis.core.units import create_conversion_factors
-from pyretis.orderparameter import OrderParameterDistance
+from pyretis.orderparameter import DistanceVelocity
 from wcafunctions import WCAOrderParameter
 
 
@@ -35,15 +35,16 @@ class WCAOrderTest(unittest.TestCase):
         system.particles = particles
 
         order1 = WCAOrderParameter((0, 1))
-        order2 = OrderParameterDistance((0, 1), periodic=True)
+        order2 = DistanceVelocity((0, 1), periodic=True)
 
         for i in np.arange(0.001, 5.0, 0.1):
             particles.pos[1] = np.array([1.0, i])
             particles.vel = np.random.random(particles.vel.shape)
-            lmb1, vel1 = order1.calculate(system)
-            lmb2, vel2 = order2.calculate(system)
-            self.assertAlmostEqual(lmb1, lmb2)
-            self.assertAlmostEqual(vel1, vel2)
+            out1 = order1.calculate(system)
+            out2 = order2.calculate(system)
+            self.assertEqual(len(out1), len(out2))
+            for orderi, orderj in zip(out1, out2):
+                self.assertAlmostEqual(orderi, orderj)
 
 
 if __name__ == '__main__':

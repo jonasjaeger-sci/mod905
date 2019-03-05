@@ -4,7 +4,7 @@ TIS simulation 2D WCA, low barrier
 
 Simulation
 ----------
-task = tis
+task = tis-multiple
 steps = 1000000
 interfaces = [1.2, 1.24, 1.26, 1.32, 1.58]
 
@@ -16,7 +16,7 @@ temperature = 1.0
 
 Box
 ---
-length = [3.872983346207417, 3.872983346207417]
+cell = [3.872983346207417, 3.872983346207417]
 periodic = [True, True]
 
 Engine

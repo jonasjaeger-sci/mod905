@@ -10,7 +10,7 @@ class PSOEngine(MDEngine):
     """Perform particle swarm optimization."""
 
     def __init__(self, inertia, accp, accg):
-        """Initiate the engine.
+        """Set up the engine.
 
         Parameters
         ----------
@@ -21,6 +21,7 @@ class PSOEngine(MDEngine):
             The acceleration for the previous best term. "The congnitive term".
         accg : float
             The acceleration for the global best term. "The social term".
+
         """
         super().__init__(1, 'Particle Swarm Optimization')
         self.inertia = inertia

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A GROMACS external MD integrator interface. Used for testing"""
+"""A GROMACS external MD integrator interface. Used for testing."""
 import logging
 import os
 import pickle
 from numpy.random import RandomState
 from pyretis.engines.gromacs2 import GromacsEngine2
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -19,7 +19,7 @@ with open(INPUTFILE, 'rb') as inputf:
 
 
 def prepare_shooting_point(gro, input_file):
-    """Method to create initial configuration for a shooting move.
+    """Create initial configuration for a shooting move.
 
     Parameters
     ----------
@@ -34,6 +34,7 @@ def prepare_shooting_point(gro, input_file):
         The name of the file created.
     energy : dict
         The energy terms read from the GROMACS .edr file.
+
     """
     gen_mdp = os.path.join(gro.exe_dir, 'genvel.mdp')
     # Use specific seed:
@@ -60,17 +61,17 @@ class GromacsEngine2R(GromacsEngine2):
     """A class for interfacing GROMACS.
 
     This class uses a set of reproducible seeds for generation velocities.
-    Otherwise is it equal to :py:class:`.GromacsEngine2`.
+    Otherwise, it is equal to :py:class:`.GromacsEngine2`.
     """
 
     def __init__(self, gmx, mdrun, input_path, timestep, subcycles,
                  maxwarn=0, gmx_format='g96', write_vel=True,
                  write_force=False):
-        """Initiate the script."""
+        """Set up the engine."""
         super().__init__(gmx, mdrun, input_path, timestep, subcycles,
                          maxwarn=0, gmx_format=gmx_format,
                          write_vel=write_vel, write_force=write_force)
 
     def _prepare_shooting_point(self, input_file):
-        """Method to create initial configuration for a shooting move."""
+        """Create initial configuration for a shooting move."""
         return prepare_shooting_point(self, input_file)

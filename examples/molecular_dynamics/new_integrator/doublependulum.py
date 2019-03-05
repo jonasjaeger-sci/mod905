@@ -1,44 +1,42 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A collection of simple position dependent potentials.
-
-This module defines some potential functions which are useful
-as simple models.
-"""
+"""A double pendulum potential."""
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-class DoublePendulumn(PotentialFunction):
-    r"""DoublePendulumn(PotentialFunction).
+class DoublePendulum(PotentialFunction):
+    r"""DoublePendulum(PotentialFunction).
 
     Attributes
     ----------
     l1 : float
-        Length of first wire
+        Length of first wire.
     l2 : float
-        Length of second wire
+        Length of second wire.
     g : float
-        The acceletration of gravity.
+        The acceleration of gravity.
+
     """
 
     def __init__(self, l1=1.0, l2=1.0, g=1.0, desc='2D double pendulum'):
-        """Initiate the one dimensional double well potential.
+        """Set up the double pendulum potential.
 
         Parameters
         ----------
         l1 : float, optional
-            Parameter for the potential.
+            Length of first wire.
         l1 : float, optional
-            Parameter for the potential.
+            Length of second wire.
         g : float, optional
-            Parameter for the potential.
+            The acceleration of gravity.
         desc : string, optional
             Description of the force field.
+
         """
         super().__init__(dim=2, desc=desc)
         self.params = {'g': g, 'l1': l1, 'l2': l2}
@@ -59,6 +57,7 @@ class DoublePendulumn(PotentialFunction):
         -------
         out : float
             The potential energy.
+
         """
         costheta1 = np.cos(system.particles.pos[0][0])
         costheta2 = np.cos(system.particles.pos[1][0])
@@ -81,7 +80,8 @@ class DoublePendulumn(PotentialFunction):
         out[0] : numpy.array
             The calculated force.
         out[1] : numpy.array
-            The virial, currently not implemented for this potential
+            The virial, currently not implemented for this potential.
+
         """
         g = self.g
         l1 = self.l1
@@ -132,6 +132,7 @@ class DoublePendulumn(PotentialFunction):
             positions in `particles.pos`.
         out[2] : numpy.array
             The virial, currently not implemented for this potential.
+
         """
         forces, virial = self.force(system)
         pot = self.potential(system)

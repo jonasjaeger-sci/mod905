@@ -99,19 +99,14 @@ def generate_latex_table(table, title, headings, fixnum=None):
         The header/title for the table.
     headings : list of strings
         These are the headings for each table column.
-    fixnum : list/set of integers
-        These integers identifies the columns where `latexify_number` is
+    fixnum : list of integers, optional
+        These integers identify the columns where `latexify_number` is
         to be applied.
 
     """
     str_table = [
-        r'\renewcommand{\arraystretch}{1.25}',
-        r'\noindent',
-        r'\begin{minipage}{\textwidth}',
-        r'\centering',
-        r'\textbf{' + title + r'} \\',
-        r'\medskip',
-        r'\begin{tabular}{' + len(headings) * '| c ' + '|}',
+        r'\begin{longtable}{' + len(headings) * '| c ' + '|}',
+        r'\caption{' + title + r'}\\',
         r'\hline',
         r' & '.join(headings) + r'\\ \hline',
     ]
@@ -123,9 +118,7 @@ def generate_latex_table(table, title, headings, fixnum=None):
         else:
             str_table.append(' & '.join(row) + r'\\')
     str_table.append(r'\hline')
-    str_table.append(r'\end{tabular}')
-    str_table.append(r'\bigskip')
-    str_table.append(r'\end{minipage}')
+    str_table.append(r'\end{longtable}')
     return str_table
 
 

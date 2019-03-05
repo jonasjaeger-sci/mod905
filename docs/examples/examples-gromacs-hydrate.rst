@@ -114,12 +114,12 @@ Here, we make use of the following keywords:
 
 * ``timestep = 0.002`` which is the time step to use in the GROMACS simulations.
 
-* ``subcycles = 5`` which is the number of sub cycles GROMACS will complete
+* ``subcycles = 5`` which is the number of subcycles GROMACS will complete
   before |pyretis| re-calculated order parameter. This will also be the
   frequency by which GROMACS write information (trajectory and energies) to
   the disk.
 
-This specifies and select the GROMACS engine for use with |pyretis|.
+This specifies and selects the GROMACS engine for use with |pyretis|.
 The full input file for the RETIS simulation is given below:
 
 .. pyretis-collapse-block::

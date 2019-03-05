@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 PyRETIS - A simulation package for rare event simulations.
-Copyright (C) 2019, PyRETIS Development Team
+Copyright (c) 2019, PyRETIS Development team.
 
 This file only generates the verison info.
 """
@@ -12,11 +12,11 @@ import subprocess
 
 
 # For setting version. This is copied from Numpy's setup.py.
-MAJOR = 1
+MAJOR = 2
 MINOR = 0
 MICRO = 0
-DEV = 4
-ISRELEASED = False
+DEV = 0
+ISRELEASED = True
 if not ISRELEASED:
     VERSION = '{:d}.{:d}.{:d}.dev{:d}'.format(MAJOR, MINOR, MICRO, DEV)
 else:
@@ -129,10 +129,13 @@ def write_version_in_setup_py(version):
 
     setup.py is a small file so we just read it into memory here."""
     tmp = []
+    comment = '# Automatically set by setup_version.py'
     with open(SETUP_PY, 'r') as sfile:
         for lines in sfile:
             if lines.startswith('FULL_VERSION ='):
-                tmp.append(("FULL_VERSION = '{}'\n".format(version)))
+                tmp.append(
+                    ("FULL_VERSION = '{}'  {}\n".format(version, comment))
+                )
             else:
                 tmp.append(lines)
     with open(SETUP_PY, 'wt') as sfile:

@@ -3,19 +3,26 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """
 Example of running a MD NVE simulation.
-This system considered is a simple Lennard-Jones fluid.
+
+Here we are running forward and then backward using a potential
+written in FORTRAN or C. This can be selected below by the user.
 """
-# pylint: disable=C0103
+
+# pylint: disable=invalid-name
+import sys
+# For plotting:
 from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
+from matplotlib import gridspec
+# PyRETIS imports:
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.setup import (create_simulation, create_force_field,
-                                 create_system, create_engine,
-                                 create_output_tasks)
-from pyretis.inout.writers import FileIO, ThermoTable
-# for plotting:
+                                 create_system, create_engine)
+from pyretis.inout.fileio import FileIO
+from pyretis.inout.formats import ThermoTableFormatter
 from pyretis.inout.plotting import mpl_set_style
-# simulation settings:
+
+
+# Define simulation settings:
 
 klass = {'fortran': 'PairLennardJonesCutF',
          'cpython3': 'PairLennardJonesCutC'}
@@ -28,7 +35,6 @@ settings = {}
 settings['simulation'] = {
     'task': 'md-nve',
     'steps': 2000,
-    'exe-path': ''
 }
 settings['system'] = {
     'units': 'lj',
@@ -56,48 +62,44 @@ settings['particles'] = {
     'position': {'file': 'initial.gro'},
     'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
 }
+
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
 ljsystem.forcefield = create_force_field(settings)
 kwargs = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, kwargs)
-# set up extra output:
-table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header, oldfile='overwrite')
+
+# Set up extra output:
+thermo_file = FileIO('thermo.txt', 'w', ThermoTableFormatter(), backup=False)
+thermo_file.open()
 store_results = []
-# also create some other outputs:
-output_tasks = [task for task in create_output_tasks(settings)]
-# run the simulation :-)
-
+# Also create some other outputs:
+simulation_nve.set_up_output(settings, progress=False)
+# Run the simulation forward:
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    for lines in table.generate_output(stepno, result['thermo']):
-        thermo_file.write(lines)
+    thermo_file.output(stepno, result['thermo'])
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
-    for task in output_tasks:
-        task.output(result)
-# run backward:
+# Run backward:
 ljsystem.particles.vel *= -1.0
-simulation_nve.extend_cycles(settings['simulation']['steps'])
+simulation_nve.extend_cycles(settings['simulation']['steps'] - 1)
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    for lines in table.generate_output(stepno, result['thermo']):
-        thermo_file.write(lines)
+    thermo_file.output(stepno, result['thermo'])
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
-    for task in output_tasks:
-        task.output(result)
+thermo_file.close()
 
-mpl_set_style()  # load pyretis style
+mpl_set_style()  # Load PyRETIS plotting style
 step = [res['stepno'] for res in store_results]
 pot_e = [res['vpot'] for res in store_results]
 kin_e = [res['ekin'] for res in store_results]
 tot_e = [res['etot'] for res in store_results]
 pressure = [res['press'] for res in store_results]
 temp = [res['temp'] for res in store_results]
-# first figure - some energies
+# Plot some energies:
 fig1 = plt.figure()
 gs = gridspec.GridSpec(2, 2)
 ax1 = fig1.add_subplot(gs[:, 0])
@@ -115,4 +117,5 @@ ax3.plot(step, pressure)
 ax3.set_xlabel('Step no.')
 ax3.set_ylabel('Pressure')
 fig1.subplots_adjust(bottom=0.12, right=0.95, top=0.95, left=0.12, wspace=0.3)
-plt.show()
+if 'noplot' not in sys.argv[1:]:
+    plt.show()

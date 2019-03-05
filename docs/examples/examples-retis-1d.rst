@@ -3,7 +3,7 @@
 RETIS in a 1D potential
 =======================
 
-In this example  you will explore a rare event
+In this example, you will explore a rare event
 with the Replica Exchange Transition Interface
 Sampling (RETIS) algorithm.
 
@@ -110,12 +110,12 @@ random number generator used by the integrator.
 TIS specific settings
 ^^^^^^^^^^^^^^^^^^^^^
 
-The TIS settings controls how the TIS algorithm is carried out.
+The TIS settings control how the TIS algorithm is carried out.
 Here we set that 50 % of the TIS moves should be shooting moves (keyword ``freq``)
 and we limit all paths to a maximum length of 20 000 steps.
-Further we select aimless shooting and we tell |pyretis| to not set the
+Further, we select aimless shooting and we tell |pyretis| to not set the
 momentum to zero and to not rescale the energy after drawing new random velocities.
-Further we set ``allowmaxlength = False`` which means that for shooting,
+We also set ``allowmaxlength = False`` which means that for shooting,
 we determine stochastically the length of new paths based on the length of
 the path we are shooting from. The given seed is a seed for the random number
 generator used by the TIS algorithm.
@@ -133,7 +133,7 @@ The RETIS section controls the RETIS algorithm.
 Here we request that 50 % of the RETIS moves should be
 swapping moves, while the remaining 50 % will be TIS moves.
 We further say that we do not do relative shooting and that
-we attempt to swap several ensembles at the say time. In case
+we attempt to swap several ensembles at the same time. In case
 an ensemble is not participating in the swap, a null move (that is
 just accepting the last accepted path again) is carried out.
 
@@ -144,7 +144,7 @@ just accepting the last accepted path again) is carried out.
 Initial path settings
 ^^^^^^^^^^^^^^^^^^^^^
 
-These settings determined how we find the initial path(s).
+These settings determine how we find the initial path(s).
 Here, we ask |pyretis| to generate these using the
 :ref:`kick method <user-section-initial-path-kick>`.
 

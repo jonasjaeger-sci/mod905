@@ -14,7 +14,7 @@ where ``INPUT`` is the input file. This will produce output files
 which can be analysed using the :ref:`pyretisanalyse <user-guide-analyse>`
 application.
 
-In the following we describe the syntax for the |pyretis| input file.
+In the following, we describe the syntax for the |pyretis| input file.
 
 The |pyretis| input file
 ------------------------
@@ -129,7 +129,7 @@ are in fact **case-sensitive**:
       -----------
       length = (1.0, 'm')
 
-  Here, we are using a unit of 1 metre which is identified with
+  Here, we are using a unit of 1 meter which is identified with
   a ``'m'`` and not a ``'M'``.
 
 Comments

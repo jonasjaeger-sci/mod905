@@ -4,10 +4,10 @@
 """A test for the simple potentials."""
 import logging
 import unittest
+import numpy as np
 from pyretis.core.system import System
 from pyretis.core.particles import Particles
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
-import numpy as np
 logging.disable(logging.CRITICAL)
 
 

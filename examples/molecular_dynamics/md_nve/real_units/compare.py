@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Simple script to compare outcome of two simulations.
+"""Simple script to compare the outcome of two simulations.
 
 The outcome of the ``md_nve.py`` simulation should be independent (to numerical
 precision) of the units used. This script will test that by comparing:
@@ -13,20 +13,19 @@ precision) of the units used. This script will test that by comparing:
 For the energies, it will create a plot comparing the energies, the pressure
 and the temperature.
 """
-# pylint: disable=C0103
+import sys
 import colorama
 import numpy as np
-from pyretis.inout.common import print_to_screen
-from pyretis.inout.writers import get_writer
+from matplotlib import pyplot as plt
+from matplotlib import gridspec
+from pyretis.inout import print_to_screen
+from pyretis.inout.formats.snapshot import SnapshotFile
 from pyretis.inout.settings import parse_settings_file
 from pyretis.core.units import (
     create_conversion_factors,
     generate_system_conversions,
     CONVERT
 )
-# for plotting:
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gridspec
 plt.style.use('seaborn-colorblind')
 
 
@@ -46,7 +45,7 @@ def snapshot_difference(snap1, snap2, unit1, unit2):
 
 
 def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
-    """A comparison of two trajectories from PyRETIS
+    """Compare two trajectories from PyRETIS.
 
     Here we calculate the mean squared error for the two
     trajectories.
@@ -67,11 +66,13 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
     Returns
     -------
     None, just prints out the result of the comparison.
+
     """
+    retval = 1
     print_to_screen('Comparing trajectories', level='info')
     print('Checking mean squared error...')
-    file1 = get_writer('trajtxt').load(traj1)
-    file2 = get_writer('trajtxt').load(traj2)
+    file1 = SnapshotFile(traj1, 'r').load()
+    file2 = SnapshotFile(traj2, 'r').load()
     error, error_v = 0.0, 0.0
     nsnap = 0
     for snap1, snap2 in zip(file1, file2):
@@ -82,28 +83,32 @@ def compare_traj(traj1, traj2, unit1, unit2, tol=1e-12):
     error /= float(nsnap)
     if abs(error) < tol:
         lev = 'success'
+        retval = 0
     else:
         lev = 'error'
+        return 1
     print_to_screen('Mean error - positions: {}'.format(error),
                     level=lev)
     if abs(error_v) < tol:
         lev = 'success'
+        retval = 0
     else:
         lev = 'error'
+        return 1
     print_to_screen('Mean error - velocities: {}'.format(error_v),
                     level=lev)
+    return retval
 
 
 def run_comparison():
-    """Run the comparison!"""
+    """Run the comparison."""
     settings = parse_settings_file('settings.rst')
-    UNIT = settings['system']['units']
+    unit = settings['system']['units']
     create_conversion_factors('lj')
-    create_conversion_factors(UNIT)
-    generate_system_conversions('lj', UNIT)
-    compare_traj('../traj.xyz', 'traj.xyz', UNIT, 'lj')
-    # just make a bunch of plots comparing the energies
-    return UNIT, 'lj'
+    create_conversion_factors(unit)
+    generate_system_conversions('lj', unit)
+    ret = compare_traj('../traj.xyz', 'traj.xyz', unit, 'lj')
+    return unit, 'lj', ret
 
 
 def make_plot(unit1, unit2):
@@ -115,8 +120,8 @@ def make_plot(unit1, unit2):
     other_units[:, 2:5] *= CONVERT['energy'][unit1, unit2]
     other_units[:, 5] *= CONVERT['pressure'][unit1, unit2]
     fig1 = plt.figure(figsize=(12, 6))
-    gs = gridspec.GridSpec(2, 2)
-    ax1 = fig1.add_subplot(gs[:, 0])
+    grid = gridspec.GridSpec(2, 2)
+    ax1 = fig1.add_subplot(grid[:, 0])
     ljlab = '"{}"'.format(unit2)
     unilab = '"{}"'.format(unit1)
     ax1.plot([], [], label='Potential', lw=0, alpha=0)
@@ -138,14 +143,14 @@ def make_plot(unit1, unit2):
     ax1.set_ylabel('Energy per particle')
     _ = ax1.legend(loc='center left', prop={'size': 'large'}, ncol=3)
 
-    ax2 = fig1.add_subplot(gs[0, 1])
+    ax2 = fig1.add_subplot(grid[0, 1])
     ax2.plot(ljunits[:, 0], ljunits[:, 1], label=ljlab,
              ls='-', lw=7, alpha=0.9)
     ax2.plot(other_units[:, 0], other_units[:, 1], label=unilab,
              ls='--', lw=3, alpha=0.8, color='0.2')
     ax2.set_ylabel('Temperature')
     ax2.legend(loc='upper right', prop={'size': 'large'})
-    ax3 = fig1.add_subplot(gs[1, 1])
+    ax3 = fig1.add_subplot(grid[1, 1])
     ax3.plot(ljunits[:, 0], ljunits[:, 5], label=ljlab,
              ls='-', lw=7, alpha=0.9)
     ax3.plot(other_units[:, 0], other_units[:, 5], label=unilab,
@@ -158,8 +163,15 @@ def make_plot(unit1, unit2):
     fig1.savefig('compare.png')
 
 
+def main(args):
+    """Run the comparison."""
+    uni1, uni2, ret = run_comparison()
+    if 'plot' in args:
+        make_plot(uni1, uni2)
+        plt.show()
+    return ret
+
+
 if __name__ == '__main__':
     colorama.init(autoreset=True)
-    un1, un2 = run_comparison()
-    make_plot(un1, un2)
-    plt.show()
+    sys.exit(main(sys.argv[1:]))

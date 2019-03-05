@@ -10,7 +10,7 @@ Molecular modelling: Introduction to RETIS
 Introduction
 ------------
 
-In this exercise you will explore a rare event
+In this exercise, you will explore a rare event
 with the Replica Exchange Transition Interface
 Sampling (RETIS) algorithm.
 
@@ -74,7 +74,7 @@ Installing |pyretis| and running the exercise
 Installing |pyretis|
 ~~~~~~~~~~~~~~~~~~~~
 
-In this example we will make use of the |pyretis| library for carrying
+In this example, we will make use of the |pyretis| library for carrying
 out the RETIS simulations and we will use
 `matplotlib <http://matplotlib.org/>`_ for
 plotting some results. These two libraries will have
@@ -185,7 +185,7 @@ The bulk of this script handles the plotting, and we will not go
 into details on how matplotlib is used to plot the result. We will rather
 focus on the RETIS algorithm and how we can use it to calculate
 rate constants. But before we do that, let us also try the text-based script.
-This script will give the same out put as the ``retis_movie.py`` script, but it
+This script will give the same output as the ``retis_movie.py`` script, but it
 will not display the animation and will thus run slightly faster.
 Download the example
 script :download:`retis.py </_static/exercises/retis.py>` to
@@ -206,7 +206,7 @@ file ``name_of_file.txt``:
     :alt: The 1D potential example, text output.
     :align: center
 
-    Sample output from the text based RETIS script. The top terminal is
+    Sample output from the text-based RETIS script. The top terminal is
     running the simulation where the progress meter is displayed. The lower
     terminal is inspecting the output file. After each completed
     RETIS cycle the script outputs the cycle number, and then some results
@@ -237,7 +237,7 @@ Since the probability for the actual crossing can be very small, we
 introduce several more interfaces which help us
 obtain the crossing probability. These interfaces
 define the so-called path
-ensembles, labelled :math:`[0^-], [0^+], [1^+], \ldots`
+ensembles, labeled :math:`[0^-], [0^+], [1^+], \ldots`
 and so on as shown in :numref:`figretistxt`.
 The path ensemble :math:`[i^+]` contain
 trajectories that start at :math:`\lambda_\text{A}`, then cross
@@ -291,7 +291,7 @@ probabilities that are labelled :math:`P_\text{cross}`
 in :numref:`figretistxt`.
 
 The optimal number of path ensembles
-to use in a RETIS simulation is a trade off between not having
+to use in a RETIS simulation is a trade-off between not having
 to do too many path simulations and not having too small crossing
 probabilities (the :math:`P_\text{cross}`-values in :numref:`figretistxt`).
 By making some basic assumptions on the path lengths etc. one can
@@ -312,76 +312,77 @@ three letter abbreviation as described in :numref:`tababbrev`.
 .. _tabmoves:
 
 .. table:: Abbreviations for the RETIS moves
+   :class: table-striped table-hover
 
-    +----------------+-------------------------------+
-    |  Abbreviation  | Description                   |
-    +================+===============================+
-    | ``swap``       | A RETIS swapping move.        |
-    +----------------+-------------------------------+
-    | ``nullmove``   | Just accepting the last       |
-    |                | accepted path once again.     |
-    +----------------+-------------------------------+
-    |   ``tis (sh)`` | A TIS shooting move           |
-    +----------------+-------------------------------+
-    |  ``tis (tr)``  | A TIS time-reversal move      |
-    +----------------+-------------------------------+
+   +----------------+-------------------------------+
+   |  Abbreviation  | Description                   |
+   +================+===============================+
+   | ``swap``       | A RETIS swapping move.        |
+   +----------------+-------------------------------+
+   | ``nullmove``   | Just accepting the last       |
+   |                | accepted path once again.     |
+   +----------------+-------------------------------+
+   |   ``tis (sh)`` | A TIS shooting move           |
+   +----------------+-------------------------------+
+   |  ``tis (tr)``  | A TIS time-reversal move      |
+   +----------------+-------------------------------+
 
 .. _tababbrev:
 
 .. table:: Abbreviations for the RETIS statuses
+   :class: table-striped table-hover
 
-    +----------------+--------------------------------------------+
-    |  Abbreviation  | Description                                |
-    +================+============================================+
-    | ``ACC``        | The path has been accepted.                |
-    +----------------+--------------------------------------------+
-    | ``BWI``        | When integrating backward in time for a    |
-    |                | shooting move we arrived at the right      |
-    |                | interface and not the left one, i.e. we    |
-    |                | reached the **Wrong Interface**.           |
-    +----------------+--------------------------------------------+
-    | ``BTL``        | When integrating backward in time for      |
-    |                | a shooting move, the backward trajectory   |
-    |                | will have a maximum length determined by   |
-    |                | the RETIS algorithm in order to obey       |
-    |                | detailed balance. This maximum varies each |
-    |                | time: it is the old path length divided    |
-    |                | by a random number between 0 and 1.        |
-    |                | ``BTL`` means that we did not reach any    |
-    |                | of the outer most interfaces before we     |
-    |                | exceeded this maximum path length.         |
-    +----------------+--------------------------------------------+
-    | ``BTX``        | We also have a maximum length for          |
-    |                | trajectories in order to limit the memory  |
-    |                | the trajectories use. ``BTX`` means that   |
-    |                | the trajectory length exceeded this limit  |
-    |                | before we reached an interface. This limit |
-    |                | implies that we ignore very long           |
-    |                | trajectories and, therefore, it will       |
-    |                | result in a systematic error. The number   |
-    |                | of ``BTX`` or ``FTX`` occurrences can be   |
-    |                | reduced by increasing the parameter        |
-    |                | ``maxlength`` in the input script.         |
-    +----------------+--------------------------------------------+
-    | ``FTL``        | Similar to ``BTL`` in the **Forward**      |
-    |                | direction.                                 |
-    +----------------+--------------------------------------------+
-    | ``FTX``        | Similar to ``BTX`` in the **Forward**      |
-    |                | direction.                                 |
-    +----------------+--------------------------------------------+
-    | ``NCR``        | No crossing with the interface which has   |
-    |                | to be crossed in order to be part of the   |
-    |                | specific path ensemble. This can happen    |
-    |                | when we attempt swapping move or when the  |
-    |                | shooting move goes backward and forward in |
-    |                | time to the left interface without making  |
-    |                | sufficient progress along the reaction     |
-    |                | coordinate.                                |
-    +----------------+--------------------------------------------+
+   +----------------+--------------------------------------------+
+   |  Abbreviation  | Description                                |
+   +================+============================================+
+   | ``ACC``        | The path has been accepted.                |
+   +----------------+--------------------------------------------+
+   | ``BWI``        | When integrating backward in time for a    |
+   |                | shooting move we arrived at the right      |
+   |                | interface and not the left one, i.e. we    |
+   |                | reached the **Wrong Interface**.           |
+   +----------------+--------------------------------------------+
+   | ``BTL``        | When integrating backward in time for      |
+   |                | a shooting move, the backward trajectory   |
+   |                | will have a maximum length determined by   |
+   |                | the RETIS algorithm in order to obey       |
+   |                | detailed balance. This maximum varies each |
+   |                | time: it is the old path length divided    |
+   |                | by a random number between 0 and 1.        |
+   |                | ``BTL`` means that we did not reach any    |
+   |                | of the outer most interfaces before we     |
+   |                | exceeded this maximum path length.         |
+   +----------------+--------------------------------------------+
+   | ``BTX``        | We also have a maximum length for          |
+   |                | trajectories in order to limit the memory  |
+   |                | the trajectories use. ``BTX`` means that   |
+   |                | the trajectory length exceeded this limit  |
+   |                | before we reached an interface. This limit |
+   |                | implies that we ignore very long           |
+   |                | trajectories and, therefore, it will       |
+   |                | result in a systematic error. The number   |
+   |                | of ``BTX`` or ``FTX`` occurrences can be   |
+   |                | reduced by increasing the parameter        |
+   |                | ``maxlength`` in the input script.         |
+   +----------------+--------------------------------------------+
+   | ``FTL``        | Similar to ``BTL`` in the **Forward**      |
+   |                | direction.                                 |
+   +----------------+--------------------------------------------+
+   | ``FTX``        | Similar to ``BTX`` in the **Forward**      |
+   |                | direction.                                 |
+   +----------------+--------------------------------------------+
+   | ``NCR``        | No crossing with the interface which has   |
+   |                | to be crossed in order to be part of the   |
+   |                | specific path ensemble. This can happen    |
+   |                | when we attempt swapping move or when the  |
+   |                | shooting move goes backward and forward in |
+   |                | time to the left interface without making  |
+   |                | sufficient progress along the reaction     |
+   |                | coordinate.                                |
+   +----------------+--------------------------------------------+
 
 
-
-Now, hopefully you are able to execute the two example scripts we will
+Now, hopefully, you are able to execute the two example scripts we will
 be using.
 
 Before we start with the exercise we give a few examples
@@ -390,7 +391,7 @@ to modify your simulation. Typically, this involves
 making changes in the ``SETTINGS`` dictionary defined
 in the Python scripts. In fact the RETIS simulation you are
 running is defined with this Python dictionary.
-In this exercise we will just
+In this exercise, we will just
 change a few of these settings and we give some examples here:
 
 * In order to run a longer simulation you need to change the
@@ -421,7 +422,7 @@ change a few of these settings and we give some examples here:
 
      INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
-  We can for instance see what happens if we just use fewer interfaces:
+  We can, for instance, see what happens if we just use fewer interfaces:
 
   .. code-block:: python
 
@@ -431,7 +432,7 @@ change a few of these settings and we give some examples here:
 
   The settings for the RETIS method is split into two parts,
   one is RETIS specific and the other is TIS specific. The former
-  controls swapping while the latter the shooting. In this exercise
+  controls swapping while the latter the shooting. In this exercise,
   we will just change the frequencies of the different moves.
   The percentage of swapping are controlled by the ``swapfreq`` keyword
   of the RETIS settings:
@@ -448,8 +449,7 @@ change a few of these settings and we give some examples here:
   What about the remaining 50% of the moves? These will be TIS moves
   and here we have two options - shooting or time reversal. The relative
   frequency of these moves is determined by the ``freq`` keyword in
-  the TIS specific settings which specifies the frequency of TIS moves
-  which should be time reversal moves.
+  the TIS specific settings.
 
   .. code-block:: python
 
@@ -464,7 +464,7 @@ change a few of these settings and we give some examples here:
                        'rescale_energy': False}
 
   Here, 50% will be shooting moves and 50% will be time-reversal moves.
-  Note that this is in percentage of the TIS moves, so in total we will have
+  Note that this is as a percentage of the TIS moves, so in total, we will have
   50% swapping, 25% shooting and 25% time reversal.
 
   What happens with a ``swapfreq`` equal to 0.8 and a ``freq``
@@ -488,7 +488,7 @@ simulations to see how the method works in practice.
    probability... Here you can also try to explain what is displayed
    in the animation shown by running ``retis_movie.py``.
 
-3. In the RETIS method we have three main moves which generate new
+3. In the RETIS method, we have three main moves which generate new
    paths. These are the shooting, time-reversal and swapping moves.
    How do these moves generate new paths?
    Which move is the most computationally demanding?
@@ -548,7 +548,7 @@ simulations to see how the method works in practice.
    to show the crossing probabilities on a log scale.
 
 6. The swapping move is the defining move for the RETIS algorithm and
-   is essentially the move that separate it from the TIS algorithm.
+   is essentially the move that separates it from the TIS algorithm.
    What is the purpose of the swapping move? What will happen if we
    remove it? Investigate this using the ``retis_movie.py``
    script and setting the frequency of swapping moves to 0. Here,
@@ -579,7 +579,7 @@ For instance, if we set the interfaces to
    # K_AB: 2.31146e-07 +- 1.40359e-07
 
 with a total number of force evaluations equal to about 3.9 million. As you can
-see there are rather lager uncertainties as 2000 is in fact a small
+see there are rather large uncertainties, because 2000 is in fact a small
 number of steps. In this part of the exercise, we will see if we
 can improve the situation and our goal is to lower (if possible)
 the number of force evaluations and the uncertainty. Here, you
@@ -598,16 +598,16 @@ some suggestions:
   Which one of these two simulations would you say performs better?
 
 * Run first some short simulations (say 100-200 steps) where you test out
-  different positions of interfaces and also different number
+  different positions of interfaces and also a different number
   of interfaces. Here you should make use of both the ``retis_movie.py``
-  and ``retis.py`` scripts to investigate your changes influences
+  and ``retis.py`` scripts to investigate how your changes influence
   the results.
 
 
 * After having found a set of interfaces you are happy with, run a
   longer simulation (2000 steps) with the ``retis.py`` script
-  and report your results to the teaching assistant. How does your
-  results compare to the results given above. Are you able to perform better?
+  and report your results to the teaching assistant. How do your
+  results compare to the results given above? Are you able to perform better?
   Note: It will take around 7-8 minutes to complete the 2000 cycles.
 
 

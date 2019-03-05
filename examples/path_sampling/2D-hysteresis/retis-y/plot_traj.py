@@ -2,7 +2,7 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import os
 import sys
 import numpy as np
@@ -11,11 +11,11 @@ from matplotlib.cm import get_cmap
 from pyretis.core import create_box, System, Particles
 from pyretis.inout.setup import create_force_field, create_orderparameter
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.writers import prepare_load
+from pyretis.inout.formats.path import PathIntFile
 
 
 def plot_potential(settings, axi, axj):
-    """Just plot the potential in the given axis"""
+    """Plot the potential in the given axis."""
     forcefield = create_force_field(settings)
     box = create_box(periodic=[False, False])
     fakesys = System(units='reduced', box=box)
@@ -60,7 +60,6 @@ def plot_ensemble(settings, dirname, axi, axj, maxlines=100, minorder=None,
     fakesys.add_particle(name='B', pos=np.zeros(2), ptype=1)
     forcefield = create_force_field(settings)
     traj_file = os.path.join(dirname, 'traj.txt')
-    trajload = prepare_load('pathtrajint', traj_file)
     iplot = 0
     all_lines = []
     all_lines2 = []
@@ -68,32 +67,33 @@ def plot_ensemble(settings, dirname, axi, axj, maxlines=100, minorder=None,
     first_point = []
     order_last = []
     order_last2 = []
-    for i, traj in enumerate(trajload):
-        if traj['comment'][0].split('status:')[-1].strip() != 'ACC':
-            continue
-        if i % skip != 0:
-            continue
-        pos = np.array([x['pos'][0] for x in traj['data']])
-        order = []
-        for posi in pos:
-            fakesys.particles.pos[0, 0] = posi[0]
-            fakesys.particles.pos[0, 1] = posi[1]
-            fakesys.particles.vpot = forcefield.evaluate_potential(fakesys)
-            order.append(orderp.calculate(fakesys)[0])
-        if minorder is not None:
-            if max(order) < minorder:
+    with PathIntFile(traj_file, 'r') as tfile:
+        for i, traj in enumerate(tfile.load()):
+            if traj['comment'][0].split('status:')[-1].strip() != 'ACC':
                 continue
-        line, = axi.plot(pos[:, 0], pos[:, 1], lw=3, alpha=0.9)
-        line2, = axj.plot(order, lw=3, alpha=0.9)
-        order_last.append((len(order) - 1, order[-1]))
-        order_last2.append((len(order) - 2, order[-2]))
-        all_lines.append(line)
-        all_lines2.append(line2)
-        first_point.append((pos[0, 0], pos[0, 1]))
-        last_point.append((pos[-1, 0], pos[-1, 1]))
-        iplot += 1
-        if iplot >= maxlines:
-            break
+            if i % skip != 0:
+                continue
+            pos = np.array([x['pos'][0] for x in traj['data']])
+            order = []
+            for posi in pos:
+                fakesys.particles.pos[0, 0] = posi[0]
+                fakesys.particles.pos[0, 1] = posi[1]
+                fakesys.particles.vpot = forcefield.evaluate_potential(fakesys)
+                order.append(orderp.calculate(fakesys)[0])
+            if minorder is not None:
+                if max(order) < minorder:
+                    continue
+            line, = axi.plot(pos[:, 0], pos[:, 1], lw=3, alpha=0.9)
+            line2, = axj.plot(order, lw=3, alpha=0.9)
+            order_last.append((len(order) - 1, order[-1]))
+            order_last2.append((len(order) - 2, order[-2]))
+            all_lines.append(line)
+            all_lines2.append(line2)
+            first_point.append((pos[0, 0], pos[0, 1]))
+            last_point.append((pos[-1, 0], pos[-1, 1]))
+            iplot += 1
+            if iplot >= maxlines:
+                break
     # Add colors now that we know how many we have created:
     cmap = get_cmap(name='coolwarm')
     colors = cmap(np.linspace(0, 1, iplot))

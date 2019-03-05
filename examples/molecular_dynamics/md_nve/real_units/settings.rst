@@ -31,7 +31,7 @@ name = ['Ar']
 type = [0]
 
 Forcefield settings
---------------------
+-------------------
 
 description = Lennard Jones test
 

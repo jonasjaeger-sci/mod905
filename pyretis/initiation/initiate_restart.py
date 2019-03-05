@@ -6,17 +6,17 @@
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-initiate_restart (:py:func`.initiate_restart`)
-    Method that will get the initial path from the output from
+initiate_restart (:py:func:`.initiate_restart`)
+    A method that will get the initial path from the output from
     a previous simulation.
 """
 import logging
 import os
-from pyretis.core.pathensemble import PATH_DIR_FMT
-from pyretis.core.common import get_path_class
-from pyretis.inout.common import print_to_screen
+from pyretis.core.pathensemble import generate_ensemble_name
+from pyretis.core.path import Path
+from pyretis.inout import print_to_screen
 from pyretis.inout.restart import read_restart_file
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -37,7 +37,6 @@ def initiate_restart(simulation, cycle, settings):
 
     """
     maxlen = settings['tis']['maxlength']
-    klass = get_path_class(simulation.engine.engine_type)
     for ensemble in simulation.path_ensembles:
         name = ensemble.ensemble_name
         logger.info('Loading restart data for path ensemble %s:', name)
@@ -46,9 +45,11 @@ def initiate_restart(simulation, cycle, settings):
             level='warning'
         )
         simulation.engine.exe_dir = ensemble.directory['generate']
-        path = klass(simulation.rgen, maxlen=maxlen)
-        restart_file = os.path.join(PATH_DIR_FMT.format(ensemble.ensemble),
-                                    'ensemble.restart')
+        path = Path(rgen=simulation.rgen, maxlen=maxlen)
+        restart_file = os.path.join(
+            generate_ensemble_name(ensemble.ensemble_number),
+            'ensemble.restart'
+        )
         restart_info = read_restart_file(restart_file)
         ensemble.load_restart_info(path, restart_info, cycle=cycle)
-        yield True, path, path.status
+        yield True, path, path.status, ensemble

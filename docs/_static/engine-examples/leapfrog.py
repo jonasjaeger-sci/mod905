@@ -17,8 +17,8 @@ class LeapFrog(MDEngine):
             Set the time step for the integrator.
         """
         super().__init__(timestep, 'Leap Frog integrator', dynamics='NVE')
-        self.half_delta_t = self.delta_t * 0.5
-        self.half_delta_t_sq = 0.5 * self.delta_t**2
+        self.half_timestep = self.timestep * 0.5
+        self.half_timestep_sq = 0.5 * self.timestep**2
 
     def integration_step(self, system):
         """Perform one step for the Leap Frog integrator."""
@@ -28,11 +28,11 @@ class LeapFrog(MDEngine):
         # get current acceleration:
         acc_t = particles.force * imass
         # update positions:
-        particles.pos += (self.delta_t * particles.vel +
-                          self.half_delta_t_sq * acc_t)
+        particles.pos += (self.timestep * particles.vel +
+                          self.half_timestep_sq * acc_t)
         # update forces:
         system.potential_and_force()
         # update acceleration:
         acc_t2 = particles.force * imass
         # update velocities:
-        particles.vel += self.half_delta_t * (acc_t + acc_t2)
+        particles.vel += self.half_timestep * (acc_t + acc_t2)

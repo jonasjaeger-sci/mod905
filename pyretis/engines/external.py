@@ -4,14 +4,14 @@
 """Definition of external engines.
 
 This module defines the base class for external MD engines.
-This class is sub-classed by all other external MD engines.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ExternalMDEngine (:py:class:`.ExternalMDEngine`)
-    The base class for external scripts. This defines the actual
+    The base class for external engines which defines the
     interface to external programs.
+
 """
 from abc import abstractmethod
 import re
@@ -19,9 +19,10 @@ import logging
 import subprocess
 import shutil
 import os
-from pyretis.inout.common import print_to_screen
+from pyretis.inout import print_to_screen
+from pyretis.inout.fileio import FileIO
 from pyretis.engines.engine import EngineBase
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -33,22 +34,22 @@ class ExternalMDEngine(EngineBase):
     Base class for interfacing external MD engines.
 
     This class defines the interface to external programs. The
-    interface will define how we interact with the external programs
-    and how we write input files for them and read output files.
+    interface will define how we interact with the external programs,
+    how we write input files for them and read output files from them.
     New engines should inherit from this class and implement the
     following methods:
 
     * :py:meth:`ExternalMDEngine.step`
         A method for performing a MD step with the external
         engine. Note that the MD step can consist of a number
-        of sub-cycles.
+        of subcycles.
     * :py:meth:`ExternalMDEngine._read_configuration`
         For reading output (configurations) from the external engine.
         This is used for calculating the order parameter(s).
     * :py:meth:`ExternalMDEngine._reverse_velocities`
         For reversing velocities in a snapshot. This method
-        will typically make use of the
-        :py:meth:`ExternalMDEngine._read_configuration` method.
+        will typically make use of the method
+        :py:meth:`ExternalMDEngine._read_configuration`.
     * :py:meth:`ExternalMDEngine._extract_frame`
         For extracting a single frame from a trajectory.
     * :py:meth:`ExternalMDEngine._propagate_from`
@@ -57,15 +58,14 @@ class ExternalMDEngine(EngineBase):
     * :py:meth:`ExternalMDEngine.modify_velocities`
         The method used for generating random velocities for
         shooting points. Note that this method is defined in
-        :py:meth:`.EngineBase.modify_velocities`.
+        :py:meth:`EngineBase.modify_velocities`.
 
     Attributes
     ----------
     description : string
-        Short string which a description about the external
-        script. This can for instance be what program we are
-        interfacing. This is used for output of information to
-        the user.
+        A string with a description of the external engine.
+        This can, for instance, be what program we are interfacing with.
+        This is used for outputting information to the user.
     timestep : float
         The time step used for the external engine.
     subcycles : integer
@@ -87,9 +87,9 @@ class ExternalMDEngine(EngineBase):
         Parameters
         ----------
         description : string
-            Short string which a description about the external
-            script. This can for instance be what program we are
-            interfacing.
+            A string with a description of the external engine.
+            This can, for instance, be what program we are interfacing
+            with. This is used for outputting information to the user.
         timestep : float
             The time step used in the simulation.
         subcycles : integer
@@ -100,33 +100,18 @@ class ExternalMDEngine(EngineBase):
         super().__init__(description)
         self.timestep = timestep
         self.subcycles = subcycles
-        self._exe_dir = None
-
-    @property
-    def exe_dir(self):
-        """Return the directory we are currently using."""
-        return self._exe_dir
-
-    @exe_dir.setter
-    def exe_dir(self, exe_dir):
-        """Set the current executable dir."""
-        self._exe_dir = exe_dir
-        logger.debug('Setting exe_dir to "%s"', exe_dir)
-        if not os.path.isdir(exe_dir):
-            logger.warning(('"Exe dir" for "%s" is set to "%s" which does '
-                            'not exist!'), self.description, exe_dir)
 
     def integration_step(self, system):
         """
-        Perform one time step of the integration.
+        Perform a single time step of the integration.
 
         For external engines, it does not make much sense to run single
         steps unless we absolutely have to. We therefore just fail here.
         I.e. the external engines are not intended for performing pure
         MD simulations.
 
-        If it's absolutely needed, there is a `self.step()` method
-        which can be used, for instance in the initialisation.
+        If it's absolutely needed, there is a :py:meth:`self.step()`
+        method which can be used, for instance in the initialisation.
 
         Parameters
         ----------
@@ -134,7 +119,7 @@ class ExternalMDEngine(EngineBase):
             A system to run the integration step on.
 
         """
-        msg = 'External engine does not support "integration_step()"!'
+        msg = 'External engine does **NOT** support "integration_step()"!'
         logger.error(msg)
         raise NotImplementedError(msg)
 
@@ -156,7 +141,7 @@ class ExternalMDEngine(EngineBase):
             completing the step.
 
         """
-        pass
+        return
 
     @abstractmethod
     def _read_configuration(self, filename):
@@ -177,7 +162,7 @@ class ExternalMDEngine(EngineBase):
             The velocities found in the given filename.
 
         """
-        pass
+        return
 
     @abstractmethod
     def _reverse_velocities(self, filename, outfile):
@@ -191,7 +176,7 @@ class ExternalMDEngine(EngineBase):
             File to write with reversed velocities.
 
         """
-        pass
+        return
 
     @staticmethod
     def _modify_input(sourcefile, outputfile, settings, delim='='):
@@ -211,8 +196,8 @@ class ExternalMDEngine(EngineBase):
             The path of the file to write.
         settings : dict
             A dictionary with settings to write.
-        delim : string
-            The delimiter used for separation keywords from settings
+        delim : string, optional
+            The delimiter used for separation keywords from settings.
 
         """
         reg = re.compile(r'(.*?){}'.format(delim))
@@ -247,8 +232,8 @@ class ExternalMDEngine(EngineBase):
         ----------
         sourcefile : string
             The path of the file to use for creating the output.
-        delim : string
-            The delimiter used for separation keywords from settings
+        delim : string, optional
+            The delimiter used for separation keywords from settings.
 
         Returns
         -------
@@ -277,7 +262,7 @@ class ExternalMDEngine(EngineBase):
 
         We are here executing a command and then waiting until it
         finishes. The standard out and standard error are piped to
-        files during the execution, and can be inspected if the
+        files during the execution and can be inspected if the
         command fails. This method returns the return code of the
         issued command.
 
@@ -285,17 +270,17 @@ class ExternalMDEngine(EngineBase):
         ----------
         cmd : list of strings
             The command to execute.
-        cwd : string or None
+        cwd : string or None, optional
             The current working directory to set for the command.
-        inputs : bytes or None
-            Possible input to give to the command. This are not arguments
-            but more akin to keystrokes etc. that the external command
-            may take.
+        inputs : bytes or None, optional
+            Additional inputs to give to the command. These are not
+            arguments but more akin to keystrokes etc. that the external
+            command may take.
 
         Returns
         -------
         out : int
-            The return code of the command.
+            The return code of the issued command.
 
         """
         cmd2 = ' '.join(cmd)
@@ -375,8 +360,8 @@ class ExternalMDEngine(EngineBase):
             A list with files to remove.
 
         """
-        for thefile in files:
-            self._removefile(os.path.join(dirname, thefile))
+        for i in files:
+            self._removefile(os.path.join(dirname, i))
 
     def clean_up(self):
         """Will remove all files from the current directory."""
@@ -402,7 +387,7 @@ class ExternalMDEngine(EngineBase):
             The object the order parameter is acting on.
         xyz : numpy.array, optional
             The positions to use, in case we have already read them
-            somewhere else. We will then not attempt to read the again.
+            somewhere else. We will then not attempt to read them again.
         vel : numpy.array, optional
             The velocities to use, in case we already have read them.
         box : numpy.array, optional
@@ -414,6 +399,7 @@ class ExternalMDEngine(EngineBase):
             The calculated order parameter(s).
 
         """
+        # Convert system into an internal representation:
         if any((xyz is None, vel is None, box is None)):
             out = self._read_configuration(system.particles.config[0])
             box = out[0]
@@ -426,21 +412,19 @@ class ExternalMDEngine(EngineBase):
         else:
             system.particles.vel = vel
         system.update_box(box)
-        return order_function.calculate_all(system)
+        return order_function.calculate(system)
 
     def kick_across_middle(self, system, order_function, rgen, middle,
                            tis_settings):
-        """
-        Force a phase point across the middle interface.
+        """Force a phase point across the middle interface.
 
-        This is accomplished by repeatedly kicking the pahse point so
+        This is accomplished by repeatedly kicking the phase point so
         that it crosses the middle interface.
 
         Parameters
         ----------
         system : object like :py:class:`.System`
-            This is the system that contains the particles we are
-            investigating
+            This is the system that we are investigating.
         order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         rgen : object like :py:class:`.RandomGenerator`
@@ -450,26 +434,19 @@ class ExternalMDEngine(EngineBase):
         tis_settings : dict
             This dictionary contains settings for TIS. Explicitly used here:
 
-            * `zero_momentum`: boolean, determines if the momentum is zeroed
+            * `zero_momentum`: boolean, determines if the momentum is zeroed.
             * `rescale_energy`: boolean, determines if energy is re-scaled.
 
         Returns
         -------
-        out[0] : dict
-            This dict contains the phase-point just before the interface.
-            It is obtained by calling the `get_particle_state()` of the
-            particles object.
-        out[1] : dict
-            This dict contains the phase-point just after the interface.
-            It is obtained by calling the `get_particle_state()` of the
-            particles object.
+        out[0] : object like :py:class:`.System`
+            The phase-point just before the crossing the interface.
+        out[1] : object like :py:class:`.System`
+            The phase-point just after crossing the interface.
 
         Note
         ----
-        This function will update the system state so that the
-        `system.particles.get_particle_state() == out[1]`.
-        This is more convenient for the following usage in the
-        `generate_initial_path_kick` function.
+        This function will update the input system state.
 
         """
         logger.info('Kicking with external integrator: %s', self.description)
@@ -477,19 +454,25 @@ class ExternalMDEngine(EngineBase):
         # by sequentially kicking the initial phase point
         # Let's get the starting point:
         initial_file = self.dump_frame(system)
-        # Create a "previous file" for storing the state before a new kick
+        # Create a "previous file" for storing the state before a new kick:
         prev_file = os.path.join(
             self.exe_dir,
             'p_{}'.format(os.path.basename(initial_file))
         )
+        msg_file_name = os.path.join(self.exe_dir, 'msg-kick.txt')
+        msg_file = FileIO(msg_file_name, 'w', None, backup=False)
+        msg_file.open()
+        msg_file.write('Kick initiation for {}'.format(self.description))
         self._copyfile(initial_file, prev_file)
-        # Update so that we use the prev_file
-        system.particles.set_pos((prev_file, None))
+        # Update so that we use the prev_file:
+        system.particles.set_pos((prev_file, None, None))
         logger.info('Searching for crossing with: %9.6g', middle)
         print_to_screen('Searching for crossing with: {}'.format(middle))
+        print_to_screen('Writing progress to: {}'.format(msg_file_name))
         while True:
-            print_to_screen('Kicking:')
+            msg_file.write('New kick:')
             # Do kick from current state:
+            msg_file.write('\tModify velocities...')
             self.modify_velocities(system,
                                    rgen,
                                    sigma_v=None,
@@ -498,47 +481,46 @@ class ExternalMDEngine(EngineBase):
                                    rescale=None)
             # Update order parameter in case it's velocity dependent:
             curr = self.calculate_order(order_function, system)[0]
+            msg_file.write('\tAfter kick: {}'.format(curr))
             # Store the kicked configuration as the previous config.
             self._movefile(system.particles.get_pos()[0], prev_file)
-            system.particles.set_pos((prev_file, None))
-            previous = system.particles.get_particle_state()
-            previous['order'] = curr
+            system.particles.set_pos((prev_file, None, None))
+            previous = system.copy()
+            previous.order = curr
             # Update system by integrating forward:
+            msg_file.write('\tIntegrate forward...')
             conf = self.step(system, 'gen_kick')
             curr_file = os.path.join(self.exe_dir, conf)
             # Compare previous order parameter and the new one:
             prev = curr
             curr = self.calculate_order(order_function, system)[0]
             txt = '{} -> {} | {}'.format(prev, curr, middle)
-            if (prev < middle < curr) or (curr < middle < prev):
+            msg_file.write('\t{}'.format(txt))
+            if (prev <= middle < curr) or (curr < middle <= prev):
                 logger.info('Crossed middle interface: %s', txt)
-                print_to_screen('Crossed middle interface: {}'.format(txt),
-                                level='info')
-                # have crossed middle interface, just stop the loop
+                msg_file.write('\tCrossed middle interface!')
+                # Middle interface was crossed, just stop the loop.
                 break
-            elif (prev <= curr <= middle) or (middle <= curr <= prev):
-                # Getting closer, keep the new point
+            elif (prev <= curr < middle) or (middle < curr <= prev):
+                # Getting closer, keep the new point:
                 logger.debug('Getting closer to middle: %s', txt)
-                print_to_screen('-> Getting closer to middle: {}'.format(txt))
-                self._movefile(curr_file, prev_file)
-                # Update file name after moving:
-                system.particles.set_pos((prev_file, None))
-            elif (prev == middle):
-                # Unlucky case, but we want at least 2 points so, search more
-                logger.debug('Getting closer to middle: %s', txt)
-                print_to_screen('-> Getting closer to middle: {}'.format(txt))
-                self._movefile(curr_file, prev_file)
-                # Update file name after moving:
-                system.particles.set_pos((prev_file, None))
-            else:  # we did not get closer, fall back to previous point
-                logger.debug('Did not get closer to middle: %s', txt)
-                print_to_screen(
-                    '-> Did not get closer to middle: {}'.format(txt)
+                msg_file.write(
+                    '\tGetting closer to middle, keeping new point.'
                 )
-                system.particles.set_particle_state(previous)
-                curr = previous['order']
+                self._movefile(curr_file, prev_file)
+                # Update file name after moving:
+                system.particles.set_pos((prev_file, None, None))
+            else:  # We did not get closer, fall back to previous point:
+                logger.debug('Did not get closer to middle: %s', txt)
+                msg_file.write(
+                    '\tDid not get closer, fall back to previous point.'
+                )
+                system.particles = previous.particles.copy()
+                curr = previous.order
                 self._removefile(curr_file)
-        return previous, system.particles.get_particle_state()
+        msg_file.close()
+        self._removefile(msg_file_name)
+        return previous, system
 
     @abstractmethod
     def _extract_frame(self, traj_file, idx, out_file):
@@ -554,9 +536,9 @@ class ExternalMDEngine(EngineBase):
             The file to dump to.
 
         """
-        pass
+        return
 
-    def propagate(self, path, system, order_function, interfaces,
+    def propagate(self, path, initial_state, order_function, interfaces,
                   reverse=False):
         """
         Propagate the equations of motion with the external code.
@@ -571,16 +553,15 @@ class ExternalMDEngine(EngineBase):
             We are here not returning a new path - this since we want
             to delegate the creation of the path to the method
             that is running `propagate`.
-        system : object like :py:class:`.System`
+        initial_state : object like :py:class:`.System`
             The system object gives the initial state for the
-            integration. The initial state is stored and the system is
-            reset to the initial state when the integration is done.
+            integration.
         order_function : object like :py:class:`.OrderParameter`
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
-        reverse : boolean
-            If True, the system will be propagated backwards in time.
+        reverse : boolean, optional
+            If True, the system will be propagated backward in time.
 
         Returns
         -------
@@ -598,42 +579,52 @@ class ExternalMDEngine(EngineBase):
             logger.debug('Running forward in time.')
             name = 'trajF'
         logger.debug('Trajectory name: "%s"', name)
+        # Also create a message file for inspecting progress:
+        msg_file_name = os.path.join(self.exe_dir, 'msg-{}.txt'.format(name))
+        logger.debug('Writing propagation progress to: %s', msg_file_name)
+        msg_file = FileIO(msg_file_name, 'w', None, backup=False)
+        msg_file.open()
+        msg_file.write(
+            '# Preparing propagation with {}'.format(self.description)
+        )
+        msg_file.write('# Trajectory label: {}'.format(name))
 
-        initial_state = system.particles.get_particle_state()
+        system = initial_state.copy()
         initial_file = self.dump_frame(system)
-        logger.debug('Initial state: %s', initial_state)
+        msg_file.write('# Initial file: {}'.format(initial_file))
+        logger.debug('Initial state: %s', system)
 
-        if reverse != initial_state['vel']:
+        if reverse != system.particles.vel_rev:
             logger.debug('Reversing velocities in initial config.')
+            msg_file.write('# Reversing velocities')
             basepath = os.path.dirname(initial_file)
             localfile = os.path.basename(initial_file)
             initial_conf = os.path.join(basepath, 'r_{}'.format(localfile))
             self._reverse_velocities(initial_file, initial_conf)
         else:
             initial_conf = initial_file
+        msg_file.write('# Initial config: {}'.format(initial_conf))
 
         # Update system to point to the configuration file:
-        phase_point = {'pos': (initial_conf, None),
-                       'vel': reverse,
-                       'vpot': None,
-                       'ekin': None}
-        system.particles.set_particle_state(phase_point)
+        system.particles.set_pos((initial_conf, None))
+        system.particles.set_vel(reverse)
         # Propagate from this point:
+        msg_file.write('# Interfaces: {}'.format(interfaces))
         success, status = self._propagate_from(
             name,
             path,
             system,
             order_function,
             interfaces,
+            msg_file,
             reverse=reverse
         )
-        # Reset system to initial state:
-        system.particles.set_particle_state(initial_state)
+        msg_file.close()
         return success, status
 
     @abstractmethod
     def _propagate_from(self, name, path, system, order_function, interfaces,
-                        reverse=False):
+                        msg_file, reverse=False):
         """
         Run the actual propagation using the specific engine.
 
@@ -654,8 +645,11 @@ class ExternalMDEngine(EngineBase):
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
-        reverse : boolean
-            If True, the system will be propagated backwards in time.
+        msg_file : object like :py:class:`.FileIO`
+            An object we use for writing out messages that are useful
+            for inspecting the status of the current propagation.
+        reverse : boolean, optional
+            If True, the system will be propagated backward in time.
 
         Returns
         -------
@@ -665,7 +659,7 @@ class ExternalMDEngine(EngineBase):
             A text description of the current status of the propagation.
 
         """
-        pass
+        return
 
     def _name_output(self, basename):
         """Return the name of the output file."""
@@ -709,5 +703,6 @@ class ExternalMDEngine(EngineBase):
 
     def dump_phasepoint(self, phasepoint, deffnm='conf'):
         """Just dump the frame from a system object."""
-        pos_file = self.dump_config(phasepoint['pos'], deffnm=deffnm)
-        phasepoint['pos'] = (pos_file, None)
+        pos_file = self.dump_config(phasepoint.particles.get_pos(),
+                                    deffnm=deffnm)
+        phasepoint.particles.set_pos((pos_file, None))

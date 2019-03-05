@@ -10,7 +10,7 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, imports from the other modules and defines helper
+    This file, imports from the other modules and defines some helper
     methods for the initiation.
 
 initiate_kick.py (:py:mod:`pyretis.initiation.initiate_kick`)
@@ -19,6 +19,9 @@ initiate_kick.py (:py:mod:`pyretis.initiation.initiate_kick`)
 initiate_load.py (:py:mod:`pyretis.initiation.initiate_load`)
     Methods for initiating by loading already existing paths from
     files.
+
+initiate_restart.py (:py:mod:`pyretis.initiation.initiate_restart`)
+    Methods for initiating by loading PyRETIS restart files.
 
 
 Important methods defined in this package
@@ -32,11 +35,11 @@ initiate_path_simulation (:py:func:`initiate_path_simulation`)
 
 """
 import logging
-from pyretis.inout.common import print_to_screen
+from pyretis.inout import print_to_screen
 from .initiate_kick import initiate_kick
 from .initiate_load import initiate_load
 from .initiate_restart import initiate_restart
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -51,6 +54,11 @@ def get_initiation_method(settings):
     settings : dict
         This dictionary contains the settings for the initiation.
 
+    Returns
+    -------
+    out : callable
+        The method to be used for the initiation.
+
     """
     _methods = {
         'kick': initiate_kick,
@@ -59,12 +67,11 @@ def get_initiation_method(settings):
     }
     method = settings['initial-path']['method'].lower()
     if method not in _methods:
-        logger.error('Unknown initiation method "%s" requrested', method)
+        logger.error('Unknown initiation method "%s" requested', method)
         logger.error('Known methods: %s', _methods.keys())
         raise ValueError('Unknown initiation method requested!')
-    logtxt = 'Will initiate paths using method "{}"'.format(method)
-    print_to_screen(logtxt)
-    logger.info(logtxt)
+    print_to_screen('Will initiate paths using method "{}".'.format(method))
+    logger.info('Initiation method "%s" selected', method)
     return _methods[method]
 
 
@@ -77,6 +84,11 @@ def initiate_path_simulation(simulation, settings):
         The simulation we are doing the initiation for.
     settings : dict
         A dictionary with settings for the initiation.
+
+    Returns
+    -------
+    out : callable
+        The method to be used for the initiation.
 
     """
     cycle = simulation.cycle['step']

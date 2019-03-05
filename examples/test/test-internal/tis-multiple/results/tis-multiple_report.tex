@@ -1,0 +1,216 @@
+\documentclass[a4paper]{article}
+%\usepackage{fixltx2e} % LaTeX patches, \textsubscript
+%\usepackage{cmap} % fix search and cut-and-paste in Acrobat
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{mathptmx} % Times
+\usepackage[scaled=.90]{helvet}
+\usepackage{courier}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{xcolor}
+\usepackage{longtable}
+%%% User specified packages and stylesheets
+\DeclareGraphicsExtensions{ %
+    .pdf,.PDF,%
+    .png,.PNG,%
+    .jpg,.mps,.jpeg,.jbig2,.jb2,.JPG,.JPEG,.JBIG2,.JB2}
+\title{PyRETIS --- TIS analysis}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\noindent The main result is:
+\begin{itemize}
+\item The crossing probability:
+$P_{\text{cross}} =$ \colorbox{blue!30}{ $0.103484118$ }  $\pm$ $82.283801772$ $\%$
+\end{itemize}
+\noindent Detailed results are given below for the different path
+ensembles and the overall results are summarized
+in the last section.
+\section{Results for path ensembles}
+The following interfaces were used in the simulation and in
+the analysis:
+
+\begin{longtable}{| c | c | c | c | c |}
+\caption{Interfaces}\\
+\hline
+Ensemble & Left & Middle & Right & Detect\\ \hline
+$ [0^+]  $ & $-0.9000 $ & $-0.9000 $ & $ 1.0000 $ & $-0.8000 $\\
+$ [1^+]  $ & $-0.9000 $ & $-0.8000 $ & $ 1.0000 $ & $-0.7000 $\\
+$ [2^+]  $ & $-0.9000 $ & $-0.7000 $ & $ 1.0000 $ & $-0.6000 $\\
+$ [3^+]  $ & $-0.9000 $ & $-0.6000 $ & $ 1.0000 $ & $-0.5000 $\\
+$ [4^+]  $ & $-0.9000 $ & $-0.5000 $ & $ 1.0000 $ & $-0.4000 $\\
+$ [5^+]  $ & $-0.9000 $ & $-0.4000 $ & $ 1.0000 $ & $-0.3000 $\\
+$ [6^+]  $ & $-0.9000 $ & $-0.3000 $ & $ 1.0000 $ & $ 1.0000 $\\
+\hline
+\end{longtable}
+
+The calculated crossing probabilities are:
+
+\begin{longtable}{| c | c | c | c |}
+\caption{Probabilities}\\
+\hline
+Ensemble & $P_\text{cross}$ & Error & Rel. error (\%)\\ \hline
+$ [0^+]  $ & $ 0.823529 $ & $ 0.205051 $ & $24.899090 $\\
+$ [1^+]  $ & $ 0.843137 $ & $ 0.117912 $ & $13.984901 $\\
+$ [2^+]  $ & $ 0.803922 $ & $ 0.092015 $ & $11.445810 $\\
+$ [3^+]  $ & $ 0.686275 $ & $ 0.138790 $ & $20.223719 $\\
+$ [4^+]  $ & $ 0.745098 $ & $ 0.086199 $ & $11.568874 $\\
+$ [5^+]  $ & $ 0.803922 $ & $ 0.036059 $ & $ 4.485331 $\\
+$ [6^+]  $ & $ 0.450980 $ & $ 0.327112 $ & $72.533575 $\\
+\hline
+\end{longtable}
+
+The crossing probabilities are also displayed in the figures below
+
+\subsection{Crossing probabilities}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{001_pcross.png}%
+\includegraphics[width=0.33\linewidth]{001_prun.png}%
+\includegraphics[width=0.33\linewidth]{001_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{002_pcross.png}%
+\includegraphics[width=0.33\linewidth]{002_prun.png}%
+\includegraphics[width=0.33\linewidth]{002_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{003_pcross.png}%
+\includegraphics[width=0.33\linewidth]{003_prun.png}%
+\includegraphics[width=0.33\linewidth]{003_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{004_pcross.png}%
+\includegraphics[width=0.33\linewidth]{004_prun.png}%
+\includegraphics[width=0.33\linewidth]{004_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{005_pcross.png}%
+\includegraphics[width=0.33\linewidth]{005_prun.png}%
+\includegraphics[width=0.33\linewidth]{005_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{006_pcross.png}%
+\includegraphics[width=0.33\linewidth]{006_prun.png}%
+\includegraphics[width=0.33\linewidth]{006_perror.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{007_pcross.png}%
+\includegraphics[width=0.33\linewidth]{007_prun.png}%
+\includegraphics[width=0.33\linewidth]{007_perror.png}%
+\end{center}
+
+\clearpage
+
+\subsection{Distributions for path lengths and shooting moves}
+The average path lengths in the different ensembles are given in
+the table below and some distributions for the path lengths and
+shooting moves can also be found here:
+
+\begin{longtable}{| c | c | c | c |}
+\caption{Path lengths}\\
+\hline
+Ensemble & Accepted & All & All/Accepted\\ \hline
+$ [0^+]  $ & $780.039216$ & $422.800000$ & $ 0.542024 $\\
+$ [1^+]  $ & $726.274510$ & $365.820000$ & $ 0.503694 $\\
+$ [2^+]  $ & $789.882353$ & $349.260000$ & $ 0.442167 $\\
+$ [3^+]  $ & $870.725490$ & $336.260000$ & $ 0.386184 $\\
+$ [4^+]  $ & $1.2057 \times 10^{3}$ & $498.340000$ & $ 0.413311 $\\
+$ [5^+]  $ & $1.1873 \times 10^{3}$ & $450.040000$ & $ 0.379053 $\\
+$ [6^+]  $ & $1.2144 \times 10^{3}$ & $445.180000$ & $ 0.366575 $\\
+\hline
+\end{longtable}
+
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{001_lpath.png}%
+\includegraphics[width=0.33\linewidth]{001_shoots.png}%
+\includegraphics[width=0.33\linewidth]{001_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{002_lpath.png}%
+\includegraphics[width=0.33\linewidth]{002_shoots.png}%
+\includegraphics[width=0.33\linewidth]{002_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{003_lpath.png}%
+\includegraphics[width=0.33\linewidth]{003_shoots.png}%
+\includegraphics[width=0.33\linewidth]{003_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{004_lpath.png}%
+\includegraphics[width=0.33\linewidth]{004_shoots.png}%
+\includegraphics[width=0.33\linewidth]{004_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{005_lpath.png}%
+\includegraphics[width=0.33\linewidth]{005_shoots.png}%
+\includegraphics[width=0.33\linewidth]{005_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{006_lpath.png}%
+\includegraphics[width=0.33\linewidth]{006_shoots.png}%
+\includegraphics[width=0.33\linewidth]{006_shoots_scaled.png}%
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.33\linewidth]{007_lpath.png}%
+\includegraphics[width=0.33\linewidth]{007_shoots.png}%
+\includegraphics[width=0.33\linewidth]{007_shoots_scaled.png}%
+\end{center}
+
+\clearpage
+
+\subsection{Efficiency analysis}
+
+\begin{longtable}{| c | c | c | c | c | c |}
+\caption{Efficiency}\\
+\hline
+Ensemble & TIS cycles & Tot sim. & Acceptance ratio & Correlation & Efficiency\\ \hline
+$ [0^+]  $ & $    51    $ & $2.1563 \times 10^{4}$ & $ 0.941176 $ & $14.465842 $ & $1.3368 \times 10^{3}$\\
+$ [1^+]  $ & $    51    $ & $1.8657 \times 10^{4}$ & $ 0.901961 $ & $ 5.256144 $ & $364.885341$\\
+$ [2^+]  $ & $    51    $ & $1.7812 \times 10^{4}$ & $ 0.823529 $ & $ 2.685634 $ & $233.352291$\\
+$ [3^+]  $ & $    51    $ & $1.7149 \times 10^{4}$ & $ 0.725490 $ & $ 4.473424 $ & $701.402687$\\
+$ [4^+]  $ & $    51    $ & $2.5415 \times 10^{4}$ & $ 0.529412 $ & $ 1.956106 $ & $340.155980$\\
+$ [5^+]  $ & $    51    $ & $2.2952 \times 10^{4}$ & $ 0.509804 $ & $ 0.412423 $ & $46.175368 $\\
+$ [6^+]  $ & $    51    $ & $2.2704 \times 10^{4}$ & $ 0.411765 $ & $21.608169 $ & $1.1945 \times 10^{4}$\\
+\hline
+\end{longtable}
+
+\section{Combined results}
+
+The overall matched probability is shown in the left figure below
+and the individual matched probabilities are shown in the right figure:
+
+\begin{center}
+\includegraphics[width=0.45\linewidth]{total-probability.png}%
+\includegraphics[width=0.45\linewidth]{matched-probability.png}%
+\end{center}
+
+\noindent The overall crossing probability is:
+\begin{center}
+$P_{\text{cross}} =$ \colorbox{blue!30}{ $0.103484118$ }  $\pm$ $82.283801772$ $\%$
+\end{center}
+Other statistics:
+\begin{itemize}
+\item sim.time: $1.462527000 \times 10^{5}$
+\item $\tau_{\text{eff}} =$~$9.902220457 \times 10^{4}$
+\item $\tau_{\text{eff}}^{\text{opt}} =$~$5.380351263 \times 10^{4}$
+\end{itemize}
+
+\end{document}

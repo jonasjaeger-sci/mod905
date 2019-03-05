@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package contains functions for setting up plotters.
 
-Specifically it defines colors, color schemes and a function
+Specifically, it defines colors, color schemes and a function
 for selecting a plotter.
 
 Here we also hard-code some color schemes which may be useful for
@@ -22,7 +22,7 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, handles imports for PyRETIS and defines some colors
+    This file. Handles imports for PyRETIS and defines some colors
     and the method for creating a plotter.
 
 mpl_plotting.py (:py:mod:`pyretis.inout.plotting.mpl_plotting`)
@@ -30,6 +30,9 @@ mpl_plotting.py (:py:mod:`pyretis.inout.plotting.mpl_plotting`)
 
 plotting.py (:py:mod:`pyretis.inout.plotting.plotting`)
     Definition of a generic base class for the plotter(s).
+
+txt_plotting.py (:py:mod:`pyretis.inout.plotting.txt_plotting`)
+    Methods for generating text output.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +69,7 @@ __all__ = ['create_plotter']
 COLORS = {'almost_black': '#262626'}
 # Custom color-schemes. The default will be defined by the style file.
 # The husl schemes are suited when many different colors are needed. They
-# are hard-coded with different number of colors.
+# are hard-coded with the different number of colors.
 COLOR_SCHEME = {'colorblind_10': ['#006BA4', '#FF800E', '#ABABAB', '#595959',
                                   '#5F9ED1', '#C85200', '#898989', '#A2C8EC',
                                   '#FFBC79', '#CFCFCF'],
@@ -90,7 +93,7 @@ def create_plotter(plot_settings, out_dir=None):
     """Create a plotter from given settings.
 
     The input plot settings is assumed to be a dictionary which we use
-    for creating the plotter. In case the plot settings is not given, we
+    for creating the plotter. In case the plot settings are not given, we
     just return None. We are here assuming that they are not given
     simply because we do not want to create a plotter.
 
@@ -108,7 +111,7 @@ def create_plotter(plot_settings, out_dir=None):
     Returns
     -------
     out : object like :py:class:`.MplPlotter`
-        This is a object which can be used for plotting.
+        This is an object which can be used for plotting.
 
     """
     if plot_settings is None:

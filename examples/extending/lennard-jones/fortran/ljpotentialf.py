@@ -3,13 +3,16 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in FORTRAN."""
 import logging
+import os
+import sys
 import numpy as np
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import (
     generate_pair_interactions
 )
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     from ljfortran import ljfortran
 except ImportError:
@@ -65,13 +68,14 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cutoff.
     _rcut2 : numpy.array
-        Squared cut-off for each interaction type.
+        The squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
+
     """
 
     def __init__(self, dim=3, shift=True, mixing='geometric',
                  desc='Lennard-Jones pair potential (FORTRAN)'):
-        """Initiate the Lennard-Jones potential.
+        """Set up the Lennard-Jones potential.
 
         Parameters
         ----------
@@ -81,6 +85,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
             Determines if the potential should be shifted or not.
         mixing : string
             Determines how we should mix potential parameters.
+
         """
         super().__init__(dim=dim, desc=desc, mixing=mixing)
         self.ntype = 0
@@ -94,7 +99,8 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         Parameters
         ----------
         parameters : dict
-            The input base parameters
+            The input base parameters.
+
         """
         self.params = {}
         pair_param = generate_pair_interactions(parameters, self.mixing)
@@ -136,6 +142,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         -------
         v_pot : float
             The potential energy.
+
         """
         particles = system.particles
         box = system.box
@@ -164,6 +171,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
             The forces on the particles.
         virial : numpy.array
             The virial obtained from the forces.
+
         """
         particles = system.particles
         box = system.box
@@ -187,10 +195,10 @@ class PairLennardJonesCutF(PairLennardJonesCut):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a
-        whole. It is not calculated as a virial per atom. The virial
+        Currently, the virial is only calculated for all the particles.
+        It is not calculated as a virial per atom. The virial
         per atom might be useful to obtain a local pressure or stress,
-        however this needs some consideration. Perhaps it's best to
+        however, this needs some consideration. Perhaps it's best to
         fully implement this as a method of planes or something similar.
 
         Returns
@@ -203,6 +211,7 @@ class PairLennardJonesCutF(PairLennardJonesCut):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
+
         """
         particles = system.particles
         box = system.box

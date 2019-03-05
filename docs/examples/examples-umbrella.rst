@@ -17,23 +17,20 @@ and the probability density.
 
    Sample results for the potential energy and the probability density.
 
-We begin by importing the pyretis library:
-
-.. literalinclude:: /_static/examples/examples-mc.py
-   :lines: 1-5
-
-And we import `numpy <http://www.numpy.org/>`_
+We begin by importing the |pyretis| library and 
+`numpy <http://www.numpy.org/>`_
 and `matplotlib <http://matplotlib.org/>`_
 which we will use for some additional numerical methods and for plotting.
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 7-8
+.. literalinclude:: /_static/examples/examples_mc.py
+   :lines: 5-11
+
 
 First, we set up the system by defining the units we will
-use and adding a particle (labelled as 'X') at a specified position.
+use and adding a particle (labeled as 'X') at a specified position.
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 10-12
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 14-16
 
 
 Next we define the force field in terms of potential functions.
@@ -41,36 +38,36 @@ Here, we create the unbiased potential - a
 :ref:`double well potential <user-section-potential-doublewell>` -
 and a biased version of the potential where a
 :ref:`rectangular well <user-section-potential-rectangularwell>` is used.
-Finally, the biased potential is attached to the system.
+Finally, the biased force field is attached to the system.
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 14-19
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 18-23
 
 In order to run the actual simulation, we need to specify some additional
 settings, like where the umbrella windows should be placed and how many
 cycles we need to perform:
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 21-25
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 25-29
 
 and we create a random number generator for use in the umbrella simulation:
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 27-28
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 31-32
 
 We are now ready to run the simulation. We will do this by looping over
 the umbrella windows we defined,
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 30-50
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 34-54
 
 The simulation is now done, and we can do the analysis and plot the results.
 For the analysis we match the histograms:
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 52-61
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 56-65
 
 And we finally plot the results:
 
-.. literalinclude::  /_static/examples/examples-mc.py
-   :lines: 63-97
+.. literalinclude::  /_static/examples/examples_mc.py
+   :lines: 67-101

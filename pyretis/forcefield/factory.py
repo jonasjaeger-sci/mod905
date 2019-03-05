@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Define a factory for potentials.
-
-Note: This module will probably be deleted and replace with a true
-factory method. That is, a class method for the potential function
-class. For now, this is a transition module. Don't count on it
-being present in the future!
-"""
+"""Define a factory for potentials."""
 import logging
 from pyretis.core.common import generic_factory
 from pyretis.forcefield.potentials import (PairLennardJonesCut,
@@ -15,7 +9,7 @@ from pyretis.forcefield.potentials import (PairLennardJonesCut,
                                            DoubleWellWCA,
                                            DoubleWell,
                                            RectangularWell)
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 

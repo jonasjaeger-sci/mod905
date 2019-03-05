@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""A test module for the xyzio module."""
+"""A test module for the xyz in/out module."""
 import logging
 import unittest
 import tempfile
@@ -9,7 +9,7 @@ import filecmp
 import os
 import gzip
 import numpy as np
-from pyretis.inout.writers.xyzio import (
+from pyretis.inout.formats.xyz import (
     format_xyz_data,
     read_xyz_file,
     convert_snapshot,
@@ -26,7 +26,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class XYZIOTest(unittest.TestCase):
-    """Test xyzio."""
+    """Test the xyz format reading & writing."""
 
     def test_format_data(self):
         """Test that we format data as expected."""

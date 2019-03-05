@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from numpy import average, rint, dot, sqrt
 from pyretis.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -19,12 +19,13 @@ class RingDiffusion(OrderParameter):
     Attributes
     ----------
     name : string
-        A human readable name for the order parameter
+        A human-readable name for the order parameter.
     index : integer
         This selects the particle to use for the order parameter.
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self):
@@ -37,6 +38,7 @@ class RingDiffusion(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
+
         """
         super().__init__(description='Ring diffusion for hydrate')
         self.idx1 = np.array([56, 64, 104, 112, 200, 208], dtype=np.int16)
@@ -73,6 +75,7 @@ class RingDiffusion(OrderParameter):
         -------
         out : float
             The order parameter.
+
         """
         pos = system.particles.pos
         resl = 1.0e3

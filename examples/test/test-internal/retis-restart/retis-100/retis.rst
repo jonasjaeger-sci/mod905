@@ -71,7 +71,7 @@ c = 0.0
 
 Orderparameter
 --------------
-class = OrderParameterPosition
+class = Position
 dim = x
 index = 0
 periodic = False

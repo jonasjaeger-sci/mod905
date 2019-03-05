@@ -16,18 +16,32 @@ orderparameter.py (:py:mod:`pyretis.orderparameter.orderparameter`)
     Defines the base class for order parameters and some simple
     example order parameters.
 
+orderangle.py (:py:mod:`pyretis.orderparameter.orderangle`)
+    Defines a class for an angle order parameter.
+
+orderdihedral.py (:py:mod:`pyretis.orderparameter.orderdihedral`)
+    Defines a class for a dihedral angle order parameter.
+
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 order_factory (:py:func:`.order_factory`)
     A method to create order parameters from settings.
+
 """
 from pyretis.core.common import generic_factory
-from .orderparameter import (OrderParameter,
-                             OrderParameterPosition,
-                             OrderParameterDistance)
-from .orderangle import OrderParameterAngle
-from .orderdihedral import OrderParameterDihedral
+from .orderparameter import (
+    OrderParameter,
+    Position,
+    Velocity,
+    Distance,
+    Distancevel,
+    PositionVelocity,
+    DistanceVelocity,
+    CompositeOrderParameter,
+)
+from .orderangle import Angle
+from .orderdihedral import Dihedral
 
 
 def order_factory(settings):
@@ -44,18 +58,36 @@ def order_factory(settings):
     Returns
     -------
     out : object like :py:class:`.OrderParameter`
-        An object representing the orderparameter.
+        An object representing the order parameter.
 
     """
     factory_map = {
-        'orderparameter': {'cls': OrderParameter},
-        'orderparameterposition': {'cls': OrderParameterPosition},
-        'position': {'cls': OrderParameterPosition},
-        'orderparameterdistance': {'cls': OrderParameterDistance},
-        'distance': {'cls': OrderParameterDistance},
-        'orderparameterangle': {'cls': OrderParameterAngle},
-        'angle': {'cls': OrderParameterAngle},
-        'dihedral': {'cls': OrderParameterDihedral},
-        'orderparameterdihedral': {'cls': OrderParameterDihedral},
+        'orderparameter': {
+            'cls': OrderParameter
+        },
+        'position': {
+            'cls': Position
+        },
+        'velocity': {
+            'cls': Velocity
+        },
+        'distance': {
+            'cls': Distance
+        },
+        'distancevel': {
+            'cls': Distancevel
+        },
+        'positionvelocity': {
+            'cls': PositionVelocity
+        },
+        'distancevelocity': {
+            'cls': DistanceVelocity
+        },
+        'angle': {
+            'cls': Angle
+        },
+        'dihedral': {
+            'cls': Dihedral
+        },
     }
     return generic_factory(settings, factory_map, name='orderparameter')

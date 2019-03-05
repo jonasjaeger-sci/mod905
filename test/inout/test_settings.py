@@ -29,13 +29,20 @@ from pyretis.inout.settings import (
     copy_settings,
     write_settings_file,
     _clean_settings,
+    _check_for_bullshitt
 )
 from pyretis.core.units import create_conversion_factors, CONVERT
 from pyretis.engines import Verlet, VelocityVerlet, Langevin
 from pyretis.orderparameter import (
     OrderParameter,
-    OrderParameterPosition,
-    OrderParameterDistance
+    Position,
+    Velocity,
+    PositionVelocity,
+    Distance,
+    Distancevel,
+    DistanceVelocity,
+    Angle,
+    Dihedral,
 )
 from pyretis.forcefield.potentials import (
     PairLennardJonesCut,
@@ -45,18 +52,11 @@ from pyretis.forcefield.potentials import (
     RectangularWell
 )
 from pyretis.forcefield import PotentialFunction
+from .help import turn_on_logging
 logging.disable(logging.CRITICAL)
 
 
 LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))
-
-
-def _remove_file(filename):
-    """Remove a file, fail silently if somethings fails."""
-    try:
-        os.remove(filename)
-    except OSError:
-        pass
 
 
 def _read_raw_settings(filename):
@@ -113,11 +113,10 @@ class KeywordParsing(unittest.TestCase):
         correct = {
             'heading': {'text': ('Molecular dynamics example settings\n'
                                  '===================================\n'
-                                 'Here I can write some text to remind me\n'
-                                 'what this simulation is doing.')},
-
+                                 'this is a simple test system to check '
+                                 'the input statements are correct')},
             'system': {'units': 'lj',
-                       'dimensions': 3,  # added by default
+                       'dimensions': 3,  # Added by default.
                        'temperature': 2.0},
             'simulation': {'task': 'md-nve',
                            'steps': 100},
@@ -139,37 +138,39 @@ class KeywordParsing(unittest.TestCase):
 
     def test_keyword_format(self):
         """Test different forms of some simple keywords."""
-        test_data = [(["units = 'lj'"], {'units': 'lj'}),  # normal
-                     (["unITS = 'lj'"], {'units': 'lj'}),  # case-sensitive?
-                     (["units = 'lj' # comment"], {'units': 'lj'}),  # comments
-                     (["units = 'lj' # comment units='a'"], {'units': 'lj'}),
-                     (["unITS='lj'"], {'units': 'lj'}),  # spacing
-                     (["unITS= 'lj'"], {'units': 'lj'}),  # spacing
-                     (['units = "lj"'], {'units': 'lj'}),  # " vs '
-                     (['units =          "lj"'], {'units': 'lj'}),  # spacing
-                     (['units        = "lj"'], {'units': 'lj'}),  # spacing
-                     (['units = lj'], {'units': 'lj'}),  # quotations
-                     (['units = "lj'], {'units': '"lj'})]  # quotations
+        test_data = [
+            (["units = 'lj'"], {'units': 'lj'}),  # Normal input
+            (["unITS = 'lj'"], {'units': 'lj'}),  # Test case-sensitive?
+            (["units = 'lj' # comment"], {'units': 'lj'}),  # Add a comment.
+            (["units = 'lj' # comment units='a'"], {'units': 'lj'}),
+            (["unITS='lj'"], {'units': 'lj'}),  # Test spacing.
+            (["unITS= 'lj'"], {'units': 'lj'}),  # Test spacing.
+            (['units = "lj"'], {'units': 'lj'}),  # Test " vs '.
+            (['units =          "lj"'], {'units': 'lj'}),  # Test spacing.
+            (['units        = "lj"'], {'units': 'lj'}),  # Test spacing.
+            (['units = lj'], {'units': 'lj'}),  # Test quotations.
+            (['units = "lj'], {'units': '"lj'})  # Test quotations.
+        ]
 
         for data in test_data:
             setting = _parse_raw_section(data[0], 'system')
             self.assertEqual(setting, data[1])
 
     def test_keyword_dict(self):
-        """Test some cases when reading dicts"""
+        """Test some cases when reading dicts."""
         teststr = []
         correct = []
-        # simple test:
+        # First, some simple input:
         teststr.append(['Engine settings',
                         '---------------',
                         'class = velocityverlet', 'timestep = 0.002'])
         correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
-        # test with comment
+        # Test input with comment(s):
         teststr.append(['Engine settings',
                         '---------------',
                         'class = velocityverlet', 'timestep = 0.002 # fs'])
         correct.append({'timestep': 0.002, 'class': 'velocityverlet'})
-        # test with spaces etc
+        # Test with white space, etc.:
         teststr.append(['Engine settings',
                         '---------------', 'junk',
                         '    ', 'junk = 10',
@@ -198,21 +199,7 @@ class KeywordParsing(unittest.TestCase):
 
     def test_write_and_read(self):
         """Test that we can parse some data, write it and read it."""
-        data = """
-Simulation settings
--------------------
-task = md-nve
-steps = 100
-
-System settings
----------------
-dimensions = 2
-temperature = 1.0
-
-Engine settings
----------------
-class = velocityverlet
-timestep = 0.002"""
+        data = _read_raw_settings('settings-rw-test.rst')
         correct = {'engine': {'timestep': 0.002,
                               'class': 'velocityverlet'},
                    'system': {'dimensions': 2, 'temperature': 1.0},
@@ -229,18 +216,7 @@ timestep = 0.002"""
 
     def test_ignore_section(self):
         """Test that we ignore unknown sections."""
-        data = """
-Engine settings
----------------
-class = velocityverlet
-timestep = 0.002
-
-Junk section
-------------
-This section should be ignored
-# and not give any problems
-Is this = True?
-"""
+        data = _read_raw_settings('settings-unknown-section.rst')
         correct = {'engine': {'timestep': 0.002,
                               'class': 'velocityverlet'}}
         settings = _test_correct_parsing(self, data, correct)
@@ -252,14 +228,7 @@ class KeywordEngine(unittest.TestCase):
 
     def test_load_external_engine(self):
         """Test that we can load external python modules for engines."""
-        data = """
-Engine settings
----------------
-class = FooEngine
-module = fooengine.py
-timestep = 0.5
-extra = 100
-"""
+        data = _read_raw_settings('external-engine.rst')
         correct = {'engine': {'class': 'FooEngine',
                               'module': 'fooengine.py',
                               'timestep': 0.5,
@@ -270,7 +239,7 @@ extra = 100
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         fooengine = create_engine(settings)
-        self.assertEqual(fooengine.delta_t,
+        self.assertEqual(fooengine.timestep,
                          correct['engine']['timestep'])
         self.assertEqual(fooengine.extra,  # pylint: disable=no-member
                          correct['engine']['extra'])
@@ -309,7 +278,7 @@ extra = 100
                 create_engine(settings)
 
     def test_internal_engine(self):
-        """Test that we can load all internal engines"""
+        """Test that we can load all internal engines."""
         klass, test_data, correct = [], [], []
         klass.append(Verlet)
         test_data.append('Engine\n'
@@ -356,7 +325,7 @@ extra = 100
             settings = _test_correct_parsing(self, data, corr)
             engine = create_engine(settings)
             self.assertIsInstance(engine, cls)
-            self.assertAlmostEqual(engine.delta_t,
+            self.assertAlmostEqual(engine.timestep,
                                    corr['engine']['timestep'])
             for key, val in corr['engine'].items():
                 if hasattr(engine, key):
@@ -368,31 +337,30 @@ class KeywordOrderPrameter(unittest.TestCase):
 
     def test_load_orderparameter(self):
         """Test loading of external order parameter."""
-        data = """
-Orderparameter
---------------
-class = FooOrderParameter
-module = fooorderparameter.py
-name = Dummy"""
-        correct = {'orderparameter': {'class': 'FooOrderParameter',
-                                      'module': 'fooorderparameter.py',
-                                      'name': 'Dummy'}}
-        settings = _test_correct_parsing(self, data, correct)
+        data = [
+            'Orderparameter',
+            '--------------',
+            'class = FooOrderParameter',
+            'module = fooorderparameter.py',
+            'name = Dummy'
+        ]
+        correct = {
+            'orderparameter': {
+                'class': 'FooOrderParameter',
+                'module': 'fooorderparameter.py',
+                'name': 'Dummy'
+            }
+        }
+        settings = _test_correct_parsing(self, '\n'.join(data), correct)
         # Here we add the exe-path key to the settings to tell
         # PyRETIS where we are executing from. This is to locate the
         # script we want to run.
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         orderp = create_orderparameter(settings)
-
-        def extra_function(args):
-            """Dummy function for testing."""
-            return args
-        added = orderp.add_orderparameter(extra_function)
-        self.assertTrue(added)
-        self.assertIs(orderp.extra[0], extra_function)
-        # check that we can't add something that's not callable
-        added = orderp.add_orderparameter('dummy')
-        self.assertFalse(added)
+        self.assertEqual(
+            correct['orderparameter']['class'],
+            orderp.__class__.__name__,
+        )
 
     def test_fail_orderparameter(self):
         """Test that loading external order parameters fails."""
@@ -414,18 +382,67 @@ name = Dummy"""
     def test_create_orderparameter(self):
         """Test that we can create internal order parameters."""
         test_data = _read_raw_settings('internal-order.rst')
-        klass = [OrderParameter,
-                 OrderParameterPosition,
-                 OrderParameterDistance]
+        klass = [
+            OrderParameter,
+            Position,
+            Velocity,
+            PositionVelocity,
+            Distance,
+            Distancevel,
+            DistanceVelocity,
+            Angle,
+            Dihedral,
+        ]
         correct = {
-            'orderparameter': {'class': 'OrderParameter', 'name': 'test'},
-            'collective-variable': [{'class': 'OrderParameterPosition',
-                                     'name': 'Position',
-                                     'index': 0, 'dim': 'x',
-                                     'periodic': False},
-                                    {'class': 'OrderParameterDistance',
-                                     'name': 'My distance',
-                                     'index': (100, 101), 'periodic': False}],
+            'orderparameter': {
+                'class': 'OrderParameter',
+                'name': 'test'
+            },
+            'collective-variable':
+                [
+                    {
+                        'class': 'Position',
+                        'name': 'Position',
+                        'index': 0, 'dim': 'x',
+                        'periodic': False
+                    },
+                    {
+                        'class': 'Velocity',
+                        'name': 'Velocity',
+                        'index': 0, 'dim': 'x',
+                    },
+                    {
+                        'class': 'PositionVelocity',
+                        'name': 'PositionVelocity',
+                        'index': 0, 'dim': 'x',
+                        'periodic': True
+                    },
+                    {
+                        'class': 'Distance',
+                        'name': 'My distance',
+                        'index': (100, 101), 'periodic': False
+                    },
+                    {
+                        'class': 'Distancevel',
+                        'name': 'My distance Velocity',
+                        'index': (102, 103), 'periodic': True
+                    },
+                    {
+                        'class': 'DistanceVelocity',
+                        'name': 'My distance Position Velocity',
+                        'index': (1001, 1002), 'periodic': True
+                    },
+                    {
+                        'class': 'Angle',
+                        'name': 'Angle',
+                        'index': (1001, 1002, 1003), 'periodic': True
+                    },
+                    {
+                        'class': 'Dihedral',
+                        'name': 'Dihedral',
+                        'index': (1001, 1002, 1003, 1004), 'periodic': True
+                    },
+                ],
         }
         raw = _parse_sections(test_data.split('\n'))
         settings = _parse_all_raw_sections(raw)
@@ -437,7 +454,7 @@ name = Dummy"""
             for key, val in setting.items():
                 self.assertEqual(val, corr[key])
         order = create_orderparameter(settings)
-        for i, j in zip(order.order_parameters(), klass):
+        for i, j in zip(order.order_parameters, klass):
             self.assertIsInstance(i, j)
 
 
@@ -446,16 +463,7 @@ class KeywordParticles(unittest.TestCase):
 
     def test_lattice(self):
         """Test initialisation on a lattice."""
-        data = """
-Particles
----------
-position = {'generate': 'fcc',
-            'repeat': [6, 6, 6],
-            'lcon': 1.0}
-
-System
-------
-units = lj"""
+        data = _read_raw_settings('settings-lattice.rst')
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [6, 6, 6],
                                               'lcon': 1.0}},
@@ -475,17 +483,7 @@ units = lj"""
 
     def test_lattice_type(self):
         """Test initialisation on a lattice with types."""
-        data = """
-Particles
----------
-position = {'generate': 'fcc',
-            'repeat': [3, 3, 3],
-            'lcon': 1.0}
-type = [0, 1]
-
-System
-------
-units = lj"""
+        data = _read_raw_settings('settings-lattice-type.rst')
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'lcon': 1.0},
@@ -503,15 +501,7 @@ units = lj"""
 
     def test_lattice_dens(self):
         """Test initialisation on a lattice with density set."""
-        data = """
-Particles
----------
-position = {'generate': 'fcc',
-            'repeat': [3, 3, 3],
-            'density': 0.9}
-System
-------
-units = lj"""
+        data = _read_raw_settings('settings-lattice-dens.rst')
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'density': 0.9}},
@@ -531,18 +521,7 @@ units = lj"""
 
     def test_lattice_dens_lcon(self):
         """Test initialisation on a lattice with density and lcon set."""
-        data = """
-Particles
----------
-position = {'generate': 'fcc',
-            'repeat': [3, 3, 3],
-            'density': 0.9,
-            'lcon': 1000.}
-
-
-System
-------
-units = lj"""
+        data = _read_raw_settings('settings-lattice-dens-lcon.rst')
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'density': 0.9,
@@ -561,19 +540,7 @@ units = lj"""
 
     def test_lattice_and_mass(self):
         """Test initialisation on a lattice and setting of masses/types."""
-        data = """
-Particles
----------
-position = {'generate': 'fcc',
-            'repeat': [3, 3, 3],
-            'lcon': 1.0}
-type = [0, 1]
-name = ['Ar', 'Kr']
-mass = {'Ar': 1.0}
-
-System
-------
-units = lj"""
+        data = _read_raw_settings('settings-lattice-mass.rst')
         correct = {'particles': {'position': {'generate': 'fcc',
                                               'repeat': [3, 3, 3],
                                               'lcon': 1.},
@@ -594,20 +561,8 @@ units = lj"""
                 self.assertAlmostEqual(particles.mass[i][0], 2.09767698)
 
     def test_inconsistent_dimlattice(self):
-        """Test initialisation on a lattice with inconsistent dims."""
-        data = """
-Particles
----------
-position = {'generate': 'sq',
-            'repeat': [6, 6],
-            'lcon': 1.0}
-name = ['Ar']
-mass = {'Ar': 1.0}
-
-System
-------
-dimensions = 3
-units = lj"""
+        """Test initialisation on a lattice with inconsistent dimensions."""
+        data = _read_raw_settings('settings-lattice-dims.rst')
         correct = {'particles': {'position': {'generate': 'sq',
                                               'repeat': [6, 6],
                                               'lcon': 1.},
@@ -658,7 +613,7 @@ units = lj"""
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         particles, size, vel_read = create_initial_positions(settings)
         self.assertTrue(vel_read)
-        self.assertTrue(np.allclose(size['length'], [2., 2., 2.]))
+        self.assertTrue(np.allclose(size['cell'], [2., 2., 2.]))
         correct_pos = np.array([[0., 0., 0.], [0.05, 0.05, 0.05],
                                 [0.05, 0.05, 0.], [0.05, 0., 0.05],
                                 [0., 0.05, 0.05]])
@@ -724,14 +679,7 @@ class KeywordForcefield(unittest.TestCase):
 
     def test_potential_parse(self):
         """Test creation of potentials while parsing input."""
-        data = """
-Potential
----------
-class = PairLennardJonesCut
-shift = False
-mixing = geometric
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
-parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
+        data = _read_raw_settings('settings-potential1.rst')
         correct = {'potential': [{'class': 'PairLennardJonesCut',
                                   'shift': False, 'mixing': 'geometric',
                                   'parameter': {0: {'sigma': 1.0,
@@ -745,7 +693,7 @@ parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
         self.assertIsInstance(potentials[0], PairLennardJonesCut)
         self.assertEqual(potentials[0].shift,
                          correct['potential'][0]['shift'])
-        # test that we can assign parameters
+        # Test that we can assign parameters:
         for pot, params in zip(potentials, pot_par):
             pot.set_parameters(params)
         potparam = potentials[0].params
@@ -769,17 +717,7 @@ parameter 1 = {'sigma': 2.0, 'epsilon': 2.0, 'rcut': 2.5}"""
 
     def test_potential_inconsitentdim(self):
         """Test creation of potentials with inconsistent dims."""
-        data = """
-Potential
----------
-class = PairLennardJonesCut
-shift = True
-parameter 0 = {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}
-#dim = 2
-
-System
-------
-dimensions = 2"""
+        data = _read_raw_settings('settings-potential2.rst')
         correct = {'system': {'dimensions': 2},
                    'potential': [{'class': 'PairLennardJonesCut',
                                   'shift': True,
@@ -806,18 +744,13 @@ dimensions = 2"""
 
     def test_ext_potential(self):
         """Test creation of potentials while parsing input from externals."""
-        data = """
-Potential
----------
-class = FooPotential
-module = foopotential.py
-parameter a = 2.0"""
+        data = _read_raw_settings('settings-ext-potential.rst')
         correct = {'potential': [{'class': 'FooPotential',
                                   'module': 'foopotential.py',
                                   'parameter': {'a': 2.0}}]}
         settings = _test_correct_parsing(self, data, correct)
         self.assertEqual(settings, correct)
-        # add path for testing:
+        # Add path for testing:
         settings['simulation'] = {'exe-path': LOCAL_DIR}
         potentials, pot_param = create_potentials(settings)
         self.assertIsInstance(potentials[0], PotentialFunction)
@@ -828,12 +761,7 @@ parameter a = 2.0"""
 
     def test_ext_potentialfail(self):
         """Test failure of external potential creation."""
-        data = """
-Potential
----------
-class = BarPotential
-module = foopotential.py
-parameter a = 2.0"""
+        data = _read_raw_settings('settings-ext-potential-fail.rst')
         correct = {'potential': [{'class': 'BarPotential',
                                   'module': 'foopotential.py',
                                   'parameter': {'a': 2.0}}]}
@@ -868,6 +796,33 @@ parameter a = 2.0"""
         self.assertIsInstance(forcefield.potential[1], DoubleWellWCA)
         self.assertIsInstance(forcefield.potential[2], PotentialFunction)
 
+    def test_check_for_bullshitt(self):
+        """Test that _check for bullshitt finds the inconsistent settings."""
+        # Insufficient interfaces for TIS/RETIS:
+        settings = {'simulation': {'task': 'tis', 'interfaces': [1]}}
+        with turn_on_logging():
+            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+                _check_for_bullshitt(settings)
+        # Not Sorted interfaces:
+        settings = {'simulation': {'task': 'tis', 'interfaces': [2, 5, 1]}}
+        with turn_on_logging():
+            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+                _check_for_bullshitt(settings)
+        # Wrong interfaces:
+        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
+                    'ensemble': [{'interface': 1}, {'interface': 2},
+                                 {'interface': 4}]}
+        with turn_on_logging():
+            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+                _check_for_bullshitt(settings)
+        # Not sorted:
+        settings = {'simulation': {'task': 'tis', 'interfaces': [1, 2, 3]},
+                    'ensemble': [{'interface': 1}, {'interface': 3},
+                                 {'interface': 2}]}
+        with turn_on_logging():
+            with self.assertLogs('pyretis.inout.settings', level='CRITICAL'):
+                _check_for_bullshitt(settings)
+
     def test_too_many(self):
         """Test what happens when we add too many potentials."""
         settings = {
@@ -901,7 +856,7 @@ parameter a = 2.0"""
         settings = parse_settings_file(inputfile)
         txt = settings_to_text(settings)
         to_find = ['RETIS EXAMPLE FOR TESTING',
-                   'TIS settings', 'RETIS settings']
+                   'TIS', 'RETIS']
         found = [False for _ in to_find]
         for lines in txt.split('\n'):
             for i, key in enumerate(to_find):
@@ -915,17 +870,25 @@ parameter a = 2.0"""
         """Test that we can write settings to a file."""
         inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
         settings = parse_settings_file(inputfile)
-        out_file = os.path.join(LOCAL_DIR, '_pyretis_settings_temp.rst')
-        _remove_file(out_file)
-        write_settings_file(settings, out_file)
-        out_file = os.path.join(LOCAL_DIR, '_pyretis_settings_temp.rst')
-        write_settings_file(settings, out_file, backup=True)
-        settings2 = parse_settings_file(out_file)
-        _remove_file(out_file)
-        _remove_file(out_file + '_000')
+        settings2 = None
+        with tempfile.TemporaryDirectory() as tempdir:
+            out_file = os.path.join(tempdir, '_pyretis_settings_temp.rst')
+            # Check that we can write a file:
+            write_settings_file(settings, out_file)
+            self.assertTrue(os.path.isfile(out_file))
+            # Check that we can write a file and backup:
+            write_settings_file(settings, out_file, backup=True)
+            out_file2 = '{}_000'.format(out_file)
+            settings2 = parse_settings_file(out_file)
+            self.assertTrue(os.path.isfile(out_file2))
         for key, val in settings.items():
-            self.assertTrue(key in settings2)
-            self.assertEqual(val, settings2[key])
+            if key != 'ensemble':
+                self.assertTrue(key in settings2)
+                self.assertEqual(val, settings2[key])
+                self.assertTrue(key in settings2['ensemble'][0])
+                self.assertTrue(key in settings['ensemble'][2])
+                self.assertTrue(key in settings2['ensemble'][2])
+                self.assertEqual(val, settings2[key])
 
     def test_clean_settings(self):
         """Test that we can clean settings."""
@@ -938,6 +901,23 @@ parameter a = 2.0"""
         self.assertFalse('junk' in settings_c)
         self.assertFalse('junk' in settings_c['system'])
         self.assertFalse('box' in settings_c)
+
+
+class KeywordEnsemble(unittest.TestCase):
+    """Test ensemble and setting keywords."""
+
+    def test_fill_up_tis_and_retis_settings(self):
+        """Test if ensembles are correctly generated."""
+        inputfile = os.path.join(LOCAL_DIR, 'settings-retis.rst')
+        settings = parse_settings_file(inputfile)
+
+        self.assertEqual(settings['ensemble'][5]['retis'], settings['retis'])
+        self.assertEqual(settings['ensemble'][2]['box'], settings['box'])
+        self.assertEqual(
+            settings['ensemble'][1]['collective-variable'][5]['name'],
+            'Bugno'
+        )
+        self.assertEqual(len(settings['ensemble']), 8)
 
 
 if __name__ == '__main__':

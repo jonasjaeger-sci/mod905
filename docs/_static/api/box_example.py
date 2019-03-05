@@ -4,7 +4,7 @@
 """Example of creating a lattice and making a box."""
 from pyretis.core import create_box
 from pyretis.tools import generate_lattice
-from pyretis.inout.writers.xyzio import write_xyz_file
+from pyretis.inout.formats.xyz import write_xyz_file
 
 xyz, size = generate_lattice('diamond', [2, 2, 2], lcon=3.567)
 write_xyz_file('diamond_small.xyz', xyz, names=['C']*len(xyz))

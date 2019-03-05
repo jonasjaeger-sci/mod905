@@ -1,4 +1,4 @@
-#     Step    No. acc  No. shoot l m r  Length Acc Mc            Min-O            Max-O Idx-Min Idx-Max          O-shoot  Idx-sh Idx-shN
+#     Step    No.-acc  No.-shoot l m r  Length Acc Mc            Min-O            Max-O Idx-Min Idx-Max          O-shoot  Idx-sh Idx-shN
          0          1          0 R M R    6080 ACC ki -1.149162857e+00 -8.996258782e-01     605    6079  0.000000000e+00       0       0
          1          2          0 R M R     765 ACC s+ -1.115267156e+00 -8.993901951e-01     341     764  0.000000000e+00       0       0
          2          3          1 R M R     797 ACC sh -1.119699875e+00 -8.995555186e-01     406     796 -1.048220852e+00     529     220

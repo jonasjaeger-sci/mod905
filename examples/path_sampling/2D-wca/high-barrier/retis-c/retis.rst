@@ -15,7 +15,7 @@ temperature = 1.0
 
 Box
 ---
-length = [5.9761430466719681, 5.9761430466719681]
+cell = [5.9761430466719681, 5.9761430466719681]
 periodic = [True, True]
 
 Engine
@@ -74,7 +74,7 @@ parameter height = 15.0
 parameter width = 0.5
 
 Orderparameter
----------------
+--------------
 class = WCAOrderParameter
 index = (0, 1)
 module = ../c-for-python3/wcafunctions.py

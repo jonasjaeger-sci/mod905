@@ -3,7 +3,7 @@
 The Forcefield section
 ======================
 
-The force field section defines the force field
+The ``forcefield`` section defines the force field
 to use for the simulation.
 
 .. pyretis-input-example:: Forcefield
@@ -29,7 +29,7 @@ For the Forcefield section the following keywords can be set:
 .. _table-keywords-forcefield:
 
 .. table:: Keywords for the Forcefield section.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +------------------+-------------------------------------------------------+
    | Keyword          | Description                                           |

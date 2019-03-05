@@ -3,10 +3,13 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """The Langevin integrator implemented in FORTRAN."""
 import logging
+import os
+import sys
 import numpy as np
 from pyretis.engines import MDEngine
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     from vvintegrator import vvintegrator
 except ImportError:
@@ -26,17 +29,18 @@ class LangevinF(MDEngine):
 
     Attributes
     ----------
-    delta_t : float
+    timestep : float
         The time step.
     gamma : float
         The gamma parameter for the Langevin integrator.
     high_friction : boolean
         Determines if we are in the high_friction limit and should
         do the over-damped version.
+
     """
 
     def __init__(self, timestep, gamma, high_friction, seed):
-        """Initiate the Velocity Verlet integrator.
+        """Set up the Velocity Verlet integrator.
 
         Parameters
         ----------
@@ -48,6 +52,7 @@ class LangevinF(MDEngine):
             Determines if we should do overdamped or not.
         seed : integer
             A seed for the random number generator.
+
         """
         super().__init__(timestep, 'The Langevin integrator (FORTRAN)',
                          dynamics='stochastic')
@@ -63,24 +68,25 @@ class LangevinF(MDEngine):
         vvintegrator.seed_random_generator(seeds)
 
     def _initiate_parameters(self, system):
-        """Initiate Langevin parameters
+        """Set up Langevin parameters.
 
         Parameters
         ----------
         system : object like :py:class:`.System`
             The system to integrate/act on. Assumed to have a particle
             list in `system.particles`.
+
         """
         beta = system.temperature['beta']
         imasses = system.particles.imass
         if self.high_friction:
-            self.param_high['sigma'] = np.sqrt(2.0 * self.delta_t *
+            self.param_high['sigma'] = np.sqrt(2.0 * self.timestep *
                                                imasses/(beta * self.gamma))
-            self.param_high['bddt'] = self.delta_t * imasses / self.gamma
+            self.param_high['bddt'] = self.timestep * imasses / self.gamma
         else:
-            gammadt = self.gamma * self.delta_t
+            gammadt = self.gamma * self.timestep
             exp_gdt = np.exp(-gammadt)
-            s11 = ((self.delta_t * imasses / (beta * self.gamma)) *
+            s11 = ((self.timestep * imasses / (beta * self.gamma)) *
                    (2. - (3. - 4. * exp_gdt + exp_gdt**2) / gammadt))
             sig_r = np.sqrt(s11)
             s22 = (1.0 - exp_gdt**2) * imasses / beta
@@ -95,10 +101,10 @@ class LangevinF(MDEngine):
             else:
                 c_0, c_1, c_2 = 1.0, 1.0, 0.5
             self.param_iner['c0'] = c_0
-            self.param_iner['a1'] = c_1 * self.delta_t
-            self.param_iner['a2'] = c_2 * self.delta_t**2 * imasses
-            self.param_iner['b1'] = (c_1 - c_2) * self.delta_t * imasses
-            self.param_iner['b2'] = c_2 * self.delta_t * imasses
+            self.param_iner['a1'] = c_1 * self.timestep
+            self.param_iner['a2'] = c_2 * self.timestep**2 * imasses
+            self.param_iner['b1'] = (c_1 - c_2) * self.timestep * imasses
+            self.param_iner['b2'] = c_2 * self.timestep * imasses
 
     def integration_step(self, system):
         """Langevin integration, one time step.
@@ -114,6 +120,7 @@ class LangevinF(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         if self.init_params:
             self._initiate_parameters(system)
@@ -136,6 +143,7 @@ class LangevinF(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         system.force()  # update forces
         particles = system.particles
@@ -147,7 +155,6 @@ class LangevinF(MDEngine):
             self.param_high['sigma']
         )
         system.potential()
-        return None
 
     def integration_step_inertia(self, system):
         """Langevin integration, one time step.
@@ -163,6 +170,7 @@ class LangevinF(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         particles.pos, particles.vel = vvintegrator.inertia1(
@@ -185,4 +193,3 @@ class LangevinF(MDEngine):
             self.param_iner['b2']
         )
         system.potential()
-        return None

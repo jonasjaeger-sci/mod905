@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains a class for a generic force field.
 
-This module defines the class used for representing force field.
+This module defines the class used for representing a force field.
 The forcefield class is built up of potential functions.
 
 Important classes defined here
@@ -13,7 +13,7 @@ ForceField (:py:class:`.ForceField`)
     A class representing a generic Force Field.
 """
 import logging
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -111,7 +111,7 @@ class ForceField:
         -------
         out : None or tuple
             Returns `None` if not potential was removed, otherwise it
-            will return the removed potential and it's parameters.
+            will return the removed potential and its parameters.
 
         """
         if potential in self.potential:
@@ -234,7 +234,7 @@ class ForceField:
         Returns
         -------
         out : string
-            Description of force field and the potential functions
+            Description of the force field and the potential functions
             included in the force field.
 
         """

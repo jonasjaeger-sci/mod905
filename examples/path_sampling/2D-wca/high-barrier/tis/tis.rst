@@ -3,7 +3,7 @@
 
 Simulation
 ----------
-task = tis
+task = tis-multiple
 steps = 1000000
 interfaces = [1.24, 1.34, 1.40, 1.46, 1.52, 1.54, 1.64, 1.74]
 
@@ -15,7 +15,7 @@ temperature = 1.0
 
 Box
 ---
-length = [5.9761430466719681, 5.9761430466719681]
+cell = [5.9761430466719681, 5.9761430466719681]
 periodic = [True, True]
 
 Engine
@@ -70,7 +70,7 @@ parameter width = 0.5
 parameter types = [(1, 1)]
 
 Orderparameter
----------------
+--------------
 class = Distance
 name = B-B distance
 index = (0, 1)

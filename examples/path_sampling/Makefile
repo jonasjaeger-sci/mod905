@@ -10,6 +10,10 @@ clean:
 	find -name \*.restart* -delete
 	find -name \*.log* -delete
 	-rm -rf 1D-double-well/retis/0*
+	-rm -rf 1D-double-well/tis/0*
+	-rm -rf 1D-double-well/tis/flux
+	-rm -rf 1D-double-well/tis-multiple/0*
+	-rm -rf 1D-double-well/tis-multiple/tis-0*.rst
 	-rm -rf gromacs-hydrate/0*
 	-rm -rf cp2k-hydrogen/0*
 	-rm -rf 2D-wca/*/retis-c/0*
@@ -17,3 +21,4 @@ clean:
 	-rm -rf 2D-wca/*/tis/0*
 	find -name \*.tpr -delete
 	find -name \pyretis.mdp -delete
+	find -name EXIT -delete

@@ -13,7 +13,7 @@ PotentialFunction (:py:class:`.PotentialFunction`)
     A class for representing generic potential functions.
 """
 import logging
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -32,8 +32,9 @@ class PotentialFunction:
     dim : int
         Represents the spatial dimensionality of the potential.
     params : dict
-        Contains the parameters. This dict defines on initiation what
-        parameters the potential will handle and store.
+        The parameters for the potential. This dict defines,
+        on initiation, the parameters the potential will handle
+        and store.
 
     """
 
@@ -65,9 +66,7 @@ class PotentialFunction:
         self.check_parameters()
 
     def check_parameters(self):
-        """Check on the consistency of the parameters.
-
-        This can be implemented for the different potential functions.
+        """Check the consistency of the parameters.
 
         Returns
         -------

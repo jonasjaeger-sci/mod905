@@ -4,15 +4,18 @@
 """Test functionality for the PathEnsemble classes."""
 import logging
 import os
+import tempfile
 import unittest
-import tarfile
 import numpy as np
-from pyretis.core.path import PathExt, Path
+from pyretis.core.system import System
+from pyretis.core.particles import Particles, ParticlesExt
+from pyretis.core.path import Path
 from pyretis.core.pathensemble import (
     _generate_file_names,
     get_path_ensemble_class,
     PathEnsemble,
     PathEnsembleExt,
+    generate_ensemble_name,
 )
 from pyretis.core.random_gen import MockRandomGenerator
 from pyretis.inout.common import make_dirs
@@ -46,20 +49,30 @@ def remove_dirs():
             pass
 
 
+def make_system(order, pos, vel, vpot, ekin, internal=True):
+    """Create a system for testing."""
+    system = System()
+    if internal:
+        system.particles = Particles(dim=3)
+    else:
+        system.particles = ParticlesExt(dim=3)
+    system.order = order
+    system.particles.set_pos(pos)
+    system.particles.set_vel(vel)
+    system.particles.vpot = vpot
+    system.particles.ekin = ekin
+    return system
+
+
 def make_fake_extpath(length=10):
     """Just return a fake path for testing."""
     rgen = MockRandomGenerator(seed=0)
-    path = PathExt(rgen)
+    path = Path(rgen)
     for i in range(length):
         filename = os.path.join(DIR_NAME, FILE_NAME.format(i))
-        phasepoint = {
-            'order': [i],
-            'pos': (filename, i),
-            'vel': False,
-            'vpot': 0.0,
-            'ekin': 0.0
-        }
-        path.append(phasepoint)
+        path.append(
+            make_system([i], (filename, i), False, 0.0, 0.0, internal=False)
+        )
     return path
 
 
@@ -68,38 +81,31 @@ def make_fake_path(length=10):
     rgen = MockRandomGenerator(seed=0)
     path = Path(rgen)
     for i in range(length):
-        phasepoint = {
-            'order': [i],
-            'pos': np.ones((5, 3)) * i,
-            'vel': np.ones((5, 3)) * i,
-            'vpot': 0.0,
-            'ekin': 0.0
-        }
-        path.append(phasepoint)
+        path.append(
+            make_system([i], np.ones((5, 3)) * i,
+                        np.ones((5, 3)) * i, 0.0, 0.0)
+        )
     path.generated = ('fake',)
     return path
 
 
-def make_fake_path_files():
-    """Return a fake path and set up some files for it."""
+def make_fake_path_files(dirname):
+    """Return a fake path and generate files for it."""
     rgen = MockRandomGenerator(seed=0)
-    path = PathExt(rgen)
-    for name in (os.path.join(HERE, 'fake_path_1'),
-                 os.path.join(HERE, 'fake_path_2')):
-        with open(name, 'w') as output:
+    path = Path(rgen)
+    for name in ('fake_path_1', 'fake_path_2'):
+        filename = os.path.join(dirname, name)
+        with open(filename, 'w') as output:
             output.write('Ibsens ripsbusker og andre buskevekster\n')
-            output.write(name)
+            output.write(filename)
     for i in range(10):
         if i < 5:
-            filename = os.path.join(HERE, 'fake_path_1')
+            filename = os.path.join(dirname, 'fake_path_1')
         else:
-            filename = os.path.join(HERE, 'fake_path_2')
-        phasepoint = {
-            'order': [i],
-            'pos': (filename, i),
-            'vel': False, 'vpot': 0.0, 'ekin': 0.0,
-        }
-        path.append(phasepoint)
+            filename = os.path.join(dirname, 'fake_path_2')
+        path.append(
+            make_system([i], (filename, i), False, 0.0, 0.0, internal=False)
+        )
     path.generated = ('fake',)
     return path
 
@@ -108,8 +114,8 @@ def remove_path_files(path):
     """Remove the files for a trajectory."""
     # Just remove the files:
     names = set()
-    for i in path.trajectory():
-        names.add(i['pos'][0])
+    for i in path.phasepoints:
+        names.add(i.particles.get_pos()[0])
     for name in names:
         _remove_file(name)
 
@@ -130,21 +136,22 @@ class MethodsTest(unittest.TestCase):
         path = make_fake_extpath()
         new_dir = os.path.abspath(os.path.join('new', 'target'))
         new_pos, source = _generate_file_names(path, new_dir)
-        for i, (point, pointn) in enumerate(zip(path.trajectory(), new_pos)):
+        for i, (point, pointn) in enumerate(zip(path.phasepoints, new_pos)):
             self.assertEqual(i, pointn[1])
-            self.assertEqual(point['pos'][1], pointn[1])
-            path1 = os.path.dirname(point['pos'][0])
+            self.assertEqual(point.particles.get_pos()[1], pointn[1])
+            path1 = os.path.dirname(point.particles.get_pos()[0])
             path2 = os.path.dirname(pointn[0])
             self.assertEqual(path1, DIR_NAME)
             self.assertEqual(path2, new_dir)
-            self.assertTrue(point['pos'][0] in source)
-            target = source[point['pos'][0]]
+            self.assertTrue(point.particles.get_pos()[0] in source)
+            target = source[point.particles.get_pos()[0]]
             self.assertEqual(target, pointn[0])
         new_pos2, _ = _generate_file_names(path, new_dir, prefix='prefix-')
         for i, point in enumerate(new_pos2):
-            file1 = os.path.basename(point[0])
-            file2 = 'prefix-{}'.format(FILE_NAME.format(i))
-            self.assertEqual(file1, file2)
+            self.assertEqual(
+                os.path.basename(point[0]),
+                'prefix-{}'.format(FILE_NAME.format(i)),
+            )
 
     def test_get_class(self):
         """Test that we get the correct class."""
@@ -154,6 +161,16 @@ class MethodsTest(unittest.TestCase):
         self.assertTrue(klass2 is PathEnsembleExt)
         with self.assertRaises(ValueError):
             get_path_ensemble_class('Pretty fly for a whity guy')
+
+    def test_generate_ensemble_name(self):
+        """Test that we can generate names for directories."""
+        name = generate_ensemble_name(5, zero_pad=3)
+        self.assertEqual(name, '005')
+        name = generate_ensemble_name(2, zero_pad=6)
+        self.assertEqual(name, '000002')
+        for i in (-1, 0, 1, 2):
+            name = generate_ensemble_name(1, zero_pad=i)
+            self.assertEqual(name, '001')
 
 
 class PathEnsembleTest(unittest.TestCase):
@@ -178,12 +195,16 @@ class PathEnsembleTest(unittest.TestCase):
         for i in ensemble1.directories():
             self.assertTrue(i is None)
             j += 1
-        self.assertEqual(j, 1)
+        self.assertEqual(j, 4)
         j = 0
-        for i in ensemble2.directories():
-            self.assertEqual(i, os.path.join(DIR_NAME, '000'))
+        dirs = [i for i in ensemble2.directories()]
+        self.assertTrue(os.path.join(DIR_NAME, '000') in dirs)
+        j += 1
+        for i in ('accepted', 'generate', 'traj'):
+            testname = os.path.join(DIR_NAME, '000', i)
+            self.assertTrue(testname in dirs)
             j += 1
-        self.assertEqual(j, 1)
+        self.assertEqual(j, 4)
 
     def test_update_dir(self):
         """Test that we can update directories."""
@@ -200,18 +221,18 @@ class PathEnsembleTest(unittest.TestCase):
     def test_add_path(self):
         """Test adding of paths and reset."""
         ensemble = PathEnsemble(1, [-1, 0, 1], detect=0, maxpath=10)
-        # Add a path
+        # Add a path:
         path = make_fake_path(length=10)
         ensemble.add_path_data(path, 'ACC', cycle=0)
         self.assertEqual(ensemble.nstats['npath'], 1)
         self.assertEqual(ensemble.nstats['ACC'], 1)
         self.assertTrue(path is ensemble.last_path)
-        # Add empty path
+        # Add an empty path:
         ensemble.add_path_data(None, 'KOB', cycle=1)
         self.assertEqual(ensemble.nstats['npath'], 2)
         self.assertEqual(ensemble.nstats['KOB'], 1)
         self.assertTrue(path is ensemble.last_path)
-        # Add for shooting move
+        # Add for a shooting move:
         path = make_fake_path(length=3)
         path.generated = ('sh', 1, 2, 3)
         ensemble.add_path_data(path, 'ACC', cycle=2)
@@ -228,7 +249,7 @@ class PathEnsembleTest(unittest.TestCase):
     def test_looping(self):
         """Test adding of paths and looping."""
         ensemble = PathEnsemble(1, [-1, 0, 1], detect=0, maxpath=20)
-        correct = []  # store correct lengths
+        correct = []  # For storing the correct lengths.
         for i in range(5):
             correct.append(10 + i)
             path = make_fake_path(length=10+i)
@@ -266,8 +287,9 @@ class PathEnsembleTest(unittest.TestCase):
         rgen = MockRandomGenerator(seed=0)
         empty_path = Path(rgen)
         ensemble2.load_restart_info(empty_path, info)
-        # Note we do not force interfaces when loading restart,
-        # here, just check that nstats were correctly loaded:
+        # Note we do not force interfaces when loading restart
+        # information, here, just check that nstats were
+        # correctly loaded:
         for key, val in ensemble.nstats.items():
             self.assertEqual(val, ensemble2.nstats[key])
 
@@ -309,125 +331,115 @@ class PathEnsembleExtTest(unittest.TestCase):
 
     def test_move_path(self):
         """Test that we can move paths."""
-        ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=HERE)
-        for name in ens.list_superfluous():
-            os.remove(name)
-        path = make_fake_path_files()
-        # Add a file so that we will have to overwrite it:
-        target = os.path.join(HERE, '001', 'accepted', 'fake_path_2')
-        with open(target, 'w') as output:
-            output.write('Blekkulf, er du der?')
-        # And add a file we don't need:
-        target = os.path.join(HERE, '001', 'accepted', 'extra-file')
-        with open(target, 'w') as output:
-            output.write('Takpapp, veggpapp, gulvpapp, tapet')
-        file_paths = []
-        for i in path.trajectory():
-            if not i['pos'][0] in file_paths:
-                file_paths.append(i['pos'][0])
-        ens.add_path_data(path, 'ACC', cycle=0)
-        file_paths2 = []
-        for i in path.trajectory():
-            if not i['pos'][0] in file_paths2:
-                file_paths2.append(i['pos'][0])
-        for i, j in zip(file_paths, file_paths2):
-            pre = os.path.commonprefix([i, j])
-            name = os.path.basename(i)
-            self.assertEqual(os.path.basename(i), os.path.basename(j))
-            self.assertEqual(os.path.join(pre, '001', 'accepted', name), j)
-            self.assertEqual(os.path.join(pre, name), i)
-        # Force move path when source and target are the same
-        ens.add_path_data(path, 'ACC', cycle=0)
-        remove_path_files(path)
+        with tempfile.TemporaryDirectory() as tempdir:
+            ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=tempdir)
+            for i in ens.directories():
+                make_dirs(i)
+            for name in ens.list_superfluous():
+                os.remove(name)
+            path = make_fake_path_files(tempdir)
+            # Add a file so that we will have to overwrite it:
+            target = os.path.join(tempdir, '001', 'accepted', 'fake_path_2')
+            with open(target, 'w') as output:
+                output.write('Blekkulf, er du der?')
+            # And add a file we don't need:
+            target = os.path.join(tempdir, '001', 'accepted', 'extra-file')
+            with open(target, 'w') as output:
+                output.write('Takpapp, veggpapp, gulvpapp, tapet')
+            file_paths = []
+            for i in path.phasepoints:
+                file_paths.append(i.particles.get_pos()[0])
+            # Add the file as accepted. This will move it:
+            ens.add_path_data(path, 'ACC', cycle=0)
+            file_paths2 = []
+            for i in path.phasepoints:
+                file_paths2.append(i.particles.get_pos()[0])
+            for i, j in zip(file_paths, file_paths2):
+                # Check that files were moved:
+                self.assertNotEqual(i, j)
+                self.assertFalse(os.path.isfile(i))
+                self.assertTrue(os.path.isfile(j))
+                # Check that we did not alter the base name:
+                self.assertEqual(os.path.basename(i), os.path.basename(j))
+                # Check that files were moved into the accepted folder:
+                target = os.path.join(
+                    ens.directory['accepted'], os.path.basename(j)
+                )
+                self.assertEqual(j, target)
+            # Force move path, when source and target are the same:
+            ens.add_path_data(path, 'ACC', cycle=0)
 
     def test_move_to_generated(self):
         """Test that we can move a path to the generated folder."""
-        ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=HERE)
-        path = make_fake_path_files()
-        for i in path.trajectory():
-            self.assertTrue(os.path.isfile(i['pos'][0]))
-        ens.add_path_data(path, 'ACC', cycle=0)
-        ens.move_path_to_generated(path, prefix='gen_')
-        for i in path.trajectory():
-            base = os.path.basename(i['pos'][0])
-            name = os.path.join(HERE, '001', 'generate', base)
-            self.assertEqual(name, i['pos'][0])
-        for i in path.trajectory():
-            self.assertTrue(os.path.isfile(i['pos'][0]))
-        remove_path_files(path)
+        with tempfile.TemporaryDirectory() as tempdir:
+            ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=tempdir)
+            for i in ens.directories():
+                make_dirs(i)
+            path = make_fake_path_files(tempdir)
+            # Check that generated files exists:
+            for i in path.phasepoints:
+                self.assertTrue(os.path.isfile(i.particles.get_pos()[0]))
+            # Add to path ensemble (and move to the accepted folder):
+            ens.add_path_data(path, 'ACC', cycle=0)
+            for i in path.phasepoints:
+                target = os.path.join(
+                    tempdir, ens.directory['accepted'],
+                    os.path.basename(i.particles.get_pos()[0])
+                )
+                # After the move, these names should be equal:
+                self.assertEqual(target, i.particles.get_pos()[0])
+            ens.move_path_to_generated(path, prefix='gen_')
+            # Check that files were moved to the generated folder:
+            for i in path.phasepoints:
+                self.assertTrue(os.path.isfile(i.particles.get_pos()[0]))
+                target = os.path.join(
+                    tempdir, ens.directory['generate'],
+                    os.path.basename(i.particles.get_pos()[0])
+                )
+                self.assertEqual(target, i.particles.get_pos()[0])
 
     def test_copy_path(self):
         """Test that we can copy a path."""
-        ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=HERE)
-        path = make_fake_path_files()
-        ens.add_path_data(path, 'ACC', cycle=0)
-        target_dir = ens.directory['path-ensemble']
-        path_copy = ens._copy_path(  # pylint: disable=protected-access
-            path,
-            target_dir,
-            prefix='copy_'
-        )
-        for i in path_copy.trajectory():
-            base = os.path.basename(i['pos'][0])
-            name = os.path.join(HERE, '001', base)
-            self.assertEqual(name, i['pos'][0])
-        for i in path_copy.trajectory():
-            self.assertTrue(os.path.isfile(i['pos'][0]))
-        remove_path_files(path)
-        remove_path_files(path_copy)
+        with tempfile.TemporaryDirectory() as tempdir:
+            ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=tempdir)
+            for i in ens.directories():
+                make_dirs(i)
+            path = make_fake_path_files(tempdir)
+            ens.add_path_data(path, 'ACC', cycle=0)
+            target_dir = ens.directory['path-ensemble']
+            path_copy = ens._copy_path(  # pylint: disable=protected-access
+                path,
+                target_dir,
+                prefix='copy_'
+            )
+            # Check that files were copied:
+            for i in path_copy.phasepoints:
+                self.assertTrue(os.path.isfile(i.particles.get_pos()[0]))
+            # Check that original files remains:
+            for i in path.phasepoints:
+                self.assertTrue(os.path.isfile(i.particles.get_pos()[0]))
 
     def test_restart(self):
         """Test that we can write/read restart info."""
-        ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=HERE)
-        path = make_fake_path_files()
-        ens.add_path_data(path, 'ACC', cycle=0)
-        info = ens.restart_info()
-        rgen = MockRandomGenerator(seed=0)
-        empty_path = PathExt(rgen)
-        ens2 = PathEnsembleExt(2, [-1., 0.5, 1.], exe_dir=HERE)
-        # Note that this will NOT copy any paths, just set some path
-        # names. We just check that we get a warning about this:
-        logging.disable(logging.INFO)
-        with self.assertLogs('pyretis.core.pathensemble', level='CRITICAL'):
-            ens2.load_restart_info(empty_path, info, cycle=0)
-        logging.disable(logging.CRITICAL)
-        remove_path_files(path)
-        remove_path_files(empty_path)
-
-    def test_generate_output(self):
-        """Test that we can generate output."""
-        ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=HERE)
-        tar = ens._traj_file  # pylint: disable=protected-access
-        _remove_file(tar)
-        self.assertFalse(os.path.isfile(tar))
-        path = make_fake_path_files()
-        cycle = {'step': 0}
-        ens.generate_output(cycle, path)
-        self.assertTrue(os.path.isfile(tar))
-        # read the tar
-        with tarfile.open(tar, 'r') as traj:
-            for entry in traj:
-                lines = traj.extractfile(entry)
-                line = None
-                for line in lines:
-                    pass
-                self.assertEqual(line[-11:].decode('utf-8'), entry.name[2:])
-        # Currupt the tar file and try to write again:
-        with open(tar, 'w') as traj:
-            traj.write('Some Men Just Want to Watch The World Burn')
-        ens.generate_output(cycle, path)
-        # Check that we got the back up.
-        tar_backup = '{}_000'.format(tar)
-        self.assertTrue(os.path.isfile(tar_backup))
-        with open(tar_backup, 'r') as traj:
-            lines = None
-            for lines in traj:
-                pass
-            self.assertEqual(lines,
-                             'Some Men Just Want to Watch The World Burn')
-        remove_path_files(path)
-        _remove_file(tar)
-        _remove_file(tar_backup)
+        with tempfile.TemporaryDirectory() as tempdir:
+            ens = PathEnsembleExt(1, [-1., 0., 1.], exe_dir=tempdir)
+            for i in ens.directories():
+                make_dirs(i)
+            path = make_fake_path_files(tempdir)
+            ens.add_path_data(path, 'ACC', cycle=0)
+            info = ens.restart_info()
+            rgen = MockRandomGenerator(seed=0)
+            empty_path = Path(rgen)
+            ens2 = PathEnsembleExt(2, [-1., 0.5, 1.], exe_dir=tempdir)
+            for i in ens2.directories():
+                make_dirs(i)
+            # Note that this will NOT copy any paths, just set some path
+            # names. We just check that we get a warning about this:
+            logging.disable(logging.INFO)
+            with self.assertLogs('pyretis.core.pathensemble',
+                                 level='CRITICAL'):
+                ens2.load_restart_info(empty_path, info, cycle=0)
+            logging.disable(logging.CRITICAL)
 
 
 if __name__ == '__main__':

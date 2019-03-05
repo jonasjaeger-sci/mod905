@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 20000
+steps = 100
 interfaces = [-1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, 0.0]
 
 System
@@ -36,6 +36,11 @@ rescale_energy = False
 sigma_v =  -1
 seed = 0
 initial_path = kick
+
+Initial-path settings
+---------------------
+method = kick
+kick-from = initial
 
 RETIS settings
 --------------

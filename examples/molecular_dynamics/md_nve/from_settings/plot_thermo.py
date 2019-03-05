@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Plot results using matplotlib"""
+"""Plot results using matplotlib."""
 import numpy as np
 from matplotlib import pyplot as plt
 
 
 def make_plot():
     """Create the plot and show it."""
-    plt.style.use('seaborn')
+    plt.style.use('seaborn-poster')
     raw_data = np.loadtxt('thermo.txt')
     data = {}
     for i, key in enumerate(('step', 'temp', 'pot', 'kin', 'tot', 'press')):

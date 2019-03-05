@@ -1,13 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
 make clean
+gmx=${1:-gmx_d}
+echo Using gmx=$gmx
+replace='s/GMXCOMMAND/'$gmx'/g'
+
+gmxversion=$($gmx --version | grep -i "gromacs version")
+echo $gmxversion
+
 cd run-100
-pyretisrun -i retis.rst -p
+sed -e $replace retis.rst > retis-run.rst
+pyretisrun -i retis-run.rst -p
+rm retis-run.rst
 cd ..
+
 cd run-20
-pyretisrun -i retis.rst -p
+sed -e $replace retis.rst > retis-run.rst
+pyretisrun -i retis-run.rst -p
+rm retis-run.rst
 cd ..
+
 python copy_restart_files.py
 cd run-load
-pyretisrun -i retis.rst -p
+sed -e $replace retis.rst > retis-run.rst
+pyretisrun -i retis-run.rst -p
+rm retis-run.rst
 cd ..
+
 python compare.py

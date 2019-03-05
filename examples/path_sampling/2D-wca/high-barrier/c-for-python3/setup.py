@@ -6,6 +6,8 @@ from distutils.core import (  # pylint: disable=no-name-in-module,import-error
     setup,
     Extension,
 )
+import numpy as np
+
 
 WCAORDER = Extension(
     'wcalambda',
@@ -21,4 +23,5 @@ setup(
     name='PyRETIS WCA C extension',
     description='C extensions for the WCA potential.',
     ext_modules=[WCAORDER, WCAFORCE],
+    include_dirs=[np.get_include()],
 )

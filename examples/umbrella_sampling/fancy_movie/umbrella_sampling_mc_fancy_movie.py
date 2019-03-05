@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""
-Animation of umbrella sampling.
-"""
-from pyretis.inout.common import print_to_screen
+"""Animation of umbrella sampling."""
+from matplotlib import pyplot as plt
+from matplotlib import gridspec
+import numpy as np
+import colorama
+from tqdm import tqdm, trange
+from pyretis.inout import print_to_screen
 from pyretis.core import System, RandomGenerator, create_box, Particles
 from pyretis.simulation import UmbrellaWindowSimulation
 from pyretis.forcefield import ForceField
 from pyretis.forcefield.potentials import DoubleWell, RectangularWell
 from pyretis.analysis.histogram import histogram, match_all_histograms
-from matplotlib import pyplot as plt
-import matplotlib.gridspec as gridspec
-import numpy as np
-import colorama
-from tqdm import tqdm, trange
 
 
 UMBRELLA_WINDOWS = [
@@ -26,14 +24,14 @@ UMBRELLA_WINDOWS = [
     [0.3, 0.6],
     [0.5, 1.0]
 ]
-RANDSEED = 1  # seed for random number generator:
-MINCYCLES = 10000  # minimum number of cycles in each window
-MAXDX = 0.1  # maximum allowed displacement in the MC step(s).
+RANDSEED = 1  # Seed for random number generator.
+MINCYCLES = 10000  # Minimum number of cycles in each window.
+MAXDX = 0.1  # Maximum allowed displacement in the MC step(s).
 BINS = 100
 HISTLIM = (-1.2, 1.2)
 FIG_FREQ = 100  # How often we should store figures.
 XLIM = (-1.2, 1.2)
-SCALE_STEPS = 12  # Steps for animating the scaling
+SCALE_STEPS = 12  # Steps for animating the scaling.
 XLIM_POT = (-1.2, 1.2)
 YLIM_POT = (-0.3, 0.05)
 BAR_FMT = {
@@ -49,31 +47,31 @@ BAR_FMT = {
 
 
 def create_system():
-    """Helper method to set up the system."""
-    # Define system with a temperature in K
+    """Set up the system."""
+    # Define system with a temperature in K:
     system = System(temperature=500, units='eV/K',
                     box=create_box(periodic=[False]))
     system.particles = Particles(dim=system.get_dim())
     # We will only have one particle in the system:
     system.add_particle(name='X', pos=np.array([-0.7]))
     # In this particular example, we are going to use
-    # a simple double well potential
+    # a simple double well potential:
     potential_dw = DoubleWell(a=1, b=1, c=0.02)
-    # and a rectangular well potential
+    # And a rectangular well potential:
     potential_rw = RectangularWell()
-    # set up the unbiased force field
+    # Set up the unbiased force field:
     forcefield = ForceField(
         'Double well',
         potential=[potential_dw],
         params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}],
     )
-    # and the biased potential:
+    # Set up the biased potential:
     forcefield_bias = ForceField(
         'Double well with rectangular bias',
         potential=[potential_dw, potential_rw],
         params=[{'a': 1.0, 'b': 1.0, 'c': 0.02}, None]
     )
-    # attach biased force field to the system:
+    # Attach biased force field to the system:
     system.forcefield = forcefield_bias
     return system, forcefield, forcefield_bias
 
@@ -100,23 +98,24 @@ def run_umbrella_simulation(system, settings, rgen):
         True if a move was accepted.
     ener : numpy.array
         The potential energy of the system.
+
     """
-    # Move the bias according to the umbrella
+    # Move the bias according to the umbrella:
     params = {
         'left': settings['umbrella'][0],
         'right': settings['umbrella'][1]
     }
     system.forcefield.update_potential_parameters(
-        system.forcefield.potential[1],  # this is the rectangular well
+        system.forcefield.potential[1],  # This is the rectangular well.
         params
     )
-    system.potential()  # recalculate potential energy
+    system.potential()  # Recalculate potential energy.
     simulation = UmbrellaWindowSimulation(
         system,
         settings['umbrella'],
         settings['over'],
-        rgen,
         settings['maxdx'],
+        rgen=rgen,
         mincycle=settings['mincycle'],
     )
     pos, trial, ener = [], [], []
@@ -132,19 +131,19 @@ def run_umbrella_simulation(system, settings, rgen):
 
 
 def run_simulation(system):
-    """Helper method to run the simulation (all umbrellas)."""
+    """Run the simulation (all umbrellas)."""
     numb = len(UMBRELLA_WINDOWS)
     rgen = RandomGenerator(seed=RANDSEED)
-    trajectory, energy = [], []  # to store all trajectories & energies
+    trajectory, energy = [], []  # To store all trajectories & energies.
     msg = '\nRunning umbrella no: {} of {}. Location: {}'
     # we run all the umbrella simulations by looping over
     # the different umbrellas we defined:
     print_to_screen('Starting simulations:', level='info')
     for i, window in enumerate(UMBRELLA_WINDOWS):
         print_to_screen(msg.format(i + 1, numb, window))
-        # get position that must be crossed:
+        # Get position that must be crossed:
         over = UMBRELLA_WINDOWS[min(i + 1, numb - 1)][0]
-        # collect settings:
+        # Collect settings:
         settings = {
             'umbrella': window,
             'over': over,
@@ -178,6 +177,7 @@ def evaluate_potential(system, forcefield, positions):
     -------
     out : numpy.array
         The potential energy
+
     """
     vpot = []
     for pos in positions:
@@ -205,11 +205,11 @@ def add_potential_plot(axes, system, forcefield):
 
 
 def add_histogram_plots(axes_hist, axes_all_hist, axes_hist_log):
-    """Add histogram plot to the given axes"""
+    """Add histogram plot to the given axes."""
     counts = []
     probs = []
     histlog = []
-    # create empty histogram to get bins etc:
+    # Create empty histogram to get bins etc:
     for _ in range(len(UMBRELLA_WINDOWS)):
         hist, _, bin_mid = histogram([0], bins=BINS, limits=HISTLIM)
         delta_bin = bin_mid[1] - bin_mid[0]
@@ -229,7 +229,7 @@ def add_histogram_plots(axes_hist, axes_all_hist, axes_hist_log):
 
 
 def create_plots(system, forcefield):
-    """Helper method to set up for plotting."""
+    """Set up for plotting."""
     fig = plt.figure()
     grid = gridspec.GridSpec(2, 2)
 
@@ -314,10 +314,10 @@ def update_figure(fig, axes, artist):
 
 
 def plot_trials(fig, axes, plot_obj, system, forcefield, trajectory, energy):
-    """Here we plot the trial moves and corresponding histograms."""
+    """Plot the trial moves and corresponding histograms."""
     tot_step = 0  # Total number of steps done.
-    all_histograms = []  # for storing all histograms
-    all_normed_histograms = []  # for storing all histograms
+    all_histograms = []  # For storing all histograms.
+    all_normed_histograms = []  # For storing all normed histograms.
     print_to_screen('Making plots for windows', level='success')
     for i in trange(len(UMBRELLA_WINDOWS), bar_format=BAR_FMT['window']):
         pos, trial, success = (trajectory[i][0], trajectory[i][1],
@@ -349,7 +349,7 @@ def plot_trials(fig, axes, plot_obj, system, forcefield, trajectory, energy):
                                  store=all_normed_histograms, density=True)
                 update_figure(fig, axes['pot'], plot_obj['scatter'])
                 fig.savefig('frame-{0:03d}-{1:05d}.png'.format(i, j))
-        # add final histograms:
+        # Add final histograms:
         hist1 = update_histogram(pos_so_far, axes['hist'],
                                  plot_obj['counts'][i])
         all_histograms.append(hist1)
@@ -404,7 +404,7 @@ def plot_scalings(fig, axes, plot_obj, system, forcefield, all_histograms):
 
     free = -np.log(hist_avg) / system.temperature['beta']  # free energy
     free -= free.min()
-    # replot potential:
+    # Replot potential:
     pos = np.linspace(-2, 2, 250)
     vpot = evaluate_potential(system, forcefield, pos)
     vpot -= vpot.min()

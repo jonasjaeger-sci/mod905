@@ -4,13 +4,13 @@ Introduction to |pyretis| and rare event methods
 ================================================
 
 |pyretis| is a computational library for performing molecular
-simulations of rare events with focus on transition
+simulations of rare events with a focus on transition
 interface sampling (TIS) [1]_
 and replica exchange transition interface sampling (RETIS) [2]_.
 
 Rare events are called rare because they happen at time or length scales
 much longer than we are able to simulate through brute-force simulations.
-Raindrops forms every day, but compared to the motion of water molecules,
+Raindrops form every day, but compared to the motion of water molecules,
 raindrop formation is rare, and simulating it through brute-force
 simulations would take forever and a day.
 
@@ -25,8 +25,8 @@ Transition Interface Sampling
 
 To explain the basic concepts, we
 consider an illustrative example: The transition
-between two stable states, from the reactant (labelled A) to the product
-(labelled B) as illustrated in :numref:`fig_intro_pot`.
+between two stable states, from the reactant (labeled A) to the product
+(labeled B) as illustrated in :numref:`fig_intro_pot`.
 
 .. _fig_intro_pot:
 
@@ -138,7 +138,7 @@ For TIS [1]_ we choose between two moves:
 
 * The **shooting move** which is adapted from the
   transition path sampling (TPS) shooting algorithm [3]_ [4]_
-  to allow variable trajectory length. In this move we generate
+  to allow variable trajectory length. In this move, we generate
   a new trajectory from an existing trajectory one by:
 
   1. Picking randomly one of the discrete MD steps in the present
@@ -200,11 +200,11 @@ which consist of trajectories that explore the reactant state
     as described in the text.
 
 
-The swapping move  acts between different path simulations. If two
+The swapping move acts between different path simulations. If two
 simulations generate simultaneously two paths that are valid for each
 other's path ensemble, these two paths can be swapped.
 The swapping moves increase with negligible extra computational cost
-the number of accepted paths in the ensembles and decreases significantly the
+the number of accepted paths in the ensembles and decrease significantly the
 correlations between the consecutive paths within the same ensemble. All the
 moves used for generating trajectories are illustrated in :numref:`fig_intro_retis_moves`.
 

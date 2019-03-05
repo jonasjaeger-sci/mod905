@@ -4,6 +4,7 @@
 """A test of the Lennard-Jones pair potential."""
 import logging
 import unittest
+import numpy as np
 from pyretis.core.box import create_box
 from pyretis.core.particles import Particles
 from pyretis.core.system import System
@@ -11,7 +12,6 @@ from pyretis.forcefield.potentials.pairpotentials.lennardjones import (
     PairLennardJonesCut,
     PairLennardJonesCutnp,
 )
-import numpy as np
 logging.disable(logging.CRITICAL)
 
 
@@ -26,7 +26,7 @@ CORRECT_VPOT = 32480.0489507
 
 def create_system_box(use_numpy=False):
     """Create a simple test system."""
-    box = create_box(length=[10, 10, 10])
+    box = create_box(cell=[10, 10, 10])
     system = System(box=box)
     system.particles = Particles(system.get_dim())
     system.add_particle(name='Ar', pos=np.array([1.0, 1.0, 1.0]),

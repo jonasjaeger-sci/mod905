@@ -6,7 +6,7 @@
 This test is comparing the C implementation with the PyRETIS
 implementation.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import unittest
 import itertools
 import numpy as np

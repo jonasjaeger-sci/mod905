@@ -8,10 +8,16 @@ Important classes defined here
 
 SimulationTask (:py:class:`.SimulationTask`)
     A class representing a simulation task.
+
+SimulationTaskList (:py:class:`.SimulationTaskList`)
+    A class for representing a list of simulation tasks. This class
+    defines functionality for adding tasks from a dictionary description.
+
 """
 import logging
 from pyretis.core.common import inspect_function
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.inout.simulationio import Task
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -26,10 +32,10 @@ def _check_args(function, given_args=None, given_kwargs=None):
     ----------
     function : callable
         The function we will inspect.
-    given_args : list
+    given_args : list, optional
         A list of the arguments to pass to the function. 'self' will not
         be considered here since it passed implicitly.
-    given_kwargs : dict
+    given_kwargs : dict, optional
         A dictionary with keyword arguments.
 
     Returns
@@ -70,43 +76,12 @@ def _check_args(function, given_args=None, given_kwargs=None):
     return True
 
 
-def execute_now(step, when):
-    """Determine if a task should be executed or not at this `step`.
-
-    Parameters
-    ----------
-    step : dict of ints
-        Keys are 'step' (current cycle number), 'start' cycle number at
-        start 'stepno' the number of cycles we have performed so far.
-    when : dict
-        This dict determines when the function should be executed.
-
-    Returns
-    -------
-    out : boolean
-        True of the task should be executed.
-
-    """
-    if when is None:
-        return True
-    else:
-        exe = False
-        if 'every' in when:
-            exe = step['stepno'] % when['every'] == 0
-        if not exe and 'at' in when:
-            try:
-                exe = step['step'] in when['at']
-            except TypeError:
-                exe = step['step'] == when['at']
-        return exe
-
-
-class SimulationTask:
+class SimulationTask(Task):
     """Representation of simulation tasks.
 
     This class defines a task object. A task is executed at specific
     points, at regular intervals etc. in a simulation. A task will
-    typically provide a result, but it does not need to. I can simply
+    typically provide a result, but it does not need to. It can simply
     just alter the state of the passed argument(s).
 
     Attributes
@@ -114,7 +89,7 @@ class SimulationTask:
     function : function
         The function to execute.
     when : dict
-        Determines if the task should be executed.
+        Determines when the task should be executed.
     args : list
         List of arguments to the function.
     kwargs : dict
@@ -139,13 +114,13 @@ class SimulationTask:
             List of arguments to the function.
         kwargs : dict, optional
             The keyword arguments to the function.
-        when : dict
+        when : dict, optional
             Determines if the task should be executed.
-        first : boolean
+        result : string, optional
+            This is a label for the result created by the task.
+        first : boolean, optional
             True if this task should be executed before the first
             step of the simulation.
-        result : string
-            This is a label for the result created by the task.
 
         """
         if not callable(function):
@@ -155,10 +130,10 @@ class SimulationTask:
         if not ok_to_add:
             msg = 'Wrong arguments or keyword arguments!'
             raise AssertionError(msg)
+        super().__init__(when)
         self.function = function
         self.args = args
         self.kwargs = kwargs
-        self.when = when
         self._result = result
         self.first = first
 
@@ -182,7 +157,7 @@ class SimulationTask:
         """
         args = self.args
         kwargs = self.kwargs
-        if execute_now(step, self.when):
+        if self.execute_now(step):
             if args is None:
                 if kwargs is None:
                     return self.function()
@@ -192,29 +167,6 @@ class SimulationTask:
             return self.function(*args, **kwargs)
         return None
 
-    def update_when(self, when):
-        """Update self.when to new value(s).
-
-        It will only update `self.when` for the keys given in the
-        input `when`.
-
-        Parameters
-        ----------
-        when : dict
-            This dict contains the settings to update.
-
-        Returns
-        -------
-        out : None
-            Returns `None` but modifies `self.when`.
-
-        """
-        if self.when is None:
-            self.when = when
-        else:
-            for key in when:
-                self.when[key] = when[key]
-
     @property
     def result(self):
         """Return the result label."""
@@ -223,6 +175,13 @@ class SimulationTask:
     def run_first(self):
         """Return True if task should be executed before first step."""
         return self.first
+
+    def task_dict(self):
+        """Return a dict representing the task."""
+        return {'func': self.function, 'args': self.args,
+                'kwargs': self.kwargs, 'when': self.when,
+                'result': self.result, 'first': self.first,
+                'func-name': self.function.__name__}
 
     def __call__(self, step):
         """Execute the task.
@@ -246,7 +205,7 @@ class SimulationTask:
 
     def __str__(self):
         """Output info about the task."""
-        msg = ['Simulation task:']
+        msg = ['Task:']
         msg += [' -> Function name: {}'.format(self.function.__name__)]
         msg += [' -> Function args: {}'.format(self.args)]
         msg += [' -> Function kwargs: {}'.format(self.kwargs)]

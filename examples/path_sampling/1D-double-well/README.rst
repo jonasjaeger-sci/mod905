@@ -33,7 +33,7 @@ are performed:
    flux.rst
 
 2. Obtaining the crossing probability by running the simulations defined
-   by tis.rst
+   by tis-multiple.rst
 
 Obtaining the rate constant from RETIS
 --------------------------------------

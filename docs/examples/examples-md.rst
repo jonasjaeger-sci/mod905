@@ -20,9 +20,8 @@ at a specified temperature as illustrated in the figure below.
     :alt: NVE simulation of a LJ fluid
     :align: center
 
-    Initial and final structure of the Lennard-Jones simulation.
-    The initial structure (left) is a FCC lattice, while the final
-    structure is less ordered.
+    The initial (left) and the final structure (right) of the Lennard-Jones simulation.
+    The initial structure is a FCC lattice, while the final structure is less ordered.
 
 .. contents:: Table of Contents
    :local:
@@ -89,7 +88,7 @@ and we modify the output created by specifying the
    :lines: 44-50
 
 What we are essentially modifying here is
-the frequency of output, and we are also telling |pyretis|
+the frequency of the output, and we are also telling |pyretis|
 not to back-up, but to **overwrite** old output files that might
 be present in the same directory (this is controlled
 by the ``backup = False`` keyword setting).
@@ -126,7 +125,7 @@ a figure similar to:
     :width: 75%
     :align: center
 
-    Representative output from the MD NVE simulation:
+    A representative output from the MD NVE simulation:
     The eneriges, pressure and the temperature as
     a function of the simulation step.
 
@@ -139,7 +138,7 @@ In this part of the example, we will make explicit use
 of the |pyretis| library
 If you want
 to try this example, you will have to copy the code-snippets
-given below in to a Python script, say ``md.py``, and run it as
+given below into a Python script, say ``md.py``, and run it as
 
 .. code-block:: pyretis
 
@@ -197,7 +196,7 @@ select an engine and a simulation to run:
    :lines: 46-48
 
 Now, we are ready to run the simulation and plot the energies
-as a function of simulation step:
+as a function of the simulation step:
 
 .. literalinclude:: /_static/examples/md.py
    :language: python

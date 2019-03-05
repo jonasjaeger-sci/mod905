@@ -12,7 +12,7 @@ potential:
 
 3) The FORTRAN implementation.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import unittest
 import numpy as np
 from pyretis.core import System, create_box, Particles

@@ -3,15 +3,18 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Example of using a Lennard-Jones potential implemented in C."""
 import logging
+import os
+import sys
 import numpy as np
 from pyretis.forcefield.potentials import PairLennardJonesCut
 from pyretis.forcefield.potentials.pairpotentials import (
     generate_pair_interactions,
 )
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     import ljc
 except ImportError:
@@ -67,7 +70,7 @@ class PairLennardJonesCutC(PairLennardJonesCut):
         Potential values for shifting the potential if requested.
         This is the potential evaluated at the cutoff.
     _rcut2 : numpy.array
-        Squared cut-off for each interaction type.
+        The squared cut-off for each interaction type.
         Keys are the pairs (particle types) that may interact.
 
     """
@@ -211,10 +214,10 @@ class PairLennardJonesCutC(PairLennardJonesCut):
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a
-        whole. It is not calculated as a virial per atom. The virial
+        Currently, the virial is only calculated for all the particles.
+        It is not calculated as a virial per atom. The virial
         per atom might be useful to obtain a local pressure or stress,
-        however this needs some consideration. Perhaps it's best to
+        however, this needs some consideration. Perhaps it's best to
         fully implement this as a method of planes or something similar.
 
         Returns

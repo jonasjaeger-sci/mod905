@@ -29,19 +29,21 @@ initial_positions_file (:py:func:`.initial_positions_file`)
 
 initial_positions_lattice (:py:func:`.initial_positions_lattice`)
     Get initial positions by generating a lattice.
+
 """
 import logging
 import os
 import numpy as np
 from pyretis.tools import generate_lattice
-from pyretis.core.box import create_box
+from pyretis.core.box import create_box, box_from_restart
 from pyretis.core.system import System
-from pyretis.core.particles import Particles, get_particle_type
+from pyretis.core.particles import (Particles, get_particle_type,
+                                    particles_from_restart)
 from pyretis.core.units import CONVERT
-from pyretis.inout.writers.writers import read_txt_snapshots
-from pyretis.inout.writers.xyzio import read_xyz_file
-from pyretis.inout.writers.gromacsio import read_gromacs_file
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.inout.formats.snapshot import read_txt_snapshots
+from pyretis.inout.formats.xyz import read_xyz_file
+from pyretis.inout.formats.gromacs import read_gromacs_file
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -100,9 +102,9 @@ def list_get(input_list, index):
     Parameters
     ----------
     input_list : list
-        The list to pick from
+        The list to pick from.
     index : integer
-        The index to pick
+        The index to pick.
 
     """
     try:
@@ -117,9 +119,9 @@ def guess_particle_mass(particle_no, particle_type, unit):
     Parameters
     ----------
     particle_no : integer
-        Just used to identify the particle number
+        Just used to identify the particle number.
     particle_type : string
-        Used to identify the particle
+        Used to identify the particle.
     unit : string
         The system of units. This is used in case we try to get the
         mass from the periodic table where the units are in `g/mol`.
@@ -149,7 +151,7 @@ def initial_positions_lattice(settings):
     Parameters
     ----------
     settings : dict
-        The input settings for the simulation
+        The input settings for the simulation.
 
     Returns
     -------
@@ -189,8 +191,8 @@ def initial_positions_lattice(settings):
     for i, pos in enumerate(lattice):
         particle_type = list_get(ptype, i)
         particle_name = list_get(pname, i)
-        # infer mass from the input masses, or try to get it
-        # from the periodic table
+        # Infer the mass from the input masses, or try to get it
+        # from the periodic table:
         try:
             particle_mass = pmass[particle_name]
         except KeyError:
@@ -204,9 +206,9 @@ def initial_positions_lattice(settings):
             name=particle_name,
             ptype=particle_type
         )
-    logger.info('Initiated %i particles on lattice "%s"',
+    logger.info('Generated %i particles on lattice "%s".',
                 particles.npart, lattice_type)
-    logger.info('Lattice is %iD', ndim)
+    logger.info('Lattice is %iD.', ndim)
 
     size = np.array(size)
     box = {'low': size[:, 0], 'high': size[:, 1]}
@@ -247,9 +249,9 @@ def _get_snapshot_from_file(pos_settings, units):
     convert = None
     if fmt not in READFILE:
         msg = ('Input configuration "{}" has unknown '
-               'format "{}"').format(filename, fmt)
+               'format "{}".').format(filename, fmt)
         logger.error(msg)
-        logger.error('Supported formats are: %s', [key for key in READFILE])
+        logger.error('Supported formats are: %s.', [key for key in READFILE])
         raise ValueError(msg)
 
     reader = READFILE[fmt]['reader']
@@ -261,23 +263,26 @@ def _get_snapshot_from_file(pos_settings, units):
             'length': CONVERT['length'][read_units['length'], units],
             'velocity': CONVERT['velocity'][read_units['velocity'], units]
         }
-    msg = 'Reading "{}" input file.'.format(fmt)
-    logger.info(msg)
+    logger.info(
+        'Reading initial configuration from "%s" (format: "%s").',
+        filename,
+        fmt,
+    )
     snaps = [snap for snap in reader(filename)]
 
     snapshot = None
-    if len(snaps) == 0:
-        msg = ('Could not find any configurations in '
-               'input file: {}').format(filename)
-        logger.error(msg)
-        raise ValueError(msg)
-    elif len(snaps) == 1:
+    if len(snaps) == 1:
         snapshot = snaps[0]
-    else:
+    elif len(snaps) > 1:
         msg = ('Found several frames ({}) in input file.'
                ' Will use the last one!').format(len(snaps))
         logger.warning(msg)
         snapshot = snaps[-1]
+    else:
+        msg = ('Could not find any configurations in '
+               'input file: {}').format(filename)
+        logger.error(msg)
+        raise ValueError(msg)
     return snapshot, convert
 
 
@@ -287,7 +292,7 @@ def initial_positions_file(settings):
     Parameters
     ----------
     settings : dict
-        The input settings for the simulation
+        The input settings for the simulation.
 
     Returns
     -------
@@ -335,7 +340,7 @@ def initial_positions_file(settings):
             particle_name = atomname
         else:
             particle_name = list_get(pname, i)
-        # Infer mass from the input masses, or try to get it
+        # Infer the mass from the input masses, or try to get it
         # from the periodic table:
         try:
             particle_mass = pmass[particle_name]
@@ -347,15 +352,16 @@ def initial_positions_file(settings):
                                mass=particle_mass, name=particle_name,
                                ptype=particle_type)
     try:
-        box = {'length': [i * convert['length'] for i in snapshot['box']]}
+        box = {'cell': [i * convert['length'] for i in snapshot['box']]}
         if ndim < 3:
-            box['length'] = box['lenght'][:ndim]
+            box['cell'] = box['cell'][:ndim]
     except (KeyError, IndexError, TypeError) as err:
-        logger.debug('No box read from file: %s', err)
+        logger.debug('No box read from file: %s.', err)
         box = None
+    logger.info('Read %d particle(s) from "%s".', particles.npart,
+                pos_settings['file'])
     if vel_read:
-        msg = 'Used velocities found in {}.'.format(pos_settings['file'])
-        logger.info(msg)
+        logger.info('Read velocoties from file: "%s".', pos_settings['file'])
     return particles, box, vel_read
 
 
@@ -373,7 +379,7 @@ def create_initial_positions(settings):
     Returns
     -------
     out[0] : object like :py:class:`.Particles`
-        The particles we created
+        The particles we created.
     out[1] : list
         The size associated with the particles. Can be used to create a
         box.
@@ -383,14 +389,13 @@ def create_initial_positions(settings):
         velocities.
 
     """
-    msg = 'Settings used for initial positions: {}'
-    debugtxt = msg.format(settings['particles']['position'])
-    logger.debug(debugtxt)
+    logger.debug('Settings used for initial positions: %s',
+                 settings['particles']['position'])
     particles = None
     if 'generate' in settings['particles']['position']:
         particles, box = initial_positions_lattice(settings)
         return particles, box, False
-    elif 'file' in settings['particles']['position']:
+    if 'file' in settings['particles']['position']:
         # First check if we need to add a path to the file:
         filename = settings['particles']['position']['file']
         if (not os.path.isfile(filename) and
@@ -400,11 +405,10 @@ def create_initial_positions(settings):
             settings['particles']['position']['file'] = filename
         particles, box, vel = initial_positions_file(settings)
         return particles, box, vel
-    else:
-        msg = 'Unknown settings for initial positions: {}'
-        msgtxt = msg.format(settings['particles']['position'])
-        logger.error(msgtxt)
-        raise ValueError(msgtxt)
+    msg = 'Unknown settings for initial positions: {}'
+    msgtxt = msg.format(settings['particles']['position'])
+    logger.error(msgtxt)
+    raise ValueError(msgtxt)
 
 
 def set_up_box(settings, boxs, dim=3):
@@ -413,12 +417,12 @@ def set_up_box(settings, boxs, dim=3):
     Parameters
     ----------
     settings : dict
-        The dict with the simulation settings
+        The dict with the simulation settings.
     boxs : dict or None
         If no box settings are given, we can still create a box,
         inferred from the positions of the particles. This dict
         contains the settings to do so.
-    dim : integer
+    dim : integer, optional
         Number of dimensions for the box. This is used only as a last
         resort when no information about the box is given.
 
@@ -475,13 +479,15 @@ def create_velocities(system, settings, vel):
     """
     vel_settings = settings['particles'].get('velocity', {})
     if vel:
-        msg = 'Velocities read from file (temperature: {}).'
-        msg = msg.format(system.calculate_temperature())
-        logger.info(msg)
+        logger.info(
+            'Velocities read from input configuration (temperature: %6.2g).',
+            system.calculate_temperature(),
+        )
     if 'generate' in vel_settings:
         if vel:
-            msg = 'Will overwrite velocities already set.'
-            logger.warning(msg)
+            logger.warning(
+                'Will generate and overwrite velocities already set.'
+            )
         gen_settings = {'distribution': vel_settings['generate']}
         for key in ('seed', 'momentum', 'temperature', 'rgen'):
             try:
@@ -489,17 +495,17 @@ def create_velocities(system, settings, vel):
             except KeyError:
                 pass
         system.generate_velocities(**gen_settings)
-        msg = 'Generated velocities with average temperature: {}'
-        msg = msg.format(system.calculate_temperature())
-        logger.info(msg)
-        msg = 'Settings used for generating velocities: \n{}'
-        msg = msg.format(gen_settings)
-        logger.debug(msg)
+        logger.info(
+            'Generated new velocities with average temperature: %6.2g',
+            system.calculate_temperature(),
+        )
+        logger.debug('Settings used for generating velocities: %s',
+                     gen_settings)
         return True
-    elif 'scale' in vel_settings:
+    if 'scale' in vel_settings:
         target = vel_settings['scale']
-        # just set the velocities to some temperature for now
-        # the scaling is done later by calling system.extra_setup()
+        # Just set the velocities to some temperature for now.
+        # The scaling is done later by calling `system.extra_setup()`.
         gen_settings = {
             'distribution': 'maxwell',
             'momentum': system.particles.npart != 1,
@@ -510,8 +516,7 @@ def create_velocities(system, settings, vel):
         logger.debug(msg)
         system.post_setup.append(('rescale_velocities', (target,)))
         return True
-    else:
-        return False
+    return False
 
 
 def create_system_from_restart(restart):
@@ -529,25 +534,13 @@ def create_system_from_restart(restart):
 
     """
     settings = restart['system']
-
-    klass = get_particle_type(settings['particles']['class'])
-    particles = klass(dim=settings['particles']['dim'])
-    particles.load_restart_info(settings['particles'])
-
-    box = create_box(
-        length=settings['box']['length'],
-        low=settings['box']['low'],
-        high=settings['box']['high'],
-        periodic=settings['box']['periodic']
-    )
-
+    box = box_from_restart(settings)
     system = System(
         temperature=settings['temperature']['set'],
         units=settings['units'],
         box=box
     )
-
-    system.particles = particles
+    system.particles = particles_from_restart(settings)
     return system
 
 
@@ -557,8 +550,8 @@ def create_system_from_settings(settings, engine):
     Parameters
     ----------
     settings : dict
-        The dict with the simulation settings
-    engine : object like :py:class:`.EngineBase`, optional
+        The dict with the simulation settings.
+    engine : object like :py:class:`.EngineBase`
         The engine to be used for the simulation. This can be given
         in case we want to choose an external particle list type.
 
@@ -573,12 +566,11 @@ def create_system_from_settings(settings, engine):
         particles, box, vel = create_initial_positions(settings)
         box = set_up_box(settings, box, dim=particles.dim)
     else:
-        # engine is not None and not internal -> external
+        # Engine is not None and not internal => external.
         klass = get_particle_type(engine.engine_type)
         particles = klass(dim=3)
-        phasepoint = {'pos': (engine.input_files['conf'], None),
-                      'vel': False, 'ekin': None, 'vpot': None}
-        particles.set_particle_state(phasepoint)
+        particles.set_pos((engine.input_files['conf'], None))
+        particles.set_vel(False)
         vel = None
         box = set_up_box(settings, None, dim=0)
 
@@ -589,12 +581,9 @@ def create_system_from_settings(settings, engine):
     )
     system.particles = particles
 
-    # figure out what to do with velocities:
+    # Figure out what to do with velocities:
     if internal:
-        if 'particles' in settings:
-            vel_gen = create_velocities(system, settings, vel)
-        else:
-            vel_gen = False
+        vel_gen = create_velocities(system, settings, vel)
         if not (vel_gen or vel):
             logger.warning('Velocities were not created/read: Set to zero!')
     return system
@@ -615,7 +604,7 @@ def create_system(settings, engine=None, restart=None):
     Parameters
     ----------
     settings : dict
-        The dict with the simulation settings
+        The dict with the simulation settings.
     engine : object like :py:class:`.EngineBase`, optional
         The engine to be used for the simulation. This can be given
         in case we want to choose an external particle list type.
@@ -629,7 +618,9 @@ def create_system(settings, engine=None, restart=None):
 
     """
     if restart is not None:
+        logger.info('System is created from restart information.')
         system = create_system_from_restart(restart)
     else:
+        logger.info('System is created from input settings.')
         system = create_system_from_settings(settings, engine)
     return system

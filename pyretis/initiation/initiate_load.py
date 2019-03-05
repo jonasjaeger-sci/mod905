@@ -1,25 +1,32 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This file contains functions used for initiation of paths.
+"""Method for initiating paths by loading from previous simulation(s).
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-initiate_load (:py:func`.initiate_load`)
-    Method that will get the initial path from the output from
+initiate_load (:py:func:`.initiate_load`)
+    A method that will get the initial path from the output of
     a previous simulation.
 """
 import collections
+import errno
 import logging
 import os
 import shutil
-from pyretis.core.pathensemble import PATH_DIR_FMT
-from pyretis.core.common import get_path_class
-from pyretis.inout.common import print_to_screen
-from pyretis.inout.writers import prepare_load, get_writer
+import mdtraj
+from pyretis.inout.formats.xyz import read_xyz_file, convert_snapshot
+from pyretis.core.pathensemble import generate_ensemble_name
+from pyretis.inout import print_to_screen
+from pyretis.inout.common import make_dirs
+from pyretis.inout.formats.order import OrderPathFile, OrderFile
+from pyretis.inout.formats.energy import EnergyPathFile
+from pyretis.inout.formats.path import PathIntFile, PathExtFile
+from pyretis.core.path import Path, paste_paths
 from pyretis.tools.recalculate_order import recalculate_order
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.engines.cp2k import read_cp2k_box
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -40,36 +47,216 @@ def initiate_load(simulation, cycle, settings):
 
     """
     maxlen = settings['tis']['maxlength']
-    klass = get_path_class(simulation.engine.engine_type)
     folder = settings['initial-path'].get('load_folder', 'load')
-    for ensemble in simulation.path_ensembles:
-        name = ensemble.ensemble_name
-        logger.info('Loading data for path ensemble %s:', name)
-        print_to_screen('Loading data for path ensemble {}:'.format(name))
-        simulation.engine.exe_dir = ensemble.directory['generate']
-        path = klass(simulation.rgen, maxlen=maxlen)
-        edir = os.path.join(folder, PATH_DIR_FMT.format(ensemble.ensemble))
+    simulation.system.particles.top = settings['initial-path'].get('top_file')
+
+    if not os.path.exists(folder):
+        logger.critical('Load folder "%s" not found!', folder)
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
+                                folder)
+
+    for path_ensemble in simulation.path_ensembles:
+        name = path_ensemble.ensemble_name
+        logger.info('Loading data for path path ensemble %s:', name)
+        print_to_screen('Loading data for path path ensemble {}:'.format(name))
+        simulation.engine.exe_dir = path_ensemble.directory['generate']
+        path = Path(simulation.rgen, maxlen=maxlen)
+        path.generated = ('re', 0, 0, 0)  # To be eventually replaced.
+        edir = os.path.join(
+            folder,
+            generate_ensemble_name(path_ensemble.ensemble_number))
+
+        if not os.path.exists(os.path.join(edir, 'traj.txt')):
+            # Make sure the files are where they are supposed to be:
+            _do_the_dirty_load_job(folder, edir)
+            # Generate a traj.txt file for the path ensemble:
+
+            logger.warning('Input Load missing')
+            print_to_screen('No traj.txt file found in {}, attempt generate!'
+                            .format(edir))
+            _generate_traj_txt_from_ext(edir, simulation.system,
+                                        simulation.engine)
+            path.set_move('ld')
+
         if simulation.engine.engine_type == 'internal':
             accept, status = read_path_files(
                 path,
-                ensemble,
+                path_ensemble,
                 edir,
                 simulation.system,
                 simulation.order_function,
-                simulation.engine,
+                simulation.engine
             )
         elif simulation.engine.engine_type == 'external':
             accept, status = read_path_files_ext(
                 path,
-                ensemble,
+                path_ensemble,
                 edir,
+                simulation.system,
                 simulation.order_function,
-                simulation.engine,
+                simulation.engine
             )
         else:
             raise ValueError('Unknown engine type!')
-        ensemble.add_path_data(path, status, cycle)
-        yield accept, path, status
+
+        if not accept and path.get_move() == 'ld':  # Let's try to fix it:
+            path, (accept, status) = reorderframes(path, path_ensemble)
+            path.status = status
+        path_ensemble.add_path_data(path, status, cycle)
+        path_ensemble.last_path = path
+        yield accept, path, status, path_ensemble
+
+
+def reorderframes(path, path_ensemble):
+    """Re-order the phase points in the input path.
+
+    This function assumes that the path needs to be fixed.
+
+    Parameters
+    ----------
+    path : object like :py:class:`.PathBase`
+        The path we try to fix.
+    path_ensemble : object like :py:class:`.PathEnsembleExt`
+        The path ensemble the path could be added to.
+
+    """
+    slave_path = path.copy()
+    left, _, right = path_ensemble.interfaces
+    # If the path is from L to R, we order the phase points according
+    # to the order parameter.
+    # If the path is from R to L (e.g. for the [0^-] ensemble),
+    # a reversed path is generated.
+    # If the path goes from L and stops, it is doubled to create a
+    # L to L path.
+    if path_ensemble.start_condition == 'R':
+        path.sorting('order', reverse=False)
+        slave_path.sorting('order', reverse=False)
+        path = paste_paths(path, slave_path, maxlen=100000)
+
+    if path_ensemble.start_condition == 'L':
+        path.sorting('order', reverse=False)
+
+        if path.get_end_point(left, right) not in ['L', 'R']:
+            slave_path = path.copy()
+            path.sorting('order', reverse=True)
+            slave_path.sorting('order', reverse=True)
+            path = paste_paths(path, slave_path, maxlen=100000)
+    path.set_move('ld')
+    return path, _check_path(path, path_ensemble)
+
+
+def _do_the_dirty_load_job(mainfolder, edir):
+    """Copy the files to a place where PyRETIS expects them to be.
+
+    Parameters
+    ----------
+    mainfolder : string
+        The path of the main load directory with frame/trajectory
+        files.
+    edir : string
+        The path of the path ensemble load directory with
+        frame/trajectory files.
+
+    """
+    formats = ['.xyz', '.gro', '.xtc', '.trr']
+
+    listoffiles = [i.name for i in os.scandir(mainfolder) if i.is_file()]
+    traj_files = [i for i in listoffiles if i[-4:] in formats]
+
+    if not os.path.exists(edir):
+        if not traj_files:
+            logger.critical('No files to load in %s', mainfolder)
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
+                                    mainfolder)
+        else:
+            make_dirs(os.path.join(edir, 'accepted'))
+            for filei in traj_files:
+                shutil.copy(
+                    os.path.join(mainfolder, filei),
+                    os.path.join(edir, 'accepted', filei)
+                )
+    elif not os.path.exists(os.path.join(edir, 'accepted')):
+        listoffiles = [i.name for i in os.scandir(edir) if i.is_file()]
+        traj_files_ens = [i for i in listoffiles if i[-4:] in formats]
+        if not traj_files_ens and not traj_files:
+            logger.critical('No files to load in %s', edir)
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
+                                    edir)
+        else:
+            make_dirs(os.path.join(edir, 'accepted'))
+            if not traj_files_ens:
+                for filei in traj_files:
+                    shutil.copy(
+                        os.path.join(mainfolder, filei),
+                        os.path.join(edir, 'accepted', filei)
+                    )
+            else:
+                for filei in traj_files_ens:
+                    shutil.move(
+                        os.path.join(edir, filei),
+                        os.path.join(edir, 'accepted', filei)
+                    )
+
+
+def _generate_traj_txt_from_ext(dirname, system, engine):
+    """Generate a traj.txt file in the path ensemble folder.
+
+    Parameters
+    ----------
+    dirname : string
+        The path of the path ensemble directory with
+        trajectory files.
+    system : object like :py:class:`.System`
+        A system object we can use when calculating the order
+        parameter(s).
+    engine : object like :py:class:`.Engine`
+        The engine used for the simulation. It is used here to
+        reference a topology, if needed, for mdtraj.
+
+    """
+    trajexts = ['.xyz', '.gro', '.trr', '.xtc']
+    load_file = os.path.join(dirname, 'traj.txt')
+
+    traj_files = sorted([i for i in
+                         os.listdir(os.path.join(dirname, 'accepted'))
+                         if i[-4:] in trajexts])
+
+    if system.particles.particle_type == 'internal':
+        path = Path()
+        for filei in traj_files:
+            for snap in read_xyz_file(os.path.join(dirname,
+                                                   'accepted', filei)):
+                _, pos, vel, _ = convert_snapshot(snap)
+                snapshot = {'pos': pos, 'vel': vel}
+                phase_point = system_from_snapshot(system, snapshot)
+                path.append(phase_point)
+        with PathIntFile(load_file, 'w', backup=True) as trajfile:
+            trajfile.output(0, (path, 'ACC'))
+    else:
+        path = Path()
+        for tfile in traj_files:
+            all_tfile = os.path.join(dirname, 'accepted', tfile)
+            if tfile[-4:] == '.xyz':
+                for i, snap in enumerate(read_xyz_file(all_tfile)):
+                    snapshot = {'pos': (tfile, i), 'vel': False}
+                    phase_point = system_from_snapshot(system, snapshot)
+                    path.append(phase_point)
+            else:
+                if tfile[-4:] == '.gro':
+                    md_file = mdtraj.load(all_tfile)
+                else:
+                    if system.particles.top is None:
+                        # Steal it from the engine:
+                        system.particles.top = engine.input_files['conf']
+
+                    md_file = mdtraj.load(all_tfile, top=system.particles.top)
+
+                for i in range(0, md_file.n_frames):
+                    snapshot = {'pos': (tfile, i), 'vel': False}
+                    phase_point = system_from_snapshot(system, snapshot)
+                    path.append(phase_point)
+        with PathExtFile(load_file, 'w', backup=True) as pathfile:
+            pathfile.output(0, (path, 'ACC'))
 
 
 def _load_order_parameters(traj, dirname, system, order_function):
@@ -83,7 +270,8 @@ def _load_order_parameters(traj, dirname, system, order_function):
     dirname : string
         The path to the directory with the input files.
     system : object like :py:class:`.System`
-        A system object we can use when calculating the order parameter(s).
+        A system object we can use when calculating the order
+        parameter(s).
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
@@ -91,32 +279,34 @@ def _load_order_parameters(traj, dirname, system, order_function):
     Returns
     -------
     out : list
-        The order parameters, each item in the list corresponds to a time
-        frame.
+        The order parameters, each item in the list corresponds to a
+        time frame.
 
     """
     order_file_name = os.path.join(dirname, 'order.txt')
-    orderfile = prepare_load('pathorder', order_file_name, required=False)
-    if orderfile is not None:
-        print_to_screen('Loading order parameters')
-        order = next(orderfile)
-        return order['data'][:, 1:]
+    try:
+        with OrderPathFile(order_file_name, 'r') as orderfile:
+            print_to_screen('Loading order parameters.')
+            order = next(orderfile.load())
+            return order['data'][:, 1:]
+    except FileNotFoundError:
+        print_to_screen('Could not read file: {}'.format(order_file_name))
     orderdata = []
-    print_to_screen('Recalculating order parameters for input path')
-    logger.info('Recalculating order parameters for input path')
+    print_to_screen('Recalculating order parameters for input path.')
+    logger.info('Recalculating order parameters for input path.')
     for snapshot in traj['data']:
         system.particles.pos = snapshot['pos']
         system.particles.vel = snapshot['vel']
-        orderdata.append(order_function.calculate_all(system))
+        orderdata.append(order_function.calculate(system))
     return orderdata
 
 
-def _load_order_parameters_ext(traj, dirname, order_function):
+def _load_order_parameters_ext(traj, dirname, order_function, system, engine):
     """Load or re-calculate the order parameters.
 
     For external trajectories, dumping of specific frames from a
-    trajectory might be expensive and we here do slightly more work than
-    just dumping the frames.
+    trajectory might be expensive and we here do slightly more work
+    than just dumping the frames.
 
     Parameters
     ----------
@@ -128,46 +318,49 @@ def _load_order_parameters_ext(traj, dirname, order_function):
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
+    system : object like :py:class:`.System`
+        A system object we can use when calculating the order
+        parameter(s).
 
     Returns
     -------
     out : list
-        The order parameters, each item in the list corresponds to a time
-        frame.
+        The order parameters, each item in the list corresponds to
+        a time frame.
 
     """
     order_file_name = os.path.join(dirname, 'order.txt')
-    orderfile = prepare_load('pathorder', order_file_name, required=False)
-    if orderfile is not None:
-        print_to_screen('Loading order parameters from file!')
-        order = next(orderfile)
-        return order['data'][:, 1:]
+    try:
+        with OrderPathFile(order_file_name, 'r') as orderfile:
+            print_to_screen('Loading order parameters.')
+            order = next(orderfile.load())
+            return order['data'][:, 1:]
+    except FileNotFoundError:
+        print_to_screen('Could not read file: {}'.format(order_file_name))
     orderdata = []
-    print_to_screen('Recalculating order parameters for input path!')
-    logger.info('Recalculating order parameters for input path')
-    # First get unique files and indexes for them:
+    print_to_screen('Recalculating order parameters for input path.')
+    logger.info('Recalculating order parameters for input path.')
+    # First get unique files and indices for them:
     files = collections.OrderedDict()
     for snapshot in traj['data']:
         filename = snapshot[1]
         if filename not in files:
             files[filename] = {'minidx': None, 'maxidx': None,
                                'reverse': snapshot[3]}
-        if snapshot[2] is None:
-            idx = 0
-        else:
-            idx = int(snapshot[2])
+        idx = int(snapshot[2])
         minidx = files[filename]['minidx']
         if minidx is None or idx < minidx:
             files[filename]['minidx'] = idx
         maxidx = files[filename]['maxidx']
         if maxidx is None or idx > maxidx:
             files[filename]['maxidx'] = idx
-    # ok now we have the files, calculate the order parameters:
+    # Ok, now we have the files, calculate the order parameters:
     for filename, info in files.items():
-        for new_order in recalculate_order(order_function, filename,
-                                           reverse=info['reverse'],
-                                           maxidx=info['maxidx'],
-                                           minidx=info['minidx']):
+        if hasattr(system.particles, 'top'):  # mdtraj specific.
+            info['top'] = system.particles.top
+        if filename[-4:] == '.xyz':           # CP2K specific NVE.
+            info['box'], _ = read_cp2k_box(engine.input_files['template'])
+        for new_order in recalculate_order(order_function, filename, info):
             orderdata.append(new_order)
     # Store the re-calculated order parameters so we don't have
     # to re-calculate again later:
@@ -177,13 +370,10 @@ def _load_order_parameters_ext(traj, dirname, order_function):
 
 def write_order_parameters(order_file_name, orderdata):
     """Store re-calculated order parameters to a file."""
-    writer = get_writer('order')
-    with open(order_file_name, 'w') as outfile:
-        outfile.write('# Cycle: Re-calculated\n')
-        outfile.write('{}\n'.format(writer.header))
+    with OrderFile(order_file_name, 'w') as orderfile:
+        orderfile.write('# Re-calculated order parameters.')
         for step, data in enumerate(orderdata):
-            txt = writer.format_data(step, data)
-            outfile.write('{}\n'.format(txt))
+            orderfile.output(step, data)
 
 
 def _load_energies_for_path(path, dirname):
@@ -203,48 +393,49 @@ def _load_energies_for_path(path, dirname):
     """
     # Get energies if any:
     energy_file_name = os.path.join(dirname, 'energy.txt')
-    energyfile = prepare_load('pathenergy', energy_file_name, required=False)
-    if energyfile is not None:
-        energy = next(energyfile)
-        logger.debug('Energies found')
-        print_to_screen('Loading energies')
-        path.vpot = [i for i in energy['data']['vpot']]
-        path.ekin = [i for i in energy['data']['ekin']]
+    try:
+        with EnergyPathFile(energy_file_name, 'r') as energyfile:
+            print_to_screen('Loading energy data.')
+            energy = next(energyfile.load())
+            path.update_energies(
+                [i for i in energy['data']['ekin']],
+                [i for i in energy['data']['vpot']]
+            )
+    except FileNotFoundError:
+        print_to_screen('Could not read file: {}'.format(energy_file_name))
+        print_to_screen('Energies are not set.')
 
 
-def _check_path(path, ensemble):
+def _check_path(path, path_ensemble):
     """Run some checks for the path.
 
     Parameters
     ----------
     path : object like :py:class:`.PathBase`
         The path we are to set up/fill.
-    ensemble : object like :py:class:`.PathEnsemble`
-        The ensemble the path could be added to.
+    path_ensemble : object like :py:class:`.PathEnsemble`
+        The path ensemble the path could be added to.
 
     """
-    start, end, _, cross = path.check_interfaces(ensemble.interfaces)
-    start_condition = ensemble.start_condition
+    start, end, _, cross = path.check_interfaces(path_ensemble.interfaces)
+    start_condition = path_ensemble.start_condition
     accept = True
     status = 'ACC'
 
     if start != start_condition:
         logger.critical('Initial path for %s start at wrong interface!',
-                        ensemble.ensemble_name)
+                        path_ensemble.ensemble_name)
         status = 'SWI'
         accept = False
 
-    if not (end == 'R' or end == 'L'):
+    if end not in ('R', 'L'):
         logger.critical('Initial path for %s end at wrong interface!',
-                        ensemble.ensemble_name)
+                        path_ensemble.ensemble_name)
         status = 'EWI'
         accept = False
-        if ensemble.ensemble == 0 and end == 'L':
-            logger.critical('Path for %s ends at LEFT interface!',
-                            ensemble.ensemble_name)
     if not cross[1]:
         logger.critical('Initial path for %s did not cross middle interface!',
-                        ensemble.ensemble_name)
+                        path_ensemble.ensemble_name)
         status = 'NCR'
         accept = False
     path.status = status
@@ -257,39 +448,37 @@ def _load_trajectory(dirname):
     Parameters
     ----------
     dirname : string
-        Directory where we can find the trajectory file(s).
+        The directory where we can find the trajectory file(s).
 
     Returns
     -------
     traj : dict
         A dictionary containing the trajectory information. Here,
-        the trajectory information is name of files with indices and
+        the trajectory information is a list of files with indices and
         information about velocity direction.
 
     """
-    trajfile = prepare_load(
-        'pathtrajint',
-        os.path.join(dirname, 'traj.txt'),
-        required=True
-    )
-    # Just get the first trajectory:
-    traj = next(trajfile)
-    return traj
+    with PathIntFile(os.path.join(dirname, 'traj.txt'), 'r') as trajfile:
+        # Just get the first trajectory:
+        traj = next(trajfile.load())
+        return traj
 
 
-def read_path_files(path, ensemble, dirname, system, order_function, engine):
+def read_path_files(path, path_ensemble, dirname, system, order_function,
+                    engine):
     """Read data needed for a path from a directory.
 
     Parameters
     ----------
     path : object like :py:class:`.PathBase`
         The path we are to set up/fill.
-    ensemble : object like :py:class:`.PathEnsemble`
-        The ensemble the path could be added to.
+    path_ensemble : object like :py:class:`.PathEnsemble`
+        The path ensemble the path could be added to.
     dirname : string
         The path to the directory with the input files.
     system : object like :py:class:`.System`
-        A system object we can use when calculating the order parameter(s).
+        A system object we can use when calculating the order
+        parameter(s).
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
@@ -297,19 +486,17 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
         The engine we use for the dynamics.
 
     """
-    left, _, right = ensemble.interfaces
+    left, _, right = path_ensemble.interfaces
     traj = _load_trajectory(dirname)
     orderdata = _load_order_parameters(traj, dirname, system, order_function)
 
-    # Add to path :-)
-    print_to_screen('Creating path from files')
-    logger.debug('Creating path from files')
+    # Add to path:
+    print_to_screen('Creating path from files.')
+    logger.debug('Creating path from files.')
     for snapshot, orderi in zip(traj['data'], orderdata):
-        phase_point = {'order': orderi,
-                       'pos': snapshot['pos'],
-                       'vel': snapshot['vel'],
-                       'vpot': None,
-                       'ekin': None}
+        snapshot = {'order': orderi, 'pos': snapshot['pos'],
+                    'vel': snapshot['vel']}
+        phase_point = system_from_snapshot(system, snapshot)
         engine.add_to_path(
             path,
             phase_point,
@@ -317,8 +504,7 @@ def read_path_files(path, ensemble, dirname, system, order_function, engine):
             right
         )
     _load_energies_for_path(path, dirname)
-    path.generated = ('re', 0, 0, 0)
-    return _check_path(path, ensemble)
+    return _check_path(path, path_ensemble)
 
 
 def _load_external_trajectory(dirname, engine):
@@ -330,7 +516,7 @@ def _load_external_trajectory(dirname, engine):
     Parameters
     ----------
     dirname : string
-        Directory where we can find the trajectory file(s).
+        The directory where we can find the trajectory file(s).
     engine : object like :py:class:`.ExternalMDEngine`
         The engine we use, here it is used to access the directories
         for the new simulation.
@@ -339,50 +525,51 @@ def _load_external_trajectory(dirname, engine):
     -------
     traj : dict
         A dictionary containing the trajectory information. Here,
-        the trajectory information is name of files with indices and
+        the trajectory information is a list of files with indices and
         information about velocity direction.
 
     """
     traj_file_name = os.path.join(dirname, 'traj.txt')
-    trajfile = prepare_load('pathtrajext', traj_file_name, required=True)
-    # Just get the first trajectory:
-    traj = next(trajfile)
-    # Hard-copy the files. Here we assume that they are stored
-    # in an folder called accepted and that we can get the **correct**
-    # names from the traj.txt file!
-    files = set([])
-    for snapshot in traj['data']:
-        filename = os.path.join(os.path.abspath(dirname),
-                                'accepted', snapshot[1])
-        files.add(filename)
-    print_to_screen('Copying trajectory files')
-    for filename in files:
-        logger.debug('Copying %s -> %s', filename, engine.exe_dir)
-        shutil.copy(filename, engine.exe_dir)
-    # update trajectory to use full path names:
-    for i, snapshot in enumerate(traj['data']):
-        config = os.path.join(engine.exe_dir, snapshot[1])
-        traj['data'][i][1] = config
-        reverse = (int(snapshot[3]) == -1)
-        idx = int(snapshot[2])
-        if idx < 0:
-            idx = None
-        traj['data'][i][2] = idx
-        traj['data'][i][3] = reverse
-    return traj
+    with PathExtFile(traj_file_name, 'r') as trajfile:
+        # Just get the first trajectory:
+        traj = next(trajfile.load())
+        # Hard-copy the files. Here we assume that they are stored
+        # in an folder called "accepted" and that we can get the
+        # **correct** names from the traj.txt file!
+        files = set([])
+        for snapshot in traj['data']:
+            filename = os.path.join(os.path.abspath(dirname),
+                                    'accepted', snapshot[1])
+            files.add(filename)
+        print_to_screen('Copying trajectory files.')
+        for filename in files:
+            logger.debug('Copying %s -> %s', filename, engine.exe_dir)
+            shutil.copy(filename, engine.exe_dir)
+        # Update trajectory to use full path names:
+        for i, snapshot in enumerate(traj['data']):
+            config = os.path.join(engine.exe_dir, snapshot[1])
+            traj['data'][i][1] = config
+            reverse = (int(snapshot[3]) == -1)
+            idx = int(snapshot[2])
+            traj['data'][i][2] = idx
+            traj['data'][i][3] = reverse
+        return traj
 
 
-def read_path_files_ext(path, ensemble, dirname, order_function, engine):
+def read_path_files_ext(path, path_ensemble, dirname, system, order_function,
+                        engine):
     """Read data needed for a path from a directory.
 
     Parameters
     ----------
-    path : object like :py:class:`.PathExt`
+    path : object like :py:class:`.Path`
         The path we are to set up/fill.
-    ensemble : object like :py:class:`.PathEnsembleExt`
-        The ensemble the path could be added to.
+    path_ensemble : object like :py:class:`.PathEnsembleExt`
+        The path ensemble the path could be added to.
     dirname : string
         The path to the directory with the input files.
+    system : object like :py:class:`.System`
+        A system object we can use when calculating the order parameter(s).
     order_function : object like :py:class:`.OrderParameter`
         This can be used to re-calculate order parameters in case
         they are not given.
@@ -390,18 +577,20 @@ def read_path_files_ext(path, ensemble, dirname, order_function, engine):
         The engine we use for the dynamics.
 
     """
-    left, _, right = ensemble.interfaces
+    left, _, right = path_ensemble.interfaces
     traj = _load_external_trajectory(dirname, engine)
-    orderdata = _load_order_parameters_ext(traj, dirname, order_function)
-    # Add to path :-)
-    print_to_screen('Creating path from files')
-    logger.debug('Creating path from files')
-    for snapshot, orderi in zip(traj['data'], orderdata):
-        phase_point = {'order': orderi,
-                       'pos': (snapshot[1], snapshot[2]),
-                       'vel': snapshot[3],
-                       'vpot': None,
-                       'ekin': None}
+    orderdata = _load_order_parameters_ext(traj, dirname,
+                                           order_function, system, engine)
+    # Add to path:
+    print_to_screen('Creating path from files.')
+    logger.debug('Creating path from files.')
+    for snapshot, order in zip(traj['data'], orderdata):
+        snapshot = {'order': order,
+                    'pos': (snapshot[1], snapshot[2]),
+                    'vel': snapshot[3],
+                    'vpot': None,
+                    'ekin': None}
+        phase_point = system_from_snapshot(system, snapshot)
         engine.add_to_path(
             path,
             phase_point,
@@ -409,5 +598,15 @@ def read_path_files_ext(path, ensemble, dirname, order_function, engine):
             right
         )
     _load_energies_for_path(path, dirname)
-    path.generated = ('re', 0, 0, 0)
-    return _check_path(path, ensemble)
+    return _check_path(path, path_ensemble)
+
+
+def system_from_snapshot(system, snapshot):
+    """Create a system from a given snapshot."""
+    system_copy = system.copy()
+    system_copy.particles.ekin = snapshot.get('ekin', None)
+    system_copy.particles.vpot = snapshot.get('vpot', None)
+    system_copy.order = snapshot.get('order', None)
+    system_copy.particles.set_pos(snapshot.get('pos', None))
+    system_copy.particles.set_vel(snapshot.get('vel', None))
+    return system_copy

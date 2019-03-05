@@ -42,7 +42,7 @@ But before we can run this script, we need to install the |pyretis| library and
       pip install pyretis
 
 
-   If you want to install the library system wide, you will need
+   If you want to install the library system-wide, you will need
    super-user access (typically a `sudo` will do). If you don't have
    super-user access, pip works well
    with `virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and we refer
@@ -143,7 +143,7 @@ Here are some examples:
 
      SETTINGS['interfaces'] = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
-  We can for instance see what happens if we just use two interfaces:
+  We can, for instance, see what happens if we just use two interfaces:
 
   .. code-block:: python
 

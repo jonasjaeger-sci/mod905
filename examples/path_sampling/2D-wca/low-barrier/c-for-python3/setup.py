@@ -6,6 +6,7 @@ from distutils.core import (  # pylint: disable=no-name-in-module,import-error
     setup,
     Extension,
 )
+import numpy as np
 
 
 WCAFORCE = Extension(
@@ -16,5 +17,6 @@ WCAFORCE = Extension(
 setup(
     name='PyRETIS WCA C extension',
     description='C extension for WCA potential.',
-    ext_modules=[WCAFORCE]
+    ext_modules=[WCAFORCE],
+    include_dirs=[np.get_include()],
 )

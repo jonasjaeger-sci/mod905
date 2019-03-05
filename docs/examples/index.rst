@@ -5,7 +5,7 @@ Examples
 ########
 
 We have prepared several examples to show the use of |pyretis|.
-All examples are inlcuded in the source code distribution.
+All examples are included in the source code distribution.
 
 Complete list of examples:
 

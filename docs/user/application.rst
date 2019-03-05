@@ -17,27 +17,29 @@ and :numref:`tableloglevel`.
 Example use
 -----------
 
-To run the simulation defined in a file named ``retis.rst``, make a log file
-for output named ``retis.log`` and display a progress bar:
+Here are some examples of the use of the application:
 
-.. code-block:: pyretis
+* To run the simulation defined in a file named ``retis.rst``, make a log file
+  for output named ``retis.log`` and display a progress bar:
 
-   pyretisrun -i retis.rst -f retis.log -p
+  .. code-block:: pyretis
 
-To run the simulation defined in a file named ``test.rst`` and display debug messages:
+     pyretisrun -i retis.rst -f retis.log -p
 
-.. code-block:: pyretis
+* To run the simulation defined in a file named ``test.rst`` and display debug messages:
 
-   pyretisrun -i test.rst -l DEBUG
+  .. code-block:: pyretis
 
-To run the simulation defined in a file named ``input.rst``, display only critical
-messages, write to a log file named ``mylog.log`` and display a progress bar:
+     pyretisrun -i test.rst -l DEBUG
 
-.. code-block:: pyretis
+* To run the simulation defined in a file named ``input.rst``, display only critical
+  messages, write to a log file named ``mylog.log`` and display a progress bar:
 
-   pyretisrun -i input.rst -l CRITICAL -p -f mylog.log
+  .. code-block:: pyretis
 
-The long version of the arguments may also be used, for instance the previous example
+     pyretisrun -i input.rst -l CRITICAL -p -f mylog.log
+
+The long version of the arguments may also be used, for instance, the previous example
 can also be written more verbose as
 
 .. code-block:: pyretis
@@ -51,7 +53,8 @@ Input arguments
 
 .. _tableappargument:
 
-.. table:: Description of input arguments for |pyretis|
+.. table:: Description of input arguments for |pyretis|.
+   :class: table-striped table-hover
 
    +-------------------------------------+--------------------------------------------------+
    | Argument                            | Description                                      |
@@ -72,7 +75,8 @@ Input arguments
 
 .. _tableloglevel:
 
-.. table:: Possible settings for the ``LOG_LEVEL``
+.. table:: Possible settings for the ``LOG_LEVEL``.
+   :class: table-striped table-hover
 
    +-----------+---------------------------------------------------------+
    | LOG_LEVEL | Description                                             |

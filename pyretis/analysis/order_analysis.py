@@ -32,7 +32,7 @@ def analyse_orderp(orderdata, settings):
     -------
     results : numpy.array
         For each order parameter `key`, `results[key]` contains the
-        result from the analysis.
+        result of the analysis.
 
     See Also
     --------

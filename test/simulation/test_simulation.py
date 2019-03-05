@@ -2,26 +2,32 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the Simulation class."""
+from io import StringIO
+import os
 import logging
 import unittest
+from unittest.mock import patch
+import tempfile
+import pathlib
 from pyretis.engines.internal import Langevin
 from pyretis.core.random_gen import RandomGenerator
 from pyretis.simulation.simulation import Simulation
-from pyretis.inout.writers.writers import Writer
-from pyretis.inout.setup.createoutput import OutputTaskScreen
+from pyretis.inout.simulationio import OutputTask
+from pyretis.inout.screen import ScreenOutput
+from pyretis.inout.formats.formatter import OutputFormatter
+from pyretis.inout.settings import add_default_settings
+from pyretis.inout.setup.createsystem import create_system_from_settings
+from pyretis.core.units import units_from_settings
+from .test_helpers import turn_on_logging, TEST_SETTINGS
 logging.disable(logging.CRITICAL)
 
 
-class TxtWriter(Writer):
+class TxtWriter(OutputFormatter):
     """A class used for testing output."""
     FMT = '{:>10d} {:>20s}'
 
-    def __init__(self):
-        header = {'labels': ['Step', 'Message'], 'width': [9, 20]}
-        super().__init__(None, header=header)
-
-    def generate_output(self, step, *message):
-        yield self.FMT.format(step, message[0])
+    def format(self, step, data):
+        yield self.FMT.format(step, data)
 
 
 class TestSimulation(unittest.TestCase):
@@ -53,27 +59,44 @@ class TestSimulation(unittest.TestCase):
         """Test that we can run and extend a simulation."""
         simulation = Simulation(steps=10)
 
-        def task1():  # pylint: disable=missing-docstring
-            return 'Hello there!'
+        def task1(simulation):
+            """Dummy task for the simulation."""
+            return 'Hello there {:03d}'.format(simulation.cycle['step'])
 
-        task = {'func': task1, 'result': 'hello'}
+        task = {'func': task1, 'result': 'hello', 'args': (simulation,)}
         add = simulation.add_task(task)
         self.assertTrue(add)
 
-        output = [
-            OutputTaskScreen('Hello-test', ['hello'], TxtWriter(),
-                             {'every': 1}),
+        writer = ScreenOutput(
+            TxtWriter(
+                'test',
+                header={'labels': ['Step', 'Message'], 'width': [9, 20]}
+            )
+        )
+        simulation.output_tasks = [
+            OutputTask('Hello-test', ['hello'], writer, {'every': 1}),
         ]
 
-        for i, step in enumerate(simulation.run(output=output)):
+        lines = []
+        with patch('sys.stdout', new=StringIO()) as stdout:
+            for i, step in enumerate(simulation.run()):
+                if i == 0:
+                    self.assertFalse('hello' in step)
+                else:
+                    self.assertTrue('hello' in step)
+            simulation.extend_cycles(5)
+            for i, step in enumerate(simulation.run()):
+                self.assertEqual(i + 1 + 10, step['cycle']['step'])
+            for linei in stdout.getvalue().strip().split('\n'):
+                if linei:
+                    lines.append(linei)
+        for i, linei in enumerate(lines):
             if i == 0:
-                self.assertFalse('hello' in step)
+                self.assertEqual('#    Step              Message', linei)
             else:
-                self.assertTrue('hello' in step)
-
-        simulation.extend_cycles(5)
-        for i, step in enumerate(simulation.run()):
-            self.assertEqual(i + 1 + 10, step['cycle']['step'])
+                msg = 'Hello there {:03d}'.format(i)
+                correct = '{:>10d} {:>20s}'.format(i, msg)
+                self.assertEqual(correct, linei)
 
     def test_restart_simple(self):
         """Test restart methods."""
@@ -101,6 +124,50 @@ class TestSimulation(unittest.TestCase):
         # Add and try again:
         simulation2.engine = Langevin(1.0, 2.0)
         simulation2.load_restart_info(restart)
+
+    def test_set_up_output(self):
+        """Test the set_up_output things."""
+        simulation = Simulation(steps=100)
+        settings = {}
+        add_default_settings(settings)
+        with tempfile.TemporaryDirectory() as tempdir:
+            settings['simulation']['exe-path'] = tempdir
+            simulation.set_up_output(settings)
+            self.assertEqual(simulation.restart_freq,
+                             settings['output']['restart-file'])
+            settings['output']['restart-file'] = -1
+            with turn_on_logging():
+                with self.assertLogs('pyretis.simulation.simulation',
+                                     level='WARNING'):
+                    simulation.set_up_output(settings)
+                    self.assertIsNone(simulation.restart_freq)
+
+    def test_soft_exit(self):
+        """Test the soft exit method."""
+        settings = TEST_SETTINGS.copy()
+        with tempfile.TemporaryDirectory() as tempdir:
+            simulation = Simulation(steps=100)
+            add_default_settings(settings)
+            units_from_settings(settings)
+            system = create_system_from_settings(settings, None)
+            simulation.system = system
+            settings['simulation']['exe-path'] = tempdir
+            simulation.set_up_output(settings)
+            self.assertEqual(tempdir, simulation.exe_dir)
+            for i, _ in enumerate(simulation.run()):
+                if i > simulation.restart_freq:
+                    break
+            files = [i.name for i in os.scandir(tempdir)]
+            self.assertEqual(1, len(files))
+            self.assertIn('pyretis.restart', files)
+            exit_file = os.path.join(tempdir, 'EXIT')
+            pathlib.Path(exit_file).touch()
+            with patch('sys.stdout', new=StringIO()) as stdout:
+                for _ in enumerate(simulation.run()):
+                    pass
+                self.assertIn('soft exit', stdout.getvalue().strip())
+            self.assertEqual(simulation.cycle['step'],
+                             simulation.restart_freq + 2)
 
 
 if __name__ == '__main__':

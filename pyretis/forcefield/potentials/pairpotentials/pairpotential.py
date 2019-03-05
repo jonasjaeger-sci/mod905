@@ -16,7 +16,7 @@ generate_pair_interactions (:py:func:`generate_pair_interactions`)
 import itertools
 import logging
 import numpy as np
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -32,7 +32,7 @@ def _check_pair_parameters(parameters):
     Parameters
     ----------
     parameters : dict
-        The dict with the settings for the potential
+        The settings for the potential.
 
     Note
     ----
@@ -82,8 +82,6 @@ def generate_pair_interactions(parameters, mixing):
         pari = parameters[atmi]
         parj = parameters[atmj]
         if (atmi, atmj) in pair_param:
-            if (atmj, atmi) not in pair_param:
-                pair_param[atmj, atmi] = pair_param[atmi, atmj]
             continue
         if (atmi, atmj) in parameters:
             pair_param[atmi, atmj] = dict(parameters[atmi, atmj])
@@ -97,6 +95,8 @@ def generate_pair_interactions(parameters, mixing):
             eps_ij = pari['epsilon']
             sig_ij = pari['sigma']
             rcut_ij = pari['rcut']
+            pair_param[atmi, atmi] = {'epsilon': eps_ij, 'sigma': sig_ij,
+                                      'rcut': rcut_ij}
         else:
             eps_ij, sig_ij, rcut_ij = mixing_parameters(pari['epsilon'],
                                                         pari['sigma'],
@@ -104,10 +104,11 @@ def generate_pair_interactions(parameters, mixing):
                                                         parj['epsilon'],
                                                         parj['sigma'],
                                                         parj['rcut'], mixing)
-        pair_param[atmi, atmj] = {'epsilon': eps_ij, 'sigma': sig_ij,
-                                  'rcut': rcut_ij}
-        if (atmj, atmi) not in pair_param:
+            pair_param[atmi, atmj] = {'epsilon': eps_ij, 'sigma': sig_ij,
+                                      'rcut': rcut_ij}
             pair_param[atmj, atmi] = pair_param[atmi, atmj]
+    #     if (atmj, atmi) not in pair_param:
+    #         pair_param[atmj, atmi] = pair_param[atmi, atmj]
     return pair_param
 
 
@@ -120,48 +121,65 @@ def mixing_parameters(epsilon_i, sigma_i, rcut_i, epsilon_j, sigma_j, rcut_j,
 
     1. Geometric:
 
-       * :math:`\epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}`
+       * .. math::
 
-       * :math:`\sigma_{ij} = \sqrt{\sigma_{i} \times \sigma_{j}}`
+            \epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}
 
-       * :math:`r_{\text{c},ij} = \sqrt{r_{\text{c},i} \times r_{\text{c},j}}`
+       * .. math::
+
+            \sigma_{ij} = \sqrt{\sigma_{i} \times \sigma_{j}}
+
+       * .. math::
+
+            r_{\text{c},ij} = \sqrt{r_{\text{c},i} \times r_{\text{c},j}}
 
     2. Arithmetic:
 
-       * :math:`\epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}`
+       * .. math::
 
-       * :math:`\sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}`
+            \epsilon_{ij} = \sqrt{\epsilon_{i} \times \epsilon_{j}}
 
-       * :math:`r_{\text{c},ij} = \frac{r_{\text{c},i} \times
-                r_{\text{c},j}}{2}`
+       * .. math::
+
+            \sigma_{ij} = \frac{\sigma_{i} \times \sigma_{j}}{2}
+
+       * .. math::
+
+            r_{\text{c},ij} = \frac{r_{\text{c},i} \times r_{\text{c},j}}{2}
 
     3. Sixthpower
 
-       * :math:`\epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}}
-                \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}`
+       * .. math::
 
-       * :math:`\sigma_{ij} = \left( \frac{\sigma_{i}^6 \times
-                \sigma_{j}^6}{2} \right)^{1/6}`
+            \epsilon_{ij} = 2 \sqrt{\epsilon_{i} \times \epsilon_{j}}
+            \frac{\sigma_i^3 \times \sigma_j^3}{\sigma_i^6 + \sigma_j^6}
 
-       * :math:`r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times
-                r_{\text{c},j}^6}{2}\right)^{1/6}`
+       * .. math::
+
+            \sigma_{ij} = \left( \frac{\sigma_{i}^6 \times
+            \sigma_{j}^6}{2} \right)^{1/6}
+
+       * .. math::
+
+            r_{\text{c},ij} = \left(\frac{r_{\text{c},i}^6 \times
+            r_{\text{c},j}^6}{2}\right)^{1/6}
 
 
     Parameters
     ----------
     epsilon_i : float
-        Lennard-Jones epsilon parameter for particle of type `i`.
+        Lennard-Jones epsilon parameter for a particle of type `i`.
     sigma_i : float
-        Lennard-Jones sigma parameter for particle of type `i`.
+        Lennard-Jones sigma parameter for a particle of type `i`.
     rcut_i : float
-        Lennard-Jones cut-off value for particle of type `i`.
+        Lennard-Jones cut-off value for a particle of type `i`.
     epsilon_j : float
-        Lennard-Jones epsilon parameter for particle of type `j`.
+        Lennard-Jones epsilon parameter for a particle of type `j`.
     sigma_j : float
-        Lennard-Jones sigma parameter for particle of type `j`.
+        Lennard-Jones sigma parameter for a particle of type `j`.
     rcut_j : float
-        Lennard-Jones cut-off value for particle of type `j`.
-    mixing :  string
+        Lennard-Jones cut-off value for a particle of type `j`.
+    mixing :  string, optional
         Represents what kind of mixing that should be done.
 
     Returns

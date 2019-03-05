@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 make clean
 gmx=${1:-gmx_d}
 echo Using gmx=$gmx

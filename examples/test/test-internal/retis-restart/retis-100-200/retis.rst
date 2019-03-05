@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 200
+steps = 100
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 restart = ../retis-100/pyretis.restart
 
@@ -56,7 +56,7 @@ c = 0.0
 
 Orderparameter
 --------------
-class = OrderParameterPosition
+class = Position
 dim = x
 index = 0
 periodic = False

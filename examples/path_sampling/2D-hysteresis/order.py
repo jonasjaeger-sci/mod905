@@ -4,7 +4,7 @@
 """The order parameter for the hysteresis example."""
 import logging
 from pyretis.orderparameter.orderparameter import OrderParameter
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -34,6 +34,7 @@ class OrderX(OrderParameter):
     periodic : boolean
         This determines if periodic boundaries should be applied to
         the position or not.
+
     """
 
     def __init__(self, index, inter_a, inter_b, energy_a, energy_b,
@@ -60,6 +61,7 @@ class OrderX(OrderParameter):
         periodic : boolean, optional
             This determines if periodic boundary conditions should be
             applied to the position.
+
         """
         txt = 'Position of particle {} (dim: {})'.format(index, dim)
         super().__init__(description=txt)
@@ -92,6 +94,7 @@ class OrderX(OrderParameter):
         -------
         out : float
             The order parameter.
+
         """
         particles = system.particles
         pos = particles.pos[self.index]

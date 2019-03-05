@@ -20,11 +20,12 @@ import itertools
 import colorama
 import numpy as np
 from matplotlib import pyplot as plt
-from pyretis.core import System, create_box, ParticlesExt, PathExt
-from pyretis.orderparameter.orderparameter import OrderParameterPosition
-from pyretis.inout.common import make_dirs, print_to_screen
+from pyretis.core import System, create_box, ParticlesExt, Path
+from pyretis.orderparameter import PositionVelocity
+from pyretis.inout.common import make_dirs
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
-from pyretis.inout.writers.xyzio import read_xyz_file, write_xyz_trajectory
+from pyretis.inout.formats.xyz import read_xyz_file, write_xyz_trajectory
 from pyretis.engines.cp2k import (
     CP2KEngine,
     write_for_step_vel,
@@ -36,7 +37,7 @@ plt.style.use('seaborn-deep')
 
 
 def clean_dir(dirname):
-    """Remove ALL files in the given directory!"""
+    """Remove ALL files in the given directory."""
     for files in os.listdir(dirname):
         filename = os.path.join(dirname, files)
         if os.path.isfile(filename):
@@ -57,13 +58,14 @@ def run_in_steps(engine, system, order_parameter, interfaces,
         An order parameter to calculate.
     interfaces : list of floats
         Interfaces to consider, here typically just set to
-        ``[-float('inf'), float('inf'), float('inf')]``
+        ``[-float('inf'), float('inf'), float('inf')]``.
     steps : integer
         The number of steps we will do.
     exe_dir : string
-        The foler to use for the execution.
+        The folder to use for the execution.
     reverse : boolean
         Selects the time direction.
+
     """
     print_to_screen('\nRunning {} steps in "{}"'.format(steps, exe_dir),
                     level='message')
@@ -72,7 +74,7 @@ def run_in_steps(engine, system, order_parameter, interfaces,
     folder = os.path.abspath(exe_dir)
     clean_dir(folder)
     engine.exe_dir = folder
-    path = PathExt(None, maxlen=steps)
+    path = Path(None, maxlen=steps)
     start = time.perf_counter()
     engine.propagate(path, system, order_parameter, interfaces,
                      reverse=reverse)
@@ -89,7 +91,7 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
     Parameters
     ----------
     engine : object like :py:class:`.CP2KEngine`
-        This is used to obtain the commands for executing CP2K
+        This is used to obtain the commands for executing CP2K.
     system : object like :py:class:`.System`
         The system we are propagation.
     order_parameter : object like :py:class:`.OrderParameter`
@@ -99,9 +101,10 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
     steps : integer
         The number of steps to run.
     exe_dir : string
-        Path to where we should execute CP2K
+        The path to where we should execute CP2K.
     reverse : boolean
         Selects the time direction.
+
     """
     print_to_screen(
         '\nRunning {} plain CP2K steps in "{}"'.format(steps, exe_dir),
@@ -149,7 +152,7 @@ def run_plain_cp2k(engine, system, order_parameter, input_conf,
         if reverse:
             system.particles.vel *= -1
         system.box.update_size(box)
-        order.append(order_parameter.calculate_all(system))
+        order.append(order_parameter.calculate(system))
         write_xyz_trajectory(out_file, xyz, -vel, names, box,
                              append=False)
         write_xyz_trajectory(out_file2, xyz, -vel, names, box,
@@ -164,18 +167,18 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     Parameters
     ----------
     engine : object like :py:class:`.ExternalMDEngine
-        Engine to use for propagation.
+        Engine to use for the generation.
     input_file : string
-        A file containing the input configuratio for CP2K.
+        A file containing the input configuration for CP2K.
     exe_dir : string, optional
         The folder where we will be executing CP2K.
-
 
     Returns
     -------
     out_conf : string
-        The path to the output configuration with randommized
+        The path to the output configuration with randomized
         velocities.
+
     """
     print_to_screen('\nRunning CP2K genvel step in "{}"'.format(exe_dir),
                     level='message')
@@ -207,32 +210,24 @@ def main(plot=False):
     print_to_screen('Time step: {}'.format(engine.timestep))
     print_to_screen('Subcycles: {}'.format(engine.subcycles))
     system = System(units='gromacs',
-                    box=create_box(length=[100, 100, 100]),
+                    box=create_box(cell=[100, 100, 100]),
                     temperature=500)
     system.particles = ParticlesExt(dim=3)
     initial_conf = engine.input_files['conf']
-    phase_point = {'pos': (initial_conf, None),
-                   'vel': False,
-                   'vpot': None,
-                   'ekin': None}
-    system.particles.set_particle_state(phase_point)
     interfaces = [-float('inf'), float('inf'), float('inf')]
-    order_parameter = OrderParameterPosition(0, dim='x', periodic=True)
+    order_parameter = PositionVelocity(0, dim='x', periodic=True)
 
     # First generate some random velocities:
     initial_conf = test_genvel(engine, initial_conf, exe_dir='genvel')
-    phase_point = {'pos': (initial_conf, None),
-                   'vel': False,
-                   'vpot': None,
-                   'ekin': None}
-    system.particles.set_particle_state(phase_point)
+    system.particles.set_pos((initial_conf, None))
+    system.particles.set_vel(False)
 
     pathf = run_in_steps(engine, system, order_parameter, interfaces,
                          steps=steps, exe_dir='forward', reverse=False)
 
     # set state to last point in trajectory:
-    phase_point = pathf.phasepoint(-1)
-    system.particles.set_particle_state(phase_point)
+    phase_point = pathf.phasepoints[-1]
+    system = phase_point.copy()
 
     pathb = run_in_steps(engine, system, order_parameter, interfaces,
                          steps=steps, exe_dir='backward', reverse=True)
@@ -273,21 +268,27 @@ def mse_combinations(text, var, tol=None):
 
 
 def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
-    """Obtain some MSE's"""
-    mses = [(np.array(pathf.order), 'step-forward'),
-            (np.array([i for i in pathb.order[::-1]]), 'step-back'),
+    """Calculate mean square errors."""
+    orderf = [i.order for i in pathf.phasepoints]
+    orderb = [i.order for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(orderf), 'step-forward'),
+            (np.array(orderb), 'step-back'),
             (plainf[1][::subcycles, :], 'plain-forward'),
             (plainb[1][::subcycles, :][::-1], 'plain-back')]
     mse_combinations('order parameters', mses, tol=1e-7)
 
-    mses = [(np.array(pathf.ekin), 'step-forward'),
-            (np.array(pathb.ekin[::-1]), 'step-back'),
+    ekinf = [i.particles.ekin for i in pathf.phasepoints]
+    ekinb = [i.particles.ekin for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(ekinf), 'step-forward'),
+            (np.array(ekinb), 'step-back'),
             (plainf[0][::subcycles, 2], 'plain-forward'),
             (plainb[0][::subcycles, 2][::-1], 'plain-back')]
     mse_combinations('kinetic energy', mses, tol=1e-7)
 
-    mses = [(np.array(pathf.vpot), 'step-forward'),
-            (np.array(pathb.vpot[::-1]), 'step-back'),
+    vpotf = [i.particles.vpot for i in pathf.phasepoints]
+    vpotb = [i.particles.vpot for i in reversed(pathb.phasepoints)]
+    mses = [(np.array(vpotf), 'step-forward'),
+            (np.array(vpotb), 'step-back'),
             (plainf[0][::subcycles, 4], 'plain-forward'),
             (plainb[0][::subcycles, 4][::-1], 'plain-back')]
     mse_combinations('potential energy', mses, tol=1e-4)
@@ -295,8 +296,8 @@ def obtain_mses(pathf, pathb, plainf, plainb, subcycles):
 
 def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
     """Just plot some properties for the paths."""
-    orderf = np.array(pathf.order)
-    orderb = np.array([i for i in pathb.order[::-1]])
+    orderf = np.array([i.order for i in pathf.phasepoints])
+    orderb = np.array([i.order for i in reversed(pathb.phasepoints)])
     fig1 = plt.figure(figsize=(12, 6))
     ax11 = fig1.add_subplot(121)
     ax12 = fig1.add_subplot(122)
@@ -318,16 +319,17 @@ def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
     ax12.plot(plainb[1][:, 1][::-1], lw=2, ls='-.', marker='x',
               alpha=0.8)
     ax12.set_title('Order param 2')
-    kinf = np.array(pathf.ekin)
-    kinb = np.array(pathb.ekin[::-1])
-    potf = np.array(pathf.vpot)
-    potb = np.array(pathb.vpot[::-1])
+
+    ekinf = np.array([i.particles.ekin for i in pathf.phasepoints])
+    ekinb = np.array(
+        [i.particles.ekin for i in reversed(pathb.phasepoints)]
+    )
     fig2 = plt.figure(figsize=(12, 6))
     ax21 = fig2.add_subplot(121)
     ax22 = fig2.add_subplot(122)
-    ax21.plot(steps, kinf, lw=2, ls='-', marker='o', label='Forward', ms=12,
+    ax21.plot(steps, ekinf, lw=2, ls='-', marker='o', label='Forward', ms=12,
               alpha=0.8)
-    ax21.plot(steps, kinb, lw=2, ls='--', marker='^', label='Backward',
+    ax21.plot(steps, ekinb, lw=2, ls='--', marker='^', label='Backward',
               ms=9, alpha=0.8)
     ax21.plot(plainf[0][:, 0], plainf[0][:, 2], lw=2, ls=':', marker='s',
               label='Plain forward', alpha=0.8)
@@ -335,9 +337,14 @@ def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
               marker='x', label='Plain backward', alpha=0.8)
     ax21.set_title('Kinetic energy')
     ax21.legend()
-    ax22.plot(steps, potf, lw=2, ls='-', marker='o', label='Forward',
+
+    vpotf = np.array([i.particles.vpot for i in pathf.phasepoints])
+    vpotb = np.array(
+        [i.particles.vpot for i in reversed(pathb.phasepoints)]
+    )
+    ax22.plot(steps, vpotf, lw=2, ls='-', marker='o', label='Forward',
               ms=12, alpha=0.8)
-    ax22.plot(steps, potb, lw=2, ls='--', marker='^', label='Backward',
+    ax22.plot(steps, vpotb, lw=2, ls='--', marker='^', label='Backward',
               ms=12, alpha=0.8)
     ax22.plot(plainf[0][:, 0], plainf[0][:, 4], lw=2, ls=':', marker='s',
               label='Plain forward', alpha=0.8)
@@ -380,30 +387,30 @@ def plot_path_comparison(steps, pathf, pathb, plainf, plainb, subcycles):
               c='#262626', alpha=0.5, lw=2)
     ax32.legend()
 
-    ax33.scatter(kinf, kinb, marker='o', label='Backward',
+    ax33.scatter(ekinf, ekinb, marker='o', label='Backward',
                  alpha=0.8)
-    ax33.scatter(kinf, plainf[0][::subcycles, 2], marker='s',
+    ax33.scatter(ekinf, plainf[0][::subcycles, 2], marker='s',
                  label='Forward-plain', alpha=0.8)
-    ax33.scatter(kinf, plainb[0][::subcycles, 2][::-1], marker='^',
+    ax33.scatter(ekinf, plainb[0][::subcycles, 2][::-1], marker='^',
                  label='Backward-plain', alpha=0.8)
     ax33.set_xlabel('Ekin Forward')
     ax33.set_ylabel('Ekin')
-    minx = min(kinf)
-    maxx = max(kinf)
+    minx = min(ekinf)
+    maxx = max(ekinf)
     ax33.plot([minx, maxx], [minx, maxx], ls=':',
               c='#262626', alpha=0.5, lw=2)
     ax33.legend()
 
-    ax34.scatter(potf, potb, marker='o', label='Backward',
+    ax34.scatter(vpotf, vpotb, marker='o', label='Backward',
                  alpha=0.8)
-    ax34.scatter(potf, plainf[0][::subcycles, 4], marker='s',
+    ax34.scatter(vpotf, plainf[0][::subcycles, 4], marker='s',
                  label='Forward-plain', alpha=0.8)
-    ax34.scatter(potf, plainb[0][::subcycles, 4][::-1], marker='^',
+    ax34.scatter(vpotf, plainb[0][::subcycles, 4][::-1], marker='^',
                  label='Backward-plain', alpha=0.8)
     ax34.set_xlabel('Vpot Forward')
     ax34.set_ylabel('Vpot')
-    minx = min(potf)
-    maxx = max(potf)
+    minx = min(vpotf)
+    maxx = max(vpotf)
     ax34.plot([minx, maxx], [minx, maxx], ls=':',
               c='#262626', alpha=0.5, lw=2)
     ax34.legend()

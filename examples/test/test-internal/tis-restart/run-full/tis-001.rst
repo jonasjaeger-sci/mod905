@@ -4,9 +4,7 @@ TIS 1D example
 Simulation settings
 -------------------
 interfaces = [-0.9, -0.9, 1.0]
-ensemble = 1
 steps = 200
-detect = -0.8
 task = tis
 
 System settings
@@ -67,6 +65,8 @@ restart-file = 10
 
 TIS settings
 ------------
+ensemble_number = 1
+detect = -0.8
 rescale_energy = False
 zero_momentum = False
 maxlength = 20000

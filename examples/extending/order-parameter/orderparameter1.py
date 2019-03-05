@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2019, pyretis Development Team.
+# Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains examples for order parameters.
 
-This file is distributed as part of the documentation of pyretis.
+This file is distributed as part of the documentation of PyRETIS.
 """
 import numpy as np
 from pyretis.orderparameter import OrderParameter
@@ -12,12 +12,12 @@ from pyretis.orderparameter import OrderParameter
 class PlaneDistanceX(OrderParameter):
     """A positional order parameter.
 
-    This class defines a very simple order parameter which is just
-    the position of a given particle.
+    This class defines a very simple order parameter which is
+    the distance from a plane for a given particle.
     """
 
     def __init__(self, index, plane_position):
-        """Initialize the order parameter.
+        """Initialise the order parameter.
 
         Parameters
         ----------
@@ -31,8 +31,7 @@ class PlaneDistanceX(OrderParameter):
         txt = 'Distance from particle {} to the plane at {}'.format(
             index,
             plane_position)
-        super().__init__('Plane distance, x-axis', desc=txt)
-        print(index, plane_position)
+        super().__init__(description=txt)
         self.index = index
         self.plane_position = plane_position
 
@@ -40,9 +39,4 @@ class PlaneDistanceX(OrderParameter):
         """Calculate the order parameter."""
         pos = system.particles.pos[self.index]
         dist = -np.abs(pos[0] - self.plane_position)
-        print(dist)
-        return dist
-
-    def calculate_velocity(self, system):
-        """Calculate the time derivative of the order parameter."""
-        pass
+        return [dist]

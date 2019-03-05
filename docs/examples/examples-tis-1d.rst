@@ -3,7 +3,7 @@
 TIS in a 1D potential
 =====================
 
-In this example  you will explore a rare event
+In this example, you will explore a rare event
 with the Transition Interface Sampling (TIS) algorithm.
 
 We will consider a simple 1D potential where a particle is moving.
@@ -36,7 +36,7 @@ crossing probability and an initial flux. To obtain to the
 crossing probability, we need to carry out TIS simulations for
 each path ensemble we define and in order to obtain the
 initial flux, we will have to carry out a MD simulation.
-Below we describe the two kinds input files we need to create.
+Below we describe the two kinds of input files we need to create.
 
 .. _examples-tis-1d-input:
 
@@ -118,12 +118,12 @@ random number generator used by the integrator.
 TIS specific settings
 ^^^^^^^^^^^^^^^^^^^^^
 
-The TIS settings controls how the TIS algorithm is carried out.
+The TIS settings control how the TIS algorithm is carried out.
 Here we set that 50 % of the moves should be shooting moves (keyword ``freq``)
 and we limit all paths to a maximum length of 20 000 steps.
-Further we select aimless shooting and we tell |pyretis| to not set the
+Further, we select aimless shooting and we tell |pyretis| to not set the
 momentum to zero and to not rescale the energy after drawing new random velocities.
-Further we set ``allowmaxlength = False`` which means that for shooting,
+We also set ``allowmaxlength = False`` which means that for shooting,
 we determine (randomly) the length of new paths based on the length of
 the path we are shooting from. The given seed is a seed for the random number
 generator used by the TIS algorithm.
@@ -136,7 +136,7 @@ generator used by the TIS algorithm.
 Initial path settings
 ^^^^^^^^^^^^^^^^^^^^^
 
-These settings determined how we find the initial path(s).
+These settings determine how we find the initial path(s).
 Here, we ask |pyretis| to generate these using the
 :ref:`kick method <user-section-initial-path-kick>`.
 
@@ -157,6 +157,9 @@ of the single particle we are simulating.
 
 Modifying the output
 ^^^^^^^^^^^^^^^^^^^^
+
+To save some disk space, we will set up the simulation to
+only write output for trajectories at every 100th step.
 
 .. literalinclude:: /_static/examples/tis1d/tis-1d.txt
    :language: rst
@@ -203,7 +206,7 @@ will rename the log file.
 Analysing the TIS results
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When the all the TIS simulatoins are finished, we can analyse the results.
+When the all the TIS simulations are finished, we can analyse the results.
 |pyretis| will create a file, ``out.rst_000``, which you can use for the analysis.
 This is a copy of the input ``tis.rst`` with some additional settings
 for the analysis. For a description of the analysis specific keywords,

@@ -36,7 +36,7 @@ from pyretis.inout.report.report_path import (generate_report_retis,
                                               generate_report_retis0,
                                               generate_report_tis,
                                               generate_report_tis_path)
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -59,13 +59,13 @@ _TEMPLATE_NAMES = {'md-flux': 'mdflux',
                    'retis': 'retis',
                    'retis0': 'retis0',
                    'tis': 'tis',
-                   'tis-single': 'tis_single'}
+                   'tis-multiple': 'tis-multiple'}
 
 _REPORT_MAP = {'md-flux': generate_report_mdflux,
                'retis': generate_report_retis,
                'retis0': generate_report_retis0,
-               'tis': generate_report_tis,
-               'tis-single': generate_report_tis_path}
+               'tis-multiple': generate_report_tis,
+               'tis': generate_report_tis_path}
 # Table for file extensions:
 _EXT = {'rst': 'rst',
         'html': 'html',
@@ -119,10 +119,10 @@ def get_template(output, report_type, template=None):
 
     Returns
     -------
+    out[0] : string
+        Filename of template to use.
     out[1] : string
-        File name of template to use.
-    out[2] : string
-        Path to the template to use.
+        The path to the template to use.
 
     """
     if template is None or not os.path.isfile(template):
@@ -146,9 +146,9 @@ def render_report(report, output, template, path):
     """Render a report using a template and jinja2.
 
     The report is given as a dictionary which is used to fill in a
-    template with jinja2. The template is given as string
+    template with jinja2. The template is given as a string
     (a file name) with a path to the template. The output can also be
-    specified here and this is only use to convert to HTML if that is
+    specified here and this is only used to convert to HTML if that is
     the desired output.
 
     Parameters
@@ -162,7 +162,7 @@ def render_report(report, output, template, path):
     template : string
         This is the template to use (the file name).
     path :  string
-        This is the template file to use (it's path).
+        This is the template file to use (its full path).
 
     Returns
     -------
@@ -177,11 +177,14 @@ def render_report(report, output, template, path):
     call to :py:func:`.get_template`.
 
     """
-    env = jinja2.Environment(block_start_string='@{%',
-                             block_end_string='%}@',
-                             variable_start_string='@{{',
-                             variable_end_string='}}@',
-                             loader=jinja2.FileSystemLoader(path))
+    env = jinja2.Environment(
+        block_start_string='@{%',
+        block_end_string='%}@',
+        variable_start_string='@{{',
+        variable_end_string='}}@',
+        autoescape=jinja2.select_autoescape(['html', 'htm', 'xml']),
+        loader=jinja2.FileSystemLoader(path)
+    )
     # pylint: disable=maybe-no-member
     render = env.get_template(template).render(report)
     # pylint: enable=maybe-no-member

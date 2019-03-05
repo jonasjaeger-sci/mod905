@@ -9,19 +9,19 @@ Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 generate_report_tis (:py:func:`.generate_report_tis`)
-    Generate a report for the over-all results from a TIS simulation.
+    Generate a report for the overall results from a TIS simulation.
 
 generate_report_tis_path (:py:func:`.generate_report_tis_path`)
     Generate a report for a single TIS simulation.
 
 generate_report_retis (:py:func:`.generate_report_retis`)
-    Generate a report for the over-all results from a RETIS simulation.
+    Generate a report for the overall results from a RETIS simulation.
 """
 import logging
 from pyretis.inout.report.markup import (generate_rst_table,
                                          generate_latex_table)
-from pyretis.inout.common import apply_format, format_number
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.inout.formats.formatter import apply_format, format_number
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -199,13 +199,13 @@ def generate_report_retis(analysis, output='rst'):
 def generate_report_retis0(analysis, output='txt'):
     """Generate a report for [0^-] in a RETIS simulation.
 
-    This method is primary intended for displaying results on the
+    This method is primarily intended for displaying results on the
     screen during the analysis.
 
     Parameters
     ----------
     analysis : dict
-        This is the output from the analysis.
+        This is the output of the analysis.
     output : string, optional
         This is the desired output format. It must match one of the
         formats defined in
@@ -244,7 +244,7 @@ def _table_interface(results, fmt='rst'):
     Parameters
     ----------
     results : list of dicts
-        These are the results from the analysis.
+        These are the results of the analysis.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').
@@ -294,7 +294,7 @@ def _table_interface0(results, fmt='rst'):
     Parameters
     ----------
     results : list of dicts
-        These are the results from the analysis.
+        These are the results of the analysis.
     fmt : string, optional
         Determines if we create reStructuredText ('rst') or
         latex ('tex').
@@ -515,7 +515,7 @@ def _table_summary(report, fmt='rst'):
 def _get_path_figures(figures):
     """Return path figures from a dict of figures.
 
-    This method extracts figures from results and make them avaiable
+    This method extracts figures from results and makes them available
     to the report.
 
     Parameters

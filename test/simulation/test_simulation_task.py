@@ -4,7 +4,8 @@
 """Test the SimulationTask class."""
 import logging
 import unittest
-from pyretis.simulation.simulation_task import SimulationTask, execute_now
+from pyretis.simulation.simulation_task import SimulationTask
+from .test_helpers import turn_on_logging
 logging.disable(logging.CRITICAL)
 
 
@@ -37,19 +38,17 @@ class SimulationTaskTest(unittest.TestCase):
         # Test giving too many kwargs
         inkw = {'test': 'yes', 'more': 'indeed'}
         with self.assertRaises(AssertionError):
-            logging.disable(logging.INFO)
-            with self.assertLogs('pyretis.simulation.simulation_task',
-                                 level='WARNING'):
-                SimulationTask(some_function2, kwargs=inkw)
-            logging.disable(logging.CRITICAL)
+            with turn_on_logging():
+                with self.assertLogs('pyretis.simulation.simulation_task',
+                                     level='WARNING'):
+                    SimulationTask(some_function2, kwargs=inkw)
         # Test giving kwargs when None are expected
         inkw = {'missing': 'indeed'}
         with self.assertRaises(AssertionError):
-            logging.disable(logging.INFO)
-            with self.assertLogs('pyretis.simulation.simulation_task',
-                                 level='WARNING'):
-                SimulationTask(some_function, kwargs=inkw)
-            logging.disable(logging.CRITICAL)
+            with turn_on_logging():
+                with self.assertLogs('pyretis.simulation.simulation_task',
+                                     level='WARNING'):
+                    SimulationTask(some_function, kwargs=inkw)
 
     def test_execute(self):
         """Test that we can execute the task."""
@@ -89,8 +88,6 @@ class SimulationTaskTest(unittest.TestCase):
         result = task3.execute(step)
         self.assertFalse(task3.run_first())
         self.assertEqual(result, 25)
-        when = {'every': 3}
-        task3.update_when(when)
 
         task4 = SimulationTask(some_function4,
                                kwargs={'exp': 2},
@@ -100,36 +97,37 @@ class SimulationTaskTest(unittest.TestCase):
         self.assertTrue(task4.run_first())
         self.assertEqual(task4.result, 'the-stuff')
 
-        when = {'every': 3}
-        task4.update_when(when)
+    def test_when_change(self):
+        """Test that we can change the "when" property."""
+        def function(var):  # pylint: disable=missing-docstring
+            return var * 10
+        task = SimulationTask(function, args=[2], result='times-10')
+        step = {'step': 10, 'start': 3, 'stepno': 7}
+        result = task(step)
+        self.assertEqual(result, 20)
+        self.assertIsNone(task.when)
+        task.when = None
+        self.assertIsNone(task.when)
+        task.when = {'every': 1}
+        self.assertEqual(task.when, {'every': 1})
+        task.when = None
+        self.assertIsNone(task.when)
+        task.when = {'every': 1, 'all-the-time': 100}
+        self.assertEqual(task.when, {'every': 1})
 
-
-class ExecuteNowTest(unittest.TestCase):
-    """Test the execute now method."""
-
-    def test_execute_now(self):
-        """Test the execute now method."""
-        step = {'step': 10, 'start': 2, 'stepno': 8}
-
-        when = None
-        exe = execute_now(step, when)
-        self.assertTrue(exe)
-
-        when = {'every': 2}
-        exe = execute_now(step, when)
-        self.assertTrue(exe)
-
-        when = {'every': 3}
-        exe = execute_now(step, when)
-        self.assertFalse(exe)
-
-        when = {'at': 10}
-        exe = execute_now(step, when)
-        self.assertTrue(exe)
-
-        when = {'at': (1, 9, 10)}
-        exe = execute_now(step, when)
-        self.assertTrue(exe)
+    def test_task_dict(self):
+        """Test that the dictionary returned from a task is ok."""
+        def function(var):  # pylint: disable=missing-docstring
+            return var * 2
+        task = SimulationTask(function, args=[21], result='double')
+        task.when = {'every': 2}
+        task_dict = task.task_dict()
+        self.assertIsNone(task_dict['kwargs'])
+        self.assertEqual(task_dict['when'], {'every': 2})
+        self.assertFalse(task_dict['first'])
+        self.assertEqual(task_dict['result'], 'double')
+        self.assertEqual(task_dict['args'], [21])
+        self.assertEqual(task_dict['func'], function)
 
 
 if __name__ == '__main__':

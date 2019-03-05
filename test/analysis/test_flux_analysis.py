@@ -7,9 +7,10 @@ import unittest
 import os
 import pickle
 import numpy as np
-from pyretis.analysis.flux_analysis import analyse_flux
-from pyretis.inout.writers import prepare_load
+from pyretis.analysis.flux_analysis import analyse_flux, find_crossings
 from pyretis.inout.settings import SECTIONS
+from pyretis.inout.formats.cross import CrossFile
+from pyretis.inout.formats.order import OrderFile
 logging.disable(logging.CRITICAL)
 
 
@@ -22,7 +23,9 @@ class FluxTest(unittest.TestCase):
     def test_flux_analysis(self):
         """Test the flux analysis."""
         filename = os.path.join(HERE, 'cross.txt')
-        data = prepare_load('cross', filename, required=True)
+        data = None
+        with CrossFile(filename, 'r') as crossfile:
+            data = crossfile.load()
         settings = {
             'simulation': {'endcycle': 250000, 'interfaces': [-0.9]},
             'engine': {'timestep': 0.002},
@@ -51,6 +54,29 @@ class FluxTest(unittest.TestCase):
                                 results['errflux']):
             for i, j in zip(data1, data2):
                 self.assertTrue(np.allclose(i, j))
+
+    def test_crossing_calculation(self):
+        """Test calculation of crossings from order parameter data."""
+        filename = os.path.join(HERE, 'order-calculate-crossings.txt')
+        data = None
+        with OrderFile(filename, 'r') as orderfile:
+            data = orderfile.load()
+        orderp = next(data)['data'][:, 1]
+        cross = find_crossings(orderp, [-0.9, -0.85, -0.70])
+
+        filename_cross = os.path.join(HERE, 'cross-correct.txt')
+        cross_correct = None
+        with CrossFile(filename_cross, 'r') as crossfile:
+            cross_correct = next(crossfile.load())['data']
+        self.assertEqual(len(cross), len(cross_correct))
+        for i, j in zip(cross, cross_correct):
+            self.assertEqual(i[0], j[0])
+            self.assertEqual(i[1], j[1] - 1)
+            self.assertIn(i[2], ('+', '-'))
+            if i[2] == '-':
+                self.assertEqual(j[2], -1)
+            elif i[2] == '+':
+                self.assertEqual(j[2], 1)
 
 
 if __name__ == '__main__':

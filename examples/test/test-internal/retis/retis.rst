@@ -4,7 +4,7 @@ Retis 1D example
 Simulation
 ----------
 task = retis
-steps = 250
+steps = 25
 interfaces = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 
 System
@@ -23,7 +23,8 @@ class = Langevin
 timestep = 0.002
 gamma = 0.3
 high_friction = False
-seed = 321
+seed = 0
+rgen = test
 
 TIS settings
 ------------
@@ -33,8 +34,9 @@ aimless = True
 allowmaxlength = False
 zero_momentum = False
 rescale_energy = False
-sigma_v =  -1
-seed = 123
+sigma_v = -1
+seed = 0
+rgen = test
 
 RETIS settings
 --------------
@@ -51,9 +53,6 @@ kick-from = initial
 Particles
 ---------
 position = {'file': 'initial.xyz'}
-velocity = {'generate': 'maxwell',
-            'momentum': False,
-            'seed': 0}
 mass = {'Ar': 1.0}
 name = ['Ar']
 type = [0]

@@ -3,7 +3,7 @@
 The RETIS section
 =================
 
-Specifies settings for RETIS simulations. Note that
+The ``RETIS`` section specifies settings for RETIS simulations. Note that
 the section for :ref:`TIS <user-section-tis>` also needs
 to be defined for a RETIS simulation.
 
@@ -34,7 +34,7 @@ The following keywords can be set for the RETIS section:
 .. _table-retis-keywords:
 
 .. table:: Keywords for the RETIS section.
-   :class: table-striped
+   :class: table-striped table-hover
 
    +-------------------+------------------------------------------------------+
    | Keyword           | Description                                          |

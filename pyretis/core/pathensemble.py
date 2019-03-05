@@ -20,18 +20,39 @@ import collections
 import logging
 import os
 import shutil
-import tarfile
-from pyretis.inout.common import create_backup
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['PathEnsemble', 'PathEnsembleExt']
 
 
-PATH_DIR_FMT = '{:03d}'  # For naming path ensemble (and its output dir).
+def generate_ensemble_name(ensemble_number, zero_pad=3):
+    """Generate a simple name for an ensemble.
+
+    The simple name will have a format like 01, 001, 0001 etc. and it
+    is used to name the path ensemble and the output directory.
+
+    Parameters
+    ----------
+    ensemble_number : int
+        The number representing the ensemble.
+    zero_pad : int, optional
+        The number of zeros to use for padding the name.
+
+    Returns
+    -------
+    out : string
+        The ensemble name.
+
+    """
+    if zero_pad < 3:
+        logger.warning('zero_pad must be >= 3. Setting it to 3.')
+        zero_pad = 3
+    fmt = '{{:0{}d}}'.format(zero_pad)
+    return fmt.format(ensemble_number)
 
 
 def _generate_file_names(path, target_dir, prefix=None):
@@ -42,8 +63,8 @@ def _generate_file_names(path, target_dir, prefix=None):
     path : object like :py:class:`.PathBase`
         This is the path object we are going to store.
     target_dir : string
-        The location were we are moving the path to.
-    prefix : string or None
+        The location where we are moving the path to.
+    prefix : string, optional
         The prefix can be used to prefix the name of the files.
 
     Returns
@@ -56,9 +77,9 @@ def _generate_file_names(path, target_dir, prefix=None):
 
     """
     source = {}
-    new_pos = [None for _ in range(len(path.pos))]
-    for i, phasepoint in enumerate(path.trajectory(reverse=False)):
-        pos_file, idx = phasepoint['pos']
+    new_pos = []
+    for phasepoint in path.phasepoints:
+        pos_file, idx = phasepoint.particles.get_pos()
         if pos_file not in source:
             localfile = os.path.basename(pos_file)
             if prefix is not None:
@@ -66,31 +87,32 @@ def _generate_file_names(path, target_dir, prefix=None):
             dest = os.path.join(target_dir, localfile)
             source[pos_file] = dest
         dest = source[pos_file]
-        new_pos[i] = (dest, idx)
+        new_pos.append((dest, idx))
     return new_pos, source
 
 
 class PathEnsemble:
     """Representation of a path ensemble.
 
-    This class represents a collection of `Paths` in a path ensemble.
-    In general paths may be 'long and complicated' so here, we really
-    just store an simplified abstraction of the path, which is obtained
+    This class represents a collection of paths in a path ensemble.
+    In general, paths may be "long and complicated" so here, we really
+    just store a simplified abstraction of the path, which is obtained
     by the `Path.get_path_data()` function for a given `Path` object.
     The returned dictionary is stored in the list `PathEnsemble.paths`.
-    The only full path we store, is the last accepted path. This is
+    The only full path we store is the last accepted path. This is
     convenient for the RETIS method where paths may be swapped between
     path ensembles.
 
     Attributes
     ----------
-    ensemble : integer
-        This integer is used to represent the path ensemble, for retis
+    ensemble_number : integer
+        This integer is used to represent the path ensemble, for RETIS
         simulations it's useful to identify the path ensemble. The path
         ensembles are numbered sequentially 0, 1, 2, etc. This
         corresponds to ``[0^-]``, ``[0^+]``, ``[1^+]``, etc.
     ensemble_name : string
-        A string which can be used for printing the ensemble name
+        A string which can be used for printing the ensemble name.
+        This is of form ``[0^-]``, ``[0^+]``, ``[1^+]``, etc.
     ensemble_name_simple : string
         A string with a simpler representation of the ensemble name,
         can be used for creating output files etc.
@@ -117,7 +139,7 @@ class PathEnsemble:
 
     """
 
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
+    def __init__(self, ensemble_number, interfaces, detect=None, maxpath=10000,
                  exe_dir=None):
         """Initialise the PathEnsemble object.
 
@@ -127,9 +149,9 @@ class PathEnsemble:
             An integer used to identify the ensemble.
         interfaces : list of floats
             These are the interfaces specified with the values
-            for the order parameters: [left, middle, right]
+            for the order parameters: ``[left, middle, right]``.
         detect : float, optional
-            The interface used for detecting successful path in the
+            The interface used for detecting a successful path in the
             analysis.
         maxpath : integer, optional
             The maximum number of paths to store information for in memory.
@@ -141,20 +163,22 @@ class PathEnsemble:
             ensemble.
 
         """
-        self.ensemble = ensemble
-        self.interfaces = tuple(interfaces)  # Should not change interfaces
-        self.detect = detect  # detect interface to use for analysis
+        self.ensemble_number = ensemble_number
+        self.interfaces = tuple(interfaces)  # Should not change interfaces.
+        self.detect = detect
         self.last_path = None
         self.nstats = {'npath': 0, 'nshoot': 0, 'ACC': 0}
         self.paths = []
         self.maxpath = maxpath
-        if self.ensemble == 0:
+        if self.ensemble_number == 0:
             self.ensemble_name = '[0^-]'
             self.start_condition = 'R'
         else:
-            self.ensemble_name = '[{}^+]'.format(self.ensemble - 1)
+            self.ensemble_name = '[{}^+]'.format(self.ensemble_number - 1)
             self.start_condition = 'L'
-        self.ensemble_name_simple = PATH_DIR_FMT.format(self.ensemble)
+        self.ensemble_name_simple = generate_ensemble_name(
+            self.ensemble_number
+        )
         self.directory = collections.OrderedDict()
         self.directory['path-ensemble'] = None
         self.directory['accepted'] = None
@@ -166,7 +190,8 @@ class PathEnsemble:
 
     def directories(self):
         """Yield the directories PyRETIS should make."""
-        yield self.directory['path-ensemble']
+        for key in self.directory:
+            yield self.directory[key]
 
     def update_directories(self, path):
         """Update directory names.
@@ -219,7 +244,7 @@ class PathEnsemble:
 
         Returns
         -------
-        None, but we update self.last_path
+        None, but we update `self.last_path`.
 
         """
         self.last_path = path
@@ -237,11 +262,11 @@ class PathEnsemble:
             This is the object to store data from.
         status : string
             This is the status of the path. Note that the path object
-            also have a status property. However this one might not be
-            set, for instance when path is just None. We therefore use
-            `status` here as a parameter.
+            also has a status property. However, this one might not be
+            set, for instance when the path is just None. We therefore
+            use `status` here as a parameter.
         cycle : int, optional
-            The current cycle number
+            The current cycle number.
 
         """
         if len(self.paths) >= self.maxpath:
@@ -252,7 +277,7 @@ class PathEnsemble:
                           'in memory.\nThis will *NOT* influence the '
                           'simulation'), self.ensemble_name)
             self.paths = []
-        # update statistics:
+        # Update statistics:
         if path is None:
             # Here we add a dummy path with minimal info. This is because we
             # could not generate a path for some reason which should be
@@ -260,24 +285,24 @@ class PathEnsemble:
             path_data = {'status': status, 'generated': ('', 0, 0, 0)}
         else:
             path_data = path.get_path_data(status, self.interfaces)
-            if path_data['status'] == 'ACC':  # store the path
+            if path_data['status'] == 'ACC':  # Store the path:
                 self.store_path(path)
                 if path_data['generated'][0] == 'sh':
                     self.nstats['nshoot'] += 1
-        path_data['cycle'] = cycle  # also store cycle number
-        self.paths.append(path_data)  # store the new data
-        # update some statistics:
+        path_data['cycle'] = cycle  # Also store cycle number.
+        self.paths.append(path_data)  # Store the new data.
+        # Update some statistics:
         try:
             self.nstats[status] += 1
-        except KeyError:  # this is the first occurrence of the status:
+        except KeyError:  # This is the first occurrence of the status:
             self.nstats[status] = 1
         self.nstats['npath'] += 1
 
     def get_accepted(self):
-        """Yield accepted paths from the PathEnsemble.
+        """Yield accepted paths from the path ensemble.
 
-        This function  will give an iterator useful for iterating over
-        accepted paths only. In the PathEnsemble we store both accepted
+        This function will return an iterator useful for iterating over
+        accepted paths only. In the path ensemble we store both accepted
         and rejected paths. This function will loop over all paths
         stored and yield the accepted paths the correct number of times.
         """
@@ -313,8 +338,8 @@ class PathEnsemble:
         """Yield the different paths stored in the path ensemble.
 
         It is included here in order to have a simple compatibility
-        between the `PathEnsemble` object and the `PathEnsembleFile`
-        object defined in `pyretis.inout`. This is useful for the
+        between the :py:class:`.PathEnsemble` object and the
+        py:class:`.PathEnsembleFile` object. This is useful for the
         analysis.
 
         Yields
@@ -328,7 +353,7 @@ class PathEnsemble:
 
     def move_path_to_generated(self, path, prefix=None):
         """Move a path for temporary storing."""
-        pass
+        return
 
     def __str__(self):
         """Return a string with some info about the path ensemble."""
@@ -351,7 +376,7 @@ class PathEnsemble:
             'nstats': self.nstats,
             'interfaces': self.interfaces,
             'detect': self.detect,
-            'ensemble': self.ensemble,
+            'ensemble_number': self.ensemble_number,
         }
         if self.last_path:
             restart['last_path'] = self.last_path.restart_info()
@@ -366,15 +391,15 @@ class PathEnsemble:
             A object we can load the stored path into.
         info : dict
             A dictionary with the restart information.
-        cycle : integer
+        cycle : integer, optional
             The current simulation cycle.
 
         """
         self.nstats = info['nstats']
-        for attr in ('interfaces', 'detect', 'ensemble'):
+        for attr in ('interfaces', 'detect', 'ensemble_number'):
             if info[attr] != getattr(self, attr):
-                logger.warning('Inconsistent ensemble restart info for %s',
-                               attr)
+                logger.warning(
+                    'Inconsistent path ensemble restart info for %s', attr)
         path.load_restart_info(info['last_path'])
         path_data = path.get_path_data('ACC', self.interfaces)
         path_data['cycle'] = cycle
@@ -388,29 +413,8 @@ class PathEnsembleExt(PathEnsemble):
     This class is similar to :py:class:`.PathEnsemble` but it is made
     to work with external paths. That is, some extra file handling is
     done when accepting a path.
+
     """
-
-    def __init__(self, ensemble, interfaces, detect=None, maxpath=10000,
-                 exe_dir=None):
-        """Initialise the PathEnsembleExt object.
-
-        Parameters
-        ----------
-        ensemble : integer
-            An integer used to identify the ensemble.
-        interfaces : list of floats
-            These are the interfaces specified with the values
-            for the order parameters: [left, middle, right]
-
-        """
-        super().__init__(ensemble, interfaces, detect=detect,
-                         maxpath=maxpath, exe_dir=exe_dir)
-        self._traj_file = os.path.join(self.directory['traj'], 'traj.tar')
-
-    def directories(self):
-        """Yield the directories PyRETIS should make."""
-        for key in self.directory:
-            yield self.directory[key]
 
     @staticmethod
     def _move_path(path, target_dir, prefix=None):
@@ -421,15 +425,16 @@ class PathEnsembleExt(PathEnsemble):
         path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
         target_dir : string
-            The location were we are moving the path to.
-        prefix : string or None
+            The location where we are moving the path to.
+        prefix : string, optional
             To give a prefix to the name of moved files.
 
         """
         logger.debug('Moving path to %s', target_dir)
         new_pos, source = _generate_file_names(path, target_dir,
                                                prefix=prefix)
-        path.pos = new_pos
+        for pos, phasepoint in zip(new_pos, path.phasepoints):
+            phasepoint.particles.set_pos(pos)
         for src, dest in source.items():
             if src == dest:
                 logger.debug('Skipping move %s -> %s', src, dest)
@@ -450,7 +455,9 @@ class PathEnsembleExt(PathEnsemble):
         path : object like :py:class:`.PathBase`
             This is the path object we are going to store.
         target_dir : string
-            The location were we are moving the path to.
+            The location where we are moving the path to.
+        prefix : string, optional
+            To give a prefix to the name of copied files.
 
         Returns
         -------
@@ -460,8 +467,10 @@ class PathEnsembleExt(PathEnsemble):
         """
         new_pos, source = _generate_file_names(path, target_dir,
                                                prefix=prefix)
-        path_copy = path.copy_path()
-        path_copy.pos = new_pos
+        path_copy = path.copy()
+        # Update positions:
+        for pos, phasepoint in zip(new_pos, path_copy.phasepoints):
+            phasepoint.particles.set_pos(pos)
         for src, dest in source.items():
             shutil.copy(src, dest)
         return path_copy
@@ -487,8 +496,8 @@ class PathEnsembleExt(PathEnsemble):
         """List files in accepted directory that we do not need."""
         last = set()
         if self.last_path:
-            for phasepoint in self.last_path.trajectory(reverse=False):
-                pos_file, _ = phasepoint['pos']
+            for phasepoint in self.last_path.phasepoints:
+                pos_file, _ = phasepoint.particles.get_pos()
                 last.add(pos_file)
         for entry in os.scandir(self.directory['accepted']):
             if entry.is_file() and entry.path not in last:
@@ -498,65 +507,19 @@ class PathEnsembleExt(PathEnsemble):
         """Move a path for temporary storing."""
         self._move_path(path, self.directory['generate'], prefix=prefix)
 
-    def generate_output(self, cycle, path):
-        """Output a trajectory by adding it to a tar file.
-
-        This method handles the "physical" output.
-
-        Parameters
-        ----------
-        cycle : dict
-            The current cycle number dictionary as obtained from the
-            simulation object. This is used to generate a unique name
-            for the output file.
-        path : object like :py:class:`.PathBase`
-            The path to output.
-
-        Returns
-        -------
-        path_copy : object like :py:class:`.PathBase`
-            A path like the input `path`, but with updated file names.
-
-        """
-        new_pos, source = _generate_file_names(
-            path,
-            self.directory['traj'],
-            prefix='{}_'.format(cycle['step']))
-        path_copy = path.copy_path()
-        path_copy.pos = new_pos
-        try:
-            with tarfile.open(self._traj_file, 'a') as tar:
-                for src, dest in source.items():
-                    tar.add(src, arcname=os.path.basename(dest))
-        except tarfile.ReadError:
-            logger.warning('Could not open trajectory: "%s"', self._traj_file)
-            logger.info('Will backup and create new file.')
-            logtxt = create_backup(self._traj_file)
-            logger.info(logtxt)
-            with tarfile.open(self._traj_file, 'w') as tar:
-                for src, dest in source.items():
-                    tar.add(src, arcname=os.path.basename(dest))
-        except OSError:  # pragma: no cover
-            logger.warning(
-                'Could not find trajectory: "%s". Will not write.',
-                self._traj_file
-            )
-        return path_copy
-
     def load_restart_info(self, path, info, cycle=0):
         """Load restart for external path."""
         super().load_restart_info(path, info, cycle=cycle)
         # Update file names:
         directory = self.directory['accepted']
-        new_pos = []
-        for pos in path.pos:
-            filename = os.path.basename(pos[0])
+        for phasepoint in path.phasepoints:
+            filename = os.path.basename(phasepoint.particles.get_pos()[0])
             new_file_name = os.path.join(directory, filename)
             if not os.path.isfile(new_file_name):
                 logger.critical('The restart path "%s" does not exist',
                                 new_file_name)
-            new_pos.append((new_file_name, pos[1]))
-        path.pos = new_pos
+            phasepoint.particles.set_pos((new_file_name,
+                                          phasepoint.particles.get_pos()[1]))
 
 
 def get_path_ensemble_class(ensemble_type):

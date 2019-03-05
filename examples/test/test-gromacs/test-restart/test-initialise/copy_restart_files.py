@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""This script will help copying files for restarting.
+"""This script will help to copy files for restarting.
 
-Here, we pick out the last accepted path.
+Here, we copy the last accepted path for each ensemble.
 """
-# pylint: disable=C0103
 import os
 import shutil
 import pickle
 from pyretis.inout.settings import parse_settings_file
-from pyretis.core.pathensemble import PATH_DIR_FMT
+from pyretis.core.pathensemble import generate_ensemble_name
 
 
 SOURCE = 'run-initialise'
@@ -18,25 +17,27 @@ TARGET = 'run-restart'
 
 
 def main():
-    """Copy the files :-)"""
+    """Copy the files."""
     settings = parse_settings_file(os.path.join(SOURCE, 'retis.rst'))
     nint = len(settings['simulation']['interfaces'])
     for i in range(nint):
-        ens = PATH_DIR_FMT.format(i)
+        ens = generate_ensemble_name(i)
         target = os.path.join(TARGET, ens)
         source = os.path.join(SOURCE, ens)
         shutil.copytree(source, target)
-        # read restart file and update paths:
+        # Read restart file and update paths:
         restart = os.path.join(target, 'ensemble.restart')
         info = {}
         with open(restart, 'rb') as infile:
             info = pickle.load(infile)
         newpos = []
-        for pos in info['last_path']['pos']:
-            name = os.path.basename(pos[0])
+        for phasepoint in info['last_path']['phasepoints']:
+            filename, idx = phasepoint['particles']['config']
+            name = os.path.basename(filename)
             abs_path = os.path.abspath(os.path.join(target, 'accepted', name))
-            newpos.append((abs_path, pos[1]))
-        info['last_path']['pos'] = newpos
+            newpos.append((abs_path, idx))
+        for phasepoint, pos in zip(info['last_path']['phasepoints'], newpos):
+            phasepoint['particles']['config'] = pos
         with open(restart, 'wb') as outfile:
             pickle.dump(info, outfile)
 

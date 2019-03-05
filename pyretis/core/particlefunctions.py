@@ -42,7 +42,7 @@ calculate_thermo (:py:func:`calculate_thermo`)
 
 calculate_thermo_path (:py:func:`calculate_thermo_path`)
     Calculate and return some thermodynamic properties. This method
-    is similar to the `calculate_thermo`, however it is simpler and
+    is similar to the `calculate_thermo`, however, it is simpler and
     calculates fewer quantities.
 
 kinetic_energy (:py:func:`kinetic_energy`)
@@ -85,15 +85,15 @@ def _get_vel_mass(particles, selection=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
 
     Returns
     -------
     out[0] : numpy.array
         The velocities corresponding to the selection.
-    out[1] : numpy.array
+    out[1] : numpy.array, optional
         The masses corresponding to the selection.
 
     """
@@ -112,9 +112,9 @@ def atomic_kinetic_energy_tensor(particles, selection=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
 
     Returns
     -------
@@ -142,10 +142,10 @@ def calculate_kinetic_energy(particles, selection=None, kin_tensor=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
-    kin_tensor : numpy.array
+        A list with indices of particles to use in the calculation.
+    kin_tensor : numpy.array, optional
         If kinetic_tensor is not given, the kinetic energy tensor will
         be calculated.
 
@@ -171,14 +171,14 @@ def calculate_kinetic_energy_tensor(particles, selection=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
 
     Returns
     -------
     out : numpy.array
-        The kinetic energy tensor. Dimensionality equal to (dim, dim)
+        The kinetic energy tensor. Dimensionality is equal to (dim, dim)
         where dim is the number of dimensions used in the velocities.
         The trace gives the kinetic energy.
 
@@ -222,14 +222,14 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     boltzmann : float
         This is the Boltzmann factor/constant in correct units.
     dof : list of floats, optional
-        dof is the degrees of freedom to subtract. It's shape should
+        The degrees of freedom to subtract. Its shape should
         be equal to the number of dimensions.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
     kin_tensor : numpy.array optional
         The kinetic energy tensor. If the kinetic energy tensor is not
         given, it will be recalculated here.
@@ -237,7 +237,7 @@ def calculate_kinetic_temperature(particles, boltzmann, dof=None,
     Returns
     -------
     out[0] : numpy.array
-        Array with same size as the kinetic energy, it
+        Array with the same size as the kinetic energy. It
         contains the temperature in each spatial dimension.
     out[1] : float
         The temperature averaged over all dimensions.
@@ -274,7 +274,7 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None, kin_tensor=None):
     boltzmann : float
         This is the Boltzmann factor/constant in correct units.
     dof : list of floats, optional
-        dof is the degrees of freedom to subtract. It's shape should
+        The degrees of freedom to subtract. Its shape should
         be equal to the number of dimensions.
     kin_tensor : numpy.array optional
         The kinetic energy tensor. If the kinetic energy tensor is not
@@ -283,7 +283,7 @@ def kinetic_temperature(vel, mass, boltzmann, dof=None, kin_tensor=None):
     Returns
     -------
     out[0] : numpy.array
-        Array with same size as the kinetic energy, it
+        Array with the same size as the kinetic energy. It
         contains the temperature in each spatial dimension.
     out[1] : float
         The temperature averaged over all dimensions.
@@ -309,9 +309,9 @@ def calculate_linear_momentum(particles, selection=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
 
     Returns
     -------
@@ -333,7 +333,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     dim : int
         This is the dimensionality of the system.
         Typically provided by `system.get_dim()`.
@@ -344,7 +344,7 @@ def calculate_pressure_from_temp(particles, dim, boltzmann, volume,
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `box.calculate_volume()`
     dof : list of floats, optional
-        `dof` is the degrees of freedom to subtract. Its shape should
+        The degrees of freedom to subtract. Its shape should
         be equal to the number of dimensions.
 
     Returns
@@ -381,11 +381,11 @@ def calculate_pressure_tensor(particles, volume, kin_tensor=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `box.calculate_volume()`.
-    kin_tensor : numpy.array
+    kin_tensor : numpy.array, optional
         The kinetic energy tensor. If `kin_tensor` is not given, it will
         be calculated here.
 
@@ -409,24 +409,24 @@ def calculate_scalar_pressure(particles, volume, dim, press_tensor=None,
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     volume : float
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `box.calculate_volume()`.
     dim : int
         This is the dimensionality of the system. Typically provided by
         `system.get_dim()`
-    press_tensor : numpy.array
+    press_tensor : numpy.array, optional
         If `press_tensor` is not given, the pressure tensor will be
         calculated here.
-    kin_tensor : numpy.array
+    kin_tensor : numpy.array, optional
         If `kin_tensor` is not given, the kinetic energy tensor will be
         calculated here.
 
     Returns
     -------
     out : float
-        The scalar pressure, averaged over the diagonal components of
+        The scalar pressure averaged over the diagonal components of
         the pressure tensor.
 
     """
@@ -447,16 +447,15 @@ def calculate_thermo(system, dof=None, dim=None, volume=None, vpot=None):
     ----------
     system : object like :py:class:`.System`
         This object is used to access the particles and the box.
-    dof : list of floats
-        `dof` is the degrees of freedom, typically provided with
-        a `system.temperature['dof']`.
-    dim : float
+    dof : list of floats, optional
+        The degrees of freedom.
+    dim : float, optional
         The dimensionality of, typically provided with a
         `system.get_dim()`.
-    volume : float
+    volume : float, optional
         This is the volume 'occupied' by the particles. It can typically
         be obtained by a `system.box.calculate_volume()`.
-    vpot : float
+    vpot : float, optional
         The potential energy of the particles.
 
     Returns
@@ -496,7 +495,10 @@ def calculate_thermo_path(system):
     """Calculate and return several thermodynamic properties.
 
     The calculated properties are the potential, kinetic and total
-    energies for the system and the current temperature.
+    energies for the system and the current temperature. The name here
+    ``calculate_thermo_path`` just indicates that this function is
+    useful in connection with path sampling simulations, i.e. it
+    just calculates a few energy terms.
 
     Parameters
     ----------
@@ -526,12 +528,12 @@ def reset_momentum(particles, selection=None, dim=None):
     Parameters
     ----------
     particles : object like :py:class:`.Particles`
-        This object represent the particles.
+        This object represents the particles.
     selection : list of integers, optional
-        A list with indexes of particles to use in calculation.
+        A list with indices of particles to use in the calculation.
     dim : list or None, optional
         If ``dim`` is None, the momentum will be reset for ALL
-        dimensions. Otherwise it will only be applied to the
+        dimensions. Otherwise, it will only be applied to the
         dimensions where ``dim`` is True.
 
     Returns

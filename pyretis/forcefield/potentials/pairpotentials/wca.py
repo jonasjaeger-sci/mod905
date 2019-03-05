@@ -7,12 +7,12 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DoubleWellWCA (:py:class:`.DoubleWellWCA`)
-    This class defines a n-dimensional Double Well potential.
+    This class defines a double well WCA potential.
 """
 import logging
 import numpy as np
 from pyretis.forcefield.potential import PotentialFunction
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -22,9 +22,9 @@ __all__ = ['DoubleWellWCA']
 class DoubleWellWCA(PotentialFunction):
     r"""A double well potential.
 
-    This class defines a n-dimensional Double Well potential.
-    The potential energy (:math:`V_\text{pot}`) for a pair of particles
-    separated by a distance :math:`r` is given by,
+    This class defines a double well WCA potential. The potential energy
+    (:math:`V_\text{pot}`) for a pair of particles separated by a
+    distance :math:`r` is given by,
 
     .. math::
 
@@ -64,7 +64,7 @@ class DoubleWellWCA(PotentialFunction):
         Parameters
         ----------
         dim : int, optional
-            Setting for the dimensionality of the potential
+            The dimensionality of the potential.
         desc : string, optional
             Description of the force field.
 
@@ -191,17 +191,18 @@ class DoubleWellWCA(PotentialFunction):
         box = system.box
         forces = np.zeros(particles.pos.shape)
         virial = np.zeros((box.dim, box.dim))
-        rwidth = self.params['rwidth']
-        width2 = self.params['width2']
-        height4 = self.params['height4']
         for pair in particles.pairs():
             i, j, itype, jtype = pair
             if self._activate(itype, jtype):
                 delta = box.pbc_dist_coordinate(particles.pos[i] -
                                                 particles.pos[j])
                 delr = np.sqrt(np.dot(delta, delta))
-                forceij = (height4 * (1.0 - (delr - rwidth)**2 / width2) *
-                           ((delr - rwidth) / width2))
+                diff = delr - self.params['rwidth']
+                forceij = (
+                    self.params['height4'] *
+                    (1.0 - diff**2 / self.params['width2']) *
+                    (diff / self.params['width2'])
+                )
                 forceij = forceij * delta / delr
                 forces[i] += forceij
                 forces[j] -= forceij
@@ -231,23 +232,21 @@ class DoubleWellWCA(PotentialFunction):
 
         """
         particles = system.particles
-        box = system.box
         forces = np.zeros(particles.pos.shape)
-        virial = np.zeros((box.dim, box.dim))
+        virial = np.zeros((system.box.dim, system.box.dim))
         v_pot = 0.0
-        rwidth = self.params['rwidth']
-        width2 = self.params['width2']
-        height = self.params['height']
-        height4 = self.params['height4']
         for pair in particles.pairs():
             i, j, itype, jtype = pair
             if self._activate(itype, jtype):
-                delta = box.pbc_dist_coordinate(particles.pos[i] -
-                                                particles.pos[j])
+                delta = system.box.pbc_dist_coordinate(particles.pos[i] -
+                                                       particles.pos[j])
                 delr = np.sqrt(np.dot(delta, delta))
-                v_pot += (height * (1.0 - (delr - rwidth)**2/width2)**2)
-                forceij = (height4 * (1.0 - (delr - rwidth)**2/width2) *
-                           ((delr - rwidth)/width2))
+                diff = delr - self.params['rwidth']
+                v_pot += (self.params['height'] *
+                          (1.0 - diff**2 / self.params['width2'])**2)
+                forceij = (self.params['height4'] *
+                           (1.0 - diff**2 / self.params['width2']) *
+                           (diff / self.params['width2']))
                 forceij = forceij * delta / delr
                 forces[i] += forceij
                 forces[j] -= forceij

@@ -6,7 +6,8 @@ import os
 import time
 import colorama
 from pyretis.core import System, create_box, ParticlesExt
-from pyretis.inout.common import make_dirs, print_to_screen
+from pyretis.inout.common import make_dirs
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.engines.cp2k import (
     CP2KEngine,
@@ -31,7 +32,7 @@ def run_step(engine, system, exe_dir='forward-single-step'):
     system : object like :py:class:`.System`
         The system we are propagation.
     exe_dir : string
-        The foler to use for the execution.
+        The folder to use for the execution.
     """
     print_to_screen('\nRunning a single CP2K step in "{}"'.format(exe_dir),
                     level='message')
@@ -49,7 +50,7 @@ def test_genvel(engine, input_file, exe_dir='genvel'):
     Parameters
     ----------
     engine : object like :py:class:`.ExternalMDEngine
-        Engine to use for propagation.
+        Engine to use for the generation.
     input_file : string
         The input configuration used for CP2K.
     exe_dir : string, optional
@@ -80,15 +81,12 @@ def main():
     print_to_screen('Time step: {}'.format(engine.timestep))
     print_to_screen('Subcycles: {}'.format(engine.subcycles))
     system = System(units='gromacs',
-                    box=create_box(length=[100, 100, 100]),
+                    box=create_box(cell=[100, 100, 100]),
                     temperature=500)
     system.particles = ParticlesExt(dim=3)
     initial_conf = engine.input_files['conf']
-    phase_point = {'pos': (initial_conf, None),
-                   'vel': False,
-                   'vpot': None,
-                   'ekin': None}
-    system.particles.set_particle_state(phase_point)
+    system.particles.set_pos((initial_conf, None))
+    system.particles.set_vel(False)
 
     start = time.perf_counter()
     run_step(engine, system, exe_dir='forward-single-step')

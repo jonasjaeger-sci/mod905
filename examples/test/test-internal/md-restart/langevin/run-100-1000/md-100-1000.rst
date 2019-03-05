@@ -4,7 +4,7 @@ Molecular dynamics example settings
 Simulation settings
 -------------------
 task = md-nve
-steps = 1000
+steps = 900
 restart = ../run-100/pyretis.restart
 
 Engine settings
@@ -20,7 +20,7 @@ System settings
 units = lj
 
 Forcefield settings
---------------------
+-------------------
 description = Lennard Jones test
 
 Potential

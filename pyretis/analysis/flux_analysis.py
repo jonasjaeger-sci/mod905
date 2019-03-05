@@ -11,7 +11,9 @@ analyse_flux (:py:func:`.analyse_flux`)
     the initial flux for a simulation.
 """
 import numpy as np
+from numpy import divide  # pylint: disable=no-name-in-module
 from pyretis.analysis.analysis import running_average, block_error_corr
+from pyretis.core.path import check_crossing
 
 
 __all__ = ['analyse_flux']
@@ -27,8 +29,8 @@ def analyse_flux(fluxdata, settings):
     Parameters
     ----------
     fluxdata : list of tuples of integers
-        The contents of this array is the data obtained from a MD
-        simulation for the fluxes.
+        This array contains the data obtained from a MD simulation
+        for the fluxes.
     settings : dict
         This dict contains the settings for the analysis. Note that
         this dictionary also needs some settings from the simulation,
@@ -82,18 +84,19 @@ def analyse_flux(fluxdata, settings):
         results['errflux'].append(block_error)
 
     # do some additional statistics:
-    results['cross_time'] = [np.divide(float(end_step), float(neff))
+    results['cross_time'] = [divide(float(end_step), float(neff))
                              for neff in results['neffcross']]
 
-    results['neffc/nc'] = [np.divide(float(neff), float(ncr)) for neff, ncr
+    results['neffc/nc'] = [divide(float(neff), float(ncr)) for neff, ncr
                            in zip(results['neffcross'], results['ncross'])]
     for flux, error in zip(results['runflux'], results['errflux']):
         results['pMD'].append(flux[-1] * time_step)
-        results['1-p'].append(np.divide(float(1.0 - results['pMD'][-1]),
-                                        results['pMD'][-1]))
+        results['1-p'].append(divide(float(1.0 - results['pMD'][-1]),
+                                     results['pMD'][-1]))
         results['teffMD'].append(end_step * error[4]**2)
-        results['corrMD'].append(np.divide(results['teffMD'][-1],
-                                           results['1-p'][-1]))
+        results['corrMD'].append(
+            divide(results['teffMD'][-1], results['1-p'][-1])
+        )
     return results
 
 
@@ -103,8 +106,8 @@ def _effective_crossings(fluxdata, nint, end_step):
     Parameters
     ----------
     fluxdata : list of tuples of ints
-        The contents of this array is the data obtained from a
-        ``md-flux`` simulation.
+        The list contains the data obtained from a ``md-flux``
+        simulation.
     nint : int
         The number of interfaces used.
     end_step : int
@@ -121,7 +124,7 @@ def _effective_crossings(fluxdata, nint, end_step):
         `neffcross[i]` is the number of effective crossings for
         interface `i`.
     time_in_state : dict
-        The time spent in the different states which are labelled with
+        The time spent in the different states which are labeled with
         the keys 'A', 'B', 'OA', 'OB'. 'O' is taken to mean the
         'overall' state.
 
@@ -130,8 +133,8 @@ def _effective_crossings(fluxdata, nint, end_step):
     We do here `intf - 1`. This is just to be compatible with the old
     FORTRAN code where the interfaces are numbered 1, 2, 3 rather than
     0, 1, 2. If this is to be changed in the future the `-1` can just
-    be removed. Such a change will also require changes to the writer
-    for flux data!
+    be removed. Such a change will also require changes to the
+    formatter for flux data.
 
     """
     # First line is used to determine if we start in B or A
@@ -220,3 +223,32 @@ def _calculate_flux(effective_cross, time_in_state, time_window, time_step):
     flux = (1.0 * ncross) / (time_step * time_window)
     time = np.arange(1, max_windows+1) * time_window
     return time, ncross, flux
+
+
+def find_crossings(order, interfaces):
+    """Find crossings with interfaces for given order parameter data.
+
+    Parameters
+    ----------
+    order : numpy.array (1D)
+        Order parameters, as a function of time.
+    interfaces : list of floats
+        The interfaces for which we will investigate crossings.
+
+    Returns
+    -------
+    out : list of tuple
+        Each tuple contains the crossings on the following form:
+        (step, interface-number, direction), where direction = '+' if
+        the interface was crossed while moving to the right and '-' if
+        the movement was towards the left.
+
+    """
+    leftside_prev = None  # previous
+    cross = []
+    for step, orderi in enumerate(order):
+        leftside, ncross = check_crossing(step, orderi,
+                                          interfaces, leftside_prev)
+        leftside_prev = [i for i in leftside]
+        cross.extend(ncross)
+    return cross

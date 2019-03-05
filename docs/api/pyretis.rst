@@ -34,7 +34,7 @@ into sub-packages:
 * :ref:`pyretis.forcefield <api-forcefield>` for defining
   force fields to use in simulations.
 
-* :ref:`pyretis.initiaion <api-initiation>` with functions for
+* :ref:`pyretis.initiation <api-initiation>` with functions for
   initiation of path sampling simulations.
 
 * :ref:`pyretis.inout <api-inout>` for handling the input
@@ -81,3 +81,44 @@ Contents: The |pyretis| sub-packages
     pyretis.orderparameter
     pyretis.simulation
     pyretis.tools
+
+In addition |pyretis| has the following submodules:
+
+List of submodules
+------------------
+
+There are also some submodules with information about
+|pyretis|. These are:
+
+* :ref:`pyretis.info <api-info>`
+* :ref:`pyretis.version <api-version>`
+
+.. _api-info:
+
+pyretis.info module
+...................
+
+.. automodule:: pyretis.info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api-version:
+
+pyretis.version module
+......................
+
+.. automodule:: pyretis.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+|pyretis| executables
+---------------------
+
+The main |pyretis| executables can be found in:
+
+.. toctree::
+    :maxdepth: 1
+
+    pyretis.bin

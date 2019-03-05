@@ -30,7 +30,7 @@ import logging
 import numpy as np
 from pyretis.analysis.analysis import running_average, block_error_corr
 from pyretis.analysis.histogram import histogram, histogram_and_avg
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -77,7 +77,7 @@ def _running_pcross(path_ensemble, idetect, data=None):
     Note that the accepted paths are used to create an array which is
     then averaged. This could possibly be replaced by a simple
     'on-the-fly' calculation of the running average,
-    as detailed in: http://en.wikipedia.org/wiki/Moving_average
+    see: https://en.wikipedia.org/wiki/Moving_average
 
     Parameters
     ----------
@@ -86,10 +86,10 @@ def _running_pcross(path_ensemble, idetect, data=None):
     idetect : float
         This is the interface used for detecting if a path is successful
         or not.
-    data : numpy.array
+    data : numpy.array, optional
         This is the data created by `_get_successful(path_ensemble)`
         If this function has been executed, the result can be re-used
-        here by specifying data. If not, it will be generated.
+        here, by specifying data. If not, it will be generated.
 
     Returns
     -------
@@ -114,14 +114,14 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
     The crossing probability is here obtained as a function of the order
     parameter. The actual calculation is performed by
-    `_pcross_lambda_cumulative` and this function is just a wrapper in
-    order to handle input objects like :py:class:`.PathEnsemble`.
+    :py:meth:`_pcross_lambda_cumulative` and this function is just a wrapper
+    in order to handle input objects like :py:class:`.PathEnsemble`.
 
     Parameters
     ----------
     path_ensemble : object like :py:class:`.PathEnsemble`
         This is the path ensemble we will analyse.
-    ngrid : int
+    ngrid : int, optional
         This is the number of grid points.
 
     Returns
@@ -133,16 +133,12 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
 
     See Also
     --------
-    `_pcross_lambda_cumulative`
-
-    Notes
-    -----
-    This routine could perhaps be made shorter by making use of
-    `numpy.digitize` etc.
+    The actual calculation is performed in
+    :py:meth:`_pcross_lambda_cumulative`.
 
     """
-    # first, get the boundaries and order parameters of the
-    # accepted paths
+    # First, get the boundaries and order parameters of the
+    # accepted paths:
     orderparam = []
     ordermax = None
     for path in path_ensemble.get_accepted():
@@ -151,7 +147,7 @@ def _pcross_lambda(path_ensemble, ngrid=1000):
             ordermax = orderp
         orderparam.append(orderp)
     orderparam = np.array(orderparam)
-    # next create the ``cumulative histogram'':
+    # Next create the a cumulative histogram:
     ordermax = min(ordermax, max(path_ensemble.interfaces))
     ordermin = path_ensemble.interfaces[1]
     pcross, lamb = _pcross_lambda_cumulative(orderparam, ordermin, ordermax,
@@ -165,7 +161,7 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
 
     It will do the actual calculation of the crossing probability as
     a function of order parameter. It is split off from `pcross_lambda`
-    since the analysis is intended to be backwards compatible with the
+    since the analysis is intended to be backward compatible with the
     output/results from the old ``TISMOL FORTRAN`` program.
 
     Parameters
@@ -202,7 +198,8 @@ def _pcross_lambda_cumulative(orderparam, ordermin, ordermax, ngrid,
         if idx >= ngrid:
             pcross += weight
         elif idx < 0:
-            pass
+            msg = "Path {} has ordermax lower than limiting value".format(i)
+            logger.warning(msg)
         else:
             pcross[:idx + 1] += weight  # +1 to include up to idx
     pcross /= sumw  # normalisation
@@ -246,7 +243,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     length_acc = np.array(length_acc)
     length_all = []
     for path in path_ensemble.paths:
-        length = _get_path_length(path, path_ensemble.ensemble)
+        length = _get_path_length(path, path_ensemble.ensemble_number)
         if length is not None:
             length_all.append(length)
     length_all = np.array(length_all)
@@ -255,7 +252,7 @@ def _get_path_distribution(path_ensemble, bins=1000):
     return hist_acc, hist_all, length_acc
 
 
-def _get_path_length(path, ensemble):
+def _get_path_length(path, ensemble_number):
     """Return the path length for different moves.
 
     Different moves may have a different way of obtaining the path
@@ -268,7 +265,7 @@ def _get_path_length(path, ensemble):
         It can typically be obtained by iterating over the path
         ensemble object, e.g. with a
         `for path in path_ensemble.get_paths():`.
-    ensemble : int
+    ensemble_number : int
         This integer identifies the ensemble. This is used for
         the swapping moves in [0^-] and [0^+].
 
@@ -281,19 +278,17 @@ def _get_path_length(path, ensemble):
     move = path['generated'][0]
     return_table = {'tr': 0, 's+': 0, 's-': 0, '00': 0}
     if move in return_table:
-        if move == 's+' and ensemble == 0:
+        if move == 's+' and ensemble_number == 0:
             return path['length'] - 2
-        elif move == 's-' and ensemble == 1:
+        if move == 's-' and ensemble_number == 1:
             return path['length'] - 2
         return return_table[move]
     if move == 'sh':
         return path['length'] - 1
-    elif move == 'ki':
-        msg = 'Skipped initial path: {}'.format(move)
-        logger.info(msg)
+    if move == 'ki':
+        logger.info('Skipped initial path (move "%s")', move)
         return None
-    msg = 'Skipped unknown mc move: {}'.format(move)
-    logger.warning(msg)
+    logger.warning('Skipped path with unknown mc move: %s', move)
     return None
 
 
@@ -339,10 +334,10 @@ def _update_shoot_stats(shoot_stats, path):
     Parameters
     ----------
     shoot_stats : dict
-        This dict contains the results from the shoot analysis, e.g.
-        `shoot_stats[key]` contain the order parameters for the status
-        `key` which can be the different statuses defined in
-        `pyretis.core.path._STATUS` or 'REJ' (for rejected).
+        This dict contains the results from the analysis of shooting
+        moves. E.g. `shoot_stats[key]` contain the order parameters
+        for the status `key` which can be the different statuses
+        defined in `pyretis.core.path._STATUS` or 'REJ' (for rejected).
     path : dict
         This is the path information, represented as a dictionary.
 
@@ -370,10 +365,10 @@ def _create_shoot_histograms(shoot_stats, bins):
     Parameters
     ----------
     shoot_stats : dict
-        This dict contains the results from the shoot analysis, e.g.
-        `shoot_stats[key]` contain the order parameters for the status
-        `key` which can be the different statuses defined in
-        `pyretis.core.path._STATUS` or 'REJ' (for rejected).
+        This dict contains the results from the analysis of shooting
+        moves. E.g. `shoot_stats[key]` contain the order parameters
+        for the status `key` which can be the different statuses
+        defined in `pyretis.core.path._STATUS` or 'REJ' (for rejected).
     bins : int
         The number of bins to use for the histograms.
 
@@ -391,19 +386,19 @@ def _create_shoot_histograms(shoot_stats, bins):
 
     See Also
     --------
-    :py:func`.histogram` in :py:mod:`.histogram`.
+    :py:func:`.histogram` in :py:mod:`.histogram`.
 
     """
     histograms = {}
     scale = {}
     for key in shoot_stats:
-        shoot_stats[key] = np.array(shoot_stats[key])
-        if len(shoot_stats[key]) < 1:
+        if not shoot_stats[key]:
             logger.warning('No shoots data found for %s (empty histogram)',
                            key)
             mind = 0.0
             maxd = 0.1
         else:
+            shoot_stats[key] = np.array(shoot_stats[key])
             mind = shoot_stats[key].min()
             maxd = shoot_stats[key].max()
         histograms[key] = histogram(shoot_stats[key], bins=bins,
@@ -433,7 +428,7 @@ def analyse_path_ensemble_object(path_ensemble, settings):
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
-          analysis. Note that this will maximum be equal the half the
+          analysis. Note that this will maximum be equal the half of the
           length of the data, see `block_error` in `.analysis`.
         * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
@@ -521,7 +516,7 @@ def analyse_path_ensemble(path_ensemble, settings):
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
-          analysis. Note that this will maximum be equal the half the
+          analysis. Note that this will maximum be equal the half of the
           length of the data, see `block_error` in `.analysis`.
         * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
@@ -543,18 +538,18 @@ def analyse_path_ensemble(path_ensemble, settings):
     References
     ----------
     .. [wikimov] Wikipedia, "Moving Average",
-       http://en.wikipedia.org/wiki/Moving_average
+       https://en.wikipedia.org/wiki/Moving_average
 
     """
     detect = path_ensemble.detect
-    if path_ensemble.ensemble == 0:
+    if path_ensemble.ensemble_number == 0:
         return analyse_path_ensemble0(path_ensemble, settings)
-    ensemble = path_ensemble.ensemble
+    ensemble_number = path_ensemble.ensemble_number
     result = {'prun': [],
               'cycle': [],
               'detect': detect,
               'ensemble': path_ensemble.ensemble_name,
-              'ensembleid': ensemble,
+              'ensembleid': ensemble_number,
               'interfaces': [i for i in path_ensemble.interfaces]}
     orderparam = []  # list of all accepted order parameters
     weights = []
@@ -586,7 +581,7 @@ def analyse_path_ensemble(path_ensemble, settings):
         result['cycle'].append(path['cycle'])
         # get the length - note that this length depends on the type of move
         # see the `_get_path_length` function.
-        length = _get_path_length(path, ensemble)
+        length = _get_path_length(path, ensemble_number)
         if length is not None:
             length_all.append(length)
         # update the shoot stats, this will only be done for shooting moves
@@ -627,7 +622,7 @@ def analyse_path_ensemble(path_ensemble, settings):
     result['tis-cycles'] = npath
     # extra analysis for the [0^+] ensemble in case we will determine
     # the initial flux:
-    if ensemble == 1:
+    if ensemble_number == 1:
         lengtherr = block_error_corr(data=np.repeat(length_acc,
                                                     weights),
                                      maxblock=analysis['maxblock'],
@@ -655,7 +650,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
         * `ngrid`: The number of grid points for calculating the
           crossing probability as a function of the order parameter.
         * `maxblock`: The max length of the blocks for the block error
-          analysis. Note that this will maximum be equal the half the
+          analysis. Note that this will maximum be equal the half of the
           length of the data, see `block_error` in `.analysis`.
         * `blockskip`: Can be used to skip certain block lengths.
           A `blockskip` equal to `n` will consider every n'th block up
@@ -666,15 +661,15 @@ def analyse_path_ensemble0(path_ensemble, settings):
     Returns
     -------
     result : dict
-        The results from the analysis on this ensemble.
+        The results from the analysis for the ensemble.
 
     """
     detect = path_ensemble.detect
-    ensemble = path_ensemble.ensemble
+    ensemble_number = path_ensemble.ensemble_number
     result = {'cycle': [],
               'detect': detect,
               'ensemble': path_ensemble.ensemble_name,
-              'ensembleid': ensemble,
+              'ensembleid': ensemble_number,
               'interfaces': [i for i in path_ensemble.interfaces]}
     length_acc, length_all, weights = [], [], []
     shoot_stats = {'REJ': [], 'ALL': []}
@@ -688,7 +683,7 @@ def analyse_path_ensemble0(path_ensemble, settings):
         else:  # just increase the weights
             weights[-1] += 1
         result['cycle'].append(path['cycle'])
-        length = _get_path_length(path, ensemble)
+        length = _get_path_length(path, ensemble_number)
         if length is not None:
             length_all.append(length)
         # update the shoot stats, this will only be done for shooting moves

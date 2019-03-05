@@ -2,15 +2,37 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Test the recalculate orderparameter tools in pyretis.tools"""
+from contextlib import contextmanager
+from io import StringIO
 import logging
 import os
 import tarfile
 from tempfile import NamedTemporaryFile
 import unittest
+from unittest.mock import patch
 import numpy as np
-from pyretis.tools.recalculate_order import recalculate_order
+import mdtraj as md
+from pyretis.tools.recalculate_order import (
+    recalculate_from_frame,
+    recalculate_from_trj,
+    recalculate_order,
+    get_traj_files,
+)
+
 from pyretis.orderparameter import OrderParameter
+
+
 logging.disable(logging.CRITICAL)
+
+
+@contextmanager
+def turn_on_logging():
+    """Turn on logging so that tests can detect it."""
+    logging.disable(logging.INFO)
+    try:
+        yield
+    finally:
+        logging.disable(logging.CRITICAL)
 
 
 CORRECT_TRI = [
@@ -39,6 +61,19 @@ CORRECT_TRI = [
 ]
 
 
+CORRECT_XYZ = [
+    [-1.0912E-05, 1.85E-07, -2.310E-06],
+    [-2.1178E-05, 6.2E-08, -4.785E-06],
+    [-3.1073E-05, -3.8E-07, -7.123E-06],
+    [-4.1081E-05, -1.026E-06, -9.074E-06],
+    [-5.1297E-05, -1.657E-06, -1.0489E-05],
+    [-6.1028E-05, -2.03E-06, -1.1326E-05],
+]
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
 class OrderBox(OrderParameter):
     """This order parameter is just the box."""
 
@@ -49,65 +84,223 @@ class OrderBox(OrderParameter):
         return system.box.cell
 
 
-class RecalculateOrder(unittest.TestCase):
+class Xpos1partExt(OrderParameter):
+    """This gives out the X position of the first particle."""
+
+    def __init__(self):
+        super().__init__(description='X pos particle 1')
+
+    def calculate(self, system):
+        trj = md.load_frame(system.particles.config[0],
+                            int(system.particles.config[1]),
+                            top=system.particles.top)
+
+        return trj.xyz[0][0][0]
+
+
+class Velocity(OrderParameter):
+    """This order parameter is the sum of components of the velocity."""
+
+    def __init__(self):
+        super().__init__(description='Box order parameter')
+
+    def calculate(self, system):
+        return system.particles.vel.sum(axis=0)
+
+
+class TestRecalculateOrder(unittest.TestCase):
     """Test the calculation of order parameters from trajectory files."""
 
     def test_rectangular_box(self):
-        """Test that we can generate all lattices."""
+        """Test recalculate for a rectangular box."""
         orderf = OrderBox()
         box = np.array([2.7200000286102295]*3)
-        here = os.path.abspath(os.path.dirname(__file__))
-        trr = os.path.join(here, '4water.trr')
-        for i in recalculate_order(orderf, trr):
-            self.assertTrue(np.allclose(i, box))
+        trr = os.path.join(HERE, '4water.trr')
+        with patch('sys.stdout', new=StringIO()):
+            for i in recalculate_order(orderf, trr, {}):
+                self.assertTrue(np.allclose(i, box))
+
+    def test_novel(self):
+        """Test recalculate for a rectangular box."""
+        trr = os.path.join(HERE, 'traj-novel.trr')
+        with turn_on_logging(), patch('sys.stdout', new=StringIO()):
+            with self.assertLogs('pyretis.tools.recalculate_order',
+                                 level='WARNING'):
+
+                for order in recalculate_order(Velocity(), trr, {}):
+                    for i in order:
+                        self.assertAlmostEqual(i, 0.0)
 
     def test_tri_box(self):
-        """Test that we can generate all lattices."""
+        """Test recalculate for a triclinic box."""
         orderf = OrderBox()
-        here = os.path.abspath(os.path.dirname(__file__))
-        trr = os.path.join(here, '4water_tri_dyn.trr')
-        for i, j in enumerate(recalculate_order(orderf, trr)):
-            self.assertTrue(np.allclose(j, CORRECT_TRI[i]))
+        trr = os.path.join(HERE, '4water_tri_dyn.trr')
+        orderp = []
+        with patch('sys.stdout', new=StringIO()):
+            for i, j in zip(recalculate_order(orderf, trr, {}), CORRECT_TRI):
+                orderp.append(i)
+                self.assertTrue(np.allclose(i, j))
+            self.assertEqual(len(orderp), len(CORRECT_TRI))
+            for i, j in zip(
+                    recalculate_order(orderf, trr, {'reverse': True}),
+                    orderp[::-1]):
+                self.assertTrue(np.allclose(i, j))
+
+    def test_sub_selection(self):
+        """Test when we specify a min/max index to consider."""
+        orderf = OrderBox()
+        trr = os.path.join(HERE, '4water_tri_dyn.trr')
+        idx = 3
+        with patch('sys.stdout', new=StringIO()):
+            orderp = [i for i in recalculate_order(orderf, trr,
+                                                   {'maxidx': idx})]
+            for i, j in zip(orderp, CORRECT_TRI[:idx+1]):
+                self.assertTrue(np.allclose(i, j))
+        with patch('sys.stdout', new=StringIO()):
+            orderp = [i for i in recalculate_order(orderf, trr,
+                                                   {'minidx': idx})]
+            for i, j in zip(orderp, CORRECT_TRI[idx:]):
+                self.assertTrue(np.allclose(i, j))
 
     def test_recalculate_gro(self):
-        """Recalculate from .gro file"""
+        """Recalculate from .gro file."""
         orderf = OrderBox()
-        here = os.path.abspath(os.path.dirname(__file__))
-        tarf = os.path.join(here, '4water_tri_dyn.gro.tgz')
-        tar = tarfile.open(tarf, 'r:gz')
+        tar = tarfile.open(
+            os.path.join(HERE, '4water_tri_dyn.gro.tgz'), 'r:gz'
+        )
         members = sorted([i.name for i in tar.getmembers()])
         i = 0
-        for member in members:
-            gro = tar.extractfile(member)
-            if gro is not None:
-                grofile = NamedTemporaryFile(suffix='.gro')
-                path = grofile.name
-                with open(path, 'wb') as output:
-                    output.write(gro.read())
-                box = recalculate_order(orderf, path)
-                for j, k in zip(box[0], CORRECT_TRI[i]):
-                    self.assertAlmostEqual(j, k, places=5)
-                i += 1
+        with patch('sys.stdout', new=StringIO()):
+            for member in members:
+                gro = tar.extractfile(member)
+                if gro is not None:
+                    grofile = NamedTemporaryFile(suffix='.gro')
+                    with open(grofile.name, 'wb') as output:
+                        output.write(gro.read())
+                    box = recalculate_order(orderf, grofile.name, {})
+                    for j, k in zip(box[0], CORRECT_TRI[i]):
+                        self.assertAlmostEqual(j, k, places=5)
+                    i += 1
+        # Do some additional tests:
+        with patch('sys.stdout', new=StringIO()):
+            gro = tar.extractfile(members[1])
+            grofile = NamedTemporaryFile(suffix='.gro')
+            with open(grofile.name, 'wb') as output:
+                output.write(gro.read())
+            vel1, = recalculate_from_frame(Velocity(), grofile.name,
+                                           {'ext': '.gro', 'reverse': False})
+            vel2, = recalculate_from_frame(Velocity(), grofile.name,
+                                           {'ext': '.gro', 'reverse': True})
+            self.assertTrue(np.allclose(vel1, -vel2))
+        with patch('sys.stdout', new=StringIO()):
+            with self.assertRaises(ValueError):
+                recalculate_from_frame(Velocity(), 'something.txt',
+                                       {'ext': '.txt'})
 
     def test_recalculate_g96(self):
         """Recalculate from .g96."""
         orderf = OrderBox()
-        here = os.path.abspath(os.path.dirname(__file__))
-        tarf = os.path.join(here, '4water_tri_dyn.g96.tgz')
-        tar = tarfile.open(tarf, 'r:gz')
+        tar = tarfile.open(
+            os.path.join(HERE, '4water_tri_dyn.g96.tgz'), 'r:gz'
+        )
         members = sorted([i.name for i in tar.getmembers()])
         i = 0
-        for member in members:
-            g96 = tar.extractfile(member)
-            if g96 is not None:
-                g96file = NamedTemporaryFile(suffix='.g96')
-                path = g96file.name
-                with open(path, 'wb') as output:
-                    output.write(g96.read())
-                box = recalculate_order(orderf, path)
-                for j, k in zip(box[0], CORRECT_TRI[i]):
-                    self.assertAlmostEqual(j, k, places=5)
-                i += 1
+        with patch('sys.stdout', new=StringIO()):
+            for member in members:
+                g96 = tar.extractfile(member)
+                if g96 is not None:
+                    g96file = NamedTemporaryFile(suffix='.g96')
+                    with open(g96file.name, 'wb') as output:
+                        output.write(g96.read())
+                    box = recalculate_order(orderf, g96file.name, {})
+                    for j, k in zip(box[0], CORRECT_TRI[i]):
+                        self.assertAlmostEqual(j, k, places=5)
+                    i += 1
+
+    def test_recalculate_xyz(self):
+        """Recalculate from .xyz."""
+        orderf = Velocity()
+        filename = os.path.join(HERE, 'traj.xyz')
+        with patch('sys.stdout', new=StringIO()):
+            order = [i for i in recalculate_order(orderf, filename, {})]
+            order_r = [
+                i for i in recalculate_order(
+                    orderf, filename, {'reverse': True}
+                )
+            ]
+            self.assertEqual(len(order), len(CORRECT_XYZ))
+            self.assertEqual(len(order), len(order_r))
+            for vel1, vel2, vel3 in zip(order, order_r[::-1], CORRECT_XYZ):
+                for i, j, k in zip(vel1, vel2, vel3):
+                    self.assertAlmostEqual(i, -j, places=7)
+                    self.assertAlmostEqual(i, k, places=7)
+        # Test with subsection:
+        idx = 2
+        with patch('sys.stdout', new=StringIO()):
+            order = [
+                i for i in recalculate_order(orderf, filename, {'maxidx': idx})
+            ]
+            for i, j in zip(order, CORRECT_XYZ[:idx+1]):
+                self.assertTrue(np.allclose(i, j))
+        with patch('sys.stdout', new=StringIO()):
+            order = [
+                i for i in recalculate_order(orderf, filename, {'minidx': idx})
+            ]
+            for i, j in zip(order, CORRECT_XYZ[idx:]):
+                self.assertTrue(np.allclose(i, j))
+        # Test with missing box:
+        filename = os.path.join(HERE, 'traj-no-box.xyz')
+        orderf = OrderBox()
+        with patch('sys.stdout', new=StringIO()):
+            order = [
+                i for i in recalculate_order(orderf, filename,
+                                             {'box': [6., 6., 6.]})
+            ]
+            for orderi in order:
+                self.assertEqual(len(orderi), 3)
+                for i in orderi:
+                    self.assertAlmostEqual(i, 6.)
+
+    def test_get_traj_files(self):
+        """Test the method for getting traj files."""
+        traj = os.path.join(HERE, 'traj-ext.txt')
+        correct = {
+            'trajB.trr': {'minidx': 0, 'maxidx': 6, 'reverse': True},
+            'trajF.trr': {'minidx': 0, 'maxidx': 7, 'reverse': False},
+        }
+        files = get_traj_files(traj)
+        for key, val in correct.items():
+            self.assertIn(key, files)
+            self.assertEqual(val, files[key])
+
+    def test_use_mdtraj(self):
+        """Test the method for load and recalculate op via mdtraj."""
+        orderf = Xpos1partExt()
+        sim_file = os.path.join(HERE, '2water')
+
+        ordercheck = [0.12596679, 0.12572690, 0.125513270,
+                      0.12531899, 0.12513746, 0.124962576]
+
+        with patch('sys.stdout', new=StringIO()):
+            order = [i for i in recalculate_order(
+                orderf, sim_file + '.trr',
+                {'top': sim_file + '.gro'})]
+
+        for orderi, orderj in zip(order, ordercheck):
+            self.assertAlmostEqual(orderi, orderj)
+
+        with patch('sys.stdout', new=StringIO()):
+            order = [i for i in recalculate_from_trj(
+                orderf, sim_file + '.trr',
+                {'top': sim_file + '.gro'})]
+
+        for orderi, orderj in zip(order, ordercheck):
+            self.assertAlmostEqual(orderi, orderj)
+
+        one_op = recalculate_from_trj(orderf, sim_file + '.trr',
+                                      {'top': sim_file + '.gro',
+                                       'idx': 3})
+        self.assertAlmostEqual(next(one_op), ordercheck[3])
 
 
 if __name__ == '__main__':

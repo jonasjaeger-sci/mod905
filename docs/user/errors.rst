@@ -3,7 +3,7 @@
 Some common |pyretis| errors
 ============================
 
-In this section we describe some of the most common |pyretis|
+In this section, we describe some of the most common |pyretis|
 warning or error messages and how these errors can be resolved.
 
 .. _user-error-simulation:
@@ -49,7 +49,7 @@ Simulation warnings/error messages
 
    For simulation type ``XXX`` the required settings
    ``YYY`` was not found in the input. Please read the manual
-   describing the simulation you wish to preform in order to see
+   describing the simulation you wish to perform in order to see
    what simulation settings you will need to set.
 
    **Fix**: Update your input settings.
@@ -68,7 +68,7 @@ Plotting warnings/error messages
    while ``axes.color_cycle`` was used in previous versions. Currently
    |pyretis| will try to set ``axes.color_cycle`` as the most recent version
    of matplotlib will accept this, albeit with some complaining (i.e. the
-   warning message give above).
+   warning message given above).
 
    **Fix**: N/A. Note that this behaviour might change in the future
    if support for older matplotlib versions is dropped from |pyretis|.
@@ -77,7 +77,7 @@ Plotting warnings/error messages
 .. topic:: Warning: ``Using Matplotlib version < 1.4.0, please upgrade it!'``
 
    We recommend using a more recent matplotlib version than 1.4.
-   These versions supports styles for plotting which makes it easier
+   These versions support styles for plotting which makes it easier
    to customize the figures for the reports.
 
    **Fix**: Upgrade matplotlib.

@@ -1,0 +1,48 @@
+# Cycle: 0, status: ACC
+#     Time      Potential        Kinetic
+         0            nan            nan
+         1            nan            nan
+         2            nan            nan
+         3            nan            nan
+         4            nan            nan
+         5            nan            nan
+         6            nan            nan
+         7            nan            nan
+         8            nan            nan
+         9            nan            nan
+        10            nan            nan
+        11            nan            nan
+        12            nan            nan
+        13            nan            nan
+        14            nan            nan
+        15            nan            nan
+        16            nan            nan
+        17            nan            nan
+        18            nan            nan
+        19            nan            nan
+        20            nan            nan
+# Cycle: 1, status: KOB
+#     Time      Potential        Kinetic
+         0      -1.112647       0.002375
+# Cycle: 2, status: ACC
+#     Time      Potential        Kinetic
+         0      -1.114917       0.004881
+         1      -1.127913       0.017258
+         2      -1.132126       0.021413
+         3      -1.112791       0.002375
+# Cycle: 3, status: ACC
+#     Time      Potential        Kinetic
+         0      -1.114917       0.004881
+         1      -1.127913       0.017258
+         2      -1.132126       0.021413
+         3      -1.112791       0.002375
+# Cycle: 4, status: ACC
+#     Time      Potential        Kinetic
+         0      -1.116717       0.036102
+         1      -1.125468       0.044667
+         2            nan            nan
+# Cycle: 5, status: ACC
+#     Time      Potential        Kinetic
+         0            nan            nan
+         1      -1.125468       0.044667
+         2      -1.116717       0.036102

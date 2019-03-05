@@ -8,7 +8,7 @@ Newtons equations of motion in time, the dynamics in molecular dynamics.
 """
 import logging
 from pyretis.engines import MDEngine
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -19,17 +19,18 @@ class VVIntegrator(MDEngine):
 
     Attributes
     ----------
-    delta_t : float
+    timestep : float
         The time step.
-    half_delta_t : float
-        Half of timestep.
+    half_timestep : float
+        Half of the time step.
     description : string
         Description of the integrator.
+
     """
 
     def __init__(self, timestep,
                  description='The velocity verlet integrator'):
-        """Initiate the Velocity Verlet integrator.
+        """Set up the Velocity Verlet integrator.
 
         Parameters
         ----------
@@ -37,9 +38,10 @@ class VVIntegrator(MDEngine):
             The time step in internal units.
         description : string
             Description of the integrator.
+
         """
         super().__init__(timestep, description, dynamics='NVE')
-        self.half_delta_t = self.delta_t * 0.5
+        self.half_timestep = self.timestep * 0.5
 
     def integration_step(self, system):
         """Velocity Verlet integration, one time step.
@@ -55,14 +57,14 @@ class VVIntegrator(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         imass = particles.imass
-        particles.vel += self.half_delta_t * particles.force * imass
-        particles.pos += self.delta_t * particles.vel
+        particles.vel += self.half_timestep * particles.force * imass
+        particles.pos += self.timestep * particles.vel
         system.potential_and_force()
-        particles.vel += self.half_delta_t * particles.force * imass
-        return None
+        particles.vel += self.half_timestep * particles.force * imass
 
 
 class Euler(MDEngine):
@@ -72,26 +74,28 @@ class Euler(MDEngine):
 
     Attributes
     ----------
-    delta_t : float
+    timestep : float
         The time step.
-    half_delta_t : float
-        Half of timestep.
+    half_timestepsq : float
+        Half of the squared time step.
     description : string
         Description of the integrator.
+
     """
 
     def __init__(self, timestep, description='The Euler integrator'):
-        """Initiate the Euler integrator.
+        """Set up the Euler integrator.
 
         Parameters
         ----------
         timestep : float
             The time step in internal units.
-        descriotion : string
+        description : string
             Description of the integrator.
+
         """
         super().__init__(timestep, description, dynamics='NVE?')
-        self.half_delta_tsq = 0.5 * self.delta_t**2
+        self.half_timestepsq = 0.5 * self.timestep**2
 
     def integration_step(self, system):
         """Euler integration, one time step.
@@ -107,13 +111,13 @@ class Euler(MDEngine):
         out : None
             Does not return anything, but alters the state of the given
             `system`.
+
         """
         particles = system.particles
         imass = particles.imass
         # update positions and velocities
-        particles.pos += (self.delta_t * particles.vel +
-                          self.half_delta_tsq * particles.force * imass)
-        particles.vel += self.delta_t * particles.force * imass
+        particles.pos += (self.timestep * particles.vel +
+                          self.half_timestepsq * particles.force * imass)
+        particles.vel += self.timestep * particles.force * imass
         # update forces
         system.potential_and_force()
-        return None

@@ -3,7 +3,7 @@
 Breaking a bond with RETIS
 ==========================
 
-In this example  you will explore bond breaking in
+In this example, you will explore bond breaking in
 a simple model system
 with the Replica Exchange Transition Interface
 Sampling (RETIS) algorithm.
@@ -100,7 +100,7 @@ The code can be downloaded as a zip-archive
 here: :download:`low.zip </_static/examples/retis2d-wca/low.zip>`.
 
 For the order parameter, we include a kinetic energy and potential
-energy [1]_ in the definition to ensure stability of the initial
+energy [1]_ in the definition to ensure the stability of the initial
 and final states. The Python code for the order parameter can
 be found below.
 

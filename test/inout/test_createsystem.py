@@ -76,7 +76,7 @@ class DummyExternal(ExternalMDEngine):
         pass
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
-                        reverse=False):
+                        msg_file, reverse=False):
         # pylint: disable=too-many-arguments
         pass
 
@@ -140,7 +140,7 @@ class TestMethods(unittest.TestCase):
         particles, box, vel = initial_positions_file(settings)
         self.assertTrue(vel)
         self.assertEqual(particles.dim, 3)
-        for i in box['length']:
+        for i in box['cell']:
             self.assertAlmostEqual(i, 20.0)
         for i, j in zip(particles.name, ['Ba', 'Hf', 'O', 'O', 'O']):
             self.assertEqual(i, j)
@@ -207,7 +207,7 @@ class TestMethods(unittest.TestCase):
         """Test that we can set up a box from settings."""
         # From settings:
         settings = {
-            'box': {'length': [1, 2, 3], 'periodic': [True, False, True]}
+            'box': {'cell': [1, 2, 3], 'periodic': [True, False, True]}
         }
         box = set_up_box(settings, None)
         self.assertIsInstance(box, RectangularBox)
@@ -215,9 +215,9 @@ class TestMethods(unittest.TestCase):
             self.assertAlmostEqual(i, j)
         for i, j in zip(box.periodic, [True, False, True]):
             self.assertEqual(i, j)
-        # From dict, with missing settings
+        # From dict, with missing settings:
         settings = {}
-        boxs = {'length': [1, 2, 3, 4, 5, 6]}
+        boxs = {'cell': [1, 2, 3, 4, 5, 6]}
         box = set_up_box(settings, boxs)
         self.assertIsInstance(box, TriclinicBox)
         mat = np.array([[1., 4., 5.], [0., 2., 6.], [0., 0., 3.]])
@@ -260,7 +260,6 @@ class TestMethods(unittest.TestCase):
 
     def test_create_system_settings(self):
         """Test creation of system from settings."""
-        # Internal engine:
         # On a lattice:
         settings = {
             'particles': {},
@@ -278,6 +277,12 @@ class TestMethods(unittest.TestCase):
         engine = DummyExternal('test', 1.0, 10)
         system = create_system_from_settings(settings, engine)
         self.assertIsInstance(system.particles, ParticlesExt)
+        # Test that missing 'particles' in settings combined with
+        # an internal engine gives an KeyError:
+        del settings['particles']
+        engine = MDEngine(1.0, 'Just for testing')
+        self.assertRaises(KeyError, lambda: create_system_from_settings(
+            settings, engine))
 
     def test_create_system(self):
         """Test that we can use the create_system method."""

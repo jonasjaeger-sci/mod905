@@ -100,7 +100,7 @@ Combined results
 ================
 
 The overall matched probability is shown in the left figure below
-and the indivitual matched probabilities are shown in the right figure:
+and the individual matched probabilities are shown in the right figure:
 
 .. image:: @{{ figures['total'] }}@
    :width: 45%

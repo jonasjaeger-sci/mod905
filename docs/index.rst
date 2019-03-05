@@ -5,6 +5,11 @@
 
 .. title:: Home
 
+#####################
+Welcome to |pyretis|!
+#####################
+
+
 .. container:: jumbotron
 
   .. image:: /_static/img/logo3.png

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
-"""Test the C implementation of the velocity verlet integrator.
+"""Test the C implementation of the Velocity Verlet integrator.
 
 This test is comparing:
 
-1) The python (numpy) implementation
+1) The Python (numpy) implementation
 
 2) The C implementation.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import unittest
 import numpy as np
 from pyretis.core import System, create_box, Particles
@@ -23,7 +23,7 @@ from vvintegratorc import VelocityVerletC
 
 
 def create_positions():
-    """Create particles for test"""
+    """Create particles for the test."""
     create_conversion_factors('lj')
     lattice, size = generate_lattice('fcc', [3, 3, 3], density=0.9)
     size = np.array(size)
@@ -41,13 +41,13 @@ def create_positions():
 
 
 def run_test(steps, integrator, system=None):
-    """Execute test MD simulation."""
+    """Execute a test MD simulation."""
     if system is None:
         # create system
         particles, box = create_positions()
-        initial = particles.get_particle_state()
         system = System(temperature=1.0, units='lj', box=box)
         system.particles = particles
+        initial = system.copy()
     else:
         initial = None
     parameters = {0: {'sigma': 1.0, 'epsilon': 1.0, 'rcut': 2.5}}
@@ -61,7 +61,13 @@ def run_test(steps, integrator, system=None):
     simulation.add_task(task_integrate)
     traj = []
     for _ in simulation.run():
-        traj.append(system.particles.get_particle_state())
+        traj.append(
+            {
+                'pos': system.particles.get_pos(),
+                'vel': system.particles.get_vel(),
+                'force': system.particles.get_force()
+            }
+        )
     return traj, initial, system
 
 
@@ -73,7 +79,7 @@ class VVIntegratorTest(unittest.TestCase):
         integrator = VelocityVerlet(0.0025)
         traj, initial, system = run_test(20, integrator)
         # reset to initial state
-        system.particles.set_particle_state(initial)
+        system = initial
         # repeat with external integrator:
         integratorc = VelocityVerletC(0.0025)
         traj2, _, _ = run_test(20, integratorc, system)

@@ -5,16 +5,16 @@
 
 This system considered is a simple Lennard-Jones fluid.
 """
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 from pyretis.core.units import create_conversion_factors
 from pyretis.inout.setup import (
     create_simulation,
     create_system,
     create_engine,
     create_force_field,
-    create_output_tasks
 )
-from pyretis.inout.writers import FileIO, ThermoTable
+from pyretis.inout.fileio import FileIO
+from pyretis.inout.formats import ThermoTableFormatter
 settings = {}
 settings['simulation'] = {
     'task': 'md-nve',
@@ -42,12 +42,10 @@ settings['potential'] = [
      'shift': True,
      'parameter': {0: {'sigma': 1, 'epsilon': 1, 'factor': 2.5}}}
 ]
-settings['particles'] = {'position': {'generate': 'fcc',
-                                      'repeat': [3, 3, 3],
-                                      'density': 0.9},
-                         'velocity': {'generate': 'maxwell',
-                                      'momentum': True,
-                                      'seed': 0}}
+settings['particles'] = {
+    'position': {'generate': 'fcc', 'repeat': [3, 3, 3], 'density': 0.9},
+    'velocity': {'generate': 'maxwell', 'momentum': True, 'seed': 0}
+}
 create_conversion_factors(settings['system']['units'])
 print('# Creating system from settings.')
 ljsystem = create_system(settings)
@@ -56,19 +54,17 @@ print('# Creating simulation from settings.')
 sim_args = {'system': ljsystem, 'engine': create_engine(settings)}
 simulation_nve = create_simulation(settings, sim_args)
 print('# Creating output tasks from settings.')
-output_tasks = [task for task in create_output_tasks(settings)]
+simulation_nve.set_up_output(settings, progress=False)
 msg = 'Created fcc grid with {} atoms.'
 print(msg.format(ljsystem.particles.npart))
 # set up extra output:
-table = ThermoTable()
-thermo_file = FileIO('thermo.txt', header=table.header)
+thermo_file = FileIO('thermo-test.txt', 'w', ThermoTableFormatter())
+thermo_file.open()
 store_results = []
 # run the simulation :-)
 for result in simulation_nve.run():
     stepno = result['cycle']['stepno']
-    for lines in table.generate_output(stepno, result['thermo']):
-        thermo_file.write(lines)
+    thermo_file.output(stepno, result['thermo'])
     result['thermo']['stepno'] = stepno
     store_results.append(result['thermo'])
-    for task in output_tasks:
-        task.output(result)
+thermo_file.close()

@@ -2,7 +2,7 @@
 # Copyright (c) 2019, PyRETIS Development Team.
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """Plot raw data from a simulation."""
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 import numpy as np
 import colorama
 from matplotlib import pyplot as plt
@@ -13,7 +13,7 @@ from pyretis.core.units import units_from_settings
 from pyretis.core.tis import shoot, time_reversal
 from pyretis.core.retis import retis_swap
 from pyretis.initiation import initiate_path_simulation
-from pyretis.inout.common import print_to_screen
+from pyretis.inout import print_to_screen
 from pyretis.inout.settings import parse_settings_file
 from pyretis.inout.setup import (
     create_force_field,
@@ -28,9 +28,9 @@ def plot_path(path, axi, axj, color, alphai=0.9, alphaj=0.9, lsj='-'):
     pos = []
     order = []
     time = []
-    for i, phasepoint in enumerate(path.trajectory()):
-        pos.append(phasepoint['pos'][0])
-        order.append(phasepoint['order'][0])
+    for i, phasepoint in enumerate(path.phasepoints):
+        pos.append(phasepoint.particles.get_pos()[0])
+        order.append(phasepoint.order[0])
         time.append(i)
     pos = np.array(pos)
     order = np.array(order)
@@ -55,6 +55,7 @@ class PlotHelper:
     """A class for handling the plotting."""
 
     def __init__(self, simulation, settings, axi, axj, colors):
+        """Set up the plotter."""
         self.simulation = simulation
         self.axi = axi
         self.axj = axj
@@ -65,7 +66,7 @@ class PlotHelper:
         self.idx = 0
 
     def potential_setup(self, settings):
-        """Just do setup for the potential function."""
+        """Set up the potential function."""
         # Set up raw data:
         forcefield = create_force_field(settings)
         box = create_box(periodic=[False, False])
@@ -95,10 +96,10 @@ class PlotHelper:
         self.maxy = maxy
 
     def plot_potential(self, axi, axj):
-        """Just plot the potential in the given axis"""
+        """Plot the potential in the given axis."""
         axi.contourf(self.xpos, self.ypos, self.pot, 10,
                      cmap=get_cmap('viridis'), alpha=0.8)
-        # add interfaces
+        # Add interfaces:
         origin = np.array([-0.2, -0.4])
         delta_x = 0.2 - (-0.2)
         delta_y = 0.4 - (-0.4)
@@ -132,7 +133,7 @@ class PlotHelper:
         axj.set_ylabel((r'Order parameter ($\lambda$)'), fontsize='large')
 
     def plot_accepted(self, idx=None):
-        """Plot the accepted paths"""
+        """Plot the accepted paths."""
         ensembles = self.simulation.path_ensembles
         for i, ensemble in enumerate(ensembles):
             if idx is None:
@@ -146,12 +147,11 @@ class PlotHelper:
                       self.colors[i], alphai=0.9, alphaj=alpha)
 
     def do_shoot(self, event):
-        """Perform the shooting."""
+        """Perform shooting moves."""
         ensembles = self.simulation.path_ensembles
         ensemble = ensembles[self.idx]
         accept, trial, status = shoot(
             ensemble.last_path,
-            self.simulation.system,
             self.simulation.order_function,
             ensemble.interfaces,
             self.simulation.engine,
@@ -165,9 +165,9 @@ class PlotHelper:
         self.plot_accepted((self.idx,))
         plot_path(trial, self.axi, self.axj, self.colors[-1], lsj='--')
         sidx = trial.generated[2]
-        spoint = ensemble.last_path.phasepoint(sidx)
-        pos = spoint['pos'][0]
-        order = spoint['order'][0]
+        spoint = ensemble.last_path.phasepoints[sidx]
+        pos = spoint.particles.get_pos()[0]
+        order = spoint.order[0]
         self.axi.scatter(pos[0], pos[1], marker='o', s=75, alpha=0.9,
                          color=self.colors[self.idx])
         self.axj.scatter(sidx, order, marker='o', s=75, alpha=0.9,
@@ -183,6 +183,7 @@ class PlotHelper:
         ensemble = ensembles[self.idx]
         accept, trial, status = time_reversal(
             ensemble.last_path,
+            self.simulation.order_function,
             ensemble.interfaces,
             ensemble.start_condition
         )
@@ -198,7 +199,7 @@ class PlotHelper:
         plt.draw()
 
     def do_accept_last_move(self, event):
-        """Button for accepting the last move."""
+        """Try to accept the last move."""
         self.accept_last_move()
 
     def accept_last_move(self):
@@ -237,7 +238,7 @@ class PlotHelper:
             plt.draw()
 
     def set_idx(self, label):
-        """Just to define indexes for the ensembles."""
+        """Just to define indices for the ensembles."""
         idx = {'$[0^-]$': 0, '$[0^+]$': 1, '$[1^+]$': 2,
                '$[2^+]$': 3, '$[3^+]$': 4, '$[4^+]$': 5,
                '$[5^+]$': 6}
@@ -250,7 +251,6 @@ class PlotHelper:
         accept, trial, status = retis_swap(
             self.simulation.path_ensembles,
             self.idx,
-            self.simulation.system,
             self.simulation.order_function,
             self.simulation.engine,
             self.simulation.settings,
@@ -270,14 +270,14 @@ class PlotHelper:
 
 
 def set_up_simulation(settings):
-    """To all the set-ups to create the simulation."""
+    """Do all the set-ups to create the simulation."""
     units_from_settings(settings)
     engine = create_engine(settings)
     system = create_system(settings, engine=engine)
     system.forcefield = create_force_field(settings)
     keyargs = {'system': system, 'engine': engine}
     simulation = create_simulation(settings, keyargs)
-    # also do the initialisation here:
+    # Also, do the initialisation here:
     for i, _ in enumerate(initiate_path_simulation(simulation, settings)):
         ensemble = simulation.path_ensembles[i]
         name = ensemble.ensemble_name
@@ -291,11 +291,11 @@ def set_up_simulation(settings):
 
 
 def main(inputfile='retis.rst'):
-    """To run the whole interactive plotting."""
-    # setup simulation
+    """Run the whole interactive plotting."""
+    # Setup simulation
     sim_settings = parse_settings_file(inputfile)
     simulation = set_up_simulation(sim_settings)
-    # set up for plotting:
+    # Set up for plotting:
     fig = plt.figure(figsize=(12, 6))
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
@@ -304,7 +304,7 @@ def main(inputfile='retis.rst'):
     axbt3 = fig.add_axes([0.40, 0.12, 0.1, 0.075])
     axbt4 = fig.add_axes([0.30, 0.04, 0.1, 0.075])
 
-    cmap = get_cmap(name='Vega10')
+    cmap = get_cmap(name='tab10')
     colors = cmap(np.linspace(0, 1, len(simulation.path_ensembles)+2))
 
     myplot = PlotHelper(simulation, sim_settings, ax1, ax2, colors)

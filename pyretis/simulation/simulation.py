@@ -10,11 +10,16 @@ Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Simulation (:py:class:`.Simulation`)
-    Object defining a generic simulation.
+    A class defining a generic simulation.
+
 """
 import logging
-from .simulation_task import SimulationTask
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+import os
+from pyretis.simulation.simulation_task import SimulationTask
+from pyretis.inout.screen import print_to_screen
+from pyretis.inout.simulationio import task_from_settings
+from pyretis.inout.restart import write_restart_file
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -35,20 +40,29 @@ class Simulation:
         * `step`: The current cycle number.
         * `start`: The cycle number we started at.
         * `stepno`: The number of cycles we have performed to arrive at
-          cycle number given by `cycle['step']`.
-
-        Note that `cycle['stepno']` might be different from
-        `cycle['step']` since `cycle['start']` might be != 0.
-    task : list of objects like :py:class:`.SimulationTask`
-        This is the list of simulation tasks to execute.
+          cycle number given by `cycle['step']`. Note that `cycle['stepno']`
+          might be different from `cycle['step']` since `cycle['start']`
+          might be != 0.
+    exe_dir : string
+        The path we are running the simulation from.
+    restart_freq : integer
+        The frequency for creating restart files.
     first_step : boolean
         True if the first step has not been executed yet.
     system : object like :py:class:`.System`
         This is the system the simulation will act on.
+    simulation_output : list of dicts
+        This list defines the output tasks associated
+        with the simulation.
+    simulation_type : string
+        An identifier for the simulation.
+    tasks : list of objects like :py:class:`.SimulationTask`
+        This is the list of simulation tasks to execute.
 
     """
 
     simulation_type = 'generic'
+    simulation_output = []
 
     def __init__(self, steps=0, startcycle=0):
         """Initialise the simulation object.
@@ -58,15 +72,17 @@ class Simulation:
         steps : int, optional
             The number of simulation steps to perform.
         startcycle : int, optional
-            The cycle we start the simulation on, can be useful if
-            restarting.
+            The cycle we start the simulation on.
 
         """
         self.cycle = {'step': startcycle, 'end': startcycle + steps,
-                      'start': startcycle, 'stepno': 0}
-        self.task = []
+                      'start': startcycle, 'stepno': 0, 'steps': steps}
+        self.tasks = []
+        self.output_tasks = []
         self.first_step = True
         self.system = None
+        self.restart_freq = None
+        self.exe_dir = None
 
     def extend_cycles(self, steps):
         """Extend a simulation with the given number of steps.
@@ -82,21 +98,21 @@ class Simulation:
             Returns `None` but modifies `self.cycle`.
 
         """
-        self.cycle['start'] = self.cycle['end']
-        self.cycle['end'] += steps
+        self.cycle['start'] = self.cycle['stepno']
+        self.cycle['end'] = self.cycle['start'] + steps
 
     def is_finished(self):
         """Determine if the simulation is finished.
 
         In this object, the simulation is done if the current step
         number is larger than the end cycle. Note that the number of
-        steps performed is dependent of the value of
+        steps performed is dependent on the value of
         `self.cycle['start']`.
 
         Returns
         -------
         out : boolean
-            True if simulation is finished, False otherwise.
+            True if the simulation is finished, False otherwise.
 
         """
         return self.cycle['step'] >= self.cycle['end']
@@ -104,22 +120,21 @@ class Simulation:
     def step(self):
         """Execute a simulation step.
 
-        Here, the tasks in `self.task` will be executed sequentially.
+        Here, the tasks in :py:attr:`.tasks` will be executed
+        sequentially.
 
         Returns
         -------
         out : dict
             This dictionary contains the results of the defined tasks.
-            It is obtained as the return value from
-            `self.execute_tasks()`.
 
         Note
         ----
         This function will have 'side effects' and update/change
         the state of other attached variables such as the system or
-        other variables that are not explicitly shown. This is intended.
-        In order to see what actually is happening when running
-        `step()`, investigate the tasks defined in `self.task`.
+        other variables that are not explicitly shown. This is intended
+        and the behavior is defined by the tasks in
+        :py:attr:`.tasks`.
 
         """
         if not self.first_step:
@@ -137,13 +152,10 @@ class Simulation:
         -------
         results : dict
             The results from the different tasks (if any).
-        first : boolean
-            This is just to do the initial tasks, i.e. tasks that should
-            be done before the simulation starts.
 
         """
         results = {'cycle': self.cycle}
-        for task in self.task:
+        for task in self.tasks:
             if not self.first_step or task.run_first():
                 resi = task.execute(self.cycle)
                 if task.result is not None:
@@ -155,46 +167,35 @@ class Simulation:
         """Add a new simulation task.
 
         A task can still be added manually by simply appending to
-        `self.task`. This function will however do some checks so that
-        the task added can be executed.
+        py:attr:`.tasks`. This function will, however, do some
+        checks so that the task added can be executed.
 
         Parameters
         ----------
         task : dict
-            A dict defining the task. A task is represented by a
-            object of type `SimulationTask` from `.simulation_task`
-            with some additional settings on how to store the output
-            and when to execute the task. Note that the actual
-            execution of the task in controlled in the object.
-            The keywords are:
+            A dict defining the task. A task is represented by an
+            object of type :py:class:`.SimulationTask` with some
+            additional settings on how to store the output
+            and when to execute the task.
+            The keywords in the dict defining the task are:
 
-            * `func`: A function to execute.
-            * `args` which stores the arguments for the function.
-            * `kwargs` which store the keyword arguments for the
+            * `func`: Callable, this is a function to execute in the
+              task.
+            * `args`: List, with arguments for the function.
+            * `kwargs`: Dict, with the keyword arguments for the
               function.
-            * `when` which stores when the task should be executed.
-            * `first` which is a boolean which determines if the task
-              should be executed on the initial step, i.e. before the
+            * `when`: Dict, which defines when the task should be
+              executed.
+            * `first`: Boolean, determines if the task should be
+              executed on the initial step, i.e. before the
               full simulation starts.
-            * `result` which is used to label the result. This is used
-              for output.
-        position : int
-            Can be used to placed the task at a specific position.
-
-        Note
-        ----
-        `SimulationTask` will do some tests on the consistency of the
-        keys 'func', 'args' and 'kwargs'. If this is not consistent,
-        it will raise an AssertionError.
-
-        See Also
-        --------
-        :py:func:`.SimulationTask` object
-        in :py:mod:`.simulation_task`.
+            * `result`: String, used to label the result.
+        position : int, optional
+            Can be used to give the tasks a specific position in the
+            task list.
 
         """
         try:
-            # create task in an explicit way - use 'get'.
             new_task = SimulationTask(task['func'],
                                       args=task.get('args', None),
                                       kwargs=task.get('kwargs', None),
@@ -202,32 +203,27 @@ class Simulation:
                                       result=task.get('result', None),
                                       first=task.get('first', False))
             if position is None:
-                self.task.append(new_task)
+                self.tasks.append(new_task)
             else:
-                self.task.insert(position, new_task)
+                self.tasks.insert(position, new_task)
             return True
         except AssertionError:
-            msg = 'Could not add task: {}'.format(task)
-            logger.warning(msg)
+            logger.warning('Could not add task: %s', task)
             return False
 
-    def run(self, output=None):
+    def run(self):
         """Run a simulation.
 
         The intended usage is for simulations where all tasks have
-        been defined in `self.tasks`.
+        been defined in :py:attr:`self.tasks`.
 
         Note
         ----
-        This function will simply run the tasks. In general this is
-        probably too generic for the simulation you want. It is perhaps
-        best to modify the `run` function of your simulation object to
-        tailor your simulation.
-
-        Parameters
-        ----------
-        output : list of objects like :py:class:`.OutputTask`
-            If outputs are given, they will be executed here.
+        This function will just run the tasks via executing
+        :py:meth:`.step` In general, this is probably too generic for
+        the simulation you want, if you are creating a custom simulation.
+        Please consider customizing the :py:meth:`.run` (or the
+        :py:meth:`.step`) method of your simulation class.
 
         Yields
         ------
@@ -235,25 +231,134 @@ class Simulation:
             This dictionary contains the results from the simulation.
 
         """
-        if output is None:
-            output = []
         while not self.is_finished():
             result = self.step()
-            for task in output:
+            for task in self.output_tasks:
                 task.output(result)
+            self.write_restart()
+            if self.soft_exit():
+                yield result
+                break
             yield result
 
     def __str__(self):
         """Just a small function to return some info about the simulation."""
-        ntask = len(self.task)
+        ntask = len(self.tasks)
         mtask = 'task' if ntask == 1 else 'tasks'
-        msg = ['General simulation with {} {}.'.format(ntask, mtask)]
+        msg = ['Generic simulation with {} {}.'.format(ntask, mtask)]
+        for i, task in enumerate(self.tasks):
+            msg += ['* Task no. {}'.format(i)]
+            for j, line in enumerate(str(task).split('\n')):
+                if j > 0:
+                    msg += [line]
         return '\n'.join(msg)
+
+    def set_up_output(self, settings, progress=False):
+        """Set up output from the simulation.
+
+        This includes the predefined output tasks, but also output
+        related to the restart file(s).
+
+
+        Parameters
+        ----------
+        settings : dict
+            These are the simulation settings.
+        progress : boolean
+            For some simulations, the user may select to display a
+            progress bar, we then need to disable the screen output.
+
+        """
+        logging.debug('Setting up output for simulation %s',
+                      self.__class__.__name__)
+        # Create the output tasks:
+        self.create_output_tasks(settings, progress=progress)
+        # Do set-up for restart output:
+        self.restart_freq = settings['output'].get('restart-file', -1)
+        if self.restart_freq < 1:
+            self.restart_freq = None
+            logger.warning('Writing of restart file(s) disableled!')
+        logger.debug('Setting restart frequency for simulation %s',
+                     self.restart_freq)
+        self.exe_dir = settings['simulation'].get('exe-path', os.getcwd())
+
+    def create_output_tasks(self, settings, progress=False):
+        """Create output tasks for the simulation.
+
+        This method will generate output tasks based on the tasks
+        listed in :py:attr:`.simulation_output`.
+
+        Parameters
+        ----------
+        settings : dict
+            These are the simulation settings.
+        progress : boolean
+            For some simulations, the user may select to display a
+            progress bar, we then need to disable the screen output.
+
+        """
+        logging.debug('Clearing output tasks & adding pre-defined ones')
+        engine = getattr(self, 'engine', None)
+        order_function = getattr(self, 'order_function', None)
+        self.output_tasks = []
+        for task_dict in self.simulation_output:
+            if 'order' in task_dict['type'] and order_function is None:
+                continue
+            task = task_from_settings(task_dict, settings, None, engine,
+                                      progress)
+            if task is not None:
+                logger.debug('Created output task:\n%s', task)
+                self.output_tasks.append(task)
+
+    def soft_exit(self):
+        """Force simulation to stop at the current step."""
+        exit_file = 'EXIT'
+        if self.exe_dir:
+            exit_file = os.path.join(self.exe_dir, exit_file)
+        if os.path.isfile(exit_file):
+            logger.info('Exit file found - will do a soft exit.')
+            print_to_screen('Exit file found - will do a soft exit.',
+                            level='warning')
+            # Write restart file...
+            self.write_restart(now=True)
+            # Close output files...
+            for task in self.output_tasks:
+                if task.target == 'file':
+                    task.writer.close()
+            return True
+        return False
+
+    def write_restart(self, now=False):
+        """Create a restart file.
+
+        Parameters
+        ----------
+        now : boolean, optional
+            If True, the output file will be written irrespective of the
+            step number.
+
+        """
+        if now or (self.restart_freq is not None and
+                   self.cycle['stepno'] % self.restart_freq == 0):
+            out = 'pyretis.restart'
+            if self.exe_dir:
+                out = os.path.join(self.exe_dir, out)
+            write_restart_file(out, self)
 
     def restart_info(self):
         """Return information which can be used to restart the simulation."""
-        info = {'cycle': self.cycle,
-                'type': self.simulation_type}
+        info = {
+            'cycle': self.cycle,
+            'type': self.simulation_type
+        }
+        try:
+            info['rgen'] = self.rgen.get_state()
+        except AttributeError:
+            pass
+        try:
+            info['engine'] = {'rgen': self.engine.rgen.get_state()}
+        except AttributeError:
+            pass
         return info
 
     def load_restart_info(self, info):
@@ -265,14 +370,13 @@ class Simulation:
         Parameters
         ----------
         info : dict
-            The dictionary with the restart information, should be
-            similar to the dict produced by :py:func:`.restart_info`.
+            The dictionary with the restart information.
 
         """
+        steps = self.cycle['steps']
         for key, val in info['cycle'].items():
-            if key != 'end':
-                self.cycle[key] = val
-        self.first_step = False
+            self.cycle[key] = val
+        self.extend_cycles(steps)
         if 'rgen' in info:
             try:
                 rgen = self.rgen
@@ -291,5 +395,5 @@ class Simulation:
                                         'random number generator state!'))
             except AttributeError:
                 logger.warning(('Restart: Tried setting engine state, but '
-                                'NO engine was present in simulation %s'),
+                                'NO engine is present in simulation %s'),
                                self.simulation_type)

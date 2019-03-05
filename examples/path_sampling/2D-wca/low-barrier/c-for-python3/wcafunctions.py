@@ -7,7 +7,7 @@ import os
 import logging
 import numpy as np
 from pyretis.forcefield import PotentialFunction
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 # Just to handle imports of the library:
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -50,12 +50,13 @@ class WCAPotential(PotentialFunction):
           Potential values for shifting the potential if requested.
           This is the potential evaluated at the cutoff.
         * `rcut2` : numpy.array
-          Squared cut-off for each interaction type.
+          The squared cut-off for each interaction type.
+
     """
 
     def __init__(self, dim=2, shift=True,
-                 desc='Lennard-Jones pair potential (C)'):
-        """Initiate the Lennard-Jones potential.
+                 desc='WCA pair potential (C)'):
+        """Set up the WCA potential.
 
         Parameters
         ----------
@@ -63,6 +64,7 @@ class WCAPotential(PotentialFunction):
             The dimensionality to use.
         shift : boolean
             Determines if the potential should be shifted or not.
+
         """
         super().__init__(dim=dim, desc=desc)
         self.shift = shift
@@ -89,7 +91,8 @@ class WCAPotential(PotentialFunction):
         Parameters
         ----------
         parameters : dict
-            The input base parameters
+            The input base parameters.
+
         """
         for key in parameters:
             if key in self.params:
@@ -118,16 +121,18 @@ class WCAPotential(PotentialFunction):
         self.params['offset'] = vcut
 
     def potential(self, system):
-        """Calculate the potential energy for the WCA interaction.
+        """Calculate the potential energy.
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we are operating on.
 
         Returns
         -------
-        The potential energy as a float.
+        out : float
+            The potential energy.
+
         """
         particles = system.particles
         box = system.box
@@ -147,16 +152,18 @@ class WCAPotential(PotentialFunction):
         return v_pot
 
     def potential_well(self, system):
-        """Calculate the potential energy for the well only.
+        """Calculate the potential energy for the well term.
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we are operating on.
 
         Returns
         -------
-        The potential energy as a float.
+        out : float
+            The potential energy of the well.
+
         """
         particles = system.particles
         box = system.box
@@ -172,20 +179,23 @@ class WCAPotential(PotentialFunction):
         return v_pot
 
     def force(self, system):
-        """Calculate the force for the Lennard-Jones interaction.
+        """Calculate the force.
 
         We also calculate the virial here, since the force
         is evaluated.
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we are operating on.
 
         Returns
         -------
-        The force as a numpy.array of the same shape as the positions
-        in `particles.pos`.
+        out[0] : numpy.array
+            The forces.
+        out[1] : numpy.array
+            The virial.
+
         """
         particles = system.particles
         box = system.box
@@ -208,21 +218,21 @@ class WCAPotential(PotentialFunction):
         return forces, virial
 
     def potential_and_force(self, system):
-        """Calculate potential and force for the Lennard-Jones interaction.
+        """Calculate potential and force.
 
         Since the force is evaluated, the virial is also calculated.
 
         Parameters
         ----------
-        system : object like `System`
+        system : object like :py:class:`.System`
             The system we are operating on.
 
         Note
         ----
-        Currently, the virial is only calculated for the particles as a
-        whole. It is not calculated as a virial per atom. The virial
+        Currently, the virial is only calculated for all the particles.
+        It is not calculated as a virial per atom. The virial
         per atom might be useful to obtain a local pressure or stress,
-        however this needs some consideration. Perhaps it's best to
+        however, this needs some consideration. Perhaps it's best to
         fully implement this as a method of planes or something similar.
 
         Returns
@@ -235,6 +245,7 @@ class WCAPotential(PotentialFunction):
         out[2] : numpy.array
             The virial, as a symmetric matrix with dimensions
             (dim, dim) where dim is given by the box/system dimensions.
+
         """
         particles = system.particles
         box = system.box

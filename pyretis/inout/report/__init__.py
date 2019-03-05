@@ -13,7 +13,7 @@ Modules
 ~~~~~~~
 
 __init__.py
-    This file, handles imports for PyRETIS and defines a method for
+    This file. Handles imports for PyRETIS and defines a method for
     writing a report to a file.
 
 markup.py (:py:mod:`pyretis.inout.report.markup`)

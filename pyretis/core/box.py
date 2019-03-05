@@ -23,33 +23,39 @@ Examples
 ~~~~~~~~
 >>> from pyretis.core.box import create_box
 
->>> box = create_box(length=[10, 10, 10], periodic=[True, False, True])
+>>> box = create_box(cell=[10, 10, 10], periodic=[True, False, True])
 
 """
 from abc import ABCMeta, abstractmethod
+from copy import copy
 import logging
+import math
 import numpy as np
 from numpy.linalg import det
 from numpy import product
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from pyretis.core.common import compare_objects
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
 __all__ = ['create_box']
 
 
-def create_box(low=None, high=None, length=None, periodic=None):
+def create_box(low=None, high=None, cell=None, periodic=None):
     """Set up and create a box.
 
     Parameters
     ----------
-    low : numpy.array
+    low : numpy.array, optional
         1D array containing the lower bounds of the cell.
-    high : numpy.array
+    high : numpy.array, optional
         1D array containing the higher bounds of the cell.
-    length : numpy.array
-        1D array containing the size lengths of the cell.
-    periodic : list of boolean
+    cell : numpy.array, optional
+        1D array, a flattened version of the simulation box matrix.
+        This array is expected to contain 1, 2, 3, 6 or 9 items.
+        These are the xx, yy, zz, xy, xz, yx, yz, zx, zy elements,
+        respectively.
+    periodic : list of boolean, optional
         If `periodic[i]` then we should apply periodic boundaries
         to dimension `i`.
 
@@ -59,18 +65,162 @@ def create_box(low=None, high=None, length=None, periodic=None):
         The object representing the simulation box.
 
     """
+    # If the cell is given, the we should be able to determine
+    # the length:
+    if cell is not None:
+        # make sure the cell does not become an array of objects
+        cell = np.array(cell, dtype=np.float)
+
+        if len(cell) <= 3:
+            length = np.array([i for i in cell])
+        else:  # Use the xx, yy and zz parameters:
+            length = np.array([i for i in cell[:3]])
+        # Determine low, high, length and possible periodic:
+        low, high, length, periodic = _get_low_high_length(
+            low, high, length, periodic
+        )
+    else:  # Here, cell was not given. Try to obtain it from the length:
+        low, high, length, periodic = _get_low_high_length(
+            low, high, cell, periodic
+        )
+        cell = np.array([i for i in length])
+    # We can still have periodic not set:
+    if periodic is None:
+        logger.info(
+            'Periodic settings not given. Assumed True for all directions.'
+        )
+        periodic = [True] * len(length)
+    else:
+        # If for some reason the periodic settings have wrong length:
+        if len(periodic) < len(length):
+            logger.info('Setting missing periodic settings to True.')
+            for _ in range(len(length) - len(periodic)):
+                periodic.append(True)
+        elif len(periodic) > len(length):
+            logger.error('Too many periodic settings given.')
+            raise ValueError('Too many periodic settings given.')
+    # Here, everything should be set:
+    check_consistency(low, high, length)
+    # Create the box:
     obj = TriclinicBox
-    if length is None or len(length) <= 3:
+    if len(cell) <= 3:
         obj = RectangularBox
-    return obj(low=low, high=high, length=length, periodic=periodic)
+    return obj(low, high, length, periodic, cell)
 
 
-def array_to_box_matrix(length):
+def check_consistency(low, high, length):
+    """Check that given box bounds are consistent.
+
+    Parameters
+    ----------
+    low : numpy.array
+        The lower bounds for the box.
+    high : numpy.array
+        The upper bounds for the box.
+    length : numpy.array
+        The lengths of the box.
+
+    """
+    length_re = high - low
+    if any(i <= 0 for i in length_re):
+        logger.error('Check box settings. Found high <= low.')
+        raise ValueError('Incorrect box: high <= low.')
+    if not all(np.isclose(length, length_re)):
+        logger.error('Check box settings: length != high - low.')
+        raise ValueError('Incorrect box: length != high - low.')
+
+
+def _get_low_high_length(low, high, length, periodic):
+    """Determine box cell parameters from input.
+
+    This method will consider the following cases:
+
+    1) We are given low, high and length.
+    2) We are given high and length, and determine the low values.
+    3) We are given low and length, and determine the high values.
+    4) We are given length, assume low to be zero and determine high.
+    5) We are given low and high, and determine the length.
+    6) We are given just high, assume low to be zero and
+       determine the length.
+    7) We are just given low, and assume high and length to be infinite.
+    8) We are given none of the values, and assume all to infinite.
+
+    Parameters
+    ----------
+    low : numpy.array or None
+        The lower bounds for the box.
+    high : numpy.array or None
+        The upper bounds for the box.
+    length : numpy.array or None
+        The lengths of the box.
+    periodic : list of boolean or None
+        We will assume a periodic box for dimensions where
+        this list is True.
+
+    Returns
+    -------
+    out[0] : numpy.array
+        The updated lower bounds for the box.
+    out[1] : numpy.array
+        The updated upper bounds for the box.
+    out[2] : numpy.array
+        The updated lengths of the box.
+    out[3] : list of boolean
+        The updated periodic settings for the box.
+
+    """
+    case = (length is not None, low is not None, high is not None)
+    if low is not None:
+        low = np.array(low)
+    if high is not None:
+        high = np.array(high)
+    if length is not None:
+        length = np.array(length)
+    if case == (True, True, True):
+        # 1) We have given length, low and high.
+        pass
+    elif case == (True, False, True):
+        # 2) Length & high has been given, just determine low:
+        low = high - length
+    elif case == (True, True, False):
+        # 3) Length and low was given, determine high:
+        high = low + length
+    elif case == (True, False, False):
+        # 4) Length is given, set low to 0 and high to low + length:
+        low = np.zeros_like(length)
+        high = low + length
+    elif case == (False, True, True):
+        # 5) Low and high is given, determine length:
+        length = high - low
+    elif case == (False, False, True):
+        # 6) High is given, assume low and determine length:
+        low = np.zeros_like(high)
+        length = high - low
+    elif case == (False, True, False):
+        # 7) Low given. High and length to be determined.
+        # This is not enough info, so we assume an infinite box:
+        length = float('inf') * np.ones_like(low)
+        high = float('inf') * np.ones_like(low)
+    elif case == (False, False, False):
+        # Not much info is given. We let the box be similar
+        # in shape to the input periodic settings:
+        if periodic is None:
+            logger.info(
+                'Too few settings for the box is given. A 1D box is assumed.'
+            )
+            periodic = [False]
+        low = np.array([-float('inf') for _ in periodic])
+        high = float('inf') * np.ones_like(low)
+        length = float('inf') * np.ones_like(low)
+    return low, high, length, periodic
+
+
+def array_to_box_matrix(cell):
     """Return a box matrix corresponding to a cell array.
 
     Parameters
     ----------
-    length : list or numpy.array
+    cell : list or numpy.array
         An (1D) array containing 1, 2, 3, 6 or 9 items. These are
         the xx, yy, zz, xy, xz, yx, yz, zx, zy elements. Setting
         x = 0, y = 1 and z = 2 will give the indices in the matrix,
@@ -83,38 +233,43 @@ def array_to_box_matrix(length):
         The box vector on matrix form.
 
     """
-    if len(length) == 1:
-        return 1.0 * np.array([length[0]])
-    elif len(length) == 2:
-        return 1.0 * np.array([[length[0], 0.0],
-                               [0.0, length[1]]])
-    elif len(length) == 3:
-        return 1.0 * np.array([[length[0], 0.0, 0.0],
-                               [0.0, length[1], 0.0],
-                               [0.0, 0.0, length[2]]])
-    elif len(length) == 6:
-        return 1.0 * np.array([[length[0], length[3], length[4]],
-                               [0.0, length[1], length[5]],
-                               [0.0, 0.0, length[2]]])
-    elif len(length) == 9:
-        return 1.0 * np.array([[length[0], length[3], length[4]],
-                               [length[5], length[1], length[6]],
-                               [length[7], length[8], length[2]]])
-    else:
-        logger.error('%d box parameters given, need 1, 2 3, 6, or 9.',
-                     len(length))
-        raise ValueError('Incorrect number of box-parameters!')
+    if len(cell) == 1:
+        return 1.0 * np.array([cell[0]])
+    if len(cell) == 2:
+        return 1.0 * np.array([[cell[0], 0.0],
+                               [0.0, cell[1]]])
+    if len(cell) == 3:
+        return 1.0 * np.array([[cell[0], 0.0, 0.0],
+                               [0.0, cell[1], 0.0],
+                               [0.0, 0.0, cell[2]]])
+    if len(cell) == 6:
+        return 1.0 * np.array([[cell[0], cell[3], cell[4]],
+                               [0.0, cell[1], cell[5]],
+                               [0.0, 0.0, cell[2]]])
+    if len(cell) == 9:
+        return 1.0 * np.array([[cell[0], cell[3], cell[4]],
+                               [cell[5], cell[1], cell[6]],
+                               [cell[7], cell[8], cell[2]]])
+    logger.error(
+        '%d box parameters given, need 1, 2, 3, 6, or 9.', len(cell)
+    )
+    raise ValueError('Incorrect number of box-parameters!')
 
 
-def box_matrix_to_list(matrix):
+def box_matrix_to_list(matrix, full=False):
     """Return a list representation of the box matrix.
 
-    This method ensures correct ordering of the elements for PyRETIS.
+    This method ensures correct ordering of the elements for PyRETIS:
+    ``xx, yy, zz, xy, xz, yx, yz, zx, zy``.
 
     Parameters
     ----------
     matrix : numpy.array
         A matrix (2D) representing the box.
+    full : boolean, optional
+        Return a full set of parameters (9) if set to True. If False,
+        and we need 3 or fewer parameters (i.e. the other 6 are zero)
+        we will only return the 3 non-zero ones.
 
     Returns
     -------
@@ -124,8 +279,8 @@ def box_matrix_to_list(matrix):
     """
     if matrix is None:
         return None
-    if np.count_nonzero(matrix) <= 3:
-        return np.diag(matrix)
+    if np.count_nonzero(matrix) <= 3 and not full:
+        return [matrix[0, 0], matrix[1, 1], matrix[2, 2]]
     return [matrix[0, 0], matrix[1, 1], matrix[2, 2],
             matrix[0, 1], matrix[0, 2], matrix[1, 0],
             matrix[1, 2], matrix[2, 0], matrix[2, 1]]
@@ -134,8 +289,8 @@ def box_matrix_to_list(matrix):
 def _cos(angle):
     """Return cosine of an angle.
 
-    Here, we also check if the angle is close to 90.0 and
-    if so, we return just a zero.
+    We also check if the angle is close to 90.0 and if so, we return
+    a zero.
 
     Parameters
     ----------
@@ -148,29 +303,29 @@ def _cos(angle):
         The cosine of the angle.
 
     """
-    if np.isclose(angle, 90.):
+    if math.isclose(angle, 90.):
         return 0.
-    return np.cos(np.radians(angle))  # pylint: disable=no-member
+    return math.cos(math.radians(angle))
 
 
 def box_vector_angles(length, alpha, beta, gamma):
-    """Return the box matrix from lengths ang angles.
+    """Obtain the box matrix from given lengths and angles.
 
     Parameters
     ----------
     length : numpy.array
-        1D array, the box-lengths on form ``[a, b, c]``
+        1D array, the box-lengths on form ``[a, b, c]``.
     alpha : float
-        The alpha angle.
+        The alpha angle, in degrees.
     beta : float
-        The beta angle.
+        The beta angle, in degrees.
     gamma : float
-        The gamma angle.
+        The gamma angle, in degrees.
 
     Returns
     -------
-    out : np.array
-        The box matrix (2D).
+    out : numpy.array, 2D
+        The (upper triangular) box matrix.
 
     """
     box_matrix = np.zeros((3, 3))
@@ -180,12 +335,50 @@ def box_vector_angles(length, alpha, beta, gamma):
     box_matrix[0, 0] = length[0]
     box_matrix[0, 1] = length[1] * cos_gamma
     box_matrix[0, 2] = length[2] * cos_beta
-    box_matrix[1, 1] = np.sqrt(length[1]**2 - box_matrix[0, 1]**2)
+    box_matrix[1, 1] = math.sqrt(length[1]**2 - box_matrix[0, 1]**2)
     box_matrix[1, 2] = (length[1] * length[2] * cos_alpha -
                         box_matrix[0, 1] * box_matrix[0, 2]) / box_matrix[1, 1]
-    box_matrix[2, 2] = np.sqrt(length[2]**2 - box_matrix[0, 2]**2 -
-                               box_matrix[1, 2]**2)
+    box_matrix[2, 2] = math.sqrt(length[2]**2 - box_matrix[0, 2]**2 -
+                                 box_matrix[1, 2]**2)
     return box_matrix
+
+
+def angles_from_box_matrix(box_matrix):
+    """Obtain angles and lengths from a given box matrix.
+
+    Parameters
+    ----------
+    box_matrix : np.array
+        The box matrix (2D).
+
+    Returns
+    -------
+    length : numpy.array
+        1D array, the box-lengths on form ``[a, b, c]``.
+    alpha : float
+        The alpha angle, in degrees.
+    beta : float
+        The beta angle, in degrees.
+    gamma : float
+        The gamma angle, in degrees.
+
+    """
+    length = [
+        box_matrix[0, 0],
+        math.sqrt(box_matrix[1, 1]**2 + box_matrix[0, 1]**2),
+        math.sqrt(box_matrix[2, 2]**2 + box_matrix[0, 2]**2 +
+                  box_matrix[1, 2]**2),
+    ]
+    cos_alpha = (
+        (box_matrix[0, 1] * box_matrix[0, 2] +
+         box_matrix[1, 1] * box_matrix[1, 2]) / (length[1] * length[2])
+    )
+    cos_beta = box_matrix[0, 2] / length[2]
+    cos_gamma = box_matrix[0, 1] / length[1]
+    alpha = math.degrees(math.acos(cos_alpha))
+    beta = math.degrees(math.acos(cos_beta))
+    gamma = math.degrees(math.acos(cos_gamma))
+    return np.array(length), alpha, beta, gamma
 
 
 class BoxBase(metaclass=ABCMeta):
@@ -216,110 +409,24 @@ class BoxBase(metaclass=ABCMeta):
 
     """
 
-    def __init__(self, low=None, high=None, length=None, periodic=None):
+    def __init__(self, low, high, length, periodic, cell):
         """Initialise the BoxBase class."""
-        case = (length is not None, low is not None, high is not None)
-
-        self.length = None
-        self.ilength = None
-        self.low = None
-        self.high = None
-        self.periodic = None
-        self.box_matrix = np.zeros((3, 3))
-        self.cell = None
-        self.dim = 0
-
-        if length is not None:
-            self.cell = [float(i) for i in length]
-            self._update_length(length)
-        if low is not None:
-            self.low = np.array([float(i) for i in low])
-        if high is not None:
-            self.high = np.array([float(i) for i in high])
-
-        self._set_low_high_length_cell(case, periodic)
-
-        # Here: low, high and length should have been set.
-        if self.periodic is None:
-            if periodic is None:
-                self.periodic = [True for _ in self.length]
-            else:
-                self.periodic = [i for i in periodic]
-        if len(self.periodic) < len(self.length):
-            for _ in range(len(self.length) - len(self.periodic)):
-                self.periodic.append(True)
-
-        self.dim = len(self.length)
+        self.low = low
+        self.high = high
+        self.length = length
+        self.periodic = periodic
+        self.cell = cell
+        # Create box matrix from the given cell:
         self.box_matrix = array_to_box_matrix(self.cell)
-        self._check_consistency()
         self.ilength = 1.0 / self.length
-
-    def _update_length(self, new_length):
-        """Update the box lengths."""
-        if len(new_length) <= 3:
-            self.length = np.array([float(i) for i in new_length])
-        else:
-            self.length = np.array([float(i) for i in new_length[:3]])
-
-    def _set_low_high_length_cell(self, case, periodic):
-        """Determine low, high and length."""
-        if case == (True, True, True):
-            # We have given length, low and high.
-            pass
-        elif case == (True, False, True):
-            # Length & high has been given, just determine low.
-            self.low = self.high - self.length
-        elif case == (True, True, False):
-            # Length and low was given, determine high.
-            self.high = self.low + self.length
-        elif case == (True, False, False):
-            # Length is given, set low to 0 and high to low + length
-            self.low = np.zeros_like(self.length)
-            self.high = self.low + self.length
-        elif case == (False, True, True):
-            # Low and high is given, determine length
-            self.length = self.high - self.low
-        elif case == (False, False, True):
-            # High is given, assume low and determine length.
-            self.low = np.zeros_like(self.high)
-            self.length = self.high - self.low
-        elif case == (False, True, False):
-            # Low given. High and length to be determined.
-            # This is not enough info really...
-            self.length = float('inf') * np.ones_like(self.low)
-            self.high = float('inf') * np.ones_like(self.low)
-        elif case == (False, False, False):
-            # Not much info is given. We let things be determined by
-            # the periodic settings.
-            if periodic is None:
-                self.periodic = [False]
-            else:
-                self.periodic = periodic
-            self.low = np.array([-float('inf') for _ in self.periodic])
-            self.high = float('inf') * np.ones_like(self.low)
-            self.length = float('inf') * np.ones_like(self.low)
-        if self.cell is None:
-            self.cell = [i for i in self.length]
-
-    def _check_consistency(self):
-        """Do some simple check for consistency of cell parameters."""
-        length = self.high - self.low
-        if any(i < 0 for i in length):
-            logger.error('Check box settings! Found high < low!')
-            raise ValueError('Incorrect box: high < low!')
-        if not all(np.isclose(self.length, length)):
-            logger.error('Check box settings length != high - low')
-            raise ValueError('Check box: length != high - low')
-        if any(self.length == 0):
-            logger.error('Cannot have a length of 0')
-            raise ValueError('Check box: Found length == 0')
+        self.dim = len(self.length)
 
     def update_size(self, new_size):
         """Update the box size.
 
         Parameters
         ----------
-        new_size : list, tuple, numpy.array, or other iterable.
+        new_size : list, tuple, numpy.array, or other iterable
             The new box size.
 
         """
@@ -343,7 +450,7 @@ class BoxBase(metaclass=ABCMeta):
                 try:
                     self.box_matrix = array_to_box_matrix(new_size)
                     self.cell = [i for i in new_size]
-                    self._update_length(new_size)
+                    self.length = np.array([float(i) for i in self.cell[:3]])
                     self.high = self.low + self.length
                     self.ilength = 1.0 / self.length
                 except ValueError:
@@ -351,10 +458,7 @@ class BoxBase(metaclass=ABCMeta):
 
     def bounds(self):
         """Return the boundaries of the box (low, high) as an array."""
-        bounds = []
-        for i, j in zip(self.low, self.high):
-            bounds.append([i, j])
-        return bounds
+        return [(i, j) for i, j in zip(self.low, self.high)]
 
     @abstractmethod
     def calculate_volume(self):
@@ -418,8 +522,7 @@ class BoxBase(metaclass=ABCMeta):
         """Apply periodic boundaries to a distance.
 
         This will apply periodic boundaries to a distance. Note that the
-        distance can be a vector, but not a matrix of several distance
-        vectors.
+        distance can be a vector, but not a matrix of distance vectors.
 
         Parameters
         ----------
@@ -443,12 +546,31 @@ class BoxBase(metaclass=ABCMeta):
     def restart_info(self):
         """Return a dictionary with restart information."""
         info = {
-            'length': self.cell,
+            'length': self.length,
             'periodic': self.periodic,
             'low': self.low,
             'high': self.high,
+            'cell': self.cell,
         }
         return info
+
+    def copy(self):
+        """Return a copy of the box.
+
+        Returns
+        -------
+        out : object like :py:class:`.BoxBase`
+            A copy of the box.
+
+        """
+        box_copy = self.__class__(
+            np.copy(self.low),
+            np.copy(self.high),
+            np.copy(self.length),
+            copy(self.periodic),
+            np.copy(self.cell)
+        )
+        return box_copy
 
     def __str__(self):
         """Return a string describing the box.
@@ -456,7 +578,7 @@ class BoxBase(metaclass=ABCMeta):
         Returns
         -------
         out : string
-            String with type of box, extent of the box and
+            String with the type of box, the extent of the box and
             information about the periodicity.
 
         """
@@ -474,12 +596,17 @@ class BoxBase(metaclass=ABCMeta):
         boxstr.append('Cell: {}'.format(cell))
         return '\n'.join(boxstr)
 
+    def __eq__(self, other):
+        """Compare two box objects."""
+        attrs = {'low', 'high', 'length', 'ilength', 'box_matrix', 'cell',
+                 'periodic', 'dim'}
+        numpy_attrs = {'low', 'high', 'length', 'ilength', 'box_matrix',
+                       'cell'}
+        return compare_objects(self, other, attrs, numpy_attrs)
+
 
 class RectangularBox(BoxBase):
     """An orthogonal box."""
-
-    def __init__(self, low=None, high=None, length=None, periodic=None):
-        super().__init__(low=low, high=high, length=length, periodic=periodic)
 
     def calculate_volume(self):
         """Calculate the volume of the box.
@@ -515,8 +642,7 @@ class RectangularBox(BoxBase):
             if relpos < 0.0 or relpos >= length:
                 delta = relpos - np.floor(relpos * ilength) * length
             return delta + low
-        else:
-            return pos
+        return pos
 
     def pbc_wrap(self, pos):
         """Apply periodic boundaries to the given position.
@@ -559,7 +685,7 @@ class RectangularBox(BoxBase):
 
         Returns
         -------
-        out : numpy.array, same shape as parameter `distance`
+        out : numpy.array, same shape as the `distance` parameter
             The pbc-wrapped distances.
 
         Note
@@ -583,8 +709,7 @@ class RectangularBox(BoxBase):
         """Apply periodic boundaries to a distance.
 
         This will apply periodic boundaries to a distance. Note that the
-        distance can be a vector, but not a matrix of several distance
-        vectors.
+        distance can be a vector, but not a matrix of distance vectors.
 
         Parameters
         ----------
@@ -593,7 +718,7 @@ class RectangularBox(BoxBase):
 
         Returns
         -------
-        out : numpy.array, same shape as parameter `distance`
+        out : numpy.array, same shape as the `distance` parameter
             The periodic-boundary wrapped distance vector.
 
         """
@@ -611,9 +736,6 @@ class RectangularBox(BoxBase):
 
 class TriclinicBox(BoxBase):
     """This class represents a triclinic box."""
-
-    def __init__(self, low=None, high=None, length=None, periodic=None):
-        super().__init__(low=low, high=high, length=length, periodic=periodic)
 
     def calculate_volume(self):
         """Calculate and return the volume of the box.
@@ -641,3 +763,30 @@ class TriclinicBox(BoxBase):
     def pbc_dist_coordinate(self, distance):
         """Apply periodic boundaries to a distance."""
         raise NotImplementedError
+
+
+def box_from_restart(restart):
+    """Create a box from restart settings.
+
+    Parameters
+    ----------
+    restart : dict
+        A dictionary with restart settings.
+
+    Returns
+    -------
+    box : object like :py:class:`.BoxBase`
+        The box created from the restart settings.
+
+    """
+    restart_box = restart.get('box', None)
+    if restart_box is None:
+        logger.info('No box created from restart settings.')
+        return None
+    box = create_box(
+        low=restart_box.get('low'),
+        high=restart_box.get('high'),
+        cell=restart_box.get('cell'),
+        periodic=restart_box.get('periodic')
+    )
+    return box

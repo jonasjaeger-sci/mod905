@@ -17,18 +17,18 @@ import re
 import shlex
 from pyretis.engines.external import ExternalMDEngine
 from pyretis.core.random_gen import create_random_generator
-from pyretis.inout.writers.xyzio import (
+from pyretis.inout.formats.xyz import (
     read_xyz_file,
     write_xyz_trajectory,
     convert_snapshot
 )
-from pyretis.inout.writers.cp2kio import (
+from pyretis.inout.formats.cp2k import (
     update_cp2k_input,
     read_cp2k_restart,
     read_cp2k_box,
     read_cp2k_energy,
 )
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -49,7 +49,7 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
                        name='md_step', print_freq=None):
     """Create input file for a single step.
 
-    Note, the single step actually consist of a number of subcycles.
+    Note, the single step actually consists of a number of subcycles.
     But from PyRETIS' point of view, this is a single step.
     Further, we here assume that we start from a given xyz file and
     we also explicitly give the velocities here.
@@ -68,8 +68,8 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
         The (base)name for the input file to read positions from.
     vel : numpy.array
         The velocities to set in the input.
-    name : string
-        A name given to the CP2K project.
+    name : string, optional
+        A name for the CP2K project.
     print_freq : integer, optional
         How often we should print to the trajectory file.
 
@@ -124,12 +124,79 @@ def write_for_step_vel(infile, outfile, timestep, subcycles, posfile, vel,
     update_cp2k_input(infile, outfile, update=to_update, remove=remove)
 
 
+def write_for_integrate(infile, outfile, timestep, subcycles, posfile,
+                        name='md_step', print_freq=None):
+    """Create input file for a single step for the integrate method.
+
+    Here, we do minimal changes and just set the time step and subcycles
+    and the starting configuration.
+
+    Parameters
+    ----------
+    infile : string
+        The input template to use.
+    outfile : string
+        The file to create.
+    timestep : float
+        The time-step to use for the simulation.
+    subcycles : integer
+        The number of sub-cycles to perform.
+    posfile : string
+        The (base)name for the input file to read positions from.
+    name : string, optional
+        A name for the CP2K project.
+    print_freq : integer, optional
+        How often we should print to the trajectory file.
+
+    """
+    if print_freq is None:
+        print_freq = subcycles
+    to_update = {
+        'GLOBAL': {
+            'data': ['PROJECT {}'.format(name),
+                     'RUN_TYPE MD',
+                     'PRINT_LEVEL LOW'],
+            'replace': True,
+        },
+        'MOTION->MD':  {
+            'data': {'STEPS': subcycles,
+                     'TIMESTEP': timestep}
+        },
+        'MOTION->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
+        'MOTION->PRINT->RESTART->EACH': {
+            'data': {'MD': print_freq}
+        },
+        'MOTION->PRINT->VELOCITIES->EACH': {
+            'data': {'MD': print_freq}
+        },
+        'MOTION->PRINT->TRAJECTORY->EACH': {
+            'data': {'MD': print_freq}
+        },
+        'FORCE_EVAL->SUBSYS->TOPOLOGY': {
+            'data': {'COORD_FILE_NAME': posfile,
+                     'COORD_FILE_FORMAT': 'xyz'}
+        },
+        'FORCE_EVAL->DFT->SCF->PRINT->RESTART': {
+            'data': ['BACKUP_COPIES 0'],
+            'replace': True,
+        },
+    }
+    remove = [
+        'EXT_RESTART',
+        'FORCE_EVAL->SUBSYS->COORD'
+    ]
+    update_cp2k_input(infile, outfile, update=to_update, remove=remove)
+
+
 def write_for_continue(infile, outfile, timestep, subcycles,
                        name='md_continue'):
     """
     Create input file for a single step.
 
-    Note, the single step actually consist of a number of sub-cycles.
+    Note, the single step actually consists of a number of subcycles.
     But from PyRETIS' point of view, this is a single step.
     Here, we make use of restart files named ``previous.restart``
     and ``previous.wfn`` to continue a run.
@@ -144,8 +211,8 @@ def write_for_continue(infile, outfile, timestep, subcycles,
         The time-step to use for the simulation.
     subcycles : integer
         The number of sub-cycles to perform.
-    name : string
-        A name given to the CP2K project.
+    name : string, optional
+        A name for the CP2K project.
 
     """
     to_update = {
@@ -208,8 +275,8 @@ def write_for_genvel(infile, outfile, posfile, seed, name='genvel'):
         The (base)name for the input file to read positions from.
     seed : integer
         A seed for generating velocities.
-    name : string
-        A name given to the CP2K project.
+    name : string, optional
+        A name for the CP2K project.
 
     """
     to_update = {
@@ -278,8 +345,8 @@ class CP2KEngine(ExternalMDEngine):
 
     """
 
-    def __init__(self, cp2k, input_path, timestep, subcycles, extra_files,
-                 seed=0):
+    def __init__(self, cp2k, input_path, timestep, subcycles,
+                 extra_files=None, seed=0):
         """Set up the CP2K engine.
 
         Parameters
@@ -294,7 +361,7 @@ class CP2KEngine(ExternalMDEngine):
             The number of steps each CP2K run is composed of.
         extra_files : list
             List of extra files which may be required to run CP2K.
-        seed : integer
+        seed : integer, optional
             A seed for the random number generator.
 
         """
@@ -304,9 +371,9 @@ class CP2KEngine(ExternalMDEngine):
         self.ext = 'xyz'
         self.cp2k = shlex.split(cp2k)
         logger.info('Command for execution of CP2K: %s', ' '.join(self.cp2k))
-        # store input path:
+        # Store input path:
         self.input_path = os.path.abspath(input_path)
-        # store input files:
+        # Store input files:
         self.input_files = {}
         for key, fname in zip(('conf', 'template'),
                               ('initial.xyz', 'cp2k.inp')):
@@ -378,7 +445,7 @@ class CP2KEngine(ExternalMDEngine):
         return os.path.join(self.exe_dir, out_file)
 
     def _propagate_from(self, name, path, system, order_function, interfaces,
-                        reverse=False):
+                        msg_file, reverse=False):
         """
         Propagate with CP2K from the current system configuration.
 
@@ -399,8 +466,11 @@ class CP2KEngine(ExternalMDEngine):
             The object used for calculating the order parameter.
         interfaces : list of floats
             These interfaces define the stopping criterion.
-        reverse : boolean
-            If True, the system will be propagated backwards in time.
+        msg_file : object like :py:class:`.FileIO`
+            An object we use for writing out messages that are useful
+            for inspecting the status of the current propagation.
+        reverse : boolean, optional
+            If True, the system will be propagated backward in time.
 
         Returns
         -------
@@ -437,24 +507,35 @@ class CP2KEngine(ExternalMDEngine):
         order = self.calculate_order(order_function, system,
                                      xyz=xyz, vel=vel, box=box)
         traj_file = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
+        # Create a message file with some info about this run:
+        msg_file.write(
+            '# Initial order parameter: {}'.format(
+                ' '.join(['{}'.format(i) for i in order])
+            )
+        )
+        msg_file.write('# Trajectory file is: {}'.format(traj_file))
         # Run the first step:
+        msg_file.write('# Running first CP2k step.')
         out_files = self.run_cp2k('step.inp', name)
         restart_file = os.path.join(self.exe_dir, out_files['restart'])
         prestart_file = os.path.join(self.exe_dir, 'previous.restart')
         wave_file = os.path.join(self.exe_dir, out_files['wfn'])
         pwave_file = os.path.join(self.exe_dir, 'previous.wfn')
+
         # Note: Order is calculated at the END of each iteration!
         i = 0
         # Write the config so we have a non-empty file:
         write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i,
                              append=False)
+        msg_file.write('# Running main CP2k propagation loop.')
+        msg_file.write('# Step order parameter cv1 cv2 ...')
         for i in range(path.maxlen):
-            print('At step {}, order = {}'.format(i, order))
-            phase_point = {'order': order,
-                           'pos': (traj_file, i),
-                           'vel': reverse,
-                           'vpot': None,
-                           'ekin': None}
+            msg_file.write(
+                '{} {}'.format(i, ' '.join(['{}'.format(j) for j in order]))
+            )
+            snapshot = {'order': order, 'config': (traj_file, i),
+                        'vel_rev': reverse}
+            phase_point = self.snapshot_to_system(system, snapshot)
             status, success, stop, add = self.add_to_path(path, phase_point,
                                                           left, right)
             if add and i > 0:
@@ -479,11 +560,13 @@ class CP2KEngine(ExternalMDEngine):
                 atoms, xyz, vel, box, _ = read_cp2k_restart(restart_file)
                 order = self.calculate_order(order_function, system,
                                              xyz=xyz, vel=vel, box=box)
+        msg_file.write('# Propagation done.')
         energy_file = out_files['energy']
+        msg_file.write('# Reading energies from: {}'.format(energy_file))
         energy = read_cp2k_energy(energy_file)
         end = (i + 1) * self.subcycles
-        path.ekin = energy[0][:end:self.subcycles]
-        path.vpot = energy[1][:end:self.subcycles]
+        path.update_energies(energy['ekin'][:end:self.subcycles],
+                             energy['vpot'][:end:self.subcycles])
         for _, files in out_files.items():
             self._removefile(files)
         self._removefile(prestart_file)
@@ -491,6 +574,111 @@ class CP2KEngine(ExternalMDEngine):
         self._removefile(continue_input)
         self._removefile(step_input)
         return success, status
+
+    def integrate(self, system, steps, order_function=None, thermo='full'):
+        """
+        Propagate several integration steps.
+
+        This method will perform several integration steps using
+        CP2K. It will also calculate the order parameter(s) and
+        energy terms if requested.
+
+        Parameters
+        ----------
+        system : object like :py:class:`.System`
+            The system we are integrating.
+        steps : integer
+            The number of steps we are going to perform. Note that we
+            do not integrate on the first step (e.g. step 0) but we do
+            obtain the other properties. This is to output the starting
+            configuration.
+        order_function : object like :py:class:`.OrderParameter`, optional
+            An order function can be specified if we want to
+            calculate the order parameter along with the simulation.
+        thermo : string, optional
+            Select the thermodynamic properties we are to calculate.
+
+        Yields
+        ------
+        results : dict
+            The results from a MD step. This contains the state of the system
+            and order parameter(s) and energies (if calculated).
+
+        """
+        logger.debug('Integrating with CP2K')
+        # First, copy the required input files:
+        logger.debug('Adding input files for CP2K')
+        self.add_input_files(self.exe_dir)
+        # Get positions and velocities from the input file.
+        initial_conf = self.dump_frame(system)
+
+        box, xyz, vel, atoms = self._read_configuration(initial_conf)
+        if box is None:
+            box, _ = read_cp2k_box(self.input_files['template'])
+
+        name = 'pyretis-cp2k'
+
+        logger.debug('Thermo was set to: %s', thermo)
+
+        # Add CP2K input for a single step:
+        step_input = os.path.join(self.exe_dir, 'step.inp')
+        write_for_integrate(self.input_files['template'], step_input,
+                            self.timestep, self.subcycles,
+                            os.path.basename(initial_conf),
+                            name=name)
+        # And create the input file for continuing:
+        continue_input = os.path.join(self.exe_dir, 'continue.inp')
+        write_for_continue(self.input_files['template'], continue_input,
+                           self.timestep, self.subcycles, name=name)
+        # Get the order parameter before the run:
+        if order_function:
+            order = self.calculate_order(order_function, system,
+                                         xyz=xyz, vel=vel, box=box)
+        else:
+            order = None
+        traj_file = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
+        # Run the first step:
+        out_files = self.run_cp2k('step.inp', name)
+        restart_file = os.path.join(self.exe_dir, out_files['restart'])
+        prestart_file = os.path.join(self.exe_dir, 'previous.restart')
+        wave_file = os.path.join(self.exe_dir, out_files['wfn'])
+        pwave_file = os.path.join(self.exe_dir, 'previous.wfn')
+        # Note: Order is calculated at the END of each iteration!
+        i = 0
+        # Write the config so we have a non-empty file:
+        write_xyz_trajectory(traj_file, xyz, vel, atoms, box, step=i,
+                             append=False)
+        for i in range(steps):
+            if i > 0:
+                # Write the previous configuration:
+                write_xyz_trajectory(traj_file, xyz, vel, atoms, box,
+                                     step=i)
+            if i == 0:
+                pass
+            elif i > 0:
+                self._movefile(restart_file, prestart_file)
+                self._movefile(wave_file, pwave_file)
+                if i < steps - 1:  # Do not integrate the last step.
+                    out_files = self.run_cp2k('continue.inp', name)
+            self._remove_files(self.exe_dir,
+                               self._find_backup_files(self.exe_dir))
+            results = {}
+            if order:
+                results['order'] = order
+            # Read config after the step
+            if i < steps - 1:
+                atoms, xyz, vel, box, _ = read_cp2k_restart(restart_file)
+                if order_function:
+                    order = self.calculate_order(order_function, system,
+                                                 xyz=xyz, vel=vel, box=box)
+            energy = read_cp2k_energy(out_files['energy'])
+            end = (i + 1) * self.subcycles
+            results['thermo'] = {}
+            for key, val in energy.items():
+                results['thermo'][key] = val[:end:self.subcycles][-1]
+            yield results
+        # Note we do not remove the run-files here as they might be
+        # useful for the user.
 
     def step(self, system, name):
         """Perform a single step with CP2K.
@@ -510,10 +698,6 @@ class CP2KEngine(ExternalMDEngine):
 
         """
         initial_conf = self.dump_frame(system)
-        # Save as a single snapshot file
-        phase_point = {'pos': (initial_conf, None), 'vel': False,
-                       'vpot': None, 'ekin': None}
-        system.particles.set_particle_state(phase_point)
         # Prepare input files etc.:
         self.add_input_files(self.exe_dir)
         box, xyz, vel, atoms = self._read_configuration(initial_conf)
@@ -534,11 +718,12 @@ class CP2KEngine(ExternalMDEngine):
         atoms, xyz, vel, box, _ = read_cp2k_restart(out_files['restart'])
         conf_out = os.path.join(self.exe_dir, '{}.{}'.format(name, self.ext))
         write_xyz_trajectory(conf_out, xyz, vel, atoms, box, append=False)
-        phase_point = {'pos': (conf_out, None),
-                       'vel': False,
-                       'vpot': energy[1][-1],
-                       'ekin': energy[0][-1]}
-        system.particles.set_particle_state(phase_point)
+        system.particles.set_pos((conf_out, None))
+        system.particles.set_vel(False)
+        system.particles.ekin = energy['ekin'][-1]
+        system.particles.vpot = energy['vpot'][-1]
+        system.update_box(box)
+        # Prepare input files etc.:
         logger.debug('Removing CP2K output after single step.')
         # Remove run-files etc:
         for _, files in out_files.items():
@@ -592,7 +777,7 @@ class CP2KEngine(ExternalMDEngine):
         Returns
         -------
         box : numpy.array
-            The box dimensions if we mange to read it.
+            The box dimensions if we manage to read it.
         xyz : numpy.array
             The positions.
         vel : numpy.array
@@ -604,7 +789,7 @@ class CP2KEngine(ExternalMDEngine):
         xyz, vel, box, names = None, None, None, None
         for snapshot in read_xyz_file(filename):
             box, xyz, vel, names = convert_snapshot(snapshot)
-            break  # stop after the first snapshot
+            break  # Stop after the first snapshot.
         return box, xyz, vel, names
 
     def _reverse_velocities(self, filename, outfile):
@@ -621,7 +806,6 @@ class CP2KEngine(ExternalMDEngine):
         """
         box, xyz, vel, names = self._read_configuration(filename)
         write_xyz_trajectory(outfile, xyz, -1.0*vel, names, box, append=False)
-        return None
 
     def _prepare_shooting_point(self, input_file):
         """
@@ -639,7 +823,7 @@ class CP2KEngine(ExternalMDEngine):
         output_file : string
             The name of the file created.
         energy : dict
-            The energy terms read from the GROMACS .edr file.
+            The energy terms read from the CP2K energy file.
 
         """
         box, xyz, vel, atoms = self._read_configuration(input_file)
@@ -717,12 +901,12 @@ class CP2KEngine(ExternalMDEngine):
         if aimless:
             pos = self.dump_frame(system)
             posvel, energy = self._prepare_shooting_point(pos)
-            kin_new = energy[0][-1]
-            phase_point = {'pos': (posvel, None), 'vel': False,
-                           'ekin': kin_new,
-                           'vpot': energy[1][-1]}
-            system.particles.set_particle_state(phase_point)
-        else:  # soft velocity change, add from Gaussian dist
+            kin_new = energy['ekin'][-1]
+            system.particles.set_pos((posvel, None))
+            system.particles.set_vel(False)
+            system.particles.ekin = kin_new
+            system.particles.vpot = energy['vpot'][-1]
+        else:  # Soft velocity change, from a Gaussian distribution:
             msgtxt = 'CP2K engine only support aimless shooting!'
             logger.error(msgtxt)
             raise NotImplementedError(msgtxt)

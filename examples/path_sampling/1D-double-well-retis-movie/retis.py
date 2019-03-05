@@ -8,53 +8,67 @@ aim to calculate the crossing probability and the rate constant.
 
 Have fun!
 """
+import numpy as np
+from tqdm import tqdm
 from pyretis.core import System, create_box, Particles
 from pyretis.initiation import initiate_path_simulation
 from pyretis.core.properties import Property
 from pyretis.inout.setup import (create_force_field, create_engine,
                                  create_orderparameter, create_simulation)
 from pyretis.analysis.path_analysis import _pcross_lambda_cumulative
-import numpy as np
-from tqdm import tqdm
 
 INTERFACES = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, 1.0]
 # Let us define the simulation:
 SETTINGS = {}
 # Basic settings for the simulation:
-SETTINGS['simulation'] = {'task': 'retis',
-                          'steps': 150,
-                          'interfaces': INTERFACES}
+SETTINGS['simulation'] = {
+    'task': 'retis',
+    'steps': 150,
+    'interfaces': INTERFACES
+}
 # Basic settings for the system:
 SETTINGS['system'] = {'units': 'lj', 'temperature': 0.07}
 # Basic settings for the Langevin integrator:
-SETTINGS['engine'] = {'class': 'Langevin',
-                      'gamma': 0.3,
-                      'high_friction': False,
-                      'seed': 0,
-                      'timestep': 0.002}
+SETTINGS['engine'] = {
+    'class': 'Langevin',
+    'gamma': 0.3,
+    'high_friction': False,
+    'seed': 0,
+    'timestep': 0.002
+}
 # Potential parameters:
 # The potential is: `V_\text{pot} = a x^4 - b (x - c)^2`
-SETTINGS['potential'] = [{'a': 1.0, 'b': 2.0, 'c': 0.0,
-                          'class': 'DoubleWell'}]
+SETTINGS['potential'] = [
+    {
+        'class': 'DoubleWell',
+        'a': 1.0, 'b': 2.0, 'c': 0.0,
+    }
+]
 # Settings for the order parameter:
-SETTINGS['orderparameter'] = {'class': 'OrderParameterPosition',
-                              'dim': 'x', 'index': 0,
-                              'periodic': False}
+SETTINGS['orderparameter'] = {
+    'class': 'PositionVelocity',
+    'dim': 'x', 'index': 0,
+    'periodic': False
+}
 # TIS specific settings:
-SETTINGS['tis'] = {'freq': 0.5,
-                   'maxlength': 20000,
-                   'aimless': True,
-                   'allowmaxlength': False,
-                   'sigma_v': -1,
-                   'seed': 0,
-                   'zero_momentum': False,
-                   'rescale_energy': False}
+SETTINGS['tis'] = {
+    'freq': 0.5,
+    'maxlength': 20000,
+    'aimless': True,
+    'allowmaxlength': False,
+    'sigma_v': -1,
+    'seed': 0,
+    'zero_momentum': False,
+    'rescale_energy': False
+}
 SETTINGS['initial-path'] = {'method': 'kick'}
 # RETIS specific settings:
-SETTINGS['retis'] = {'swapfreq': 0.5,
-                     'relative_shoots': None,
-                     'nullmoves': True,
-                     'swapsimul': True}
+SETTINGS['retis'] = {
+    'swapfreq': 0.5,
+    'relative_shoots': None,
+    'nullmoves': True,
+    'swapsimul': True
+}
 
 # For convenience:
 TIMESTEP = SETTINGS['engine']['timestep']
@@ -62,7 +76,7 @@ ANALYSIS = {'ngrid': 100, 'nblock': 5}
 
 
 def set_up_system(settings):
-    """Just a method to help set up the system.
+    """Set up the system.
 
     Parameters
     ----------
@@ -73,6 +87,7 @@ def set_up_system(settings):
     -------
     sys : object like :py:class:`.System`
         A system object we can use in a simulation.
+
     """
     box = create_box(periodic=[False])
     sys = System(temperature=settings['system']['temperature'],
@@ -85,11 +100,11 @@ def set_up_system(settings):
 
 
 def step_txt(ensembles, retis_result, prun):
-    """A function to return some text information about the RETIS step.
+    """Return some text information about the RETIS step.
 
     Parameters
     ----------
-    ensembles : list of enemble objects
+    ensembles : list of objects like :py:class:`.PathEnsemble`
         The different path ensembles we are simulating.
     retis_result : list of lists
         The results from a RETIS simulation step.
@@ -100,7 +115,8 @@ def step_txt(ensembles, retis_result, prun):
     -------
     out : list of strings
         Each string contains information about the move performed
-        in a ensemble.
+        in an ensemble.
+
     """
     txt = []
     force = 0  # counter for force evaluations
@@ -109,19 +125,21 @@ def step_txt(ensembles, retis_result, prun):
     # the force evaluation that might be performed prior to propagation,
     # i.e. the initial force evaluation since this can be stored in memory,
     # along the path -> i.e. we can avoid it.
-    for i, result in enumerate(retis_result):
-        ensemble = ensembles[i]
+    for ensemble in ensembles:
         name = ensemble.ensemble_name
-        name_of_move = result[0]
-        accepted = result[1]
+        idx = ensemble.ensemble_number
+        name_of_move = retis_result['move-{}'.format(idx)]
+        accepted = retis_result['accept-{}'.format(idx)]
         line = []
         if name_of_move == 'swap':
-            name2 = ensembles[result[-1]].ensemble_name
+            idx2 = retis_result['all-{}'.format(idx)]['swap-with']
+            name2 = ensembles[idx2].ensemble_name
             move = '{} {},'.format(name_of_move, name2)
-            if i == 0 or (i == 1 and result[-1] == 0):
+            if idx == 0 or (idx == 1 and idx2 == 0):
+                # Evaluate forces when swapping [0^-] <-> [0^+]:
                 force += ensemble.paths[-1]['length'] - 2
         elif name_of_move == 'tis':
-            trial_path = result[2]
+            trial_path = retis_result['path-{}'.format(idx)]
             tis_move = trial_path.generated[0]
             move = '{} ({}),'.format(name_of_move, tis_move)
             if tis_move == 'sh':
@@ -130,8 +148,8 @@ def step_txt(ensembles, retis_result, prun):
             move = '{},'.format(name_of_move)
         line.append('{}: {:11s}'.format(name, move))
         line.append('{},'.format(accepted))
-        if i > 0:
-            line.append('p = {:<8.6g}'.format(prun[i]))
+        if idx > 0:
+            line.append('p = {:<8.6g}'.format(prun[idx]))
         txt.append(' '.join(line))
     return txt, force
 
@@ -141,8 +159,8 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
 
     Parameters
     ----------
-    ensemble : object
-        The ensemble to analyse
+    ensemble : objects like :py:class:`.PathEnsemble`
+        The ensemble to analyse.
     step : int
         The current simulation step.
     prun : float
@@ -163,6 +181,7 @@ def probability_path_ensemble(ensemble, step, prun, orderp):
     pcross : numpy.array
         The crossing probability as a function of the order
         parameter.
+
     """
     ordermax = ensemble.last_path.ordermax[0]
     success = 1 if ordermax > ensemble.detect else 0
@@ -209,7 +228,7 @@ def analyse_path_ensembles(ensembles, step, variables):
 
     Parameters
     ----------
-    ensembles : a list of PathEnsemble objects
+    ensembles : a list of objects like :py:class:`.PathEnsemble`
         These objects contain information about accepted paths for the
         different path ensembles.
     step : integer
@@ -223,6 +242,7 @@ def analyse_path_ensembles(ensembles, step, variables):
     out : dict of floats
         A dictionary with computed initial flux, crossing probability and
         errors in these.
+
     """
     calc = {'flux': 0, 'fluxe': 0,
             'pcross': 0, 'pcrosse': float('inf'),
@@ -275,7 +295,7 @@ def analyse_path_ensembles(ensembles, step, variables):
 
 
 def main():
-    """Just run the simulation :-)"""
+    """Just run the simulation."""
     print('# CREATING SYSTEM...')
     system = set_up_system(SETTINGS)
     print('# CREATING SIMULATION...')
@@ -319,7 +339,7 @@ def main():
         step = result['cycle']['step']
         print('# Current cycle: {}'.format(step))
         anr = analyse_path_ensembles(ensembles, step, variables)
-        retis_txt, force = step_txt(ensembles, result['retis'],
+        retis_txt, force = step_txt(ensembles, result,
                                     variables['prun'])
         ftot += force
         for line in retis_txt:

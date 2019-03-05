@@ -5,7 +5,7 @@
 import logging
 import numpy as np
 from matplotlib import pyplot as plt
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 try:
     from vvintegrator import vvintegrator
@@ -16,8 +16,12 @@ except ImportError:
     raise ImportError(MSG)
 
 
+plt.style.use('seaborn-colorblind')
+SEED = 1000
+
+
 def test_rangaussian(sigma, numbers=10000, bins=100):
-    """Test the gaussian generator"""
+    """Test the gaussian generator."""
     rndf = np.array([vvintegrator.rangaussian(sigma) for _ in range(numbers)])
     rnd = np.random.normal(loc=0.0, scale=sigma, size=numbers)
 
@@ -31,8 +35,8 @@ def test_rangaussian(sigma, numbers=10000, bins=100):
     midf = 0.5 * (edgesf[1:] + edgesf[:-1])
     hist, edges = np.histogram(rnd, bins=bins, range=(mini, maxi))
     mid = 0.5 * (edges[1:] + edges[:-1])
-    ax1.plot(midf, histf, 'bo-', label='FORTRAN', lw=2, alpha=0.5)
-    ax1.plot(mid, hist, 'gs-', label='numpy', lw=2, alpha=0.5)
+    ax1.plot(midf, histf, 'o-', label='FORTRAN', lw=2, alpha=0.7)
+    ax1.plot(mid, hist, 's-', label='numpy', lw=2, alpha=0.7)
     ax1.set_title('Numbers = {}, bins = {}'.format(numbers, bins))
     ax1.legend()
     plt.show()
@@ -53,11 +57,15 @@ def test_gssbivar(s12os11, sqrts11, sqrtsos11, numbers=10000, bins=100):
     plt.show()
 
 
-if __name__ == '__main__':
-    SEED = 1000
+def main():
+    """Run the test."""
     size = vvintegrator.get_seed_size()
     seeds = np.array([SEED + i for i in range(size)], dtype=np.int32)
     vvintegrator.seed_random_generator(seeds)
     for sig in [1.0, 0.5, 2.0, 10.0]:
         test_rangaussian(sig, numbers=10**6)
     test_gssbivar(1.0, 2.0, 1.0)
+
+
+if __name__ == '__main__':
+    main()

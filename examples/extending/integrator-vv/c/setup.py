@@ -6,6 +6,7 @@ from distutils.core import (  # pylint: disable=no-name-in-module,import-error
     setup,
     Extension,
 )
+import numpy as np
 
 
 CMODULE = Extension(
@@ -17,4 +18,5 @@ setup(
     name='PyRETIS Velocity Verlet C extension',
     description='C extension for the Velocity Verlet integrator.',
     ext_modules=[CMODULE],
+    include_dirs=[np.get_include()],
 )

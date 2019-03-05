@@ -42,11 +42,14 @@ extensions = [
 
 # Napoleon settings
 napoleon_numpy_docstring = True
-napoleon_include_private_with_doc = False
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = True
 napoleon_include_special_with_doc = True
 napoleon_use_ivar = False
-napoleon_use_param = True
-napoleon_use_rtype = True
+napoleon_use_keyword = False
+napoleon_use_param = False
+napoleon_use_rtype = False
+
 # autodoc settings
 #autodoc_default_flags = ['members', ]
 # Add any paths that contain templates here, relative to this directory.
@@ -185,6 +188,7 @@ html_theme_options = {
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
     'bootstrap_version': "3",
+    'nosidebar': True,
 }
 
 

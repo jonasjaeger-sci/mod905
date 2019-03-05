@@ -46,6 +46,14 @@ logging.disable(logging.CRITICAL)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+ORDER_ERROR_MSG = (
+    'No order parameter was defined, but the '
+    'engine *does* require it.'
+)
+MISSING_STEPS_ERROR_MSG = 'Simulation setting "steps" is missing!'
+MISSING_INTERFACES_ERROR_MSG = 'Simulation setting "interfaces" is missing!'
+
+
 def create_test_system():
     """Create a system we can use for testing."""
     create_conversion_factors('lj')
@@ -75,29 +83,26 @@ def create_test_system():
 
 
 class TestMethods(unittest.TestCase):
-    """Test some of the methods from .createsimulation"""
+    """Test some of the methods from .createsimulation."""
 
     def test_create_path_ensemble(self):
         """Test create_path_ensemble."""
         settings = {
-            'simulation': {
-                'interfaces': [-1., 0, 1],
-                'detect': 0.8,
-                'ensemble': 2,
-            }
+            'simulation': {'interfaces': [-1., 0, 1]},
+            'tis': {'detect': 0.8, 'ensemble_number': 2}
         }
         ensemble = create_path_ensemble(settings, 'internal')
-        self.assertEqual(ensemble.ensemble, 2)
+        self.assertEqual(ensemble.ensemble_number, 2)
         self.assertAlmostEqual(ensemble.detect, 0.8)
         self.assertIsInstance(ensemble, PathEnsemble)
         ensemble = create_path_ensemble(settings, 'external')
         self.assertIsInstance(ensemble, PathEnsembleExt)
-        self.assertEqual(ensemble.ensemble, 2)
+        self.assertEqual(ensemble.ensemble_number, 2)
         self.assertAlmostEqual(ensemble.detect, 0.8)
         # Test with some "missing" settings:
-        settings = {'simulation': {'interfaces': [-1., 0., 1.]}}
+        settings = {'simulation': {'interfaces': [-1., 0., 1.]}, 'tis': {}}
         ensemble = create_path_ensemble(settings, 'internal')
-        self.assertEqual(ensemble.ensemble, 1)
+        self.assertEqual(ensemble.ensemble_number, 1)
         self.assertAlmostEqual(ensemble.detect, 1.0)
         with self.assertRaises(ValueError):
             settings = {'simulation': {'interfaces': [-1., 0.]}}
@@ -131,16 +136,24 @@ class TestMethods(unittest.TestCase):
         system = create_test_system()
         engine = VelocityVerlet(0.002)
         settings = {'simulation': {}}
-        with self.assertRaises(ValueError):
+        # Test that the setup fails without an order parameter,
+        # when the engine requires it:
+        with self.assertRaises(ValueError) as err:
             create_mdflux_simulation(settings, system, engine)
-        settings['orderparameter'] = {'class': 'OrderParameterPosition',
+        self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
+        settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
-        with self.assertRaises(ValueError):
+        # Test that we fail because required setting "steps" are missing:
+        with self.assertRaises(ValueError) as err:
             create_mdflux_simulation(settings, system, engine)
+        self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
-        with self.assertRaises(ValueError):
+        # Test that we fail because required setting "interfaces" are
+        # missing:
+        with self.assertRaises(ValueError) as err:
             create_mdflux_simulation(settings, system, engine)
+        self.assertEqual(MISSING_INTERFACES_ERROR_MSG, str(err.exception))
         settings['simulation']['interfaces'] = [0, 1]
         sim = create_mdflux_simulation(settings, system, engine)
         self.assertIsInstance(sim, SimulationMDFlux)
@@ -175,13 +188,19 @@ class TestMethods(unittest.TestCase):
             },
             'tis': SECTIONS['tis'],
         }
-        with self.assertRaises(ValueError):
+        # Test that the set up fails, when we did not define an
+        # order parameter and the engine wants it:
+        with self.assertRaises(ValueError) as err:
             create_tis_simulations(settings, system, engine)
-        settings['orderparameter'] = {'class': 'OrderParameterPosition',
+        self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
+        # Continue testing with an order parameter defined:
+        settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
-        with self.assertRaises(ValueError):
+        # Test that we fail when we are missing some settings:
+        with self.assertRaises(ValueError) as err:
             create_tis_simulations(settings, system, engine)
+        self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
         sim = create_tis_simulations(settings, system, engine)
         self.assertIsInstance(sim, SimulationSingleTIS)
@@ -192,13 +211,13 @@ class TestMethods(unittest.TestCase):
         engine = VelocityVerlet(0.002)
         settings = {
             'simulation': {
-                'task': 'tis',
+                'task': 'tis-multiple',
                 'interfaces': [-1., 0., 1., 2],
                 'steps': 10,
             },
             'tis': SECTIONS['tis'],
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False,
@@ -207,7 +226,7 @@ class TestMethods(unittest.TestCase):
         }
         simulations = create_tis_simulations(settings, system, engine)
         for sim, i in zip(simulations, [1, 2, 3]):
-            self.assertEqual(sim['simulation']['ensemble'], i)
+            self.assertEqual(sim['tis']['ensemble_number'], i)
 
     def test_create_retis_simulation(self):
         """Test create_retis_simulations."""
@@ -221,13 +240,17 @@ class TestMethods(unittest.TestCase):
             'tis': SECTIONS['tis'],
             'retis': SECTIONS['retis'],
         }
-        with self.assertRaises(ValueError):
+        # Test that we fail without an order parameter defined:
+        with self.assertRaises(ValueError) as err:
             create_retis_simulation(settings, system, engine)
-        settings['orderparameter'] = {'class': 'OrderParameterPosition',
+        self.assertEqual(ORDER_ERROR_MSG, str(err.exception))
+        settings['orderparameter'] = {'class': 'Position',
                                       'dim': 'x', 'index': 0,
                                       'periodic': False}
-        with self.assertRaises(ValueError):
+        # Test that we fail when we are missing some settings:
+        with self.assertRaises(ValueError) as err:
             create_retis_simulation(settings, system, engine)
+        self.assertEqual(MISSING_STEPS_ERROR_MSG, str(err.exception))
         settings['simulation']['steps'] = 10
         sim = create_retis_simulation(settings, system, engine)
         self.assertIsInstance(sim, SimulationRETIS)
@@ -239,7 +262,7 @@ class TestMethods(unittest.TestCase):
             create_simulation(settings, None)
 
     def test_create_simulationnve(self):
-        """Test create_simulation for NVE"""
+        """Test create_simulation for NVE."""
         settings = {'simulation': {'task': 'does-not-exist'}}
         system = create_test_system()
         engine = VelocityVerlet(0.002)
@@ -255,7 +278,7 @@ class TestMethods(unittest.TestCase):
         self.assertIsInstance(sim, SimulationNVE)
 
     def test_create_simulationmdflux(self):
-        """Test create_simulation for MD-Flux"""
+        """Test create_simulation for MD-Flux."""
         system = create_test_system()
         engine = VelocityVerlet(0.002)
         settings = {
@@ -265,7 +288,7 @@ class TestMethods(unittest.TestCase):
                 'interfaces': [-1.0],
             },
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False
@@ -282,7 +305,7 @@ class TestMethods(unittest.TestCase):
         self.assertIsInstance(sim, SimulationMDFlux)
 
     def test_create_simulationumb(self):
-        """Test create_simulation for UmbrellaWindow"""
+        """Test create_simulation for UmbrellaWindow."""
         system = create_test_system()
         settings = {
             'simulation': {
@@ -293,7 +316,7 @@ class TestMethods(unittest.TestCase):
                 'mincycle': 10,
             },
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False
@@ -316,7 +339,7 @@ class TestMethods(unittest.TestCase):
             },
             'tis': SECTIONS['tis'],
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False,
@@ -334,13 +357,13 @@ class TestMethods(unittest.TestCase):
         # TIS:
         settings = {
             'simulation': {
-                'task': 'tis',
+                'task': 'tis-multiple',
                 'interfaces': [-1., 0., 1., 2.0],
                 'steps': 10,
             },
             'tis': SECTIONS['tis'],
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False,
@@ -350,7 +373,7 @@ class TestMethods(unittest.TestCase):
         kwargs = {'system': system, 'engine': engine}
         simulations = create_simulation(settings, kwargs)
         for sim, i in zip(simulations, [1, 2, 3]):
-            self.assertEqual(sim['simulation']['ensemble'], i)
+            self.assertEqual(sim['tis']['ensemble_number'], i)
 
     def test_create_simulationretis(self):
         """Test create_simulation for SimulationRETIS."""
@@ -365,7 +388,7 @@ class TestMethods(unittest.TestCase):
             'tis': SECTIONS['tis'],
             'retis': SECTIONS['retis'],
             'orderparameter': {
-                'class': 'OrderParameterPosition',
+                'class': 'Position',
                 'dim': 'x',
                 'index': 0,
                 'periodic': False,

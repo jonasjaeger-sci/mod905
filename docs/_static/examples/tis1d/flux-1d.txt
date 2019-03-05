@@ -1,1 +1,1 @@
-../../../../examples/path_sampling/1D-double-well/tis/flux/flux.rst
+../../../../examples/path_sampling/1D-double-well/flux/flux.rst

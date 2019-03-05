@@ -3,26 +3,18 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This file contains common functions for the input/output.
 
-It contains some functions that is used when generating reports,
-typically to format tables and numbers.
-
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyretisLogFormatter (:py:class:`.PyretisLogFormatter`)
-    A class representing a formatter for the PyRETIS log file.
+OutputBase (:py:class:`.OutputBase`)
+    A base class for handling the output.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-apply_format (:py:func:`.apply_format`)
-    Apply a format string to a given float value. This method
-    can be used for formatting text for tables (i.e. if we want
-    a fixed width).
-
 check_python_version (:py:func:`.check_python_version`)
-    Method that will give warnings when we use older and untested
-    versions of python.
+    A method that will give warnings when we use older and possibly
+    unsupported Python versions.
 
 create_backup (:py:func:`.create_backup`)
     A function to handle the creation of backups of old files.
@@ -30,21 +22,29 @@ create_backup (:py:func:`.create_backup`)
 make_dirs (:py:func:`.make_dirs`)
     Create directories (for path simulation).
 
-print_to_screen (:py:func:`.print_to_screen`)
-    A method used for printing to screen.
+simplify_ensemble_name (:py:func:`.simplify_ensemble_name`)
+    Simplify the name of ensembles for creating directories.
+
+generate_file_name (:py:func:`.generate_file_name`)
+    Generate file name for an output task, from settings.
+
 """
+from abc import ABCMeta, abstractmethod
 import errno
 import os
 import re
 import sys
 import logging
-import colorama
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
-__all__ = ['apply_format', 'check_python_version', 'create_backup',
-           'make_dirs', 'print_to_screen', 'PyretisLogFormatter']
+__all__ = [
+    'check_python_version',
+    'create_backup',
+    'make_dirs',
+    'simplify_ensemble_name',
+]
 
 
 # Hard-coded patters for energy analysis output files.
@@ -84,21 +84,12 @@ PATHFILES = {'pcross': '{}_pcross',
 # hard-coded patterns for matched files:
 PATH_MATCH = {'total': 'total-probability',
               'match': 'matched-probability'}
-# hard-coded formats to use for Log files:
-LOG_FMT = '[%(levelname)s]: %(message)s'
-LOG_DEBUG_FMT = '[%(levelname)s] [%(name)s.%(funcName)s()]: %(message)s'
-# colors for printing:
-COLORS = {'error': colorama.Fore.RED,
-          'info': colorama.Fore.BLUE,
-          'warning': colorama.Fore.YELLOW,
-          'message': colorama.Fore.CYAN,
-          'success': colorama.Fore.GREEN}
 
 
 def create_backup(outputfile):
     """Check if a file exist and create backup if requested.
 
-    This function will check if the given file name exist and if it
+    This function will check if the given file name exists and if it
     does, it will move that file to a new file name such that the given
     one can be used without overwriting.
 
@@ -110,8 +101,8 @@ def create_backup(outputfile):
     Returns
     -------
     out : string
-        This string is None if no backup is made, otherwise it will just
-        say what file was moved (and to where).
+        This string is None if no backup is made, otherwise, it will
+        just say what file was moved (and to where).
 
     Note
     ----
@@ -129,50 +120,6 @@ def create_backup(outputfile):
         msg = 'Backup existing file "{}" to "{}"'.format(outputfile, filename)
         os.rename(outputfile, filename)
     return msg
-
-
-def apply_format(value, fmt):
-    """Apply a format string to a given float value.
-
-    Here we check the formatting of a float. We are *forcing* a
-    *maximum length* on the resulting string. This is to avoid problems
-    like: '{:7.2f}'.format(12345.7) which returns '12345.70' with a
-    length 8 > 7. The intended use of this function is to avoid such
-    problems when we are formatting numbers for tables. Here it is done
-    by switching to an exponential notation. But note however that this
-    will have implications for how many decimal places we can show.
-
-    Parameters
-    ----------
-    value : float
-        The float to format.
-    fmt : string
-        The format to use.
-
-    Note
-    ----
-    This function converts numbers to have a fixed length. In some
-    cases this may reduce the number of significant digits. Remember
-    to also output your numbers without this format in case a specific
-    number of significant digits is important!
-
-    """
-    maxlen = fmt.split(':')[1].split('.')[0]
-    align = ''
-    if not maxlen[0].isalnum():
-        align = maxlen[0]
-        maxlen = maxlen[1:]
-    maxlen = int(maxlen)
-    str_fmt = fmt.format(value)
-    if len(str_fmt) > maxlen:  # switch to exponential:
-        if value < 0:
-            deci = maxlen - 7
-        else:
-            deci = maxlen - 6
-        new_fmt = '{{:{0}{1}.{2}e}}'.format(align, maxlen, deci)
-        return new_fmt.format(value)
-    else:
-        return str_fmt
 
 
 def _remove_extension(filename):
@@ -199,8 +146,8 @@ def make_dirs(dirname):
     """Create directories for path simulations.
 
     This function will create a folder using a specified path.
-    If the path already exist and if it's a directory, we will do
-    nothing. If the path exist and is a file we will raise an
+    If the path already exists and if it's a directory, we will do
+    nothing. If the path exists and is a file we will raise an
     `OSError` exception here.
 
     Parameters
@@ -230,32 +177,6 @@ def make_dirs(dirname):
             return msg
 
 
-def print_to_screen(txt=None, level=None):  # pragma: no cover
-    """Print output to standard out.
-
-    This method is included to ensure that output from PyRETIS to the
-    screen is written out in a uniform way across the library and
-    application(s).
-
-    Parameters
-    ----------
-    txt : string
-        The text to write to the screen.
-    level : string
-        The level can be used to color the output.
-
-    """
-    if txt is None:
-        print()
-    else:
-        out = '{}'.format(txt)
-        color = COLORS.get(level, None)
-        if color is None:
-            print(out)
-        else:
-            print(color + out)
-
-
 def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     """Simplify path names for file/directory names.
 
@@ -269,7 +190,7 @@ def simplify_ensemble_name(ensemble, fmt='{:03d}'):
     Parameters
     ----------
     ensemble : string
-        This is the string to translate
+        This is the string to simplify.
     fmt : string. optional
         This is a format to use for the directories.
 
@@ -325,7 +246,7 @@ def name_file(name, extension, path=None):
 
     This function is used to create file names. It will use
     `os.extsep` to create the file names and `os.path.join` to add a
-    path name if the `path` is given. The returned file name fill be of
+    path name if the `path` is given. The returned file name will be of
     form (example for posix): ``path/name.extension``.
 
     Parameters
@@ -346,6 +267,34 @@ def name_file(name, extension, path=None):
     return add_dirname(os.extsep.join([name, extension]), path)
 
 
+def generate_file_name(basename, directory, settings):
+    """Generate file name for an output task, from settings.
+
+    Parameters
+    ----------
+    basename : string
+        The base file name to use.
+    directory : string
+        A directory to output to. Can be None to output to the
+        current working directory.
+    settings : dict
+        The input settings
+
+    Returns
+    -------
+    filename : string
+        The file name to use.
+
+    """
+    prefix = settings['output'].get('prefix', None)
+    if prefix is not None:
+        filename = '{}{}'.format(prefix, basename)
+    else:
+        filename = basename
+    filename = add_dirname(filename, directory)
+    return filename
+
+
 def check_python_version():  # pragma: no cover
     """Give a warning about old python version(s)."""
     pyversion = sys.version.split()[0]
@@ -357,67 +306,72 @@ def check_python_version():  # pragma: no cover
         raise SystemExit(msgtxt)
 
 
-class PyretisLogFormatter(logging.Formatter):  # pragma: no cover
-    """Hard-coded formatter for the PyRETIS log file.
+class OutputBase(metaclass=ABCMeta):
+    """A generic class for handling output.
 
-    This formatter will just adjust multi-line messages to have some
-    indentation.
-    """
-
-    def format(self, record):
-        """Apply the PyRETIS log format."""
-        out = logging.Formatter.format(self, record)
-        header, _ = out.split(record.message)
-        out = out.replace('\n', '\n' + ' ' * len(header))
-        return out
-
-
-def format_number(number, minf, maxf, fmtf='{0:<16.9f}', fmte='{0:<16.9e}'):
-    """Format a number based on it's size.
-
-    Parameters
+    Attributes
     ----------
-    number : float
-        The number to format.
-    minf : float
-        If the number is smaller than `minf` then apply the
-        format with scientific notation.
-    maxf : float
-        If the number is greater than `maxf` then apply the
-        format with scientific notation.
-    fmtf : string
-        Format to use for floats.
-    fmte : string
-        Format to use for scientific notation.
-
-    Returns
-    -------
-    out : string
-        The formatted number.
+    formatter : object like py:class:`.OutputFormatter`
+        The object responsible for formatting output.
+    target : string
+        Determines where the target for the output, for
+        instance "screen" or "file".
+    first_write : boolean
+        Determines if we have written something yet, or
+        if this is the first write.
 
     """
-    if minf <= number <= maxf:
-        return fmtf.format(number)
-    return fmte.format(number)
 
+    target = None
 
-def get_log_formatter(level):
-    """Select a log format based on a given level.
+    def __init__(self, formatter):
+        """Create the object and attach a formatter."""
+        self.formatter = formatter
+        self.first_write = True
 
-    Here, it is just used to get a slightly more verbose format for
-    the debug level.
+    def output(self, step, data):
+        """Use the formatter to write data to the file.
 
-    Parameters
-    ----------
-    level : integer
-        This integer defines the log level.
+        Parameters
+        ----------
+        step : int
+            The current step number.
+        data : list
+            The data we are going to output.
 
-    Returns
-    -------
-    out : object like :py:class:`logging.Formatter`
-        An object that can be used as a formatter for a logger.
+        """
+        if self.first_write and self.formatter.print_header:
+            self.first_write = False
+            self.write(self.formatter.header)
+        for line in self.formatter.format(step, data):
+            self.write(line)
 
-    """
-    if level <= logging.DEBUG:
-        return PyretisLogFormatter(LOG_DEBUG_FMT)
-    return PyretisLogFormatter(LOG_FMT)
+    @abstractmethod
+    def write(self, towrite, end='\n'):
+        """Write a string to the output defined by this class.
+
+        Parameters
+        ----------
+        towrite : string
+            The string to write.
+        end : string, optional
+            A "terminator" for the given string.
+
+        Returns
+        -------
+        status : boolean
+            True if we managed to write, False otherwise.
+
+        """
+        return
+
+    def formatter_info(self):
+        """Return a string with info about the formatter."""
+        if self.formatter is not None:
+            return self.formatter.__class__
+        return None
+
+    def __str__(self):
+        """Return basic info."""
+        return '{}\n\t* Formatter: {}'.format(self.__class__.__name__,
+                                              self.formatter)

@@ -4,7 +4,7 @@
 """A class for writing text data for the analysis.
 
 This module defines a text plotter which supports the same method as
-the generic plotter, however the output is human-readable text.
+the generic plotter, however, the output is human-readable text.
 
 Important classes defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,10 +21,10 @@ from pyretis.inout.plotting.plotting import Plotter
 from pyretis.inout.common import name_file
 from pyretis.inout.common import (ENERFILES, ENERTITLE, FLUXFILES,
                                   ORDERFILES, PATHFILES, PATH_MATCH)
-from pyretis.inout.writers.txtinout import txt_save_columns
+from pyretis.inout.formats.txt_table import txt_save_columns
 
 
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 logger.addHandler(logging.NullHandler())
 
 
@@ -111,7 +111,7 @@ class TxtPlotter(Plotter):
             corresponding energy. It is assumed to contains the keys
             'vpot', 'ekin', 'etot', 'ham', 'temp', 'elec'.
         energies : numpy.array
-            This is the raw-data for the energy analysis.
+            This is the raw data for the energy analysis.
 
         Returns
         -------
@@ -163,7 +163,7 @@ class TxtPlotter(Plotter):
             Each item in `results` contains the results for the
             corresponding order parameter.
         orderdata : numpy.array
-            This is the raw-data for the order parameter analysis
+            This is the raw data for the order parameter analysis
 
         Returns
         -------
@@ -342,12 +342,12 @@ def _txt_block_error(outputfile, title, error, backup=False):
     outputfile : string
         This is the name of the output file to create.
     title : string
-        This is a identifier/title to add to the header, e.g.
+        This is an identifier/title to add to the header, e.g.
         'Ensemble: 001', 'Kinetic energy', etc.
     error : list
-        This is the result from the error analysis.
+        This is the result of the error analysis.
     backup : boolean, optional
-        Determines if we will do backup of old files or not.
+        Determines if we will do a backup of old files or not.
 
     """
     header = '{0}, Rel.err: {1:9.6e}, Ncor: {2:9.6f}'
@@ -367,7 +367,7 @@ def _txt_histogram(outputfile, title, histograms, backup=False):
     histograms : tuple or list
         The histograms to store.
     backup : boolean, optional
-        Determines if we will do backup of old files or not.
+        Determines if we will do a backup of old files or not.
 
     """
     data = []
@@ -397,7 +397,7 @@ def _txt_shoots_histogram(outputfile, histograms, scale, ensemble,
     outputfile : string
         This is the name of the output file to create.
     backup : boolean, optional
-        Determines if we will do backup of old files or not.
+        Determines if we will do a backup of old files or not.
 
     """
     data = []

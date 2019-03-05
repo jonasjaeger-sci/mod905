@@ -3,7 +3,7 @@
 # Distributed under the LGPLv2.1+ License. See LICENSE for more info.
 """This package defines different simulations for use with PyRETIS.
 
-The different simulations are defined as objects which inherits from
+The different simulations are defined as objects which inherit from
 the base Simulation object defined in `simulation.py`. The simulation
 object defines as simulation as a series of tasks to be executed,
 typically at each step of the simulation. These tasks may produce
@@ -29,7 +29,7 @@ simulation.py (:py:mod:`pyretis.simulation.simulation`)
     simulations.
 
 simulation_task.py (:py:mod:`pyretis.simulation.simulation_task`)
-    Defines classes for handling of simulation tasks.
+    Defines classes for the handling of simulation tasks.
 
 Important classes defined in this package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,5 +49,5 @@ SimulationRETIS (:py:class:`.SimulationRETIS`)
 from .simulation import Simulation
 from .simulation_task import SimulationTask
 from .mc_simulation import UmbrellaWindowSimulation
-from .md_simulation import SimulationNVE, SimulationMDFlux
+from .md_simulation import SimulationMD, SimulationNVE, SimulationMDFlux
 from .path_simulation import SimulationSingleTIS, SimulationRETIS

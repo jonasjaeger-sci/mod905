@@ -11,7 +11,7 @@ We are here doing the following:
 
 The trajectories from 2) and 4) should match for short simulations. 
 
-In this example we perform the integration in different ways:
+In this example, we perform the integration in different ways:
 
 1) Step-stop-step and so on using the PyRETIS CP2K engine.
 

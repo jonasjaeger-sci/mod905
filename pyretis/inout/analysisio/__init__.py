@@ -19,7 +19,7 @@ analysisio.py (:py:mod:`.analysisio`)
     output files from PyRETIS.
 
 __init__.py
-    This file, handles imports for PyRETIS.
+    This file handles imports for PyRETIS.
 
 Important methods defined here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
