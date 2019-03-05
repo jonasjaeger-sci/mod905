@@ -596,7 +596,7 @@ Keyword gmx_format
    configurations. It can be set to ``gro`` or ``g96``.
 
    Default:
-       The default value is ``gmx_format = g96``.
+       The default value is ``gmx_format = gro``.
 
 .. _user-section-engine-cp2k:
 
